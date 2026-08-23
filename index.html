@@ -22,6 +22,12 @@
     .stack { display: grid; gap: 20px; }
     .card { padding: 20px 22px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; }
     .card p { margin: 0; font-size: .96rem; color: #625e58; }
+    .diagram { margin: 28px 0; padding: 8px 12px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; }
+    .diagram svg { display: block; width: 100%; height: auto; }
+    .pairs { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; margin: 24px 0 28px; }
+    .pairs div { padding: 14px 16px; border: 1px solid #e7e1d7; border-radius: 12px; background: #fbf8f2; }
+    .pairs h3 { margin: 0 0 4px; font-size: .74rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; color: #d64d36; }
+    .pairs p { margin: 0; font-size: .93rem; color: #625e58; }
     .q { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; padding: 20px 22px; border: 1px solid #e7e1d7; border-left: 3px solid #d64d36; border-radius: 14px; background: #fbf8f2; }
     .q .num { grid-row: span 2; color: #d64d36; font: 700 1.05rem/1.4 Georgia, serif; }
     .q p { margin: 0; font-size: .96rem; color: #625e58; }
@@ -36,13 +42,14 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.1</p>
+    <p class="eyebrow">Planning doc — v0.2</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled. Everything below is a proposal, not a decision — select any block with the Redline controls and tell me what to change. We'll iterate on this page until the plan is right, then start building.</p>
 
     <section>
       <h2>What we're building</h2>
       <p>A simulation core where each physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains advance on their own terms and exchange quantities through a shared, explicit coupling layer rather than by reaching into each other.</p>
+      <p>The model itself is data, not code. Which components exist and how they're wired together is authored while the simulation runs — on a canvas, or from a script — and takes effect without a rebuild. Plugins ship the physics; you assemble the system live. This is the Modelica bargain, and it's the part worth stealing.</p>
       <p>Bevy's ECS is the substrate: entities carry state components from any mix of domains, and the plugin system is already the extension point we need. Bevy's renderer gives us visualization for free, but the core should stay usable headless.</p>
     </section>
 
@@ -55,7 +62,7 @@
         </div>
         <div class="card">
           <h3>Coupling layer</h3>
-          <p>Cross-domain exchange goes through typed exchange components — a fluid domain writes heat flux, the thermal domain reads it. Explicit, inspectable, and the only place where domains touch.</p>
+          <p>Cross-domain exchange goes through acausal connectors rather than hand-wired reads and writes — see below. Explicit, inspectable, and the only place where domains touch.</p>
         </div>
         <div class="card">
           <h3>Solver scheduling</h3>
@@ -64,6 +71,53 @@
         <div class="card">
           <h3>Integrators as a library</h3>
           <p>Semi-implicit Euler, RK4, and friends live in the core as reusable pieces so each domain isn't reinventing time integration.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Modelica, but you can see it</h2>
+      <p>The idea Modelica gets right is the <b>acausal connector</b>. A component declares ports; each port carries a <i>potential</i> variable and a <i>flow</i> variable. Wiring two ports together asserts two equations — potentials are equal, flows sum to zero — and nothing else. You never decide which side is input and which is output; the solver works that out from the assembled system.</p>
+
+      <div class="diagram" role="img" aria-label="Two components joined at a connector node: potentials equal, flows summing to zero.">
+        <svg viewBox="0 0 620 150" xmlns="http://www.w3.org/2000/svg">
+          <rect x="24" y="42" width="150" height="66" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
+          <text x="99" y="80" text-anchor="middle" fill="#4b4740" font-size="14" font-family="Inter, sans-serif">Pump</text>
+          <rect x="446" y="42" width="150" height="66" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
+          <text x="521" y="80" text-anchor="middle" fill="#4b4740" font-size="14" font-family="Inter, sans-serif">Heat exchanger</text>
+          <line x1="174" y1="75" x2="446" y2="75" stroke="#d64d36" stroke-width="2"/>
+          <circle cx="310" cy="75" r="7" fill="#d64d36"/>
+          <text x="310" y="34" text-anchor="middle" fill="#8a857c" font-size="12.5" font-family="Inter, sans-serif">p₁ = p₂</text>
+          <text x="310" y="112" text-anchor="middle" fill="#8a857c" font-size="12.5" font-family="Inter, sans-serif">ṁ₁ + ṁ₂ = 0</text>
+        </svg>
+      </div>
+
+      <p>That single rule is what makes multi-domain coupling uniform — every domain is the same shape, only the units change:</p>
+      <div class="pairs">
+        <div><h3>Mechanical</h3><p>velocity · force</p></div>
+        <div><h3>Electrical</h3><p>voltage · current</p></div>
+        <div><h3>Thermal</h3><p>temperature · heat flow</p></div>
+        <div><h3>Hydraulic</h3><p>pressure · mass flow</p></div>
+      </div>
+
+      <p>A domain plugin's real job, then, is to define its connector kinds and ship components that constrain them. Coupling two domains is a component with one port of each kind — a pump bridges electrical and hydraulic, a resistor bridges electrical and thermal. No special cases in the core.</p>
+
+      <div class="stack">
+        <div class="card">
+          <h3>The graph is the source of truth</h3>
+          <p>Components and connections live in a runtime graph, not in compiled code. Editing it is an ordinary mutation, so the visual canvas, a script, and a loaded model file are all just three ways of writing to the same structure.</p>
+        </div>
+        <div class="card">
+          <h3>Incremental recompile</h3>
+          <p>Changing the graph re-runs the pipeline: flatten to an equation set, do the structural analysis, index-reduce the DAE, hand the result to the solver. Only the affected strongly-connected components get rebuilt, which is what makes editing-while-running feel instant instead of like a restart.</p>
+        </div>
+        <div class="card">
+          <h3>Visible by default</h3>
+          <p>Where Modelica's tooling goes opaque, we stay legible: live values annotated on the wires, flow direction animated, residuals and solver iterations shown per component, and the flattened equations viewable for any node you select. Debugging a stiff model should be a matter of looking at it.</p>
+        </div>
+        <div class="card">
+          <h3>Scripting for what graphs are bad at</h3>
+          <p>An embedded language covers the cases a canvas handles poorly — parameter sweeps, procedurally generated topologies, controllers, and test scenarios. Same API surface the editor uses: <code>spawn</code>, <code>connect</code>, <code>set_param</code>, <code>step</code>. Scripts can also define new component equations at runtime, which is how a user adds physics we never shipped.</p>
         </div>
       </div>
     </section>
@@ -78,8 +132,8 @@
         </div>
         <div class="q">
           <span class="num">02</span>
-          <p>Are plugins compiled in, or do we want dynamic loading / scripting so third parties can add domains without rebuilding?</p>
-          <p class="lean"><b>My lean:</b> compiled-in traits first. Dynamic loading is a large detour and we can keep the trait boundary clean enough to add it later.</p>
+          <p>Which embedded language? Rhai is pure Rust and embeds without ceremony; Lua is faster and everyone already knows it; WASM would let people write components in any language at the cost of a much heavier boundary.</p>
+          <p class="lean"><b>My lean:</b> Rhai. Zero FFI, native Rust types across the boundary, and we can add a WASM path later for people who want to bring their own toolchain.</p>
         </div>
         <div class="q">
           <span class="num">03</span>
@@ -101,6 +155,21 @@
           <p>Do we reuse an existing physics crate (Rapier, Avian) for rigid body, or write our own so the coupling model is uniform across domains?</p>
           <p class="lean"><b>My lean:</b> write our own simple solver first. Learning the domain API matters more early than physical fidelity.</p>
         </div>
+        <div class="q">
+          <span class="num">07</span>
+          <p>Is every domain equation-based? Rigid-body contact and grid-based fluids don't flatten into a DAE the way a circuit does, so forcing them through one solver may be the wrong trade.</p>
+          <p class="lean"><b>My lean:</b> hybrid. The connector graph is the interface everyone honors, but a domain may solve however it likes internally and only reconcile its port equations at step boundaries.</p>
+        </div>
+        <div class="q">
+          <span class="num">08</span>
+          <p>What happens to state when you rewire a running model? Deleting a component mid-run leaves the solver holding values for equations that no longer exist.</p>
+          <p class="lean"><b>My lean:</b> preserve state for components that survive the edit, re-initialize only the affected subsystem, and offer a pause-on-structural-change toggle for when you want to be careful.</p>
+        </div>
+        <div class="q">
+          <span class="num">09</span>
+          <p>Do we import Modelica models, or define our own format? Compatibility buys an existing component library; a native format buys us years of not implementing a language spec.</p>
+          <p class="lean"><b>My lean:</b> native format, serialized straight from the graph. A partial Modelica importer is worth doing once we know our own semantics, not before.</p>
+        </div>
       </div>
     </section>
 
@@ -108,10 +177,11 @@
       <h2>Build order</h2>
       <ul class="milestones">
         <li><b>Core skeleton.</b> Cargo workspace, Bevy app, fixed-timestep schedule, the <code>Domain</code> trait and plugin registration.</li>
+        <li><b>Connector algebra.</b> Ports, potential/flow semantics, graph → flattened equations → solver, proven on a trivial domain like a resistor network.</li>
         <li><b>First domain.</b> One real solver end to end, with a scene it can run and a way to watch it.</li>
-        <li><b>Second domain.</b> The one that proves the abstraction — deliberately unlike the first.</li>
-        <li><b>Coupling.</b> Exchange components, ordering rules, and a coupled scenario that would be wrong without them.</li>
-        <li><b>Tooling.</b> Scenario definition, state inspection, and enough diagnostics to trust the numbers.</li>
+        <li><b>Second domain.</b> The one that proves the abstraction — deliberately unlike the first, coupled to the first through a bridging component.</li>
+        <li><b>Live canvas.</b> Build, rewire, and inspect a running model without restarting it. Incremental recompile lands here.</li>
+        <li><b>Scripting.</b> Embedded language over the same graph API, plus scenario files and enough diagnostics to trust the numbers.</li>
       </ul>
     </section>
 

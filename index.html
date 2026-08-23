@@ -64,7 +64,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.15</p>
+    <p class="eyebrow">Planning doc — v0.16</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
@@ -73,7 +73,7 @@
       <p>A simulation core where every physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains never reach into each other; they meet at acausal connectors, ports carrying a potential and a flow, and the solver works out causality from the assembled system. That one rule is what makes multi-domain coupling uniform.</p>
       <p>The model is data, not code — authored while the simulation runs, from a canvas or a script. A subsystem is anything that honors its ports: a nested graph, a reduced surrogate standing in for a thousand nodes, or firmware we didn't write — as source, as WASM, or as a binary running on an emulated chip. Fidelity is a runtime dial rather than an architectural commitment.</p>
       <p>The bar is emergence. Perturb one edge of a rigorous system and behavior nobody encoded should fall out — a pendulum that stands upright when you shake it, a tube that sings when you heat it — so the acceptance suite is a list of documented surprises, checked by assertions that span domains in a single statement.</p>
-      <p>Bevy's ECS is the substrate: entities carry state from any mix of domains, and the plugin system is already the extension point we need. The renderer gives us visualization for free, but the core stays usable headless — and the scene is strictly a <i>view</i> of state, never an input to it. That one-way rule is what lets a gear you can watch turn be the same object as five equations; the mechanism is <i>A motor that spins a gear you can see</i> below.</p>
+      <p>Bevy's ECS is the substrate: one entity carries components from any mix of domains at once — a resistor is an electrical element, a heat source and a lump of mass without being three objects — and the plugin system is already the extension point we need. <i>A resistor is three things at once</i> below is what that buys. The renderer gives us visualization for free, but the core stays usable headless — and the scene is strictly a <i>view</i> of state, never an input to it. That one-way rule is what lets a gear you can watch turn be the same object as five equations; the mechanism is <i>A motor that spins a gear you can see</i> below.</p>
     </section>
 
     <section>
@@ -432,6 +432,51 @@
       </div>
 
       <p>Where this lands in the plan: tier one is an ordinary domain plugin and could reasonably be the second or third one built, since water hammer is already on the acceptance list. Tier two is deliberately much later. What we owe them <i>now</i> is small but not nothing — port arrays with parameter-dependent length, so a distributed model is expressible at all, and a block interface that never requires a component to expose its internals to be part of the graph. The second of those is the same two-function interface being built for foreign firmware, so it costs us once.</p>
+    </section>
+
+    <section>
+      <h2>A resistor is three things at once</h2>
+      <p>Everything so far has been careful about coupling <i>between</i> components and quiet about coupling <i>inside</i> one, which leaves a hole. Real parts aren't single-domain. A resistor on a board is an electrical element, a heat source with a thermal mass of its own, and 0.4 grams sitting at a particular place. A motor is a winding, a rotor, a lump of iron that gets hot, and something bolted to a chassis that shakes it.</p>
+      <p>The answer is the substrate, used the way it's meant to be used: <b>one entity carrying components from several domains at once.</b> That's the strongest argument for building on an ECS and the page has so far made it in one clause. It's worth working the example, because two things fall out of it that aren't obvious — where the heat graph comes from, and what happens when you shake something that has been reduced to a model with nothing to shake.</p>
+
+      <div class="stack">
+        <div class="card">
+          <h3>One entity, several domains</h3>
+          <p>The resistor is a single entity carrying an electrical component (a resistance and two electrical ports), a thermal component (a heat capacity and one thermal port), and mass with a placement. Nothing in the core knows the word "resistor", and there is no multi-domain base class to inherit from — a part is multi-domain exactly when someone attached components from more than one domain to it, and a domain plugin only ever sees the components it defined. Adding a domain later can make every existing part richer without touching any of them.</p>
+        </div>
+        <div class="card">
+          <h3>Inside a part is equations; between parts is ports</h3>
+          <p>The distinction that makes this work, and it's worth stating sharply. <code>P = I²R</code> pushing heat out of the thermal port, and temperature moving <code>R</code>, are constitutive facts about what a resistor <i>is</i>. They're written as equations inside the component, not wired. The connection from that thermal port to the copper underneath it is a different kind of thing entirely — that's a port, an edge in the graph, something you can select and delete. Current hogging, already on the acceptance list, is exactly this loop closing, and it cannot be built if the only coupling mechanism is a wire.</p>
+        </div>
+        <div class="card">
+          <h3>The same parts, wired three different ways</h3>
+          <p>This is the part that surprised me into writing the section. Electrically, a resistor's neighbours are whatever the netlist says. Thermally, its neighbours are whatever it physically <i>touches</i> — the pad beneath it, the air above it, the part sitting next to it. Mechanically, its neighbour is whatever it's mounted to. Those three neighbour sets have almost nothing in common, so what we have is three quite different connection topologies over one shared set of entities. That's the real answer to "how do we model heat distribution": not a special mode of the electrical model, but a second graph over the same parts.</p>
+          <div class="detail">
+            <p><b>Where the thermal graph comes from.</b> Not from typing it in — a board with four hundred parts has a thermal topology nobody is going to wire by hand. It's derived from placement: the board is the discretized wall from the previous section, a grid of thermal masses each exposing a port, and every part's thermal port is connected to the patch it sits on. Overlapping pads conduct, adjacent patches conduct, exposed patches convect to ambient. Heat distribution is then just the temperature field across that port array, and the hot spot is the patch with the highest number.</p>
+            <p><b>Which is a nuance against "geometry parameterizes; it doesn't derive".</b> Deriving physics from a mesh, still no. Deriving <i>topology</i> from placement — which patch touches which — yes, and the difference matters: the result lands in the graph as ordinary connections you can see, select and delete, rather than as behaviour hidden inside a solver. Generated edges are marked as generated, so re-running placement replaces them without clobbering a wire someone added by hand.</p>
+            <p><b>And the graphs move independently.</b> Slide a part two centimetres across the board and its thermal neighbours change completely while its electrical neighbours don't change at all. Same entity, same netlist, different heat path. That independence is the whole reason these are separate graphs rather than one graph with tags.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Weight is a property, not a domain</h3>
+          <p>Worth not over-building. Mass is something several domains read, and it shows up at three levels of seriousness. Total mass and centre of mass of an assembly are a <i>query over the graph</i> — a sum over everything carrying a mass component — and not a simulation at all, which makes them nearly free and worth having early. Static load, where the board sags and a connector takes weight, is the mechanical domain with parts as loads. Only the third level costs anything: feeding an inertia tensor to a 6-DOF domain, where where-each-part-sits starts to matter dynamically. No weight domain, no weight solver.</p>
+        </div>
+        <div class="card">
+          <h3>Gravity, ambient, vibration: sources, not globals</h3>
+          <p>Some things apply to everything at once, and gravity is the one we need first — Kapitza doesn't stand up without it. The tempting implementation is a global constant the mechanical domain reads. That's wrong here, and not for purity reasons: a global is coupling that doesn't appear as an edge, and the whole page rests on the graph being the source of truth about what affects what. So an environment is a component with connections like anything else — a gravity source, an ambient-temperature source, a shaker driving a mount — and parts subscribe by declaring an environment port. It needs syntactic sugar so nobody wires four hundred gravity connections by hand, but the sugar generates real edges, marked as generated, exactly like the thermal ones.</p>
+        </div>
+        <div class="card">
+          <h3>Vibration lands differently on different representations</h3>
+          <p>And here's the case that has no clean answer yet. Base excitation itself is easy — a mount with a prescribed motion, no new mechanism. What's hard is that the same shaking arrives at different representations of the same object as completely different questions, and one of the outcomes should be a refusal rather than a number.</p>
+          <div class="detail">
+            <p><b>Three ways a representation responds.</b> If it has the degrees of freedom — a board modelled as a plate with modes — it resonates, and that's the case everyone pictures. If the response crosses domains, it needs a component that owns the coupling: a solder-joint model with a mechanical port whose accumulated cycles modulate an electrical parameter, so fatigue raises resistance, which raises dissipation, which raises temperature. And if the representation is the reduced thermal box with an efficiency curve, it has no mechanical port at all — the vibration isn't damped by it, it's <i>invisible</i> to it.</p>
+            <p><b>That last one is a different failure from leaving an envelope.</b> An envelope exit means you've gone outside the range where a fit is accurate: warn, record, carry on — already decided. This is a stronger statement — this representation cannot answer this class of question at all — and it should be refused when you wire it rather than discovered later as an answer that was suspiciously quiet. Concretely: a surrogate declares which port kinds it carries, and connecting a shaker to a model with no mechanical port is an error with a sentence explaining what's missing and which fidelity does have it.</p>
+            <p><b>An excitation has to be projectable.</b> Shake a five-hundred-patch wall and you're supplying five hundred accelerations; shake its lumped stand-in and you're supplying one. So a source needs to know how to spread itself across a port array, and a response needs to collapse back. That map from coarse to fine and back is a single object — the same piece of maths the surrogate reduction already needs, run in the other direction — which is a good reason to build it once and deliberately rather than twice by accident.</p>
+          </div>
+        </div>
+      </div>
+
+      <p>What this commits us to is small and mostly already true: a component may hold ports of several kinds and couple them with its own internal equations; connections may be <i>generated</i> — from placement, from an environment source — as long as they land in the graph as ordinary editable edges rather than hidden behaviour; and a representation must declare which port kinds it carries, so that asking it an unanswerable question fails loudly. The rest is the ECS doing what it's for.</p>
     </section>
 
     <section>

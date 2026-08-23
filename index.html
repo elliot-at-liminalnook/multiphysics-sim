@@ -41,8 +41,12 @@
     .q { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; padding: 20px 22px; border: 1px solid #e7e1d7; border-left: 3px solid #d64d36; border-radius: 14px; background: #fbf8f2; }
     .q .num { grid-row: span 2; color: #d64d36; font: 700 1.05rem/1.4 Georgia, serif; }
     .q p { margin: 0; font-size: .96rem; color: #625e58; }
+    .q > :not(.num) { grid-column: 2; }
     .q .lean { margin-top: 8px; }
     .lean b { color: #423d36; font-weight: 650; }
+    .detail { display: grid; gap: 11px; margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2dbcf; }
+    .detail p { margin: 0; font-size: .93rem; line-height: 1.6; color: #6d685f; }
+    .detail b { color: #423d36; font-weight: 650; }
     .milestones { counter-reset: m; list-style: none; padding: 0; }
     .milestones li { position: relative; padding-left: 2.6em; }
     .milestones li::before { counter-increment: m; content: "M" counter(m); position: absolute; left: 0; color: #d64d36; font-size: .78rem; font-weight: 750; letter-spacing: .08em; }
@@ -52,7 +56,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.4</p>
+    <p class="eyebrow">Planning doc — v0.5</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled. Everything below is a proposal, not a decision — select any block with the Redline controls and tell me what to change. We'll iterate on this page until the plan is right, then start building.</p>
 
@@ -285,6 +289,15 @@
           <span class="num">10</span>
           <p>Who produces the reduced models? Automatic order reduction is a deep specialty and only behaves for linear time-invariant subsystems; hand-authored surrogates work everywhere but rely on someone knowing the physics.</p>
           <p class="lean"><b>My lean:</b> hand-authored surrogates plus a validation harness that runs both fidelities and reports divergence. Automatic reduction lands later, for the linear cases where it's actually sound.</p>
+          <div class="detail">
+            <p><b>What a surrogate actually is.</b> For the board: a lumped RC network on the thermal port — junction-to-case resistance, case-to-ambient, one thermal mass — plus an efficiency curve on the power port. Five or six numbers standing in for a few hundred nodes. The skill is entirely in choosing that structure; nothing about it is laborious once chosen.</p>
+            <p><b>Where the numbers come from.</b> The human picks the structure, an optimizer picks the constants — least squares against traces from the detailed run. That split is what makes "hand-authored" affordable: you supply physical judgment about which effects survive the reduction, not curve-fitting done by hand.</p>
+            <p><b>What the harness measures.</b> Both fidelities run the same scenario under identical boundary conditions with every port recorded, and divergence comes back as numbers — peak error, RMS, and the moment it went worst — instead of two plots someone eyeballs. This is also the first real consumer of the determinism guarantee, since the comparison is only meaningful if both runs are reproducible.</p>
+            <p><b>Excitation is most of the difficulty.</b> A surrogate matched at steady state can be wildly wrong on a transient, so the harness sweeps rather than spot-checks: step response, a frequency chirp, and the duty cycle you actually care about. Nearly every surrogate failure in practice is a model that was only ever checked at DC.</p>
+            <p><b>The envelope falls out of the sweep.</b> This is the part I like most — the region where divergence stays under threshold <i>is</i> the validity envelope from the next question. It stops being a promise someone wrote in a comment and becomes a measured artifact of the fit, re-derived every time either model changes.</p>
+            <p><b>What it costs to build.</b> A scenario runner, a port-trace recorder, and a comparison report. Those same three pieces are what the phenomena above need in order to run as regressions, so this is shared infrastructure rather than a detour — which is most of why I'd start here rather than with the automatic path.</p>
+            <p><b>What unlocks automatic reduction later.</b> Balanced truncation needs a linear state-space, so the precondition is a domain being able to emit its Jacobian around an operating point. Put that in the domain trait now, even unused, and automatic reduction becomes available for the linear subsystems without a redesign.</p>
+          </div>
         </div>
         <div class="q">
           <span class="num">11</span>

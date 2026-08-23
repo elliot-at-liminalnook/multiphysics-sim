@@ -22,6 +22,10 @@
     .stack { display: grid; gap: 20px; }
     .card { padding: 20px 22px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; }
     .card p { margin: 0; font-size: .96rem; color: #625e58; }
+    .card .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+    .tags span { padding: 3px 9px; border-radius: 999px; background: #f0eae0; color: #8a7f70; font-size: .68rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+    .card .proves { margin-top: 10px; }
+    .proves b { color: #423d36; font-weight: 650; }
     .ladder { list-style: none; margin: 28px 0; padding: 0 0 0 26px; border-left: 2px solid #ece6dc; }
     .ladder li { position: relative; margin: 0 0 22px; }
     .ladder li::before { content: ""; position: absolute; left: -32px; top: .45em; width: 9px; height: 9px; border-radius: 50%; background: #d64d36; }
@@ -48,7 +52,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.3</p>
+    <p class="eyebrow">Planning doc — v0.4</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled. Everything below is a proposal, not a decision — select any block with the Redline controls and tell me what to change. We'll iterate on this page until the plan is right, then start building.</p>
 
@@ -183,12 +187,59 @@
     </section>
 
     <section>
+      <h2>Emergence as the acceptance test</h2>
+      <p>The proof that a multi-domain core is rigorous isn't that a pendulum swings. It's that you change one value at one edge of the system and behavior nobody encoded falls out the other end — because the coupling was honest enough to produce it. So the acceptance suite should be a list of documented surprises, each with published numbers to fail against.</p>
+      <p>Every one of these has the same shape: a single parameter at a boundary, a qualitative change in what the whole system does, and a reference measurement from the literature.</p>
+
+      <div class="stack">
+        <div class="card">
+          <p class="tags"><span>mechanical</span></p>
+          <h3>Kapitza's inverted pendulum</h3>
+          <p>Shake the pivot up and down fast enough and the <i>upright</i> position becomes stable. Nudge the bob and it returns to vertical, standing on nothing.</p>
+          <p class="proves"><b>Proves:</b> integrator fidelity and timescale separation. The effect lives entirely in the averaged residual of a fast oscillation, so a step size that's merely adequate erases it completely.</p>
+        </div>
+        <div class="card">
+          <p class="tags"><span>mechanical</span><span>structural</span></p>
+          <h3>Huygens' coupled clocks</h3>
+          <p>Two pendulum clocks on a shared flexible beam settle into exact anti-phase within the hour, whatever their starting positions. The beam moves by micrometers.</p>
+          <p class="proves"><b>Proves:</b> weak coupling survives our connector layer. All the information passes through a tiny amount of momentum exchange — round it away and the synchronization never appears.</p>
+        </div>
+        <div class="card">
+          <p class="tags"><span>electrical</span><span>thermal</span></p>
+          <h3>Current hogging</h3>
+          <p>Two identical devices in parallel should split the load evenly. With a positive temperature coefficient they self-balance; flip that coefficient negative and the marginally hotter one draws more current, heats further, and takes all of it. Same topology, same parts — the sign of one derivative decides whether the board survives.</p>
+          <p class="proves"><b>Proves:</b> the electro-thermal loop closes in both directions — dissipation heats the part, temperature moves resistance — with no special case anywhere.</p>
+        </div>
+        <div class="card">
+          <p class="tags"><span>thermal</span><span>acoustic</span></p>
+          <h3>The Rijke tube</h3>
+          <p>A heated gauze a quarter of the way up an open tube makes it sing. Steady heat in, a loud pure tone out, with no oscillator anywhere in the model. Slide the gauze past the midpoint and it falls silent.</p>
+          <p class="proves"><b>Proves:</b> Rayleigh's criterion emerges rather than being asserted — heat added in phase with the pressure wave feeds the mode. The position dependence makes it sharply falsifiable.</p>
+        </div>
+        <div class="card">
+          <p class="tags"><span>hydraulic</span><span>structural</span></p>
+          <h3>Water hammer</h3>
+          <p>Close a valve in a tenth of a second and pressure spikes to many times what the pump can deliver — routinely enough to split the pipe.</p>
+          <p class="proves"><b>Proves:</b> we're carrying compressibility and a finite wave speed. An incompressible network solve cannot produce this transient at all, and the Joukowsky prediction gives us an exact number to hit.</p>
+        </div>
+        <div class="card">
+          <p class="tags"><span>fluid</span><span>structural</span></p>
+          <h3>Flutter</h3>
+          <p>Below a critical airspeed the structure damps any disturbance. A few metres per second above it, the same structure starts extracting energy from the airflow and shakes itself apart. Nothing changed but one boundary value.</p>
+          <p class="proves"><b>Proves:</b> the system finds a stability boundary we never wrote down — the phase lag that inverts the sign of the damping is a consequence of the coupling, not a term in it.</p>
+        </div>
+      </div>
+
+      <p>Two things follow for the design. Integrators have to be good enough that these effects survive discretization, which argues for energy drift being a first-class diagnostic rather than something you discover later. And every scenario needs a stored reference trace, so a regression shows up as a number rather than as a simulation that looks a bit wrong.</p>
+    </section>
+
+    <section>
       <h2>Open questions</h2>
       <div class="stack">
         <div class="q">
           <span class="num">01</span>
-          <p>Which domain do we build first? The first one shapes the core's API more than any later one.</p>
-          <p class="lean"><b>My lean:</b> rigid-body mechanics — familiar, easy to eyeball for correctness, and it exercises substepping immediately.</p>
+          <p>Which domain do we build first? The first one shapes the core's API more than any later one — and, given the section above, the better question may be which <i>surprise</i> we're chasing first.</p>
+          <p class="lean"><b>My lean:</b> rigid-body mechanics, because Kapitza and Huygens are single-domain and can therefore judge the core before any coupling exists. Then electrical and thermal as the first pair, since current hogging is the cheapest honest test of a two-way loop.</p>
         </div>
         <div class="q">
           <span class="num">02</span>
@@ -245,6 +296,11 @@
           <p>How far do we take error accounting? Per-model error is tractable; composing bounds across a hierarchy of surrogates is a research problem.</p>
           <p class="lean"><b>My lean:</b> measure and surface per-model divergence against the detailed run, and make no claim about end-to-end bounds we can't back up.</p>
         </div>
+        <div class="q">
+          <span class="num">13</span>
+          <p>How hard do we hold the line on conservation? Symplectic integrators keep energy bounded over long runs but constrain what else the domain can do; general-purpose implicit solvers are far more flexible and quietly bleed energy — which is precisely how a Kapitza pendulum falls over for reasons that aren't physics.</p>
+          <p class="lean"><b>My lean:</b> symplectic wherever the domain permits it, and energy drift reported per domain as a standing diagnostic, so when we do bleed we can at least see it happening.</p>
+        </div>
       </div>
     </section>
 
@@ -253,7 +309,7 @@
       <ul class="milestones">
         <li><b>Core skeleton.</b> Cargo workspace, Bevy app, fixed-timestep schedule, the <code>Domain</code> trait and plugin registration.</li>
         <li><b>Connector algebra.</b> Ports, potential/flow semantics, graph → flattened equations → solver, proven on a trivial domain like a resistor network.</li>
-        <li><b>First domain.</b> One real solver end to end, with a scene it can run and a way to watch it.</li>
+        <li><b>First domain.</b> One real solver end to end, with a scene it can run and a way to watch it — done when the Kapitza pendulum stands up on its own.</li>
         <li><b>Second domain.</b> The one that proves the abstraction — deliberately unlike the first, coupled to the first through a bridging component.</li>
         <li><b>Hierarchy.</b> Subsystems as components, one hand-authored surrogate beside its detailed model, and the harness that measures the gap between them.</li>
         <li><b>Live canvas.</b> Build, rewire, and inspect a running model without restarting it. Incremental recompile lands here.</li>

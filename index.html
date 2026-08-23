@@ -64,7 +64,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.14</p>
+    <p class="eyebrow">Planning doc — v0.15</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
@@ -692,36 +692,13 @@ sim-test     scenario runner, reference traces, the phenomena suite</pre>
         </div>
         <div class="card">
           <h3>The test spine exists before it's interesting</h3>
-          <p>Scenario runner, port-trace recorder and comparison report land in the first month, when there's almost nothing worth recording. Retrofitting determinism and reference traces onto a system that grew without them is the standard way this kind of project quietly stops being trustworthy, and the same three pieces are what the surrogate harness and the phenomena suite both run on.</p>
+          <p>Scenario runner, port-trace recorder and comparison report land alongside the first domain, while there's still almost nothing worth recording. Retrofitting determinism and reference traces onto a system that grew without them is the standard way this kind of project quietly stops being trustworthy, and the same three pieces are what the surrogate harness and the phenomena suite both run on.</p>
         </div>
         <div class="card">
           <h3>What we're deliberately not building yet</h3>
           <p>Automatic model-order reduction, Modelica import, the emulator backend, contact, cross-machine determinism, 6-DOF mechanics. Every one of them is a backend or an importer behind an interface we're specifying now — which is the only reason deferring them is a plan rather than a hope.</p>
         </div>
       </div>
-
-      <ul class="ladder">
-        <li>
-          <span class="scale">Week one</span>
-          <b>A schedule that ticks.</b>
-          <p>Cargo workspace, the <code>Domain</code> trait, fixed-timestep schedule, and one hard-coded pendulum integrating headless. No graph, no connectors, no solver. The deliverable is a test that fails when the physics is wrong.</p>
-        </li>
-        <li>
-          <span class="scale">Month one</span>
-          <b>Connectors, on something too simple to hide anything.</b>
-          <p>The full pipeline against a resistor network, checked against an answer computed by hand. Then rotational mechanics on the same machinery, the first visual binding, and Kapitza standing up. Typed quantities and the trace recorder are in from the start, not added afterwards.</p>
-        </li>
-        <li>
-          <span class="scale">Quarter one</span>
-          <b>The second domain, which is the real proof.</b>
-          <p>Electrical and thermal, bridged, with current hogging as the test that the coupling is honest in both directions. Then hierarchy, the first hand-authored surrogate, and the comparison harness with its plots. Still script-driven and mostly headless — the canvas comes after, on purpose, because the API it will drive should be exercised by scripts first.</p>
-        </li>
-        <li>
-          <span class="scale">Year one</span>
-          <b>The thing itself.</b>
-          <p>Live canvas with incremental recompile, the 3D scene, foreign blocks with snapshot and restore, modeled peripherals, and the cold-start motor scenario running end to end against a controller we didn't write.</p>
-        </li>
-      </ul>
 
       <p>Two things would make us stop and rethink rather than push on. If the compile pipeline can't rebuild a mid-sized dirty subgraph inside a frame, incremental recompile is the wrong shape and the live canvas is what gives — we'd fall back to edit-then-restart and say so plainly. And if index reduction on real coupled models proves harder than expected, we restrict the supported class to index-1 and reject the rest with an explanation, rather than shipping a solver that's subtly wrong on the models people most want to build.</p>
     </section>

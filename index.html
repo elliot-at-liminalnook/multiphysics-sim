@@ -50,6 +50,11 @@
     .detail { display: grid; gap: 11px; margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2dbcf; }
     .detail p { margin: 0; font-size: .93rem; line-height: 1.6; color: #6d685f; }
     .detail b { color: #423d36; font-weight: 650; }
+    .decisions { display: grid; grid-template-columns: repeat(auto-fit, minmax(236px, 1fr)); gap: 14px; }
+    .decisions div { position: relative; padding: 16px 18px 16px 40px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; }
+    .decisions div::before { content: "✓"; position: absolute; left: 17px; top: 15px; color: #d64d36; font-size: .88rem; font-weight: 750; }
+    .decisions h3 { margin: 0 0 4px; font-size: .95rem; }
+    .decisions p { margin: 0; font-size: .9rem; line-height: 1.55; color: #6d685f; }
     .milestones { counter-reset: m; list-style: none; padding: 0; }
     .milestones li { position: relative; padding-left: 2.6em; }
     .milestones li::before { counter-increment: m; content: "M" counter(m); position: absolute; left: 0; color: #d64d36; font-size: .78rem; font-weight: 750; letter-spacing: .08em; }
@@ -59,14 +64,14 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.7</p>
+    <p class="eyebrow">Planning doc — v0.8</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
-    <p class="intro">Rust and Bevy are settled. Everything below is a proposal, not a decision — select any block with the Redline controls and tell me what to change. We'll iterate on this page until the plan is right, then start building.</p>
+    <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
     <section>
       <h2>What we're building</h2>
       <p>A simulation core where every physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains never reach into each other; they meet at acausal connectors, ports carrying a potential and a flow, and the solver works out causality from the assembled system. That one rule is what makes multi-domain coupling uniform.</p>
-      <p>The model is data, not code — authored while the simulation runs, from a canvas or a script. A subsystem is anything that honors its ports: a nested graph, a reduced surrogate standing in for a thousand nodes, or a block of WASM running firmware we didn't write. Fidelity is a runtime dial rather than an architectural commitment.</p>
+      <p>The model is data, not code — authored while the simulation runs, from a canvas or a script. A subsystem is anything that honors its ports: a nested graph, a reduced surrogate standing in for a thousand nodes, or firmware we didn't write — as source, as WASM, or as a binary running on an emulated chip. Fidelity is a runtime dial rather than an architectural commitment.</p>
       <p>The bar is emergence. Perturb one edge of a rigorous system and behavior nobody encoded should fall out — a pendulum that stands upright when you shake it, a tube that sings when you heat it — so the acceptance suite is a list of documented surprises, checked by assertions that span domains in a single statement.</p>
       <p>Bevy's ECS is the substrate: entities carry state from any mix of domains, and the plugin system is already the extension point we need. The renderer gives us visualization for free, but the core stays usable headless.</p>
     </section>
@@ -137,12 +142,16 @@
           <p>Cross-domain exchange goes through acausal connectors rather than hand-wired reads and writes — see below. Explicit, inspectable, and the only place where domains touch.</p>
         </div>
         <div class="card">
+          <h3>Black boxes at the boundary</h3>
+          <p>Not every domain flattens into equations — a contact solver or a grid fluid solves internally however it likes, and forcing it through a DAE would be the wrong trade. What such a domain owes the graph is a description of its <i>ports</i> over the step: an effective admittance plus an offset, published before the step, which the global solve treats as that domain's equations. Once the step is accepted it advances its own state to match. When its response is too nonlinear to linearize usefully, it participates iteratively instead — answering port queries and paying for the extra evaluations. Either way it's the same block interface a foreign controller uses, which is why hybrid costs us one mechanism rather than two.</p>
+        </div>
+        <div class="card">
           <h3>Solver scheduling</h3>
           <p>A fixed master timestep with per-domain substepping. Domains that need finer resolution subcycle internally; the coupling layer syncs at master-step boundaries.</p>
         </div>
         <div class="card">
           <h3>Integrators as a library</h3>
-          <p>Semi-implicit Euler, RK4, and friends live in the core as reusable pieces so each domain isn't reinventing time integration.</p>
+          <p>Verlet, implicit midpoint, BDF and friends live in the core as reusable pieces so no domain reinvents time integration — but which one a domain uses is the domain's choice, because the right answer genuinely differs between a pendulum and a thermal mass.</p>
         </div>
       </div>
     </section>
@@ -217,16 +226,36 @@
           <p>Reaches-within, settles-to, stays-below, never-exceeds-for-longer-than. These are statements about a trajectory rather than a final value, and they name signals from any domain in the model. A failure reports the moment it happened and the surrounding trace, not a boolean.</p>
         </div>
         <div class="card">
-          <h3>A controller is just another subsystem</h3>
-          <p>It has ports and it composes like anything else — the only difference is that it's <i>causal</i>. It reads sensor values and writes actuator commands, where the network around it is acausal. Both kinds of block coexist in one graph; the controller simply declares direction on its ports and the solver stops trying to infer it.</p>
+          <h3>Causal blocks in an acausal graph</h3>
+          <p>Worth being precise about, because it sounds like a contradiction and mostly isn't. A controller is causal — it reads sensors and writes commands — while the network around it has no preferred direction. Both live in the same graph, and they're reconciled in one place: the structural analysis that already runs on every recompile.</p>
+          <div class="detail">
+            <p><b>What that analysis does anyway.</b> Flattening the graph produces a pile of equations and a pile of unknowns. <i>Matching</i> decides which equation solves which unknown; <i>tearing</i> splits the result into blocks that can be solved one after another. For an acausal component that's the entire point — it contributes equations with no assigned direction and lets matching choose.</p>
+            <p><b>A causal block just arrives pre-matched.</b> It says: these ports are inputs, these are outputs, the map between them is opaque. Matching honors that rather than deciding it. Nothing about the algorithm changes — a causal block is a constraint on the matching, and constraints on matching are exactly what tearing already exists to handle.</p>
+            <p><b>The one genuinely hard case</b> is direct feedthrough inside a loop: a causal block whose output depends algebraically on its input at the same instant, sitting in a cycle. The solver would have to iterate through it and can't, because it's opaque. So either the block declares its input-output Jacobian, or we refuse to place it in an algebraic loop and say plainly why.</p>
+            <p><b>Sampling makes the common case easy.</b> A controller running at 10 kHz holds its output constant across the step. A held output is a <i>known value</i>, not an unknown — so the controller drops out of the algebraic system entirely and contributes nothing to solve. The realistic case, a sampled digital controller, is also the cheapest one.</p>
+          </div>
         </div>
         <div class="card">
-          <h3>Any language, through WASM</h3>
-          <p>Compile the block to WebAssembly and load it at runtime, and the language it was written in stops mattering. The real prize is running the <i>actual firmware</i> against the simulated plant — hardware-in-the-loop without the hardware, and a control bug that reproduces exactly on someone else's machine.</p>
+          <h3>Three tiers of foreign code</h3>
+          <p>You're right that WASM alone is too narrow. It assumes a recompile you may not be able to do — sometimes all you have is a <code>.bin</code> someone handed you. So the adapter should be a tier, not a technology.</p>
+          <div class="detail">
+            <p><b>Native.</b> A Rust block compiled into the binary. No boundary, no marshalling, full speed. For controllers we write ourselves, and for the reference implementations everything else gets compared against.</p>
+            <p><b>WASM.</b> Anything with a WebAssembly target — Rust, C, C++, TinyGo, increasingly Python. Sandboxed, deterministic, and a snapshot is a copy of one linear memory. The right tier when you have source but not our language.</p>
+            <p><b>Emulated target.</b> When you only have the binary, run the binary. An instruction-set emulator for the actual part — Cortex-M being the obvious first family — executing the unmodified firmware image, with our peripheral models wired to its memory-mapped registers. The firmware reads an ADC register we populate from the simulated analog front end and writes PWM registers that drive the bridge, and it cannot tell the difference.</p>
+            <p><b>What emulation costs.</b> Somewhere between ten and a hundred times slower than a native block, and it ties us to specific chip families, so it isn't the default. But it's the only tier that's honest about interrupt latency, register write timing, and what the compiler actually emitted — and the only one that works at all on a binary blob.</p>
+            <p><b>The interface is the real design.</b> All three tiers implement one block trait, so which tier a subsystem uses is a property of how it was loaded and not something the graph or the solver knows about. Get that trait right and adding the emulator later is a backend, not a redesign.</p>
+          </div>
         </div>
         <div class="card">
           <h3>The re-entrancy problem</h3>
-          <p>This is the part that needs care. An implicit solver evaluates a step several times while searching, and may reject a step and retry it — so a stateful controller called during those probes would advance its integral term four times for one millisecond of simulated time. Foreign blocks therefore need snapshot and restore, committing only on accepted steps. WASM makes that tractable: the entire block state is one linear memory, so a snapshot is a <code>memcpy</code>.</p>
+          <p>The part that needs the most care, and the reason the block interface has the shape it does. A foreign block gets called many more times than there are timesteps, and most of those calls must not be allowed to change anything.</p>
+          <div class="detail">
+            <p><b>Why it gets called repeatedly.</b> Three reasons compound. An implicit step runs Newton iterations, evaluating the system at trial states until it converges — five or ten evaluations for one step is ordinary. A variable-step controller may then decide the step was too large, throw the result away, and redo it at half the size. And event location bisects: to find the instant a comparator trips, the solver re-runs the same interval repeatedly, narrowing.</p>
+            <p><b>The structural fix.</b> Split evaluation from advancement. <code>eval(t, inputs) → outputs</code> is pure and may be called any number of times; <code>advance(h)</code> may mutate and is called exactly once per accepted step. FMI makes the same split for the same reason, and it should be the first trait we write.</p>
+            <p><b>Real firmware won't cooperate.</b> Actual control code mutates on every call — that's what an integral term is. So for anything we didn't write, we snapshot instead: capture before the step, restore before each retry, commit on acceptance. The cost is reassuringly uniform across tiers — a <code>Clone</code> for native, one linear-memory <code>memcpy</code> for WASM, registers plus RAM for the emulator. Tens of kilobytes a few thousand times a second is nothing.</p>
+            <p><b>Side effects need deferring too.</b> A block that logs, traces, or bumps a counter during a rejected step has corrupted its output even though its state was restored. So block-visible I/O is buffered and flushed only when the step commits — which is also part of what makes a run reproducible.</p>
+            <p><b>The machinery pays for itself elsewhere.</b> Once whole-model snapshot exists, canvas undo, rewind-and-replay debugging, and the checkpoint before a structural edit are all the same operation. Worth building properly the first time.</p>
+          </div>
         </div>
         <div class="card">
           <h3>Rate, budget, and sandbox</h3>
@@ -283,55 +312,96 @@
     </section>
 
     <section>
+      <h2>Decided</h2>
+      <p>Settled in review, and treated as fixed unless something forces a revisit.</p>
+      <div class="decisions">
+        <div>
+          <h3>Rigid body first</h3>
+          <p>Kapitza and Huygens can judge the core before any coupling exists. Electrical and thermal follow as the first pair, with current hogging as the test.</p>
+        </div>
+        <div>
+          <h3>Typed quantities everywhere</h3>
+          <p>You were right that not having units bugs <i>is</i> the ergonomics. Newtypes on every physical quantity, with the arithmetic written once so it stays invisible in use.</p>
+        </div>
+        <div>
+          <h3>An interactive sandbox</h3>
+          <p>The product is a canvas where you can watch the whole system at once. The core still runs headless, so batch sweeps and regressions never need a window.</p>
+        </div>
+        <div>
+          <h3>Same-machine repeatability</h3>
+          <p>Reproducible run to run on one machine. Cross-machine bit-determinism isn't a goal, though we won't gratuitously design it out.</p>
+        </div>
+        <div>
+          <h3>Our own solvers, behind traits</h3>
+          <p>Simple implementations first, with integration and constraint solving behind swappable interfaces from day one — so trading ours for Rapier later is a config change, not a rewrite.</p>
+        </div>
+        <div>
+          <h3>Hybrid domains</h3>
+          <p>Not everything is an equation. The connector graph is the contract; how a domain solves inside is its own business. The mechanism is <i>Black boxes at the boundary</i> above.</p>
+        </div>
+        <div>
+          <h3>Native model format</h3>
+          <p>Serialized straight from the graph. A partial Modelica importer only once our own semantics have stopped moving.</p>
+        </div>
+        <div>
+          <h3>Warn on envelope exit</h3>
+          <p>Warn and record by default, auto-escalation opt-in per model. No silent fidelity switches.</p>
+        </div>
+        <div>
+          <h3>Per-model error, honestly</h3>
+          <p>Measure divergence against the detailed run and surface it; claim nothing about composed end-to-end bounds we can't back up.</p>
+        </div>
+        <div>
+          <h3>Declarative assertions</h3>
+          <p>A form the runner can introspect, so a failure can plot the signal it was about. Script escape hatch for the rare thing the form can't say.</p>
+        </div>
+        <div>
+          <h3>Peripherals are modeled, not approximated</h3>
+          <p>You weren't misunderstanding — the ADC, sampling clock and PWM timer are real components with quantization, conversion delay and dead time of their own. Emulating the <i>processor</i> is the separate matter, now question 01.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
       <h2>Open questions</h2>
       <div class="stack">
         <div class="q">
           <span class="num">01</span>
-          <p>Which domain do we build first? The first one shapes the core's API more than any later one — and, given the section above, the better question may be which <i>surprise</i> we're chasing first.</p>
-          <p class="lean"><b>My lean:</b> rigid-body mechanics, because Kapitza and Huygens are single-domain and can therefore judge the core before any coupling exists. Then electrical and thermal as the first pair, since current hogging is the cheapest honest test of a two-way loop.</p>
+          <p>Which foreign-code tiers do we build, and when does emulation earn its cost? The peripherals are settled as modeled components; what's open is the processor. Emulation runs an unmodified binary and gets interrupt latency exactly right, but costs ten to a hundred times native and ties us to chip families. WASM needs a recompile you may not be able to do. Native needs source in our language.</p>
+          <p class="lean"><b>My lean:</b> native and WASM first, since between them they cover everything we write ourselves, with emulation as a third backend behind the same block trait — built the first time a binary-only firmware makes it necessary. Because it's a backend rather than a redesign, that day costs a week instead of a quarter.</p>
+          <div class="detail">
+            <p><b>What to decide now regardless.</b> Which chip family we'd target first, since that's mostly a question of which emulator core we can lean on rather than something we'd write. It also decides which peripheral models get built first, and those are reusable across all three tiers.</p>
+            <p><b>The tiers have to be interchangeable to be useful.</b> The real payoff is running the same firmware at two tiers and diffing: WASM for the fast sweep, emulated for the run that has to be exactly right. That only works if a tier swap doesn't change the block's interface to the graph — which is the same argument as the surrogate harness, applied to code instead of physics.</p>
+          </div>
         </div>
         <div class="q">
           <span class="num">02</span>
-          <p>Which embedded language? Rhai is pure Rust and embeds without ceremony; Lua is faster and everyone already knows it; WASM lets people write components in any language at the cost of a much heavier boundary.</p>
-          <p class="lean"><b>My lean:</b> both, because these are two different jobs. Rhai for authoring — building models, sweeping parameters, writing scenarios — where you want a small language with native Rust types across the boundary. WASM for foreign subsystems that participate in the solve, where sandboxing and snapshot-restore matter more than ergonomics. Trying to make one language do both is what makes this question feel hard.</p>
+          <p>Which integrator do we default to, and how hard do we hold the line on energy conservation? Here's the landscape without the math.</p>
+          <p class="lean"><b>My lean:</b> the choice belongs to the domain, not the simulator — mechanics gets a symplectic method, stiff dissipative domains get BDF, and energy drift is reported per domain as a standing number so a lie is visible rather than inferred.</p>
+          <div class="detail">
+            <p><b>The one-sentence version.</b> Every integrator makes a small error each step. What matters over a long run isn't the size of that error but whether the errors cancel or accumulate — and the three families get that wrong in characteristically different directions.</p>
+            <p><b>Explicit methods</b> (forward Euler, RK4). Take the current state and guess forward. Cheap and simple, and they tend to <i>add</i> energy to anything oscillating — a pendulum swings gradually higher, an orbit spirals outward. RK4 is accurate enough to hide this for a long while, but the drift only ever goes one way. They also fall apart on stiff systems unless the step is punishingly small.</p>
+            <p><b>Implicit methods</b> (backward Euler, BDF). Solve for a state consistent with its own derivative. Much more work per step, but stable at step sizes that would destroy an explicit method — which is what makes stiff systems tractable at all, and non-negotiable anywhere fast and slow dynamics coexist. The price is that they <i>remove</i> energy: a frictionless pendulum quietly winds down. Excellent for finding a steady state, silently wrong for anything meant to oscillate forever.</p>
+            <p><b>Symplectic methods</b> (velocity Verlet, implicit midpoint). Built to preserve the geometric structure of a mechanical system rather than to minimize per-step error. Energy wobbles a little each step but doesn't drift — after a million steps the orbit is still an orbit. The catch is that "structure" means something specific: they apply cleanly to Hamiltonian mechanics, want care around constraints and contact, and don't generalize to an arbitrary DAE.</p>
+            <p><b>Why it isn't just "always symplectic".</b> Stiffness. A board's electrical dynamics and its thermal mass are ten orders of magnitude apart in timescale, and an explicit or Verlet integrator would need a step sized for the fastest thing in the model, forever. Implicit methods eat that happily. So the right answer really is a property of the domain rather than a global setting.</p>
+            <p><b>Which leaves a concrete default.</b> Velocity Verlet for unconstrained mechanics, implicit midpoint when constrained — it's the useful compromise, being both symplectic and stable at large steps. BDF for thermal, fluid, and anything else genuinely dissipative, where energy loss is physics rather than error. And Kapitza is the canary: if the inverted pendulum falls over, an integrator is lying somewhere.</p>
+          </div>
         </div>
         <div class="q">
           <span class="num">03</span>
-          <p>How strict do we get about units and dimensional analysis? Type-level units catch real bugs but cost ergonomics everywhere.</p>
-          <p class="lean"><b>My lean:</b> newtypes over <code>f64</code> for the quantities that cross domain boundaries, plain floats inside a domain.</p>
+          <p>What happens to state when you rewire a running model? You asked for implementation detail before deciding, which is right — this is the feature most likely to quietly corrupt a run rather than fail loudly.</p>
+          <p class="lean"><b>My lean:</b> preserve state for components that survive the edit, re-initialize only the affected subsystem, and offer a pause-on-structural-change toggle. What makes that affordable is a few choices that have to be made early.</p>
+          <div class="detail">
+            <p><b>State lives in components, never in the solver.</b> The load-bearing choice, and one we can only make now. The solver's working arrays — the flattened unknown vector, the Jacobian sparsity, the block ordering — are all <i>derived</i>, rebuilt from component state on every recompile. If the authoritative copy lived in the solver, rewiring would mean surgery on an index-mapped array and it would be hopeless. Because it doesn't, a recompile is just a rebuild from a source of truth that never moved.</p>
+            <p><b>Stable identity, not position.</b> Every component gets a generational id at creation, independent of where it sits in the graph. Edits are named operations against ids — <code>delete(id)</code>, <code>connect(a, b)</code> — rather than a diff between two graph states. After a recompile we therefore know exactly which components survived instead of having to infer it.</p>
+            <p><b>Only the dirty subgraph rebuilds.</b> Mark the edited components, extend that set to anything sharing an algebraic block with them, rebuild those blocks alone. State carries forward by id for everything that survived; initialization runs only on what's new. A component on the far side of the model never notices the edit happened.</p>
+            <p><b>The genuinely hard part is consistent initialization.</b> A DAE can't start from arbitrary values — algebraic variables have to satisfy their constraints at the restart instant, and the new subsystem has to be consistent with the state of everything around it that survived. So there's a small solve at the seam after every structural edit. It usually converges immediately and occasionally doesn't, and that moment is exactly what the pause-on-structural-change toggle is for.</p>
+            <p><b>The edit log is the provenance.</b> Every structural change is an entry: what changed, at what simulation time, and what it was derived from. That log is what marks a surrogate stale when its detailed model is edited, what lets <i>zoom in</i> find the right source, and what makes a whole session reproducible from a starting model plus a list of operations.</p>
+            <p><b>Undo is a snapshot, not an inverse.</b> We already need whole-model snapshot and restore for foreign blocks, so an edit takes a checkpoint first and undo restores rather than trying to invert the operation. That matters because re-initialization isn't invertible — you cannot un-solve a seam.</p>
+          </div>
         </div>
         <div class="q">
           <span class="num">04</span>
-          <p>What's the intended use — an interactive sandbox, a batch solver you script and inspect afterward, or both?</p>
-          <p class="lean"><b>My lean:</b> headless core plus a Bevy app for visualization, so batch runs never depend on a window.</p>
-        </div>
-        <div class="q">
-          <span class="num">05</span>
-          <p>Determinism: do we need bit-reproducible runs across machines, or is run-to-run repeatability on one machine enough?</p>
-          <p class="lean"><b>My lean:</b> same-machine repeatability now, but avoid choices that foreclose full determinism later.</p>
-        </div>
-        <div class="q">
-          <span class="num">06</span>
-          <p>Do we reuse an existing physics crate (Rapier, Avian) for rigid body, or write our own so the coupling model is uniform across domains?</p>
-          <p class="lean"><b>My lean:</b> write our own simple solver first. Learning the domain API matters more early than physical fidelity.</p>
-        </div>
-        <div class="q">
-          <span class="num">07</span>
-          <p>Is every domain equation-based? Rigid-body contact and grid-based fluids don't flatten into a DAE the way a circuit does, so forcing them through one solver may be the wrong trade.</p>
-          <p class="lean"><b>My lean:</b> hybrid. The connector graph is the interface everyone honors, but a domain may solve however it likes internally and only reconcile its port equations at step boundaries.</p>
-        </div>
-        <div class="q">
-          <span class="num">08</span>
-          <p>What happens to state when you rewire a running model? Deleting a component mid-run leaves the solver holding values for equations that no longer exist.</p>
-          <p class="lean"><b>My lean:</b> preserve state for components that survive the edit, re-initialize only the affected subsystem, and offer a pause-on-structural-change toggle for when you want to be careful.</p>
-        </div>
-        <div class="q">
-          <span class="num">09</span>
-          <p>Do we import Modelica models, or define our own format? Compatibility buys an existing component library; a native format buys us years of not implementing a language spec.</p>
-          <p class="lean"><b>My lean:</b> native format, serialized straight from the graph. A partial Modelica importer is worth doing once we know our own semantics, not before.</p>
-        </div>
-        <div class="q">
-          <span class="num">10</span>
           <p>Who produces the reduced models? Automatic order reduction is a deep specialty and only behaves for linear time-invariant subsystems; hand-authored surrogates work everywhere but rely on someone knowing the physics.</p>
           <p class="lean"><b>My lean:</b> hand-authored surrogates plus a validation harness that runs both fidelities and reports divergence. Automatic reduction lands later, for the linear cases where it's actually sound.</p>
           <div class="detail">
@@ -339,35 +409,15 @@
             <p><b>Where the numbers come from.</b> The human picks the structure, an optimizer picks the constants — least squares against traces from the detailed run. That split is what makes "hand-authored" affordable: you supply physical judgment about which effects survive the reduction, not curve-fitting done by hand.</p>
             <p><b>What the harness measures.</b> Both fidelities run the same scenario under identical boundary conditions with every port recorded, and divergence comes back as numbers — peak error, RMS, and the moment it went worst — instead of two plots someone eyeballs. This is also the first real consumer of the determinism guarantee, since the comparison is only meaningful if both runs are reproducible.</p>
             <p><b>Excitation is most of the difficulty.</b> A surrogate matched at steady state can be wildly wrong on a transient, so the harness sweeps rather than spot-checks: step response, a frequency chirp, and the duty cycle you actually care about. Nearly every surrogate failure in practice is a model that was only ever checked at DC. The most realistic excitation available is the real one — drive the subsystem with its actual controller, as above, and compare fidelities under the load it will actually see.</p>
-            <p><b>The envelope falls out of the sweep.</b> This is the part I like most — the region where divergence stays under threshold <i>is</i> the validity envelope from the next question. It stops being a promise someone wrote in a comment and becomes a measured artifact of the fit, re-derived every time either model changes.</p>
+            <p><b>The envelope falls out of the sweep.</b> This is the part I like most — the region where divergence stays under threshold <i>is</i> the validity envelope we settled on above. It stops being a promise someone wrote in a comment and becomes a measured artifact of the fit, re-derived every time either model changes.</p>
             <p><b>What it costs to build.</b> A scenario runner, a port-trace recorder, and a comparison report. Those same three pieces are what the phenomena above need in order to run as regressions, so this is shared infrastructure rather than a detour — which is most of why I'd start here rather than with the automatic path.</p>
             <p><b>What unlocks automatic reduction later.</b> Balanced truncation needs a linear state-space, so the precondition is a domain being able to emit its Jacobian around an operating point. Put that in the domain trait now, even unused, and automatic reduction becomes available for the linear subsystems without a redesign.</p>
           </div>
         </div>
         <div class="q">
-          <span class="num">11</span>
-          <p>What happens when a model leaves its validity envelope mid-run — warn and keep going, clamp, or automatically escalate to the detailed model? Escalation means re-initializing state and changing the timestep underneath a running solve.</p>
-          <p class="lean"><b>My lean:</b> warn and record by default, with auto-escalation opt-in per model. Silent fidelity switches are how you stop trusting a simulator.</p>
-        </div>
-        <div class="q">
-          <span class="num">12</span>
-          <p>How far do we take error accounting? Per-model error is tractable; composing bounds across a hierarchy of surrogates is a research problem.</p>
-          <p class="lean"><b>My lean:</b> measure and surface per-model divergence against the detailed run, and make no claim about end-to-end bounds we can't back up.</p>
-        </div>
-        <div class="q">
-          <span class="num">13</span>
-          <p>How hard do we hold the line on conservation? Symplectic integrators keep energy bounded over long runs but constrain what else the domain can do; general-purpose implicit solvers are far more flexible and quietly bleed energy — which is precisely how a Kapitza pendulum falls over for reasons that aren't physics.</p>
-          <p class="lean"><b>My lean:</b> symplectic wherever the domain permits it, and energy drift reported per domain as a standing diagnostic, so when we do bleed we can at least see it happening.</p>
-        </div>
-        <div class="q">
-          <span class="num">14</span>
-          <p>Are assertions a small declarative form, or just code in the scripting language? Code is obviously more expressive, and obviously worse at explaining itself.</p>
-          <p class="lean"><b>My lean:</b> a declarative form. An assertion the runner can introspect can plot the signal it was about, mark the moment it broke, and say which term of a settling criterion failed. An arbitrary predicate can only return false. Escape hatch to a script for the rare thing the form can't say.</p>
-        </div>
-        <div class="q">
-          <span class="num">15</span>
-          <p>How real does a foreign controller's view of the world get? Real firmware reads a quantized ADC on a sampling clock, drives PWM with dead time, and responds to interrupts that arrive late.</p>
-          <p class="lean"><b>My lean:</b> model the peripheral boundary — sample rate, quantization, conversion delay, PWM granularity — because that is exactly where control bugs live, and skipping it makes the whole exercise decorative. Emulating the instruction set is a different project.</p>
+          <span class="num">05</span>
+          <p>Which embedded language for <i>authoring</i> — building models, sweeping parameters, writing scenarios? Rhai is pure Rust and embeds without ceremony; Lua is faster and everyone already knows it.</p>
+          <p class="lean"><b>My lean:</b> Rhai, because the authoring API passes native Rust types across the boundary with no marshalling layer to maintain, and authoring scripts are not where we need speed. Worth noting this is now a separate question from foreign subsystems, which is question 01 — trying to make one language do both jobs is most of what made it feel hard.</p>
         </div>
       </div>
     </section>
@@ -382,7 +432,7 @@
         <li><b>Hierarchy.</b> Subsystems as components, one hand-authored surrogate beside its detailed model, and the harness that measures the gap between them.</li>
         <li><b>Live canvas.</b> Build, rewire, and inspect a running model without restarting it. Incremental recompile lands here.</li>
         <li><b>Scripting.</b> Embedded language over the same graph API, plus scenario files with whole-system assertions and enough diagnostics to trust the numbers.</li>
-        <li><b>Foreign subsystems.</b> WASM blocks with snapshot and restore, peripheral-boundary modeling, and the motor scenario running end to end against a controller we didn't write.</li>
+        <li><b>Foreign subsystems.</b> Native and WASM blocks behind one trait, with snapshot and restore, modeled peripherals, and the motor scenario running end to end against a controller we didn't write. An emulated-target backend the first time a binary-only firmware demands one.</li>
       </ul>
     </section>
 

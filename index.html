@@ -64,7 +64,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.12</p>
+    <p class="eyebrow">Planning doc — v0.13</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
@@ -339,7 +339,7 @@
       <h2>Fluids, and a million particles</h2>
       <p>Everything up to here quietly assumes the world is made of parts. A motor, a shaft, a gear: each one is a thing with a name, a handful of numbers describing what it's currently doing, and two ends you can attach something to. That assumption is the entire reason the connector graph works — you can only wire up boxes if there are boxes.</p>
       <p>Water in a pipe is not like that. It has a different pressure and a different velocity at every point along the pipe, and there's no natural place to draw the boundary of a "part". Sand pouring through a hopper is worse: a million grains that only mean anything as a crowd. Neither one has two ends in any obvious sense, and neither can be summarized by three numbers without throwing something away.</p>
-      <p>So this needs a real answer rather than a hand-wave, and the answer has two halves. The useful thing to know first is that <b>the question decides which half you need</b>, and most questions need the easy one.</p>
+      <p>So this needs a real answer rather than a hand-wave, and the answer is a ladder rather than a switch — three rungs, and the same components at every one of them. The useful thing to know first is that <b>the question decides which rung you need</b>, and most questions are answered from the bottom.</p>
       <p>An analogy that does most of the work. If you want to know how long a delivery takes across a city, you model the road network: each road has a capacity and a travel time, and you never simulate a single car. If you want to know why one particular junction jams, you have to simulate the cars. Same city, two completely different models, and choosing the wrong one is either wasted months or a wrong answer. Fluid is exactly this, and the overwhelming majority of engineering questions are road-network questions.</p>
 
       <div class="diagram" role="img" aria-label="A pump and a tank connected through a box containing a swirling fluid simulation; the box exposes only two ports, each carrying a pressure and a mass flow.">
@@ -373,8 +373,19 @@
           <div class="detail">
             <p><b>It really is the same as a circuit.</b> A narrow pipe resists flow the way a resistor resists current. A tank stores fluid the way a capacitor stores charge. A long slug of moving water has inertia and doesn't want to stop, the way an inductor doesn't want to stop carrying current. This isn't a teaching analogy that falls apart when you push it — the equations are the same equations, which is exactly why the same solver handles both without knowing which is which.</p>
             <p><b>"But a pressure wave travels along the pipe."</b> Right, and that seems like it needs a field. It doesn't. Chop the pipe into a hundred short pipes in a row, each one still a dumb little component with two ports. A disturbance at one end now has to pass through all hundred to reach the other, so it arrives <i>late</i>, and it arrives changed. Wave behaviour falls out of a chain of simple parts. That's all water hammer needs, and it's how the Rijke tube gets a note out of a heated gauze.</p>
-            <p><b>What you get and what you don't.</b> You get pressure and flow everywhere along the pipe, transients, resonances, pumps fighting each other, a valve slamming shut. You do not get the swirl behind the valve, or where a hot spot forms on a wall, or how the sand piles up. If you didn't need those, you've lost nothing at all — and you got an answer in milliseconds instead of hours.</p>
+            <p><b>What you get and what you don't.</b> You get pressure and flow everywhere along the pipe, transients, resonances, pumps fighting each other, a valve slamming shut. What a handful of components can't give you is anything whose answer depends on the shape of the flow itself — the swirl behind the valve, how the sand piles up. If you didn't need that, you've lost nothing at all, and you got an answer in milliseconds instead of hours. Where a hot spot lands on a wall is the more interesting case, because it sits between the two rungs — next card.</p>
             <p><b>This tier is not special.</b> It's a domain plugin like electrical or thermal, built the same way and coupled the same way. None of the complications in the rest of this section apply to it — everything below is about the other half.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Tier one and a half — a wall made of five hundred parts</h3>
+          <p>Straight answer to the question this raises: yes, you can find the hot spot, and usually without leaving tier one at all. Chop the wall into five hundred little thermal masses, wire each to its neighbours with a conduction component, and wire the ones facing the flow to the fluid nodes beside them. Five hundred ordinary components, the same ports, the same solver, no field code anywhere. The hot spot is then just the patch with the highest temperature.</p>
+          <div class="detail">
+            <p><b>It's the same trick as the pipe, in two dimensions.</b> A hundred pipe segments in a row gave you a travelling pressure wave; five hundred thermal masses in a grid give you a temperature field. "Distributed" isn't a different kind of physics — it's the same primitive repeated with its neighbours wired up. And because they're ordinary components, everything else on this page still works on them: surrogates, validity envelopes, cross-domain assertions, live values on the canvas, <code>expect wall.hotspot stays below 110 °C</code> as a scenario line.</p>
+            <p><b>What that demands of the core, and this is the real answer to "are we powerful enough".</b> Two things, both cheap now and expensive to retrofit. First, a component must be able to declare an <i>array</i> of ports whose length is a parameter — the wall exposes five hundred thermal ports, not one — and connections have to be expressible in bulk rather than clicked one at a time. Second, the flattener has to accept a component whose equation count depends on a parameter. Neither one touches the connector rule: potentials match and flows cancel patch by patch, exactly as before. That's the commitment worth making now, and it's the distributed-physics equivalent of designing the <code>Frame</code> connector kind before there's a 3D domain to use it.</p>
+            <p><b>One consequence to know about.</b> Changing the mesh count is a structural edit rather than a parameter tweak — it changes how many equations exist, so it triggers a recompile and a re-initialization at the seam. That's already built for, but it means resolution is a dial that pauses rather than one you scrub while watching.</p>
+            <p><b>Where it runs out, and why there's no cliff.</b> Five hundred nodes is comfortable. Fifty thousand is where our own solver stops being the right tool, and at that point the wall becomes a domain that solves itself internally and exposes a boundary — which is tier two. The important part is that it's the same wall with the same ports at every rung: one component, five hundred components, or one component with a specialist inside. Nothing above it has to be rewritten when it moves, which is the fidelity ladder from <i>Detail on demand</i> applied to a continuum.</p>
+            <p><b>The honest caveat.</b> A hot spot is only as good as the heat arriving at it, and a 1D fluid network hands you a bulk temperature and a textbook heat-transfer coefficient, not a resolved boundary layer. That's genuinely adequate for a cold plate or a heatsink and genuinely not for a recirculation zone behind an obstacle, where the flow's own structure is what puts the hot spot where it is. When that's the question, both sides have to go to tier two — and the harness measures the gap between the two answers rather than us asserting one is fine.</p>
           </div>
         </div>
         <div class="card">
@@ -420,7 +431,7 @@
         </div>
       </div>
 
-      <p>Where this lands in the plan: tier one is an ordinary domain plugin and could reasonably be the second or third one built, since water hammer is already on the acceptance list. Tier two is deliberately much later. What we owe it <i>now</i> is nothing extra — the two-function block interface it needs is the same one being built for foreign firmware, and the requirement is only that we don't accidentally design it so that a component must expose its internals to be part of the graph.</p>
+      <p>Where this lands in the plan: tier one is an ordinary domain plugin and could reasonably be the second or third one built, since water hammer is already on the acceptance list. Tier two is deliberately much later. What we owe them <i>now</i> is small but not nothing — port arrays with parameter-dependent length, so a distributed model is expressible at all, and a block interface that never requires a component to expose its internals to be part of the graph. The second of those is the same two-function interface being built for foreign firmware, so it costs us once.</p>
     </section>
 
     <section>
@@ -668,7 +679,7 @@ sim-test     scenario runner, reference traces, the phenomena suite</pre>
       <div class="stack">
         <div class="card">
           <h3>Five interfaces, and everything else is negotiable</h3>
-          <p><code>ConnectorKind</code> — the potential/flow pair and its units. <code>Component</code> — parameters, state, ports, and its contribution to the residual. <code>Domain</code> — registration, plus the Jacobian-at-operating-point hook that automatic reduction will need later. <code>Block</code> — <code>eval</code> and <code>advance</code>, the tier-agnostic foreign-code seam. <code>Integrator</code> — step and error estimate. Getting these five wrong is what a redesign costs; getting anything else wrong costs an afternoon.</p>
+          <p><code>ConnectorKind</code> — the potential/flow pair and its units. <code>Component</code> — parameters, state, ports, and its contribution to the residual, with port declarations allowed to be arrays whose length is a parameter, which is the whole of what distributed models need from the core. <code>Domain</code> — registration, plus the Jacobian-at-operating-point hook that automatic reduction will need later. <code>Block</code> — <code>eval</code> and <code>advance</code>, the tier-agnostic foreign-code seam. <code>Integrator</code> — step and error estimate. Getting these five wrong is what a redesign costs; getting anything else wrong costs an afternoon.</p>
         </div>
         <div class="card">
           <h3>The compile pipeline is a pure function</h3>

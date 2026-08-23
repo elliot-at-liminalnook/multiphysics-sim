@@ -64,7 +64,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.8</p>
+    <p class="eyebrow">Planning doc — v0.9</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
@@ -73,7 +73,7 @@
       <p>A simulation core where every physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains never reach into each other; they meet at acausal connectors, ports carrying a potential and a flow, and the solver works out causality from the assembled system. That one rule is what makes multi-domain coupling uniform.</p>
       <p>The model is data, not code — authored while the simulation runs, from a canvas or a script. A subsystem is anything that honors its ports: a nested graph, a reduced surrogate standing in for a thousand nodes, or firmware we didn't write — as source, as WASM, or as a binary running on an emulated chip. Fidelity is a runtime dial rather than an architectural commitment.</p>
       <p>The bar is emergence. Perturb one edge of a rigorous system and behavior nobody encoded should fall out — a pendulum that stands upright when you shake it, a tube that sings when you heat it — so the acceptance suite is a list of documented surprises, checked by assertions that span domains in a single statement.</p>
-      <p>Bevy's ECS is the substrate: entities carry state from any mix of domains, and the plugin system is already the extension point we need. The renderer gives us visualization for free, but the core stays usable headless.</p>
+      <p>Bevy's ECS is the substrate: entities carry state from any mix of domains, and the plugin system is already the extension point we need. The renderer gives us visualization for free, but the core stays usable headless — and the scene is strictly a <i>view</i> of state, never an input to it. That one-way rule is what lets a gear you can watch turn be the same object as five equations; the mechanism is <i>A motor that spins a gear you can see</i> below.</p>
     </section>
 
     <section>
@@ -157,6 +157,65 @@
     </section>
 
     <section>
+      <h2>What a step actually is</h2>
+      <p>Worth laying out plainly, because the rest of this document leans on it and none of it explains itself. A physics model does not tell you the future. It tells you <i>rates</i>. Newton gives you an acceleration, not a position. A thermal mass gives you a rate of temperature change, not a temperature. A capacitor tells you how fast its voltage is moving. Wire a hundred such components together and you still have nothing but a very well-informed description of the present instant.</p>
+      <p>The integrator is the piece that turns rates into futures, and it is the only reason a simulation moves at all. Everything else on this page — connectors, domain plugins, foreign blocks, index reduction — exists to assemble one honest statement of how fast everything is changing right now. The integrator is what consumes that statement and takes a step. Strip the vocabulary away and the whole simulator is this loop:</p>
+
+      <div class="snippet">
+<pre><span class="k">loop</span> {                                  // one master timestep
+  ẋ, g = assemble(model, x, t)          // rates from every domain, plus connector constraints
+  x′   = integrator.step(x, ẋ, g, h)    // the only line that moves time
+  <span class="k">if</span> error(x′) &gt; tol { h = h / 2; <span class="k">continue</span> }
+  advance_blocks(h); commit(x′); t += h
+}</pre>
+      </div>
+
+      <p><code>x</code> is the state of everything — every angle, velocity, voltage, temperature. <code>assemble</code> is the compiled model. <code>step</code> is the integrator. That's the entire simulator, and every hard problem on this page is a detail of one of those three names.</p>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Why it isn't just rate × time</h3>
+          <p>It can be — that's forward Euler, a real integrator and the worst one. The trouble is that the rate itself changes <i>during</i> the step, so multiplying the rate at the start by the whole interval is wrong by however much the rate moved in between. Every integrator is a different strategy for guessing what happened inside the step: sample the rate at several points and average them cleverly, solve for a rate that's consistent with where you land, or use a formula chosen to preserve something you care about rather than to minimize the error.</p>
+        </div>
+        <div class="card">
+          <h3>Step size is the whole economy</h3>
+          <p>Halve the step and you double the cost and cut the error by rather more than half. A simulation is that trade made a few thousand times a second. Adaptive stepping automates it — take a step, estimate how wrong it was, accept it or throw it away and retry smaller. This is also precisely why the foreign-block interface splits <code>eval</code> from <code>advance</code>: the solver <i>speculates</i>, and most of what it computes never happened.</p>
+        </div>
+        <div class="card">
+          <h3>Our models are DAEs, not ODEs</h3>
+          <p>A connector doesn't contribute a rate. "Potentials are equal" and "flows sum to zero" are algebraic truths with no derivative in them at all. Mixing those with rate equations gives a differential-algebraic system, which is why the compile pipeline has an index-reduction stage — some constraints have to be differentiated before an integrator can touch them. The practical consequence shows up twice on this page: state can't be set arbitrarily, it has to satisfy the constraints at <code>t = 0</code> and again at the seam after every structural edit.</p>
+        </div>
+        <div class="card">
+          <h3>Stiffness is why there's more than one answer</h3>
+          <p>A model is stiff when its fastest behavior and its slowest behavior are far apart in timescale — a switching transient measured in nanoseconds sitting next to a heatsink that takes minutes. The fast thing is usually uninteresting and has long since died away, but an explicit integrator still has to take steps sized for it or it goes unstable. Not inaccurate: unstable, numbers to infinity in a few dozen steps. Implicit methods don't care. That single fact is what splits the integrator families apart.</p>
+        </div>
+        <div class="card">
+          <h3>What conservation has to do with any of it</h3>
+          <p>An integrator that quietly leaks energy is indistinguishable, from inside the model, from friction we forgot to write down. That's tolerable for a heat-transfer study and fatal for this project, because the acceptance phenomena live in exactly that residue — Kapitza's stability is a small averaged effect, Huygens' synchronization passes through micrometres of beam motion. So energy drift is a reported per-domain number rather than something discovered later.</p>
+        </div>
+      </div>
+
+      <p>Which brings us to the three families, and the reason the choice was settled per domain rather than globally.</p>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Explicit</h3>
+          <p>Forward Euler, RK4. Take the current state and guess forward. Cheap, simple, and they tend to <i>add</i> energy to anything oscillating — a pendulum swings gradually higher, an orbit spirals outward. RK4 is accurate enough to hide this for a long while, but the drift only ever goes one way. They also fall apart on stiff systems unless the step is punishingly small.</p>
+        </div>
+        <div class="card">
+          <h3>Implicit</h3>
+          <p>Backward Euler, BDF. Solve for a state consistent with its own derivative — which means a Newton iteration and a Jacobian inside every step. Much more work per step, but stable at step sizes that would destroy an explicit method, and that's what makes stiff systems tractable at all. The price is that they <i>remove</i> energy: a frictionless pendulum quietly winds down. Excellent for finding a steady state, silently wrong for anything meant to oscillate forever.</p>
+        </div>
+        <div class="card">
+          <h3>Symplectic</h3>
+          <p>Velocity Verlet, implicit midpoint. Built to preserve the geometric structure of a mechanical system rather than to minimize per-step error. Energy wobbles a little each step but doesn't drift — after a million steps the orbit is still an orbit. The catch is that "structure" means something specific: they apply cleanly to Hamiltonian mechanics, want care around constraints and contact, and don't generalize to an arbitrary DAE.</p>
+        </div>
+      </div>
+
+      <p>So there's no global winner. Velocity Verlet for unconstrained mechanics, implicit midpoint when constrained — the useful compromise, being both symplectic and stable at large steps. BDF for thermal, fluid, and anything genuinely dissipative, where energy loss is physics rather than error. Integrators therefore live in the core as a library while the choice belongs to the domain, and Kapitza is the canary: if the inverted pendulum falls over, an integrator is lying somewhere.</p>
+    </section>
+
+    <section>
       <h2>Modelica, but you can see it</h2>
       <p>The idea Modelica gets right is the <b>acausal connector</b>. A component declares ports; each port carries a <i>potential</i> variable and a <i>flow</i> variable. Wiring two ports together asserts two equations — potentials are equal, flows sum to zero — and nothing else. You never decide which side is input and which is output; the solver works that out from the assembled system.</p>
 
@@ -198,9 +257,81 @@
         </div>
         <div class="card">
           <h3>Scripting for what graphs are bad at</h3>
-          <p>An embedded language covers the cases a canvas handles poorly — parameter sweeps, procedurally generated topologies, controllers, and test scenarios. Same API surface the editor uses: <code>spawn</code>, <code>connect</code>, <code>set_param</code>, <code>step</code>. Scripts can also define new component equations at runtime, which is how a user adds physics we never shipped.</p>
+          <p>An embedded language — Rhai, settled below — covers the cases a canvas handles poorly: parameter sweeps, procedurally generated topologies, controllers, and test scenarios. Same API surface the editor uses: <code>spawn</code>, <code>connect</code>, <code>set_param</code>, <code>step</code>. Scripts can also define new component equations at runtime, which is how a user adds physics we never shipped.</p>
+        </div>
+        <div class="card">
+          <h3>Editing a running model without corrupting it</h3>
+          <p>Settled: state is preserved for components that survive the edit, only the affected subsystem re-initializes, and a pause-on-structural-change toggle exists for when that goes badly. This is the feature most likely to quietly corrupt a run rather than fail loudly, so it's worth being explicit about what makes it affordable — and most of it has to be decided now, not later.</p>
+          <div class="detail">
+            <p><b>State lives in components, never in the solver.</b> The load-bearing choice. The solver's working arrays — the flattened unknown vector, the Jacobian sparsity, the block ordering — are all <i>derived</i>, rebuilt from component state on every recompile. If the authoritative copy lived in the solver, rewiring would mean surgery on an index-mapped array and it would be hopeless. Because it doesn't, a recompile is just a rebuild from a source of truth that never moved.</p>
+            <p><b>Stable identity, not position.</b> Every component gets a generational id at creation, independent of where it sits in the graph. Edits are named operations against ids — <code>delete(id)</code>, <code>connect(a, b)</code> — rather than a diff between two graph states. After a recompile we therefore know exactly which components survived instead of having to infer it.</p>
+            <p><b>Only the dirty subgraph rebuilds.</b> Mark the edited components, extend that set to anything sharing an algebraic block with them, rebuild those blocks alone. State carries forward by id for everything that survived; initialization runs only on what's new. A component on the far side of the model never notices the edit happened.</p>
+            <p><b>The genuinely hard part is consistent initialization.</b> A DAE can't start from arbitrary values — algebraic variables have to satisfy their constraints at the restart instant, and the new subsystem has to be consistent with the state of everything around it that survived. So there's a small solve at the seam after every structural edit. It usually converges immediately and occasionally doesn't, and that moment is exactly what the pause toggle is for.</p>
+            <p><b>The edit log is the provenance.</b> Every structural change is an entry: what changed, at what simulation time, and what it was derived from. That log is what marks a surrogate stale when its detailed model is edited, what lets <i>zoom in</i> find the right source, and what makes a whole session reproducible from a starting model plus a list of operations.</p>
+            <p><b>Undo is a snapshot, not an inverse.</b> We already need whole-model snapshot and restore for foreign blocks, so an edit takes a checkpoint first and undo restores rather than trying to invert the operation. That matters because re-initialization isn't invertible — you cannot un-solve a seam.</p>
+          </div>
         </div>
       </div>
+    </section>
+
+    <section>
+      <h2>A motor that spins a gear you can see</h2>
+      <p>This is the reconciliation the whole thing lives or dies on, and it deserves a straight answer. A connector graph is a diagram. A motor driving a gearbox driving a load is five components and about nine equations, and not one of them mentions a shape, a position, or a direction in space. But the thing anyone actually wants on screen is a gear turning — and turning at the <i>right</i> speed, slowing when the load bites, stopping when the supply browns out.</p>
+      <p>The trap is to let those two pictures become two models. Once the renderer owns a transform that the physics also owns, they drift, and every bug afterwards is an argument about which one was right. So the answer is three layers with a strict rule about which way information flows: <b>state is the only truth, and the scene reads from it and never writes back.</b></p>
+
+      <div class="diagram" role="img" aria-label="A motor, gearbox and inertia joined by rotational flanges, with dashed arrows projecting each one down into a 3D scene whose transforms are functions of the shaft angle.">
+        <svg viewBox="0 0 620 196" xmlns="http://www.w3.org/2000/svg">
+          <rect x="24" y="30" width="130" height="54" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
+          <text x="89" y="62" text-anchor="middle" fill="#4b4740" font-size="13.5" font-family="Inter, sans-serif">Motor</text>
+          <rect x="245" y="30" width="130" height="54" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
+          <text x="310" y="62" text-anchor="middle" fill="#4b4740" font-size="13.5" font-family="Inter, sans-serif">Gearbox n:1</text>
+          <rect x="466" y="30" width="130" height="54" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
+          <text x="531" y="62" text-anchor="middle" fill="#4b4740" font-size="13.5" font-family="Inter, sans-serif">Gear + load</text>
+          <line x1="154" y1="57" x2="245" y2="57" stroke="#d64d36" stroke-width="2"/>
+          <line x1="375" y1="57" x2="466" y2="57" stroke="#d64d36" stroke-width="2"/>
+          <circle cx="199" cy="57" r="6" fill="#d64d36"/>
+          <circle cx="420" cy="57" r="6" fill="#d64d36"/>
+          <text x="199" y="21" text-anchor="middle" fill="#8a857c" font-size="12" font-family="Inter, sans-serif">φ · τ</text>
+          <text x="420" y="21" text-anchor="middle" fill="#8a857c" font-size="12" font-family="Inter, sans-serif">φ · τ</text>
+          <g stroke="#c9c2b6" stroke-width="1.5" stroke-dasharray="4 4">
+            <line x1="89" y1="84" x2="89" y2="128"/>
+            <line x1="310" y1="84" x2="310" y2="128"/>
+            <line x1="531" y1="84" x2="531" y2="128"/>
+          </g>
+          <rect x="24" y="132" width="572" height="46" rx="10" fill="#fffdf9" stroke="#ddd7cd" stroke-dasharray="5 4"/>
+          <text x="310" y="160" text-anchor="middle" fill="#8a857c" font-size="12.5" font-family="Inter, sans-serif">3D scene — every visual's transform is a pure function of state, evaluated after the step</text>
+        </svg>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Drivetrains are one-dimensional, and that's not a compromise</h3>
+          <p>A rotational port carries shaft angle as its potential and torque as its flow — the mechanical row of the table above, integrated once. Motor, shaft, gearbox, inertia, load: one or two equations each. A gear ratio is <code>φ₁ = n·φ₂</code> and <code>τ₂ = −n·τ₁</code>. Two lines, exact, free, and correct under any load. Almost everything people mean by "a machine" lives here, and none of it wants six degrees of freedom per part. The gear you're watching spin has exactly one state variable behind it.</p>
+        </div>
+        <div class="card">
+          <h3>The scene is a projection of state</h3>
+          <p>Every component may declare a <i>visual</i>: a mesh, a fixed local offset, and a binding from state to transform. For the gear that binding is "rotate about the mount axis by φ". The renderer walks those bindings once per frame, after the step, and writes transforms. Nothing in the physics ever reads a transform back. Bevy makes this nearly free — the same entity carries the rotational state component and the <code>Transform</code>, and the binding is one ordinary system in the render schedule.</p>
+          <p class="proves"><b>Consequence:</b> the visual can be wrong without the simulation being wrong, which is the right failure mode. Get the mesh offset backwards and you see a gear in the wrong place, not a machine with different physics.</p>
+        </div>
+        <div class="card">
+          <h3>Mounts are where 1D meets 3D</h3>
+          <p>The bridging component, and the piece people forget. A mount has a 1D flange on one side and a 3D frame on the other, plus an axis: it applies the flange torque to the body about that axis and reports the relative rotation back. What earns its keep is the <i>reaction</i> — torque into the rotor is torque out of the housing, so a motor bolted to a chassis shakes the chassis, and a gearbox reacts against its case. Structurally it is the same trick as the pump and the resistor: one component holding one port of each kind, and no special case anywhere in the core.</p>
+        </div>
+        <div class="card">
+          <h3>Full 3D is just another connector kind</h3>
+          <p>When geometry genuinely <i>is</i> the physics — a linkage, a pendulum swinging free in space, anything whose inertia depends on its configuration — the connector's potential is a spatial velocity and its flow is a wrench, force and torque carried together. Bodies and joints constrain frames the way resistors constrain electrical nodes. That's a new connector kind and a domain plugin, not a new mechanism, which is the entire reason the acausal rule was worth paying for.</p>
+        </div>
+        <div class="card">
+          <h3>Geometry parameterizes; it doesn't derive</h3>
+          <p>Mass and inertia come from the shape you declared, and the teeth are drawn from the ratio rather than the ratio being inferred from the teeth. We will not read physics out of a mesh. The one honest exception is contact, which really does need geometry — and that's precisely why contact is a <i>black box at the boundary</i> publishing port linearizations rather than an equation set in the graph.</p>
+        </div>
+        <div class="card">
+          <h3>One graph, two views</h3>
+          <p>Clicking the gear in the 3D scene selects the same component the canvas node selects. Hovering a wire highlights the shaft it represents; the inspector shows φ, τ, and the flattened equations for either. Because both are views over one graph rather than two synchronized documents, "watch the gear spin" and "read the residuals" are the same act of selection.</p>
+        </div>
+      </div>
+
+      <p>What all of that costs is small and worth committing to now: a <code>Visual</code> binding type, a <code>Frame</code> connector kind, and the mount component. Design the frame kind now and implement only the 1D half, and the full 3D mechanical domain arrives later as a plugin instead of a rewrite — the same argument as the emulator backend, made about geometry.</p>
     </section>
 
     <section>
@@ -243,7 +374,10 @@
             <p><b>WASM.</b> Anything with a WebAssembly target — Rust, C, C++, TinyGo, increasingly Python. Sandboxed, deterministic, and a snapshot is a copy of one linear memory. The right tier when you have source but not our language.</p>
             <p><b>Emulated target.</b> When you only have the binary, run the binary. An instruction-set emulator for the actual part — Cortex-M being the obvious first family — executing the unmodified firmware image, with our peripheral models wired to its memory-mapped registers. The firmware reads an ADC register we populate from the simulated analog front end and writes PWM registers that drive the bridge, and it cannot tell the difference.</p>
             <p><b>What emulation costs.</b> Somewhere between ten and a hundred times slower than a native block, and it ties us to specific chip families, so it isn't the default. But it's the only tier that's honest about interrupt latency, register write timing, and what the compiler actually emitted — and the only one that works at all on a binary blob.</p>
-            <p><b>The interface is the real design.</b> All three tiers implement one block trait, so which tier a subsystem uses is a property of how it was loaded and not something the graph or the solver knows about. Get that trait right and adding the emulator later is a backend, not a redesign.</p>
+            <p><b>The interface is the real design.</b> All three tiers implement one block trait, so which tier a subsystem uses is a property of how it was loaded and not something the graph or the solver knows about. Get that trait right and adding the emulator later is a backend, not a redesign. Settled below: native and WASM get built, emulation is the third backend behind the same trait, built the first time a binary-only firmware makes it necessary.</p>
+            <p><b>Which chip, then.</b> The joke lands closer than it should, because two chips are involved and both matter. <i>This</i> machine is the target of the native tier — compile the same firmware source for the desktop, run it in-process at full speed, and treat it as the reference the other tiers are diffed against. That's the tier most debugging will actually happen in, and it costs us nothing but a cargo target. The <i>emulated</i> tier targets ARM Cortex-M, which is a different animal from anything in a laptop: M-profile, Thumb-2 only, no MMU, peripherals bolted straight onto the address map. Even on an ARM desktop you can't just execute it — different profile, different encoding, nothing to reuse but the vendor's name. Which is fine; that's what an interpreter is for, and Cortex-M is the family with the best existing cores to lean on.</p>
+            <p><b>What picking the family decides today.</b> Almost nothing about the emulator and everything about the peripherals, which are the part we build first: an ADC with real quantization and conversion delay, an advanced-control timer that inserts dead time, a tick source and an interrupt controller with honest latency. Those are ordinary components in the graph, and they're reusable across all three tiers — the native-tier firmware talks to the same modeled ADC the emulated image does, just through a shim instead of a memory-mapped register.</p>
+            <p><b>The tiers have to be interchangeable to be worth having.</b> The real payoff is running the same firmware at two tiers and diffing: native or WASM for the fast parameter sweep, emulated for the run that has to be exactly right about interrupt latency. That only works if a tier swap doesn't change the block's interface to the graph — which is the surrogate-harness argument again, applied to code instead of physics.</p>
           </div>
         </div>
         <div class="card">
@@ -357,67 +491,55 @@
         </div>
         <div>
           <h3>Peripherals are modeled, not approximated</h3>
-          <p>You weren't misunderstanding — the ADC, sampling clock and PWM timer are real components with quantization, conversion delay and dead time of their own. Emulating the <i>processor</i> is the separate matter, now question 01.</p>
+          <p>You weren't misunderstanding — the ADC, sampling clock and PWM timer are real components with quantization, conversion delay and dead time of their own. Emulating the <i>processor</i> is the separate matter, settled in the next card.</p>
+        </div>
+        <div>
+          <h3>Native and WASM first, emulation as a backend</h3>
+          <p>Between them the first two tiers cover everything we write ourselves. Emulation lands behind the same block trait the day a binary-only firmware forces it — a week, not a quarter. Target family is ARM Cortex-M, which is really a decision about which peripherals get built first.</p>
+        </div>
+        <div>
+          <h3>The integrator is the domain's choice</h3>
+          <p>Symplectic for mechanics, BDF for stiff dissipative domains, all of them a library in the core. Energy drift is reported per domain as a standing number, so a lie is visible rather than inferred. Reasoning is <i>What a step actually is</i> above.</p>
+        </div>
+        <div>
+          <h3>Rewiring preserves surviving state</h3>
+          <p>State lives in components and never in the solver; only the dirty subgraph rebuilds and re-initializes; undo is a snapshot, not an inverse. Pause-on-structural-change is a toggle for when the seam solve misbehaves.</p>
+        </div>
+        <div>
+          <h3>Rhai for authoring</h3>
+          <p>Native Rust types cross the boundary with no marshalling layer to maintain, and authoring scripts are not where we need speed. Separate question from foreign subsystems — conflating the two is most of what made it feel hard.</p>
         </div>
       </div>
     </section>
 
     <section>
       <h2>Open questions</h2>
+      <p>Two left. Foreign-code tiers, integrators, live rewiring and the authoring language all moved into <i>Decided</i> this round; what remains is one question about how deep the first mechanical domain goes, and one about where reduced models come from.</p>
       <div class="stack">
         <div class="q">
           <span class="num">01</span>
-          <p>Which foreign-code tiers do we build, and when does emulation earn its cost? The peripherals are settled as modeled components; what's open is the processor. Emulation runs an unmodified binary and gets interrupt latency exactly right, but costs ten to a hundred times native and ties us to chip families. WASM needs a recompile you may not be able to do. Native needs source in our language.</p>
-          <p class="lean"><b>My lean:</b> native and WASM first, since between them they cover everything we write ourselves, with emulation as a third backend behind the same block trait — built the first time a binary-only firmware makes it necessary. Because it's a backend rather than a redesign, that day costs a week instead of a quarter.</p>
+          <p>How deep does the first mechanical domain go — one generalized coordinate, or six degrees of freedom? We settled on "rigid body first", and the section on seeing a gear turn splits that into two rather different projects. A 1D rotational domain is a few equations per component and covers every drivetrain; a full 6-DOF frame domain needs orientation representations, joint constraints, and constraint stabilization before it can display a single pendulum.</p>
+          <p class="lean"><b>My lean:</b> 1D flanges first, with the <code>Frame</code> connector kind designed but unimplemented. Kapitza is one angle with a prescribed pivot motion, Huygens is two angles and a translating beam, and both are honest tests of the integrator without a line of 3D mechanics. The 6-DOF domain becomes the <i>second</i> mechanical domain, built the first time a linkage or a contact demands it.</p>
           <div class="detail">
-            <p><b>What to decide now regardless.</b> Which chip family we'd target first, since that's mostly a question of which emulator core we can lean on rather than something we'd write. It also decides which peripheral models get built first, and those are reusable across all three tiers.</p>
-            <p><b>The tiers have to be interchangeable to be useful.</b> The real payoff is running the same firmware at two tiers and diffing: WASM for the fast sweep, emulated for the run that has to be exactly right. That only works if a tier swap doesn't change the block's interface to the graph — which is the same argument as the surrogate harness, applied to code instead of physics.</p>
+            <p><b>The argument against.</b> Generalized coordinates are hand-derived per mechanism, which is exactly the thing this project claims not to do — you can't compose them the way you compose components, and "one angle with a prescribed pivot" is a model somebody wrote by hand rather than a graph somebody assembled. If that bothers you, the answer flips and 6-DOF goes first, at the cost of several weeks before anything moves on screen.</p>
+            <p><b>What makes the deferral safe.</b> Only that the connector kind is designed now. A frame port carrying a spatial velocity and a wrench is a decision about the <i>shape</i> of the mechanical interface, and the mount component is what pins it down. Get those two right against a domain that doesn't exist yet and the 3D domain is additive; get them wrong and every 1D component written in the meantime needs revisiting.</p>
+            <p><b>The thing I'd actually watch.</b> Whether the visual bindings written for 1D components survive contact with real 3D bodies unchanged. If a gear's binding is "rotate by φ about the mount axis" and a 3D body's is "here is your transform", those are the same interface and the deferral cost nothing. If they aren't, we found out early and cheaply.</p>
           </div>
         </div>
         <div class="q">
           <span class="num">02</span>
-          <p>Which integrator do we default to, and how hard do we hold the line on energy conservation? Here's the landscape without the math.</p>
-          <p class="lean"><b>My lean:</b> the choice belongs to the domain, not the simulator — mechanics gets a symplectic method, stiff dissipative domains get BDF, and energy drift is reported per domain as a standing number so a lie is visible rather than inferred.</p>
-          <div class="detail">
-            <p><b>The one-sentence version.</b> Every integrator makes a small error each step. What matters over a long run isn't the size of that error but whether the errors cancel or accumulate — and the three families get that wrong in characteristically different directions.</p>
-            <p><b>Explicit methods</b> (forward Euler, RK4). Take the current state and guess forward. Cheap and simple, and they tend to <i>add</i> energy to anything oscillating — a pendulum swings gradually higher, an orbit spirals outward. RK4 is accurate enough to hide this for a long while, but the drift only ever goes one way. They also fall apart on stiff systems unless the step is punishingly small.</p>
-            <p><b>Implicit methods</b> (backward Euler, BDF). Solve for a state consistent with its own derivative. Much more work per step, but stable at step sizes that would destroy an explicit method — which is what makes stiff systems tractable at all, and non-negotiable anywhere fast and slow dynamics coexist. The price is that they <i>remove</i> energy: a frictionless pendulum quietly winds down. Excellent for finding a steady state, silently wrong for anything meant to oscillate forever.</p>
-            <p><b>Symplectic methods</b> (velocity Verlet, implicit midpoint). Built to preserve the geometric structure of a mechanical system rather than to minimize per-step error. Energy wobbles a little each step but doesn't drift — after a million steps the orbit is still an orbit. The catch is that "structure" means something specific: they apply cleanly to Hamiltonian mechanics, want care around constraints and contact, and don't generalize to an arbitrary DAE.</p>
-            <p><b>Why it isn't just "always symplectic".</b> Stiffness. A board's electrical dynamics and its thermal mass are ten orders of magnitude apart in timescale, and an explicit or Verlet integrator would need a step sized for the fastest thing in the model, forever. Implicit methods eat that happily. So the right answer really is a property of the domain rather than a global setting.</p>
-            <p><b>Which leaves a concrete default.</b> Velocity Verlet for unconstrained mechanics, implicit midpoint when constrained — it's the useful compromise, being both symplectic and stable at large steps. BDF for thermal, fluid, and anything else genuinely dissipative, where energy loss is physics rather than error. And Kapitza is the canary: if the inverted pendulum falls over, an integrator is lying somewhere.</p>
-          </div>
-        </div>
-        <div class="q">
-          <span class="num">03</span>
-          <p>What happens to state when you rewire a running model? You asked for implementation detail before deciding, which is right — this is the feature most likely to quietly corrupt a run rather than fail loudly.</p>
-          <p class="lean"><b>My lean:</b> preserve state for components that survive the edit, re-initialize only the affected subsystem, and offer a pause-on-structural-change toggle. What makes that affordable is a few choices that have to be made early.</p>
-          <div class="detail">
-            <p><b>State lives in components, never in the solver.</b> The load-bearing choice, and one we can only make now. The solver's working arrays — the flattened unknown vector, the Jacobian sparsity, the block ordering — are all <i>derived</i>, rebuilt from component state on every recompile. If the authoritative copy lived in the solver, rewiring would mean surgery on an index-mapped array and it would be hopeless. Because it doesn't, a recompile is just a rebuild from a source of truth that never moved.</p>
-            <p><b>Stable identity, not position.</b> Every component gets a generational id at creation, independent of where it sits in the graph. Edits are named operations against ids — <code>delete(id)</code>, <code>connect(a, b)</code> — rather than a diff between two graph states. After a recompile we therefore know exactly which components survived instead of having to infer it.</p>
-            <p><b>Only the dirty subgraph rebuilds.</b> Mark the edited components, extend that set to anything sharing an algebraic block with them, rebuild those blocks alone. State carries forward by id for everything that survived; initialization runs only on what's new. A component on the far side of the model never notices the edit happened.</p>
-            <p><b>The genuinely hard part is consistent initialization.</b> A DAE can't start from arbitrary values — algebraic variables have to satisfy their constraints at the restart instant, and the new subsystem has to be consistent with the state of everything around it that survived. So there's a small solve at the seam after every structural edit. It usually converges immediately and occasionally doesn't, and that moment is exactly what the pause-on-structural-change toggle is for.</p>
-            <p><b>The edit log is the provenance.</b> Every structural change is an entry: what changed, at what simulation time, and what it was derived from. That log is what marks a surrogate stale when its detailed model is edited, what lets <i>zoom in</i> find the right source, and what makes a whole session reproducible from a starting model plus a list of operations.</p>
-            <p><b>Undo is a snapshot, not an inverse.</b> We already need whole-model snapshot and restore for foreign blocks, so an edit takes a checkpoint first and undo restores rather than trying to invert the operation. That matters because re-initialization isn't invertible — you cannot un-solve a seam.</p>
-          </div>
-        </div>
-        <div class="q">
-          <span class="num">04</span>
           <p>Who produces the reduced models? Automatic order reduction is a deep specialty and only behaves for linear time-invariant subsystems; hand-authored surrogates work everywhere but rely on someone knowing the physics.</p>
           <p class="lean"><b>My lean:</b> hand-authored surrogates plus a validation harness that runs both fidelities and reports divergence. Automatic reduction lands later, for the linear cases where it's actually sound.</p>
           <div class="detail">
             <p><b>What a surrogate actually is.</b> For the board: a lumped RC network on the thermal port — junction-to-case resistance, case-to-ambient, one thermal mass — plus an efficiency curve on the power port. Five or six numbers standing in for a few hundred nodes. The skill is entirely in choosing that structure; nothing about it is laborious once chosen.</p>
             <p><b>Where the numbers come from.</b> The human picks the structure, an optimizer picks the constants — least squares against traces from the detailed run. That split is what makes "hand-authored" affordable: you supply physical judgment about which effects survive the reduction, not curve-fitting done by hand.</p>
-            <p><b>What the harness measures.</b> Both fidelities run the same scenario under identical boundary conditions with every port recorded, and divergence comes back as numbers — peak error, RMS, and the moment it went worst — instead of two plots someone eyeballs. This is also the first real consumer of the determinism guarantee, since the comparison is only meaningful if both runs are reproducible.</p>
+            <p><b>What the harness measures.</b> Both fidelities run the same scenario under identical boundary conditions with every port recorded, and divergence comes back as numbers — peak error, RMS, and the moment it went worst — so a regression is a value that changed rather than a picture that looks a bit different. This is also the first real consumer of the determinism guarantee, since the comparison is only meaningful if both runs are reproducible.</p>
+            <p><b>And it plots, obviously.</b> The numbers are what a regression test compares; the plots are what a human uses to work out <i>why</i>. Both, from the same recorded traces: each port overlaid detailed-versus-reduced, the difference drawn underneath on its own axis with the worst moment marked, and the sweep rendered as a map of divergence against amplitude and frequency with the validity envelope shaded on top — so the envelope is something you can look at rather than a threshold in a config file. Comparison against a stored reference trace gets the same treatment, which means the phenomena suite and the surrogate harness share one plot view. It belongs in the app next to the inspector, and headless runs write the same data out for a report.</p>
             <p><b>Excitation is most of the difficulty.</b> A surrogate matched at steady state can be wildly wrong on a transient, so the harness sweeps rather than spot-checks: step response, a frequency chirp, and the duty cycle you actually care about. Nearly every surrogate failure in practice is a model that was only ever checked at DC. The most realistic excitation available is the real one — drive the subsystem with its actual controller, as above, and compare fidelities under the load it will actually see.</p>
             <p><b>The envelope falls out of the sweep.</b> This is the part I like most — the region where divergence stays under threshold <i>is</i> the validity envelope we settled on above. It stops being a promise someone wrote in a comment and becomes a measured artifact of the fit, re-derived every time either model changes.</p>
             <p><b>What it costs to build.</b> A scenario runner, a port-trace recorder, and a comparison report. Those same three pieces are what the phenomena above need in order to run as regressions, so this is shared infrastructure rather than a detour — which is most of why I'd start here rather than with the automatic path.</p>
             <p><b>What unlocks automatic reduction later.</b> Balanced truncation needs a linear state-space, so the precondition is a domain being able to emit its Jacobian around an operating point. Put that in the domain trait now, even unused, and automatic reduction becomes available for the linear subsystems without a redesign.</p>
           </div>
-        </div>
-        <div class="q">
-          <span class="num">05</span>
-          <p>Which embedded language for <i>authoring</i> — building models, sweeping parameters, writing scenarios? Rhai is pure Rust and embeds without ceremony; Lua is faster and everyone already knows it.</p>
-          <p class="lean"><b>My lean:</b> Rhai, because the authoring API passes native Rust types across the boundary with no marshalling layer to maintain, and authoring scripts are not where we need speed. Worth noting this is now a separate question from foreign subsystems, which is question 01 — trying to make one language do both jobs is most of what made it feel hard.</p>
         </div>
       </div>
     </section>
@@ -430,10 +552,75 @@
         <li><b>First domain.</b> One real solver end to end, with a scene it can run and a way to watch it — done when the Kapitza pendulum stands up on its own.</li>
         <li><b>Second domain.</b> The one that proves the abstraction — deliberately unlike the first, coupled to the first through a bridging component.</li>
         <li><b>Hierarchy.</b> Subsystems as components, one hand-authored surrogate beside its detailed model, and the harness that measures the gap between them.</li>
-        <li><b>Live canvas.</b> Build, rewire, and inspect a running model without restarting it. Incremental recompile lands here.</li>
-        <li><b>Scripting.</b> Embedded language over the same graph API, plus scenario files with whole-system assertions and enough diagnostics to trust the numbers.</li>
+        <li><b>Live canvas.</b> Build, rewire, and inspect a running model without restarting it. Incremental recompile lands here, and so does the 3D scene as a second view of the same state.</li>
+        <li><b>Scripting.</b> Rhai over the same graph API, plus scenario files with whole-system assertions, the comparison plots, and enough diagnostics to trust the numbers.</li>
         <li><b>Foreign subsystems.</b> Native and WASM blocks behind one trait, with snapshot and restore, modeled peripherals, and the motor scenario running end to end against a controller we didn't write. An emulated-target backend the first time a binary-only firmware demands one.</li>
       </ul>
+    </section>
+
+    <section>
+      <h2>Implementation plan</h2>
+      <p>Build order says what gets proven in what sequence. This says what the thing is actually made of, and it's deliberately coarse — the point is to fix the seams that would be expensive to move later and leave everything else free.</p>
+
+      <div class="snippet">
+<pre>sim-core     graph, ports, typed quantities, compile pipeline, state store
+sim-solve    integrators, linear + Newton solve, event location, error control
+sim-domains  one crate per domain — rotational, electrical, thermal, …
+sim-blocks   the foreign-code block trait, with native and wasm backends
+sim-script   Rhai bindings over the same graph API the canvas drives
+sim-app      Bevy: canvas, 3D scene, inspectors, plots — depends on everything
+sim-test     scenario runner, reference traces, the phenomena suite</pre>
+      </div>
+
+      <p>The dependency arrows only point downward, and <code>sim-core</code> depends on <code>bevy_ecs</code> rather than on <code>bevy</code> — the ECS without the renderer is what keeps "headless" honest instead of aspirational. If a domain crate ever needs something from <code>sim-app</code>, the layering is wrong and we stop and fix it rather than reaching for a feature flag.</p>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Five interfaces, and everything else is negotiable</h3>
+          <p><code>ConnectorKind</code> — the potential/flow pair and its units. <code>Component</code> — parameters, state, ports, and its contribution to the residual. <code>Domain</code> — registration, plus the Jacobian-at-operating-point hook that automatic reduction will need later. <code>Block</code> — <code>eval</code> and <code>advance</code>, the tier-agnostic foreign-code seam. <code>Integrator</code> — step and error estimate. Getting these five wrong is what a redesign costs; getting anything else wrong costs an afternoon.</p>
+        </div>
+        <div class="card">
+          <h3>The compile pipeline is a pure function</h3>
+          <p>Graph in, compiled model out. Flatten, match, tear, index-reduce, emit residual and sparsity. It reads the graph and writes nothing — no mutation of the world, no hidden global state, no rendering — which makes it directly testable against hand-computed answers, and makes incremental recompile a memoized version of the same function rather than a second code path that can disagree with the first.</p>
+        </div>
+        <div class="card">
+          <h3>State is the only mutable truth</h3>
+          <p>Component state in ECS components, keyed by generational id. Solver arrays derived and disposable. Scene transforms derived and disposable. Every hard feature on this page — rewiring live, undo, snapshot and restore, rewind-and-replay, the 3D view — is a consequence of that one arrangement, which is why it's the first thing written and the last thing to change.</p>
+        </div>
+        <div class="card">
+          <h3>The test spine exists before it's interesting</h3>
+          <p>Scenario runner, port-trace recorder and comparison report land in the first month, when there's almost nothing worth recording. Retrofitting determinism and reference traces onto a system that grew without them is the standard way this kind of project quietly stops being trustworthy, and the same three pieces are what the surrogate harness and the phenomena suite both run on.</p>
+        </div>
+        <div class="card">
+          <h3>What we're deliberately not building yet</h3>
+          <p>Automatic model-order reduction, Modelica import, the emulator backend, contact, cross-machine determinism, 6-DOF mechanics. Every one of them is a backend or an importer behind an interface we're specifying now — which is the only reason deferring them is a plan rather than a hope.</p>
+        </div>
+      </div>
+
+      <ul class="ladder">
+        <li>
+          <span class="scale">Week one</span>
+          <b>A schedule that ticks.</b>
+          <p>Cargo workspace, the <code>Domain</code> trait, fixed-timestep schedule, and one hard-coded pendulum integrating headless. No graph, no connectors, no solver. The deliverable is a test that fails when the physics is wrong.</p>
+        </li>
+        <li>
+          <span class="scale">Month one</span>
+          <b>Connectors, on something too simple to hide anything.</b>
+          <p>The full pipeline against a resistor network, checked against an answer computed by hand. Then rotational mechanics on the same machinery, the first visual binding, and Kapitza standing up. Typed quantities and the trace recorder are in from the start, not added afterwards.</p>
+        </li>
+        <li>
+          <span class="scale">Quarter one</span>
+          <b>The second domain, which is the real proof.</b>
+          <p>Electrical and thermal, bridged, with current hogging as the test that the coupling is honest in both directions. Then hierarchy, the first hand-authored surrogate, and the comparison harness with its plots. Still script-driven and mostly headless — the canvas comes after, on purpose, because the API it will drive should be exercised by scripts first.</p>
+        </li>
+        <li>
+          <span class="scale">Year one</span>
+          <b>The thing itself.</b>
+          <p>Live canvas with incremental recompile, the 3D scene, foreign blocks with snapshot and restore, modeled peripherals, and the cold-start motor scenario running end to end against a controller we didn't write.</p>
+        </li>
+      </ul>
+
+      <p>Two things would make us stop and rethink rather than push on. If the compile pipeline can't rebuild a mid-sized dirty subgraph inside a frame, incremental recompile is the wrong shape and the live canvas is what gives — we'd fall back to edit-then-restart and say so plainly. And if index reduction on real coupled models proves harder than expected, we restrict the supported class to index-1 and reject the rest with an explanation, rather than shipping a solver that's subtly wrong on the models people most want to build.</p>
     </section>
 
     <p class="note">Reply on any block above and I'll revise the plan. Once we're settled, this page becomes the spec we build against.</p>

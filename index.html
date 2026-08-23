@@ -59,15 +59,16 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.6</p>
+    <p class="eyebrow">Planning doc — v0.7</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled. Everything below is a proposal, not a decision — select any block with the Redline controls and tell me what to change. We'll iterate on this page until the plan is right, then start building.</p>
 
     <section>
       <h2>What we're building</h2>
-      <p>A simulation core where each physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains advance on their own terms and exchange quantities through a shared, explicit coupling layer rather than by reaching into each other.</p>
-      <p>The model itself is data, not code. Which components exist and how they're wired together is authored while the simulation runs — on a canvas, or from a script — and takes effect without a rebuild. Plugins ship the physics; you assemble the system live. This is the Modelica bargain, and it's the part worth stealing.</p>
-      <p>Bevy's ECS is the substrate: entities carry state components from any mix of domains, and the plugin system is already the extension point we need. Bevy's renderer gives us visualization for free, but the core should stay usable headless.</p>
+      <p>A simulation core where every physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains never reach into each other; they meet at acausal connectors, ports carrying a potential and a flow, and the solver works out causality from the assembled system. That one rule is what makes multi-domain coupling uniform.</p>
+      <p>The model is data, not code — authored while the simulation runs, from a canvas or a script. A subsystem is anything that honors its ports: a nested graph, a reduced surrogate standing in for a thousand nodes, or a block of WASM running firmware we didn't write. Fidelity is a runtime dial rather than an architectural commitment.</p>
+      <p>The bar is emergence. Perturb one edge of a rigorous system and behavior nobody encoded should fall out — a pendulum that stands upright when you shake it, a tube that sings when you heat it — so the acceptance suite is a list of documented surprises, checked by assertions that span domains in a single statement.</p>
+      <p>Bevy's ECS is the substrate: entities carry state from any mix of domains, and the plugin system is already the extension point we need. The renderer gives us visualization for free, but the core stays usable headless.</p>
     </section>
 
     <section>

@@ -26,6 +26,9 @@
     .tags span { padding: 3px 9px; border-radius: 999px; background: #f0eae0; color: #8a7f70; font-size: .68rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
     .card .proves { margin-top: 10px; }
     .proves b { color: #423d36; font-weight: 650; }
+    .snippet { margin: 26px 0; padding: 20px 22px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; overflow-x: auto; }
+    .snippet pre { margin: 0; font: 500 .84rem/1.8 ui-monospace, SFMono-Regular, Menlo, monospace; color: #5a554d; }
+    .snippet .k { color: #d64d36; font-weight: 700; }
     .ladder { list-style: none; margin: 28px 0; padding: 0 0 0 26px; border-left: 2px solid #ece6dc; }
     .ladder li { position: relative; margin: 0 0 22px; }
     .ladder li::before { content: ""; position: absolute; left: -32px; top: .45em; width: 9px; height: 9px; border-radius: 50%; background: #d64d36; }
@@ -56,7 +59,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.5</p>
+    <p class="eyebrow">Planning doc — v0.6</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled. Everything below is a proposal, not a decision — select any block with the Redline controls and tell me what to change. We'll iterate on this page until the plan is right, then start building.</p>
 
@@ -191,6 +194,47 @@
     </section>
 
     <section>
+      <h2>Drive it like the real thing</h2>
+      <p>The honest test isn't applying a torque to a shaft — it's wiring a real supply to a real bridge to a real motor under a real load, running a controller that doesn't know it's in a simulation, and then asking what the whole system did. The interesting assertions cross domains: volts in one, shaft speed in another, junction temperature in a third, all in a single statement about one run.</p>
+
+      <div class="snippet">
+<pre><span class="k">scenario</span> "cold start under load" {
+  supply.v      = 24
+  load.torque   = ramp(0 → 0.4 N·m over 2 s)
+  controller    = wasm("firmware/foc.wasm") @ 10 kHz
+
+  <span class="k">expect</span> motor.speed          reaches 3000 rpm within 250 ms
+  <span class="k">expect</span> motor.speed          settles within 2% of setpoint
+  <span class="k">expect</span> bridge.junction_temp stays below 85 °C
+  <span class="k">expect</span> supply.current       never exceeds 12 A for longer than 50 ms
+}</pre>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Assertions are temporal, and about the system</h3>
+          <p>Reaches-within, settles-to, stays-below, never-exceeds-for-longer-than. These are statements about a trajectory rather than a final value, and they name signals from any domain in the model. A failure reports the moment it happened and the surrounding trace, not a boolean.</p>
+        </div>
+        <div class="card">
+          <h3>A controller is just another subsystem</h3>
+          <p>It has ports and it composes like anything else — the only difference is that it's <i>causal</i>. It reads sensor values and writes actuator commands, where the network around it is acausal. Both kinds of block coexist in one graph; the controller simply declares direction on its ports and the solver stops trying to infer it.</p>
+        </div>
+        <div class="card">
+          <h3>Any language, through WASM</h3>
+          <p>Compile the block to WebAssembly and load it at runtime, and the language it was written in stops mattering. The real prize is running the <i>actual firmware</i> against the simulated plant — hardware-in-the-loop without the hardware, and a control bug that reproduces exactly on someone else's machine.</p>
+        </div>
+        <div class="card">
+          <h3>The re-entrancy problem</h3>
+          <p>This is the part that needs care. An implicit solver evaluates a step several times while searching, and may reject a step and retry it — so a stateful controller called during those probes would advance its integral term four times for one millisecond of simulated time. Foreign blocks therefore need snapshot and restore, committing only on accepted steps. WASM makes that tractable: the entire block state is one linear memory, so a snapshot is a <code>memcpy</code>.</p>
+        </div>
+        <div class="card">
+          <h3>Rate, budget, and sandbox</h3>
+          <p>A block runs at its own rate with explicit sample-and-hold, so a 10 kHz control loop sitting on a plant stepping at microseconds is an ordinary scheduling fact rather than a special case. Fuel limits keep a hung or hostile block from taking the simulation with it, and the sandbox means running someone else's firmware isn't a decision you have to think hard about.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
       <h2>Emergence as the acceptance test</h2>
       <p>The proof that a multi-domain core is rigorous isn't that a pendulum swings. It's that you change one value at one edge of the system and behavior nobody encoded falls out the other end — because the coupling was honest enough to produce it. So the acceptance suite should be a list of documented surprises, each with published numbers to fail against.</p>
       <p>Every one of these has the same shape: a single parameter at a boundary, a qualitative change in what the whole system does, and a reference measurement from the literature.</p>
@@ -247,8 +291,8 @@
         </div>
         <div class="q">
           <span class="num">02</span>
-          <p>Which embedded language? Rhai is pure Rust and embeds without ceremony; Lua is faster and everyone already knows it; WASM would let people write components in any language at the cost of a much heavier boundary.</p>
-          <p class="lean"><b>My lean:</b> Rhai. Zero FFI, native Rust types across the boundary, and we can add a WASM path later for people who want to bring their own toolchain.</p>
+          <p>Which embedded language? Rhai is pure Rust and embeds without ceremony; Lua is faster and everyone already knows it; WASM lets people write components in any language at the cost of a much heavier boundary.</p>
+          <p class="lean"><b>My lean:</b> both, because these are two different jobs. Rhai for authoring — building models, sweeping parameters, writing scenarios — where you want a small language with native Rust types across the boundary. WASM for foreign subsystems that participate in the solve, where sandboxing and snapshot-restore matter more than ergonomics. Trying to make one language do both is what makes this question feel hard.</p>
         </div>
         <div class="q">
           <span class="num">03</span>
@@ -293,7 +337,7 @@
             <p><b>What a surrogate actually is.</b> For the board: a lumped RC network on the thermal port — junction-to-case resistance, case-to-ambient, one thermal mass — plus an efficiency curve on the power port. Five or six numbers standing in for a few hundred nodes. The skill is entirely in choosing that structure; nothing about it is laborious once chosen.</p>
             <p><b>Where the numbers come from.</b> The human picks the structure, an optimizer picks the constants — least squares against traces from the detailed run. That split is what makes "hand-authored" affordable: you supply physical judgment about which effects survive the reduction, not curve-fitting done by hand.</p>
             <p><b>What the harness measures.</b> Both fidelities run the same scenario under identical boundary conditions with every port recorded, and divergence comes back as numbers — peak error, RMS, and the moment it went worst — instead of two plots someone eyeballs. This is also the first real consumer of the determinism guarantee, since the comparison is only meaningful if both runs are reproducible.</p>
-            <p><b>Excitation is most of the difficulty.</b> A surrogate matched at steady state can be wildly wrong on a transient, so the harness sweeps rather than spot-checks: step response, a frequency chirp, and the duty cycle you actually care about. Nearly every surrogate failure in practice is a model that was only ever checked at DC.</p>
+            <p><b>Excitation is most of the difficulty.</b> A surrogate matched at steady state can be wildly wrong on a transient, so the harness sweeps rather than spot-checks: step response, a frequency chirp, and the duty cycle you actually care about. Nearly every surrogate failure in practice is a model that was only ever checked at DC. The most realistic excitation available is the real one — drive the subsystem with its actual controller, as above, and compare fidelities under the load it will actually see.</p>
             <p><b>The envelope falls out of the sweep.</b> This is the part I like most — the region where divergence stays under threshold <i>is</i> the validity envelope from the next question. It stops being a promise someone wrote in a comment and becomes a measured artifact of the fit, re-derived every time either model changes.</p>
             <p><b>What it costs to build.</b> A scenario runner, a port-trace recorder, and a comparison report. Those same three pieces are what the phenomena above need in order to run as regressions, so this is shared infrastructure rather than a detour — which is most of why I'd start here rather than with the automatic path.</p>
             <p><b>What unlocks automatic reduction later.</b> Balanced truncation needs a linear state-space, so the precondition is a domain being able to emit its Jacobian around an operating point. Put that in the domain trait now, even unused, and automatic reduction becomes available for the linear subsystems without a redesign.</p>
@@ -314,6 +358,16 @@
           <p>How hard do we hold the line on conservation? Symplectic integrators keep energy bounded over long runs but constrain what else the domain can do; general-purpose implicit solvers are far more flexible and quietly bleed energy — which is precisely how a Kapitza pendulum falls over for reasons that aren't physics.</p>
           <p class="lean"><b>My lean:</b> symplectic wherever the domain permits it, and energy drift reported per domain as a standing diagnostic, so when we do bleed we can at least see it happening.</p>
         </div>
+        <div class="q">
+          <span class="num">14</span>
+          <p>Are assertions a small declarative form, or just code in the scripting language? Code is obviously more expressive, and obviously worse at explaining itself.</p>
+          <p class="lean"><b>My lean:</b> a declarative form. An assertion the runner can introspect can plot the signal it was about, mark the moment it broke, and say which term of a settling criterion failed. An arbitrary predicate can only return false. Escape hatch to a script for the rare thing the form can't say.</p>
+        </div>
+        <div class="q">
+          <span class="num">15</span>
+          <p>How real does a foreign controller's view of the world get? Real firmware reads a quantized ADC on a sampling clock, drives PWM with dead time, and responds to interrupts that arrive late.</p>
+          <p class="lean"><b>My lean:</b> model the peripheral boundary — sample rate, quantization, conversion delay, PWM granularity — because that is exactly where control bugs live, and skipping it makes the whole exercise decorative. Emulating the instruction set is a different project.</p>
+        </div>
       </div>
     </section>
 
@@ -326,7 +380,8 @@
         <li><b>Second domain.</b> The one that proves the abstraction — deliberately unlike the first, coupled to the first through a bridging component.</li>
         <li><b>Hierarchy.</b> Subsystems as components, one hand-authored surrogate beside its detailed model, and the harness that measures the gap between them.</li>
         <li><b>Live canvas.</b> Build, rewire, and inspect a running model without restarting it. Incremental recompile lands here.</li>
-        <li><b>Scripting.</b> Embedded language over the same graph API, plus scenario files and enough diagnostics to trust the numbers.</li>
+        <li><b>Scripting.</b> Embedded language over the same graph API, plus scenario files with whole-system assertions and enough diagnostics to trust the numbers.</li>
+        <li><b>Foreign subsystems.</b> WASM blocks with snapshot and restore, peripheral-boundary modeling, and the motor scenario running end to end against a controller we didn't write.</li>
       </ul>
     </section>
 

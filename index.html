@@ -64,7 +64,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.13</p>
+    <p class="eyebrow">Planning doc — v0.14</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
@@ -204,7 +204,7 @@
         </div>
         <div class="card">
           <h3>Implicit</h3>
-          <p>Backward Euler, BDF. Solve for a state consistent with its own derivative — which means a Newton iteration and a Jacobian inside every step. Much more work per step, but stable at step sizes that would destroy an explicit method, and that's what makes stiff systems tractable at all. The price is that they <i>remove</i> energy: a frictionless pendulum quietly winds down. Excellent for finding a steady state, silently wrong for anything meant to oscillate forever.</p>
+          <p>Backward Euler, BDF. Solve for a state consistent with its own derivative — which means a Newton iteration and a Jacobian — a table of slopes — inside every step. Much more work per step, but stable at step sizes that would destroy an explicit method, and that's what makes stiff systems tractable at all. The price is that they <i>remove</i> energy: a frictionless pendulum quietly winds down. Excellent for finding a steady state, silently wrong for anything meant to oscillate forever.</p>
         </div>
         <div class="card">
           <h3>Symplectic</h3>
@@ -465,6 +465,7 @@
             <p><b>Concretely.</b> In a loop of resistors you can't get a voltage without knowing a current and can't get a current without knowing a voltage. So guess the current in one branch, compute every other voltage and current from it in order, and check whether the branch you started from still agrees with itself. A handful of rounds and it's done. The payoff is that the expensive linear algebra is sized by the number of torn variables rather than by the size of the loop, and good tearing is most of why Modelica tools stay interactive on ten-thousand-equation models.</p>
             <p><b>A causal block just arrives pre-matched.</b> It says: these ports are inputs, these are outputs, the map between them is opaque. Matching honors that rather than deciding it. Nothing about the algorithm changes — a causal block is a constraint on the matching, and a constrained matching is the same algorithm with some of its choices already made.</p>
             <p><b>The one genuinely hard case</b> is direct feedthrough inside a loop: a causal block whose output depends algebraically on its input at the same instant, sitting in a cycle. The guess-and-check round trip above would have to pass straight through it, and it can't, because the block is opaque — there's no equation to rearrange. So either the block declares how its output moves with its input — its input-output Jacobian — or we refuse to place it in an algebraic loop and say plainly why.</p>
+            <p><b>And a Jacobian, since the word keeps turning up.</b> It's a table of slopes, and nothing more than that. For every input and every output there's one number answering "if I nudge this input a little, how far does that output move?" With one input and one output it collapses to a single number — the slope of a line. Solvers want it because knowing which way and how fast everything moves lets them aim straight at an answer instead of guessing at one, and it's the same object as the second of the two numbers a fluid box publishes at its ports.</p>
             <p><b>Sampling makes the common case easy.</b> A controller running at 10 kHz holds its output constant across the step. A held output is a <i>known value</i>, not an unknown — so the controller drops out of the algebraic system entirely and contributes nothing to solve. The realistic case, a sampled digital controller, is also the cheapest one.</p>
           </div>
         </div>

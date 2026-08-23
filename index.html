@@ -64,7 +64,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.10</p>
+    <p class="eyebrow">Planning doc — v0.11</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
@@ -143,7 +143,7 @@
         </div>
         <div class="card">
           <h3>Black boxes at the boundary</h3>
-          <p>Not every domain flattens into equations — a contact solver or a grid fluid solves internally however it likes, and forcing it through a DAE would be the wrong trade. What such a domain owes the graph is a description of its <i>ports</i> over the step: an effective admittance plus an offset, published before the step, which the global solve treats as that domain's equations. Once the step is accepted it advances its own state to match. When its response is too nonlinear to linearize usefully, it participates iteratively instead — answering port queries and paying for the extra evaluations. Either way it's the same block interface a foreign controller uses, which is why hybrid costs us one mechanism rather than two.</p>
+          <p>Not every domain flattens into equations — a contact solver or a grid fluid solves internally however it likes, and forcing it through a DAE would be the wrong trade. What such a domain owes the graph is a description of its <i>ports</i> over the step: an effective admittance plus an offset, published before the step, which the global solve treats as that domain's equations. Once the step is accepted it advances its own state to match. When its response is too nonlinear to linearize usefully, it participates iteratively instead — answering port queries and paying for the extra evaluations. Either way it's the same block interface a foreign controller uses, which is why hybrid costs us one mechanism rather than two. The worked example, in plain language, is <i>Fluids, and a million particles</i> below.</p>
         </div>
         <div class="card">
           <h3>Solver scheduling</h3>
@@ -322,18 +322,6 @@
           <p>When geometry genuinely <i>is</i> the physics — a linkage, a pendulum swinging free in space, anything whose inertia depends on its configuration — the connector's potential is a spatial velocity and its flow is a wrench, force and torque carried together. Bodies and joints constrain frames the way resistors constrain electrical nodes. That's a new connector kind and a domain plugin, not a new mechanism, which is the entire reason the acausal rule was worth paying for.</p>
         </div>
         <div class="card">
-          <h3>Fields and particles: a million unknowns behind five ports</h3>
-          <p>The honest limit of everything above, and worth stating plainly. A connector graph is a <i>lumped</i> abstraction — it assumes a chunk of physics can be summarized by a few numbers at its boundary. That is exactly right for a pipe with an inlet and an outlet and exactly wrong for asking where the vortex sheds. Both are legitimate questions. The answer is to keep them separate rather than pretend one mechanism serves both.</p>
-          <div class="detail">
-            <p><b>Most fluid is a network, not a field.</b> Pipes, orifices, valves, pumps, tanks — pressure as potential, mass flow as flow, ordinary components in the graph with nothing special about them. Distributed behaviour comes from discretizing along the pipe: a hundred segments in series gets you compressibility and a finite wave speed, which is all water hammer actually needs, and the same move gives the Rijke tube its acoustic mode. This tier is where the large majority of engineering fluid lives, and it is already covered by the machinery on this page.</p>
-            <p><b>A real field solver is a domain that refuses to flatten.</b> A grid CFD, an SPH fluid, a DEM granular bed, a smoke volume: millions of degrees of freedom, its own timestep, its own solver, and nothing the acausal pipeline could usefully do with any of it. So it doesn't enter the pipeline. It's a <i>black box at the boundary</i> — the mechanism already settled for contact — and what it owes the graph is only what crosses its surface: inlet pressure, outlet mass flow, wall heat, net force on a body. Its cheap stand-in, a fitted loss coefficient or transfer function, is an ordinary component in the graph, which is the surrogate story applied to a continuum.</p>
-            <p><b>A port is a boundary condition. That's the whole trick.</b> Fixing the potential at a port is a Dirichlet condition on the solver's boundary; fixing the flow is a flux condition. Potentials-equal-and-flows-sum-to-zero <i>is</i> the coupling condition people otherwise write by hand. So the field domain publishes an effective admittance and an offset per port each step — how much flow its boundary produces per unit of potential, linearized — and the global solve treats those few numbers as that domain's equations. Five numbers stand in for a million unknowns for the duration of one step. Flutter is the acceptance case that forces this to be honest in both directions: the structure's motion changes the flow that loads the structure, inside the step.</p>
-            <p><b>Particles are not entities.</b> Worth being blunt, because ECS invites the mistake: a million particles are not a million Bevy entities. The domain owns flat arrays and whatever spatial structure it likes; the entity is the <i>domain instance</i>, and the only things the ECS tracks are the handful of components at its boundary. Fine-grained ECS is the right substrate for a hundred coupled components and the wrong one for a hundred thousand identical ones.</p>
-            <p><b>What it costs is the ability to retry.</b> The re-entrancy design assumes cheap snapshot and restore, and a gigabyte of grid state is not cheap. So a field domain declares itself expensive to roll back, and its boundary runs at a fixed step the master solver isn't allowed to reject — it substeps internally to whatever it needs. That's a real constraint rather than a detail: adaptive error control stops at the edge of a field domain, and per-model error is all we'll claim across it.</p>
-            <p><b>And it draws itself.</b> The rule of this section survives intact. A field domain publishes a visualization buffer — particle positions, a slice of the grid, an isosurface — and the renderer reads it exactly the way it reads a gear's angle. Still one-way, still the solver's state as the only truth.</p>
-          </div>
-        </div>
-        <div class="card">
           <h3>Geometry parameterizes; it doesn't derive</h3>
           <p>Mass and inertia come from the shape you declared, and the teeth are drawn from the ratio rather than the ratio being inferred from the teeth. We will not read physics out of a mesh. The one honest exception is contact, which really does need geometry — and that's precisely why contact is a <i>black box at the boundary</i> publishing port linearizations rather than an equation set in the graph.</p>
         </div>
@@ -344,6 +332,95 @@
       </div>
 
       <p>What all of that costs is small and worth committing to now: a <code>Visual</code> binding type, a <code>Frame</code> connector kind, and the mount component. Design the frame kind now and implement only the 1D half, and the full 3D mechanical domain arrives later as a plugin instead of a rewrite — the same argument as the emulator backend, made about geometry.</p>
+      <p>All of that assumes a machine made of nameable parts. The case it doesn't cover — water, air, sand, anything with no parts to name — is next.</p>
+    </section>
+
+    <section>
+      <h2>Fluids, and a million particles</h2>
+      <p>Everything up to here quietly assumes the world is made of parts. A motor, a shaft, a gear: each one is a thing with a name, a handful of numbers describing what it's currently doing, and two ends you can attach something to. That assumption is the entire reason the connector graph works — you can only wire up boxes if there are boxes.</p>
+      <p>Water in a pipe is not like that. It has a different pressure and a different velocity at every point along the pipe, and there's no natural place to draw the boundary of a "part". Sand pouring through a hopper is worse: a million grains that only mean anything as a crowd. Neither one has two ends in any obvious sense, and neither can be summarized by three numbers without throwing something away.</p>
+      <p>So this needs a real answer rather than a hand-wave, and the answer has two halves. The useful thing to know first is that <b>the question decides which half you need</b>, and most questions need the easy one.</p>
+      <p>An analogy that does most of the work. If you want to know how long a delivery takes across a city, you model the road network: each road has a capacity and a travel time, and you never simulate a single car. If you want to know why one particular junction jams, you have to simulate the cars. Same city, two completely different models, and choosing the wrong one is either wasted months or a wrong answer. Fluid is exactly this, and the overwhelming majority of engineering questions are road-network questions.</p>
+
+      <div class="diagram" role="img" aria-label="A pump and a tank connected through a box containing a swirling fluid simulation; the box exposes only two ports, each carrying a pressure and a mass flow.">
+        <svg viewBox="0 0 620 178" xmlns="http://www.w3.org/2000/svg">
+          <rect x="14" y="52" width="92" height="48" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
+          <text x="60" y="81" text-anchor="middle" fill="#4b4740" font-size="13" font-family="Inter, sans-serif">Pump</text>
+          <rect x="514" y="52" width="92" height="48" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
+          <text x="560" y="81" text-anchor="middle" fill="#4b4740" font-size="13" font-family="Inter, sans-serif">Tank</text>
+          <rect x="186" y="28" width="248" height="96" rx="12" fill="#fbf8f2" stroke="#ddd7cd" stroke-dasharray="5 4"/>
+          <g fill="#cfc7ba">
+            <circle cx="224" cy="60" r="3"/><circle cx="248" cy="82" r="3"/><circle cx="270" cy="52" r="3"/>
+            <circle cx="292" cy="96" r="3"/><circle cx="310" cy="66" r="3"/><circle cx="334" cy="88" r="3"/>
+            <circle cx="356" cy="56" r="3"/><circle cx="380" cy="94" r="3"/><circle cx="402" cy="70" r="3"/>
+            <circle cx="238" cy="104" r="3"/><circle cx="366" cy="112" r="3"/><circle cx="290" cy="42" r="3"/>
+          </g>
+          <path d="M214 88 q30 -34 62 -8 q32 26 62 -6 q30 -28 60 4" fill="none" stroke="#c9c2b6" stroke-width="1.5"/>
+          <text x="310" y="146" text-anchor="middle" fill="#8a857c" font-size="12.5" font-family="Inter, sans-serif">inside: two million unknowns, its own solver, its own timestep</text>
+          <line x1="106" y1="76" x2="186" y2="76" stroke="#d64d36" stroke-width="2"/>
+          <line x1="434" y1="76" x2="514" y2="76" stroke="#d64d36" stroke-width="2"/>
+          <circle cx="146" cy="76" r="6" fill="#d64d36"/>
+          <circle cx="474" cy="76" r="6" fill="#d64d36"/>
+          <text x="146" y="40" text-anchor="middle" fill="#8a857c" font-size="12" font-family="Inter, sans-serif">p · ṁ</text>
+          <text x="474" y="40" text-anchor="middle" fill="#8a857c" font-size="12" font-family="Inter, sans-serif">p · ṁ</text>
+        </svg>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Tier one — fluid as a plumbing diagram</h3>
+          <p>The easy half, and the one that covers most of what anyone actually asks. A pipe becomes a component with a port at each end. Pressure is the potential, flow rate is the flow, and that's it — the same two-number port every other domain on this page uses.</p>
+          <div class="detail">
+            <p><b>It really is the same as a circuit.</b> A narrow pipe resists flow the way a resistor resists current. A tank stores fluid the way a capacitor stores charge. A long slug of moving water has inertia and doesn't want to stop, the way an inductor doesn't want to stop carrying current. This isn't a teaching analogy that falls apart when you push it — the equations are the same equations, which is exactly why the same solver handles both without knowing which is which.</p>
+            <p><b>"But a pressure wave travels along the pipe."</b> Right, and that seems like it needs a field. It doesn't. Chop the pipe into a hundred short pipes in a row, each one still a dumb little component with two ports. A disturbance at one end now has to pass through all hundred to reach the other, so it arrives <i>late</i>, and it arrives changed. Wave behaviour falls out of a chain of simple parts. That's all water hammer needs, and it's how the Rijke tube gets a note out of a heated gauze.</p>
+            <p><b>What you get and what you don't.</b> You get pressure and flow everywhere along the pipe, transients, resonances, pumps fighting each other, a valve slamming shut. You do not get the swirl behind the valve, or where a hot spot forms on a wall, or how the sand piles up. If you didn't need those, you've lost nothing at all — and you got an answer in milliseconds instead of hours.</p>
+            <p><b>This tier is not special.</b> It's a domain plugin like electrical or thermal, built the same way and coupled the same way. None of the complications in the rest of this section apply to it — everything below is about the other half.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Tier two — a real fluid solver, bolted on at its edges</h3>
+          <p>When the question genuinely needs the swirl, you need the expensive thing: divide the space into a few million little boxes and track what's in each one, or track a few million particles and the forces between them. Millions of numbers, updated by code that has nothing whatsoever in common with our equation solver.</p>
+          <div class="detail">
+            <p><b>The decision that makes this tractable: we don't merge it.</b> The tempting move is to flatten those millions of unknowns into our equation system so everything is solved together and uniformly. That's a trap. Our pipeline sorts equations, finds loops, and inverts small dense blocks — machinery that is excellent for two hundred equations and hopeless for two million. Meanwhile a CFD solver already has decades of specialized work behind it. Merging gets you the worst of both.</p>
+            <p><b>So it stays a box with pipes.</b> On the diagram it's one component with an inlet and an outlet. Inside the box, it does whatever it likes at whatever timestep it likes with whatever solver it likes, and nothing outside can see in. At the two ports, it has to speak our language: a pressure and a mass flow, same as any other component. This is the <i>black box at the boundary</i> mechanism that was already settled for contact solvers — the point of settling it once is that fluid costs us nothing new.</p>
+            <p><b>Cheap version, same box.</b> Once you've run the expensive thing, you can usually replace it with a fitted curve — a loss coefficient, a heat-transfer number — that reproduces what the ports did without any of the interior. That's the surrogate story from earlier applied to a continuum, and the harness that checks a surrogate against its detailed model doesn't care that the detailed model happens to be CFD.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>How the handshake actually works, one step at a time</h3>
+          <p>This is the part worth going slowly on, because it's where "two things that can't talk to each other" turns into "one simulation". The problem: to take a step, the rest of the model needs to know how the fluid box will respond — but it can't run a two-million-cell simulation once per guess, and a stiff solver guesses ten times a step.</p>
+          <div class="detail">
+            <p><b>So we ask a cheaper question.</b> Not "what will you do?" — that's unanswerable at a sensible price. Instead, once per step: <i>if I push a little harder at your inlet, how much more flow do I get?</i> The box answers with two numbers per port. How much flow at the current conditions, and how much extra flow per unit of extra push. That's a straight line through the box's behaviour, good enough for one small step.</p>
+            <p><b>Two numbers is a resistor.</b> That's the whole payoff. Having answered, the fluid box <i>looks exactly like a resistor</i> to the rest of the system for the duration of that step — the solver does its Newton iterations against two numbers instead of against two million cells, and it never knows the difference. The slope is the same quantity as a resistor's conductance; the technical name is a port linearization, and it is the only genuinely new idea in this section.</p>
+            <p><b>Then the step commits.</b> Once everything agrees on a consistent answer, the fluid box is told: this is final, here is the pressure we settled on, advance yourself. Now it goes and does the expensive million-cell update, once, and only for a step that actually happened. Everything speculative was answered by the two numbers.</p>
+            <p><b>When a straight line isn't good enough.</b> Some boxes are too nonlinear for that — a valve on the edge of cavitating, a bed of sand about to avalanche. Then we fall back to going around the loop a few times inside one step: it answers, the outside adjusts, it answers again, until both sides stop changing their minds. That costs several interior evaluations per step, so it's opt-in per component rather than the default.</p>
+            <p><b>Why this is the right shape and not a hack.</b> Note what just happened: the fluid solver implemented <code>eval</code> — answer a port query without changing anything — and <code>advance</code> — commit one accepted step. That's the same two-function interface foreign firmware implements, for the same reason. A CFD solver and a motor controller written in C are the same kind of stranger to our system, and we only build the mechanism once.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Boundary conditions aren't something we invented</h3>
+          <p>Worth saying, because it makes the whole arrangement feel less like a trick. A fluid solver <i>cannot run</i> without being told what's happening at its edges — how hard the inlet is being pushed, or how much is flowing through it. Every CFD run in the world has that, and normally a human types it in once and it never changes. All we're doing is supplying those numbers from the rest of the model instead, freshly every step. And the acausal rule — pressures match where things join, flows into a junction cancel — <i>is</i> the bookkeeping that keeps the two sides consistent. Flutter is the case that proves it has to work in both directions at once: the wing's motion changes the airflow, and the airflow loads the wing, inside a single step.</p>
+        </div>
+        <div class="card">
+          <h3>A million particles is a storage question, not a physics one</h3>
+          <p>Separate issue, and an easy mistake to make given that this is built on an ECS. A million particles are <i>not</i> a million Bevy entities. Entities are the right tool for two hundred distinct components with different data and different behaviour; they're the wrong tool for a million identical grains, where the per-entity overhead and the scattered memory would cost more than the physics. So the particle domain is <b>one</b> entity that owns big flat arrays of numbers plus whatever spatial index it needs, and nothing outside reaches into them. The only things the ECS tracks are the handful of components at the boundary — which is exactly the same arrangement as the fluid box, arrived at from a different direction.</p>
+        </div>
+        <div class="card">
+          <h3>What we give up, said plainly</h3>
+          <p>Three things, and none of them is a surprise once you see where they come from.</p>
+          <div class="detail">
+            <p><b>The solver loses the right to change its mind.</b> Normally it takes a step, decides it was too big, throws it away and retries smaller — which means putting every component back the way it was. That's trivial when a component is six numbers and impossible when it's a gigabyte of grid. So a fluid box is declared expensive to rewind, and the step at its boundary is fixed and final: it substeps internally to whatever it needs, but it is never asked to un-happen. Concretely, automatic step-size control stops at the edge of that box and we choose the coupling step by hand.</p>
+            <p><b>Accuracy at the join is measured, not promised.</b> Passing two numbers per step across the boundary is an approximation, and it introduces error that is genuinely hard to bound in advance. That's consistent with what's already been decided: we measure divergence per model and report it honestly, and we don't claim an end-to-end error bound we can't back up.</p>
+            <p><b>It's slow, and it should be.</b> This tier is hours-not-milliseconds, so it's for the run where the question requires it, not for the parameter sweep. The parameter sweep uses the fitted surrogate, and the harness is what tells you whether that was allowed.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>You can still watch it</h3>
+          <p>The rule from the previous section holds without amendment. The fluid domain publishes a buffer for drawing — particle positions, a slice through the grid, a surface — and the renderer reads it exactly the way it reads a gear's angle. One-way, with the solver's own state as the only truth. Watching a million particles is the same kind of operation as watching one gear turn, which is a good sign the boundary was drawn in the right place.</p>
+        </div>
+      </div>
+
+      <p>Where this lands in the plan: tier one is an ordinary domain plugin and could reasonably be the second or third one built, since water hammer is already on the acceptance list. Tier two is deliberately much later. What we owe it <i>now</i> is nothing extra — the two-function block interface it needs is the same one being built for foreign firmware, and the requirement is only that we don't accidentally design it so that a component must expose its internals to be part of the graph.</p>
     </section>
 
     <section>

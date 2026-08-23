@@ -3,23 +3,119 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>New Redline Site</title>
+  <title>Multi-domain physics simulator — planning</title>
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f4f1eb; color: #202024; }
-    main { width: min(680px, calc(100% - 40px)); padding: 56px; border: 1px solid #ddd7cd; border-radius: 24px; background: #fffdf9; box-shadow: 0 24px 70px rgba(39, 34, 27, .09); }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 48px 0; background: #f4f1eb; color: #202024; }
+    main { width: min(820px, calc(100% - 40px)); padding: 56px; border: 1px solid #ddd7cd; border-radius: 24px; background: #fffdf9; box-shadow: 0 24px 70px rgba(39, 34, 27, .09); }
     .eyebrow { margin: 0 0 16px; color: #d64d36; font-size: .78rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
-    h1 { margin: 0; font: 700 clamp(2.4rem, 8vw, 5rem)/.95 Georgia, serif; letter-spacing: -.045em; }
-    .intro { max-width: 48ch; margin: 24px 0 0; color: #625e58; font-size: 1.08rem; line-height: 1.65; }
-    code { padding: .15em .4em; border-radius: .35em; background: #eee9e1; color: #423d36; }
+    h1 { margin: 0; font: 700 clamp(2.2rem, 6vw, 3.6rem)/1 Georgia, serif; letter-spacing: -.045em; }
+    h2 { margin: 0 0 20px; font: 700 1.35rem/1.2 Georgia, serif; letter-spacing: -.02em; }
+    h3 { margin: 0 0 6px; font-size: 1rem; font-weight: 650; }
+    .intro { max-width: 60ch; margin: 24px 0 0; color: #625e58; font-size: 1.08rem; line-height: 1.65; }
+    section { margin: 48px 0 0; padding: 32px 0 0; border-top: 1px solid #ece6dc; }
+    p, li { color: #4b4740; line-height: 1.65; }
+    ul { margin: 0; padding-left: 1.1em; }
+    li { margin: 0 0 10px; }
+    li:last-child { margin-bottom: 0; }
+    .stack { display: grid; gap: 20px; }
+    .card { padding: 20px 22px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; }
+    .card p { margin: 0; font-size: .96rem; color: #625e58; }
+    .q { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; padding: 20px 22px; border: 1px solid #e7e1d7; border-left: 3px solid #d64d36; border-radius: 14px; background: #fbf8f2; }
+    .q .num { grid-row: span 2; color: #d64d36; font: 700 1.05rem/1.4 Georgia, serif; }
+    .q p { margin: 0; font-size: .96rem; color: #625e58; }
+    .q .lean { margin-top: 8px; }
+    .lean b { color: #423d36; font-weight: 650; }
+    .milestones { counter-reset: m; list-style: none; padding: 0; }
+    .milestones li { position: relative; padding-left: 2.6em; }
+    .milestones li::before { counter-increment: m; content: "M" counter(m); position: absolute; left: 0; color: #d64d36; font-size: .78rem; font-weight: 750; letter-spacing: .08em; }
+    code { padding: .15em .4em; border-radius: .35em; background: #eee9e1; color: #423d36; font-size: .92em; }
+    .note { margin: 48px 0 0; padding-top: 24px; border-top: 1px solid #ece6dc; color: #8a857c; font-size: .9rem; }
   </style>
 </head>
 <body>
   <main>
-    <p class="eyebrow">Redline starter</p>
-    <h1>Shape this page.</h1>
-    <p class="intro">Use the Redline controls in the lower-right corner to select this content and tell Claude what you want to build. This starter lives entirely in <code>index.html</code>.</p>
+    <p class="eyebrow">Planning doc — v0.1</p>
+    <h1>A pluggable multi-domain physics simulator.</h1>
+    <p class="intro">Rust and Bevy are settled. Everything below is a proposal, not a decision — select any block with the Redline controls and tell me what to change. We'll iterate on this page until the plan is right, then start building.</p>
+
+    <section>
+      <h2>What we're building</h2>
+      <p>A simulation core where each physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains advance on their own terms and exchange quantities through a shared, explicit coupling layer rather than by reaching into each other.</p>
+      <p>Bevy's ECS is the substrate: entities carry state components from any mix of domains, and the plugin system is already the extension point we need. Bevy's renderer gives us visualization for free, but the core should stay usable headless.</p>
+    </section>
+
+    <section>
+      <h2>Proposed architecture</h2>
+      <div class="stack">
+        <div class="card">
+          <h3>Domain plugins</h3>
+          <p>Each domain is a Bevy <code>Plugin</code> that registers its own components, resources, and systems into a shared fixed-timestep schedule. A domain declares what it reads and what it writes; nothing else is public.</p>
+        </div>
+        <div class="card">
+          <h3>Coupling layer</h3>
+          <p>Cross-domain exchange goes through typed exchange components — a fluid domain writes heat flux, the thermal domain reads it. Explicit, inspectable, and the only place where domains touch.</p>
+        </div>
+        <div class="card">
+          <h3>Solver scheduling</h3>
+          <p>A fixed master timestep with per-domain substepping. Domains that need finer resolution subcycle internally; the coupling layer syncs at master-step boundaries.</p>
+        </div>
+        <div class="card">
+          <h3>Integrators as a library</h3>
+          <p>Semi-implicit Euler, RK4, and friends live in the core as reusable pieces so each domain isn't reinventing time integration.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Open questions</h2>
+      <div class="stack">
+        <div class="q">
+          <span class="num">01</span>
+          <p>Which domain do we build first? The first one shapes the core's API more than any later one.</p>
+          <p class="lean"><b>My lean:</b> rigid-body mechanics — familiar, easy to eyeball for correctness, and it exercises substepping immediately.</p>
+        </div>
+        <div class="q">
+          <span class="num">02</span>
+          <p>Are plugins compiled in, or do we want dynamic loading / scripting so third parties can add domains without rebuilding?</p>
+          <p class="lean"><b>My lean:</b> compiled-in traits first. Dynamic loading is a large detour and we can keep the trait boundary clean enough to add it later.</p>
+        </div>
+        <div class="q">
+          <span class="num">03</span>
+          <p>How strict do we get about units and dimensional analysis? Type-level units catch real bugs but cost ergonomics everywhere.</p>
+          <p class="lean"><b>My lean:</b> newtypes over <code>f64</code> for the quantities that cross domain boundaries, plain floats inside a domain.</p>
+        </div>
+        <div class="q">
+          <span class="num">04</span>
+          <p>What's the intended use — an interactive sandbox, a batch solver you script and inspect afterward, or both?</p>
+          <p class="lean"><b>My lean:</b> headless core plus a Bevy app for visualization, so batch runs never depend on a window.</p>
+        </div>
+        <div class="q">
+          <span class="num">05</span>
+          <p>Determinism: do we need bit-reproducible runs across machines, or is run-to-run repeatability on one machine enough?</p>
+          <p class="lean"><b>My lean:</b> same-machine repeatability now, but avoid choices that foreclose full determinism later.</p>
+        </div>
+        <div class="q">
+          <span class="num">06</span>
+          <p>Do we reuse an existing physics crate (Rapier, Avian) for rigid body, or write our own so the coupling model is uniform across domains?</p>
+          <p class="lean"><b>My lean:</b> write our own simple solver first. Learning the domain API matters more early than physical fidelity.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Build order</h2>
+      <ul class="milestones">
+        <li><b>Core skeleton.</b> Cargo workspace, Bevy app, fixed-timestep schedule, the <code>Domain</code> trait and plugin registration.</li>
+        <li><b>First domain.</b> One real solver end to end, with a scene it can run and a way to watch it.</li>
+        <li><b>Second domain.</b> The one that proves the abstraction — deliberately unlike the first.</li>
+        <li><b>Coupling.</b> Exchange components, ordering rules, and a coupled scenario that would be wrong without them.</li>
+        <li><b>Tooling.</b> Scenario definition, state inspection, and enough diagnostics to trust the numbers.</li>
+      </ul>
+    </section>
+
+    <p class="note">Reply on any block above and I'll revise the plan. Once we're settled, this page becomes the spec we build against.</p>
   </main>
 </body>
 </html>

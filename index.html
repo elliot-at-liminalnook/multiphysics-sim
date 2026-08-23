@@ -64,7 +64,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.9</p>
+    <p class="eyebrow">Planning doc — v0.10</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
@@ -320,6 +320,18 @@
         <div class="card">
           <h3>Full 3D is just another connector kind</h3>
           <p>When geometry genuinely <i>is</i> the physics — a linkage, a pendulum swinging free in space, anything whose inertia depends on its configuration — the connector's potential is a spatial velocity and its flow is a wrench, force and torque carried together. Bodies and joints constrain frames the way resistors constrain electrical nodes. That's a new connector kind and a domain plugin, not a new mechanism, which is the entire reason the acausal rule was worth paying for.</p>
+        </div>
+        <div class="card">
+          <h3>Fields and particles: a million unknowns behind five ports</h3>
+          <p>The honest limit of everything above, and worth stating plainly. A connector graph is a <i>lumped</i> abstraction — it assumes a chunk of physics can be summarized by a few numbers at its boundary. That is exactly right for a pipe with an inlet and an outlet and exactly wrong for asking where the vortex sheds. Both are legitimate questions. The answer is to keep them separate rather than pretend one mechanism serves both.</p>
+          <div class="detail">
+            <p><b>Most fluid is a network, not a field.</b> Pipes, orifices, valves, pumps, tanks — pressure as potential, mass flow as flow, ordinary components in the graph with nothing special about them. Distributed behaviour comes from discretizing along the pipe: a hundred segments in series gets you compressibility and a finite wave speed, which is all water hammer actually needs, and the same move gives the Rijke tube its acoustic mode. This tier is where the large majority of engineering fluid lives, and it is already covered by the machinery on this page.</p>
+            <p><b>A real field solver is a domain that refuses to flatten.</b> A grid CFD, an SPH fluid, a DEM granular bed, a smoke volume: millions of degrees of freedom, its own timestep, its own solver, and nothing the acausal pipeline could usefully do with any of it. So it doesn't enter the pipeline. It's a <i>black box at the boundary</i> — the mechanism already settled for contact — and what it owes the graph is only what crosses its surface: inlet pressure, outlet mass flow, wall heat, net force on a body. Its cheap stand-in, a fitted loss coefficient or transfer function, is an ordinary component in the graph, which is the surrogate story applied to a continuum.</p>
+            <p><b>A port is a boundary condition. That's the whole trick.</b> Fixing the potential at a port is a Dirichlet condition on the solver's boundary; fixing the flow is a flux condition. Potentials-equal-and-flows-sum-to-zero <i>is</i> the coupling condition people otherwise write by hand. So the field domain publishes an effective admittance and an offset per port each step — how much flow its boundary produces per unit of potential, linearized — and the global solve treats those few numbers as that domain's equations. Five numbers stand in for a million unknowns for the duration of one step. Flutter is the acceptance case that forces this to be honest in both directions: the structure's motion changes the flow that loads the structure, inside the step.</p>
+            <p><b>Particles are not entities.</b> Worth being blunt, because ECS invites the mistake: a million particles are not a million Bevy entities. The domain owns flat arrays and whatever spatial structure it likes; the entity is the <i>domain instance</i>, and the only things the ECS tracks are the handful of components at its boundary. Fine-grained ECS is the right substrate for a hundred coupled components and the wrong one for a hundred thousand identical ones.</p>
+            <p><b>What it costs is the ability to retry.</b> The re-entrancy design assumes cheap snapshot and restore, and a gigabyte of grid state is not cheap. So a field domain declares itself expensive to roll back, and its boundary runs at a fixed step the master solver isn't allowed to reject — it substeps internally to whatever it needs. That's a real constraint rather than a detail: adaptive error control stops at the edge of a field domain, and per-model error is all we'll claim across it.</p>
+            <p><b>And it draws itself.</b> The rule of this section survives intact. A field domain publishes a visualization buffer — particle positions, a slice of the grid, an isosurface — and the renderer reads it exactly the way it reads a gear's angle. Still one-way, still the solver's state as the only truth.</p>
+          </div>
         </div>
         <div class="card">
           <h3>Geometry parameterizes; it doesn't derive</h3>

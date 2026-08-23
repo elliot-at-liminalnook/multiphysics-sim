@@ -22,6 +22,12 @@
     .stack { display: grid; gap: 20px; }
     .card { padding: 20px 22px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; }
     .card p { margin: 0; font-size: .96rem; color: #625e58; }
+    .ladder { list-style: none; margin: 28px 0; padding: 0 0 0 26px; border-left: 2px solid #ece6dc; }
+    .ladder li { position: relative; margin: 0 0 22px; }
+    .ladder li::before { content: ""; position: absolute; left: -32px; top: .45em; width: 9px; height: 9px; border-radius: 50%; background: #d64d36; }
+    .ladder .scale { display: block; margin-bottom: 2px; color: #d64d36; font-size: .72rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+    .ladder b { color: #202024; font-weight: 650; }
+    .ladder p { margin: 2px 0 0; font-size: .96rem; color: #625e58; }
     .diagram { margin: 28px 0; padding: 8px 12px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; }
     .diagram svg { display: block; width: 100%; height: auto; }
     .pairs { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; margin: 24px 0 28px; }
@@ -42,7 +48,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.2</p>
+    <p class="eyebrow">Planning doc — v0.3</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
     <p class="intro">Rust and Bevy are settled. Everything below is a proposal, not a decision — select any block with the Redline controls and tell me what to change. We'll iterate on this page until the plan is right, then start building.</p>
 
@@ -51,6 +57,60 @@
       <p>A simulation core where each physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains advance on their own terms and exchange quantities through a shared, explicit coupling layer rather than by reaching into each other.</p>
       <p>The model itself is data, not code. Which components exist and how they're wired together is authored while the simulation runs — on a canvas, or from a script — and takes effect without a rebuild. Plugins ship the physics; you assemble the system live. This is the Modelica bargain, and it's the part worth stealing.</p>
       <p>Bevy's ECS is the substrate: entities carry state components from any mix of domains, and the plugin system is already the extension point we need. Bevy's renderer gives us visualization for free, but the core should stay usable headless.</p>
+    </section>
+
+    <section>
+      <h2>Detail on demand</h2>
+      <p>The case worth designing for: a full circuit board solved honestly — extracted parasitics, hundreds of nodes, switching transients — and then handed to the rest of the system as a box with five ports. Both are the same board. The detailed model is the truth; the reduced one is what the enclosure, the fan, and the battery actually talk to.</p>
+      <p>Nothing about that is specific to boards. It's the general move: solve a subsystem at the resolution its physics demands, then expose a cheap surface that preserves whatever the outside world can observe. A gearbox, a battery pack, a hydraulic manifold — same shape.</p>
+
+      <ul class="ladder">
+        <li>
+          <span class="scale">Nanoseconds</span>
+          <b>Traces and packages.</b>
+          <p>An extracted RLC network with thousands of nodes. Where signal integrity and switching losses actually live.</p>
+        </li>
+        <li>
+          <span class="scale">Microseconds</span>
+          <b>Functional blocks.</b>
+          <p>Regulator, MCU, driver stage. Behavioral models with the transients averaged out but the control loops intact.</p>
+        </li>
+        <li>
+          <span class="scale">Milliseconds</span>
+          <b>The board as one component.</b>
+          <p>Power in, a handful of signal ports, one thermal port radiating total dissipation as a function of load.</p>
+        </li>
+        <li>
+          <span class="scale">Minutes</span>
+          <b>The board in its enclosure.</b>
+          <p>A heat source next to a fan curve and a chassis. Nothing at this level knows what a trace is.</p>
+        </li>
+      </ul>
+
+      <p>Every rung is a legitimate model of the same object, and which one you want depends entirely on the question you're asking. So fidelity should be a runtime dial, not an architectural commitment.</p>
+
+      <div class="stack">
+        <div class="card">
+          <h3>A subsystem is just a component</h3>
+          <p>A model containing a graph exposes ports exactly like a primitive does, and nothing outside can tell the difference. That one rule buys the whole hierarchy — boards nest in enclosures nest in vehicles, with no special case at any level.</p>
+        </div>
+        <div class="card">
+          <h3>Three ways to get the reduced model</h3>
+          <p>Hand-authored surrogates, validated against the detailed run. Automatic order reduction — linearize around an operating point, then balanced truncation or moment matching, which is the well-trodden path for interconnect. Or fit a small state-space to simulation data. All three end at the same place: something that honors the port contract for less money.</p>
+        </div>
+        <div class="card">
+          <h3>Validity envelopes</h3>
+          <p>A reduced model is only true somewhere — a frequency band, a load range, a temperature window. That envelope is declared as part of the model and checked while it runs, so leaving it is an event you can see rather than a wrong answer you can't.</p>
+        </div>
+        <div class="card">
+          <h3>Adaptive fidelity</h3>
+          <p>You pay for detail only where you're looking. The board runs as an RLC network while you're debugging a gate driver and as a three-parameter thermal box while you're tuning the fan curve — swapped at runtime, with state handed across. Timescale separation is exactly what makes the coupled system tractable at all.</p>
+        </div>
+        <div class="card">
+          <h3>Zoom is a real operation</h3>
+          <p>A reduced model keeps a link to what it was derived from, so opening the box on the canvas shows the network underneath — and changing that network marks the surrogate stale and offers to re-derive it. Provenance is what keeps the two from silently drifting apart.</p>
+        </div>
+      </div>
     </section>
 
     <section>
@@ -170,6 +230,21 @@
           <p>Do we import Modelica models, or define our own format? Compatibility buys an existing component library; a native format buys us years of not implementing a language spec.</p>
           <p class="lean"><b>My lean:</b> native format, serialized straight from the graph. A partial Modelica importer is worth doing once we know our own semantics, not before.</p>
         </div>
+        <div class="q">
+          <span class="num">10</span>
+          <p>Who produces the reduced models? Automatic order reduction is a deep specialty and only behaves for linear time-invariant subsystems; hand-authored surrogates work everywhere but rely on someone knowing the physics.</p>
+          <p class="lean"><b>My lean:</b> hand-authored surrogates plus a validation harness that runs both fidelities and reports divergence. Automatic reduction lands later, for the linear cases where it's actually sound.</p>
+        </div>
+        <div class="q">
+          <span class="num">11</span>
+          <p>What happens when a model leaves its validity envelope mid-run — warn and keep going, clamp, or automatically escalate to the detailed model? Escalation means re-initializing state and changing the timestep underneath a running solve.</p>
+          <p class="lean"><b>My lean:</b> warn and record by default, with auto-escalation opt-in per model. Silent fidelity switches are how you stop trusting a simulator.</p>
+        </div>
+        <div class="q">
+          <span class="num">12</span>
+          <p>How far do we take error accounting? Per-model error is tractable; composing bounds across a hierarchy of surrogates is a research problem.</p>
+          <p class="lean"><b>My lean:</b> measure and surface per-model divergence against the detailed run, and make no claim about end-to-end bounds we can't back up.</p>
+        </div>
       </div>
     </section>
 
@@ -180,6 +255,7 @@
         <li><b>Connector algebra.</b> Ports, potential/flow semantics, graph → flattened equations → solver, proven on a trivial domain like a resistor network.</li>
         <li><b>First domain.</b> One real solver end to end, with a scene it can run and a way to watch it.</li>
         <li><b>Second domain.</b> The one that proves the abstraction — deliberately unlike the first, coupled to the first through a bridging component.</li>
+        <li><b>Hierarchy.</b> Subsystems as components, one hand-authored surrogate beside its detailed model, and the harness that measures the gap between them.</li>
         <li><b>Live canvas.</b> Build, rewire, and inspect a running model without restarting it. Incremental recompile lands here.</li>
         <li><b>Scripting.</b> Embedded language over the same graph API, plus scenario files and enough diagnostics to trust the numbers.</li>
       </ul>

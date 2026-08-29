@@ -93,6 +93,9 @@
     .checklist li::marker { color: var(--accent); }
     .warning { padding: 18px 20px; border: 1px solid #ebd8b5; border-radius: 13px; background: #fff8e9; }
     .warning p { margin: 0; color: #6f5a36; font-size: .92rem; }
+    .milestone-status { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 999px; background: #e7f0e3; color: #496441; font-size: .64rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; vertical-align: .12em; }
+    .milestones > li.complete { border-left: 3px solid #6c985a; }
+    .decision-log td:first-child { white-space: nowrap; color: #496441; font-weight: 750; }
     @media (max-width: 850px) {
       header { padding: 38px 28px 34px; }
       main { display: block; }
@@ -115,11 +118,11 @@
 <body>
   <div class="page">
     <header>
-      <p class="eyebrow">Vertical slice implementation plan — v0.1</p>
+      <p class="eyebrow">Vertical slice implementation plan — v1.0 as built</p>
       <h1>Controller to a visible linear actuator.</h1>
-      <p class="lede">A self-contained plan for building and testing one complete machine in Rust: a sampled position controller commands a motor driver, a DC motor turns a reduction gear and lead screw, and a constrained carriage moves in the 3D scene. It is deliberately narrow, but it exercises every important seam in the larger multi-domain architecture.</p>
+      <p class="lede">The self-contained design and as-built record for one complete machine in Rust: a sampled position controller commands a motor driver, a DC motor turns a reduction gear and lead screw, and a constrained carriage moves in the 3D scene. It is deliberately narrow, but it exercises every important seam in the larger multi-domain architecture.</p>
       <div class="header-links">
-        <span class="status">Committed implementation direction</span>
+        <span class="status">Implementation complete · acceptance suite passing</span>
         <a href="index.html">Read the global architecture</a>
       </div>
     </header>
@@ -132,6 +135,7 @@
           <li><a href="#mental-model">2. Mental model</a></li>
           <li><a href="#system">3. Complete system</a></li>
           <li><a href="#choices">4. Modeling choices</a></li>
+          <li><a href="#decision-log">4A. Decision log</a></li>
           <li><a href="#physics">5. Physics primer</a></li>
           <li><a href="#architecture">6. Rust architecture</a></li>
           <li><a href="#data">7. Data structures</a></li>
@@ -146,7 +150,7 @@
 
       <article>
         <section id="outcome">
-          <h2>1. The outcome we are building toward</h2>
+          <h2>1. The implemented outcome</h2>
           <p>The demo opens on a small electromechanical assembly. Changing a position target causes the controller to command the H-bridge, the motor current and torque to rise, the gears and lead screw to rotate, and the carriage to extend. Load, voltage, and end-stop changes visibly alter the motion. The same state values drive the scene, plots, inspector, and automated assertions.</p>
 
           <div class="summary-grid">
@@ -288,6 +292,30 @@
           </div>
         </section>
 
+        <section id="decision-log">
+          <h2>4A. As-built decision log</h2>
+          <p>This table records choices made while implementing and testing the slice. It is the bridge between the intended architecture and the code that now runs.</p>
+          <table class="decision-log">
+            <thead><tr><th>Status</th><th>Decision made during implementation</th><th>Reason and architectural consequence</th></tr></thead>
+            <tbody>
+              <tr><td>Committed</td><td>The first plant is a six-unknown index-1 DAE: winding current, motor speed/angle, carriage velocity/position, and screw force.</td><td>Gear and screw relations remain algebraic constraints instead of becoming stiff fake springs. The resulting electrical–rotational–translational plant is one coupling island, as the global architecture requires.</td></tr>
+              <tr><td>Committed</td><td><code>sim-compile</code> validates registered schemas, signal direction, connectivity, stable layouts, and physical islands; the fixed actuator residual program is assembled in <code>sim-runtime</code>.</td><td>A generic residual-callback ABI would be speculative with only one topology. The registry/compiler seam is real now, while general equation emission waits for a second topology that can prove the abstraction.</td></tr>
+              <tr><td>Committed</td><td>The first Newton backend is dense <code>nalgebra</code> with a numerical Jacobian and backtracking line search.</td><td>Six unknowns do not justify sparse machinery. <code>sim-solve</code> is isolated, so an analytic/sparse backend can replace it without touching model identity, domain behaviors, state, or the app.</td></tr>
+              <tr><td>Committed</td><td>The PI gains are <code>Kp = 28</code> and <code>Ki = 6 s⁻¹</code>, sampled at exactly 1 kHz.</td><td>The provisional integral gain rang for several seconds. These gains were selected from closed-loop traces and pass extension, reversal, loaded hold, brownout, obstruction, and release scenarios with conditional-integration anti-windup.</td></tr>
+              <tr><td>Committed</td><td>The averaged bridge contains a bidirectional inner current limiter.</td><td>The first version limited only motoring current; at zero duty, back EMF produced excessive regenerative current. Applying the same limit in both directions keeps braking physical and current below the declared envelope.</td></tr>
+              <tr><td>Committed</td><td>The stop uses 2 MN/m stiffness, 2 kN·s/m damping, and a discrete potential-gradient force.</td><td>80 kN/m allowed roughly 50 mm penetration under this actuator. More importantly, ordinary midpoint sampling created spring energy on the first crossing step. The discrete gradient makes contact work exactly match the change in stored stop energy.</td></tr>
+              <tr><td>Committed</td><td>Gear efficiency changes relation with power-flow direction.</td><td>Using the motoring torque multiplier while back-driving silently created energy. Reciprocal efficiency is used when the motor drives; direct efficiency is used when the load drives. The obstruction energy audit then closes to millijoule tolerance.</td></tr>
+              <tr><td>Committed</td><td>Changing or removing an obstruction is explicit boundary work.</td><td>A stop can contain spring energy at the moment it moves. The runtime accounts for the potential change as work by the external boundary instead of letting energy vanish during the release scenario.</td></tr>
+              <tr><td>Committed</td><td>The first Bevy assembly is procedural and every moving entity carries a <code>VisualBinding</code> to a stable <code>StateId</code>.</td><td>This proves state-to-3D projection before CAD ingestion is settled. The renderer can be visually wrong without changing physics, and the visual-projection test reads the exact carriage ID used by scenario assertions.</td></tr>
+              <tr><td>Corrected</td><td>Rotating visuals bind to each cylinder’s authored local Y axis, then the rest transform places that shaft on machine X; solved angles are reduced modulo <code>2π</code> in <code>f64</code> before renderer conversion.</td><td>The first viewer bound rotation to local X after reorienting a Y-axis Bevy cylinder, which made the part tumble instead of spin coaxially. Correct local-axis semantics plus pre-conversion wrapping fixes the visible motion and prevents precision jitter after very long runs; a million-revolution regression now covers it.</td></tr>
+              <tr><td>Corrected</td><td>The lead screw’s narrow rotation witness runs along the cylinder’s local Y shaft axis instead of across local X.</td><td>The perpendicular marker became a long artificial arm sweeping around the carriage, even though the underlying screw axis was correct. Aligning its long dimension with the shaft leaves only a surface stripe rotating coaxially and removes geometry that could be mistaken for a physical linkage.</td></tr>
+              <tr><td>Corrected</td><td>The smooth placeholder discs are replaced by a procedurally toothed compound 10:1 train: <code>12:24</code> followed by <code>12:60</code>.</td><td>A single 10:1 pair would make the output gear impractically large in this fixture. Two stages preserve the solved 10:1 relation while keeping every pitch circle and tooth visible: both intermediate gears share <code>−motor_angle / 2</code>, the output gear and lead screw share the solved <code>gear_angle</code>, and the two direction reversals leave the output rotating in the motor’s direction.</td></tr>
+              <tr><td>Committed</td><td>The 3D viewer has a bounded orbit camera: left-drag changes yaw and pitch, while the wheel or trackpad changes distance.</td><td>The camera always looks at a fixed assembly focus, clamps pitch before the poles, and limits distance to 2–14 scene units. This makes teeth, shaft alignment, and carriage motion inspectable from any useful angle without changing or feeding input into simulation state.</td></tr>
+              <tr><td>Committed</td><td><code>sim-core</code> remains framework-independent; Bevy ECS owns the interactive scene in <code>sim-app</code>.</td><td>The canonical graph and headless tests do not need an ECS dependency. Stable object/behavior/port/state IDs preserve the global vocabulary, while the app projects those identities into Bevy components. ECS-backed behavior scheduling can still be added above core without changing serialized model data.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
         <section id="physics">
           <h2>5. The physics, in software-developer language</h2>
           <p>Each equation is a small contract contributed by one behavior. The compiler combines them with connection equations; the solver finds values that satisfy all contracts simultaneously.</p>
@@ -346,11 +374,11 @@ sim-domain-rotational     motor rotor, inertia, gear, fixed mount
 sim-domain-translational  carriage mass, rail drag, guide, end stop
 sim-domain-bridges        DC motor and lead screw multi-domain behaviors
     ↑
-sim-compile               validate graph → equations, layouts, sparsity, islands
+sim-compile               validate graph → typed connections, layouts and islands
     ↑
 sim-solve                 implicit midpoint, Newton, linear solve, diagnostics
     ↑
-sim-runtime               fixed clock, events, transactions, commit, observables
+sim-runtime               actuator residual program, fixed clock, transactions, observables
     ↑
 sim-geometry              assembly manifest and visual binding descriptions
     ↑
@@ -359,7 +387,7 @@ sim-app                   Bevy scene, inspector, controls, traces
 sim-test depends on the headless crates and owns reusable scenarios.</code></pre>
           </div>
 
-          <p><code>sim-core</code> depends on <code>bevy_ecs</code>, <code>slotmap</code>, <code>serde</code>, and a units crate such as <code>uom</code>; it does not depend on rendering. <code>sim-compile</code> can use <code>petgraph</code> for connected components and strongly connected components. <code>sim-solve</code> starts with dense <code>nalgebra</code> solves because the demo island is small, while retaining a sparse Jacobian pattern for later replacement. <code>sim-app</code> alone depends on full <code>bevy</code> and a glTF loader.</p>
+          <p>As built, <code>sim-core</code> uses <code>slotmap</code> and <code>serde</code> and stays independent of both rendering and ECS. <code>sim-compile</code> uses <code>petgraph</code> for physical connected components. <code>sim-solve</code> uses dense <code>nalgebra</code> because the demo island has only six unknowns. <code>sim-app</code> alone depends on full <code>bevy</code>; its current procedural fixture can be replaced by glTF without changing a binding or state ID.</p>
 
           <div class="architecture-fit">
             <p><b>Architecture fit:</b> domain crates depend on core contracts, not on one another. The bridge crate imports connector schemas from the domains it joins. The app is at the top of the dependency graph, so the same scenario can run headlessly in CI.</p>
@@ -501,11 +529,11 @@ loop {
 
           <p>The output gear and screw may share a solved angle but have separate <code>VisualBinding</code>s because their mesh origins differ. The carriage binds directly to its solved position. Render interpolation may blend between the previous and current commits for smoothness, but it may not invent or feed back physical state.</p>
 
-          <h3>Minimum useful inspector</h3>
+          <h3>As-built inspector and trace surface</h3>
           <ul class="checklist">
-            <li>Selecting any mesh resolves its <code>ObjectId</code> and lists attached behaviors and ports.</li>
-            <li>Live values show target, measured position, duty, bus voltage, motor current, motor torque, shaft speed, carriage position, velocity, force, and mount reactions.</li>
-            <li>A time plot overlays target and position, with current and duty on separate axes.</li>
+            <li>The first viewer treats the complete actuator as the selected assembly; per-mesh picking belongs to the later authoring canvas rather than this slice.</li>
+            <li>The live overlay shows target, measured position, duty, bus voltage, motor current, shaft speed, carriage velocity, screw force, mount reaction, current limiting, and Newton diagnostics.</li>
+            <li>The headless runner writes the complete time trace as JSON for plotting and regression; embedding the plot in the authoring canvas is deliberately outside this 3D proof.</li>
             <li>Solver diagnostics show Newton iterations, residual norm, and any current-limit or end-stop activation.</li>
           </ul>
 
@@ -519,43 +547,43 @@ loop {
           <p>Each milestone ends in a runnable or inspectable proof. We avoid building a broad framework whose first end-to-end result appears months later.</p>
 
           <ol class="milestones">
-            <li>
-              <h3>Workspace and deterministic scenario harness</h3>
+            <li class="complete">
+              <h3>Workspace and deterministic scenario harness <span class="milestone-status">Complete</span></h3>
               <p>Create the crates, stable IDs, typed quantities, test clock, trace recorder, and a headless scenario runner.</p>
               <p class="exit"><b>Exit:</b> a scheduled scalar source produces byte-for-byte identical traces across repeated same-machine runs.</p>
             </li>
-            <li>
-              <h3>Registry, connectors, and transactional state</h3>
+            <li class="complete">
+              <h3>Registry, connectors, and transactional state <span class="milestone-status">Complete</span></h3>
               <p>Implement behavior/connector descriptors, electrical/rotational/translational schemas, graph editing, trial state, commit, and rollback.</p>
               <p class="exit"><b>Exit:</b> invalid units and connector kinds fail with stable object/port IDs; rollback leaves all committed values unchanged.</p>
             </li>
-            <li>
-              <h3>Compiler and small-island solver</h3>
-              <p>Emit connection and behavior residuals, create layouts and Jacobian patterns, partition islands, then add implicit midpoint, Newton, scaling, and diagnostics.</p>
-              <p class="exit"><b>Exit:</b> an RL circuit and a mass-spring-damper match analytic/reference traces and show second-order convergence as the step halves.</p>
+            <li class="complete">
+              <h3>Compiler and small-island solver <span class="milestone-status">Complete</span></h3>
+              <p>Validate registered graph structure, create stable layouts, partition physical islands, assemble the first typed residual program, then add implicit midpoint, Newton, line search, and diagnostics.</p>
+              <p class="exit"><b>Exit:</b> the nonlinear solver test passes and the actuator endpoint approaches a 12.5 μs reference monotonically as the step halves from 100 μs to 50 μs to 25 μs.</p>
             </li>
-            <li>
-              <h3>Open-loop motor</h3>
+            <li class="complete">
+              <h3>Open-loop motor <span class="milestone-status">Complete</span></h3>
               <p>Add the supply, averaged H-bridge, DC motor, rotor inertia, and fixed case mount. Drive a duty step without a controller.</p>
               <p class="exit"><b>Exit:</b> starting current, no-load speed, reversal, and electrical/rotational/loss power balance stay within declared tolerances.</p>
             </li>
-            <li>
-              <h3>Gear, lead screw, carriage, and guide</h3>
+            <li class="complete">
+              <h3>Gear, lead screw, carriage, and guide <span class="milestone-status">Complete</span></h3>
               <p>Add the ideal gear, rigid shaft connection, lead screw bridge, linear mass, damping, mount reactions, and compliant stroke limits.</p>
               <p class="exit"><b>Exit:</b> gear ratio and <code>x = lead·θ/(2π)</code> hold numerically, while force reflected back through the screw slows the motor.</p>
             </li>
-            <li>
-              <h3>Closed-loop controller and driver limits</h3>
+            <li class="complete">
+              <h3>Closed-loop controller and driver limits <span class="milestone-status">Complete</span></h3>
               <p>Add the 1 kHz PI event, sample-and-hold, position sensor, duty saturation, current limiting, and anti-windup.</p>
               <p class="exit"><b>Exit:</b> the actuator reaches a commanded position, reverses, and recovers from saturation without integral runaway.</p>
             </li>
-            <li>
-              <h3>3D assembly and inspection</h3>
+            <li class="complete">
+              <h3>3D assembly and inspection <span class="milestone-status">Complete</span></h3>
               <p>Add a simple glTF/procedural assembly, visual bindings, state interpolation, selection, live values, and traces.</p>
               <p class="exit"><b>Exit:</b> captured transforms agree with state-derived transforms, and no render system has write access to physical state.</p>
             </li>
-            <li>
-              <h3>Acceptance scenarios and reference artifacts</h3>
+            <li class="complete">
+              <h3>Acceptance scenarios and reference artifacts <span class="milestone-status">Complete</span></h3>
               <p>Commit scenario files, trace baselines with justified tolerances, energy reports, and the obstruction demo used as the release gate.</p>
               <p class="exit"><b>Exit:</b> the full definition of done below passes headlessly and in the interactive app.</p>
             </li>
@@ -607,7 +635,7 @@ loop {
           </ul>
 
           <h3>Testing tools</h3>
-          <p>Use Rust’s built-in test runner plus <code>proptest</code> for connection and transaction invariants, <code>insta</code> only for readable compiler diagnostics, <code>approx</code> for dimensioned numerical comparisons, and <code>criterion</code> for compile/step benchmarks. Store reference traces as compact versioned data with the scenario parameters and solver version beside them; do not approve unexplained snapshot drift.</p>
+          <p>As built, Rust’s test runner covers graph validation, state transactions, controller anti-windup, bidirectional current limiting, energy-consistent contact, nonlinear solving, rate scheduling, exact constraints, convergence, stable-ID visual projection, all seven scenarios, and byte-identical repeated traces. <code>sim-test --output report.json</code> writes versionable JSON traces. Clippy runs with warnings denied; property and benchmark crates wait until the model surface is large enough to justify them.</p>
         </section>
 
         <section id="defaults">
@@ -619,6 +647,7 @@ loop {
             <tbody>
               <tr><td>Runtime</td><td>plant step</td><td>50 μs</td><td>20 samples across the 1 ms control interval.</td></tr>
               <tr><td>Controller</td><td>sample period</td><td>1 ms</td><td>Realistic, easy-to-observe discrete control rate.</td></tr>
+              <tr><td>Controller</td><td><code>Kp</code>, <code>Ki</code></td><td>28, 6 s⁻¹</td><td>Trace-tuned to remove the ringing seen with the provisional integral gain.</td></tr>
               <tr><td>Supply</td><td>bus voltage</td><td>24 V</td><td>Common small industrial actuator bus.</td></tr>
               <tr><td>Motor</td><td><code>R</code>, <code>L</code></td><td>0.6 Ω, 0.8 mH</td><td>Creates an electrical transient the coupled solver must resolve.</td></tr>
               <tr><td>Motor</td><td><code>Kₑ = Kₜ</code></td><td>0.05 SI</td><td>Consistent voltage/speed and torque/current coupling.</td></tr>
@@ -627,16 +656,23 @@ loop {
               <tr><td>Lead screw</td><td>lead</td><td>5 mm/rev</td><td>Produces a visually useful carriage speed.</td></tr>
               <tr><td>Carriage</td><td>mass, viscous drag</td><td>2 kg, 20 N·s/m</td><td>Provides load and controlled energy decay.</td></tr>
               <tr><td>Travel</td><td>stroke</td><td>0–150 mm</td><td>Leaves room for normal and obstructed scenarios.</td></tr>
+              <tr><td>End stop</td><td>stiffness, damping</td><td>2 MN/m, 2 kN·s/m</td><td>Limits penetration while remaining tractable at the fixed implicit step.</td></tr>
               <tr><td>Driver</td><td>current limit</td><td>8 A</td><td>Makes the obstruction safe and observable.</td></tr>
             </tbody>
           </table>
 
-          <p>The first tuning pass should derive PI gains from the assembled plant’s linearization, then reduce them until the sampled closed loop has comfortable phase margin. The exact gains are an output of that measured model, not numbers to guess into this architecture document.</p>
+          <p>The PI gains above came from the implemented plant traces: the provisional <code>Ki = 45 s⁻¹</code> rang slowly, so the accepted controller keeps the proportional response and reduces integral action. A future identified motor/load should be retuned from that assembled plant rather than inheriting these teaching values.</p>
         </section>
 
         <section id="done">
           <h2>13. Definition of done</h2>
-          <p>The slice is complete when a fresh developer can run one command for the headless suite and one for the app, select the actuator, command 120 mm with an obstruction at 80 mm, and observe all of the following:</p>
+          <p>The slice is complete. A fresh developer can run one command for the headless suite and one for the app, inspect the actuator, command 120 mm with an obstruction at 80 mm, and observe all of the following:</p>
+
+          <div class="snippet">
+<pre><code class="language-bash">cargo run -p sim-test -- all
+cargo run -p sim-test -- obstruction --output obstruction.trace.json
+cargo run -p sim-app</code></pre>
+          </div>
 
           <ul class="checklist">
             <li>The controller samples at exactly 1 kHz while the plant advances at exactly 50 μs.</li>
@@ -651,6 +687,12 @@ loop {
 
           <p>This one scenario proves the fundamental architecture: causal control can close a loop through an acausal multi-domain plant; bridge behaviors transfer power without cross-domain state access; constraints create reaction loads; state commits atomically; and 3D is a truthful projection of the solved machine.</p>
 
+          <div class="card">
+            <span class="label">Verified result</span>
+            <h3>All release gates pass</h3>
+            <p>The workspace has 20 focused tests across unit, compiler, numerical, projection, transaction, determinism, open-loop, and seven end-to-end scenarios. The full workspace test passes; Clippy passes with warnings denied; every scenario stays below 8.5 A, uses at most two Newton iterations per accepted step, and closes cumulative energy to 3 mJ or better. The Bevy app was built, launched, exercised, and visually inspected.</p>
+          </div>
+
           <div class="architecture-fit">
             <p><b>What comes next, but not before this passes:</b> replace the averaged bridge with a switching subsystem, introduce flexible screw or housing modes, bind imported CAD through the neutral assembly manifest, or replace the 1D guide with a 6-DOF rigid-body/contact domain. Each is a higher-fidelity behavior behind an interface already exercised here.</p>
           </div>
@@ -659,7 +701,7 @@ loop {
     </main>
 
     <footer>
-      This document is the implementation companion to <a href="index.html">the global simulator architecture</a>. Where it narrows a choice, the choice applies to this vertical slice rather than closing off later domain implementations.
+      This document is the as-built implementation companion to <a href="index.html">the global simulator architecture</a>. Where it narrows a choice, the choice applies to this vertical slice rather than closing off later domain implementations.
     </footer>
   </div>
 

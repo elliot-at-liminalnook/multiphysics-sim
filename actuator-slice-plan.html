@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Motor-to-linear-actuator slice — implementation and test plan</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/styles/github.min.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202024;
+      --text: #4b4740;
+      --muted: #6d685f;
+      --line: #e7e1d7;
+      --paper: #fffdf9;
+      --soft: #fbf8f2;
+      --accent: #d64d36;
+      --blue: #356985;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: #f4f1eb; color: var(--ink); }
+    .page { width: min(1120px, calc(100% - 32px)); margin: 28px auto 64px; }
+    header, main, footer { background: var(--paper); border: 1px solid #ddd7cd; }
+    header { padding: 52px 56px 44px; border-radius: 24px 24px 0 0; }
+    main { display: grid; grid-template-columns: 230px minmax(0, 1fr); border-top: 0; }
+    footer { padding: 24px 56px; border-top: 0; border-radius: 0 0 24px 24px; color: #817b72; font-size: .9rem; }
+    .eyebrow { margin: 0 0 15px; color: var(--accent); font-size: .76rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { max-width: 850px; margin: 0; font: 700 clamp(2.25rem, 6vw, 4rem)/1 Georgia, serif; letter-spacing: -.05em; }
+    h2 { margin: 0 0 18px; font: 700 1.55rem/1.15 Georgia, serif; letter-spacing: -.025em; }
+    h3 { margin: 0 0 7px; font-size: 1rem; }
+    h4 { margin: 0 0 5px; font-size: .92rem; }
+    p, li { color: var(--text); line-height: 1.65; }
+    p { margin: 0 0 15px; }
+    a { color: #a43625; text-underline-offset: .18em; }
+    code { padding: .14em .38em; border-radius: .35em; background: #eee9e1; color: #423d36; font-size: .92em; }
+    .lede { max-width: 75ch; margin: 22px 0 0; color: #625e58; font-size: 1.08rem; }
+    .header-links { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 25px; font-size: .92rem; }
+    .status { display: inline-flex; align-items: center; gap: 7px; color: #556d4a; font-weight: 700; }
+    .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #6c985a; }
+    nav { position: sticky; top: 0; align-self: start; max-height: 100vh; padding: 36px 24px 36px 32px; overflow: auto; border-right: 1px solid var(--line); }
+    nav p { margin: 0 0 12px; color: #8a7f70; font-size: .69rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    nav ol { margin: 0; padding: 0; list-style: none; }
+    nav li { margin: 0; line-height: 1.3; }
+    nav a { display: block; padding: 6px 0; color: #625e58; font-size: .83rem; text-decoration: none; }
+    nav a:hover { color: var(--accent); }
+    article { min-width: 0; padding: 4px 56px 56px; }
+    section { padding-top: 48px; margin-top: 44px; border-top: 1px solid #ece6dc; scroll-margin-top: 16px; }
+    section:first-child { margin-top: 0; border-top: 0; }
+    .summary-grid, .cards, .decision-grid, .test-grid { display: grid; gap: 14px; }
+    .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cards, .decision-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .test-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { padding: 19px 21px; border: 1px solid var(--line); border-radius: 14px; background: var(--soft); }
+    .card p, .card li { margin-bottom: 0; color: #625e58; font-size: .94rem; }
+    .card ul { margin: 9px 0 0; padding-left: 1.1em; }
+    .card li { margin: 0 0 7px; }
+    .label { display: block; margin-bottom: 6px; color: var(--accent); font-size: .69rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .architecture-fit { margin: 20px 0; padding: 14px 18px; border-left: 3px solid var(--blue); border-radius: 0 10px 10px 0; background: #f2f7f8; }
+    .architecture-fit p { margin: 0; color: #48616e; font-size: .91rem; }
+    .architecture-fit b { color: #294c5f; }
+    .flow { margin: 24px 0; padding: 22px; border: 1px solid var(--line); border-radius: 15px; background: var(--soft); overflow-x: auto; }
+    .flow-row { display: flex; align-items: stretch; min-width: 790px; }
+    .flow-node { flex: 1; display: grid; place-items: center; min-height: 74px; padding: 10px; border: 1px solid #dcd4c8; border-radius: 10px; background: white; text-align: center; }
+    .flow-node b { display: block; font-size: .9rem; }
+    .flow-node small { color: #817b72; font-size: .74rem; line-height: 1.35; }
+    .arrow { display: grid; place-items: center; flex: 0 0 28px; color: var(--accent); font-weight: 800; }
+    .feedback { margin-top: 12px; min-width: 790px; color: var(--blue); font-size: .85rem; text-align: center; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 13px 0 0; }
+    .pill { padding: 4px 9px; border-radius: 999px; background: #eee9e1; color: #625e58; font-size: .7rem; font-weight: 750; letter-spacing: .04em; }
+    .pill.signal { background: #e8f2f5; color: #356985; }
+    .pill.physical { background: #f6e9e5; color: #a43625; }
+    .equation { display: grid; grid-template-columns: 180px 1fr; gap: 16px; padding: 16px 0; border-bottom: 1px dashed #e5ded3; }
+    .equation:last-child { border-bottom: 0; }
+    .equation h3 { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #423d36; }
+    .equation p { margin: 0; font-size: .94rem; }
+    .snippet { margin: 20px 0; padding: 19px 21px; border: 1px solid var(--line); border-radius: 14px; background: var(--soft); overflow-x: auto; }
+    .snippet pre { margin: 0; font: 500 .82rem/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .snippet pre code.hljs { padding: 0; background: transparent; }
+    .caption { margin-top: -11px; color: #817b72; font-size: .82rem; }
+    .milestones { counter-reset: milestone; margin: 22px 0 0; padding: 0; list-style: none; }
+    .milestones > li { position: relative; margin: 0 0 12px; padding: 18px 20px 18px 70px; border: 1px solid var(--line); border-radius: 13px; background: var(--soft); }
+    .milestones > li::before { counter-increment: milestone; content: "M" counter(milestone); position: absolute; left: 20px; top: 18px; color: var(--accent); font-size: .78rem; font-weight: 850; letter-spacing: .09em; }
+    .milestones p { margin: 4px 0 0; font-size: .93rem; }
+    .exit { color: #496441; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: .88rem; }
+    th, td { padding: 11px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #f5f0e8; color: #423d36; }
+    td { color: #5e5951; line-height: 1.5; }
+    .checklist { padding-left: 1.2em; }
+    .checklist li { margin-bottom: 9px; }
+    .checklist li::marker { color: var(--accent); }
+    .warning { padding: 18px 20px; border: 1px solid #ebd8b5; border-radius: 13px; background: #fff8e9; }
+    .warning p { margin: 0; color: #6f5a36; font-size: .92rem; }
+    @media (max-width: 850px) {
+      header { padding: 38px 28px 34px; }
+      main { display: block; }
+      nav { position: static; max-height: none; padding: 24px 28px; border-right: 0; border-bottom: 1px solid var(--line); }
+      nav ol { columns: 2; }
+      article { padding: 2px 28px 40px; }
+      .summary-grid, .test-grid { grid-template-columns: 1fr; }
+      .cards, .decision-grid { grid-template-columns: 1fr; }
+      .equation { grid-template-columns: 1fr; gap: 4px; }
+      footer { padding: 22px 28px; }
+    }
+    @media (max-width: 520px) {
+      .page { width: min(100% - 16px, 1120px); margin-top: 8px; }
+      header { border-radius: 16px 16px 0 0; }
+      nav ol { columns: 1; }
+      article { padding-inline: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <p class="eyebrow">Vertical slice implementation plan — v0.1</p>
+      <h1>Controller to a visible linear actuator.</h1>
+      <p class="lede">A self-contained plan for building and testing one complete machine in Rust: a sampled position controller commands a motor driver, a DC motor turns a reduction gear and lead screw, and a constrained carriage moves in the 3D scene. It is deliberately narrow, but it exercises every important seam in the larger multi-domain architecture.</p>
+      <div class="header-links">
+        <span class="status">Committed implementation direction</span>
+        <a href="index.html">Read the global architecture</a>
+      </div>
+    </header>
+
+    <main>
+      <nav aria-label="On this page">
+        <p>On this page</p>
+        <ol>
+          <li><a href="#outcome">1. Outcome</a></li>
+          <li><a href="#mental-model">2. Mental model</a></li>
+          <li><a href="#system">3. Complete system</a></li>
+          <li><a href="#choices">4. Modeling choices</a></li>
+          <li><a href="#physics">5. Physics primer</a></li>
+          <li><a href="#architecture">6. Rust architecture</a></li>
+          <li><a href="#data">7. Data structures</a></li>
+          <li><a href="#compile">8. Compile and step</a></li>
+          <li><a href="#visuals">9. 3D projection</a></li>
+          <li><a href="#milestones">10. Milestones</a></li>
+          <li><a href="#testing">11. Test strategy</a></li>
+          <li><a href="#defaults">12. Demo parameters</a></li>
+          <li><a href="#done">13. Definition of done</a></li>
+        </ol>
+      </nav>
+
+      <article>
+        <section id="outcome">
+          <h2>1. The outcome we are building toward</h2>
+          <p>The demo opens on a small electromechanical assembly. Changing a position target causes the controller to command the H-bridge, the motor current and torque to rise, the gears and lead screw to rotate, and the carriage to extend. Load, voltage, and end-stop changes visibly alter the motion. The same state values drive the scene, plots, inspector, and automated assertions.</p>
+
+          <div class="summary-grid">
+            <div class="card">
+              <span class="label">Input</span>
+              <h3>Desired carriage position</h3>
+              <p>A causal signal in metres, changed by a scenario or UI control.</p>
+            </div>
+            <div class="card">
+              <span class="label">Physical result</span>
+              <h3>Coupled motion and load</h3>
+              <p>Voltage creates current, current creates torque, and torque becomes linear force.</p>
+            </div>
+            <div class="card">
+              <span class="label">Visible result</span>
+              <h3>One truthful 3D view</h3>
+              <p>Rotor, gears, screw, and carriage project from committed solver state.</p>
+            </div>
+          </div>
+
+          <div class="architecture-fit">
+            <p><b>How this follows the global architecture:</b> this is a vertical slice, not a one-off demo. It proves directed control signals, typed acausal connectors, cross-domain bridge behaviors, transactional state, a coupling-island solver, and one-way 3D projection in one inspectable machine.</p>
+          </div>
+        </section>
+
+        <section id="mental-model">
+          <h2>2. The five ideas a non-physicist needs</h2>
+          <div class="cards">
+            <div class="card">
+              <h3>Signals carry information</h3>
+              <p>The target, measured position, and duty command have a direction: a sender computes a value and a receiver reads it. These are ordinary causal data-flow edges.</p>
+            </div>
+            <div class="card">
+              <h3>Connectors carry interaction</h3>
+              <p>A wire, shaft, or sliding joint does not have a natural input and output. Both attached parts jointly determine voltage/current, angle/torque, or position/force. The compiler solves those relationships together.</p>
+            </div>
+            <div class="card">
+              <h3>Behavior is separate from identity</h3>
+              <p>The motor is one selectable <code>ObjectId</code>, but it owns electrical, rotational, and visual behaviors. Ports and state have their own stable IDs so nothing depends on array order or a display name.</p>
+            </div>
+            <div class="card">
+              <h3>State is the truth</h3>
+              <p>Current, angles, velocity, controller integral, and carriage position live in the <code>StateStore</code>. Solver arrays and render transforms are disposable views of those stable values.</p>
+            </div>
+            <div class="card">
+              <h3>A step is a transaction</h3>
+              <p>The solver experiments on trial state until its equations agree. Only a successful step becomes committed state; failure leaves the visible machine and controller unchanged.</p>
+            </div>
+            <div class="card">
+              <h3>Geometry is a view, not physics</h3>
+              <p>A glTF mesh says what the assembly looks like. Behaviors say how it acts. Visual bindings place meshes from solved angles and positions, and the solver never reads the resulting transforms back.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="system">
+          <h2>3. The complete system and its boundaries</h2>
+          <p>The slice contains a real closed loop. The controller sees carriage position—not a privileged internal motor variable—and the command travels through the same driver and mechanics that create the visible motion.</p>
+
+          <div class="flow" role="img" aria-label="Position target flows through controller, H-bridge, DC motor, gear, lead screw, and carriage. Position sensor feeds the measured carriage position back to the controller.">
+            <div class="flow-row">
+              <div class="flow-node"><div><b>Position target</b><small>causal signal · m</small></div></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><div><b>PI controller</b><small>causal signal · duty</small></div></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><div><b>H-bridge</b><small>electrical · V, A</small></div></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><div><b>DC motor</b><small>electrical ↔ rotational</small></div></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><div><b>Gear pair</b><small>rotational · rad, N·m</small></div></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><div><b>Lead screw</b><small>rotational ↔ translational</small></div></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><div><b>Carriage</b><small>translational · m, N</small></div></div>
+            </div>
+            <div class="feedback">↖ measured carriage position returns through an ideal position sensor ↙</div>
+            <div class="legend">
+              <span class="pill signal">blue text = directed information</span>
+              <span class="pill physical">physical connectors = bidirectional interaction</span>
+            </div>
+          </div>
+
+          <p>The motor case, gearbox case, screw bearing, and rail are attached to a fixed chassis boundary. Those boundaries impose zero motion but still report reaction torque and force. That matters: “fixed” must mean the ground absorbs the equal-and-opposite load, not that the load silently disappears.</p>
+
+          <div class="architecture-fit">
+            <p><b>Architecture fit:</b> the DC motor and lead screw are bridge behaviors. Each explicitly owns ports from the domains it couples; no domain crate reaches into another domain’s state. The connected plant becomes one strongly coupled island because electrical current, shaft speed, and carriage force affect one another within the same step.</p>
+          </div>
+        </section>
+
+        <section id="choices">
+          <h2>4. Committed modeling choices</h2>
+          <p>These choices make the first implementation understandable and deterministic while keeping the seams needed for later fidelity.</p>
+
+          <div class="decision-grid">
+            <div class="card">
+              <span class="label">Time</span>
+              <h3>50 μs fixed plant step</h3>
+              <p>The electro-mechanical island advances at 20 kHz. A fixed step removes event-location and rollback complexity from the first slice while resolving the motor’s electrical time constant.</p>
+            </div>
+            <div class="card">
+              <span class="label">Control</span>
+              <h3>1 kHz sampled PI controller</h3>
+              <p>It runs exactly every 20 plant steps. Its duty output is held between samples, making discrete timing explicit and repeatable.</p>
+            </div>
+            <div class="card">
+              <span class="label">Power electronics</span>
+              <h3>Averaged H-bridge</h3>
+              <p>It applies average motor voltage instead of simulating every transistor edge. This preserves bus voltage, duty, current limit, reversal, and power loss without requiring nanosecond switching steps.</p>
+            </div>
+            <div class="card">
+              <span class="label">Mechanics</span>
+              <h3>One-dimensional axes first</h3>
+              <p>Rotational and translational connectors model the power path. Full six-degree-of-freedom bodies and general contact are unnecessary to prove the coupling or render the assembly.</p>
+            </div>
+            <div class="card">
+              <span class="label">Numerics</span>
+              <h3>Implicit midpoint plus Newton</h3>
+              <p>The method solves electrical and mechanical state together and behaves well for the stiff mix of small inductance, heavy carriage, and end-stop compliance.</p>
+            </div>
+            <div class="card">
+              <span class="label">Contact</span>
+              <h3>Compliant end stop</h3>
+              <p>A spring-damper force activates beyond the allowed stroke. It is deterministic and differentiable enough for Newton; general collision/contact remains a later domain.</p>
+            </div>
+            <div class="card">
+              <span class="label">Geometry</span>
+              <h3>glTF or procedural meshes</h3>
+              <p>Named assembly nodes are bound to stable state IDs. STEP import and automatic joint inference are not prerequisites for validating the runtime.</p>
+            </div>
+            <div class="card">
+              <span class="label">Determinism</span>
+              <h3>Same machine, same result</h3>
+              <p>Stable iteration order, fixed timing, and explicit event scheduling make regression traces repeatable on one machine. Cross-platform bit identity is not required.</p>
+            </div>
+          </div>
+
+          <div class="warning">
+            <p><b>Intentional boundary:</b> the first H-bridge is an averaged behavioral model, not a transistor-level circuit. Its external electrical contract stays the same, so a switching model can replace it later when ripple, EMI, or switching losses become the question.</p>
+          </div>
+        </section>
+
+        <section id="physics">
+          <h2>5. The physics, in software-developer language</h2>
+          <p>Each equation is a small contract contributed by one behavior. The compiler combines them with connection equations; the solver finds values that satisfy all contracts simultaneously.</p>
+
+          <div class="equation">
+            <h3>V = R·i + L·di/dt + Kₑ·ω</h3>
+            <p><b>Motor electrical balance.</b> Applied voltage is spent pushing current through resistance, changing magnetic energy in the winding, and opposing the voltage generated by the spinning motor. That last term is why a faster motor naturally draws less current at the same voltage.</p>
+          </div>
+          <div class="equation">
+            <h3>τ = Kₜ·i</h3>
+            <p><b>Motor conversion.</b> Current produces torque. In SI units <code>Kₜ</code> and <code>Kₑ</code> have matching numerical values for an ideal motor; together the two equations conserve power apart from winding loss.</p>
+          </div>
+          <div class="equation">
+            <h3>J·dω/dt = Στ</h3>
+            <p><b>Rotational motion.</b> Net torque changes angular speed. <code>J</code> is rotational inertia—the rotational analogue of mass. Angle then accumulates from speed through <code>dθ/dt = ω</code>.</p>
+          </div>
+          <div class="equation">
+            <h3>θout = θin/N</h3>
+            <p><b>Ideal reduction gear.</b> A ratio <code>N = 10</code> makes the output turn ten times slower and ideally produce ten times the torque. The paired torque equation includes efficiency and the sign convention required for power balance.</p>
+          </div>
+          <div class="equation">
+            <h3>x = k·θ, &nbsp; k = lead/(2π)</h3>
+            <p><b>Lead screw conversion.</b> One screw revolution advances the nut by one lead. The force/torque constraint is <code>τ + k·F = 0</code> in the lossless sign convention, so rotational power <code>τ·ω</code> matches linear power <code>F·v</code>.</p>
+          </div>
+          <div class="equation">
+            <h3>m·dv/dt = ΣF</h3>
+            <p><b>Linear motion.</b> Net force changes carriage velocity, and <code>dx/dt = v</code> updates position. Rail drag contributes <code>−b·v</code>; gravity is absent because the demo rail is horizontal.</p>
+          </div>
+          <div class="equation">
+            <h3>Fstop = −ks·δ − cs·v</h3>
+            <p><b>End-stop contact.</b> Once the carriage penetrates a configured limit by <code>δ</code>, a stiff spring pushes it back and a damper removes chatter. This approximates local contact, not material deformation.</p>
+          </div>
+
+          <h3>What a connector contributes</h3>
+          <table>
+            <thead><tr><th>Connector</th><th>Shared “across” value</th><th>Conserved “through” value</th><th>Power check</th></tr></thead>
+            <tbody>
+              <tr><td>Electrical</td><td>Voltage <code>V</code></td><td>Signed current <code>i</code></td><td><code>V·i</code></td></tr>
+              <tr><td>Rotational</td><td>Angle <code>θ</code></td><td>Signed torque <code>τ</code></td><td><code>ω·τ</code></td></tr>
+              <tr><td>Translational</td><td>Position <code>x</code></td><td>Signed force <code>F</code></td><td><code>v·F</code></td></tr>
+            </tbody>
+          </table>
+          <p class="caption">At a connection, across values agree and through values sum to zero. These two generic rules are the acausal graph’s core algorithm; each connector kind supplies its own units and power diagnostic.</p>
+        </section>
+
+        <section id="architecture">
+          <h2>6. Rust workspace and dependency direction</h2>
+          <p>The workspace mirrors the global architecture. The slice implements only the necessary behavior descriptors, but it does so in the crates where future domains will live.</p>
+
+          <div class="snippet">
+<pre><code class="language-plaintext">sim-core                  IDs, ModelWorld, registry, ports, quantities, StateStore
+    ↑
+sim-domain-control        PI controller, sampler, position sensor
+sim-domain-electrical     supply and averaged H-bridge
+sim-domain-rotational     motor rotor, inertia, gear, fixed mount
+sim-domain-translational  carriage mass, rail drag, guide, end stop
+sim-domain-bridges        DC motor and lead screw multi-domain behaviors
+    ↑
+sim-compile               validate graph → equations, layouts, sparsity, islands
+    ↑
+sim-solve                 implicit midpoint, Newton, linear solve, diagnostics
+    ↑
+sim-runtime               fixed clock, events, transactions, commit, observables
+    ↑
+sim-geometry              assembly manifest and visual binding descriptions
+    ↑
+sim-app                   Bevy scene, inspector, controls, traces
+
+sim-test depends on the headless crates and owns reusable scenarios.</code></pre>
+          </div>
+
+          <p><code>sim-core</code> depends on <code>bevy_ecs</code>, <code>slotmap</code>, <code>serde</code>, and a units crate such as <code>uom</code>; it does not depend on rendering. <code>sim-compile</code> can use <code>petgraph</code> for connected components and strongly connected components. <code>sim-solve</code> starts with dense <code>nalgebra</code> solves because the demo island is small, while retaining a sparse Jacobian pattern for later replacement. <code>sim-app</code> alone depends on full <code>bevy</code> and a glTF loader.</p>
+
+          <div class="architecture-fit">
+            <p><b>Architecture fit:</b> domain crates depend on core contracts, not on one another. The bridge crate imports connector schemas from the domains it joins. The app is at the top of the dependency graph, so the same scenario can run headlessly in CI.</p>
+          </div>
+        </section>
+
+        <section id="data">
+          <h2>7. Fundamental data structures</h2>
+          <p>The editable graph is identity-rich and contains no solver-specific row numbers. Compilation creates dense, disposable layouts that map back to stable IDs.</p>
+
+          <div class="snippet">
+<pre><code class="language-rust">struct ModelWorld {
+    objects: SlotMap&lt;ObjectId, SimObject&gt;,
+    behaviors: SlotMap&lt;BehaviorId, BehaviorInstance&gt;,
+    ports: SlotMap&lt;PortId, Port&gt;,
+    connections: Vec&lt;Connection&gt;,
+    state: StateStore,
+}
+
+struct BehaviorInstance {
+    object: ObjectId,       // the selectable physical/CAD identity
+    kind: BehaviorTypeId,   // resolved through the plugin registry
+    parameters: ParameterMap,
+    state: Vec&lt;StateId&gt;,
+}
+
+enum PortSchema {
+    Acausal(ConnectorTypeId),
+    SignalIn(QuantityType),
+    SignalOut(QuantityType),
+}</code></pre>
+          </div>
+
+          <div class="snippet">
+<pre><code class="language-rust">trait BehaviorDescriptor: Send + Sync {
+    fn declare(&amp;self) -&gt; BehaviorSchema;
+    fn emit_residuals(&amp;self, ctx: &amp;mut ResidualBuilder);
+    fn emit_jacobian(&amp;self, ctx: &amp;mut JacobianBuilder);
+}
+
+struct CompiledIsland {
+    state_layout: DenseStateLayout,       // StateId ↔ dense index
+    algebraic_layout: AlgebraicLayout,
+    residual_ops: Vec&lt;ResidualOp&gt;,
+    jacobian_pattern: CsrPattern,
+    integrator: IntegratorKind,
+}
+
+struct VisualBinding {
+    object: ObjectId,
+    source: StateId,
+    motion: VisualMotion,                 // rotate or translate on a local axis
+}</code></pre>
+          </div>
+
+          <p>The registry owns connector and behavior schemas, serialization hooks, state declarations, and residual builders. The compiler only asks descriptors what they contribute; it never contains a closed <code>match</code> over every motor, gear, or actuator type.</p>
+
+          <h3>The behaviors in this model</h3>
+          <table>
+            <thead><tr><th>Behavior</th><th>Ports</th><th>Persistent state</th><th>Responsibility</th></tr></thead>
+            <tbody>
+              <tr><td><code>PositionController</code></td><td>target in, measured in, duty out</td><td>integral, last sample</td><td>Sampled PI with saturation and anti-windup.</td></tr>
+              <tr><td><code>PowerSupply</code></td><td>electrical</td><td>optional bus state</td><td>24 V boundary and current observability.</td></tr>
+              <tr><td><code>AveragedHBridge</code></td><td>bus electrical, motor electrical, duty in</td><td>fault flags</td><td>Average voltage, current limit, direction, loss.</td></tr>
+              <tr><td><code>DcMotor</code></td><td>electrical, rotor flange</td><td>winding current</td><td>Electrical-to-rotational energy conversion.</td></tr>
+              <tr><td><code>RotorInertia</code></td><td>rotational</td><td>angle, speed</td><td>Stores rotational kinetic energy.</td></tr>
+              <tr><td><code>IdealGear</code></td><td>input and output flanges</td><td>none</td><td>Constrains ratio and transfers torque.</td></tr>
+              <tr><td><code>LeadScrew</code></td><td>rotational, translational</td><td>none</td><td>Converts rotation to linear displacement and torque to force.</td></tr>
+              <tr><td><code>LinearMass</code></td><td>translational</td><td>position, velocity</td><td>Stores linear kinetic energy.</td></tr>
+              <tr><td><code>PrismaticGuide</code></td><td>translational, chassis</td><td>none</td><td>Allows one axis and reports guide reaction.</td></tr>
+              <tr><td><code>CompliantEndStop</code></td><td>translational</td><td>none</td><td>Applies force beyond either stroke limit.</td></tr>
+              <tr><td><code>PositionSensor</code></td><td>translational, signal out</td><td>optional quantization state</td><td>Publishes carriage position without privileged reads.</td></tr>
+              <tr><td><code>FixedMount</code></td><td>rotational or translational</td><td>none</td><td>Constrains the chassis side and exposes reaction load.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="compile">
+          <h2>8. From graph to one accepted simulation step</h2>
+          <h3>Compile once after an edit</h3>
+          <ol class="checklist">
+            <li>Freeze an immutable snapshot of objects, behaviors, ports, parameters, connections, and stable state IDs.</li>
+            <li>Validate signal direction, quantity units, connector types, and required ports.</li>
+            <li>Collapse connected acausal ports into nodes; emit across-equality and through-conservation equations.</li>
+            <li>Ask every behavior descriptor to emit residual equations and Jacobian entries.</li>
+            <li>Match equations to unknowns and reject under- or over-constrained models with IDs a user can inspect.</li>
+            <li>Partition the dependency graph into strongly connected coupling islands.</li>
+            <li>Allocate dense trial arrays and retain <code>StateId</code>-to-index maps for state, rendering, traces, and diagnostics.</li>
+          </ol>
+
+          <p>For this machine, the electrical, rotational, and translational equations form one plant island. The sampled controller is scheduled as a discrete causal event whose output is held constant while that island solves.</p>
+
+          <h3>Advance one fixed step</h3>
+          <div class="snippet">
+<pre><code class="language-rust">const DT: Duration = Duration::from_micros(50);
+
+loop {
+    let mut trial = state.begin_trial();
+
+    // Exactly every 20 plant steps, update the 1 kHz controller.
+    scheduler.apply_due_events(time, &amp;mut trial)?;
+
+    // Newton may evaluate these equations repeatedly, but only against trial state.
+    solve_implicit_midpoint(&amp;compiled.plant_island, time, DT, &amp;mut trial)?;
+
+    // All state becomes visible together—or none of it does.
+    state.commit(trial)?;
+    observables.publish(state.committed());
+    time += DT;
+}</code></pre>
+          </div>
+
+          <p>Implicit midpoint evaluates each dynamic equation halfway between old and proposed new state. Newton’s method repeatedly computes a residual vector <code>R</code>, solves <code>J·Δx = −R</code>, and applies <code>Δx</code> until every scaled residual is below tolerance. A line search prevents a large update from making a nonlinear saturation or end stop worse.</p>
+
+          <div class="architecture-fit">
+            <p><b>Architecture fit:</b> trial/commit gives the controller integral, physical state, and any opaque block memory one mutation boundary. Repeated Newton evaluation is pure. A failed solve discards the entire trial, so the renderer never displays half of a step.</p>
+          </div>
+        </section>
+
+        <section id="visuals">
+          <h2>9. Making the same state visible in 3D</h2>
+          <p>The scene has a chassis root plus nodes for motor rotor, input gear, output gear, screw, and carriage. Their rest transforms come from glTF or a procedural fixture. Their motion comes from visual bindings to committed state:</p>
+
+          <div class="snippet">
+<pre><code class="language-rust">fn project_visuals(
+    committed: Res&lt;CommittedState&gt;,
+    mut visuals: Query&lt;(&amp;VisualBinding, &amp;RestTransform, &amp;mut Transform)&gt;,
+) {
+    for (binding, rest, mut transform) in &amp;mut visuals {
+        *transform = match binding.motion {
+            VisualMotion::Rotate { axis } =&gt;
+                rest.0 * rotation(axis, committed.angle(binding.source)),
+            VisualMotion::Translate { axis } =&gt;
+                rest.0 * translation(axis * committed.length(binding.source)),
+        };
+    }
+}</code></pre>
+          </div>
+
+          <p>The output gear and screw may share a solved angle but have separate <code>VisualBinding</code>s because their mesh origins differ. The carriage binds directly to its solved position. Render interpolation may blend between the previous and current commits for smoothness, but it may not invent or feed back physical state.</p>
+
+          <h3>Minimum useful inspector</h3>
+          <ul class="checklist">
+            <li>Selecting any mesh resolves its <code>ObjectId</code> and lists attached behaviors and ports.</li>
+            <li>Live values show target, measured position, duty, bus voltage, motor current, motor torque, shaft speed, carriage position, velocity, force, and mount reactions.</li>
+            <li>A time plot overlays target and position, with current and duty on separate axes.</li>
+            <li>Solver diagnostics show Newton iterations, residual norm, and any current-limit or end-stop activation.</li>
+          </ul>
+
+          <div class="architecture-fit">
+            <p><b>Architecture fit:</b> tests, traces, inspector, and renderer all resolve the same stable IDs from the committed <code>StateStore</code>. There is no second “animation state” to synchronize.</p>
+          </div>
+        </section>
+
+        <section id="milestones">
+          <h2>10. Implementation milestones</h2>
+          <p>Each milestone ends in a runnable or inspectable proof. We avoid building a broad framework whose first end-to-end result appears months later.</p>
+
+          <ol class="milestones">
+            <li>
+              <h3>Workspace and deterministic scenario harness</h3>
+              <p>Create the crates, stable IDs, typed quantities, test clock, trace recorder, and a headless scenario runner.</p>
+              <p class="exit"><b>Exit:</b> a scheduled scalar source produces byte-for-byte identical traces across repeated same-machine runs.</p>
+            </li>
+            <li>
+              <h3>Registry, connectors, and transactional state</h3>
+              <p>Implement behavior/connector descriptors, electrical/rotational/translational schemas, graph editing, trial state, commit, and rollback.</p>
+              <p class="exit"><b>Exit:</b> invalid units and connector kinds fail with stable object/port IDs; rollback leaves all committed values unchanged.</p>
+            </li>
+            <li>
+              <h3>Compiler and small-island solver</h3>
+              <p>Emit connection and behavior residuals, create layouts and Jacobian patterns, partition islands, then add implicit midpoint, Newton, scaling, and diagnostics.</p>
+              <p class="exit"><b>Exit:</b> an RL circuit and a mass-spring-damper match analytic/reference traces and show second-order convergence as the step halves.</p>
+            </li>
+            <li>
+              <h3>Open-loop motor</h3>
+              <p>Add the supply, averaged H-bridge, DC motor, rotor inertia, and fixed case mount. Drive a duty step without a controller.</p>
+              <p class="exit"><b>Exit:</b> starting current, no-load speed, reversal, and electrical/rotational/loss power balance stay within declared tolerances.</p>
+            </li>
+            <li>
+              <h3>Gear, lead screw, carriage, and guide</h3>
+              <p>Add the ideal gear, rigid shaft connection, lead screw bridge, linear mass, damping, mount reactions, and compliant stroke limits.</p>
+              <p class="exit"><b>Exit:</b> gear ratio and <code>x = lead·θ/(2π)</code> hold numerically, while force reflected back through the screw slows the motor.</p>
+            </li>
+            <li>
+              <h3>Closed-loop controller and driver limits</h3>
+              <p>Add the 1 kHz PI event, sample-and-hold, position sensor, duty saturation, current limiting, and anti-windup.</p>
+              <p class="exit"><b>Exit:</b> the actuator reaches a commanded position, reverses, and recovers from saturation without integral runaway.</p>
+            </li>
+            <li>
+              <h3>3D assembly and inspection</h3>
+              <p>Add a simple glTF/procedural assembly, visual bindings, state interpolation, selection, live values, and traces.</p>
+              <p class="exit"><b>Exit:</b> captured transforms agree with state-derived transforms, and no render system has write access to physical state.</p>
+            </li>
+            <li>
+              <h3>Acceptance scenarios and reference artifacts</h3>
+              <p>Commit scenario files, trace baselines with justified tolerances, energy reports, and the obstruction demo used as the release gate.</p>
+              <p class="exit"><b>Exit:</b> the full definition of done below passes headlessly and in the interactive app.</p>
+            </li>
+          </ol>
+        </section>
+
+        <section id="testing">
+          <h2>11. Test strategy</h2>
+          <div class="test-grid">
+            <div class="card">
+              <span class="label">Fast</span>
+              <h3>Unit and property tests</h3>
+              <p>Check signs, units, local residuals, Jacobians against finite differences, connector conservation, PI saturation, and state transactions.</p>
+            </div>
+            <div class="card">
+              <span class="label">Structural</span>
+              <h3>Compiler tests</h3>
+              <p>Golden small graphs cover missing equations, extra constraints, incompatible ports, island partitioning, and stable-to-dense mappings.</p>
+            </div>
+            <div class="card">
+              <span class="label">Behavioral</span>
+              <h3>Scenario tests</h3>
+              <p>Drive the whole loop, record named observables, and assert outcomes across electrical, rotational, translational, and visual layers.</p>
+            </div>
+          </div>
+
+          <h3>Required end-to-end scenarios</h3>
+          <table>
+            <thead><tr><th>Scenario</th><th>Expected behavior</th><th>What it proves</th></tr></thead>
+            <tbody>
+              <tr><td>Extend to 100 mm</td><td>Position settles near target; current peaks then falls.</td><td>Closed-loop signal path and energy conversion.</td></tr>
+              <tr><td>Reverse to 20 mm</td><td>Duty and current reverse; gears and carriage reverse coherently.</td><td>Sign conventions and bidirectional driver.</td></tr>
+              <tr><td>Apply external load</td><td>Speed drops, current and reaction load rise, controller recovers.</td><td>Load reflects through screw, gear, and motor.</td></tr>
+              <tr><td>Brownout 24 V → 12 V</td><td>Acceleration falls and settling takes longer without a visual discontinuity.</td><td>Electrical boundary affects mechanics through equations.</td></tr>
+              <tr><td>Obstruction at 80 mm</td><td>Carriage stops, current limit activates, integral remains bounded.</td><td>End stop, driver limit, anti-windup, and reactions.</td></tr>
+              <tr><td>Release obstruction</td><td>Controller resumes toward target without an extreme overshoot.</td><td>Stored controller state and physical state are coherent.</td></tr>
+              <tr><td>Zero command, coast</td><td>Energy decays only through declared electrical/mechanical losses.</td><td>Energy bookkeeping and absence of hidden animation dynamics.</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Numerical checks</h3>
+          <ul class="checklist">
+            <li><b>Residual:</b> every accepted step meets scaled absolute and relative tolerances.</li>
+            <li><b>Convergence:</b> halving <code>dt</code> from 100 μs to 50 μs to 25 μs approaches a reference with the expected midpoint trend away from discontinuities.</li>
+            <li><b>Power:</b> input electrical energy equals stored kinetic/magnetic energy, useful work, and declared loss within integrated tolerance.</li>
+            <li><b>Constraints:</b> gear angle ratio and screw displacement relation remain below explicit error bounds.</li>
+            <li><b>Transactions:</b> injected Newton failure does not advance PI integral, physical state, traces, or visual snapshots.</li>
+            <li><b>Visual projection:</b> for sampled commits, scene transforms equal pure transforms calculated from the bound <code>StateId</code>s.</li>
+          </ul>
+
+          <h3>Testing tools</h3>
+          <p>Use Rust’s built-in test runner plus <code>proptest</code> for connection and transaction invariants, <code>insta</code> only for readable compiler diagnostics, <code>approx</code> for dimensioned numerical comparisons, and <code>criterion</code> for compile/step benchmarks. Store reference traces as compact versioned data with the scenario parameters and solver version beside them; do not approve unexplained snapshot drift.</p>
+        </section>
+
+        <section id="defaults">
+          <h2>12. Default demo parameters</h2>
+          <p>These are plausible teaching values, not a claim about a specific commercial actuator. Every quantity is configured through typed SI parameters.</p>
+
+          <table>
+            <thead><tr><th>Part</th><th>Parameter</th><th>Initial value</th><th>Reason</th></tr></thead>
+            <tbody>
+              <tr><td>Runtime</td><td>plant step</td><td>50 μs</td><td>20 samples across the 1 ms control interval.</td></tr>
+              <tr><td>Controller</td><td>sample period</td><td>1 ms</td><td>Realistic, easy-to-observe discrete control rate.</td></tr>
+              <tr><td>Supply</td><td>bus voltage</td><td>24 V</td><td>Common small industrial actuator bus.</td></tr>
+              <tr><td>Motor</td><td><code>R</code>, <code>L</code></td><td>0.6 Ω, 0.8 mH</td><td>Creates an electrical transient the coupled solver must resolve.</td></tr>
+              <tr><td>Motor</td><td><code>Kₑ = Kₜ</code></td><td>0.05 SI</td><td>Consistent voltage/speed and torque/current coupling.</td></tr>
+              <tr><td>Rotor</td><td>inertia</td><td>2×10⁻⁴ kg·m²</td><td>Enough rotational storage to make coast-down visible.</td></tr>
+              <tr><td>Gear</td><td>reduction, efficiency</td><td>10:1, 90%</td><td>Trades speed for actuator force and includes declared loss.</td></tr>
+              <tr><td>Lead screw</td><td>lead</td><td>5 mm/rev</td><td>Produces a visually useful carriage speed.</td></tr>
+              <tr><td>Carriage</td><td>mass, viscous drag</td><td>2 kg, 20 N·s/m</td><td>Provides load and controlled energy decay.</td></tr>
+              <tr><td>Travel</td><td>stroke</td><td>0–150 mm</td><td>Leaves room for normal and obstructed scenarios.</td></tr>
+              <tr><td>Driver</td><td>current limit</td><td>8 A</td><td>Makes the obstruction safe and observable.</td></tr>
+            </tbody>
+          </table>
+
+          <p>The first tuning pass should derive PI gains from the assembled plant’s linearization, then reduce them until the sampled closed loop has comfortable phase margin. The exact gains are an output of that measured model, not numbers to guess into this architecture document.</p>
+        </section>
+
+        <section id="done">
+          <h2>13. Definition of done</h2>
+          <p>The slice is complete when a fresh developer can run one command for the headless suite and one for the app, select the actuator, command 120 mm with an obstruction at 80 mm, and observe all of the following:</p>
+
+          <ul class="checklist">
+            <li>The controller samples at exactly 1 kHz while the plant advances at exactly 50 μs.</li>
+            <li>The H-bridge reaches its 8 A limit; motor torque rises from that solved current.</li>
+            <li>The gear and lead-screw constraints convert motor rotation into the correct carriage position.</li>
+            <li>The obstruction stops the carriage, produces a mount reaction, and does not allow PI integral windup.</li>
+            <li>Releasing the obstruction resumes motion toward the target without an unstable jump.</li>
+            <li>Rotor, gears, screw, and carriage display transforms derive from the same committed IDs used by the assertions.</li>
+            <li>Connector power and whole-system energy reports close within declared numerical tolerance.</li>
+            <li>Repeated same-machine runs produce the same trace, and an injected failed step produces no partial mutation.</li>
+          </ul>
+
+          <p>This one scenario proves the fundamental architecture: causal control can close a loop through an acausal multi-domain plant; bridge behaviors transfer power without cross-domain state access; constraints create reaction loads; state commits atomically; and 3D is a truthful projection of the solved machine.</p>
+
+          <div class="architecture-fit">
+            <p><b>What comes next, but not before this passes:</b> replace the averaged bridge with a switching subsystem, introduce flexible screw or housing modes, bind imported CAD through the neutral assembly manifest, or replace the 1D guide with a 6-DOF rigid-body/contact domain. Each is a higher-fidelity behavior behind an interface already exercised here.</p>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      This document is the implementation companion to <a href="index.html">the global simulator architecture</a>. Where it narrows a choice, the choice applies to this vertical slice rather than closing off later domain implementations.
+    </footer>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</body>
+</html>

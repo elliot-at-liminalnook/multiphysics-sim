@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Multi-domain physics simulator — planning</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/styles/github.min.css">
   <style>
     :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
     * { box-sizing: border-box; }
@@ -28,6 +29,7 @@
     .proves b { color: #423d36; font-weight: 650; }
     .snippet { margin: 26px 0; padding: 20px 22px; border: 1px solid #e7e1d7; border-radius: 14px; background: #fbf8f2; overflow-x: auto; }
     .snippet pre { margin: 0; font: 500 .84rem/1.8 ui-monospace, SFMono-Regular, Menlo, monospace; color: #5a554d; }
+    .snippet pre code.hljs { padding: 0; background: transparent; }
     .snippet .k { color: #d64d36; font-weight: 700; }
     .ladder { list-style: none; margin: 28px 0; padding: 0 0 0 26px; border-left: 2px solid #ece6dc; }
     .ladder li { position: relative; margin: 0 0 22px; }
@@ -64,16 +66,17 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Planning doc — v0.18</p>
+    <p class="eyebrow">Planning doc — v0.21</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
-    <p class="intro">Rust and Bevy are settled, and a first round of decisions is recorded below. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
+    <p class="intro">Rust and Bevy are settled, the first controller-to-machine slice is defined, and the architecture now has one consistent account of connectors, time, state, plugins and CAD. The complete motor-driver-to-linear-actuator build and test plan is available as a <a href="actuator-slice-plan.html">self-contained implementation companion</a>. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
 
     <section>
       <h2>What we're building</h2>
-      <p>A simulation core where every physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains never reach into each other; they meet at acausal connectors, ports carrying a potential and a flow, and the solver works out causality from the assembled system. That one rule is what makes multi-domain coupling uniform.</p>
+      <p>A simulation core where every physics domain — rigid body, thermal, fluid, electrical, whatever comes later — is an independently authored plugin. Domains never reach into each other; behaviors meet either at typed acausal connectors or at explicitly directed causal signals. An acausal connector carries an <i>across</i> variable and a conserved <i>through</i> variable, and the compiler works out computational causality. Each connector kind defines its own units, compatibility rule and energy accounting rather than pretending every pair has the same physical product.</p>
       <p>The model is data, not code — authored while the simulation runs, from a canvas or a script. A subsystem is anything that honors its ports: a nested graph, a reduced surrogate standing in for a thousand nodes, or firmware we didn't write — as source, as WASM, or as a binary running on an emulated chip. Fidelity is a runtime dial rather than an architectural commitment.</p>
+      <p>One vocabulary rule keeps the layers straight. An <i>object</i> is the persistent physical or CAD identity a user selects. A <i>behavior</i> is a registered equation or block implementation attached to an object. A <i>port</i> belongs to a behavior, and state belongs to stable state ids. “Component” remains informal prose for a user-facing block, never an implementation identity.</p>
       <p>The bar is emergence. Perturb one edge of a rigorous system and behavior nobody encoded should fall out — a pendulum that stands upright when you shake it, a tube that sings when you heat it — so the acceptance suite is a list of documented surprises, checked by assertions that span domains in a single statement.</p>
-      <p>Bevy's ECS is the substrate: one entity carries components from any mix of domains at once — a resistor is an electrical element, a heat source and a lump of mass without being three objects — and the plugin system is already the extension point we need. <i>A resistor is three things at once</i> below is what that buys. The renderer gives us visualization for free, but the core stays usable headless — and the scene is strictly a <i>view</i> of state, never an input to it. That one-way rule is what lets a gear you can watch turn be the same object as five equations; the mechanism is <i>A motor that spins a gear you can see</i> below.</p>
+      <p>Bevy's ECS is the substrate: one semantic object may carry behaviors from any mix of domains at once — a resistor is an electrical element, a heat source and a lump of mass without becoming three visible objects — while each behavior, port and state value keeps its own stable identity. <i>A resistor is three things at once</i> below is what that buys. The core stays usable headless, and the scene is strictly a <i>view</i> of committed state, never an input to it. That one-way rule is what lets a gear you can watch turn be the same object the solver and tests refer to.</p>
     </section>
 
     <section>
@@ -135,23 +138,23 @@
       <div class="stack">
         <div class="card">
           <h3>Domain plugins</h3>
-          <p>Each domain is a Bevy <code>Plugin</code> that registers its own components, resources, and systems into a shared fixed-timestep schedule. A domain declares what it reads and what it writes; nothing else is public.</p>
+          <p>Each independently authored domain registers stable behavior descriptors: schemas, state layout, port declarations, residual builders, Jacobian strategy and serialization hooks. A small adapter may also register Bevy authoring and visualization systems, but physics domains never advance themselves through the Bevy schedule; the compiled runtime owns stepping.</p>
         </div>
         <div class="card">
           <h3>Coupling layer</h3>
-          <p>Cross-domain exchange goes through acausal connectors rather than hand-wired reads and writes — see below. Explicit, inspectable, and the only place where domains touch.</p>
+          <p>Cross-domain exchange goes through typed connectors rather than hand-wired reads and writes. A behavior that genuinely couples domains — a DC motor, electro-thermal resistor or mount — explicitly owns ports of several kinds and the constitutive equations between them. Domains remain independent because the bridge behavior, not either neighbouring domain, owns the coupling.</p>
         </div>
         <div class="card">
           <h3>Black boxes at the boundary</h3>
-          <p>Not every domain flattens into equations — a contact solver or a grid fluid solves internally however it likes, and forcing it through a DAE would be the wrong trade. What such a domain owes the graph is a description of its <i>ports</i> over the step: an effective admittance plus an offset, published before the step, which the global solve treats as that domain's equations. Once the step is accepted it advances its own state to match. When its response is too nonlinear to linearize usefully, it participates iteratively instead — answering port queries and paying for the extra evaluations. Either way it's the same block interface a foreign controller uses, which is why hybrid costs us one mechanism rather than two. The worked example, in plain language, is <i>Fluids, and a million particles</i> below.</p>
+          <p>Not every domain flattens into equations — a contact solver or a grid fluid solves internally however it likes. Such a block publishes a discrete-time multiport relation for the coupling step, normally <code>f = Y·a + b</code>: a full boundary Jacobian plus an offset, including cross-port effects and the block's history. A rollback-capable nonlinear block may answer pure residual queries iteratively; a non-rewindable block receives one pre-agreed fixed coupling step and advances exactly once after acceptance. The same transactional block seam later hosts foreign firmware.</p>
         </div>
         <div class="card">
           <h3>Solver scheduling</h3>
-          <p>A fixed master timestep with per-domain substepping. Domains that need finer resolution subcycle internally; the coupling layer syncs at master-step boundaries.</p>
+          <p>One scheduler owns a fixed coupling timeline. The compiler groups states and algebraic constraints into strongly connected <i>coupling islands</i>; each island advances atomically with one integration policy. Opaque blocks may substep internally, and sampled causal blocks update only at declared event times. General adaptive and multirate coupling wait until rollback and error semantics are proven.</p>
         </div>
         <div class="card">
           <h3>Integrators as a library</h3>
-          <p>Verlet, implicit midpoint, BDF and friends live in the core as reusable pieces so no domain reinvents time integration — but which one a domain uses is the domain's choice, because the right answer genuinely differs between a pendulum and a thermal mass.</p>
+          <p>Verlet, implicit midpoint, BDF and friends live in the core as reusable pieces, but the choice belongs to a compiled coupling island rather than to each domain independently. A flattened electro-mechanical loop must take one coherent step; a self-contained opaque thermal or fluid block may use a different internal method behind its accepted boundary contract.</p>
         </div>
       </div>
     </section>
@@ -159,18 +162,19 @@
     <section>
       <h2>What a step actually is</h2>
       <p>Worth laying out plainly, because the rest of this document leans on it and none of it explains itself. A physics model does not tell you the future. It tells you <i>rates</i>. Newton gives you an acceleration, not a position. A thermal mass gives you a rate of temperature change, not a temperature. A capacitor tells you how fast its voltage is moving. Wire a hundred such components together and you still have nothing but a very well-informed description of the present instant.</p>
-      <p>The integrator is the piece that turns rates into futures, and it is the only reason a simulation moves at all. Everything else on this page — connectors, domain plugins, foreign blocks, index reduction — exists to assemble one honest statement of how fast everything is changing right now. The integrator is what consumes that statement and takes a step. Strip the vocabulary away and the whole simulator is this loop:</p>
+      <p>An integrator turns rates into futures, and it is the only reason a continuous model moves at all. Everything else on this page — connectors, plugins, foreign blocks, index reduction — assembles honest residuals and constraints for a coupling island. The runtime schedules those islands and discrete events against one committed timeline. Strip the vocabulary away and the first implementation is this fixed-step transaction:</p>
 
       <div class="snippet">
-<pre><span class="k">loop</span> {                                  // one master timestep
-  ẋ, g = assemble(model, x, t)          // rates from every domain, plus connector constraints
-  x′   = integrator.step(x, ẋ, g, h)    // the only line that moves time
-  <span class="k">if</span> error(x′) &gt; tol { h = h / 2; <span class="k">continue</span> }
-  advance_blocks(h); commit(x′); t += h
-}</pre>
+<pre><code class="language-rust">loop {                                      // one fixed coupling step
+  trial.reset_from(&amp;committed);             // nothing authoritative mutates
+  apply_due_events(t, &amp;mut trial);          // controllers mutate trial state once
+  solve_coupling_islands(t, h, &amp;committed, &amp;mut trial)?;
+  commit_step(h, trial, &amp;mut committed)?;   // includes each opaque block once
+  t += h;
+}</code></pre>
       </div>
 
-      <p><code>x</code> is the state of everything — every angle, velocity, voltage, temperature. <code>assemble</code> is the compiled model. <code>step</code> is the integrator. That's the entire simulator, and every hard problem on this page is a detail of one of those three names.</p>
+      <p>The committed <code>StateStore</code> is the registry of all mutable state. Core-visible scalars and arrays live there directly under stable ids; an opaque block registers a <code>BlockStateId</code> whose private bytes remain behind its declared snapshot and commit capabilities. Compiled islands are disposable dense views. Failed solves discard trial state. Rollback-capable participants commit atomically; a non-rewindable block creates an irreversible barrier, and failure after crossing it terminates the run.</p>
 
       <div class="stack">
         <div class="card">
@@ -179,32 +183,32 @@
         </div>
         <div class="card">
           <h3>Step size is the whole economy</h3>
-          <p>Halve the step and you double the cost and cut the error by rather more than half. A simulation is that trade made a few thousand times a second. Adaptive stepping automates it — take a step, estimate how wrong it was, accept it or throw it away and retry smaller. This is also precisely why the foreign-block interface splits <code>eval</code> from <code>advance</code>: the solver <i>speculates</i>, and most of what it computes never happened.</p>
+          <p>Halve the step and you roughly double the cost while usually reducing discretization error substantially. The first implementation chooses a fixed coupling step that lands exactly on controller events, which makes scheduling and non-rewindable blocks honest. Adaptive stepping comes later for islands where every participant can snapshot or roll back; trial evaluation remains pure and side effects remain deferred in either mode.</p>
         </div>
         <div class="card">
           <h3>Our models are DAEs, not ODEs</h3>
-          <p>A connector doesn't contribute a rate. "Potentials are equal" and "flows sum to zero" are algebraic truths with no derivative in them at all. Mixing those with rate equations gives a differential-algebraic system, which is why the compile pipeline has an index-reduction stage — some constraints have to be differentiated before an integrator can touch them. The practical consequence shows up twice on this page: state can't be set arbitrarily, it has to satisfy the constraints at <code>t = 0</code> and again at the seam after every structural edit.</p>
+          <p>A connector doesn't contribute a rate. “Across values agree” and “signed through values sum to zero” are algebraic truths with no derivative in them. Mixing those with rate equations gives a differential-algebraic system, which is why the compile pipeline has an index-reduction stage. State cannot be set arbitrarily; it must satisfy constraints at <code>t = 0</code> and again at the seam after structural edits.</p>
         </div>
         <div class="card">
           <h3>Stiffness is why there's more than one answer</h3>
-          <p>A model is stiff when its fastest behavior and its slowest behavior are far apart in timescale — a switching transient measured in nanoseconds sitting next to a heatsink that takes minutes. The fast thing is usually uninteresting and has long since died away, but an explicit integrator still has to take steps sized for it or it goes unstable. Not inaccurate: unstable, numbers to infinity in a few dozen steps. Implicit methods don't care. That single fact is what splits the integrator families apart.</p>
+          <p>A model is stiff when its fastest behavior and its slowest behavior are far apart in timescale — a switching transient measured in nanoseconds sitting next to a heatsink that takes minutes. An explicit integrator may need steps sized for the fast mode even after that mode has become uninteresting. Suitable implicit methods have much larger stability regions, though they still need adequate nonlinear solves, error control and a method appropriate to the problem.</p>
         </div>
         <div class="card">
           <h3>What conservation has to do with any of it</h3>
-          <p>An integrator that quietly leaks energy is indistinguishable, from inside the model, from friction we forgot to write down. That's tolerable for a heat-transfer study and fatal for this project, because the acceptance phenomena live in exactly that residue — Kapitza's stability is a small averaged effect, Huygens' synchronization passes through micrometres of beam motion. So energy drift is a reported per-domain number rather than something discovered later.</p>
+          <p>An integrator that quietly leaks energy can be indistinguishable from friction we forgot to write down. That's tolerable in some dissipative studies and fatal for acceptance phenomena that live in small residual effects. Conservative islands therefore report energy drift, while every connector kind reports its own signed transfer balance; dissipative behaviors separately report accounted loss.</p>
         </div>
       </div>
 
-      <p>Which brings us to the three families, and the reason the choice was settled per domain rather than globally.</p>
+      <p>Which brings us to the three families, and the reason the choice is made per compiled coupling island rather than globally or independently per domain.</p>
 
       <div class="stack">
         <div class="card">
           <h3>Explicit</h3>
-          <p>Forward Euler, RK4. Take the current state and guess forward. Cheap, simple, and they tend to <i>add</i> energy to anything oscillating — a pendulum swings gradually higher, an orbit spirals outward. RK4 is accurate enough to hide this for a long while, but the drift only ever goes one way. They also fall apart on stiff systems unless the step is punishingly small.</p>
+          <p>Forward Euler, RK4. Take the current state and evaluate forward. Cheap and simple, but not generally structure-preserving: depending on the method, step and system, long oscillatory runs may gain or lose energy. Explicit stability limits can also make stiff systems prohibitively expensive.</p>
         </div>
         <div class="card">
           <h3>Implicit</h3>
-          <p>Backward Euler, BDF. Solve for a state consistent with its own derivative — which means a Newton iteration and a Jacobian — a table of slopes — inside every step. Much more work per step, but stable at step sizes that would destroy an explicit method, and that's what makes stiff systems tractable at all. The price is that they <i>remove</i> energy: a frictionless pendulum quietly winds down. Excellent for finding a steady state, silently wrong for anything meant to oscillate forever.</p>
+          <p>Backward Euler, BDF. Solve for a state consistent with its own derivative — usually a Newton iteration and a Jacobian inside every step. Much more work per step, but the right method can remain stable where an explicit scheme fails. Many implicit formulas introduce numerical damping, useful for stiff dissipative systems and potentially damaging for conservative oscillation, so the method still has to match the island.</p>
         </div>
         <div class="card">
           <h3>Symplectic</h3>
@@ -212,14 +216,14 @@
         </div>
       </div>
 
-      <p>So there's no global winner. Velocity Verlet for unconstrained mechanics, implicit midpoint when constrained — the useful compromise, being both symplectic and stable at large steps. BDF for thermal, fluid, and anything genuinely dissipative, where energy loss is physics rather than error. Integrators therefore live in the core as a library while the choice belongs to the domain, and Kapitza is the canary: if the inverted pendulum falls over, an integrator is lying somewhere.</p>
+      <p>So there's no global winner. Velocity Verlet suits some unconstrained mechanical islands; implicit midpoint is a useful first choice for the constrained electro-mechanical slice; BDF-family methods suit many stiff dissipative islands. None is unconditionally accurate merely because it is stable, so step convergence and connector-specific energy diagnostics remain acceptance tests. Integrators live in the core while compiled island capabilities determine the choice.</p>
     </section>
 
     <section>
       <h2>Modelica, but you can see it</h2>
-      <p>The idea Modelica gets right is the <b>acausal connector</b>. A component declares ports; each port carries a <i>potential</i> variable and a <i>flow</i> variable. Wiring two ports together asserts two equations — potentials are equal, flows sum to zero — and nothing else. You never decide which side is input and which is output; the solver works that out from the assembled system.</p>
+      <p>The idea Modelica gets right is the <b>acausal connector</b>. A behavior declares ports; each port carries an <i>across</i> variable and a conserved <i>through</i> variable. Wiring compatible ports together asserts that across values agree and signed through values sum to zero. You never declare an input side and an output side; structural analysis works out how the assembled equations can be solved.</p>
 
-      <div class="diagram" role="img" aria-label="Two components joined at a connector node: potentials equal, flows summing to zero.">
+      <div class="diagram" role="img" aria-label="Two behaviors joined at a connector node: across values equal, through values summing to zero.">
         <svg viewBox="0 0 620 150" xmlns="http://www.w3.org/2000/svg">
           <rect x="24" y="42" width="150" height="66" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
           <text x="99" y="80" text-anchor="middle" fill="#4b4740" font-size="14" font-family="Inter, sans-serif">Pump</text>
@@ -228,19 +232,19 @@
           <line x1="174" y1="75" x2="446" y2="75" stroke="#d64d36" stroke-width="2"/>
           <circle cx="310" cy="75" r="7" fill="#d64d36"/>
           <text x="310" y="34" text-anchor="middle" fill="#8a857c" font-size="12.5" font-family="Inter, sans-serif">p₁ = p₂</text>
-          <text x="310" y="112" text-anchor="middle" fill="#8a857c" font-size="12.5" font-family="Inter, sans-serif">ṁ₁ + ṁ₂ = 0</text>
+          <text x="310" y="112" text-anchor="middle" fill="#8a857c" font-size="12.5" font-family="Inter, sans-serif">Q₁ + Q₂ = 0</text>
         </svg>
       </div>
 
       <p>That single rule is what makes multi-domain coupling uniform — every domain is the same shape, only the units change:</p>
       <div class="pairs">
-        <div><h3>Mechanical</h3><p>velocity · force</p></div>
+        <div><h3>Rotational</h3><p>angle · torque</p></div>
         <div><h3>Electrical</h3><p>voltage · current</p></div>
         <div><h3>Thermal</h3><p>temperature · heat flow</p></div>
-        <div><h3>Hydraulic</h3><p>pressure · mass flow</p></div>
+        <div><h3>Hydraulic</h3><p>pressure · volume flow</p></div>
       </div>
 
-      <p>A domain plugin's real job, then, is to define its connector kinds and ship components that constrain them. Coupling two domains is a component with one port of each kind — a pump bridges electrical and hydraulic, a resistor bridges electrical and thermal. No special cases in the core.</p>
+      <p>The algebra is uniform; the energetics are connector-specific. Electrical power is voltage times current, rotational power is angular velocity times torque, hydraulic power for the first incompressible model is pressure times volume flow, and thermal energy transfer is already the signed heat-flow rate. A connector kind defines that diagnostic explicitly. A bridge behavior may own one port of each relevant kind — a motor bridges electrical and rotational, a resistor bridges electrical and thermal — without either domain reading the other's state.</p>
 
       <div class="stack">
         <div class="card">
@@ -249,11 +253,11 @@
         </div>
         <div class="card">
           <h3>Incremental recompile</h3>
-          <p>Changing the graph re-runs the pipeline: flatten to an equation set, do the structural analysis, index-reduce the DAE, hand the result to the solver. Only the affected strongly-connected components get rebuilt, which is what makes editing-while-running feel instant instead of like a restart.</p>
+          <p>Changing the model extracts a new immutable snapshot and re-runs flattening, matching, island partitioning and index reduction. Stable ids identify affected algebraic neighbourhoods, so only dirty coupling islands rebuild. Incremental compilation is a memoized form of the same pure pipeline, not a second compiler.</p>
         </div>
         <div class="card">
           <h3>Visible by default</h3>
-          <p>Where Modelica's tooling goes opaque, we stay legible: live values annotated on the wires, flow direction animated, residuals and solver iterations shown per component, and the flattened equations viewable for any node you select. Debugging a stiff model should be a matter of looking at it.</p>
+          <p>Where Modelica's tooling goes opaque, we stay legible: live values on connections, signed through direction animated, residuals and solver iterations shown per behavior, and flattened equations viewable for any selected object or port. Debugging a stiff model should be a matter of looking at it.</p>
         </div>
         <div class="card">
           <h3>Scripting for what graphs are bad at</h3>
@@ -261,11 +265,11 @@
         </div>
         <div class="card">
           <h3>Editing a running model without corrupting it</h3>
-          <p>Settled: state is preserved for components that survive the edit, only the affected subsystem re-initializes, and a pause-on-structural-change toggle exists for when that goes badly. This is the feature most likely to quietly corrupt a run rather than fail loudly, so it's worth being explicit about what makes it affordable — and most of it has to be decided now, not later.</p>
+          <p>Settled: stable state ids survive when their owning behaviors survive an edit, only affected coupling islands re-initialize, and a pause-on-structural-change toggle exists for a failed seam solve. This feature is likely to corrupt a run quietly unless identity and transaction boundaries remain explicit.</p>
           <div class="detail">
-            <p><b>State lives in components, never in the solver.</b> The load-bearing choice. The solver's working arrays — the flattened unknown vector, the Jacobian sparsity, the block ordering — are all <i>derived</i>, rebuilt from component state on every recompile. If the authoritative copy lived in the solver, rewiring would mean surgery on an index-mapped array and it would be hopeless. Because it doesn't, a recompile is just a rebuild from a source of truth that never moved.</p>
-            <p><b>Stable identity, not position.</b> Every component gets a generational id at creation, independent of where it sits in the graph. Edits are named operations against ids — <code>delete(id)</code>, <code>connect(a, b)</code> — rather than a diff between two graph states. After a recompile we therefore know exactly which components survived instead of having to infer it.</p>
-            <p><b>Only the dirty subgraph rebuilds.</b> Mark the edited components, extend that set to anything sharing an algebraic block with them, rebuild those blocks alone. State carries forward by id for everything that survived; initialization runs only on what's new. A component on the far side of the model never notices the edit happened.</p>
+            <p><b>State has stable identity outside the compiled solver.</b> The authoritative <code>StateStore</code> is an ECS resource keyed by stable numeric and opaque-block state ids. Behaviors own handles into it; compiled unknown vectors, Jacobian sparsity and block ordering are disposable dense views. Recompilation remaps surviving ids rather than performing surgery on an authoritative solver array.</p>
+            <p><b>Stable identity, not position.</b> Objects, behaviors, ports and state each receive generational ids independent of graph location or compiled array indices. Edits are named commands against those ids rather than diffs between anonymous graph states, so recompilation knows exactly what survived.</p>
+            <p><b>Only dirty coupling islands rebuild.</b> Mark edited behaviors, extend that set through shared algebraic constraints, and rebuild affected islands alone. Stable state ids carry committed values forward; initialization runs only for new or invalidated state.</p>
             <p><b>The genuinely hard part is consistent initialization.</b> A DAE can't start from arbitrary values — algebraic variables have to satisfy their constraints at the restart instant, and the new subsystem has to be consistent with the state of everything around it that survived. So there's a small solve at the seam after every structural edit. It usually converges immediately and occasionally doesn't, and that moment is exactly what the pause toggle is for.</p>
             <p><b>The edit log is the provenance.</b> Every structural change is an entry: what changed, at what simulation time, and what it was derived from. That log is what marks a surrogate stale when its detailed model is edited, what lets <i>zoom in</i> find the right source, and what makes a whole session reproducible from a starting model plus a list of operations.</p>
             <p><b>Undo is a snapshot, not an inverse.</b> We already need whole-model snapshot and restore for foreign blocks, so an edit takes a checkpoint first and undo restores rather than trying to invert the operation. That matters because re-initialization isn't invertible — you cannot un-solve a seam.</p>
@@ -306,33 +310,98 @@
       <div class="stack">
         <div class="card">
           <h3>Drivetrains are one-dimensional, and that's not a compromise</h3>
-          <p>A rotational port carries shaft angle as its potential and torque as its flow — the mechanical row of the table above, integrated once. Motor, shaft, gearbox, inertia, load: one or two equations each. A gear ratio is <code>φ₁ = n·φ₂</code> and <code>τ₂ = −n·τ₁</code>. Two lines, exact, free, and correct under any load. Almost everything people mean by "a machine" lives here, and none of it wants six degrees of freedom per part. The gear you're watching spin has exactly one state variable behind it.</p>
+          <p>A rotational port carries shaft angle as its across variable and torque as its through variable; angular velocity is the angle's derivative and power is <code>ω·τ</code>. Motor, shaft, gearbox, inertia, load: one or two equations each. A gear ratio is <code>φ₁ = n·φ₂</code> and <code>τ₂ = −n·τ₁</code>. The gear you're watching spin has exactly one configuration state behind it.</p>
         </div>
         <div class="card">
           <h3>The scene is a projection of state</h3>
-          <p>Every component may declare a <i>visual</i>: a mesh, a fixed local offset, and a binding from state to transform. For the gear that binding is "rotate about the mount axis by φ". The renderer walks those bindings once per frame, after the step, and writes transforms. Nothing in the physics ever reads a transform back. Bevy makes this nearly free — the same entity carries the rotational state component and the <code>Transform</code>, and the binding is one ordinary system in the render schedule.</p>
+          <p>Every object may declare a <i>visual</i>: a mesh, a fixed local offset and a binding from stable state ids to transform. For the gear that binding is “rotate about the mount axis by φ.” A Bevy projection system reads the committed <code>StateStore</code> after each step and writes disposable transforms; physics never reads them back.</p>
           <p class="proves"><b>Consequence:</b> the visual can be wrong without the simulation being wrong, which is the right failure mode. Get the mesh offset backwards and you see a gear in the wrong place, not a machine with different physics.</p>
         </div>
         <div class="card">
           <h3>Mounts are where 1D meets 3D</h3>
-          <p>The bridging component, and the piece people forget. A mount has a 1D flange on one side and a 3D frame on the other, plus an axis: it applies the flange torque to the body about that axis and reports the relative rotation back. What earns its keep is the <i>reaction</i> — torque into the rotor is torque out of the housing, so a motor bolted to a chassis shakes the chassis, and a gearbox reacts against its case. Structurally it is the same trick as the pump and the resistor: one component holding one port of each kind, and no special case anywhere in the core.</p>
+          <p>The bridge behavior people forget. A mount has a 1D flange on one side and a 3D frame on the other, plus an axis: it applies flange torque to the body and reports relative rotation. Torque into the rotor is torque out of the housing, so a motor bolted to a chassis shakes it. Structurally it is the same as the motor and electro-thermal resistor: one registered behavior owns ports of several kinds.</p>
         </div>
         <div class="card">
           <h3>Full 3D is just another connector kind</h3>
-          <p>When geometry genuinely <i>is</i> the physics — a linkage, a pendulum swinging free in space, anything whose inertia depends on its configuration — the connector's potential is a spatial velocity and its flow is a wrench, force and torque carried together. Bodies and joints constrain frames the way resistors constrain electrical nodes. That's a new connector kind and a domain plugin, not a new mechanism, which is the entire reason the acausal rule was worth paying for.</p>
+          <p>When geometry genuinely <i>is</i> the physics — a linkage, a pendulum swinging free in space, anything whose inertia depends on configuration — a frame connector carries a pose as its across configuration and a wrench as its through load. Its derived spatial twist dotted with the wrench gives power. Bodies and joints constrain frames the way gears constrain shaft angles: a new connector kind and domain, not a new coupling mechanism.</p>
         </div>
         <div class="card">
-          <h3>Geometry parameterizes; it doesn't derive</h3>
-          <p>Mass and inertia come from the shape you declared, and the teeth are drawn from the ratio rather than the ratio being inferred from the teeth. We will not read physics out of a mesh. The one honest exception is contact, which really does need geometry — and that's precisely why contact is a <i>black box at the boundary</i> publishing port linearizations rather than an equation set in the graph.</p>
+          <h3>Geometry derives artifacts, never hidden behavior</h3>
+          <p>Declared shape may produce mass properties, render or analysis meshes, attachment coordinates and candidate contacts. Gear teeth are still drawn from the declared ratio rather than the ratio being silently inferred from teeth, and touching faces do not decide whether they are welded or lubricated. Every derived parameter and generated edge carries provenance; constitutive behavior remains explicit.</p>
         </div>
         <div class="card">
           <h3>One graph, two views</h3>
-          <p>Clicking the gear in the 3D scene selects the same component the canvas node selects. Hovering a wire highlights the shaft it represents; the inspector shows φ, τ, and the flattened equations for either. Because both are views over one graph rather than two synchronized documents, "watch the gear spin" and "read the residuals" are the same act of selection.</p>
+          <p>Clicking a gear selects the same <code>ObjectId</code> as the canvas. The inspector can then show its attached behaviors, ports, φ, τ and flattened residuals. Both views query one model world rather than synchronizing separate documents.</p>
         </div>
       </div>
 
       <p>What all of that costs is small and worth committing to now: a <code>Visual</code> binding type, a <code>Frame</code> connector kind, and the mount component. Design the frame kind now and implement only the 1D half, and the full 3D mechanical domain arrives later as a plugin instead of a rewrite — the same argument as the emulator backend, made about geometry.</p>
       <p>All of that assumes a machine made of nameable parts. The case it doesn't cover — water, air, sand, anything with no parts to name — is next.</p>
+    </section>
+
+    <section>
+      <h2>CAD is the reference, not the simulation</h2>
+      <p>A CAD assembly is too important to be a decorative mesh and too incomplete to be the physics by itself. It gives us reference geometry, hierarchy, placement and durable places to attach meaning. The simulation model says what each occurrence <i>is</i>; runtime state says what it is doing now. Those are three representations of one identity rather than three documents kept in sync by names.</p>
+
+      <div class="snippet">
+<pre><code class="language-plaintext">CAD asset                 Semantic model                  Runtime state
+assembly + geometry  ←→   entities + ports + behavior  ←→   solver variables
+        ↓                           ↓                           ↓
+render / analysis meshes   selection + inspection        motion + deformation</code></pre>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Import preserves identity and hierarchy</h3>
+          <p>Every CAD occurrence gets a stable simulation id independent of display names such as <code>Part001</code>. Assembly frames, units and source provenance survive import. Re-import matches occurrences by that provenance and reports ambiguity rather than silently attaching a motor model to the wrong shaft.</p>
+        </div>
+        <div class="card">
+          <h3>Physics lives in a companion model</h3>
+          <p>The source CAD remains immutable. Selecting a shaft and giving it a rotational flange, marking two faces as electrical terminals, or assigning material and thermal properties writes simulation annotations beside the asset. The design can therefore be updated without baking physics into a vendor file or losing authored behavior.</p>
+        </div>
+        <div class="card">
+          <h3>One shape becomes several representations</h3>
+          <p>The beautiful render tessellation, collision shape, thermal mesh and structural mesh are derived artifacts with different jobs. They share the same reference coordinates and provenance but are never mistaken for one another. A million-triangle display mesh is not automatically a useful contact or finite-element model.</p>
+        </div>
+        <div class="card">
+          <h3>Geometry may generate visible topology</h3>
+          <p>Placement can calculate mass properties and propose contacts, mounts or thermal neighbours. Every result lands in the ordinary graph as a generated, inspectable edge; no importer is allowed to hide behavior in the scene. Units and coordinate frames are typed at this boundary because millimetres-versus-metres is a physics bug, not an import nuisance.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>When the CAD object bends</h2>
+      <p>The CAD shape is the undeformed reference configuration. The current configuration is state: a rigid placement plus a displacement field, <code>x(X,t) = R(t)X + p(t) + u(X,t)</code>. The renderer still never owns physics; it evaluates that mapping after an accepted step and draws the resulting shape.</p>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Deformation is an internal model behind ordinary ports</h3>
+          <p>A flexible behavior may carry six rigid coordinates, twenty modal amplitudes, or fifty thousand finite-element displacements. Outside it exposes frame or distributed mechanical ports: compatible configuration across the boundary and conserved wrench or traction through it. Derived velocity–load products supply the mechanical power diagnostic.</p>
+        </div>
+        <div class="card">
+          <h3>Fidelity changes without rewiring</h3>
+          <p>A bracket may be rigid for an enclosure study, modal for vibration, a beam or shell for a structural run, or a full FEM block for stress. Every representation honors the same mounts and boundary ports. Reduced and detailed versions are therefore interchangeable only when both declare the capabilities the scenario asks for.</p>
+        </div>
+        <div class="card">
+          <h3>Ports are attached to material coordinates</h3>
+          <p>A bearing, terminal or thermal contact is anchored at a point or region in the reference body, not at a frozen world transform. When the body bends, the port and anything mounted there move through the same displacement map. Loads return through that port into the structural residual, closing the loop.</p>
+        </div>
+        <div class="card">
+          <h3>Analysis and display meshes share a map</h3>
+          <p>The structural solver updates its own coarse nodes or modes; a precomputed interpolation maps those values onto render vertices, preferably on the GPU. The same map locates attached visuals and ports. Rendering can interpolate between committed steps for smoothness without inventing physical state.</p>
+        </div>
+        <div class="card">
+          <h3>Power is the invariant at every resolution</h3>
+          <p>For a distributed mechanical boundary, transferred power is the surface integral of velocity dotted with traction. Discretized ports preserve the same rule: coarse-to-fine motion is interpolated, fine-to-coarse forces are accumulated, and total power must match. That one test constrains every modal reduction and mesh coupling we write.</p>
+        </div>
+        <div class="card">
+          <h3>Not every shape change means the same thing</h3>
+          <p>Elastic deformation changes runtime state and springs back. Plasticity and damage change material history or the effective rest configuration. Editing the CAD changes reference geometry and invalidates derived meshes and surrogates. Fracture or new contact changes topology and becomes an explicit structural graph edit.</p>
+        </div>
+      </div>
+
+      <p>The first proof is deliberately smaller than a general solid-mechanics system: import a board or bracket, clamp named CAD faces, solve a coarse modal or plate representation, exaggerate the deformation visually, and verify that ports and attached parts remain on the moving material. That validates the representation seam before full FEM becomes a backend.</p>
     </section>
 
     <section>
@@ -342,7 +411,7 @@
       <p>So this needs a real answer rather than a hand-wave, and the answer is a ladder rather than a switch — three rungs, and the same components at every one of them. The useful thing to know first is that <b>the question decides which rung you need</b>, and most questions are answered from the bottom.</p>
       <p>An analogy that does most of the work. If you want to know how long a delivery takes across a city, you model the road network: each road has a capacity and a travel time, and you never simulate a single car. If you want to know why one particular junction jams, you have to simulate the cars. Same city, two completely different models, and choosing the wrong one is either wasted months or a wrong answer. Fluid is exactly this, and the overwhelming majority of engineering questions are road-network questions.</p>
 
-      <div class="diagram" role="img" aria-label="A pump and a tank connected through a box containing a swirling fluid simulation; the box exposes only two ports, each carrying a pressure and a mass flow.">
+      <div class="diagram" role="img" aria-label="A pump and a tank connected through a box containing a swirling fluid simulation; the box exposes two ports carrying pressure and volume flow.">
         <svg viewBox="0 0 620 178" xmlns="http://www.w3.org/2000/svg">
           <rect x="14" y="52" width="92" height="48" rx="10" fill="#fffdf9" stroke="#ddd7cd"/>
           <text x="60" y="81" text-anchor="middle" fill="#4b4740" font-size="13" font-family="Inter, sans-serif">Pump</text>
@@ -361,15 +430,15 @@
           <line x1="434" y1="76" x2="514" y2="76" stroke="#d64d36" stroke-width="2"/>
           <circle cx="146" cy="76" r="6" fill="#d64d36"/>
           <circle cx="474" cy="76" r="6" fill="#d64d36"/>
-          <text x="146" y="40" text-anchor="middle" fill="#8a857c" font-size="12" font-family="Inter, sans-serif">p · ṁ</text>
-          <text x="474" y="40" text-anchor="middle" fill="#8a857c" font-size="12" font-family="Inter, sans-serif">p · ṁ</text>
+          <text x="146" y="40" text-anchor="middle" fill="#8a857c" font-size="12" font-family="Inter, sans-serif">p · Q</text>
+          <text x="474" y="40" text-anchor="middle" fill="#8a857c" font-size="12" font-family="Inter, sans-serif">p · Q</text>
         </svg>
       </div>
 
       <div class="stack">
         <div class="card">
           <h3>Tier one — fluid as a plumbing diagram</h3>
-          <p>The easy half, and the one that covers most of what anyone actually asks. A pipe becomes a component with a port at each end. Pressure is the potential, flow rate is the flow, and that's it — the same two-number port every other domain on this page uses.</p>
+          <p>The easy half, and the one that covers most of what anyone actually asks. A pipe becomes a behavior with a port at each end. For the first incompressible model, pressure is the across variable and signed volume flow is the through variable. Compressible or thermal-fluid connectors may add density, enthalpy and composition later without changing the across/through connection rule.</p>
           <div class="detail">
             <p><b>It really is the same as a circuit.</b> A narrow pipe resists flow the way a resistor resists current. A tank stores fluid the way a capacitor stores charge. A long slug of moving water has inertia and doesn't want to stop, the way an inductor doesn't want to stop carrying current. This isn't a teaching analogy that falls apart when you push it — the equations are the same equations, which is exactly why the same solver handles both without knowing which is which.</p>
             <p><b>"But a pressure wave travels along the pipe."</b> Right, and that seems like it needs a field. It doesn't. Chop the pipe into a hundred short pipes in a row, each one still a dumb little component with two ports. A disturbance at one end now has to pass through all hundred to reach the other, so it arrives <i>late</i>, and it arrives changed. Wave behaviour falls out of a chain of simple parts. That's all water hammer needs, and it's how the Rijke tube gets a note out of a heated gauze.</p>
@@ -382,7 +451,7 @@
           <p>Straight answer to the question this raises: yes, you can find the hot spot, and usually without leaving tier one at all. Chop the wall into five hundred little thermal masses, wire each to its neighbours with a conduction component, and wire the ones facing the flow to the fluid nodes beside them. Five hundred ordinary components, the same ports, the same solver, no field code anywhere. The hot spot is then just the patch with the highest temperature.</p>
           <div class="detail">
             <p><b>It's the same trick as the pipe, in two dimensions.</b> A hundred pipe segments in a row gave you a travelling pressure wave; five hundred thermal masses in a grid give you a temperature field. "Distributed" isn't a different kind of physics — it's the same primitive repeated with its neighbours wired up. And because they're ordinary components, everything else on this page still works on them: surrogates, validity envelopes, cross-domain assertions, live values on the canvas, <code>expect wall.hotspot stays below 110 °C</code> as a scenario line.</p>
-            <p><b>What that demands of the core, and this is the real answer to "are we powerful enough".</b> Two things, both cheap now and expensive to retrofit. First, a component must be able to declare an <i>array</i> of ports whose length is a parameter — the wall exposes five hundred thermal ports, not one — and connections have to be expressible in bulk rather than clicked one at a time. Second, the flattener has to accept a component whose equation count depends on a parameter. Neither one touches the connector rule: potentials match and flows cancel patch by patch, exactly as before. That's the commitment worth making now, and it's the distributed-physics equivalent of designing the <code>Frame</code> connector kind before there's a 3D domain to use it.</p>
+            <p><b>What that demands of the core.</b> A behavior must declare parameter-sized port arrays, bulk connections and a residual count that may depend on discretization. Across compatibility and through conservation still apply patch by patch. Changing array length is an explicit structural edit that invalidates the affected coupling island.</p>
             <p><b>One consequence to know about.</b> Changing the mesh count is a structural edit rather than a parameter tweak — it changes how many equations exist, so it triggers a recompile and a re-initialization at the seam. That's already built for, but it means resolution is a dial that pauses rather than one you scrub while watching.</p>
             <p><b>Where it runs out, and why there's no cliff.</b> Five hundred nodes is comfortable. Fifty thousand is where our own solver stops being the right tool, and at that point the wall becomes a domain that solves itself internally and exposes a boundary — which is tier two. The important part is that it's the same wall with the same ports at every rung: one component, five hundred components, or one component with a specialist inside. Nothing above it has to be rewritten when it moves, which is the fidelity ladder from <i>Detail on demand</i> applied to a continuum.</p>
             <p><b>The honest caveat.</b> A hot spot is only as good as the heat arriving at it, and a 1D fluid network hands you a bulk temperature and a textbook heat-transfer coefficient, not a resolved boundary layer. That's genuinely adequate for a cold plate or a heatsink and genuinely not for a recirculation zone behind an obstacle, where the flow's own structure is what puts the hot spot where it is. When that's the question, both sides have to go to tier two — and the harness measures the gap between the two answers rather than us asserting one is fine.</p>
@@ -393,7 +462,7 @@
           <p>When the question genuinely needs the swirl, you need the expensive thing: divide the space into a few million little boxes and track what's in each one, or track a few million particles and the forces between them. Millions of numbers, updated by code that has nothing whatsoever in common with our equation solver.</p>
           <div class="detail">
             <p><b>The decision that makes this tractable: we don't merge it.</b> The tempting move is to flatten those millions of unknowns into our equation system so everything is solved together and uniformly. That's a trap. Our pipeline sorts equations, finds loops, and inverts small dense blocks — machinery that is excellent for two hundred equations and hopeless for two million. Meanwhile a CFD solver already has decades of specialized work behind it. Merging gets you the worst of both.</p>
-            <p><b>So it stays a box with pipes.</b> On the diagram it's one component with an inlet and an outlet. Inside the box, it does whatever it likes at whatever timestep it likes with whatever solver it likes, and nothing outside can see in. At the two ports, it has to speak our language: a pressure and a mass flow, same as any other component. This is the <i>black box at the boundary</i> mechanism that was already settled for contact solvers — the point of settling it once is that fluid costs us nothing new.</p>
+            <p><b>So it stays a box with pipes.</b> On the diagram it is one behavior with an inlet and an outlet. Inside, it uses whatever solver and substeps it needs. At the boundary it speaks the connector's language: pressure and signed volume flow for the first incompressible domain. This is the same opaque-block mechanism used for contact and foreign subsystems.</p>
             <p><b>Cheap version, same box.</b> Once you've run the expensive thing, you can usually replace it with a fitted curve — a loss coefficient, a heat-transfer number — that reproduces what the ports did without any of the interior. That's the surrogate story from earlier applied to a continuum, and the harness that checks a surrogate against its detailed model doesn't care that the detailed model happens to be CFD.</p>
           </div>
         </div>
@@ -401,11 +470,11 @@
           <h3>How the handshake actually works, one step at a time</h3>
           <p>This is the part worth going slowly on, because it's where "two things that can't talk to each other" turns into "one simulation". The problem: to take a step, the rest of the model needs to know how the fluid box will respond — but it can't run a two-million-cell simulation once per guess, and a stiff solver guesses ten times a step.</p>
           <div class="detail">
-            <p><b>So we ask a cheaper question.</b> Not "what will you do?" — that's unanswerable at a sensible price. Instead, once per step: <i>if I push a little harder at your inlet, how much more flow do I get?</i> The box answers with two numbers per port. How much flow at the current conditions, and how much extra flow per unit of extra push. That's a straight line through the box's behaviour, good enough for one small step.</p>
-            <p><b>Two numbers is a resistor.</b> That's the whole payoff. Having answered, the fluid box <i>looks exactly like a resistor</i> to the rest of the system for the duration of that step — the solver does its Newton iterations against two numbers instead of against two million cells, and it never knows the difference. The slope is the same quantity as a resistor's conductance; the technical name is a port linearization, and it is the only genuinely new idea in this section.</p>
+            <p><b>So we ask a cheaper boundary question.</b> At the beginning of one coupling step, the block publishes an affine relation <code>f = Y·a + b</code>. <code>a</code> contains all boundary pressures, <code>f</code> all boundary volume flows, <code>b</code> the response at the current history, and the full matrix <code>Y</code> says how perturbing any port changes every other port. Cross-port coupling is part of the contract, not a collection of independent slopes.</p>
+            <p><b>That matrix replaces the interior during speculation.</b> The global Newton iterations operate on a small discrete-time boundary model rather than millions of cells. The relation may resemble a multiport conductance, but it is allowed to contain history and step-size dependence; calling it a resistor would throw away exactly the dynamics the boundary must preserve.</p>
             <p><b>Then the step commits.</b> Once everything agrees on a consistent answer, the fluid box is told: this is final, here is the pressure we settled on, advance yourself. Now it goes and does the expensive million-cell update, once, and only for a step that actually happened. Everything speculative was answered by the two numbers.</p>
-            <p><b>When a straight line isn't good enough.</b> Some boxes are too nonlinear for that — a valve on the edge of cavitating, a bed of sand about to avalanche. Then we fall back to going around the loop a few times inside one step: it answers, the outside adjusts, it answers again, until both sides stop changing their minds. That costs several interior evaluations per step, so it's opt-in per component rather than the default.</p>
-            <p><b>Why this is the right shape and not a hack.</b> Note what just happened: the fluid solver implemented <code>eval</code> — answer a port query without changing anything — and <code>advance</code> — commit one accepted step. That's the same two-function interface foreign firmware implements, for the same reason. A CFD solver and a motor controller written in C are the same kind of stranger to our system, and we only build the mechanism once.</p>
+            <p><b>When the affine relation isn't good enough.</b> A rollback-capable block may expose pure residual and Jacobian queries and participate in coupling iterations without committing state. A non-rewindable block cannot use that path: its coupling step is chosen in advance, its published relation is accepted as the approximation for that interval, and divergence is measured afterward rather than repaired by secretly replaying history.</p>
+            <p><b>Why this is one transactional seam.</b> The block separates pure boundary evaluation from advancement into trial state and final commit. Native controllers, WASM, FEM and CFD differ in cost and rollback capability, not in the runtime's accepted-step protocol.</p>
           </div>
         </div>
         <div class="card">
@@ -414,13 +483,13 @@
         </div>
         <div class="card">
           <h3>A million particles is a storage question, not a physics one</h3>
-          <p>Separate issue, and an easy mistake to make given that this is built on an ECS. A million particles are <i>not</i> a million Bevy entities. Entities are the right tool for two hundred distinct components with different data and different behaviour; they're the wrong tool for a million identical grains, where the per-entity overhead and the scattered memory would cost more than the physics. So the particle domain is <b>one</b> entity that owns big flat arrays of numbers plus whatever spatial index it needs, and nothing outside reaches into them. The only things the ECS tracks are the handful of components at the boundary — which is exactly the same arrangement as the fluid box, arrived at from a different direction.</p>
+          <p>A million particles are <i>not</i> a million Bevy entities. They are one opaque block-state owner registered under a <code>BlockStateId</code>, containing flat arrays and a spatial index. ECS tracks the semantic object, boundary behaviors and state handle; nothing outside reaches into particle storage. Distinct user-facing objects belong in ECS, homogeneous numerical fields belong behind a registered state boundary.</p>
         </div>
         <div class="card">
           <h3>What we give up, said plainly</h3>
           <p>Three things, and none of them is a surprise once you see where they come from.</p>
           <div class="detail">
-            <p><b>The solver loses the right to change its mind.</b> Normally it takes a step, decides it was too big, throws it away and retries smaller — which means putting every component back the way it was. That's trivial when a component is six numbers and impossible when it's a gigabyte of grid. So a fluid box is declared expensive to rewind, and the step at its boundary is fixed and final: it substeps internally to whatever it needs, but it is never asked to un-happen. Concretely, automatic step-size control stops at the edge of that box and we choose the coupling step by hand.</p>
+            <p><b>The coupling island loses the right to retry.</b> A non-rewindable block forces a fixed, pre-agreed boundary step. It may substep internally, but the outer runtime does not accept the interval and then ask it to un-happen. Adaptive control stops at that boundary; a failure to advance is an explicit failed run rather than a hidden partial rollback.</p>
             <p><b>Accuracy at the join is measured, not promised.</b> Passing two numbers per step across the boundary is an approximation, and it introduces error that is genuinely hard to bound in advance. That's consistent with what's already been decided: we measure divergence per model and report it honestly, and we don't claim an end-to-end error bound we can't back up.</p>
             <p><b>It's slow, and it should be.</b> This tier is hours-not-milliseconds, so it's for the run where the question requires it, not for the parameter sweep. The parameter sweep uses the fitted surrogate, and the harness is what tells you whether that was allowed.</p>
           </div>
@@ -431,22 +500,22 @@
         </div>
       </div>
 
-      <p>Where this lands in the plan: tier one is an ordinary domain plugin and could reasonably be the second or third one built, since water hammer is already on the acceptance list. Tier two is deliberately much later. What we owe them <i>now</i> is small but not nothing — port arrays with parameter-dependent length, so a distributed model is expressible at all, and a block interface that never requires a component to expose its internals to be part of the graph. The second of those is the same two-function interface being built for foreign firmware, so it costs us once.</p>
+      <p>Where this lands in the plan: tier one is an ordinary registered domain. Tier two is deliberately later. What we owe it now is parameter-sized port arrays and the transactional multiport block contract — pure boundary evaluation, trial advancement, commit and declared rollback capability — shared by CFD, FEM and foreign firmware.</p>
     </section>
 
     <section>
       <h2>A resistor is three things at once</h2>
       <p>Everything so far has been careful about coupling <i>between</i> components and quiet about coupling <i>inside</i> one, which leaves a hole. Real parts aren't single-domain. A resistor on a board is an electrical element, a heat source with a thermal mass of its own, and 0.4 grams sitting at a particular place. A motor is a winding, a rotor, a lump of iron that gets hot, and something bolted to a chassis that shakes it.</p>
-      <p>The answer is the substrate, used the way it's meant to be used: <b>one entity carrying components from several domains at once.</b> That's the strongest argument for building on an ECS and the page has so far made it in one clause. It's worth working the example, because two things fall out of it that aren't obvious — where the heat graph comes from, and what happens when you shake something that has been reduced to a model with nothing to shake.</p>
+      <p>The answer is composition with explicit identity: <b>one semantic object carrying several behaviors.</b> An <code>ObjectId</code> names the real part or CAD occurrence; each equation-producing <code>BehaviorId</code>, boundary <code>PortId</code> and numerical <code>StateId</code> remains separately addressable. An ECS may store those behaviors on the object or on related entities without confusing implementation layout with physical identity.</p>
 
       <div class="stack">
         <div class="card">
-          <h3>One entity, several domains</h3>
-          <p>The resistor is a single entity carrying an electrical component (a resistance and two electrical ports), a thermal component (a heat capacity and one thermal port), and mass with a placement. Nothing in the core knows the word "resistor", and there is no multi-domain base class to inherit from — a part is multi-domain exactly when someone attached components from more than one domain to it, and a domain plugin only ever sees the components it defined. Adding a domain later can make every existing part richer without touching any of them.</p>
+          <h3>One object, several behaviors</h3>
+          <p>The resistor object owns electrical behavior, thermal storage, mass and placement. A dedicated electro-thermal bridge behavior owns the equations <code>P = I²R</code> and <code>R(T)</code>; neither neighbouring domain reads the other's state. Nothing in the core knows the word “resistor” — it sees registered behaviors, typed ports and stable state handles attached to one object.</p>
         </div>
         <div class="card">
           <h3>Inside a part is equations; between parts is ports</h3>
-          <p>The distinction that makes this work, and it's worth stating sharply. <code>P = I²R</code> pushing heat out of the thermal port, and temperature moving <code>R</code>, are constitutive facts about what a resistor <i>is</i>. They're written as equations inside the component, not wired. The connection from that thermal port to the copper underneath it is a different kind of thing entirely — that's a port, an edge in the graph, something you can select and delete. Current hogging, already on the acceptance list, is exactly this loop closing, and it cannot be built if the only coupling mechanism is a wire.</p>
+          <p>Constitutive facts about what a part <i>is</i> belong to its behaviors; relationships to other objects belong to ports and graph edges. The electro-thermal bridge converts electrical dissipation into signed heat flow and lets temperature affect resistance. Its thermal connection to the copper underneath is an ordinary selectable edge. Current hogging appears only when both internal bridge equations and external topology close the loop.</p>
         </div>
         <div class="card">
           <h3>The same parts, wired three different ways</h3>
@@ -463,7 +532,7 @@
         </div>
         <div class="card">
           <h3>Gravity, ambient, vibration: sources, not globals</h3>
-          <p>Some things apply to everything at once, and gravity is the one we need first — Kapitza doesn't stand up without it. The tempting implementation is a global constant the mechanical domain reads. That's wrong here, and not for purity reasons: a global is coupling that doesn't appear as an edge, and the whole page rests on the graph being the source of truth about what affects what. So an environment is a component with connections like anything else — a gravity source, an ambient-temperature source, a shaker driving a mount — and parts subscribe by declaring an environment port. It needs syntactic sugar so nobody wires four hundred gravity connections by hand, but the sugar generates real edges, marked as generated, exactly like the thermal ones.</p>
+          <p>Environmental influence remains explicit, but not every source uses an acausal power connector. Ambient temperature is a thermal boundary; a shaker is a mechanical boundary; gravity is a directed field signal consumed by mass behaviors, with gravitational potential energy accounted by the mechanical island. Authoring sugar may broadcast a field to many objects, but it generates visible provenance-bearing subscriptions rather than a hidden global read.</p>
         </div>
         <div class="card">
           <h3>Vibration lands differently on different representations</h3>
@@ -477,13 +546,13 @@
             <p><b>Why that's a different failure from leaving an envelope.</b> An envelope exit is a stretched answer: a fit that was measured between 20 and 80 °C is being run at 95, so it's probably drifting — warn, record, carry on, which is already decided. What's happening here isn't a stretched answer, it's a category error, like asking a bathroom scale how tall you are. It won't give you an inaccurate height; there is no height in there to give. So this shouldn't surface as a warning buried in a finished run — it should be refused at the moment you wire it. Concretely: every representation declares which kinds of port it carries — mechanical, electrical, thermal, hydraulic. A shaker's plug is mechanical. If the model you're plugging it into has no mechanical socket, the connection is rejected there and then, with a sentence saying what's missing and which other fidelity of this same part does have it. Failing at wiring time costs you thirty seconds; failing silently costs you the month you spent believing the plot.</p>
             <p><b>And an excitation has to be spreadable.</b> One more thing that has to be built rather than assumed. In the previous section a wall got chopped into five hundred patches so hot spots could show up somewhere on it. Shake that wall and you owe the solver a motion for each of five hundred patches. Shake the one-box version of the same wall and you owe it a single motion. Same physical shake, wildly different amounts of input — so a shaker can't simply hand over "the motion" and be done. It has to know how to spread one description of shaking across many pieces, and results have to travel back the other way, five hundred separate motions collapsed into the one number the coarse model deals in. Spread out, collapse back. Those two directions are one object, and we already need half of it: turning a detailed model into its cheap stand-in <i>is</i> the collapsing direction. Build the map once, on purpose, usable both ways — the alternative is two half-finished versions growing in separate corners of the codebase without anyone noticing they were the same thing.</p>
             <p><b>The uniform case is easy, and that's the trap.</b> If the whole wall is bolted flat to the table and moves as one rigid slab, spreading is just copying: every patch gets the same motion, and you could write that in an afternoon and believe you'd solved it. But the shakes worth simulating aren't uniform. One edge is clamped and the other is free, so the far edge swings further. The table twists as well as heaves. A wave takes real time to cross the panel, so the far side is still going up while the near side has started coming down. In every one of those, spreading means having a <i>shape</i> — a stated rule for how the single number you were handed is distributed across the five hundred you owe. That rule is a physical assumption, it's usually wrong at the edges, and it should therefore be a named, visible, swappable thing rather than a loop buried in the shaker's update function.</p>
-            <p><b>The two directions use different arithmetic, and the connector algebra already says which.</b> Every port carries two numbers: a potential (velocity, temperature, pressure) and a flow (force, heat per second, mass per second). Going coarse to fine, potentials get copied or interpolated across the patches. Coming fine to coarse, flows <i>add up</i> and potentials <i>average</i> — and the average has to be weighted, by mass for motion and by area for heat, or a fingernail-sized patch votes as loudly as the entire rest of the wall. Getting this backwards is a bug with a long shelf life: sum five hundred temperatures where you should have averaged and the wall reads five hundred times too hot, which you catch in seconds; average five hundred forces where you should have summed and the shaker just comes out a bit feeble, which you might never catch.</p>
-            <p><b>There's a one-line check that says whether a map is honest.</b> Potential times flow is power, at any port, in any domain — that's what made the connector abstraction work in the first place. So: the power crossing the single coarse port must equal the total power crossing all five hundred fine ports, every step. If it doesn't, the map is quietly manufacturing or destroying energy at the seam between two descriptions of the same object, which is the kind of error that shows up as a machine that runs slightly hot forever and never as a crash. That check is cheap enough to run in tests for every map we write, and it does more than catch mistakes — it pins the maths down. Choose the spreading rule and the honest collapsing rule is determined by it, not a second free choice. Practically, the map is an ordinary component sitting on the edge between a one-port side and a port-array side: visible in the graph, selectable, swappable for a better shape when you have one. And nothing about it is specific to vibration — the same component spreads an ambient temperature over a four-hundred-part board, or a pressure boundary across a discretized pipe. Shaking is just the case that forced us to notice we needed it.</p>
+            <p><b>The two directions use different arithmetic.</b> Across fields — angle, temperature, pressure — are copied or interpolated from coarse to fine. Conserved through quantities — torque, heat flow, volume flow — accumulate from fine to coarse. Any averaged observation needs an explicit physical weight such as area, mass or heat capacity; a fingernail-sized patch must not vote as loudly as the rest of a wall merely because both are one array entry.</p>
+            <p><b>Each connector kind supplies the honesty check.</b> Mechanical maps preserve twist–wrench power, electrical maps preserve voltage–current power, hydraulic maps preserve pressure–volume-flow power, and thermal maps preserve signed heat-flow balance while tracking entropy production separately. Choose a spreading operator and conservation constrains the corresponding collapse operator. The map is an ordinary visible behavior between a scalar port and a port array, reusable for vibration, ambient temperature and distributed pressure without claiming their energetics are identical.</p>
           </div>
         </div>
       </div>
 
-      <p>What this commits us to is small and mostly already true: a component may hold ports of several kinds and couple them with its own internal equations; connections may be <i>generated</i> — from placement, from an environment source — as long as they land in the graph as ordinary editable edges rather than hidden behaviour; and a representation must declare which port kinds it carries, so that asking it an unanswerable question fails loudly. The rest is the ECS doing what it's for.</p>
+      <p>What this commits us to is small and explicit: a bridge behavior may own ports of several kinds and their constitutive equations; generated connections land as ordinary editable edges with provenance; and every representation declares its connector capabilities so an unanswerable scenario fails during wiring rather than after a run.</p>
     </section>
 
     <section>
@@ -491,16 +560,16 @@
       <p>The honest test isn't applying a torque to a shaft — it's wiring a real supply to a real bridge to a real motor under a real load, running a controller that doesn't know it's in a simulation, and then asking what the whole system did. The interesting assertions cross domains: volts in one, shaft speed in another, junction temperature in a third, all in a single statement about one run.</p>
 
       <div class="snippet">
-<pre><span class="k">scenario</span> "cold start under load" {
+<pre><code class="language-rust">scenario "cold start under load" {
   supply.v      = 24
   load.torque   = ramp(0 → 0.4 N·m over 2 s)
   controller    = wasm("firmware/foc.wasm") @ 10 kHz
 
-  <span class="k">expect</span> motor.speed          reaches 3000 rpm within 250 ms
-  <span class="k">expect</span> motor.speed          settles within 2% of setpoint
-  <span class="k">expect</span> bridge.junction_temp stays below 85 °C
-  <span class="k">expect</span> supply.current       never exceeds 12 A for longer than 50 ms
-}</pre>
+  expect motor.speed          reaches 3000 rpm within 250 ms
+  expect motor.speed          settles within 2% of setpoint
+  expect bridge.junction_temp stays below 85 °C
+  expect supply.current       never exceeds 12 A for longer than 50 ms
+}</code></pre>
       </div>
 
       <div class="stack">
@@ -539,7 +608,7 @@
           <h3>The re-entrancy problem</h3>
           <p>The part that needs the most care, and the reason the block interface has the shape it does. A foreign block gets called many more times than there are timesteps, and most of those calls must not be allowed to change anything.</p>
           <div class="detail">
-            <p><b>Why it gets called repeatedly.</b> Three reasons compound. An implicit step runs Newton iterations, evaluating the system at trial states until it converges — five or ten evaluations for one step is ordinary. A variable-step controller may then decide the step was too large, throw the result away, and redo it at half the size. And event location bisects: to find the instant a comparator trips, the solver re-runs the same interval repeatedly, narrowing.</p>
+            <p><b>Why pure evaluation is called repeatedly.</b> An implicit step runs Newton iterations at trial states. Later, rollback-capable islands may also reject a step or bisect an interval to locate an event. The fixed-step first slice does neither globally, but the transaction contract is designed now so adding them does not change component semantics.</p>
             <p><b>The structural fix.</b> Split evaluation from advancement. <code>eval(t, inputs) → outputs</code> is pure and may be called any number of times; <code>advance(h)</code> may mutate and is called exactly once per accepted step. FMI makes the same split for the same reason, and it should be the first trait we write.</p>
             <p><b>Real firmware won't cooperate.</b> Actual control code mutates on every call — that's what an integral term is. So for anything we didn't write, we snapshot instead: capture before the step, restore before each retry, commit on acceptance. The cost is reassuringly uniform across tiers — a <code>Clone</code> for native, one linear-memory <code>memcpy</code> for WASM, registers plus RAM for the emulator. Tens of kilobytes a few thousand times a second is nothing.</p>
             <p><b>Side effects need deferring too.</b> A block that logs, traces, or bumps a counter during a rejected step has corrupted its output even though its state was restored. So block-visible I/O is buffered and flushed only when the step commits — which is also part of what makes a run reproducible.</p>
@@ -549,6 +618,126 @@
         <div class="card">
           <h3>Rate, budget, and sandbox</h3>
           <p>A block runs at its own rate with explicit sample-and-hold, so a 10 kHz control loop sitting on a plant stepping at microseconds is an ordinary scheduling fact rather than a special case. Fuel limits keep a hung or hostile block from taking the simulation with it, and the sandbox means running someone else's firmware isn't a decision you have to think hard about.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>The first full slice: controller to visible gears</h2>
+      <p>The first build is a complete, narrow machine rather than a horizontal layer of infrastructure: a sampled PI controller drives a voltage source, a DC motor bridges electrical and rotational domains, an ideal gear pair drives an inertial load, and imported meshes rotate from the accepted shaft angles. It is small enough to understand end to end and broad enough to prove the seams.</p>
+
+      <div class="snippet">
+<pre><code class="language-plaintext">speed target → PI controller → held duty cycle → voltage source
+                                                   ↓
+                                       electrical DC motor
+                                                   ↓ torque
+                                         shaft → gears → load
+                                                   ↓
+                                      committed angles + speeds
+                                                   ↓
+                                      Bevy 3D state projection</code></pre>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h3>The Rust workspace</h3>
+          <div class="snippet">
+<pre><code class="language-plaintext">sim-core              model world, registry, stable ids, ports, StateStore
+sim-compile           model snapshot → residuals, layouts, coupling islands
+sim-solve             Newton, integration, events and step transactions
+sim-runtime           clock, compilation, scheduling and atomic commits
+sim-geometry          CAD manifests, frames, provenance and projection maps
+sim-domain-*          independent control, electrical, rotational, thermal …
+sim-blocks            native, WASM and opaque-solver adapters
+sim-app               Bevy canvas, 3D projection, inspectors and plots
+sim-test              scenarios, traces, conservation and reference results</code></pre>
+          </div>
+          <p><code>sim-core</code> depends on <code>bevy_ecs</code>, not the renderer. CAD semantics remain usable headlessly in <code>sim-geometry</code>; <code>sim-app</code> sits at the top; independent domain crates depend only on core contracts.</p>
+        </div>
+        <div class="card">
+          <h3>The editable graph is identity-rich and solver-free</h3>
+          <div class="snippet">
+<pre><code class="language-rust">struct ModelWorld {
+    objects: SlotMap&lt;ObjectId, SimObject&gt;,
+    behaviors: SlotMap&lt;BehaviorId, BehaviorInstance&gt;,
+    ports: SlotMap&lt;PortId, Port&gt;,
+    connections: Vec&lt;Connection&gt;,
+    state: StateStore,
+}
+
+struct Port {
+    owner: BehaviorId,
+    kind: PortSchema, // acausal connector, causal input or causal output
+}
+
+struct BehaviorInstance {
+    object: ObjectId,
+    kind: BehaviorTypeId,
+    state: Vec&lt;StateId&gt;,
+}</code></pre>
+          </div>
+          <p><code>ObjectId</code> names the real part or CAD occurrence; behaviors, ports and numerical state remain separately addressable. The model world is canonical authoring data. A pure immutable snapshot feeds compilation, so UI and scripts mutate one source through logged commands rather than synchronizing a second graph.</p>
+        </div>
+        <div class="card">
+          <h3>The plugin seam is minimal, but present on day one</h3>
+          <p>A registry maps stable connector and behavior type ids to descriptors containing schemas, state layout, port declarations, residual builders, Jacobian strategy and serialization hooks. The built-in slice may use enums inside its own crate, but <code>sim-compile</code> never exhaustively matches them. That preserves independent domain authorship without designing a large speculative plugin lifecycle.</p>
+        </div>
+        <div class="card">
+          <h3>The compiler produces a disposable numerical program</h3>
+          <div class="snippet">
+<pre><code class="language-rust">struct CompiledModel {
+    state_layout: StateLayout,
+    algebraic_layout: AlgebraicLayout,
+    residual_ops: Vec&lt;ResidualOp&gt;,
+    jacobian_pattern: CsrPattern,
+    islands: Vec&lt;CouplingIsland&gt;,
+    observables: HashMap&lt;SignalPath, ObservableRef&gt;,
+}</code></pre>
+          </div>
+          <p>Compilation validates connector compatibility, collapses connected ports into nodes, allocates dense views over stable state ids, emits behavior and connection residuals, matches equations to unknowns, partitions strongly connected coupling islands and precomputes Jacobian sparsity. The first machine is one island; tearing and incremental compilation optimize the same representation later.</p>
+        </div>
+        <div class="card">
+          <h3>The motor is the bridge behavior</h3>
+          <p>Its electrical residual is <code>V = Ri + L·di/dt + Kₑω</code>; its rotational contribution is <code>τ = Kₜi</code>. The load contributes <code>J·dω/dt = τ − τ_load</code> and <code>dθ/dt = ω</code>. The ideal gear contributes <code>θ₁ = nθ₂</code> and <code>τ₂ = −nτ₁</code>. No behavior calls a neighbour: registered residuals and connection equations close the island.</p>
+        </div>
+        <div class="card">
+          <h3>One accepted-step protocol owns mutation</h3>
+          <div class="snippet">
+<pre><code class="language-rust">loop {
+    let mut step = state.begin_trial();
+    scheduler.apply_due_events(t, &amp;mut step); // controller state is trial state
+    runtime.solve_islands(&amp;compiled, t, dt, &amp;mut step)?;
+    runtime.commit_step(dt, step, &amp;mut state)?; // opaque blocks advance once here
+    publish_observables(&amp;state.committed());
+    t += dt;
+}</code></pre>
+          </div>
+          <p>Newton repeatedly evaluates <code>R(xₙ₊₁, xₙ, u, Δt)</code>, solves <code>JΔx = −R</code>, and updates dense trial views until converged. Before the commit barrier, failure discards controller integrals, solver values and rollback-capable block state together. A non-rewindable block advances once at the barrier and makes any later failure terminal. Implicit midpoint is the first island integrator because it treats the electro-mechanical loop coherently.</p>
+        </div>
+        <div class="card">
+          <h3>The controller is sampled, causal and cheap</h3>
+          <p>At 10 kHz it reads committed speed, advances its PI integral in the step transaction and publishes a clamped duty cycle. The fixed coupling step lands exactly on controller events; output is held between them and is known during Newton iteration. A discarded transaction may deterministically replay the event without double-advancing state. Native Rust comes first; WASM and emulation later implement the same contract.</p>
+        </div>
+        <div class="card">
+          <h3>The 3D scene reads the same values the tests do</h3>
+          <div class="snippet">
+<pre><code class="language-rust">#[derive(Component)]
+struct VisualBinding {
+    angle: StateId,
+    axis: Vec3,
+    offset: Quat,
+}
+
+fn project_state(binding: &amp;VisualBinding, state: &amp;CommittedState) -&gt; Quat {
+    binding.offset
+        * Quat::from_axis_angle(binding.axis, state.angle(binding.angle).radians() as f32)
+}</code></pre>
+          </div>
+          <p>The motor rotor and each gear read solved angles by stable handles. Render interpolation may smooth between committed states but never advances them. A brownout, load change or controller fault therefore appears as the corresponding visible slowdown without any animation-specific dynamics.</p>
+        </div>
+        <div class="card">
+          <h3>Done means the whole path is falsifiable</h3>
+          <p>A deterministic scenario supplies 24 V, commands 3,000 rpm, drives a 4:1 gearbox and applies an inertial load. Tests bound current, settling time and coast-down; check the gear constraint, electrical transfer and rotational power balance; and confirm that visual bindings read the exact state ids used by assertions. The machine on screen and the test report must be two views of one run.</p>
         </div>
       </div>
     </section>
@@ -605,16 +794,44 @@
       <p>Settled in review, and treated as fixed unless something forces a revisit.</p>
       <div class="decisions">
         <div>
-          <h3>Rigid body first</h3>
-          <p>Kapitza and Huygens can judge the core before any coupling exists. Electrical and thermal follow as the first pair, with current hogging as the test.</p>
+          <h3>Controller-to-gears first</h3>
+          <p>The first vertical slice is a sampled controller, voltage source, DC motor, 1D rotational drivetrain and visible 3D gears. It proves causal and acausal composition before the general 6-DOF domain.</p>
         </div>
         <div>
           <h3>Typed quantities everywhere</h3>
-          <p>You were right that not having units bugs <i>is</i> the ergonomics. Newtypes on every physical quantity, with the arithmetic written once so it stays invisible in use.</p>
+          <p>Authoring APIs, behavior parameters and connector schemas use typed quantities. The compiled numeric core stores canonical-SI scalars beside validated quantity metadata, so sparse algebra stays efficient without allowing metres and radians to connect accidentally.</p>
         </div>
         <div>
           <h3>An interactive sandbox</h3>
           <p>The product is a canvas where you can watch the whole system at once. The core still runs headless, so batch sweeps and regressions never need a window.</p>
+        </div>
+        <div>
+          <h3>CAD is a first-class reference</h3>
+          <p>Imported assembly identity, hierarchy, units and frames are preserved. Simulation behavior lives in a companion model; re-import updates geometry without pretending CAD alone contains the physics.</p>
+        </div>
+        <div>
+          <h3>Deformation is physical state</h3>
+          <p>CAD supplies the reference configuration. Rigid placement, modal amplitudes and finite-element displacements belong to the solver; render meshes and attached ports are projections of committed state.</p>
+        </div>
+        <div>
+          <h3>Analysis and render geometry are separate</h3>
+          <p>Collision, thermal, structural and display meshes may differ, but share provenance and explicit interpolation maps. A detailed visual mesh never silently becomes a numerical model.</p>
+        </div>
+        <div>
+          <h3>Connector kinds own their energetics</h3>
+          <p>Across equality and through conservation are universal; energy accounting is not. Each connector kind defines signed transfer and diagnostics, and every coarse-to-fine map preserves that declared balance.</p>
+        </div>
+        <div>
+          <h3>Objects and behaviors have separate identities</h3>
+          <p>CAD occurrences and conceptual parts use <code>ObjectId</code>; equation providers, ports and state use <code>BehaviorId</code>, <code>PortId</code> and <code>StateId</code>. One part may therefore compose many domains without duplicating physical identity.</p>
+        </div>
+        <div>
+          <h3>A minimal registry exists from day one</h3>
+          <p>The compiler consumes registered descriptors rather than a closed component enum. Built-ins stay simple, but independent domain plugins do not require later surgery on the compiler.</p>
+        </div>
+        <div>
+          <h3>The StateStore is authoritative</h3>
+          <p>Stable numeric and opaque-block state ids live outside compiled layouts. ECS behaviors, solvers, renderers and assertions refer to the same registry; private block memory participates through declared transaction capabilities.</p>
         </div>
         <div>
           <h3>Same-machine repeatability</h3>
@@ -622,15 +839,15 @@
         </div>
         <div>
           <h3>Our own solvers, behind traits</h3>
-          <p>Simple implementations first, with integration and constraint solving behind swappable interfaces from day one — so trading ours for Rapier later is a config change, not a rewrite.</p>
+          <p>Simple residual, integration and constraint solvers sit behind focused interfaces. A specialist engine such as Rapier would enter as an opaque rigid-body/contact domain behind mechanical ports, not masquerade as a drop-in replacement for the global DAE runtime.</p>
         </div>
         <div>
           <h3>Hybrid domains</h3>
           <p>Not everything is an equation. The connector graph is the contract; how a domain solves inside is its own business. The mechanism is <i>Black boxes at the boundary</i> above.</p>
         </div>
         <div>
-          <h3>Native model format</h3>
-          <p>Serialized straight from the graph. A partial Modelica importer only once our own semantics have stopped moving.</p>
+          <h3>Native project format</h3>
+          <p>Serialize objects, behaviors, ports, initial state, asset manifests, annotations, provenance, scenarios, solver configuration and edit history. Derived meshes and compiled layouts remain rebuildable caches. Modelica import waits until our semantics settle.</p>
         </div>
         <div>
           <h3>Warn on envelope exit</h3>
@@ -653,12 +870,12 @@
           <p>Between them the first two tiers cover everything we write ourselves. Emulation lands behind the same block trait the day a binary-only firmware forces it — a week, not a quarter. Target family is ARM Cortex-M, which is really a decision about which peripherals get built first.</p>
         </div>
         <div>
-          <h3>The integrator is the domain's choice</h3>
-          <p>Symplectic for mechanics, BDF for stiff dissipative domains, all of them a library in the core. Energy drift is reported per domain as a standing number, so a lie is visible rather than inferred. Reasoning is <i>What a step actually is</i> above.</p>
+          <h3>The integrator belongs to a coupling island</h3>
+          <p>Strongly connected flattened equations advance coherently under one island policy; opaque blocks may substep internally. The first electro-mechanical island uses fixed-step implicit midpoint, with measured convergence and connector diagnostics.</p>
         </div>
         <div>
           <h3>Rewiring preserves surviving state</h3>
-          <p>State lives in components and never in the solver; only the dirty subgraph rebuilds and re-initializes; undo is a snapshot, not an inverse. Pause-on-structural-change is a toggle for when the seam solve misbehaves.</p>
+          <p>Stable <code>StateId</code>s survive recompilation while disposable dense layouts change. Only dirty coupling islands rebuild and re-initialize; undo restores a transactional snapshot rather than attempting to invert a seam solve.</p>
         </div>
         <div>
           <h3>Rhai for authoring</h3>
@@ -669,16 +886,16 @@
 
     <section>
       <h2>Open questions</h2>
-      <p>Two left. Foreign-code tiers, integrators, live rewiring and the authoring language all moved into <i>Decided</i> this round; what remains is one question about how deep the first mechanical domain goes, and one about where reduced models come from.</p>
+      <p>Two left. The first mechanical slice, 3D projection, CAD's role and deformation semantics are settled; what remains is one question about the practical CAD ingestion path, and one about where reduced models come from.</p>
       <div class="stack">
         <div class="q">
           <span class="num">01</span>
-          <p>How deep does the first mechanical domain go — one generalized coordinate, or six degrees of freedom? We settled on "rigid body first", and the section on seeing a gear turn splits that into two rather different projects. A 1D rotational domain is a few equations per component and covers every drivetrain; a full 6-DOF frame domain needs orientation representations, joint constraints, and constraint stabilization before it can display a single pendulum.</p>
-          <p class="lean"><b>My lean:</b> 1D flanges first, with the <code>Frame</code> connector kind designed but unimplemented. Kapitza is one angle with a prescribed pivot motion, Huygens is two angles and a translating beam, and both are honest tests of the integrator without a line of 3D mechanics. The 6-DOF domain becomes the <i>second</i> mechanical domain, built the first time a linkage or a contact demands it.</p>
+          <p>What is the first authoritative CAD ingestion path? We need engineering assemblies with stable occurrence identity, units and frames, but the renderer ultimately wants tessellated assets and the simulation wants separately derived analysis representations. Treating a display format as the source loses engineering semantics; embedding a full CAD kernel immediately risks making import the whole project.</p>
+          <p class="lean"><b>My lean:</b> define a kernel-neutral internal assembly manifest first, support glTF as the immediate visual carrier, and add STEP ingestion through a narrow adapter that emits the same manifest plus tessellation. Store simulation annotations against our stable occurrence ids and source provenance rather than against either format's transient node names.</p>
           <div class="detail">
-            <p><b>The argument against.</b> Generalized coordinates are hand-derived per mechanism, which is exactly the thing this project claims not to do — you can't compose them the way you compose components, and "one angle with a prescribed pivot" is a model somebody wrote by hand rather than a graph somebody assembled. If that bothers you, the answer flips and 6-DOF goes first, at the cost of several weeks before anything moves on screen.</p>
-            <p><b>What makes the deferral safe.</b> Only that the connector kind is designed now. A frame port carrying a spatial velocity and a wrench is a decision about the <i>shape</i> of the mechanical interface, and the mount component is what pins it down. Get those two right against a domain that doesn't exist yet and the 3D domain is additive; get them wrong and every 1D component written in the meantime needs revisiting.</p>
-            <p><b>The thing I'd actually watch.</b> Whether the visual bindings written for 1D components survive contact with real 3D bodies unchanged. If a gear's binding is "rotate by φ about the mount axis" and a 3D body's is "here is your transform", those are the same interface and the deferral cost nothing. If they aren't, we found out early and cheaply.</p>
+            <p><b>The internal manifest is the seam.</b> It records assembly occurrences, parent-child transforms, units, source keys, material hints and references to derived assets. Importers end there; the graph authoring tools begin there. That keeps a future proprietary importer or cloud conversion service from leaking into the solver.</p>
+            <p><b>Re-import is the real acceptance test.</b> Import a gearbox, annotate its rotor and mounts, change one bracket in the source assembly, then import again. Unchanged occurrences must retain their simulation identities and annotations; changed or ambiguous matches must be surfaced for review.</p>
+            <p><b>What stays deliberately manual.</b> Geometry may propose contacts, joints and thermal neighbours, but a person accepts the simulation meaning. The importer can know two faces touch; it cannot know whether they are welded, lubricated, insulated or merely coincident.</p>
           </div>
         </div>
         <div class="q">
@@ -693,7 +910,7 @@
             <p><b>Excitation is most of the difficulty.</b> A surrogate matched at steady state can be wildly wrong on a transient, so the harness sweeps rather than spot-checks: step response, a frequency chirp, and the duty cycle you actually care about. Nearly every surrogate failure in practice is a model that was only ever checked at DC. The most realistic excitation available is the real one — drive the subsystem with its actual controller, as above, and compare fidelities under the load it will actually see.</p>
             <p><b>The envelope falls out of the sweep.</b> This is the part I like most — the region where divergence stays under threshold <i>is</i> the validity envelope we settled on above. It stops being a promise someone wrote in a comment and becomes a measured artifact of the fit, re-derived every time either model changes.</p>
             <p><b>What it costs to build.</b> A scenario runner, a port-trace recorder, and a comparison report. Those same three pieces are what the phenomena above need in order to run as regressions, so this is shared infrastructure rather than a detour — which is most of why I'd start here rather than with the automatic path.</p>
-            <p><b>What unlocks automatic reduction later.</b> Balanced truncation needs a linear state-space, so the precondition is a domain being able to emit its Jacobian around an operating point. Put that in the domain trait now, even unused, and automatic reduction becomes available for the linear subsystems without a redesign.</p>
+            <p><b>What unlocks automatic reduction later.</b> Balanced truncation needs a linear state-space, so behavior descriptors must be able to emit or derive Jacobians around an operating point. Register that hook now, even unused, and automatic reduction becomes available for suitable linear islands without a redesign.</p>
           </div>
         </div>
       </div>
@@ -702,45 +919,48 @@
     <section>
       <h2>Build order</h2>
       <ul class="milestones">
-        <li><b>Core skeleton.</b> Cargo workspace, Bevy app, fixed-timestep schedule, the <code>Domain</code> trait and plugin registration.</li>
-        <li><b>Connector algebra.</b> Ports, potential/flow semantics, graph → flattened equations → solver, proven on a trivial domain like a resistor network.</li>
-        <li><b>First domain.</b> One real solver end to end, with a scene it can run and a way to watch it — done when the Kapitza pendulum stands up on its own.</li>
-        <li><b>Second domain.</b> The one that proves the abstraction — deliberately unlike the first, coupled to the first through a bridging component.</li>
-        <li><b>Hierarchy.</b> Subsystems as components, one hand-authored surrogate beside its detailed model, and the harness that measures the gap between them.</li>
-        <li><b>Live canvas.</b> Build, rewire, and inspect a running model without restarting it. Incremental recompile lands here, and so does the 3D scene as a second view of the same state.</li>
-        <li><b>Scripting.</b> Rhai over the same graph API, plus scenario files with whole-system assertions, the comparison plots, and enough diagnostics to trust the numbers.</li>
-        <li><b>Foreign subsystems.</b> Native and WASM blocks behind one trait, with snapshot and restore, modeled peripherals, and the motor scenario running end to end against a controller we didn't write. An emulated-target backend the first time a binary-only firmware demands one.</li>
+        <li><b>Core skeleton.</b> Model world, typed quantities, separate object/behavior/port/state ids, transactional <code>StateStore</code>, edit commands and the minimal descriptor registry. Built-ins are simple; compiler extensibility is real.</li>
+        <li><b>Connector compiler.</b> Electrical across/through ports, graph flattening, residual assembly, stable-to-dense state mapping, coupling-island partitioning and a linear/Newton solve, proven on an inspectable voltage divider.</li>
+        <li><b>Controller-to-gears slice.</b> Sampled PI control, voltage source, electrical–rotational motor bridge, ideal gears, inertia and one fixed-step implicit-midpoint island. Done when tests and visible gears read the same committed <code>StateId</code>s.</li>
+        <li><b>CAD semantics.</b> The internal assembly manifest, stable occurrence mapping, glTF visual import, companion simulation annotations and a re-import test that preserves meaning across a design edit.</li>
+        <li><b>Flexible projection.</b> A coarse plate or modal body attached to CAD reference geometry, with material-anchored ports and a render-mesh interpolation map. Done when a clamped part bends and everything attached follows it.</li>
+        <li><b>Second coupled phenomenon.</b> Electrical and thermal behaviors close the loop through an electro-thermal resistor bridge, with current hogging or self-balancing as the acceptance result.</li>
+        <li><b>Hierarchy and fidelity.</b> Subsystems as behaviors, one hand-authored surrogate beside its detailed model, and the harness that measures port divergence and connector-specific transfer error between them.</li>
+        <li><b>Live canvas and scripting.</b> Build, rewire and inspect a running model; add incremental recompile, Rhai over the same graph API, scenario files, traces and comparison plots.</li>
+        <li><b>Foreign subsystems.</b> Native and WASM blocks behind the transactional block contract, with declared rollback capability, snapshot/restore and modeled peripherals. Add emulation when binary-only firmware demands it.</li>
       </ul>
     </section>
 
     <section>
       <h2>Implementation plan</h2>
-      <p>Build order says what gets proven in what sequence. This says what the thing is actually made of, and it's deliberately coarse — the point is to fix the seams that would be expensive to move later and leave everything else free.</p>
+      <p>Build order says what gets proven in what sequence. The controller-to-gears slice above is the concrete first implementation; this is the long-lived layering it grows into. The point is to fix only the seams that would be expensive to move later.</p>
 
       <div class="snippet">
-<pre>sim-core     graph, ports, typed quantities, compile pipeline, state store
-sim-solve    integrators, linear + Newton solve, event location, error control
-sim-domains  one crate per domain — rotational, electrical, thermal, …
-sim-blocks   the foreign-code block trait, with native and wasm backends
-sim-script   Rhai bindings over the same graph API the canvas drives
-sim-app      Bevy: canvas, 3D scene, inspectors, plots — depends on everything
-sim-test     scenario runner, reference traces, the phenomena suite</pre>
+<pre><code class="language-plaintext">sim-core              ModelWorld, registry, ids, quantities and StateStore
+sim-compile           pure snapshot compiler, matching, islands and sparsity
+sim-solve             integrators, Newton/linear solve and transactions
+sim-runtime           clock, discrete events, block scheduling and commits
+sim-geometry          CAD manifests, reference frames and projection maps
+sim-domain-*          independently registered physical behavior crates
+sim-blocks            native, WASM and opaque-solver adapters
+sim-app               Bevy canvas, 3D projection, inspectors and plots
+sim-test              scenarios, traces, comparisons and phenomena</code></pre>
       </div>
 
-      <p>The dependency arrows only point downward, and <code>sim-core</code> depends on <code>bevy_ecs</code> rather than on <code>bevy</code> — the ECS without the renderer is what keeps "headless" honest instead of aspirational. If a domain crate ever needs something from <code>sim-app</code>, the layering is wrong and we stop and fix it rather than reaching for a feature flag.</p>
+      <p>The dependency arrows only point downward, and <code>sim-core</code> depends on <code>bevy_ecs</code> rather than on <code>bevy</code>. CAD semantics and projection maps live in headless <code>sim-geometry</code>; the renderer consumes them from <code>sim-app</code>. Domain crates depend on core contracts, never on the app or on one another; bridge behaviors explicitly import only the connector kinds they join.</p>
 
       <div class="stack">
         <div class="card">
-          <h3>Five interfaces, and everything else is negotiable</h3>
-          <p><code>ConnectorKind</code> — the potential/flow pair and its units. <code>Component</code> — parameters, state, ports, and its contribution to the residual, with port declarations allowed to be arrays whose length is a parameter, which is the whole of what distributed models need from the core. <code>Domain</code> — registration, plus the Jacobian-at-operating-point hook that automatic reduction will need later. <code>Block</code> — <code>eval</code> and <code>advance</code>, the tier-agnostic foreign-code seam. <code>Integrator</code> — step and error estimate. Getting these five wrong is what a redesign costs; getting anything else wrong costs an afternoon.</p>
+          <h3>Six contracts, and everything else is negotiable</h3>
+          <p><code>ConnectorDescriptor</code> defines across/through schemas, connection equations and energy diagnostics. <code>BehaviorDescriptor</code> defines parameters, stable state, ports, residuals and Jacobians. <code>DomainPlugin</code> registers descriptors without controlling stepping. <code>Block</code> declares evaluation, trial advancement, commit and rollback capability. <code>Integrator</code> advances a compatible coupling island. <code>GeometryProjection</code> maps reference-space CAD points, ports and render vertices from committed rigid or deformation state.</p>
         </div>
         <div class="card">
           <h3>The compile pipeline is a pure function</h3>
-          <p>Graph in, compiled model out. Flatten, match, tear, index-reduce, emit residual and sparsity. It reads the graph and writes nothing — no mutation of the world, no hidden global state, no rendering — which makes it directly testable against hand-computed answers, and makes incremental recompile a memoized version of the same function rather than a second code path that can disagree with the first.</p>
+          <p>Immutable model snapshot in, compiled islands out. Flatten, match, partition, tear, index-reduce, emit residuals, stable-to-dense mappings and sparsity. It writes no model or runtime state, which makes it directly testable and makes incremental compilation a memoized form of the same function rather than a second path.</p>
         </div>
         <div class="card">
           <h3>State is the only mutable truth</h3>
-          <p>Component state in ECS components, keyed by generational id. Solver arrays derived and disposable. Scene transforms derived and disposable. Every hard feature on this page — rewiring live, undo, snapshot and restore, rewind-and-replay, the 3D view — is a consequence of that one arrangement, which is why it's the first thing written and the last thing to change.</p>
+          <p>The transactional <code>StateStore</code> registers stable numeric and opaque-block state identities. ECS behaviors hold handles; solver arrays are dense trial views; transforms, render-deformation buffers and display meshes are projections; CAD is immutable reference data. Rewiring, undo, replay, flexible visualization and fidelity changes all follow from that arrangement.</p>
         </div>
         <div class="card">
           <h3>The test spine exists before it's interesting</h3>
@@ -748,7 +968,7 @@ sim-test     scenario runner, reference traces, the phenomena suite</pre>
         </div>
         <div class="card">
           <h3>What we're deliberately not building yet</h3>
-          <p>Automatic model-order reduction, Modelica import, the emulator backend, contact, cross-machine determinism, 6-DOF mechanics. Every one of them is a backend or an importer behind an interface we're specifying now — which is the only reason deferring them is a plan rather than a hope.</p>
+          <p>Automatic model-order reduction, Modelica import, processor emulation, general contact, fracture, cross-machine determinism, full FEM and general 6-DOF mechanics. The reference-geometry, frame-port, block and projection seams are specified now so these arrive as domains, backends or structural events rather than rewrites.</p>
         </div>
       </div>
 
@@ -757,5 +977,7 @@ sim-test     scenario runner, reference traces, the phenomena suite</pre>
 
     <p class="note">Reply on any block above and I'll revise the plan. Once we're settled, this page becomes the spec we build against.</p>
   </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
 </body>
 </html>

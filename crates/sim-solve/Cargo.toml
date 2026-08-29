@@ -1,0 +1,10 @@
+[package]
+name = "sim-solve"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+nalgebra.workspace = true
+serde.workspace = true
+thiserror.workspace = true

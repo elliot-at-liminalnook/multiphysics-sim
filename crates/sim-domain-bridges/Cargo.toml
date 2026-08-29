@@ -1,0 +1,12 @@
+[package]
+name = "sim-domain-bridges"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+sim-core = { path = "../sim-core" }
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-translational = { path = "../sim-domain-translational" }

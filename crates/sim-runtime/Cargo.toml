@@ -1,0 +1,22 @@
+[package]
+name = "sim-runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+sim-compile = { path = "../sim-compile" }
+sim-core = { path = "../sim-core" }
+sim-domain-bridges = { path = "../sim-domain-bridges" }
+sim-domain-control = { path = "../sim-domain-control" }
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-translational = { path = "../sim-domain-translational" }
+sim-solve = { path = "../sim-solve" }
+thiserror.workspace = true
+
+[dev-dependencies]
+approx.workspace = true
+glam.workspace = true
+sim-geometry = { path = "../sim-geometry" }

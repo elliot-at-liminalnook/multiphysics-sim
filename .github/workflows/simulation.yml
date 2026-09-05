@@ -1,0 +1,78 @@
+name: simulation
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RUST_BACKTRACE: "1"
+  QT_QPA_PLATFORM: offscreen
+
+jobs:
+  generic-runtime:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Rust toolchain
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: System libraries for Bevy
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libudev-dev libx11-dev libxi-dev libxkbcommon-dev libwayland-dev
+      - name: Python environment client dependencies
+        run: python -m pip install numpy
+      - name: Check all workspace targets, including the viewer
+        run: cargo check --workspace --all-targets --locked
+      - name: Generic runtime tests and phenomena acceptance
+        # The gallery's separate one-second UI benchmark depends on the host.
+        # The CAD job below enforces its own explicit performance budgets.
+        run: cargo test --release --workspace --exclude sim-app --locked -- --skip every_exhibit_runs_in_real_time
+      - name: Python controller protocol tests
+        env:
+          PYTHONPATH: clients/python
+        run: python -m unittest discover -s clients/python/tests -q
+
+  cad-acceptance:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Rust toolchain
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: System libraries for CAD
+        run: sudo apt-get update && sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libdbus-1-3 libxcb-cursor0
+      - name: Install CAD dependencies
+        run: python -m pip install -r cad/requirements.txt
+      - name: Build the headless simulator
+        run: cargo build --release --locked --bin sim-cad --bin sim-experiment
+      - name: CAD to controller to measured result
+        run: python examples/motorized-pendulum/run.py
+      - name: Acceptance checker and controller failure regression tests
+        run: python -m pytest -q examples/motorized-pendulum/test_acceptance.py
+      - name: Rhai workspace, replay, caching, cancellation and responsiveness
+        env:
+          SIM_EXPERIMENT_REQUIRED: "1"
+          EXPERIMENT_ACK_SECONDS: "0.1"
+          EXPERIMENT_CACHED_SECONDS: "6"
+          EXPERIMENT_TWO_JOINT_SECONDS: "12"
+          EXPERIMENT_THERMAL_SECONDS: "6"
+        run: python -m pytest -q examples/experimentation/test_workspace.py --basetemp=runs/experimentation-acceptance
+      - name: Atomic candidates, result identity and Qt review controls
+        run: python -m pytest -q cad/tests/test_candidates.py cad/tests/test_component_graph.py cad/tests/test_component_derivation.py cad/tests/test_experiment_results.py cad/tests/test_experiment_ui.py cad/tests/test_snapshots.py cad/tests/test_experiment_config.py cad/tests/test_experiment_capture.py cad/tests/test_experiment_process.py cad/tests/test_experiment_recovery.py cad/tests/test_derivation_cache.py
+      - name: Save models, traces, controller logs and acceptance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motorized-pendulum
+          path: |
+            runs/motorized-pendulum/
+            runs/experimentation-acceptance/
+          if-no-files-found: warn

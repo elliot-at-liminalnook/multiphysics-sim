@@ -1,0 +1,18 @@
+[package]
+name = "sim-domain-sensing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sim-core = { path = "../sim-core" }
+
+[dev-dependencies]
+sim-compile = { path = "../sim-compile" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-solve = { path = "../sim-solve" }
+sim-domain-control = { path = "../sim-domain-control" }
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-translational = { path = "../sim-domain-translational" }
+sim-domain-multibody = { path = "../sim-domain-multibody" }

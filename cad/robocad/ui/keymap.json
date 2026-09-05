@@ -1,0 +1,13 @@
+{
+  "_comment": "User-remappable shortcuts. Copy to ~/.robocad/keymap.json to override. Format: command id -> key sequence(s).",
+  "command_palette": ["Ctrl+Space", "Shift+F"],
+  "file.new": "Ctrl+N", "file.open": "Ctrl+O", "file.save": "Ctrl+S", "file.save_as": "Ctrl+Shift+S", "file.import": "Ctrl+I", "file.export": "Ctrl+E", "file.export_drawing": "Ctrl+Shift+D",
+  "edit.undo": "Ctrl+Z", "edit.redo": "Ctrl+Shift+Z", "edit.delete": ["Delete", "Backspace"], "edit.copy": "Ctrl+C", "edit.paste": "Ctrl+V", "edit.select_all": "Ctrl+A", "edit.invert": "Ctrl+Shift+I", "edit.select_same_material": "Ctrl+Shift+M",
+  "view.fit": "Home", "view.focus": "F", "view.front": "1", "view.back": "Ctrl+1", "view.top": "7", "view.bottom": "Ctrl+7", "view.right": "3", "view.left": "Ctrl+3", "view.iso": "0", "view.ortho": "5", "view.grid": "Ctrl+G", "view.mode_next": "Z", "view.isolate": "/", "view.show_all": "Alt+H", "view.hide": "H", "view.section": "Ctrl+Shift+X", "view.build_plate": "Ctrl+Shift+B", "view.radial": "Space",
+  "select.body": "B", "select.face": "Shift+B", "select.edge": "E", "select.vertex": "V", "select.point": "P", "select.mode_radial": "Q",
+  "tool.select": "Escape", "tool.annotate": "N", "tool.move": "G", "tool.rotate": "R", "tool.scale": "S", "tool.push_pull": "D", "tool.offset_face": "Shift+D", "tool.box": "Shift+A, B", "tool.cylinder": "Shift+A, C", "tool.sphere": "Shift+A, S", "tool.extrude": "X", "tool.revolve": "Shift+R", "tool.fillet": "Ctrl+F", "tool.chamfer": "Ctrl+Shift+F", "tool.shell": "Ctrl+Shift+H", "tool.measure": "M", "tool.plane": "Ctrl+P", "tool.fastener": "Ctrl+H", "tool.clearance": "Ctrl+Shift+C", "tool.mirror": "Ctrl+M", "tool.array": "Ctrl+Shift+A",
+  "sketch.line": "L", "sketch.rectangle": "Shift+L", "sketch.circle": "C", "sketch.arc": "A", "sketch.polygon": "Shift+P", "sketch.slot": "Shift+S", "sketch.spline": "Shift+C", "sketch.text": "T",
+  "modify.union": "Ctrl+U", "modify.subtract": "Ctrl+Shift+U", "modify.intersect": "Ctrl+Alt+U", "modify.join": "J", "modify.unjoin": "Shift+J",
+  "print.wall_check": "Ctrl+W", "print.validate": "Ctrl+Shift+V",
+  "numeric.entry": "Tab"
+}

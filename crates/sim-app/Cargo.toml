@@ -5,7 +5,11 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+serde_json.workspace = true
 bevy.workspace = true
+nalgebra.workspace = true
 sim-core = { path = "../sim-core" }
-sim-geometry = { path = "../sim-geometry" }
-sim-runtime = { path = "../sim-runtime" }
+sim-domain-multibody = { path = "../sim-domain-multibody" }
+sim-domain-robot = { path = "../sim-domain-robot" }
+sim-phenomena = { path = "../sim-phenomena" }
+clap.workspace = true

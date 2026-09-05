@@ -1,5 +1,22 @@
 //! Pure validation and graph compilation from stable authoring IDs to disposable layouts.
 
+pub mod island;
+
+static ELIMINATION: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Turn the compile-time elimination of signal and rate-lane unknowns on
+/// or off for islands built from now on (default off; see `Island::reduce`).
+pub fn set_elimination(on: bool) {
+    ELIMINATION.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+
+pub fn elimination_enabled() -> bool {
+    ELIMINATION.load(std::sync::atomic::Ordering::Relaxed)
+}
+pub mod runtime;
+pub use island::Island;
+pub use runtime::{Runtime, RuntimeError, RuntimeSnapshot};
+
 use petgraph::graph::{NodeIndex, UnGraph};
 use petgraph::visit::Dfs;
 use sim_core::{
@@ -61,6 +78,23 @@ pub enum CompileError {
     SignalOutputCount { connection: usize },
     #[error("port {port:?} is not connected")]
     DanglingPort { port: PortId },
+    #[error("composite port {port:?} must connect through `ModelWorld::connect`, member-wise")]
+    CompositeInConnection { port: PortId },
+    #[error("port {port:?} appears in more than one connection")]
+    PortInTwoConnections { port: PortId },
+    #[error("behavior {behavior:?} of type `{kind}` declares no equations")]
+    NoEquations { behavior: BehaviorId, kind: String },
+    #[error("behavior {behavior:?}: {message}")]
+    Equations { behavior: BehaviorId, message: String },
+    #[error("state registration failed: {0}")]
+    State(String),
+}
+
+/// Validate, then build one integrable island per connected component,
+/// registering every unknown as a stable state in `model.state`.
+pub fn compile_islands(model: &mut ModelWorld, registry: &BehaviorRegistry) -> Result<Vec<Island>, CompileError> {
+    let compiled = compile(model, registry)?;
+    island::build_islands(model, registry, &compiled.connections)
 }
 
 pub fn compile(
@@ -72,7 +106,11 @@ pub fn compile(
     let mut compiled_connections = Vec::with_capacity(model.connections.len());
     let mut connected = HashSet::new();
     for (connection_index, connection) in model.connections.iter().enumerate() {
-        if connection.ports.len() < 2 {
+        // A single acausal port is an explicit open connection (through = 0);
+        // a single signal output is a reading nobody takes.
+        let open = connection.ports.len() == 1
+            && connection.ports.first().and_then(|p| model.ports.get(*p)).is_some_and(|p| matches!(p.schema, PortSchema::Acausal(_) | PortSchema::SignalOut(_)));
+        if connection.ports.len() < 2 && !open {
             return Err(CompileError::TooFewPorts {
                 connection: connection_index,
             });
@@ -81,7 +119,12 @@ pub fn compile(
             .ports
             .iter()
             .map(|id| {
-                connected.insert(*id);
+                if !connected.insert(*id) {
+                    return Err(CompileError::PortInTwoConnections { port: *id });
+                }
+                if model.ports.get(*id).is_some_and(|p| !p.members.is_empty()) {
+                    return Err(CompileError::CompositeInConnection { port: *id });
+                }
                 model
                     .ports
                     .get(*id)
@@ -104,8 +147,13 @@ pub fn compile(
                 CompiledConnectionKind::Acausal(expected)
             }
             PortSchema::SignalIn(expected) | PortSchema::SignalOut(expected) => {
+                // Dimensionless signal ports are untyped: a generic controller
+                // or filter accepts any quantity.
+                let compatible = |kind: QuantityKind| {
+                    kind == expected || kind == QuantityKind::Dimensionless || expected == QuantityKind::Dimensionless
+                };
                 if ports.iter().any(|port| match port.schema {
-                    PortSchema::SignalIn(kind) | PortSchema::SignalOut(kind) => kind != expected,
+                    PortSchema::SignalIn(kind) | PortSchema::SignalOut(kind) => !compatible(kind),
                     PortSchema::Acausal(_) => true,
                 }) {
                     return Err(CompileError::IncompatibleConnection {
@@ -131,9 +179,19 @@ pub fn compile(
         });
     }
 
-    for port in model.ports.keys() {
+    for (port, declaration) in &model.ports {
         if !connected.contains(&port) {
-            return Err(CompileError::DanglingPort { port });
+            // A composite port is represented by its members.
+            if !declaration.members.is_empty() {
+                continue;
+            }
+            // An unused signal output still gets an unknown, so it stays
+            // observable through the store; anything else must be wired.
+            if let PortSchema::SignalOut(kind) = declaration.schema {
+                compiled_connections.push(CompiledConnection { ports: vec![port], kind: CompiledConnectionKind::Signal(kind) });
+            } else {
+                return Err(CompileError::DanglingPort { port });
+            }
         }
     }
 
@@ -180,11 +238,13 @@ fn validate_behaviors_and_ports(
             if !model.behaviors.contains_key(port.owner) {
                 return Err(CompileError::MissingOwner { port: *port_id });
             }
-            if !descriptor
-                .ports
-                .iter()
-                .any(|declared| declared.name == port.name && declared.schema == port.schema)
-            {
+            // Member ports of a composite are the model's own fan-out.
+            if port.member_of.is_some() {
+                continue;
+            }
+            if !descriptor.ports.iter().any(|declared| {
+                declared.schema == port.schema && declared.matches(&port.name)
+            }) {
                 return Err(CompileError::PortMismatch {
                     behavior: behavior_id,
                     name: port.name.clone(),
@@ -192,6 +252,9 @@ fn validate_behaviors_and_ports(
             }
         }
         for declared in &descriptor.ports {
+            if declared.name.contains('*') {
+                continue;
+            }
             if !instance_ports
                 .iter()
                 .any(|(_, port)| port.name == declared.name && port.schema == declared.schema)
@@ -262,6 +325,8 @@ mod tests {
         BehaviorDescriptor {
             type_id: BehaviorTypeId::from(name),
             display_name: "test",
+            equations: None,
+            parameters: None,
             ports: vec![PortDeclaration {
                 name: "pin",
                 schema: PortSchema::Acausal(ConnectorKind::Electrical),
@@ -299,6 +364,8 @@ mod tests {
             .register(BehaviorDescriptor {
                 type_id: BehaviorTypeId::from("load"),
                 display_name: "load",
+                equations: None,
+                parameters: None,
                 ports: vec![PortDeclaration {
                     name: "pin",
                     schema: PortSchema::Acausal(ConnectorKind::Rotational),

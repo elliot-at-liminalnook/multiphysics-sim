@@ -1,0 +1,46 @@
+[package]
+name = "sim-phenomena"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+clap.workspace = true
+nalgebra.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sim-compile = { path = "../sim-compile" }
+sim-core = { path = "../sim-core" }
+sim-couple = { path = "../sim-couple" }
+sim-domain-acoustic = { path = "../sim-domain-acoustic" }
+sim-domain-bridges = { path = "../sim-domain-bridges" }
+sim-domain-control = { path = "../sim-domain-control" }
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-fluid = { path = "../sim-domain-fluid" }
+sim-domain-hydraulic = { path = "../sim-domain-hydraulic" }
+sim-domain-multibody = { path = "../sim-domain-multibody" }
+sim-domain-magnetic = { path = "../sim-domain-magnetic" }
+sim-domain-chemical = { path = "../sim-domain-chemical" }
+sim-domain-radiative = { path = "../sim-domain-radiative" }
+sim-domain-line = { path = "../sim-domain-line" }
+sim-domain-granular = { path = "../sim-domain-granular" }
+sim-domain-robot = { path = "../sim-domain-robot" }
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-sensing = { path = "../sim-domain-sensing" }
+sim-domain-thermal = { path = "../sim-domain-thermal" }
+sim-domain-translational = { path = "../sim-domain-translational" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-solve = { path = "../sim-solve" }
+sim-script = { path = "../sim-script" }
+
+[[bin]]
+name = "sim-gym"
+path = "src/bin/sim_gym.rs"
+
+[[bin]]
+name = "sim-cad"
+path = "src/bin/sim_cad.rs"
+
+[[bin]]
+name = "sim-experiment"
+path = "src/bin/sim_experiment.rs"

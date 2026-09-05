@@ -1,0 +1,14 @@
+[package]
+name = "sim-dynamics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+nalgebra.workspace = true
+serde.workspace = true
+sim-solve = { path = "../sim-solve" }
+thiserror.workspace = true
+
+[dev-dependencies]
+approx.workspace = true

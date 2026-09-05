@@ -1,0 +1,281 @@
+{
+  "legs": {
+    "+X": {
+      "parts": {
+        "hip_input": "5013b8cfb652",
+        "hip_output": "b6c048c66854",
+        "belt": "15e201e53da1",
+        "worm": "3a48197967f9",
+        "sector": "67a5757aab77",
+        "shaft": "3b161831512a",
+        "housing": "2bedd420bf35",
+        "yoke": "50cdcc038fb0",
+        "upper_tube": "ce5f28eb3dad",
+        "lower_tube": "c347907c4ec3",
+        "knee_frame": "69dd1d67cd04",
+        "guide_tube": "16df459aea17",
+        "lower_guide": "0387d47022e1",
+        "crosshead": "19e999c0b702",
+        "coupler": "1234787c1204",
+        "crank": "790022cb15f4",
+        "foot": "6fce8f4b7ac6",
+        "hip_motor_internal": "8cf3e6bcf5ec",
+        "worm_motor_internal": "5400063e1abf",
+        "foot_motor_internal": "1a0e1863ef67"
+      },
+      "joints": {
+        "hip_motor": "+X | Hip servo output",
+        "hip": "+X | Hip swing",
+        "worm_motor": "+X | Worm servo output",
+        "thigh": "+X | Thigh elevation",
+        "foot_motor": "+X | Foot servo output",
+        "coupler": "+X | Crank to curved link",
+        "slide": "+X | Foot translation"
+      }
+    },
+    "-Y": {
+      "parts": {
+        "hip_input": "25a37c97106c",
+        "hip_output": "5cdebfc67dad",
+        "belt": "1db84241242c",
+        "worm": "b4c1a773ed41",
+        "sector": "c5eef180ec65",
+        "shaft": "dedc28bf86c2",
+        "housing": "f125bdc0a201",
+        "yoke": "dc9bbf72a4ee",
+        "upper_tube": "43fe179a673f",
+        "lower_tube": "43fe179a673f",
+        "knee_frame": "43fe179a673f",
+        "guide_tube": "62baca453ced",
+        "lower_guide": "7c9dce75693f",
+        "crosshead": "5a07aadd2764",
+        "coupler": "442ebfada567",
+        "crank": "2ee3e24bcdbd",
+        "foot": "504179282a22",
+        "hip_motor_internal": "b17c2308ff96",
+        "worm_motor_internal": "612062f39577",
+        "foot_motor_internal": "d207267a00a1"
+      },
+      "joints": {
+        "hip_motor": "-Y | Hip servo output",
+        "hip": "-Y | Hip swing",
+        "worm_motor": "-Y | Worm servo output",
+        "thigh": "-Y | Thigh elevation",
+        "foot_motor": "-Y | Foot servo output",
+        "coupler": "-Y | Crank to curved link",
+        "slide": "-Y | Foot translation"
+      }
+    },
+    "+Y": {
+      "parts": {
+        "hip_input": "125c9af353f5",
+        "hip_output": "d30a509d2da7",
+        "belt": "6b83e4df04c2",
+        "worm": "b81688a47732",
+        "sector": "2bdd9cf2961a",
+        "shaft": "b723021d3f9f",
+        "housing": "6bc0005081a6",
+        "yoke": "61973fc3c995",
+        "upper_tube": "c23b1e356338",
+        "lower_tube": "0ced9648a0cb",
+        "knee_frame": "a43bcf47b876",
+        "guide_tube": "b27072d3a283",
+        "lower_guide": "8fbea7a51fd8",
+        "crosshead": "d0efced19e88",
+        "coupler": "1add94389c4b",
+        "crank": "36898caa0141",
+        "foot": "061c5209ab54",
+        "hip_motor_internal": "3389914a4e72",
+        "worm_motor_internal": "2bde3ed08741",
+        "foot_motor_internal": "5b87192d96fa"
+      },
+      "joints": {
+        "hip_motor": "+Y | Hip servo output",
+        "hip": "+Y | Hip swing",
+        "worm_motor": "+Y | Worm servo output",
+        "thigh": "+Y | Thigh elevation",
+        "foot_motor": "+Y | Foot servo output",
+        "coupler": "+Y | Crank to curved link",
+        "slide": "+Y | Foot translation"
+      }
+    },
+    "-X": {
+      "parts": {
+        "hip_input": "3090f621a4b8",
+        "hip_output": "bc15e0138b7f",
+        "belt": "da27110977cd",
+        "worm": "5276850d4a66",
+        "sector": "aa25799a2446",
+        "shaft": "3862994bb074",
+        "housing": "a77fe77ccbc1",
+        "yoke": "2f814fde6ea6",
+        "upper_tube": "f8aa0c1e0bcc",
+        "lower_tube": "520e95913b20",
+        "knee_frame": "3a9d66706e55",
+        "guide_tube": "d8fce2e155ec",
+        "lower_guide": "230c1bd4f4b3",
+        "crosshead": "62bbdafdd692",
+        "coupler": "0ce6bbbf9ead",
+        "crank": "9a9bc053e735",
+        "foot": "2dadc8db646f",
+        "hip_motor_internal": "8c1efc29fefd",
+        "worm_motor_internal": "ca080fe456c3",
+        "foot_motor_internal": "7012b56f47b9"
+      },
+      "joints": {
+        "hip_motor": "-X | Hip servo output",
+        "hip": "-X | Hip swing",
+        "worm_motor": "-X | Worm servo output",
+        "thigh": "-X | Thigh elevation",
+        "foot_motor": "-X | Foot servo output",
+        "coupler": "-X | Crank to curved link",
+        "slide": "-X | Foot translation"
+      }
+    }
+  },
+  "transmissions_by_name": [
+    {
+      "name": "+X | Timing belt 1:1",
+      "driver_joint": "+X | Hip servo output",
+      "driven_joint": "+X | Hip swing",
+      "ratio": 1
+    },
+    {
+      "name": "+X | Worm reduction 5:1",
+      "driver_joint": "+X | Worm servo output",
+      "driven_joint": "+X | Thigh elevation",
+      "ratio": 5
+    },
+    {
+      "name": "-Y | Timing belt 1:1",
+      "driver_joint": "-Y | Hip servo output",
+      "driven_joint": "-Y | Hip swing",
+      "ratio": 1
+    },
+    {
+      "name": "-Y | Worm reduction 5:1",
+      "driver_joint": "-Y | Worm servo output",
+      "driven_joint": "-Y | Thigh elevation",
+      "ratio": 5
+    },
+    {
+      "name": "+Y | Timing belt 1:1",
+      "driver_joint": "+Y | Hip servo output",
+      "driven_joint": "+Y | Hip swing",
+      "ratio": 1
+    },
+    {
+      "name": "+Y | Worm reduction 5:1",
+      "driver_joint": "+Y | Worm servo output",
+      "driven_joint": "+Y | Thigh elevation",
+      "ratio": 5
+    },
+    {
+      "name": "-X | Timing belt 1:1",
+      "driver_joint": "-X | Hip servo output",
+      "driven_joint": "-X | Hip swing",
+      "ratio": 1
+    },
+    {
+      "name": "-X | Worm reduction 5:1",
+      "driver_joint": "-X | Worm servo output",
+      "driven_joint": "-X | Thigh elevation",
+      "ratio": 5
+    }
+  ],
+  "motors": [
+    {
+      "leg": "+X",
+      "motor_id": "bc7a7393c49f",
+      "internal_geometry": "8cf3e6bcf5ec",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "+X",
+      "motor_id": "01defa41932a",
+      "internal_geometry": "5400063e1abf",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "+X",
+      "motor_id": "4368f0b5b421",
+      "internal_geometry": "1a0e1863ef67",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "-Y",
+      "motor_id": "0702845b41d3",
+      "internal_geometry": "b17c2308ff96",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "-Y",
+      "motor_id": "2a3dcb848184",
+      "internal_geometry": "612062f39577",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "-Y",
+      "motor_id": "074a9c071bf6",
+      "internal_geometry": "d207267a00a1",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "+Y",
+      "motor_id": "4f13ca1d8689",
+      "internal_geometry": "3389914a4e72",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "+Y",
+      "motor_id": "cef9d0e3d459",
+      "internal_geometry": "2bde3ed08741",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "+Y",
+      "motor_id": "4a1ae2c3e25f",
+      "internal_geometry": "5b87192d96fa",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "-X",
+      "motor_id": "f5009ce295f6",
+      "internal_geometry": "8c1efc29fefd",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "-X",
+      "motor_id": "e26858c1afc7",
+      "internal_geometry": "ca080fe456c3",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    },
+    {
+      "leg": "-X",
+      "motor_id": "1bfb702ee9c9",
+      "internal_geometry": "7012b56f47b9",
+      "mass_kg": 0.052,
+      "mass_source": "Hiwonder specified 52 g; CAD union-bounds COM and uniform-box inertia estimate"
+    }
+  ],
+  "material_status": "provisional densities; carbon tubes + individual metal pins; nylon structural assignments need per-part confirmation",
+  "units": "CAD mm; joint angles rad; motor mass kg",
+  "calibration_required": [
+    "motor neutral/polarity and hardware IDs",
+    "actual mass and inertia",
+    "transmission efficiency, friction and backlash",
+    "all-pair collision travel optimization",
+    "nylon grade/process and carbon layup"
+  ]
+}

@@ -68,7 +68,7 @@
   <main>
     <p class="eyebrow">Planning doc — v0.21</p>
     <h1>A pluggable multi-domain physics simulator.</h1>
-    <p class="intro">Rust and Bevy are settled, the first controller-to-machine slice is defined, and the architecture now has one consistent account of connectors, time, state, plugins and CAD. The complete motor-driver-to-linear-actuator build and test plan is available as a <a href="actuator-slice-plan.html">self-contained implementation companion</a>. Select any block with the Redline controls and tell me what to change — what's left under open questions is what still needs arguing about.</p>
+    <p class="intro">Models run through the generic equation compiler and integrator. Start with the <a href="README.md">project guide</a>, the <a href="examples/motorized-pendulum/README.md">CAD-to-simulation acceptance example</a>, or the <a href="surprise-gallery.html">phenomena gallery</a>. Specialized actuator, leg and quadruped runtimes have been retired.</p>
 
     <section>
       <h2>What we're building</h2>
@@ -645,12 +645,12 @@ render / analysis meshes   selection + inspection        motion + deformation</c
 <pre><code class="language-plaintext">sim-core              model world, registry, stable ids, ports, StateStore
 sim-compile           model snapshot → residuals, layouts, coupling islands
 sim-solve             Newton, integration, events and step transactions
-sim-runtime           clock, compilation, scheduling and atomic commits
+sim-compile           graph compilation, runtime scheduling and state commits
 sim-geometry          CAD manifests, frames, provenance and projection maps
 sim-domain-*          independent control, electrical, rotational, thermal …
 sim-blocks            native, WASM and opaque-solver adapters
 sim-app               Bevy canvas, 3D projection, inspectors and plots
-sim-test              scenarios, traces, conservation and reference results</code></pre>
+sim-phenomena         scenarios, traces, conservation and reference results</code></pre>
           </div>
           <p><code>sim-core</code> depends on <code>bevy_ecs</code>, not the renderer. CAD semantics remain usable headlessly in <code>sim-geometry</code>; <code>sim-app</code> sits at the top; independent domain crates depend only on core contracts.</p>
         </div>
@@ -939,12 +939,12 @@ fn project_state(binding: &amp;VisualBinding, state: &amp;CommittedState) -&gt; 
 <pre><code class="language-plaintext">sim-core              ModelWorld, registry, ids, quantities and StateStore
 sim-compile           pure snapshot compiler, matching, islands and sparsity
 sim-solve             integrators, Newton/linear solve and transactions
-sim-runtime           clock, discrete events, block scheduling and commits
+sim-dynamics          integration, discrete events and numerical analysis
 sim-geometry          CAD manifests, reference frames and projection maps
 sim-domain-*          independently registered physical behavior crates
 sim-blocks            native, WASM and opaque-solver adapters
 sim-app               Bevy canvas, 3D projection, inspectors and plots
-sim-test              scenarios, traces, comparisons and phenomena</code></pre>
+sim-phenomena         scenarios, traces, comparisons and phenomena</code></pre>
       </div>
 
       <p>The dependency arrows only point downward, and <code>sim-core</code> depends on <code>bevy_ecs</code> rather than on <code>bevy</code>. CAD semantics and projection maps live in headless <code>sim-geometry</code>; the renderer consumes them from <code>sim-app</code>. Domain crates depend on core contracts, never on the app or on one another; bridge behaviors explicitly import only the connector kinds they join.</p>

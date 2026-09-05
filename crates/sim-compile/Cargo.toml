@@ -5,6 +5,17 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+serde.workspace = true
+nalgebra.workspace = true
 petgraph.workspace = true
+rayon = "1"
 sim-core = { path = "../sim-core" }
+sim-couple = { path = "../sim-couple" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-solve = { path = "../sim-solve" }
 thiserror.workspace = true
+
+[dev-dependencies]
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-multibody = { path = "../sim-domain-multibody" }
+sim-domain-sensing = { path = "../sim-domain-sensing" }

@@ -1,0 +1,16 @@
+[package]
+name = "sim-domain-magnetic"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+nalgebra.workspace = true
+sim-core = { path = "../sim-core" }
+
+[dev-dependencies]
+sim-compile = { path = "../sim-compile" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-translational = { path = "../sim-domain-translational" }
+sim-domain-thermal = { path = "../sim-domain-thermal" }

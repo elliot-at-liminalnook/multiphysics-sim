@@ -1,0 +1,29 @@
+[package]
+name = "sim-script"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rhai = { version = "1.25.1", features = ["sync", "serde", "metadata"] }
+serde.workspace = true
+serde_json.workspace = true
+sim-core = { path = "../sim-core" }
+
+[dev-dependencies]
+sim-compile = { path = "../sim-compile" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-domain-rotational = { path = "../sim-domain-rotational" }
+sim-domain-hydraulic = { path = "../sim-domain-hydraulic" }
+sim-domain-chemical = { path = "../sim-domain-chemical" }
+sim-domain-radiative = { path = "../sim-domain-radiative" }
+sim-domain-granular = { path = "../sim-domain-granular" }
+sim-domain-magnetic = { path = "../sim-domain-magnetic" }
+sim-domain-bridges = { path = "../sim-domain-bridges" }
+sim-domain-thermal = { path = "../sim-domain-thermal" }
+sim-domain-fluid = { path = "../sim-domain-fluid" }
+sim-domain-acoustic = { path = "../sim-domain-acoustic" }
+sim-domain-line = { path = "../sim-domain-line" }
+sim-domain-control = { path = "../sim-domain-control" }
+sim-domain-sensing = { path = "../sim-domain-sensing" }
+sim-domain-multibody = { path = "../sim-domain-multibody" }

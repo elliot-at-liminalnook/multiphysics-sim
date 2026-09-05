@@ -1,0 +1,281 @@
+<title>The Surprise Suite</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,500&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F1F4F7;--panel:#FFFFFF;--panel-2:#E7ECF1;--grid:#C9D3DC;--rule:#B7C3CE;
+  --ink:#16202A;--muted:#5B6B7A;--faint:#8797A5;
+  --surprise:#C8452B;--control:#2B5DC8;--pass:#237A4C;--fail:#B4321C;--glow:#E7A23B;
+  --font-display:"Newsreader",Georgia,"Times New Roman",serif;
+  --font-body:"Source Sans 3","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0F161C;--panel:#172230;--panel-2:#1E2C3B;--grid:#2A3A48;--rule:#33465A;
+  --ink:#E8EEF3;--muted:#A3B2C0;--faint:#6F8090;
+  --surprise:#F0745A;--control:#6B95F0;--pass:#5FCB93;--fail:#F07A62;--glow:#F2B95C;color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --ground:#0F161C;--panel:#172230;--panel-2:#1E2C3B;--grid:#2A3A48;--rule:#33465A;
+  --ink:#E8EEF3;--muted:#A3B2C0;--faint:#6F8090;
+  --surprise:#F0745A;--control:#6B95F0;--pass:#5FCB93;--fail:#F07A62;--glow:#F2B95C;color-scheme:dark;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5}
+a{color:inherit}
+main{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+header.mast{padding:64px 0 32px;border-bottom:1px solid var(--rule);display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+.eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--font-display);font-weight:400;font-size:clamp(40px,6vw,64px);line-height:1;margin:8px 0 12px;text-wrap:balance}
+h1 em{font-style:italic;color:var(--surprise)}
+.lede{max-width:62ch;color:var(--muted);margin:0;font-size:18px}
+.tally{font-family:var(--font-mono);text-align:right;font-size:13px;color:var(--muted);line-height:1.7}
+.tally b{display:block;font-size:40px;line-height:1;color:var(--ink);font-weight:500}
+.tally .ok{color:var(--pass)}.tally .bad{color:var(--fail)}
+nav.index{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px 24px;padding:24px 0;border-bottom:1px solid var(--rule);font-size:14px}
+nav.index a{text-decoration:none;display:flex;gap:10px;padding:4px 0;color:var(--muted)}
+nav.index a:hover,nav.index a:focus-visible{color:var(--ink);outline:none}
+nav.index a .n{font-family:var(--font-mono);font-size:12px;width:2ch;color:var(--faint);padding-top:3px}
+nav.index a .s{width:8px;height:8px;border-radius:50%;margin-top:8px;flex:none;background:var(--pass)}
+nav.index a .s.bad{background:var(--fail)}
+section.plate{padding:56px 0 40px;border-bottom:1px solid var(--rule)}
+.plate-head{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:baseline;margin-bottom:8px}
+.plate-head .n{font-family:var(--font-mono);color:var(--faint);font-size:14px}
+h2{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:36px;margin:0;line-height:1.1;text-wrap:balance}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);padding:2px 8px;border-radius:2px}
+.blurb{max-width:66ch;margin:0 0 24px;color:var(--ink)}
+.blurb b{font-weight:600}
+.body{display:grid;grid-template-columns:minmax(300px,5fr) minmax(320px,7fr);gap:24px}
+@media (max-width:820px){.body{grid-template-columns:1fr}}
+.stage{background:var(--panel);border:1px solid var(--rule);position:relative;aspect-ratio:1/1;min-height:300px}
+.stage canvas{width:100%;height:100%;display:block}
+.stage .cap{position:absolute;left:12px;bottom:10px;font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.04em;pointer-events:none}
+.stage .clock{position:absolute;right:12px;top:10px;font-family:var(--font-mono);font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.plots{display:grid;gap:12px;align-content:start}
+figure.plot{margin:0;background:var(--panel);border:1px solid var(--rule);padding:10px 12px 6px}
+figure.plot figcaption{font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+figure.plot figcaption span::before{content:"";display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:6px;background:var(--c)}
+figure.plot svg{width:100%;height:auto;display:block}
+.ledger{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+@media (max-width:820px){.ledger{grid-template-columns:1fr}}
+.ledger h3{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 6px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.ledger table{width:100%;border-collapse:collapse;font-size:14px}
+.ledger td{padding:5px 0;border-bottom:1px solid var(--panel-2);vertical-align:top}
+.ledger td.v{font-family:var(--font-mono);font-size:12.5px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--muted)}
+.ledger td.st{width:44px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em}
+.ledger td.st.ok{color:var(--pass)}.ledger td.st.bad{color:var(--fail)}
+.ledger td.exp{color:var(--faint);font-size:12.5px}
+footer{padding:40px 0 0;color:var(--faint);font-size:13px;max-width:70ch}
+@media (prefers-reduced-motion:reduce){.stage canvas{opacity:.95}}
+</style>
+<main>
+<header class="mast">
+  <div>
+    <div class="eyebrow">Multiphysics acceptance suite · sixteen emergent phenomena</div>
+    <h1>The Surprise <em>Suite</em></h1>
+    <p class="lede">Each plate is one knob at one boundary of a model, a qualitative change nobody encoded, and a published number the run had to hit. Every animation below is driven by the recorded trace of the run that produced the ledger beside it.</p>
+  </div>
+  <div class="tally" id="tally"></div>
+</header>
+<nav class="index" id="index"></nav>
+<div id="plates"></div>
+<footer id="foot"></footer>
+</main>
+<script>
+const REPORTS = /*__REPORTS__*/null;
+const META = {
+ "kapitza-pendulum":{n:1,title:"Kapitza's inverted pendulum",tags:["mechanical"],
+  blurb:"Shake the pivot up and down at 50 Hz and the <b>upright</b> position becomes stable. The stroboscopic trace — one sample per drive cycle — shows the slow oscillation about vertical at the frequency the averaged equations predict; drop the drive to 20 Hz and the bob falls.",
+  plots:[["stroboscopic angle, fast drive","stroboscopic angle, slow drive"],["angle at full rate, first 1.5 s"]],anim:"kapitza"},
+ "huygens-clocks":{n:2,title:"Huygens' coupled clocks",tags:["mechanical","structural"],
+  blurb:"Two escapement-driven pendulums on one compliant, damped beam. From any starting phase they settle into exact <b>anti-phase</b> within the hour, the beam moving by tens of micrometres; make the beam rigid and the phase never changes.",
+  plots:[["|phase difference| from near in-phase start","|phase difference| from quadrature start"],["θ₁, first 12 s","θ₂, first 12 s"],["θ₁, last 12 s","θ₂, last 12 s"]],anim:"huygens"},
+ "current-hogging":{n:3,title:"Current hogging",tags:["electrical","thermal"],
+  blurb:"Two identical devices share a current. With a negative temperature coefficient and loop gain |α|·R<sub>th</sub>·P above one, the marginally hotter one draws more, heats further, and takes the load. The growth rate of the asymmetry is (G−1)/(R<sub>th</sub>C) to five figures.",
+  plots:[["current share of device 1, gain 1.5"],["T₁ (K), gain 1.5","T₂ (K), gain 1.5"]],anim:"hogging"},
+ "rijke-tube":{n:4,title:"The Rijke tube",tags:["thermal","acoustic"],
+  blurb:"A heated gauze a quarter of the way up an open tube. Steady heat in, a pure tone out at c/2L, with no oscillator in the model: heat released in phase with pressure feeds the mode. Slide the gauze to three quarters and it falls silent.",
+  plots:[["pressure at L/4, heater at L/4","pressure at L/4, heater at 3L/4"],["growth rate vs heater position"],["limit cycle: heat release vs pressure"]],anim:"rijke"},
+ "water-hammer":{n:5,title:"Water hammer",tags:["hydraulic","structural"],
+  blurb:"Close a valve faster than the round-trip wave time 2L/c and the pressure at the valve jumps by ρ·c·Δv — 2.4 MPa on a 1 bar head. The wave rings at 4L/c. Close it over ten round trips and the spike collapses.",
+  plots:[["valve pressure, fast closure","valve pressure, slow closure"],["pressure along pipe at t = closure + 0.25·2L/c","pressure along pipe at t = closure + 0.5·2L/c","pressure along pipe at t = closure + 0.75·2L/c","pressure along pipe at t = closure + 1·2L/c"]],anim:"hammer"},
+ "flutter":{n:6,title:"Flutter",tags:["fluid","structural"],
+  blurb:"A pitch–plunge wing section under quasi-steady aerodynamics. Below the flutter speed every gust decays; ten percent above it the same section extracts energy from the flow. The simulated boundary lands on the eigenvalue prediction to 0.01%; lock pitch and there is no boundary at all.",
+  plots:[["plunge at 0.9 U_F","plunge at 1.1 U_F"],["pitch at 1.1 U_F"]],anim:"flutter"},
+ "dzhanibekov":{n:7,title:"The Dzhanibekov flip",tags:["multibody"],
+  blurb:"A free body spun about its intermediate axis flips end over end, again and again, at the Jacobi-elliptic period of Euler's equations. Kinetic energy, |L| and the world-frame angular momentum hold through every flip; an axisymmetric body only precesses.",
+  plots:[["ω₂ (intermediate axis)","ω₁","ω₃"]],anim:"dzhanibekov"},
+ "tippe-top":{n:8,title:"The tippe top",tags:["multibody","contact"],
+  blurb:"A sphere with its centre of mass offset along the axis, spinning on a plane with sliding friction. Above the critical spin the axis swings from stem-up to stem-down and the centre of mass rises by 2a; the energy only ever decreases. Without friction, it never inverts.",
+  plots:[["stem axis ê_z at 6 ω_c","stem axis ê_z at 0.6 ω_c"],["COM height at 6 ω_c"]],anim:"tippe"},
+ "passive-walker":{n:9,title:"Passive dynamic walker",tags:["multibody","contact"],
+  blurb:"Two massless legs, a hip mass, point feet, a slope. No motor, no controller. At γ = 0.009 it walks with the published fixed point θ* = 0.200310; steepen the slope and the stride map period-doubles at γ = 0.0151, again at 0.0177, and goes chaotic.",
+  plots:[["stance angle θ(t) at γ = 0.009","inter-leg angle φ(t) at γ = 0.009"],["bifurcation diagram: heel-strike |θ| vs γ"]],anim:"walker",scatter:["bifurcation diagram: heel-strike |θ| vs γ"]},
+ "euler-buckling":{n:10,title:"Euler buckling",tags:["structural"],
+  blurb:"A pinned–pinned Hencky chain under axial load. The lowest lateral frequency obeys ω² ∝ (1 − P/P<sub>cr</sub>) and extrapolates to π²EI/L² without the run ever reaching it; at 1.5 P<sub>cr</sub> it bows. A small-strain linear element stays straight at twice the load.",
+  plots:[["mid-span deflection, P = 0","mid-span deflection, P = 1.5 P_cr"],["column shape at P = 1.5 P_cr"]],anim:"buckling"},
+ "spring-pendulum":{n:11,title:"The 2:1 spring pendulum",tags:["mechanical"],
+  blurb:"A mass on a spring, free to swing, tuned so the bounce is exactly twice the swing frequency. Start it bouncing straight down and it spontaneously swings, hands the energy back, and bounces again. Detune by 10% and the transfer collapses.",
+  plots:[["lateral x, tuned 2:1","lateral x, detuned 10%"],["vertical bounce, tuned 2:1"]],anim:"spring"},
+ "stick-slip":{n:12,title:"Stick–slip self-excitation",tags:["mechanical","contact"],
+  blurb:"A block on a moving belt held by a spring, with velocity-weakening friction. Below the belt speed at which −dF/dv equals the damping the block jerks in a stick–slip limit cycle; above it, it sits still. The measured growth rates match −(c + F′)/2m.",
+  plots:[["block velocity, belt at 0.5 v_c","block velocity, belt at 2 v_c"]],anim:"belt"},
+ "backlash-hunting":{n:13,title:"Backlash hunting",tags:["control","rotational"],
+  blurb:"A PI servo drives a load through a gear mesh with a gap. No gap, it settles; any gap, it hunts at a frequency the describing function predicts, with an amplitude that scales exactly with the gap — double the play, double the hunt, same pitch.",
+  plots:[["load angle, no gap","load angle, gap 0.01 rad"],["twist θm − θl, last 2 s"]],anim:"backlash"},
+ "sample-rate-instability":{n:14,title:"Sample-rate instability",tags:["control","electrical","rotational"],
+  blurb:"A DC motor speed loop under proportional control with a zero-order hold. The continuous loop is stable at any gain; the sampled loop goes unstable at exactly the period where coth(T/2τ) = K<sub>p</sub>K. The measured poles match e<sup>−T/τ</sup> − K<sub>p</sub>K(1 − e<sup>−T/τ</sup>).",
+  plots:[["speed samples at 0.5 T_c","speed samples at 0.9 T_c","speed samples at 1.1 T_c"]],anim:"sampled",steps:true},
+ "chua-circuit":{n:15,title:"Chua's circuit",tags:["electrical"],
+  blurb:"Two capacitors, an inductor, a resistor and one piecewise-linear negative resistance. Sweeping α walks period 1 → 2 → 4 → 8 into chaos; at the canonical parameters the double scroll has a positive Lyapunov exponent, and two runs of it are bitwise identical.",
+  plots:[["x(t) double scroll"],["orbit period vs α"]],anim:"chua",steps:true},
+ "thermoelastic-damping":{n:16,title:"Thermoelastic damping",tags:["structural","thermal"],
+  blurb:"A bending beam with no damper. Compressed fibres warm, stretched fibres cool, heat crosses the thickness, and the beam stops — Q⁻¹ matches Lifshitz–Roukes within 5% at five thicknesses, peaking at ωτ = 1, and T₀ times the entropy produced equals the energy lost. Set α = 0 and it rings forever.",
+  plots:[["curvature ringing down, ωτ = 1"],["measured Q⁻¹ vs thickness / h(ωτ=1)"],["temperature across thickness (K) at peak curvature"]],anim:"zener"},
+};
+const byName = Object.fromEntries(REPORTS.map(r=>[r.scenario,r]));
+const order = Object.entries(META).sort((a,b)=>a[1].n-b[1].n);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const S = (r,label)=> r.series.find(s=>s.label===label);
+const fmt = v => Math.abs(v)>=1e5||(Math.abs(v)<1e-3&&v!==0)? v.toExponential(3) : (+v.toPrecision(6)).toString();
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+// ---------- plots
+function plot(fig, series, opts){
+  const W=560,H=190,L=54,R=12,T=10,B=28;
+  let xs=[],ys=[];series.forEach(s=>{xs.push(...s.x);ys.push(...s.y)});
+  xs=xs.filter(Number.isFinite);ys=ys.filter(Number.isFinite);
+  let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  if(y1===y0){y1+=1;y0-=1} if(x1===x0){x1+=1}
+  const py=(y1-y0)*0.08;y0-=py;y1+=py;
+  const sx=x=>L+(x-x0)/(x1-x0)*(W-L-R), sy=y=>T+(y1-y)/(y1-y0)*(H-T-B);
+  const ticks=(a,b,n)=>{const span=b-a,raw=span/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),step=[1,2,5,10].map(m=>m*mag).find(s=>s>=raw);const out=[];for(let v=Math.ceil(a/step)*step;v<=b+1e-12;v+=step)out.push(+v.toPrecision(10));return out};
+  const tx=ticks(x0,x1,5),ty=ticks(y0,y1,4);
+  const tl=v=>{const a=Math.abs(v);if(a===0)return "0";if(a>=1e4||a<1e-2)return v.toExponential(1);return (+v.toPrecision(4)).toString()};
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
+  ty.forEach(v=>{g+=`<line x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${L-6}" y="${sy(v)+4}" text-anchor="end" font-size="10" font-family="var(--font-mono)" fill="var(--muted)">${tl(v)}</text>`});
+  tx.forEach(v=>{g+=`<line y1="${T}" y2="${H-B}" x1="${sx(v)}" x2="${sx(v)}" stroke="var(--grid)" stroke-width="1"/><text y="${H-B+14}" x="${sx(v)}" text-anchor="middle" font-size="10" font-family="var(--font-mono)" fill="var(--muted)">${tl(v)}</text>`});
+  const cols=["var(--surprise)","var(--control)","var(--glow)","var(--pass)"];
+  series.forEach((s,i)=>{
+    const c=cols[i%cols.length];
+    if(opts.scatter){s.x.forEach((x,k)=>{if(Number.isFinite(s.y[k]))g+=`<circle cx="${sx(x).toFixed(1)}" cy="${sy(s.y[k]).toFixed(1)}" r="1.2" fill="${c}"/>`});return}
+    let d="",pen=false;
+    s.x.forEach((x,k)=>{const y=s.y[k];if(!Number.isFinite(y)){pen=false;return}
+      let X=sx(x).toFixed(1),Y=sy(y).toFixed(1);
+      if(opts.steps&&pen){const px=sx(s.x[k-1]).toFixed(1);d+=`L${X} ${sy(s.y[k-1]).toFixed(1)}`}
+      d+=(pen?"L":"M")+X+" "+Y;pen=true});
+    g+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="1.4" stroke-linejoin="round"/>`});
+  g+=`<text x="${W-R}" y="${H-B+14}" text-anchor="end" font-size="10" font-family="var(--font-mono)" fill="var(--faint)"></text></svg>`;
+  fig.innerHTML=`<figcaption>${series.map((s,i)=>`<span style="--c:${cols[i%cols.length]}">${esc(s.label)}</span>`).join("")}</figcaption>`+g;
+}
+// ---------- build page
+const plates=document.getElementById("plates"),index=document.getElementById("index");
+let passTotal=0,checkTotal=0;
+for(const [name,m] of order){
+  const r=byName[name]; if(!r) continue;
+  const ok=r.checks.filter(c=>c.passed).length; passTotal+=ok; checkTotal+=r.checks.length;
+  const allOk=ok===r.checks.length;
+  index.insertAdjacentHTML("beforeend",`<a href="#p${m.n}"><span class="n">${m.n}</span><span class="s ${allOk?"":"bad"}"></span><span>${m.title}</span></a>`);
+  const sec=document.createElement("section");sec.className="plate";sec.id="p"+m.n;
+  sec.innerHTML=`<div class="plate-head"><span class="n">Plate ${String(m.n).padStart(2,"0")}</span><h2>${m.title}</h2></div>
+  <div class="tags">${m.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+  <p class="blurb">${m.blurb}</p>
+  <div class="body"><div class="stage"><canvas></canvas><div class="cap"></div><div class="clock"></div></div><div class="plots"></div></div>
+  <div class="ledger"><div><h3>Checks · ${ok}/${r.checks.length}</h3><table>${r.checks.map(c=>`<tr><td class="st ${c.passed?"ok":"bad"}">${c.passed?"PASS":"FAIL"}</td><td>${esc(c.name)}<div class="exp">${esc(c.expectation)}</div></td><td class="v">${fmt(c.observed)}</td></tr>`).join("")}</table></div>
+  <div><h3>Measured</h3><table>${r.measurements.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="v">${fmt(v)}</td></tr>`).join("")}</table></div></div>`;
+  plates.appendChild(sec);
+  const plots=sec.querySelector(".plots");
+  m.plots.forEach(labels=>{const ss=labels.map(l=>S(r,l)).filter(Boolean);if(!ss.length)return;const f=document.createElement("figure");f.className="plot";plot(f,ss,{steps:m.steps,scatter:m.scatter&&m.scatter.includes(labels[0])});plots.appendChild(f)});
+  startAnim(sec,m,r);
+}
+document.getElementById("tally").innerHTML=`<b class="${passTotal===checkTotal?"ok":"bad"}">${passTotal}/${checkTotal}</b>checks passed<br>${order.length} phenomena · ${REPORTS.reduce((a,r)=>a+r.series.length,0)} recorded traces`;
+document.getElementById("foot").textContent="Traces recorded by `cargo run -p sim-phenomena -- all --html`. Animations replay the recorded state; nothing is drawn from a formula the simulator did not solve.";
+// ---------- animation helpers
+function interp(s,t){const x=s.x,y=s.y;if(t<=x[0])return y[0];if(t>=x[x.length-1])return y[y.length-1];let lo=0,hi=x.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(x[m]<=t)lo=m;else hi=m}const f=(t-x[lo])/(x[hi]-x[lo]||1);return y[lo]+(y[hi]-y[lo])*f}
+function tspan(s){return [s.x[0],s.x[s.x.length-1]]}
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function startAnim(sec,m,r){
+  const stage=sec.querySelector(".stage"),cv=stage.querySelector("canvas"),cap=stage.querySelector(".cap"),clock=stage.querySelector(".clock");
+  const fn=ANIM[m.anim]; if(!fn) return;
+  const anim=fn(r); if(!anim){cap.textContent="no trace";return}
+  cap.textContent=anim.caption||"";
+  let start=null;
+  function frame(ts){
+    const rect=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;
+    if(cv.width!==Math.round(rect.width*dpr)){cv.width=Math.round(rect.width*dpr);cv.height=Math.round(rect.height*dpr)}
+    const ctx=cv.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,rect.width,rect.height);
+    if(start===null)start=ts;
+    let t=reduced?anim.rest??anim.t1:anim.t0+((ts-start)/1000*anim.speed)%(anim.t1-anim.t0);
+    const C={ink:css("--ink"),muted:css("--muted"),faint:css("--faint"),grid:css("--grid"),sur:css("--surprise"),con:css("--control"),glow:css("--glow"),pass:css("--pass"),panel2:css("--panel-2")};
+    anim.draw(ctx,rect.width,rect.height,t,C);
+    clock.textContent="t = "+t.toFixed(anim.digits??2)+" "+(anim.unit||"s");
+    if(!reduced)requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+function circle(ctx,x,y,r,fill){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill()}
+function line(ctx,x0,y0,x1,y1,c,w){ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.stroke()}
+function ground(ctx,W,y,C){line(ctx,0,y,W,y,C.grid,1)}
+function label(ctx,text,x,y,C,align){ctx.fillStyle=C.muted;ctx.font="11px "+css("--font-mono");ctx.textAlign=align||"left";ctx.fillText(text,x,y)}
+function trail(ctx,pts,c){ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.strokeStyle=c;ctx.lineWidth=1;ctx.globalAlpha=.5;ctx.stroke();ctx.globalAlpha=1}
+const ANIM={
+ kapitza(r){const a=S(r,"angle at full rate, first 1.5 s"),p=S(r,"pivot height, first 1.5 s");if(!a)return;const [t0,t1]=tspan(a);
+  return{t0,t1,speed:0.25,rest:t1,caption:"50 Hz pivot · drawn ¼ speed · bob stands on nothing",draw(ctx,W,H,t,C){const L=H*0.34,px=W/2,py=H*0.62-interp(p,t)*H*6;const phi=interp(a,t);
+   ground(ctx,W,H*0.62,C);line(ctx,px,H*0.62,px,py,C.faint,3);const bx=px+L*Math.sin(phi),by=py-L*Math.cos(phi);line(ctx,px,py,bx,by,C.ink,3);circle(ctx,bx,by,10,C.sur);circle(ctx,px,py,5,C.ink);label(ctx,"pivot ×6 exaggeration",12,H-30,C)}}},
+ huygens(r){const a=S(r,"θ₁, first 12 s"),b=S(r,"θ₂, first 12 s"),x=S(r,"beam x, first 12 s"),a2=S(r,"θ₁, last 12 s"),b2=S(r,"θ₂, last 12 s"),x2=S(r,"beam x, last 12 s");if(!a||!a2)return;
+  const [t0,t1]=tspan(a),[u0,u1]=tspan(a2);return{t0,t1:t1+ (u1-u0),speed:1,rest:t1+(u1-u0)-1,unit:"s",caption:"top: first seconds · bottom: after 40 minutes · beam motion ×2000",
+   draw(ctx,W,H,t,C){const rows=[[a,b,x,t,"t = 0"],[a2,b2,x2,u0+(t-t0),"t ≈ 40 min"]];rows.forEach((row,i)=>{const [s1,s2,sx,tt,tag]=row;const cy=H*(0.12+0.5*i),L=H*0.28,bx=interp(sx,tt)*2000*W;const y=cy;line(ctx,W*0.1+bx,y,W*0.9+bx,y,C.faint,6);
+    [[W*0.32,s1],[W*0.68,s2]].forEach(([px,s])=>{const th=interp(s,tt)*3;const ex=px+bx,ey=y,mx=ex+L*Math.sin(th),my=ey+L*Math.cos(th);line(ctx,ex,ey,mx,my,C.ink,2);circle(ctx,mx,my,9,i?C.pass:C.sur)});label(ctx,tag,12,cy-12,C)})}}},
+ hogging(r){const sh=S(r,"current share of device 1, gain 1.5"),t1s=S(r,"T₁ (K), gain 1.5"),t2s=S(r,"T₂ (K), gain 1.5");if(!sh)return;const [t0,t1]=tspan(sh);const tmax=Math.max(...t1s.y);
+  return{t0,t1,speed:40,rest:t1,unit:"s",digits:0,caption:"two devices in parallel on one current source · glow = temperature",draw(ctx,W,H,t,C){const s=interp(sh,t);const T=[interp(t1s,t),interp(t2s,t)];
+   [0,1].forEach(i=>{const x=W*(0.3+0.4*i),y=H*0.5,w=W*0.18,h=H*0.4;const heat=(T[i]-300)/(tmax-300);ctx.fillStyle=`rgba(240,116,90,${0.15+0.85*heat})`;ctx.fillRect(x-w/2,y-h/2,w,h);ctx.strokeStyle=C.ink;ctx.lineWidth=1.5;ctx.strokeRect(x-w/2,y-h/2,w,h);label(ctx,`${T[i].toFixed(0)} K`,x,y+h/2+18,C,"center");const share=i?1-s:s;label(ctx,`${(share*100).toFixed(1)} % of I`,x,y-h/2-10,C,"center");
+    const arrows=Math.round(share*10);for(let k=0;k<arrows;k++){const ay=y-h/2+8+k*(h-16)/10;line(ctx,x-w/2-14,ay,x-w/2-4,ay,C.con,1.5)}});
+   line(ctx,W*0.06,H*0.5,W*0.2,H*0.5,C.con,3);label(ctx,"I",W*0.06,H*0.5-8,C)}}},
+ rijke(r){const p=S(r,"pressure at L/4, heater at L/4"),q=S(r,"heat release, last 6 s"),u=S(r,"acoustic velocity at heater, last 6 s");if(!p)return;const [t0,t1]=tspan(p);const pmax=Math.max(...p.y.map(Math.abs));
+  return{t0,t1,speed:6,rest:t1,caption:"open tube · gauze at L/4 · standing wave shown as pressure envelope",draw(ctx,W,H,t,C){const x0=W*0.5,y0=H*0.9,y1=H*0.1;const pv=interp(p,t)/pmax;ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.strokeRect(x0-W*0.08,y1,W*0.16,y0-y1);
+   ctx.beginPath();for(let k=0;k<=40;k++){const s=k/40,y=y0-s*(y0-y1);const amp=pv*Math.sin(Math.PI*s)*W*0.07;if(k)ctx.lineTo(x0+amp,y);else ctx.moveTo(x0+amp,y)}ctx.strokeStyle=C.sur;ctx.lineWidth=2;ctx.stroke();ctx.beginPath();for(let k=0;k<=40;k++){const s=k/40,y=y0-s*(y0-y1);const amp=pv*Math.sin(Math.PI*s)*W*0.07;if(k)ctx.lineTo(x0-amp,y);else ctx.moveTo(x0-amp,y)}ctx.stroke();
+   const gy=y0-0.25*(y0-y1);const heat=q&&t>q.x[0]?Math.max(0,interp(q,t)):0;ctx.fillStyle=`rgba(242,185,92,${0.3+Math.min(0.7,heat*2)})`;ctx.fillRect(x0-W*0.075,gy-3,W*0.15,6);label(ctx,"gauze L/4",x0+W*0.1,gy+4,C);label(ctx,"p at L/4: "+interp(p,t).toFixed(2),12,H-30,C)}}},
+ hammer(r){const labels=[0.25,0.5,0.75,1,1.25,1.5].map(f=>S(r,`pressure along pipe at t = closure + ${f}·2L/c`)).filter(Boolean);const v=S(r,"valve pressure, fast closure");if(!labels.length||!v)return;
+  const pmin=1e5,pmax=Math.max(...labels.flatMap(s=>s.y));return{t0:0,t1:labels.length,speed:0.8,rest:labels.length-1e-3,unit:"×2L/c after closure",digits:2,caption:"reservoir (left) → 100 m pipe → valve (right) · colour = pressure",
+   draw(ctx,W,H,t,C){const k=Math.min(labels.length-1,Math.floor(t)),s=labels[k],n=s.x.length,x0=W*0.08,x1=W*0.86,y=H*0.5,h=H*0.16;for(let i=0;i<n;i++){const f=(s.y[i]-pmin)/(pmax-pmin);ctx.fillStyle=`hsl(${210-190*Math.max(0,Math.min(1,f))} 70% ${45+15*(1-f)}%)`;ctx.fillRect(x0+(x1-x0)*i/n,y-h/2,(x1-x0)/n+1,h)}
+    ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.strokeRect(x0,y-h/2,x1-x0,h);ctx.fillStyle=C.ink;ctx.fillRect(x1,y-h/2-6,8,h+12);label(ctx,"valve closed",x1-4,y+h/2+18,C,"right");label(ctx,"reservoir 2 bar",x0,y-h/2-10,C);
+    label(ctx,`profile ${(0.25*(k+1)).toFixed(2)}·2L/c after closure · peak ${(Math.max(...s.y)/1e5).toFixed(1)} bar`,12,H-30,C)}}},
+ flutter(r){const h=S(r,"plunge at 1.1 U_F"),a=S(r,"pitch at 1.1 U_F");if(!h||!a)return;const [t0,t1]=tspan(h);const hm=Math.max(...h.y.map(Math.abs));
+  return{t0,t1,speed:0.5,rest:t1,caption:"section at 1.1 U_F · plunge and pitch exaggerated · flow left→right",draw(ctx,W,H,t,C){const cx=W*0.5,cy=H*0.5+interp(h,t)/hm*H*0.2,th=interp(a,t)*8;ctx.save();ctx.translate(cx,cy);ctx.rotate(th);ctx.beginPath();const c=W*0.5;ctx.moveTo(-c/2,0);ctx.bezierCurveTo(-c/2,-c*0.11,-c*0.05,-c*0.09,c/2,0);ctx.bezierCurveTo(-c*0.05,c*0.03,-c/2,c*0.02,-c/2,0);ctx.fillStyle=C.sur;ctx.fill();ctx.restore();
+   for(let i=0;i<5;i++){const y=H*0.15+i*H*0.17,x=(t*120+i*70)%W;line(ctx,x,y,x+30,y,C.con,1)}label(ctx,"h = "+(interp(h,t)*1000).toFixed(1)+" mm  α = "+(interp(a,t)*57.3).toFixed(2)+"°",12,H-30,C)}}},
+ dzhanibekov(r){const q=["q_w","q_x","q_y","q_z"].map(l=>S(r,l));if(q.some(s=>!s))return;const [t0,t1]=tspan(q[0]);
+  return{t0,t1,speed:2,rest:20,caption:"body I = (1,2,3) spun about axis 2 · attitude from the integrated quaternion",draw(ctx,W,H,t,C){const Q=q.map(s=>interp(s,t)),[w,x,y,z]=Q;const rot=v=>{const [vx,vy,vz]=v;const tx=2*(y*vz-z*vy),ty=2*(z*vx-x*vz),tz=2*(x*vy-y*vx);return[vx+w*tx+(y*tz-z*ty),vy+w*ty+(z*tx-x*tz),vz+w*tz+(x*ty-y*tx)]};
+   const proj=v=>{const [a,b,c]=v;const X=a*0.85-c*0.5,Y=-b*0.9+a*0.25+c*0.25;return[W/2+X*W*0.22,H/2+Y*H*0.22]};const d=[0.35,1.3,0.7];const corners=[];for(let i=0;i<8;i++)corners.push([((i&1)?1:-1)*d[0],((i&2)?1:-1)*d[1],((i&4)?1:-1)*d[2]]);const P=corners.map(c=>proj(rot(c)));
+   const edges=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];edges.forEach(([a,b])=>line(ctx,P[a][0],P[a][1],P[b][0],P[b][1],C.ink,2));
+   const ax=proj(rot([0,1.6,0]));line(ctx,W/2,H/2,ax[0],ax[1],C.sur,3);circle(ctx,ax[0],ax[1],5,C.sur);label(ctx,"intermediate axis",ax[0]+8,ax[1],C)}}},
+ tippe(r){const ex=S(r,"ê_x at 6 ω_c"),ez=S(r,"stem axis ê_z at 6 ω_c"),cx=S(r,"COM x at 6 ω_c"),cz=S(r,"COM height at 6 ω_c");if(!ex||!ez)return;const [t0,t1]=tspan(ez);
+  return{t0,t1,speed:0.6,rest:t1,caption:"side view · sphere R = 15 mm, offset a = 3 mm · spun at 6 ω_c",draw(ctx,W,H,t,C){const sc=W*0.045/0.015*0.55;const gy=H*0.72;const X=interp(cx,t),Z=interp(cz,t),ax=interp(ex,t),az=interp(ez,t);const px=W/2+(X-0)*sc*0+0,pz=gy-Z*sc;
+   const R=0.015*sc,a=0.003*sc;const ccx=px+ax*a,ccz=pz-az*a;ground(ctx,W,gy,C);circle(ctx,ccx,ccz,R,C.panel2);ctx.beginPath();ctx.arc(ccx,ccz,R,0,Math.PI*2);ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.stroke();
+   line(ctx,ccx,ccz,ccx+ax*0.024*sc,ccz-az*0.024*sc,C.ink,6);circle(ctx,px,pz,5,C.sur);label(ctx,"● centre of mass",12,H-46,C);label(ctx,`ê_z = ${az.toFixed(2)} · COM height ${(Z*1000).toFixed(1)} mm`,12,H-30,C)}}},
+ walker(r){const th=S(r,"stance angle θ(t) at γ = 0.009"),ph=S(r,"inter-leg angle φ(t) at γ = 0.009");if(!th)return;const [t0,t1]=tspan(th);
+  const strikes=[];for(let i=1;i<th.x.length;i++)if(th.y[i]-th.y[i-1]>0.2)strikes.push(th.x[i]);
+  return{t0,t1:Math.min(t1,60),speed:2.5,rest:5,unit:"√(l/g)",caption:"the simplest walking model on a 0.009 rad slope · no actuation",draw(ctx,W,H,t,C){const g=0.009,L=H*0.32;let n=0;while(n<strikes.length&&strikes[n]<=t)n++;const foot0=W*0.25+n*2*Math.sin(0.2)*L-(t/6)*0;
+   const cam=W*0.5-foot0;ctx.save();ctx.translate(cam,0);const sy=x=>H*0.7-(x-W*0.25)*Math.tan(-g)*0;line(ctx,-1e4,H*0.7,1e4,H*0.7,C.grid,1);
+   const T=interp(th,t),P=interp(ph,t);const hx=foot0-L*Math.sin(T-g),hy=H*0.7-L*Math.cos(T-g);const sw=T-P;const fx=hx+L*Math.sin(sw-g),fy=hy+L*Math.cos(sw-g);
+   line(ctx,foot0,H*0.7,hx,hy,C.ink,4);line(ctx,hx,hy,fx,fy,C.sur,4);circle(ctx,hx,hy,10,C.ink);ctx.restore();label(ctx,`stride ${n} · θ = ${T.toFixed(3)}`,12,H-30,C)}}},
+ buckling(r){const sh=S(r,"column shape at P = 1.5 P_cr"),d=S(r,"mid-span deflection, P = 1.5 P_cr");if(!sh||!d)return;const [t0,t1]=tspan(d);const dm=Math.max(...d.y.map(Math.abs));
+  return{t0,t1:Math.min(t1,20),speed:2,rest:20,caption:"pinned–pinned column · P = 1.5 P_cr · shape from the final state scaled by the mid-span trace",draw(ctx,W,H,t,C){const f=interp(d,t)/dm;const x0=W*0.2,x1=W*0.8,y=H*0.5;ground(ctx,W,y,C);ctx.beginPath();sh.x.forEach((x,i)=>{const X=x0+x*(x1-x0),Y=y-sh.y[i]*f*(x1-x0);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.strokeStyle=C.sur;ctx.lineWidth=5;ctx.lineJoin="round";ctx.stroke();
+   circle(ctx,x0,y,6,C.ink);circle(ctx,x1,y,6,C.ink);line(ctx,x1+40,y,x1+10,y,C.con,3);label(ctx,"P",x1+44,y+4,C);label(ctx,`mid-span deflection ${(interp(d,t)).toFixed(3)} L`,12,H-30,C)}}},
+ spring(r){const x=S(r,"lateral x, tuned 2:1"),y=S(r,"vertical bounce, tuned 2:1");if(!x||!y)return;const [t0,t1]=tspan(x);
+  return{t0,t1,speed:4,rest:40,caption:"k/m = 4g/L · started as a pure bounce · drawn 4× speed",draw(ctx,W,H,t,C){const L=H*0.4,px=W/2,py=H*0.12;const X=px+interp(x,t)/0.6667*L,Y=py+L+interp(y,t)/0.6667*L;const n=12;ctx.beginPath();ctx.moveTo(px,py);for(let i=1;i<n;i++){const s=i/n;ctx.lineTo(px+(X-px)*s+(i%2?8:-8),py+(Y-py)*s)}ctx.lineTo(X,Y);ctx.strokeStyle=C.ink;ctx.lineWidth=1.5;ctx.stroke();circle(ctx,X,Y,11,C.sur);circle(ctx,px,py,4,C.ink);label(ctx,"lateral "+(interp(x,t)*100).toFixed(1)+" cm",12,H-30,C)}}},
+ belt(r){const v=S(r,"block velocity, belt at 0.5 v_c"),x=S(r,"block position, belt at 0.5 v_c");if(!v||!x)return;const [t0,t1]=tspan(v);const vb=0.2047;
+  return{t0,t1:Math.min(t1,16),speed:1,rest:12,caption:"block on a belt moving at 0.5 v_c · Stribeck friction · stick phases flagged",draw(ctx,W,H,t,C){const y=H*0.62,bx=W*0.5+(interp(x,t)-interp(x,t0))*W*4;const stuck=Math.abs(interp(v,t)-vb)<0.02*vb;
+   for(let i=0;i<W/30+2;i++){const bxx=((i*30+t*vb*W*0.6)%(W+30))-15;line(ctx,bxx,y+12,bxx+10,y+12,C.faint,1)}line(ctx,0,y+6,W,y+6,C.grid,1);
+   ctx.fillStyle=stuck?C.pass:C.sur;ctx.fillRect(bx-30,y-40,60,46);const n=10;ctx.beginPath();ctx.moveTo(W*0.05,y-17);for(let i=1;i<n;i++){ctx.lineTo(W*0.05+(bx-30-W*0.05)*i/n,y-17+(i%2?6:-6))}ctx.lineTo(bx-30,y-17);ctx.strokeStyle=C.ink;ctx.lineWidth=1.5;ctx.stroke();label(ctx,(stuck?"stuck":"slipping")+" · v = "+interp(v,t).toFixed(3)+" m/s",12,H-30,C)}}},
+ backlash(r){const m=S(r,"motor angle, gap 0.01 rad"),l=S(r,"load angle, gap 0.01 rad");if(!m||!l)return;const [t0,t1]=tspan(m);
+  return{t0:t0+30,t1:Math.min(t1,40),speed:0.25,rest:35,caption:"limit cycle · angles ×25 · the gap between the teeth is the whole story",draw(ctx,W,H,t,C){const th=interp(m,t)*25,tl=interp(l,t)*25;const gear=(cx,cy,R,ang,c,teeth)=>{ctx.beginPath();for(let i=0;i<teeth*2;i++){const a=ang+i*Math.PI/teeth,rr=i%2?R:R*0.85;ctx.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a))}ctx.closePath();ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke();line(ctx,cx,cy,cx+R*0.8*Math.cos(ang),cy+R*0.8*Math.sin(ang),c,3)};
+   gear(W*0.34,H*0.5,W*0.16,th,C.con,12);gear(W*0.66,H*0.5,W*0.16,Math.PI/12-tl,C.sur,12);label(ctx,"motor",W*0.34,H*0.5+W*0.16+22,C,"center");label(ctx,"load",W*0.66,H*0.5+W*0.16+22,C,"center");label(ctx,`twist ${((interp(m,t)-interp(l,t))*1000).toFixed(1)} mrad · gap ±10 mrad`,12,H-30,C)}}},
+ sampled(r){const s=S(r,"speed samples at 1.1 T_c"),g=S(r,"speed samples at 0.9 T_c");if(!s||!g)return;const [t0,t1]=tspan(s);const m=Math.max(...s.y.map(Math.abs));
+  return{t0,t1,speed:0.3,rest:t1,caption:"held command against a first-order motor · 0.9 T_c settles, 1.1 T_c diverges",draw(ctx,W,H,t,C){const y0=H*0.5;ground(ctx,W,y0,C);[[g,C.pass,"0.9 T_c"],[s,C.sur,"1.1 T_c"]].forEach(([ss,c,tag],k)=>{let i=0;while(i<ss.x.length&&ss.x[i]<=t)i++;const sc=H*0.42/(k?m:10);for(let j=1;j<i;j++){const x=W*0.06+ss.x[j]/t1*W*0.88;const h=-ss.y[j]*sc;ctx.fillStyle=c;ctx.globalAlpha=k?0.8:0.9;ctx.fillRect(x-3,y0,6,h);ctx.globalAlpha=1}label(ctx,tag,12,H-46+16*k,C)})}}},
+ chua(r){const x=S(r,"x(t) double scroll"),z=S(r,"x–z projection");if(!x||!z)return;const [t0,t1]=tspan(x);const xm=Math.max(...z.x.map(Math.abs)),zm=Math.max(...z.y.map(Math.abs));
+  return{t0,t1,speed:8,rest:t1,caption:"double scroll in the x–z plane · α = 15.6, β = 28 · drawn 8× speed",draw(ctx,W,H,t,C){let i=0;while(i<x.x.length&&x.x[i]<=t)i++;const pts=[];for(let j=Math.max(0,i-1500);j<i;j++)pts.push([W/2+z.x[j]/xm*W*0.42,H/2-z.y[j]/zm*H*0.42]);trail(ctx,pts,C.sur);if(pts.length)circle(ctx,pts[pts.length-1][0],pts[pts.length-1][1],4,C.sur)}}},
+ zener(r){const k=S(r,"curvature ringing down, ωτ = 1"),pr=S(r,"temperature across thickness (K) at peak curvature");if(!k||!pr)return;const [t0,t1]=tspan(k);const km=Math.max(...k.y.map(Math.abs)),pm=Math.max(...pr.y.map(Math.abs));
+  return{t0,t1:t0+40*2*Math.PI/62831.85,speed:1/2000,rest:t0,unit:"ms",digits:4,caption:"one bending mode · 124 µm aluminium · colour = temperature across the thickness · 2000× slow",draw(ctx,W,H,t,C){const f=interp(k,t)/km;const x0=W*0.12,x1=W*0.88,y=H*0.5,th=H*0.14;const n=pr.y.length;
+   for(let i=0;i<n;i++){const T=pr.y[i]/pm*f;ctx.fillStyle=`rgba(${T>0?240:107},${T>0?116:149},${T>0?90:240},${0.15+0.85*Math.abs(T)})`;ctx.beginPath();for(let k2=0;k2<=20;k2++){const s=k2/20,X=x0+s*(x1-x0),Y=y+(i/n-0.5)*th-f*Math.sin(Math.PI*s)*H*0.18;k2?ctx.lineTo(X,Y):ctx.moveTo(X,Y)}for(let k2=20;k2>=0;k2--){const s=k2/20,X=x0+s*(x1-x0),Y=y+((i+1)/n-0.5)*th-f*Math.sin(Math.PI*s)*H*0.18;ctx.lineTo(X,Y)}ctx.closePath();ctx.fill()}
+   label(ctx,"warm · compressed",12,H-46,C);label(ctx,"cool · stretched",12,H-30,C)}}},
+};
+(function(){const dm=document.documentElement.dataset.theme; if(!dm){/* system: nothing to do */}})();
+</script>

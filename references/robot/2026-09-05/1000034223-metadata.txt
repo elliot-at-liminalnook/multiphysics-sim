@@ -1,0 +1,44 @@
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from '/Users/elliot/physics-simulator/references/robot/2026-09-05/1000034223.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 131072
+    compatible_brands: isomiso2mp41
+    creation_time   : 2026-08-29T23:18:19.000000Z
+    com.android.capture.fps: 30.000000
+    com.android.version: 16
+    com.samsung.android.utc_offset: -0400
+  Duration: 00:00:05.25, start: 0.000000, bitrate: 3389 kb/s
+  Stream #0:0[0x1](eng): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 256 kb/s (default)
+      Metadata:
+        creation_time   : 2026-08-29T23:18:19.000000Z
+        handler_name    : SoundHandle
+        vendor_id       : [0][0][0][0]
+  Stream #0:1[0x2](eng): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 1280x720, 2533 kb/s, SAR 1:1 DAR 16:9, 27.92 fps, 30 tbr, 90k tbn (default)
+      Metadata:
+        creation_time   : 2026-08-29T23:18:19.000000Z
+        handler_name    : VideoHandle
+        vendor_id       : [0][0][0][0]
+      Side data:
+        displaymatrix: rotation of -90.00 degrees
+Stream mapping:
+  Stream #0:1 -> #0:0 (h264 (native) -> mjpeg (native))
+Press [q] to stop, [?] for help
+Output #0, image2, to '/Users/elliot/physics-simulator/references/robot/2026-09-05/frames/1000034223/%03d.jpg':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 131072
+    compatible_brands: isomiso2mp41
+    com.samsung.android.utc_offset: -0400
+    com.android.capture.fps: 30.000000
+    com.android.version: 16
+    encoder         : Lavf61.7.100
+  Stream #0:0(eng): Video: mjpeg, yuv420p(pc, bt709, progressive), 720x1280 [SAR 1:1 DAR 9:16], q=2-31, 200 kb/s, 2 fps, 2 tbn (default)
+      Metadata:
+        creation_time   : 2026-08-29T23:18:19.000000Z
+        handler_name    : VideoHandle
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc61.19.100 mjpeg
+      Side data:
+        cpb: bitrate max/min/avg: 0/0/200000 buffer size: 0 vbv_delay: N/A
+[out#0/image2 @ 0x7fdbacf07a00] video:1623KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=   10 fps=0.0 q=2.0 Lsize=N/A time=00:00:05.00 bitrate=N/A speed=32.8x

@@ -1,0 +1,23 @@
+{
+  "duration_s": 3.2,
+  "step_s": 0.0005,
+  "sample_s": 0.01,
+  "controller_period_s": 0.02,
+  "mass_relative_error": 0.000001,
+  "inertia_relative_error": 0.000001,
+  "geometry_absolute_error_m": 0.000000001,
+  "settled_angle_error_rad": 0.035,
+  "settled_windows_s": [[1.2, 1.5, 0.3], [2.8, 3.2, -0.2]],
+  "static_torque_error_nm": 0.002,
+  "peak_current_a": 0.8,
+  "minimum_peak_current_a": 0.01,
+  "step_halving_angle_difference_rad": 0.01,
+  "step_halving_current_rms_difference_a": 0.05,
+  "repeat_trace_absolute_error": 0.000000000001,
+  "falsifier_minimum_tracking_error_rad": 0.15,
+  "maximum_step_refinements": 0,
+  "export_budget_s": 60.0,
+  "run_budget_s": 60.0,
+  "total_budget_s": 240.0,
+  "subprocess_timeout_s": 120.0
+}

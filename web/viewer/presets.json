@@ -367,6 +367,17 @@
       "description": "WASD requests the crawl using student weights improved across short pushed walks and a minute-long walk. The viewport shows qualified steps and body tracking; inspect Learned motor corrections for live outputs.",
       "readiness": "Experimental student improvement · development walks pass · held-out push and 5 ms refinement each miss one swing · ideal observations and privileged planner.",
       "evidence": "Paired parameter search changes only network weights. It ranks the weakest reward per second across three fixed episodes, rejects numerical failures, and retains independent stepping and stopping gates. Physical calibration, wider terrain, faster walking and hardware transfer remain unverified. The reserved reverse-first, opposite-direction push fails one swing for both the original and improved student; this is not a robust-controller promotion. At 5 ms physics, the first swing qualifies for 180 rather than 200 ms, before the push. Stepping margin remains timestep-sensitive."
+    },
+    {
+      "id": "robot-paced-student",
+      "label": "Quadruped · Paced student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/step-margin/retry-sustained.config.json",
+      "task": "examples/full-robot/walking-objective/task.json",
+      "description": "WASD requests live walking with the improved student network, adjusted weight shifts and longer foot raise/lower phases. Bounded solver retries keep controller sampling at 50 Hz. Inspect qualified swings and learned motor corrections.",
+      "readiness": "Experimental paced student · rendered minute keeps up at 1× · active p95 28.5 ms exceeds 20 ms target · pushed minute misses heading gate · ideal observations.",
+      "evidence": "Network weights and physical force laws are unchanged. The 5 ms short walk and diagonal-push case each pass eight supported swings; reversal passes with one recovered implicit step. A 60-second three-push case completes 26 supported swings but ends with 0.00531 rad heading error against 0.005 rad. Smaller solver steps recover convergence failures, not integration accuracy. Hardware calibration, useful walking speed, wider commands and terrain remain unverified. On the documented Intel Mac/Chrome host, the rendered minute has active speed ratio 1.00035× and active transition p95 28.5 ms; rendering schedule p95 is 16.67 ms. This is not latency headroom or general interactive/terrain acceptance."
     }
   ]
 }

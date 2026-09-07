@@ -108,7 +108,7 @@ impl ImplicitSolverWorkspace {
     }
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Clone, Debug, serde::Serialize)]
 pub struct ImplicitStepDiagnostics {
     pub nonlinear: SolveDiagnostics,
     /// Includes numerical derivative probes, backtracks and final verification.

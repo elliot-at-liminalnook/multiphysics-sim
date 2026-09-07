@@ -21,6 +21,8 @@ pub use placement::{
     PointPlaneTarget, PointTarget,
 };
 mod implicit;
+mod mechanical_advance;
+pub use mechanical_advance::{EmbeddedMechanicalAdvance, MechanicalSegment};
 pub use implicit::{
     CoupledForces, EmbeddedImplicitStep, ImplicitSolverWorkspace, ImplicitStepConfig,
     ImplicitStepDiagnostics,

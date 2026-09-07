@@ -17,6 +17,56 @@ fn fixture() -> (Scene, Config) {
 }
 
 #[test]
+fn mechanical_subdivision_is_explicit_preserves_direct_accuracy_and_replays() {
+    let (scene, mut config) = fixture();
+    config.mechanical_subdivision = Some(Default::default());
+    assert!(EmbeddedSession::new(scene.clone(), config.clone(), 0, CaptureMode::Latest)
+        .err().unwrap().contains("coupled motor events"));
+    config.motors = None;
+    config.audit_contact_steps = false;
+    config.applied_generalized_loads = vec![0.01];
+    let mut direct_config = config.clone();
+    direct_config.mechanical_subdivision = None;
+    let mut direct = EmbeddedSession::new(scene.clone(), direct_config, 0, CaptureMode::Full).unwrap();
+    let mut refined = EmbeddedSession::new(scene, config, 0, CaptureMode::Full).unwrap();
+    direct.advance(80).unwrap();refined.advance(80).unwrap();
+    // The hybrid scheduler computes h=(t+duration)-t. Even without retries,
+    // this can differ from duration by clock roundoff. Compare every physical
+    // field within roundoff, while requiring exact replay of the same path below.
+    fn compare(a: &serde_json::Value, b: &serde_json::Value) {
+        use serde_json::Value;
+        match (a, b) {
+            (Value::Number(a), Value::Number(b)) => {
+                let (a, b) = (a.as_f64().unwrap(), b.as_f64().unwrap());
+                assert!((a-b).abs() <= 1e-12 * (1.0+a.abs().max(b.abs())), "{a} != {b}");
+            }
+            (Value::Array(a), Value::Array(b)) => {
+                assert_eq!(a.len(), b.len());
+                for (a, b) in a.iter().zip(b) { compare(a,b); }
+            }
+            (Value::Object(a), Value::Object(b)) => {
+                assert_eq!(a.keys().collect::<Vec<_>>(), b.keys().collect::<Vec<_>>());
+                for (key,a) in a { compare(a,&b[key]); }
+            }
+            _ => assert_eq!(a,b),
+        }
+    }
+    compare(&direct.frame().unwrap(), &refined.frame().unwrap());
+    assert_eq!(refined.implicit_step_diagnostics().len(),80);
+    assert_eq!(refined.interval_diagnostics().len(),80);
+    assert!(refined.interval_diagnostics().iter().all(|d|d.continuous_attempts==1&&d.rejected_trials==0&&d.events.is_empty()));
+    let (mut replay, steps)=EmbeddedSession::prepare_replay(refined.recording(),CaptureMode::Latest).unwrap();
+    replay.retain_solver_diagnostics(true);
+    replay.advance(steps).unwrap();
+    assert_eq!(refined.frame().unwrap(),replay.frame().unwrap());
+    assert_eq!(replay.implicit_step_diagnostics().len(),80);
+    assert_eq!(replay.interval_diagnostics().len(),80);
+    replay.retain_solver_diagnostics(false);
+    assert!(replay.implicit_step_diagnostics().is_empty());
+    assert!(replay.interval_diagnostics().is_empty());
+}
+
+#[test]
 fn condensed_motor_session_records_configuration_and_replays_across_chunks() {
     for (colored, endpoint_scale) in [(false,false),(true,false),(false,true),(true,true)] {
     let (scene, mut config) = fixture();

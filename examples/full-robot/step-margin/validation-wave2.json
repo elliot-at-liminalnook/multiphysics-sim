@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "provenance": "Predeclared second validation wave; prior X/Y push cases are now development data. Hypothetical bounded challenges, not a hardware-calibrated distribution.",
+  "cases": [
+    {
+      "name": "diagonal-pulses",
+      "actions": "neural-teacher/train.actions.json",
+      "duration_s": 24,
+      "pulses": [
+        {
+          "start_s": 3.04,
+          "duration_s": 0.24,
+          "force_world_n": [
+            0.245,
+            0.245,
+            0
+          ]
+        },
+        {
+          "start_s": 15.1,
+          "duration_s": 0.18,
+          "force_world_n": [
+            -0.245,
+            -0.245,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "reverse-x-pulse",
+      "actions": "neural-teacher/heldout.actions.json",
+      "duration_s": 24,
+      "pulses": [
+        {
+          "start_s": 6.96,
+          "duration_s": 0.2,
+          "force_world_n": [
+            -0.4,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "minute-pulses",
+      "actions": "browser-residual-policy/sustained.actions.json",
+      "duration_s": 60,
+      "pulses": [
+        {
+          "start_s": 17.04,
+          "duration_s": 0.2,
+          "force_world_n": [
+            0,
+            0.35,
+            0
+          ]
+        },
+        {
+          "start_s": 33.1,
+          "duration_s": 0.2,
+          "force_world_n": [
+            0.35,
+            0,
+            0
+          ]
+        },
+        {
+          "start_s": 49,
+          "duration_s": 0.2,
+          "force_world_n": [
+            0,
+            -0.35,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "physics_step_s": 0.005,
+  "control_period_s": 0.02,
+  "acceptance": "All unchanged check_online_steps gates; every result retained. These cases are evaluated only after candidate selection."
+}

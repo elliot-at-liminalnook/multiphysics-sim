@@ -5,6 +5,7 @@ use crate::embedded_policy::{InputEvent, PolicyConfig, SampledPolicy};
 use crate::session::{Scene, Session};
 use serde::Deserialize;
 use serde_json::json;
+use sim_domain_robot::Generalized;
 use sim_domain_control::motion_clock::{MotionClock, MotionClockConfig, MotionClockState};
 use sim_domain_robot::articulated::embedding::{
     DriverBoundary, EmbeddedDriverBank, EmbeddedDriverConfig, EmbeddedMotorBank,
@@ -51,6 +52,10 @@ pub struct Config {
     /// Absent retains the previous explicit midpoint diagnostic.
     #[serde(default)]
     pub implicit: Option<ImplicitStepConfig>,
+    /// Opt-in bounded recovery for pure mechanics/effective servos. Controller
+    /// samples remain outside retries. This is not timestep error estimation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mechanical_subdivision: Option<sim_dynamics::hybrid::HybridConfig>,
     #[serde(default)]
     pub motors: Option<MotorExperiment>,
     /// Optional bounded tail of trial endpoints for failure diagnosis. Adds
@@ -151,6 +156,7 @@ pub struct EmbeddedSession {
     config: Config,
     seed: u64,
     capture: CaptureMode,
+    retain_solver_diagnostics: bool,
     names: Vec<String>,
     independent_joint_indices: Vec<usize>,
     g: sim_domain_robot::Generalized,
@@ -502,6 +508,12 @@ impl EmbeddedSession {
             .map(|b| b.initial_states())
             .unwrap_or_default();
 
+        if config.mechanical_subdivision.is_some()
+            && (config.implicit.is_none() || bank.is_some() || servo_bank.is_some())
+        {
+            return Err("mechanical subdivision requires pure implicit mechanics or effective servos; coupled motor events use their own adapter".into());
+        }
+
         let independent_joint_indices = map.independent_joint_indices().to_vec();
         let policy = config
             .policy
@@ -571,6 +583,7 @@ impl EmbeddedSession {
             error: None,
             step_wall_s: 0.0,
             solver_steps: vec![],
+            retain_solver_diagnostics: false,
             hybrid_steps: vec![],
             hybrid_solves: vec![],
             contact_steps,
@@ -586,6 +599,29 @@ impl EmbeddedSession {
 
     pub fn completed_steps(&self) -> usize {
         self.completed_steps
+    }
+    /// Opt in to accumulating solver history even in Latest capture mode.
+    /// This is host-side diagnostic memory, not physics or replay state. Enable
+    /// only for bounded experiments; reset/replay starts with collection off.
+    pub fn retain_solver_diagnostics(&mut self, enabled: bool) {
+        self.retain_solver_diagnostics = enabled;
+        if !enabled && self.capture == CaptureMode::Latest {
+            self.solver_steps.clear();
+            self.hybrid_steps.clear();
+            self.hybrid_solves.clear();
+        }
+    }
+    /// Diagnostics for accepted non-event implicit steps. Rejected solves and
+    /// the separate hybrid motor/event path are not included in this history.
+    pub fn implicit_step_diagnostics(
+        &self,
+    ) -> &[sim_domain_robot::articulated::embedding::ImplicitStepDiagnostics] {
+        &self.solver_steps
+    }
+    /// Accepted outer intervals with event/subdivision attempt counts. Failed
+    /// outer intervals are reported by the session error, not this history.
+    pub fn interval_diagnostics(&self) -> &[sim_dynamics::hybrid::HybridDiagnostics] {
+        &self.hybrid_steps
     }
     pub fn remaining_steps(&self) -> usize {
         self.config.steps - self.completed_steps
@@ -718,9 +754,11 @@ impl EmbeddedSession {
                 self.frames.push(self.frame()?);
             }
             if self.capture == CaptureMode::Latest {
-                self.solver_steps.clear();
-                self.hybrid_steps.clear();
-                self.hybrid_solves.clear();
+                if !self.retain_solver_diagnostics {
+                    self.solver_steps.clear();
+                    self.hybrid_steps.clear();
+                    self.hybrid_solves.clear();
+                }
                 self.motion_gate_trace.clear();
             }
         }
@@ -957,13 +995,7 @@ impl EmbeddedSession {
                     step.endpoint
                 })
         } else if let Some(implicit) = &config.implicit {
-            map.step_implicit_coupled(
-                &g,
-                &motor_states,
-                i as f64 * config.step_s,
-                config.step_s,
-                implicit,
-                |t, h, g, x| {
+            let coupling = |t: f64, h: f64, g: &Generalized, x: &[f64]| {
                     let mut result = if let Some(bank) = &bank {
                         bank.evaluate(t, h, g, &motor_states, x, &boundaries_at(t, x)?)?
                             .0
@@ -1006,13 +1038,25 @@ impl EmbeddedSession {
                         );
                     }
                     Ok(result)
-                },
-            )
-            .map(|step| {
-                solver_steps.push(step.diagnostics);
-                *motor_states = step.auxiliary;
-                step.endpoint
-            })
+                };
+            if let Some(refinement) = &config.mechanical_subdivision {
+                map.advance_implicit_mechanics(
+                    &g, time, config.step_s, implicit, refinement,
+                    |t, g| coupling(t, 0.0, g, &[]).map(|f| f.generalized_loads),
+                ).map(|step| {
+                    solver_steps.extend(step.segments.into_iter().map(|s| s.diagnostics));
+                    hybrid_steps.push(step.refinement);
+                    step.endpoint
+                })
+            } else {
+                map.step_implicit_coupled(
+                    &g, &motor_states, time, config.step_s, implicit, coupling,
+                ).map(|step| {
+                    solver_steps.push(step.diagnostics);
+                    *motor_states = step.auxiliary;
+                    step.endpoint
+                })
+            }
         } else {
             map.step_midpoint(&g, i as f64 * config.step_s, config.step_s, |_, _| {
                 Ok(applied_loads.clone())

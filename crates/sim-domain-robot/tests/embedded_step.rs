@@ -45,6 +45,46 @@ fn body(slider: bool, contact: bool) -> (Articulated, Generalized) {
 }
 
 #[test]
+fn mechanical_subdivision_preserves_direct_steps_and_recovers_nonlinear_drag() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    use sim_dynamics::hybrid::HybridConfig;
+    let (art, mut g)=body(true,false);
+    let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+    let config=ImplicitStepConfig::default();
+    let load=|_:f64,_:&Generalized| Ok(vec![2.0]);
+    let direct=map.step_implicit(&g,0.0,0.02,&config,load).unwrap();
+    let recovered=map.advance_implicit_mechanics(&g,0.0,0.02,&config,&HybridConfig::default(),load).unwrap();
+    assert_eq!(direct.endpoint.generalized.q,recovered.endpoint.generalized.q);
+    assert_eq!(direct.endpoint.generalized.qd,recovered.endpoint.generalized.qd);
+    assert_eq!(recovered.refinement.continuous_attempts,1);
+    assert_eq!(recovered.segments.len(),1);
+    assert!((recovered.endpoint.generalized.qd[0]-0.02).abs()<1e-12);
+
+    // A deliberately small nonlinear iteration allowance fails the large step
+    // for cubic drag. Smaller steps must meet exactly the same solver tolerances.
+    g.qd[0]=10.0;
+    let mut config=config;config.newton.max_iterations=5;
+    let drag=|_:f64,g:&Generalized| Ok(vec![-2.0*g.qd[0].powi(3)]);
+    assert!(map.step_implicit(&g,0.0,0.1,&config,drag).is_err());
+    let recovered=map.advance_implicit_mechanics(&g,0.0,0.1,&config,&HybridConfig {maximum_halvings:10,maximum_segments:256,..Default::default()},drag).unwrap();
+    assert!(recovered.refinement.rejected_trials>0);
+    assert!(recovered.segments.len()>1);
+    let mut replay=g.clone();let mut time=0.0;
+    for segment in &recovered.segments {
+        assert!((segment.start_time_s-time).abs()<1e-12);
+        replay=map.step_implicit(&replay,time,segment.step_s,&config,drag).unwrap().endpoint.generalized;
+        time+=segment.step_s;
+    }
+    assert!((time-0.1).abs()<1e-12);
+    assert_eq!(replay.q,recovered.endpoint.generalized.q);
+    assert_eq!(replay.qd,recovered.endpoint.generalized.qd);
+    assert!(replay.qd[0]>0.0&&replay.qd[0]<g.qd[0]);
+    let before=(g.q.clone(),g.qd.clone(),g.states.clone());
+    assert!(map.advance_implicit_mechanics(&g,0.0,0.1,&config,&HybridConfig {maximum_halvings:0,..Default::default()},drag).is_err());
+    assert_eq!(before,(g.q.clone(),g.qd.clone(),g.states.clone()));
+}
+
+#[test]
 fn world_load_pulse_matches_linear_and_angular_impulse() {
     use sim_domain_robot::world_load::{WorldLoadPulse, WorldLoadSchedule};
     let (art, mut g)=body(false,false);

@@ -202,12 +202,12 @@ try {
   assert(!(await page.locator('#motion-progress').isVisible()));
   checks.push('synthetic missing-support timeout is visible, replayable, and recoverable by reset');
  }
- for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact','robot-residual-policy','robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student']) {
+ for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact','robot-residual-policy','robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student']) {
   if(!catalog.presets.some(p=>p.id===id))continue;
   await page.locator('#preset').selectOption(id);await ready();
   assert(await page.locator('#learning-progress').isVisible());
   assert.match(await page.locator('#input-help').textContent(),/20 ms/);
-  if(['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student'].includes(id)){
+  if(['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student'].includes(id)){
     assert.equal(await page.locator('#inputs input:disabled').count(),16);
     assert(!(await page.locator('#residual-inputs').isVisible()));
     await page.locator('#neural-residuals summary').click();
@@ -229,12 +229,12 @@ try {
   assert.equal(await page.locator('#sim-time').textContent(),'0.020 s');
   assert.match(await page.locator('#learning-progress').textContent(),/Last 20 ms score:/);
   const score=await page.locator('#learning-progress').textContent();
-  if(id==='robot-improved-student') {
+  if(['robot-improved-student','robot-paced-student'].includes(id)) {
     assert(await page.locator('#walking-overlay').isVisible());
     assert.match(await page.locator('#walking-overlay').textContent(),/qualified.*failed/);
     assert.match(score,/Body reference error:/);
   }
-  const neuralText=['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student'].includes(id)?await page.locator('#neural-residuals').textContent():null;
+  const neuralText=['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student'].includes(id)?await page.locator('#neural-residuals').textContent():null;
   if(neuralText){
     const outputs=[...neuralText.matchAll(/: (-?\d+\.\d+) rad/g)].map(m=>Number(m[1]));
     assert.equal(outputs.length,12);assert(outputs.some(v=>v!==0));assert(outputs.every(v=>Math.abs(v)<=(id==='robot-neural-teacher'?.001:.05)));

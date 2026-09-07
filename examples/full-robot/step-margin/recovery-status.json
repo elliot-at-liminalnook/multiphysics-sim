@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "scope": "Retained diagnostics of completed native intervals; failed final intervals and their retries are not included. Host-side history collection leaves all 1201 physical frames (excluding wall timing) and task transitions of the 5 ms run exactly unchanged. No performance acceptance claim from concurrently executed profiled runs. Initial profiles without retention were empty; these explicit diagnostic captures correct that gap.",
+  "cases": [
+    {
+      "name": "retry-5ms-retained",
+      "profile_sha256": "07027a3f099f4ee6e1f099e09b982a87cca136ef5010143207923bb8b622cb55",
+      "accepted_nominal_intervals": 4800,
+      "accepted_segments": 4802,
+      "continuous_attempts": 4804,
+      "rejected_trials": 2,
+      "minimum_accepted_step_s": 0.0024999999999995026,
+      "recovered_intervals": [
+        {
+          "accepted_segments": 2,
+          "continuous_attempts": 3,
+          "events": [],
+          "minimum_accepted_step_s": 0.0024999999999999467,
+          "rejected_trials": 1,
+          "rejection_details": [
+            {
+              "attempted_step_s": 0.0050000000000000044,
+              "reason": "implicit mechanical solve: Newton did not converge after 80 iterations; residual=2.517984287318817e-4; largest final residual: Some(\"mechanical velocity row 13: residual=-2.517984287318817e-4, candidate=7.015762541757457e-3\"); last rejected endpoint: None",
+              "start_time_s": 0.985
+            }
+          ]
+        },
+        {
+          "accepted_segments": 2,
+          "continuous_attempts": 3,
+          "events": [],
+          "minimum_accepted_step_s": 0.0024999999999995026,
+          "rejected_trials": 1,
+          "rejection_details": [
+            {
+              "attempted_step_s": 0.005000000000000782,
+              "reason": "implicit mechanical solve: Newton did not converge after 80 iterations; residual=1.8403557091346313e-5; largest final residual: Some(\"mechanical velocity row 13: residual=-1.8403557091346313e-5, candidate=4.563228351928892e-4\"); last rejected endpoint: None",
+              "start_time_s": 11.985
+            }
+          ]
+        }
+      ],
+      "maximum_accepted_newton_iterations": 79
+    },
+    {
+      "name": "retry-reverse",
+      "profile_sha256": "b8cd61a5952953d19bedb4bc55cfd52e2bfd4e42081dabecae6cf5a7df600fea",
+      "accepted_nominal_intervals": 1200,
+      "accepted_segments": 1201,
+      "continuous_attempts": 1202,
+      "rejected_trials": 1,
+      "minimum_accepted_step_s": 0.00999999999999801,
+      "recovered_intervals": [
+        {
+          "accepted_segments": 2,
+          "continuous_attempts": 3,
+          "events": [],
+          "minimum_accepted_step_s": 0.00999999999999801,
+          "rejected_trials": 1,
+          "rejection_details": [
+            {
+              "attempted_step_s": 0.019999999999999574,
+              "reason": "implicit mechanical solve: Newton did not converge after 80 iterations; residual=6.994431320492068e-4; largest final residual: Some(\"mechanical velocity row 15: residual=6.994431320492068e-4, candidate=-1.1545874677480538e-4\"); last rejected endpoint: None",
+              "start_time_s": 16.88
+            }
+          ]
+        }
+      ],
+      "maximum_accepted_newton_iterations": 38
+    },
+    {
+      "name": "retry-sustained",
+      "profile_sha256": "44853096dbf5c9b07799f087684cff041b8a8dd5629821cd35419a08ae28c005",
+      "accepted_nominal_intervals": 3000,
+      "accepted_segments": 3000,
+      "continuous_attempts": 3000,
+      "rejected_trials": 0,
+      "minimum_accepted_step_s": 0.019999999999999574,
+      "recovered_intervals": [],
+      "maximum_accepted_newton_iterations": 41
+    },
+    {
+      "name": "retry-short",
+      "profile_sha256": "4ab8a289fe1476e843bedb0568d66d407ce701f5361b2c06cee8c2dd3a344794",
+      "accepted_nominal_intervals": 1200,
+      "accepted_segments": 1200,
+      "continuous_attempts": 1200,
+      "rejected_trials": 0,
+      "minimum_accepted_step_s": 0.019999999999999574,
+      "recovered_intervals": [],
+      "maximum_accepted_newton_iterations": 79
+    }
+  ]
+}

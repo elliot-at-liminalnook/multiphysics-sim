@@ -530,6 +530,19 @@ impl EmbeddedEnvironment {
     pub fn frame(&self) -> Result<Value, String> {
         self.session.interactive_frame()
     }
+    /// Read-only accepted-step diagnostics; no extra work enters the control loop.
+    pub fn implicit_step_diagnostics(
+        &self,
+    ) -> &[sim_domain_robot::articulated::embedding::ImplicitStepDiagnostics] {
+        self.session.implicit_step_diagnostics()
+    }
+    pub fn interval_diagnostics(&self) -> &[sim_dynamics::hybrid::HybridDiagnostics] {
+        self.session.interval_diagnostics()
+    }
+    /// Host-only bounded-run diagnostics; does not alter the recorded recipe.
+    pub fn retain_solver_diagnostics(&mut self, enabled: bool) {
+        self.session.retain_solver_diagnostics(enabled);
+    }
     pub fn error(&self) -> Option<&str> {
         self.fault.as_deref()
     }

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "scope": "Declared before selecting the body-shift candidate. Prior reverse-push and refined cases are now development data. These new push schedules are evaluated after selection and never used to choose the initial shift.",
+  "conditions": [
+    {
+      "name": "fresh-x-push",
+      "actions": "examples/full-robot/neural-teacher/heldout.actions.json",
+      "physics_step_s": 0.01,
+      "steps": 2400,
+      "force_world_n": [
+        0.4,
+        0,
+        0
+      ],
+      "start_s": 5.02,
+      "duration_s": 0.2
+    },
+    {
+      "name": "fresh-y-push",
+      "actions": "examples/full-robot/neural-teacher/train.actions.json",
+      "physics_step_s": 0.01,
+      "steps": 2400,
+      "force_world_n": [
+        0,
+        -0.4,
+        0
+      ],
+      "start_s": 13.04,
+      "duration_s": 0.16
+    }
+  ],
+  "provenance": "Hypothetical bounded development challenges; uncalibrated, not a hardware-derived disturbance distribution.",
+  "acceptance": "Unchanged check_online_steps gates; both successes and failures retained."
+}

@@ -35,6 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut transitions = vec![env.transition().clone()];
     // Standalone diagnostics; timing never enters the environment recipe/replay.
     if profile_path.is_some() {
+        env.retain_solver_diagnostics(true);
         sim_solve::profile::enable();
         sim_solve::profile::reset();
     }
@@ -70,7 +71,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             path,
             serde_json::to_vec_pretty(&json!({
                 "completed":completed,"wall_s":wall_s,"buckets":buckets,
-                "scope":"Standalone native environment diagnostic after construction; excludes final capture serialization. Buckets can nest and are not additive. Profiling overhead is included; use unprofiled runs for performance acceptance."
+                "accepted_implicit_steps":env.implicit_step_diagnostics(),
+                "accepted_intervals":env.interval_diagnostics(),
+                "scope":"Standalone native environment diagnostic after construction; excludes final capture serialization. Buckets can nest and are not additive. Accepted implicit-step diagnostics exclude rejected solves and the separate hybrid motor/event path. Profiling overhead is included; use unprofiled runs for performance acceptance."
             }))?,
         )?;
     }

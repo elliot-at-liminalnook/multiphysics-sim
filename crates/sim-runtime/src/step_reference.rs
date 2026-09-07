@@ -191,8 +191,8 @@ impl OnlineStepReference {
         if art.omit_inter_link_contact {
             let observed = art.evaluate_kinematics_only(g);
             if let Some(c) = art.inter_link_penetrations(&observed)?.first() {
-                return Err(format!("observed inter-link overlap outside reduced-contact operating envelope: {} / {}",
-                    art.links[c.link].name, art.links[c.other].name));
+                return Err(format!("observed inter-link overlap outside reduced-contact operating envelope: {} / {}; penetration {:.6} mm at world {:?} m, time {:.6} s",
+                    art.links[c.link].name, art.links[c.other].name, c.penetration_m * 1000.0, c.point_m, time));
             }
         }
         let forces = crate::support::ideal_upward_floor_forces(art, g, &self.links)?;
@@ -240,11 +240,15 @@ impl OnlineStepReference {
         let links = art.evaluate_kinematics_only(&fit.motion.generalized);
         if let Some(c) = art.inter_link_penetrations(&links)?.first() {
             return Err(format!(
-                "step {} {:?} reference has internal contact: {} / {}",
+                "step {} {:?} reference has internal contact: {} / {}; penetration {:.6} mm at world {:?} m; requested body {:?} m, time {:.6} s",
                 reference.step,
                 reference.phase,
                 art.links[c.link].name,
-                art.links[c.other].name
+                art.links[c.other].name,
+                c.penetration_m * 1000.0,
+                c.point_m,
+                reference.body_world_m,
+                time
             ));
         }
         let support = if matches!(

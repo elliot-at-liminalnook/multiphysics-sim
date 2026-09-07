@@ -1,5 +1,13 @@
 # Four-leg robot commissioning
 
+The [paced student experiment](step-margin/README.md) improves supported-swing
+margin using modest weight shifts and longer raise/lower phases, with the same
+network and force laws. Shared bounded implicit-step recovery completes the
+previously failing 5 ms and reversal cases. The unforced minute passes 26 swings;
+a three-push minute completes its swings but misses the heading gate. The new
+**Paced student** browser preset preserves those limitations explicitly. General
+commands, useful walking speed, terrain and hardware calibration remain open.
+
 The [student improvement experiment](student-robustness/README.md) now searches
 neural weights across pushed walks at two timesteps and a minute-long walk.
 The selected network passes those development checks and improves minute-long

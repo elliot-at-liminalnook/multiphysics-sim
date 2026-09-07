@@ -228,6 +228,16 @@ jobs:
           target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/student-robustness/config.json examples/full-robot/walking-objective/task.json examples/full-robot/browser-residual-policy/sustained.actions.json > runs/interactive/improved-student-sustained.json
           node examples/full-robot/check_online_steps.mjs runs/interactive/improved-student-sustained.json runs/interactive/improved-student-sustained-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-improved-student runs/interactive/improved-student-short.json runs/interactive/improved-student-browser.json examples/full-robot/student-robustness/short.config.json
+      - name: Paced student refinement, bounded recovery and browser parity
+        run: |
+          cargo test --locked -p sim-domain-robot --test embedded_step
+          cargo test --locked -p sim-runtime --test embedded_session
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/step-margin/retry-short.config.json examples/full-robot/walking-objective/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/paced-student-short.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/paced-student-short.json runs/interactive/paced-student-short-acceptance
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/step-margin/retry-5ms.config.json examples/full-robot/walking-objective/task.json examples/full-robot/neural-teacher/train.actions.json --profile runs/interactive/paced-student-refined-profile.json > runs/interactive/paced-student-refined.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/paced-student-refined.json runs/interactive/paced-student-refined-acceptance
+          node -e 'const p=require("./runs/interactive/paced-student-refined-profile.json"),a=require("node:assert/strict");a(p.completed);a.equal(p.accepted_intervals.length,4800);a(p.accepted_implicit_steps.length>=4800);'
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-paced-student runs/interactive/paced-student-short.json runs/interactive/paced-student-browser.json examples/full-robot/step-margin/retry-short.config.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

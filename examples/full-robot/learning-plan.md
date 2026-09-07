@@ -9,6 +9,14 @@ faster solver kernel does not complete this goal.
 
 ## Current evidence and sequence
 
+The [browser latency investigation](latency-profile.md) now separates WASM work,
+transport and UI costs. Numerical Jacobian assembly dominates the native profile
+(60%); inter-part collision queries account for a nested 26.5%. A browser-only
+precision experiment preserves sampled motion but still misses the 20 ms p95
+target (27.5 ms), and a looser setting fails on the first lift. No precision
+change is promoted. Next investigate fewer full derivative evaluations or an
+explicit browser collision reduction with independent geometry validation.
+
 The current complete goal is `active-goal.md`. Realtime browser walking and WASD
 are required early milestones. A substantially simplified, explicitly declared
 browser physics profile is permitted; retain the detailed model for validation.

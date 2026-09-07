@@ -283,7 +283,10 @@ impl SampledPolicy {
         let online = self
             .step_reference
             .as_mut()
-            .map(|r| r.sample(art, map, g, time, &self.values))
+            .map(|r| {
+                sim_solve::profile::POLICY_REFERENCE
+                    .time(|| r.sample(art, map, g, time, &self.values))
+            })
             .transpose()?;
         let reference = online
             .as_ref()
@@ -293,16 +296,19 @@ impl SampledPolicy {
             sensors.extend([g.q[i], g.qd[i], r]);
         }
         if let Some(observer) = &self.task_observer {
-            sensors.extend(observer.observe(art, g)?);
+            sensors
+                .extend(sim_solve::profile::POLICY_OBSERVATIONS.time(|| observer.observe(art, g))?);
         }
         let body_feedback = self
             .body_feedback
             .as_ref()
-            .map(|feedback| match &online {
-                Some(p) => {
-                    feedback.sample_target(art, map, g, time, p.reference.body_world_m, [0.; 3])
-                }
-                None => feedback.sample(art, map, g, reference_time, reference_advancing),
+            .map(|feedback| {
+                sim_solve::profile::POLICY_BODY_FEEDBACK.time(|| match &online {
+                    Some(p) => {
+                        feedback.sample_target(art, map, g, time, p.reference.body_world_m, [0.; 3])
+                    }
+                    None => feedback.sample(art, map, g, reference_time, reference_advancing),
+                })
             })
             .transpose()?;
         if let Some(sample) = &body_feedback {
@@ -311,16 +317,18 @@ impl SampledPolicy {
         let point_feedback = self
             .point_feedback
             .as_ref()
-            .map(|feedback| match &online {
-                Some(p) => feedback.sample_target(
-                    art,
-                    map,
-                    g,
-                    time,
-                    &p.feedback_feet_world_m,
-                    &vec![1.; p.reference.feet_world_m.len()],
-                ),
-                None => feedback.sample(art, map, g, reference_time),
+            .map(|feedback| {
+                sim_solve::profile::POLICY_POINT_FEEDBACK.time(|| match &online {
+                    Some(p) => feedback.sample_target(
+                        art,
+                        map,
+                        g,
+                        time,
+                        &p.feedback_feet_world_m,
+                        &vec![1.; p.reference.feet_world_m.len()],
+                    ),
+                    None => feedback.sample(art, map, g, reference_time),
+                })
             })
             .transpose()?;
         if let Some(sample) = &point_feedback {
@@ -331,8 +339,8 @@ impl SampledPolicy {
             return Err("nonfinite policy observation".into());
         }
         let mut targets = self.targets.clone();
-        self.policy
-            .sample(time, &sensors, &mut targets)
+        sim_solve::profile::POLICY_SCRIPT
+            .time(|| self.policy.sample(time, &sensors, &mut targets))
             .map_err(|e| e.to_string())?;
         if targets
             .iter()

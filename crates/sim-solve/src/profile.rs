@@ -89,13 +89,19 @@ pub static CONTACT_FORCES: Bucket = Bucket::new("contact force evaluation");
 pub static CONTACT_TOPOLOGY: Bucket = Bucket::new("  contact exclusion metadata");
 pub static CONTACT_SAMPLES: Bucket = Bucket::new("  contact sample transforms");
 pub static CONTACT_PAIRS: Bucket = Bucket::new("  contact pair queries");
+pub static POLICY_REFERENCE: Bucket = Bucket::new("policy online reference");
+pub static POLICY_OBSERVATIONS: Bucket = Bucket::new("policy observations");
+pub static POLICY_BODY_FEEDBACK: Bucket = Bucket::new("policy body feedback");
+pub static POLICY_POINT_FEEDBACK: Bucket = Bucket::new("policy point feedback");
+pub static POLICY_SCRIPT: Bucket = Bucket::new("policy script");
 
-pub fn all() -> [&'static Bucket; 38] {
+pub fn all() -> [&'static Bucket; 43] {
     [&STEP, &IMPLICIT, &NEWTON, &ITERATIONS, &FRESH, &STALE_FULL_REFRESH, &RESIDUAL, &JACOBIAN, &ANALYTIC_SLOTS, &RATE_SLOTS, &FD_SLOTS, &FD_RESIDUALS, &FACTORISE, &FACTOR_SUM, &FACTOR_MATRIX, &FACTOR_SYMBOLIC, &FACTOR_SYMBOLIC_BUILD, &FACTOR_NUMERIC, &SOLVE, &GUARDS, &LOCATE, &JUMP,
         &EMBEDDED_MAPPING, &EMBEDDED_HISTORY, &EMBEDDED_DYNAMICS_PREPARE, &EMBEDDED_DYNAMICS_APPLY, &EMBEDDED_COMPONENTS,
         &EMBEDDED_CLOSURE_JACOBIAN, &EMBEDDED_CLOSURE_FACTOR, &EMBEDDED_CLOSURE_SVD,
         &EMBEDDED_INERTIA, &EMBEDDED_PROJECT_INERTIA, &EMBEDDED_FORCE_EVALUATION,
-        &CONTACT_GEOMETRY, &CONTACT_FORCES, &CONTACT_TOPOLOGY, &CONTACT_SAMPLES, &CONTACT_PAIRS]
+        &CONTACT_GEOMETRY, &CONTACT_FORCES, &CONTACT_TOPOLOGY, &CONTACT_SAMPLES, &CONTACT_PAIRS,
+        &POLICY_REFERENCE, &POLICY_OBSERVATIONS, &POLICY_BODY_FEEDBACK, &POLICY_POINT_FEEDBACK, &POLICY_SCRIPT]
 }
 
 pub fn enable() {

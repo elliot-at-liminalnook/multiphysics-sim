@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "source": "examples/full-robot/browser-reversal",
+  "inputs": {
+    "examples/full-robot/browser-reversal/scene.json": "ba8367be73e61f56bb65e2cf846bd9e93417b5319a76e6fa0d08bd9e587fccb6",
+    "examples/full-robot/browser-reversal/short.config.json": "a2b49e4cbb69c4c89e032314167f1d65222425dd89c74559ef06e8bb8b458ea3",
+    "examples/full-robot/browser-reversal/config.json": "86341139f4437662ea65b2fd32ff7bb886ab136328aef8fb7d53ca4bbd7ac3a3",
+    "examples/full-robot/browser-reversal/task.json": "c41684bf9ca1ce73dc84905dc9eeefe5bee75adf571f80a9963442d460194752",
+    "examples/full-robot/browser-reversal/forward-reverse.actions.json": "2c8a44e0d46b31c88237631f8c1412e6ab78389cb0e1eb97931523cb8e8bdb6c",
+    "examples/full-robot/browser-reversal/sustained.actions.json": "70ad63fb68f8debf1a85afd4d82e38d704e618e102ceb009f3442679b6d9c888",
+    "examples/full-robot/prepare_precision.mjs": "f86af1e48afd564f8204fbf524dc4a5306c472ee67ce2b22743f8fb74dd38cf5"
+  },
+  "scope": "Unpromoted precision experiments. Only Newton absolute and relative tolerances change; timestep, controller, physical definitions and task acceptance budgets remain unchanged. 1e-4 failed convergence during the first lift; 1e-5 still missed the rendered 20 ms latency target."
+}

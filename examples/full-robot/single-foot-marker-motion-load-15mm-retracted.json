@@ -1,0 +1,310 @@
+{
+  "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "independent_coordinates": [
+    "joint.-Y | Hip servo output",
+    "joint.-Y | Worm servo output",
+    "joint.-Y | Foot servo output",
+    "joint.+X | Hip servo output",
+    "joint.+X | Worm servo output",
+    "joint.+X | Foot servo output",
+    "joint.+Y | Hip servo output",
+    "joint.+Y | Worm servo output",
+    "joint.+Y | Foot servo output",
+    "joint.-X | Hip servo output",
+    "joint.-X | Worm servo output",
+    "joint.-X | Foot servo output"
+  ],
+  "initial_coordinates": [
+    0.0,
+    -8.346418847292681e-05,
+    -0.35,
+    0.0,
+    -0.27612813350949833,
+    -0.35,
+    0.0,
+    -8.346425388696227e-05,
+    -0.35,
+    0.0,
+    -7.650604473797781e-05,
+    -0.35
+  ],
+  "initial_base_translation_m": [
+    0,
+    0,
+    -0.01
+  ],
+  "bounds": [
+    {
+      "lower": -0.1,
+      "upper": 0.1,
+      "max_step": 0.01
+    },
+    {
+      "lower": -0.3000834641884729,
+      "upper": 0.29991653581152705,
+      "max_step": 0.02
+    },
+    {
+      "lower": -0.6,
+      "upper": -0.02,
+      "max_step": 0.025
+    },
+    {
+      "lower": -0.1,
+      "upper": 0.1,
+      "max_step": 0.01
+    },
+    {
+      "lower": -0.5761281335094983,
+      "upper": 0.02387186649050166,
+      "max_step": 0.02
+    },
+    {
+      "lower": -0.6,
+      "upper": -0.02,
+      "max_step": 0.025
+    },
+    {
+      "lower": -0.1,
+      "upper": 0.1,
+      "max_step": 0.01
+    },
+    {
+      "lower": -0.30008346425388693,
+      "upper": 0.29991653574611304,
+      "max_step": 0.02
+    },
+    {
+      "lower": -0.6,
+      "upper": -0.02,
+      "max_step": 0.025
+    },
+    {
+      "lower": -0.1,
+      "upper": 0.1,
+      "max_step": 0.01
+    },
+    {
+      "lower": -0.30007650604473796,
+      "upper": 0.299923493955262,
+      "max_step": 0.02
+    },
+    {
+      "lower": -0.6,
+      "upper": -0.02,
+      "max_step": 0.025
+    }
+  ],
+  "embedding": {
+    "dependent_solve": "pivoted_qr",
+    "direct_closure_jacobian": true
+  },
+  "placement": {
+    "tolerance_m": 1e-07,
+    "damping_m": 1e-06,
+    "max_iterations": 40
+  },
+  "sample_period_s": 0.01,
+  "maximum_interpolation_error_m": 5e-05,
+  "displacements_world_m": {
+    "interpolation": "quintic_rest_to_rest",
+    "keyframes": [
+      {
+        "time_s": 0,
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "time_s": 0.2,
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "time_s": 0.5,
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "time_s": 0.8,
+        "values": [
+          0.002,
+          0.0,
+          0.003,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "time_s": 1.1,
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "time_s": 1.4,
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "time_s": 1.6,
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  },
+  "base_displacements_world_m": {
+    "interpolation": "quintic_rest_to_rest",
+    "keyframes": [
+      {
+        "time_s": 0,
+        "values": [
+          0,
+          0.0,
+          0
+        ]
+      },
+      {
+        "time_s": 0.2,
+        "values": [
+          0,
+          0.0,
+          0
+        ]
+      },
+      {
+        "time_s": 0.5,
+        "values": [
+          0,
+          0.015,
+          0
+        ]
+      },
+      {
+        "time_s": 0.8,
+        "values": [
+          0,
+          0.015,
+          0
+        ]
+      },
+      {
+        "time_s": 1.1,
+        "values": [
+          0,
+          0.015,
+          0
+        ]
+      },
+      {
+        "time_s": 1.4,
+        "values": [
+          0,
+          0.0,
+          0
+        ]
+      },
+      {
+        "time_s": 1.6,
+        "values": [
+          0,
+          0.0,
+          0
+        ]
+      }
+    ]
+  },
+  "support_requirements": [
+    {
+      "start_s": 0.5,
+      "end_s": 1.1,
+      "marker_ids": [
+        "+X-foot-surface",
+        "+Y-foot-surface",
+        "-X-foot-surface"
+      ],
+      "minimum_forces_n": [
+        1.5,
+        1.5,
+        1.5
+      ]
+    }
+  ]
+}

@@ -199,6 +199,14 @@ impl Chain {
         if self.sampled() { 2 } else { 0 }
     }
 
+    /// Sampling is a fixed clock. Fault guards retain their phase-dependent
+    /// root-event semantics, including instantaneous dropout/recovery.
+    pub fn scheduled_events(&self, view: &View, guard_offset: usize, out: &mut Vec<(usize, f64)>) {
+        if self.sampled() {
+            out.push((guard_offset, view.state(self.held() + 1)));
+        }
+    }
+
     /// Guard 0: the next sample instant. Guard 1: the fault's onset while
     /// armed, its end while dropped out, never otherwise.
     pub fn guards(&self, view: &View, out: &mut Vec<f64>) {

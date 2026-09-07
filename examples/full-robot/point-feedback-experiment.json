@@ -1,0 +1,17 @@
+{
+  "scene": "runs/full-robot/learning/body-feedback/scene.json",
+  "config": "runs/full-robot/learning/body-feedback/config.json",
+  "plan": "runs/full-robot/learning/forward-slow/chassis-solid-sign.plan.json",
+  "controller": "examples/interactive/controllers/point-position-feedback.rhai",
+  "output_directory": "runs/full-robot/learning/point-feedback",
+  "marker_ids": ["-Y-foot-surface"],
+  "point_gain": 0.25,
+  "damping_m_per_rad": 0.002,
+  "maximum_correction_rad": 0.04,
+  "activation": {"interpolation":"quintic_rest_to_rest", "keyframes":[
+    {"time_s":0,"values":[0]}, {"time_s":0.75,"values":[0]},
+    {"time_s":0.9,"values":[1]}, {"time_s":1.5,"values":[1]},
+    {"time_s":1.65,"values":[0]}
+  ]},
+  "scope": "Ideal world foot-position feedback during the planned swing, with gradual activation. Same body/joint gains, robot, world and motor path. Provisional policy parameters, not calibrated hardware."
+}

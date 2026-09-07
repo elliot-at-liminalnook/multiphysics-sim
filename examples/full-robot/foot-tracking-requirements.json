@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "experiment_id": "full-robot-hold-100ms-r1357",
+  "coordinate_frame": "r1357-export-world-Z-up-m",
+  "start_s": 0.0,
+  "end_s": 0.1,
+  "max_sample_gap_s": 0.002,
+  "points": [
+    {"id": "-Y-foot-surface", "placement_margin_m": 0.001, "other_error_reserve_m": 0.0},
+    {"id": "+X-foot-surface", "placement_margin_m": 0.001, "other_error_reserve_m": 0.0},
+    {"id": "+Y-foot-surface", "placement_margin_m": 0.001, "other_error_reserve_m": 0.0},
+    {"id": "-X-foot-surface", "placement_margin_m": 0.001, "other_error_reserve_m": 0.0}
+  ]
+}

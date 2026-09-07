@@ -1,0 +1,876 @@
+{
+  "version": 1,
+  "scope": "CAD-derived geometric marker/base path compilation and physical execution diagnostics. No accepted stepping, walking, hardware accuracy, realtime or learning claim.",
+  "validation": {
+    "embedding_native": 12,
+    "embedding_no_default_features": 12,
+    "planning_runtime": 7,
+    "runtime_unit_tests": 7,
+    "wasm": "cargo check --locked --target wasm32-unknown-unknown -p sim-web passed",
+    "ci": "planning and support tests plus both CLI compilation included"
+  },
+  "source_manifests": {
+    "physical_execution": "runs/full-robot/learning/auxiliary-rates-source-manifest.json",
+    "compiler_and_reports_final": "runs/full-robot/learning/marker-planning-final-source-manifest.json",
+    "compiler_and_reports_prior": "runs/full-robot/learning/marker-planning-source-manifest.json"
+  },
+  "plans": {
+    "1mm": {
+      "capture": "runs/full-robot/learning/single-foot-marker-plan.json",
+      "completed": true,
+      "frames": 201,
+      "command_knots": 101,
+      "maximum_marker_error_m": 1.8055423631162506e-06,
+      "minimum_scaled_singular_value": 0.9385057108779646,
+      "maximum_scaled_closure_error": 1.3405943022348765e-13
+    },
+    "-3mm": {
+      "capture": "runs/full-robot/learning/single-foot-marker-plan-3mm.json",
+      "completed": true,
+      "frames": 201,
+      "command_knots": 101,
+      "maximum_marker_error_m": 2.9990861185152803e-06,
+      "minimum_scaled_singular_value": 0.9075974512875761,
+      "maximum_scaled_closure_error": 7.795430967405537e-12
+    },
+    "-shift-retracted": {
+      "capture": "runs/full-robot/learning/single-foot-marker-plan-shift-retracted.json",
+      "completed": true,
+      "frames": 321,
+      "command_knots": 161,
+      "maximum_marker_error_m": 4.006848398682854e-06,
+      "minimum_scaled_singular_value": 0.9010413450810069,
+      "maximum_scaled_closure_error": 5.945244296867713e-12
+    }
+  },
+  "runs": {
+    "1mm": {
+      "completed": true,
+      "simulated_s": 1.0,
+      "completed_steps": 4000,
+      "requested_steps": 4000,
+      "step_s": 0.00025,
+      "error": null,
+      "stepping_wall_s": 63.49226912799995,
+      "capture": "runs/full-robot/learning/single-foot-marker-execution.json",
+      "apex_time_s": 0.5,
+      "apex_clearances": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "minimum_clearance_m": -3.931857813999073e-06,
+          "surface_samples": 24
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "minimum_clearance_m": -9.216600057804225e-05,
+          "surface_samples": 24
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "minimum_clearance_m": -6.07199271684955e-06,
+          "surface_samples": 24
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "minimum_clearance_m": -3.201199312169445e-05,
+          "surface_samples": 24
+        }
+      ],
+      "apex_assumed_static_support": {
+        "assumed_support_marker_ids": [
+          "+X-foot-surface",
+          "+Y-foot-surface",
+          "-X-foot-surface"
+        ],
+        "center_of_mass_world_m": [
+          0.013346813205845014,
+          -0.0004136832111050928,
+          -0.042295046269236775
+        ],
+        "projected_margin": {
+          "hull_m": [
+            [
+              -0.32226483224100533,
+              1.1716891432217316e-05
+            ],
+            [
+              0.33662759125576536,
+              -6.314520955636181e-06
+            ],
+            [
+              -0.00428617868368099,
+              0.31684906340600005
+            ]
+          ],
+          "minimum_edge_margin_m": -0.0004162156714100047
+        },
+        "scope": "Static COM projection against explicitly assumed point supports in world XY. Supports are not confirmed by this calculation. Excludes authored world-ground objects; ignores foot patch extent, acceleration, friction, torque capacity and uneven terrain wrench feasibility.",
+        "total_mass_kg": 3.976239082561776
+      },
+      "event_counts": {
+        "2": 1,
+        "3": 1,
+        "5": 1,
+        "6": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "17": 1,
+        "18": 1,
+        "20": 1,
+        "21": 3,
+        "23": 1,
+        "24": 1,
+        "26": 1,
+        "29": 1,
+        "30": 3,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "servo_guard_offset": 36,
+      "maximum_body_relative_tracking_error_m": 0.0013724489419332288,
+      "accepted_internal_contact_samples": 0,
+      "apex_floor_vertical_force_n_by_link": {
+        "6": 1.4311981222834163,
+        "11": 18.432778552481853,
+        "18": 1.2144153219109686,
+        "25": 17.93798233363684
+      },
+      "apex_chassis_translation_from_initial_m": [
+        -8.082178297715535e-05,
+        -0.0005559382300560362,
+        -0.0011853033736081726
+      ],
+      "initial_assumed_static_margin_m": 9.782051352292569e-05,
+      "minimum_assumed_static_margin_m": -0.00048297497946659946
+    },
+    "-3mm": {
+      "completed": true,
+      "simulated_s": 1.0,
+      "completed_steps": 4000,
+      "requested_steps": 4000,
+      "step_s": 0.00025,
+      "error": null,
+      "stepping_wall_s": 68.76333982200008,
+      "capture": "runs/full-robot/learning/single-foot-marker-execution-3mm.json",
+      "apex_time_s": 0.5,
+      "apex_clearances": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "minimum_clearance_m": 0.00042469918318993605,
+          "surface_samples": 24
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "minimum_clearance_m": -9.864895594280387e-05,
+          "surface_samples": 24
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "minimum_clearance_m": 0.0005724576784477131,
+          "surface_samples": 24
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "minimum_clearance_m": -4.412160661870779e-05,
+          "surface_samples": 24
+        }
+      ],
+      "apex_assumed_static_support": {
+        "assumed_support_marker_ids": [
+          "+X-foot-surface",
+          "+Y-foot-surface",
+          "-X-foot-surface"
+        ],
+        "center_of_mass_world_m": [
+          0.013337220929860652,
+          -0.0011699350388017836,
+          -0.04232743202901728
+        ],
+        "projected_margin": {
+          "hull_m": [
+            [
+              -0.3223064753062627,
+              -4.6398370106691834e-07
+            ],
+            [
+              0.33666478926268606,
+              -3.420483698190406e-06
+            ],
+            [
+              -0.004264999666680781,
+              0.31644576117927947
+            ]
+          ],
+          "minimum_edge_margin_m": -0.0011679651766989445
+        },
+        "scope": "Static COM projection against explicitly assumed point supports in world XY. Supports are not confirmed by this calculation. Excludes authored world-ground objects; ignores foot patch extent, acceleration, friction, torque capacity and uneven terrain wrench feasibility.",
+        "total_mass_kg": 3.976239082561776
+      },
+      "event_counts": {
+        "2": 1,
+        "3": 3,
+        "4": 2,
+        "5": 1,
+        "6": 7,
+        "7": 6,
+        "8": 1,
+        "10": 1,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "17": 1,
+        "18": 1,
+        "20": 1,
+        "21": 3,
+        "22": 2,
+        "23": 1,
+        "24": 3,
+        "25": 2,
+        "26": 1,
+        "27": 1,
+        "29": 1,
+        "30": 3,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "servo_guard_offset": 36,
+      "maximum_body_relative_tracking_error_m": 0.0026126631095697984,
+      "accepted_internal_contact_samples": 0,
+      "apex_floor_vertical_force_n_by_link": {
+        "6": 0,
+        "11": 19.729750764887342,
+        "18": 0,
+        "25": 19.29353627368579
+      },
+      "apex_chassis_translation_from_initial_m": [
+        -8.862792352879356e-05,
+        -0.0013273616860073007,
+        -0.0012273380987765322
+      ],
+      "initial_assumed_static_margin_m": 9.782051352292569e-05,
+      "minimum_assumed_static_margin_m": -0.0022679616142347436
+    },
+    "-3mm-refined": {
+      "completed": true,
+      "simulated_s": 1.0,
+      "completed_steps": 8000,
+      "requested_steps": 8000,
+      "step_s": 0.000125,
+      "error": null,
+      "stepping_wall_s": 80.63285261100009,
+      "capture": "runs/full-robot/learning/single-foot-marker-execution-3mm-refined.json",
+      "apex_time_s": 0.5,
+      "apex_clearances": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "minimum_clearance_m": 0.0004249972532321955,
+          "surface_samples": 24
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "minimum_clearance_m": -9.858150171548896e-05,
+          "surface_samples": 24
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "minimum_clearance_m": 0.0005735652750993303,
+          "surface_samples": 24
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "minimum_clearance_m": -4.411820848393422e-05,
+          "surface_samples": 24
+        }
+      ],
+      "apex_assumed_static_support": {
+        "assumed_support_marker_ids": [
+          "+X-foot-surface",
+          "+Y-foot-surface",
+          "-X-foot-surface"
+        ],
+        "center_of_mass_world_m": [
+          0.013366754921637705,
+          -0.001160914001763649,
+          -0.04232764403991621
+        ],
+        "projected_margin": {
+          "hull_m": [
+            [
+              -0.3222780315550431,
+              -1.5914264155259417e-06
+            ],
+            [
+              0.33669007054708605,
+              -1.9399010657174384e-06
+            ],
+            [
+              -0.00420798233734456,
+              0.3164610106222426
+            ]
+          ],
+          "minimum_edge_margin_m": -0.0011591450801108124
+        },
+        "scope": "Static COM projection against explicitly assumed point supports in world XY. Supports are not confirmed by this calculation. Excludes authored world-ground objects; ignores foot patch extent, acceleration, friction, torque capacity and uneven terrain wrench feasibility.",
+        "total_mass_kg": 3.976239082561776
+      },
+      "event_counts": {
+        "2": 1,
+        "3": 3,
+        "4": 2,
+        "5": 1,
+        "6": 7,
+        "7": 8,
+        "8": 1,
+        "10": 1,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "17": 1,
+        "18": 1,
+        "20": 1,
+        "21": 3,
+        "22": 2,
+        "23": 1,
+        "24": 3,
+        "25": 2,
+        "26": 1,
+        "27": 1,
+        "29": 1,
+        "30": 3,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "servo_guard_offset": 36,
+      "maximum_body_relative_tracking_error_m": 0.002620189330989306,
+      "accepted_internal_contact_samples": 0,
+      "apex_floor_vertical_force_n_by_link": {
+        "6": 0,
+        "11": 19.716240869674834,
+        "18": 0,
+        "25": 19.2864618896129
+      },
+      "apex_chassis_translation_from_initial_m": [
+        -6.287519813226623e-05,
+        -0.0013164369238389021,
+        -0.0012276166402586269
+      ],
+      "initial_assumed_static_margin_m": 9.782051352292569e-05,
+      "minimum_assumed_static_margin_m": -0.0022545937500287167,
+      "process": {
+        "exit_code": 0,
+        "elapsed_s": 81.910178344,
+        "args": [
+          "runs/full-robot/learning/auxiliary-rates-source/bin/integrate_embedding",
+          "runs/full-robot/learning/servo-regularized-floor.scene.json",
+          "examples/full-robot/mechanical-servo-single-foot-marker-motion-3mm-refined.json"
+        ]
+      }
+    },
+    "-shift-retracted": {
+      "completed": true,
+      "simulated_s": 1.6,
+      "completed_steps": 6400,
+      "requested_steps": 6400,
+      "step_s": 0.00025,
+      "error": null,
+      "stepping_wall_s": 123.18623227399995,
+      "capture": "runs/full-robot/learning/single-foot-marker-execution-shift-retracted.json",
+      "apex_time_s": 0.8,
+      "apex_clearances": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "minimum_clearance_m": -3.5488188206977966e-06,
+          "surface_samples": 24
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "minimum_clearance_m": -9.540810801839106e-05,
+          "surface_samples": 24
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "minimum_clearance_m": -3.3575042779343534e-06,
+          "surface_samples": 24
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "minimum_clearance_m": -4.163856205119387e-05,
+          "surface_samples": 24
+        }
+      ],
+      "apex_assumed_static_support": {
+        "assumed_support_marker_ids": [
+          "+X-foot-surface",
+          "+Y-foot-surface",
+          "-X-foot-surface"
+        ],
+        "center_of_mass_world_m": [
+          0.013309319989585263,
+          0.0026872116958035217,
+          -0.04451509442715811
+        ],
+        "projected_margin": {
+          "hull_m": [
+            [
+              -0.3223059149962479,
+              -0.00015149958527684276
+            ],
+            [
+              0.33670578586817157,
+              3.832449589015485e-06
+            ],
+            [
+              -0.004731503686098213,
+              0.3159818170667723
+            ]
+          ],
+          "minimum_edge_margin_m": 0.0027596051774528853
+        },
+        "scope": "Static COM projection against explicitly assumed point supports in world XY. Supports are not confirmed by this calculation. Excludes authored world-ground objects; ignores foot patch extent, acceleration, friction, torque capacity and uneven terrain wrench feasibility.",
+        "total_mass_kg": 3.976239082561776
+      },
+      "event_counts": {
+        "2": 1,
+        "3": 3,
+        "4": 2,
+        "5": 1,
+        "6": 3,
+        "7": 4,
+        "8": 1,
+        "9": 2,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "17": 1,
+        "20": 1,
+        "21": 5,
+        "22": 2,
+        "23": 1,
+        "24": 3,
+        "26": 1,
+        "28": 4,
+        "29": 1,
+        "30": 1,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1600,
+        "37": 1600,
+        "38": 1600,
+        "39": 1600,
+        "40": 1600,
+        "41": 1600,
+        "42": 1600,
+        "43": 1600,
+        "44": 1600,
+        "45": 1600,
+        "46": 1600,
+        "47": 1600
+      },
+      "servo_guard_offset": 36,
+      "maximum_body_relative_tracking_error_m": 0.0029054940436909825,
+      "accepted_internal_contact_samples": 0,
+      "apex_floor_vertical_force_n_by_link": {
+        "6": 0.7097371010762402,
+        "11": 19.08210294537675,
+        "18": 0.6714984710482482,
+        "25": 18.718579914628314
+      },
+      "apex_chassis_translation_from_initial_m": [
+        -2.8597808240611372e-05,
+        0.0035007160794052984,
+        -0.0016904311468167238
+      ],
+      "initial_assumed_static_margin_m": 9.782041839678027e-05,
+      "minimum_assumed_static_margin_m": 9.782035187132442e-05,
+      "process": {
+        "exit_code": 0,
+        "args": [
+          "runs/full-robot/learning/auxiliary-rates-source/bin/integrate_embedding",
+          "runs/full-robot/learning/servo-regularized-floor.scene.json",
+          "examples/full-robot/mechanical-servo-single-foot-marker-motion-shift-retracted.json"
+        ],
+        "elapsed_s": 124.667066871
+      }
+    }
+  },
+  "rejected_plan": {
+    "exit_code": 1,
+    "stderr": "marker placement at 0.34s: no improving bounded point-plane step; maximum error 0.00007160822138385647 m; independent coordinates [5.261119791371275e-10, -0.025354030802840256, -0.02, -0.009270520487286167, -0.2762428735810474, -0.0997241668258983, 7.546587986345307e-12, 0.025227772128169335, -0.1434265508291002, 0.009880862112310743, -0.0002012534790759251, -0.09972838186497854]; active bounds [2]\n",
+    "elapsed_s": 1.589036487,
+    "args": [
+      "target/release/examples/plan_marker_motion",
+      "runs/full-robot/learning/servo-regularized-floor.scene.json",
+      "examples/full-robot/foot-markers.json",
+      "examples/full-robot/single-foot-marker-motion-shift.json"
+    ]
+  },
+  "interruption": {
+    "capture": "runs/full-robot/learning/single-foot-marker-execution-3mm-refined-interrupted-empty.json",
+    "state": "Empty output after intentional interruption; process and handle confirmed absent before restarting. Empty capture is not evidence."
+  },
+  "next_work": [
+    "Loaded actuator tracking and bias/load compensation with measured calibration when available.",
+    "Reachable body transfer plus foot-clearance/contact-support acceptance over complete episodes.",
+    "Automatic quadruped foothold/timing search, teacher RL, student distillation and robustness training remain unfinished.",
+    "Deployable observation contract and interactive learned-policy delivery remain unfinished."
+  ],
+  "unshifted_3mm_refinement": {
+    "maximum_world_marker_difference_m": 7.001614845451527e-05,
+    "maximum_sampled_differences": {
+      "current_a": 0.07240964348507917,
+      "gear_speed_rad_s": 0.12414961895570986,
+      "heating_w": 0.16133740242967076,
+      "joint_positions": 0.001130475356942301,
+      "joint_velocities": 1.2681016001160719,
+      "motor_states": 1.0,
+      "motor_voltage_v": 0.70201872528712,
+      "power_difference_w": 0.0010422869708890947,
+      "servo_commands": 0.06332978266806871,
+      "servo_states": 0.3906201591020615,
+      "shaft_torque_nm": 0.09372551694223528,
+      "supply_current_a": 0.012539640508227999
+    },
+    "contact_pair_mismatch_samples": 2,
+    "event_counts": [
+      {
+        "candidate_count": 1,
+        "guard": 2,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 3,
+        "maximum_ordered_time_difference_s": 0.0005788954883717522,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 2,
+        "guard": 4,
+        "maximum_ordered_time_difference_s": 0.00023688929860876673,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 5,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 7,
+        "guard": 6,
+        "maximum_ordered_time_difference_s": 0.002538427124211262,
+        "reference_count": 7
+      },
+      {
+        "candidate_count": 6,
+        "guard": 7,
+        "maximum_ordered_time_difference_s": null,
+        "reference_count": 8
+      },
+      {
+        "candidate_count": 1,
+        "guard": 8,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 10,
+        "maximum_ordered_time_difference_s": 0.0007432495196717515,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 11,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 12,
+        "maximum_ordered_time_difference_s": 0.00043141432119678247,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 14,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 15,
+        "maximum_ordered_time_difference_s": 0.00013566493521303263,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 17,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 18,
+        "maximum_ordered_time_difference_s": 0.011179161478297006,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 20,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 21,
+        "maximum_ordered_time_difference_s": 0.0007778501784365989,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 2,
+        "guard": 22,
+        "maximum_ordered_time_difference_s": 0.00014737735758840742,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 23,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 24,
+        "maximum_ordered_time_difference_s": 0.0001144319201309002,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 2,
+        "guard": 25,
+        "maximum_ordered_time_difference_s": 0.0001779413951948916,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 26,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 27,
+        "maximum_ordered_time_difference_s": 0.004377654829870292,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 29,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 30,
+        "maximum_ordered_time_difference_s": 0.0019181726889786893,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 1,
+        "guard": 32,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 33,
+        "maximum_ordered_time_difference_s": 0.00011288423268591453,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 35,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 36,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 37,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 38,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 39,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 40,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 41,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 42,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 43,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 44,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 45,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 46,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      },
+      {
+        "candidate_count": 1000,
+        "guard": 47,
+        "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+        "reference_count": 1000
+      }
+    ],
+    "scope": "Complete matched-command comparison; event counts differ and no timestep acceptance gate is asserted."
+  },
+  "final_recompile": {
+    "single-foot-marker-motion.json": {
+      "trajectory": true,
+      "frames": true,
+      "initial_coordinates": true
+    },
+    "single-foot-marker-motion-3mm.json": {
+      "trajectory": true,
+      "frames": true,
+      "initial_coordinates": true
+    },
+    "single-foot-marker-motion-shift-retracted.json": {
+      "trajectory": true,
+      "frames": true,
+      "initial_coordinates": true
+    }
+  },
+  "sha256": {
+    "examples/full-robot/baseline/robot.rcad": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "examples/full-robot/foot-markers.json": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c",
+    "examples/full-robot/mechanical-servo-single-foot-marker-motion-3mm-refined.json": "481808707cb544b385ae99a158631c2d98862e9e6e975207d89682aaf356dacc",
+    "examples/full-robot/mechanical-servo-single-foot-marker-motion-3mm.json": "5c0f0b347ee9e2dd059942c241c6f1c49a3711c6a7d3767866b768c18cf0a769",
+    "examples/full-robot/mechanical-servo-single-foot-marker-motion-shift-retracted.json": "d0c0166916362ce9596c0a6ea2cdcd5b231599161b520da8c1547ce091dc27ae",
+    "examples/full-robot/mechanical-servo-single-foot-marker-motion.json": "7bbf9649924a93957910d4e2c92132b4d616506892d804cc6072f461ed8c87ae",
+    "examples/full-robot/single-foot-marker-motion-3mm.json": "e32810fcaf1e3ea26f0bddddf28e9ae987b1c0b7feb07828431a151a7aa5a07e",
+    "examples/full-robot/single-foot-marker-motion-shift-retracted.json": "1ff83a8265055ea1e12e959f85266c9f32f1f1312c7c0898598dad1b6b7500cb",
+    "examples/full-robot/single-foot-marker-motion-shift.json": "0427b74f542ced7d549d986818073a0688368798cb93d996104a7afb8c18fc32",
+    "examples/full-robot/single-foot-marker-motion.json": "ba9e1617e8246ce0c67f3267c7ac59e5bee4547b0d1a1f70639e0ebeb2117dd0",
+    "runs/full-robot/learning/auxiliary-rates-source-manifest.json": "a50553fc00696ba922a9546347137c4c2ec20c8f7df6bc3a107511e619399feb",
+    "runs/full-robot/learning/marker-planning-final-recompile-check.json": "98ecaa7f1ddef1d78fb0d2b379967ba1386e58b8d1a8220a12cd984f0e4bda62",
+    "runs/full-robot/learning/marker-planning-final-source-manifest.json": "0d643c3fc74d1689d93bb9c2f2dad5adf38a2ed893544175d1846a2b703455f1",
+    "runs/full-robot/learning/marker-planning-source-manifest.json": "25a8eb424cc95ffe67ea170242ca72efdcb4194c5152026686662aed8eda3efa",
+    "runs/full-robot/learning/servo-regularized-floor.scene.json": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2",
+    "runs/full-robot/learning/single-foot-marker-3mm-refinement-comparison.json": "b2f2daba93b409cd80c3d832e8c431316b7504d7d5d822f735eaff594da34877",
+    "runs/full-robot/learning/single-foot-marker-clearance-3mm-refined.json": "c093b1dbf239342149949d321af91df49bbb5064c81b6f55e1904cf18af2d0ec",
+    "runs/full-robot/learning/single-foot-marker-clearance-3mm.json": "dc0569085078aaf48cc2c34af46a76648dcb99a228721c8778812c6319202ec2",
+    "runs/full-robot/learning/single-foot-marker-clearance-shift-retracted.json": "f71c52f0a21ec42d6ee4e64e86d1e714763358b22c221e4fe77ac5079483fa02",
+    "runs/full-robot/learning/single-foot-marker-clearance.json": "11962e730b309c7a9ea4dfc1890a6bc50349ed8757c409e1fad85a3c54257843",
+    "runs/full-robot/learning/single-foot-marker-execution-3mm-refined-process.json": "cb0f11371a15f3b0e8e719ce9e8acbf96d5d9767996f95e93c7bfc4825594d3f",
+    "runs/full-robot/learning/single-foot-marker-execution-3mm-refined.json": "a2c9ac51286a70894bb1c5794613df709e2d6129fac85a1cb5b513c9fb82272d",
+    "runs/full-robot/learning/single-foot-marker-execution-3mm.json": "7450828c8b621d4a14dbd26454951f92494c88b83b8a9d3c6077e4fc37f38494",
+    "runs/full-robot/learning/single-foot-marker-execution-shift-retracted-process.json": "f8b93737bbe2bb922ba3107af28abb94738b12af56d3e740974cbe757a33f320",
+    "runs/full-robot/learning/single-foot-marker-execution-shift-retracted.json": "8b9748b31426ddd7ec7556a88efa59e153b3f3168cfe347fb0edf213f2860470",
+    "runs/full-robot/learning/single-foot-marker-execution.json": "af6e495bb2c9827ec1219731d188c46e9ce2b17d934c4a4ad04c283617689883",
+    "runs/full-robot/learning/single-foot-marker-plan-3mm-verified.json": "63139b2ab7456c25fcdbba2b9539fa56bc6fb00fc58f12b53db6d4bbda7c671f",
+    "runs/full-robot/learning/single-foot-marker-plan-3mm.json": "f73401bb703fd9087b215c9cbdf9bfc80877782ad7c2228a7e65a6f08a866a4f",
+    "runs/full-robot/learning/single-foot-marker-plan-shift-process.json": "f19963280421773564a3e8a35db330c29e1c5a8207712251b489be2f554d6c18",
+    "runs/full-robot/learning/single-foot-marker-plan-shift-retracted-clearance.json": "89ee2855d8632b14d94e75d0451719c8b86ef2db305f46ae09581fc62df68a22",
+    "runs/full-robot/learning/single-foot-marker-plan-shift-retracted-process.json": "be12bcbcf9526fbd090b69b7d75209cd980ba951b810629ee1e364838cf2a6e2",
+    "runs/full-robot/learning/single-foot-marker-plan-shift-retracted-verified.json": "b329c9b947bd5c818e22efbe3680417322b3fc98e3f2b8e43f23923d6d2a76a9",
+    "runs/full-robot/learning/single-foot-marker-plan-shift-retracted.json": "b329c9b947bd5c818e22efbe3680417322b3fc98e3f2b8e43f23923d6d2a76a9",
+    "runs/full-robot/learning/single-foot-marker-plan-verified.json": "d9516066d3a28729f05c37e87a1a6b820afb78aa4fd59ce483c5961e947c29af",
+    "runs/full-robot/learning/single-foot-marker-plan.json": "7575056488ca8146bf5f65915896a9ee5f106275043c7957e906756647166dc3",
+    "runs/full-robot/learning/single-foot-marker-tracking-3mm-refined.json": "dd4107f02b81b60478e458ce5a4ae3623cd502b3b625ef992ea55b333824fa4b",
+    "runs/full-robot/learning/single-foot-marker-tracking-3mm.json": "772d347f159dbab5e960ca398787a63e24aa38e6748ef07db1964b4a2ce4c1af",
+    "runs/full-robot/learning/single-foot-marker-tracking-shift-retracted.json": "25f2fb811bb3db52d3ddaf0bb76f07b4d9cd73ff71bd9042eb0df67e1166a613",
+    "runs/full-robot/learning/single-foot-marker-tracking.json": "1d0ded5730cd5092f7aab2f5c6790020648767b9b33293ccf2fffd707294ebe7"
+  }
+}

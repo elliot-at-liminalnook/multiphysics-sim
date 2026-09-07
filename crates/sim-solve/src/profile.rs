@@ -4,7 +4,7 @@
 //! timers on, [`report`] prints the table, [`reset`] zeroes it.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering::Relaxed};
-use std::time::Instant;
+use web_time::Instant;
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
 
@@ -52,18 +52,50 @@ pub static IMPLICIT: Bucket = Bucket::new("implicit solve");
 pub static NEWTON: Bucket = Bucket::new("newton calls");
 pub static ITERATIONS: Bucket = Bucket::new("newton iterations");
 pub static FRESH: Bucket = Bucket::new("fresh jacobians");
+/// Failed full trials with a reused matrix, refreshed without discarded backtracking probes.
+pub static STALE_FULL_REFRESH: Bucket = Bucket::new("stale full-step refreshes");
 pub static RESIDUAL: Bucket = Bucket::new("residual evaluations");
 pub static JACOBIAN: Bucket = Bucket::new("jacobian assembly");
-pub static ANALYTIC_SLOTS: Bucket = Bucket::new("  slots analytic");
+pub static ANALYTIC_SLOTS: Bucket = Bucket::new("  slots supplied");
+/// These slots also count as FD slots because their state partials are differenced.
+pub static RATE_SLOTS: Bucket = Bucket::new("  slots with supplied rate partials");
 pub static FD_SLOTS: Bucket = Bucket::new("  slots finite-difference");
+/// Component fallback probes, including their unperturbed baselines. Hybrid
+/// implementations' internal probes are not included in this counter.
+pub static FD_RESIDUALS: Bucket = Bucket::new("  component FD residual calls");
 pub static FACTORISE: Bucket = Bucket::new("factorisation");
+pub static FACTOR_SUM: Bucket = Bucket::new("  factor entries sum/sort");
+pub static FACTOR_MATRIX: Bucket = Bucket::new("  sparse matrix construction");
+pub static FACTOR_SYMBOLIC: Bucket = Bucket::new("  symbolic cache lookup/build");
+pub static FACTOR_SYMBOLIC_BUILD: Bucket = Bucket::new("    symbolic cache misses");
+pub static FACTOR_NUMERIC: Bucket = Bucket::new("  sparse numeric factorisation");
 pub static SOLVE: Bucket = Bucket::new("back-substitution");
 pub static GUARDS: Bucket = Bucket::new("guards");
 pub static LOCATE: Bucket = Bucket::new("event location");
 pub static JUMP: Bucket = Bucket::new("jumps (incl. coupler)");
+pub static EMBEDDED_MAPPING: Bucket = Bucket::new("embedded closure mapping");
+pub static EMBEDDED_HISTORY: Bucket = Bucket::new("embedded contact history");
+pub static EMBEDDED_DYNAMICS_PREPARE: Bucket = Bucket::new("embedded dynamics preparation");
+pub static EMBEDDED_DYNAMICS_APPLY: Bucket = Bucket::new("embedded applied force solve");
+pub static EMBEDDED_COMPONENTS: Bucket = Bucket::new("embedded component equations");
+pub static EMBEDDED_CLOSURE_JACOBIAN: Bucket = Bucket::new("  closure Jacobian");
+pub static EMBEDDED_CLOSURE_FACTOR: Bucket = Bucket::new("  closure factorization");
+pub static EMBEDDED_CLOSURE_SVD: Bucket = Bucket::new("    closure SVD");
+pub static EMBEDDED_INERTIA: Bucket = Bucket::new("  embedded rigid inertia");
+pub static EMBEDDED_PROJECT_INERTIA: Bucket = Bucket::new("  embedded inertia projection");
+pub static EMBEDDED_FORCE_EVALUATION: Bucket = Bucket::new("  embedded force evaluation");
+pub static CONTACT_GEOMETRY: Bucket = Bucket::new("contact geometry queries");
+pub static CONTACT_FORCES: Bucket = Bucket::new("contact force evaluation");
+pub static CONTACT_TOPOLOGY: Bucket = Bucket::new("  contact exclusion metadata");
+pub static CONTACT_SAMPLES: Bucket = Bucket::new("  contact sample transforms");
+pub static CONTACT_PAIRS: Bucket = Bucket::new("  contact pair queries");
 
-pub fn all() -> [&'static Bucket; 14] {
-    [&STEP, &IMPLICIT, &NEWTON, &ITERATIONS, &FRESH, &RESIDUAL, &JACOBIAN, &ANALYTIC_SLOTS, &FD_SLOTS, &FACTORISE, &SOLVE, &GUARDS, &LOCATE, &JUMP]
+pub fn all() -> [&'static Bucket; 38] {
+    [&STEP, &IMPLICIT, &NEWTON, &ITERATIONS, &FRESH, &STALE_FULL_REFRESH, &RESIDUAL, &JACOBIAN, &ANALYTIC_SLOTS, &RATE_SLOTS, &FD_SLOTS, &FD_RESIDUALS, &FACTORISE, &FACTOR_SUM, &FACTOR_MATRIX, &FACTOR_SYMBOLIC, &FACTOR_SYMBOLIC_BUILD, &FACTOR_NUMERIC, &SOLVE, &GUARDS, &LOCATE, &JUMP,
+        &EMBEDDED_MAPPING, &EMBEDDED_HISTORY, &EMBEDDED_DYNAMICS_PREPARE, &EMBEDDED_DYNAMICS_APPLY, &EMBEDDED_COMPONENTS,
+        &EMBEDDED_CLOSURE_JACOBIAN, &EMBEDDED_CLOSURE_FACTOR, &EMBEDDED_CLOSURE_SVD,
+        &EMBEDDED_INERTIA, &EMBEDDED_PROJECT_INERTIA, &EMBEDDED_FORCE_EVALUATION,
+        &CONTACT_GEOMETRY, &CONTACT_FORCES, &CONTACT_TOPOLOGY, &CONTACT_SAMPLES, &CONTACT_PAIRS]
 }
 
 pub fn enable() {

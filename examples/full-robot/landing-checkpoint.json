@@ -1,0 +1,13 @@
+{
+  "clock": {
+    "period_s": 0.002,
+    "duration_s": 1.6,
+    "guard_start_s": 1.1,
+    "guard_end_s": 1.4,
+    "qualification_s": 0.1,
+    "maximum_pause_s": 0.3
+  },
+  "support_links": ["-Y | Sliding foot crosshead", "+X | Sliding foot crosshead", "+Y | Sliding foot crosshead", "-X | Sliding foot crosshead"],
+  "minimum_upward_force_n": 1.0,
+  "observation_source": "ideal_runtime_floor_force"
+}

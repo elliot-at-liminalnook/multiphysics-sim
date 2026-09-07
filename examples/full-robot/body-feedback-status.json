@@ -1,0 +1,231 @@
+{
+  "milestone": "bounded_body_translation_feedback",
+  "task_accepted": false,
+  "scope": "Both timesteps improve sampled body and final foot errors and pass supported lift; full foot-path sensitivity remains. Not walking, hardware calibration or realtime acceptance.",
+  "recipe": {
+    "scene": "runs/full-robot/learning/forward-slow/chassis-solid-sign.scene.json",
+    "config": "runs/full-robot/learning/forward-slow/config.json",
+    "plan": "runs/full-robot/learning/forward-slow/chassis-solid-sign.plan.json",
+    "controller": "examples/interactive/controllers/body-position-feedback.rhai",
+    "output_directory": "runs/full-robot/learning/body-feedback",
+    "body_gain": 0.25,
+    "velocity_damping_s": 0,
+    "damping_m_per_rad": 0.002,
+    "maximum_correction_rad": 0.04,
+    "full_support_force_n": 5,
+    "scope": "Bounded ideal-state body-translation feedback experiment. Same motor reference, joint feedback gain, controller clocks and physics. Gains are provisional policy settings, not calibrated robot properties."
+  },
+  "native": [
+    {
+      "step_s": 0.00025,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 158.31918750500012,
+      "lift": {
+        "failed_clearance_samples": 53,
+        "failed_support_samples": 8,
+        "failed_unloading_samples": 41,
+        "longest_qualifying_span_s": 0.16999999999999993,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0028863246841898116,
+        "qualifying_start_s": 1.25,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "peak_body_error": {
+        "coordinate_frame": "r1357-export-world-Z-up-m",
+        "rotation_angle_rad": 0.003968691780216341,
+        "translation_m": [
+          -0.00003020134217523074,
+          -0.0015488084125170175,
+          -0.0011208405653609366
+        ]
+      },
+      "terminal_world_foot": {
+        "actual_m": [
+          0.004804600391228774,
+          -0.3172086257916599,
+          -0.4410298233736824
+        ],
+        "distance_m": 0.000898646077274895,
+        "error_m": [
+          -0.0004323996480325148,
+          -0.0006518954788279907,
+          -0.00044229809095963635
+        ],
+        "reference_m": [
+          0.005237000039261289,
+          -0.31655673031283194,
+          -0.44058752528272277
+        ],
+        "xy_distance_m": 0.0007822641311826959
+      },
+      "internal_contact_samples": 0,
+      "maximum_sampled_suggestion_rad": 0.04
+    },
+    {
+      "step_s": 0.000125,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 245.1098399750001,
+      "lift": {
+        "failed_clearance_samples": 53,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 41,
+        "longest_qualifying_span_s": 0.16999999999999993,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0029084372047152862,
+        "qualifying_start_s": 1.25,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "peak_body_error": {
+        "coordinate_frame": "r1357-export-world-Z-up-m",
+        "rotation_angle_rad": 0.005093171333247704,
+        "translation_m": [
+          -0.000043971454765544954,
+          -0.0015550204642459462,
+          -0.0011228040179034546
+        ]
+      },
+      "terminal_world_foot": {
+        "actual_m": [
+          0.005692167399530532,
+          -0.3170523157666753,
+          -0.4410300986242285
+        ],
+        "distance_m": 0.0008053902349340631,
+        "error_m": [
+          0.00045516736026924264,
+          -0.0004955854538433724,
+          -0.00044257334150571426
+        ],
+        "reference_m": [
+          0.005237000039261289,
+          -0.31655673031283194,
+          -0.44058752528272277
+        ],
+        "xy_distance_m": 0.0006728909777338465
+      },
+      "internal_contact_samples": 0,
+      "maximum_sampled_suggestion_rad": 0.04
+    }
+  ],
+  "refinement": {
+    "markers": [
+      {
+        "id": "+X-foot-surface",
+        "maximum_error_m": 0.0001347364383040718,
+        "rms_error_m": 0.00006058531933775815,
+        "worst_time_s": 2.8000000000000003
+      },
+      {
+        "id": "+Y-foot-surface",
+        "maximum_error_m": 0.0010997285145007748,
+        "rms_error_m": 0.00023032306256231101,
+        "worst_time_s": 1.34
+      },
+      {
+        "id": "-X-foot-surface",
+        "maximum_error_m": 0.0000682686700333447,
+        "rms_error_m": 0.000024490550411418853,
+        "worst_time_s": 2.8000000000000003
+      },
+      {
+        "id": "-Y-foot-surface",
+        "maximum_error_m": 0.0020635665555278244,
+        "rms_error_m": 0.0007630903578311215,
+        "worst_time_s": 1.4000000000000001
+      }
+    ],
+    "contact_pair_mismatch_samples": 1,
+    "maximum_sampled_differences": {
+      "current_a": 0.4890399455002157,
+      "gear_speed_rad_s": 0.8229444400766186,
+      "heating_w": 0.8235539081840757,
+      "joint_positions": 0.0090550674677128,
+      "joint_velocities": 0.8259985203700624,
+      "motor_states": 1,
+      "motor_voltage_v": 2.218943654838768,
+      "power_difference_w": 0.012225926571972912,
+      "servo_commands": 0.20172597504467743,
+      "servo_states": 0.5976703892377917,
+      "shaft_torque_nm": 0.3553127566554755,
+      "supply_current_a": 0.07635464697459893
+    }
+  },
+  "portability": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "robot-body-feedback",
+    "compared_frames": 281,
+    "simulated_s": 2.8000000000000003,
+    "maximum_native_wasm_entry_difference": 3.21624426535827e-8,
+    "worst_path": "frame[3].policy.observations.marker.-X-foot-surface.floor_force_world.x",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 2169.639999985695,
+    "simulation_ms": 186946.3899999857,
+    "max_chunk_ms": 2415.844999998808,
+    "main_thread_heartbeats": 36616,
+    "replay_progress_messages": 280,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "robot-forward-solid-sign motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "body feedback gain, world target/actual diagnostics, support weights and replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "artifacts": {
+    "runs/full-robot/learning/body-feedback/manifest.json": "f0e30b3e03dafce4dfcc2c2003e155ce6dc871969b5152c4885b686969d61a9a",
+    "runs/full-robot/learning/body-feedback/execution.json": "8140d84eaf0ab7ab52128f7f3a1d80550d339e1c5337a52c6c218a3ff6ae3ae9",
+    "runs/full-robot/learning/body-feedback/lift.json": "930e6d74f2e0e65a87d87542de89888a517227212c4b0aa1d6675ccecbc0e3e4",
+    "runs/full-robot/learning/body-feedback/tracking.json": "0795ff0aa361e77bba729ea77e148983763e363466b011722b39359e56105d99",
+    "runs/full-robot/learning/body-feedback/refined.execution.json": "8d4524ef48be652ac582a37a52c18d698a72c606b8730638d9983eacca9ea76b",
+    "runs/full-robot/learning/body-feedback/refined.lift.json": "9821d6a5c11275ed5c8e09b575ac662124de0c6766a7daf9f50438438c0aba5d",
+    "runs/full-robot/learning/body-feedback/refined.tracking.json": "967877fbe223370c5af153deecb5690398234099ce052c09bae2add53a9f59f9",
+    "runs/full-robot/learning/body-feedback/refinement.json": "967e483db030b07b92c1121c4aa9041ac1600f387897fb8030d496d246477b03",
+    "runs/interactive/body-feedback/robot-browser.json": "e8d7d520f95fc08f1cf05d729269ea20e9ab89705903c1b6e5661a6d014c6ef5",
+    "runs/interactive/body-feedback/viewer-report.json": "ed4e349d4fbe6670a78f7261b783b1c69830554af83d99984e0b136fff0dd9e8",
+    "runs/full-robot/learning/body-feedback/scene.json": "a7f54fa014a1ba3ea392e167d9c4d5a0d60a6aa39b65357f373068bffa990614",
+    "runs/full-robot/learning/body-feedback/config.json": "4dd17fa6f02ec4caf2e5389f9c15ec7f499e53aa41144480ce7ddc41df45385a",
+    "runs/full-robot/learning/body-feedback/refined.config.json": "ddda54c7953a37212945382762704dc8b71e004d5dde2964f0f7e3560a969073",
+    "examples/full-robot/body-feedback-experiment.json": "7d00cf2d8a62e0c06ddcaae21029b80a789ca4c14afbdf60f93f7c4d13306c50",
+    "examples/full-robot/prepare_body_feedback.mjs": "15f63cd0f355e6ce47f356fd5535c979e92285e01b8aef343ec49d1eb6fe20df",
+    "examples/full-robot/summarize_body_feedback.mjs": "10953dd586da9894dfccf70abfb6138de4730bdde68d08ea2173f0448811026c",
+    "examples/full-robot/body-feedback-validation.md": "34f05afe339de471c54a40ac34db0c0c26ad1ce393bf5a5518b76be3417b87f7",
+    "examples/interactive/controllers/body-position-feedback.rhai": "ca17fd19c0eff469c7d6f24e3386e5f9ee9c14dd3e81a63022b29f9d6badc3b8",
+    "crates/sim-runtime/src/body_feedback.rs": "486f1d20ec8ab48c09397d50e374ca5cf7695983af083b3d001cc9bc0240d601",
+    "crates/sim-runtime/src/embedded_policy.rs": "281900f298383b610ca67f330e1b7c9cecef0c2c25fa0a6582ea2a84a8ca0349",
+    "crates/sim-runtime/src/embedded.rs": "18000f0430dd8c9db3f491aa6b022c1af70aec8fcc7d4aa40ec7ab8151c9fba8",
+    "crates/sim-runtime/tests/body_feedback.rs": "a7b73752526ad7a8c4b6f46a831264ae64b451f3894eed821ba3f7b9f017c534",
+    "runs/interactive/body-feedback/native-runner": "4b9b074c7ff488485cb0e33be9acf45197b30d188a1ae227cd960bfc38413614",
+    "runs/interactive/body-feedback/source-manifest.json": "acccbca808411cb5125c19a242418e2280f28deabe21f948791b017a9afaee86",
+    "runs/interactive/body-feedback/viewer/build-manifest.json": "4d2dc955755359194456fa1bc12b02ccf9a40fe5baecccd9e3f830362c1b0739",
+    "runs/interactive/body-feedback/viewer/sim_web_bg.wasm": "0be09a9e776dbfc62781140da67e7dfe70cd48f3b6f72a7a0df63c6f80235012",
+    "runs/interactive/robot-lab-body-feedback-2026-09-07.zip": "dafe32a518c2b64d8df55b6c5ffe85b0b88b9aece8bed964b3838e14f90a73e7"
+  }
+}

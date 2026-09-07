@@ -1,0 +1,6 @@
+{
+  "scene": "runs/full-robot/learning/point-feedback/scene.json",
+  "config": "runs/full-robot/learning/point-feedback/config.json",
+  "output_directory": "runs/full-robot/learning/sample-reuse",
+  "scope": "Guarded numerical Jacobian reuse after registered servo sampling events. Original whole-matrix closure solver, robot, controller, motor path, tolerances and physical equations remain unchanged. Motor-mode events still invalidate the workspace."
+}

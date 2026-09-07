@@ -1,0 +1,139 @@
+{
+  "scope": "False contact correction at inspected CAD grid nodes; task and continuous collision accuracy remain unaccepted.",
+  "task_accepted": false,
+  "browser_corrected_model_verified": true,
+  "native": [
+    {
+      "step_s": 0.00025,
+      "completed": true,
+      "error": null,
+      "wall_s": 176.20282042700006,
+      "internal_contact_samples": 0,
+      "lift": {
+        "failed_clearance_samples": 54,
+        "failed_support_samples": 8,
+        "failed_unloading_samples": 43,
+        "longest_qualifying_span_s": 0.27,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.002666734953254868,
+        "qualifying_start_s": 1.08,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "maximum_sampled_foot_change_due_to_grid_m": 0.0000010269840040626892,
+      "terminal_foot_xy_error_m": 0.0013258786355977335
+    },
+    {
+      "step_s": 0.000125,
+      "completed": true,
+      "error": null,
+      "wall_s": 243.70611911600102,
+      "internal_contact_samples": 0,
+      "lift": {
+        "failed_clearance_samples": 54,
+        "failed_support_samples": 8,
+        "failed_unloading_samples": 43,
+        "longest_qualifying_span_s": 0.17999999999999994,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0027073986711391163,
+        "qualifying_start_s": 1.06,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "maximum_sampled_foot_change_due_to_grid_m": 0.0000061201154668417475,
+      "terminal_foot_xy_error_m": 0.0012621952376663283
+    }
+  ],
+  "refinement_markers": [
+    {
+      "id": "+X-foot-surface",
+      "maximum_error_m": 0.00018858201022452944,
+      "rms_error_m": 0.00007826865990462722,
+      "worst_time_s": 2.8000000000000003
+    },
+    {
+      "id": "+Y-foot-surface",
+      "maximum_error_m": 0.001510025574419782,
+      "rms_error_m": 0.0005513880503001809,
+      "worst_time_s": 1.47
+    },
+    {
+      "id": "-X-foot-surface",
+      "maximum_error_m": 0.00015167665147402997,
+      "rms_error_m": 0.00006932702344214462,
+      "worst_time_s": 2.8000000000000003
+    },
+    {
+      "id": "-Y-foot-surface",
+      "maximum_error_m": 0.0017294862322058547,
+      "rms_error_m": 0.00029925149706779534,
+      "worst_time_s": 1.41
+    }
+  ],
+  "artifacts": {
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.execution.json": "b42f35d75d3b799b7b9950f271e4a0ff6dc96192f45ba4c9f014ba8478cf5084",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.lift.json": "30c5dc1806d687930b440507329adfb0d20b15d0d407173f041ccde7aed17b87",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.tracking.json": "5d32ce46513df8be32b5f23a8e2766c1bce7373d8b0c821b93fc5943868d9506",
+    "runs/full-robot/learning/forward-slow/tracking.json": "0fb70480dcd9e1831b03f17e7f3ee421fc4d718ac922901ceaec105dc44f97cc",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.refined.execution.json": "1b65b67096f98ab06c2675cc573b4db407981de41396a244222b2ca444c6922f",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.refined.lift.json": "a8c970004c4dd64239ce7149388104b500da08beb685d084bad68209effa6156",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.refined.tracking.json": "cede839f73a5524483aa8c27c75849711c77dfea67a1e053eab6979b586c34f7",
+    "runs/full-robot/learning/forward-slow/refined.tracking.json": "fb2bbcffb5f7644b05c1ee3cea089288900df7ff2238c771087b076ab5894a19",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.refinement.json": "5628d1c78fe18e8b5812307c0f415b6bf03a4d4fe0e4dc606f3003e2f402b455",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.scene.json": "2a1e771f14964ac80b19dd769881f67d85c2494c195fdd6ff88b6ed105338fba",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.plan.json": "40ab90e13951331dd1e326f7cb36a2aae02af4250e5b344909340df5e6141e20",
+    "runs/full-robot/learning/forward-slow/chassis-solid-sign.scene.derivation.json": "e2eb1042f6619718d92256991599057871c28153c5ef7bcc1989506b05fec8bc",
+    "examples/full-robot/chassis-sign-correction-experiment.json": "9599c45f788305cf842a5635743206f7779d3f9013f4092b5e9c311647c48e5b",
+    "runs/full-robot/learning/forward-slow/hip-contact-cells.json": "80adda8d2b432f0e28ff1cef0935283ffa1a87935c780f2a0f1a018fcf020f09",
+    "runs/full-robot/learning/forward-slow/hip-grid-sign-diagnosis.json": "b1b37b589ab305fd03464e6e64a35846c75c8f98e1ec9fff5be63bb8662db6a7",
+    "runs/full-robot/learning/forward-slow/hip-solid-sign-diagnosis.json": "a9add6be030b63a8cc2f588fab316e83f6f6181b71ffea2ea856e3143249101e",
+    "runs/interactive/chassis-solid-sign/robot-browser.json": "98a4e2f0a23f8378bc5f4f2ad1f0a05444c5f43ed9e8e6c2d8dc14c7e02e07d9",
+    "runs/interactive/chassis-solid-sign/viewer-report.json": "7615ad6f569187f40cd458c98bc140024203d5294fd02986919063a84a93f439"
+  },
+  "portability": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "robot-forward-solid-sign",
+    "compared_frames": 281,
+    "simulated_s": 2.8000000000000003,
+    "maximum_native_wasm_entry_difference": 5.696213833950026e-9,
+    "worst_path": "frame[102].contacts.1.force_n.2",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 2028.5450000166893,
+    "simulation_ms": 179581.69499999285,
+    "max_chunk_ms": 2519.875,
+    "main_thread_heartbeats": 36526,
+    "replay_progress_messages": 280,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "robot-forward-solid-sign motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  }
+}

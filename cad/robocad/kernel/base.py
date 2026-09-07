@@ -363,6 +363,10 @@ class GeometryKernel(ABC):
     def solid_inventory(self, body: Body) -> list[dict]:
         raise NotImplementedError('Solid inventory is unavailable for this kernel')
 
+    def solid_components(self, body: Body) -> list[Body]:
+        """Read-only solid handles in topology order; exclude free sheets/wires."""
+        raise NotImplementedError('Solid components are unavailable for this kernel')
+
     def extract_components(self, body: Body, components: list[list[int]]) -> tuple[Body, list[Body]]:
         raise NotImplementedError('Component extraction is unavailable for this kernel')
     @abstractmethod

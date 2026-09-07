@@ -430,6 +430,22 @@ impl LocalJacobian {
     }
 }
 
+/// A scoped residual evaluator prepared for a batch of nearby evaluations.
+/// It must produce the same residual as its behavior for every supplied context,
+/// including changed inputs, and support concurrent evaluations. Cached data is
+/// immutable; implementations validate dependencies and recompute when needed.
+pub trait PreparedResidual: Send + Sync {
+    fn residual(&self, ctx: &mut Context);
+}
+
+/// Maximum columns per parallel linearization job. Small pools amortize scratch
+/// allocation with larger batches; larger pools need finer work distribution
+/// when geometry-changing and cacheable probes have different costs.
+/// Serial evaluators need not split their input list.
+pub fn linearization_batch_columns(worker_capacity: usize) -> usize {
+    if worker_capacity <= 2 { 8 } else { 2 }
+}
+
 /// The equations of one behavior instance. Ports are indexed in the order
 /// the descriptor declares them; signal inputs and outputs are indexed in
 /// declaration order among their own kind.
@@ -452,9 +468,15 @@ pub trait Behavior: Send + Sync {
 
     fn residual(&self, ctx: &mut Context);
 
-    /// Guard functions; an event fires when one crosses from positive to
-    /// non-positive.
+    /// Root guard functions; an event fires when one crosses from nonnegative
+    /// to negative. Use `scheduled_events` for known clock deadlines.
     fn guards(&self, _view: &View, _out: &mut Vec<f64>) {}
+
+    /// Known clock deadlines: `(local guard index, absolute simulation time)`.
+    /// A deadline must remain constant during continuous advancement, until
+    /// a jump updates or removes it. The scheduler includes endpoint ticks;
+    /// these guards do not also participate in numerical root finding.
+    fn scheduled_events(&self, _view: &View, _out: &mut Vec<(usize, f64)>) {}
 
     /// Reset owned states after guard `index` fired. Only this behavior's
     /// states may change.
@@ -484,6 +506,45 @@ pub trait Behavior: Send + Sync {
     /// must report every nonzero partial.
     fn jacobian(&self, _view: &View, _out: &mut LocalJacobian) -> bool {
         false
+    }
+
+    /// Rate-aware linearization at the actual residual operating point.
+    /// The default preserves existing state-only Jacobians. Implementations
+    /// may combine exact and numerical partials, but must supply every
+    /// nonzero partial when returning true, just like `jacobian`.
+    fn jacobian_at(&self, view: &View, _state_rates: &[f64], out: &mut LocalJacobian) -> bool {
+        self.jacobian(view, out)
+    }
+
+    /// Optional complete rate partials when a complete Jacobian is unavailable.
+    /// Returning true supplies every output's derivative with respect to all
+    /// rate inputs: StateRate, AcrossDerivative, and AcrossRate when the view
+    /// has no provider for that rate. Omitted rate entries are exact zeros.
+    /// State partials (including provider-backed AcrossRate entries) are ignored;
+    /// the compiler still differences states at the current, nonzero rates.
+    /// A complete `jacobian_at` takes precedence. The default retains full FD.
+    fn rate_jacobian_at(&self, _view: &View, _state_rates: &[f64], _out: &mut LocalJacobian) -> bool {
+        false
+    }
+
+    /// Optional complete state derivatives for selected local state-residual rows.
+    /// Return the unique local row indices supplied in `out`. Every nonzero
+    /// state derivative of each claimed row must be supplied at the current
+    /// rates; omitted entries are zeros. Only Output::State for claimed rows is
+    /// permitted. Rate-input entries are ignored; rate differentiation is still
+    /// controlled by `rate_jacobian_at`. Provider-backed AcrossRate is a state
+    /// input, while unprovided AcrossRate and AcrossDerivative are rate inputs.
+    /// A complete `jacobian_at` takes precedence. The default retains full FD.
+    fn state_row_jacobian_at(&self, _view: &View, _state_rates: &[f64], _out: &mut LocalJacobian) -> Vec<usize> {
+        Vec::new()
+    }
+
+    /// Reuse expensive intermediate work during numerical differentiation.
+    /// The returned evaluator lives for this linearization only. It may borrow
+    /// the behavior, but must own any data derived from `view` or `state_rates`.
+    /// The compiler supplies unchanged noise draws to every evaluation.
+    fn prepare_linearization(&self, _view: &View, _state_rates: &[f64]) -> Option<Box<dyn PreparedResidual + '_>> {
+        None
     }
 
     /// Hand an external control element its [`Coupler`] and the contract

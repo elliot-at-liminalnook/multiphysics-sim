@@ -91,11 +91,23 @@ impl PortBinding {
 }
 
 #[derive(Debug, Clone)]
+struct FdColumn {
+    index: usize,
+    /// Only this slot's rows, preserving the global sparsity traversal order.
+    rows: Vec<usize>,
+}
+
+#[derive(Debug, Clone)]
 struct Slot {
     behavior: BehaviorId,
+    /// Conservative static output rows and inputs for local differences.
+    fd_written: Vec<usize>,
+    fd_columns: Vec<FdColumn>,
     state_start: usize,
     state_count: usize,
     ports: Vec<PortBinding>,
+    /// Immutable flat port layout, including repeated aliases in port order.
+    across_indices: Vec<usize>,
     /// Signal inputs: indices of the producing signal unknowns.
     signals_in: Vec<usize>,
     /// Signal outputs: unknown indices (rows share the index space).
@@ -132,11 +144,9 @@ impl Slot {
         b.across_rates.clear();
         b.across.reserve(lanes);
         b.across_rates.reserve(lanes);
-        for binding in &self.ports {
-            for index in binding.lane_indices() {
-                b.across.push(x[index]);
-                b.across_rates.push(rate[index]);
-            }
+        for &index in &self.across_indices {
+            b.across.push(x[index]);
+            b.across_rates.push(rate[index]);
         }
         b.through.clear();
         b.through.resize(lanes, 0.0);
@@ -341,10 +351,13 @@ impl Island {
         let noise = self.noise.lock().unwrap();
         // Signal producers first, in order (they write `x`); the rest have
         // no ordering constraint and, on a large island, run in parallel.
-        let (producers, rest): (Vec<usize>, Vec<usize>) = self.eval_order.iter().copied().partition(|k| !self.slots[*k].signals_out.is_empty());
+        let (producers, _rest): (Vec<usize>, Vec<usize>) = self.eval_order.iter().copied().partition(|k| !self.slots[*k].signals_out.is_empty());
         // Off unless asked for (`SIM_PARALLEL_RESIDUAL=1`): on the ladders
         // and robots measured so far the per-evaluation overhead ate the gain.
-        let parallel = rest.len() >= 64 && std::env::var_os("SIM_PARALLEL_RESIDUAL").is_some();
+        #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
+        let parallel = _rest.len() >= 64 && std::env::var_os("SIM_PARALLEL_RESIDUAL").is_some();
+        #[cfg(not(all(feature = "parallel", not(target_arch = "wasm32"))))]
+        let parallel = false;
         let order: Vec<usize> = if parallel { producers.clone() } else { self.eval_order.clone() };
         for &k in &order {
             let (slot, (_, behavior)) = (&self.slots[k], &self.behaviors[k]);
@@ -379,6 +392,7 @@ impl Island {
                 }
             }
         }
+        #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
         if parallel {
             use rayon::prelude::*;
             let draws_all = &noise.draws;
@@ -387,8 +401,8 @@ impl Island {
             let x_ref: &[f64] = x;
             // As many partial vectors as threads, not as elements: the
             // reduction is O(threads·n), not O(elements·n).
-            let chunk = rest.len().div_ceil(rayon::current_num_threads().max(1)).max(1);
-            let partials: Vec<(Vec<f64>, Vec<f64>)> = rest
+            let chunk = _rest.len().div_ceil(rayon::current_num_threads().max(1)).max(1);
+            let partials: Vec<(Vec<f64>, Vec<f64>)> = _rest
                 .par_chunks(chunk)
                 .map(|chunk| {
                     let mut out_part = vec![0.0; n];
@@ -472,10 +486,13 @@ impl Island {
         let draws_all: Vec<f64> = noise.draws.clone();
         let noise_step = noise.step;
         drop(noise);
+        #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
         use rayon::prelude::*;
-        let slot_parts: Vec<(Vec<(usize, usize, f64)>, Vec<(usize, usize, f64)>)> = (0..self.slots.len())
-            .into_par_iter()
-            .map(|k| {
+        #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
+        let slots = (0..self.slots.len()).into_par_iter();
+        #[cfg(not(all(feature = "parallel", not(target_arch = "wasm32"))))]
+        let slots = 0..self.slots.len();
+        let slot_parts: Vec<(Vec<(usize, usize, f64)>, Vec<(usize, usize, f64)>)> = slots.map(|k| {
                 let mut dx: Vec<(usize, usize, f64)> = Vec::new();
                 let mut drate: Vec<(usize, usize, f64)> = Vec::new();
                 let slot = &self.slots[k];
@@ -483,46 +500,22 @@ impl Island {
                 let mut b = Buffers::default();
                 let mut wrenches = vec![0.0; self.wrench_count];
                 let draws: &[f64] = draws_all.get(k * DRAWS_PER_SLOT..(k + 1) * DRAWS_PER_SLOT).unwrap_or(&[]);
-                let eval = |x: &[f64], rate: &[f64], out: &mut [f64], b: &mut Buffers, wrenches: &mut Vec<f64>| {
-                    out.iter_mut().for_each(|v| *v = 0.0);
-                    wrenches.iter_mut().for_each(|v| *v = 0.0);
-                    slot.gather(x, rate, b);
-                    {
-                        let mut ctx = Context::new(
-                            t,
-                            &x[slot.state_start..slot.state_start + slot.state_count],
-                            &rate[slot.state_start..slot.state_start + slot.state_count],
-                            &slot.offsets,
-                            &slot.rate_map,
-                            &b.across,
-                            &b.across_rates,
-                            &b.signals,
-                            &mut b.state_residuals,
-                            &mut b.through,
-                            &mut b.signals_out,
-                        ).with_noise(draws, noise_step);
-                        behavior.residual(&mut ctx);
-                    }
-                    out[slot.state_start..slot.state_start + slot.state_count].copy_from_slice(&b.state_residuals);
-                    for (port, binding) in slot.ports.iter().enumerate() {
-                        binding.scatter(&b.through[slot.offsets[port]..slot.offsets[port + 1]], out, wrenches);
-                    }
-                    for (i, row) in wrench_rows.iter().enumerate() {
-                        out[*row] += wrenches[i];
-                    }
-                    for (j, index) in slot.signals_out.iter().enumerate() {
-                        out[*index] = x[*index] - b.signals_out[j];
-                    }
-                };
                 // Analytic first.
                 let mut local = LocalJacobian::default();
-                let knows = {
+                let (knows, knows_rates) = {
                     slot.gather(x, rate, &mut b);
                     let view = View { time: t, states: &x[slot.state_start..slot.state_start + slot.state_count], offsets: &slot.offsets, rate_map: &slot.rate_map, across: &b.across, across_rates: &b.across_rates, signals_in: &b.signals };
-                    behavior.jacobian(&view, &mut local)
+                    let rates=&rate[slot.state_start..slot.state_start + slot.state_count];
+                    let knows=behavior.jacobian_at(&view, rates, &mut local);
+                    let knows_rates=if knows {false} else {
+                        local.entries.clear();
+                        behavior.rate_jacobian_at(&view,rates,&mut local)
+                    };
+                    (knows,knows_rates)
                 };
-                if knows {
-                    sim_solve::profile::ANALYTIC_SLOTS.count(1);
+                if knows || knows_rates {
+                    if knows { sim_solve::profile::ANALYTIC_SLOTS.count(1); }
+                    else { sim_solve::profile::RATE_SLOTS.count(1); }
                     let lanes: Vec<Vec<usize>> = slot.ports.iter().map(|p| p.lane_indices()).collect();
                     let flat: Vec<usize> = lanes.iter().flatten().copied().collect();
                     for (output, input, value) in &local.entries {
@@ -558,51 +551,168 @@ impl Island {
                             Input::Signal(j) => dx.push((row, slot.signals_in[j], sign * value)),
                         }
                     }
-                    for index in &slot.signals_out {
-                        dx.push((*index, *index, 1.0));
+                    if knows {
+                        for index in &slot.signals_out {
+                            dx.push((*index, *index, 1.0));
+                        }
+                        return (dx, drate);
                     }
-                    return (dx, drate);
+                    // Rate-only hooks may share an implementation with a full
+                    // Jacobian. Ignore their state partials; FD below includes
+                    // state-dependent mass/capacity coefficients and signals.
+                    dx.clear();
                 }
-                sim_solve::profile::FD_SLOTS.count(1);
-                let mut inputs: Vec<usize> = (slot.state_start..slot.state_start + slot.state_count).collect();
-                for binding in &slot.ports {
-                    inputs.extend(binding.lane_indices());
+                // Replace only this behavior's own state-residual rows. Through
+                // rows may receive contributions from several behaviors and must
+                // never be suppressed by another component's partial hook.
+                local.entries.clear();
+                slot.gather(x, rate, &mut b);
+                let state_rows = behavior.state_row_jacobian_at(&slot.view(t, x, &b),
+                    &rate[slot.state_start..slot.state_start + slot.state_count], &mut local);
+                let mut supplied_state_rows = vec![false; slot.state_count];
+                for &row in &state_rows {
+                    assert!(row < slot.state_count && !supplied_state_rows[row],
+                        "state-row Jacobian must claim unique existing local rows");
+                    supplied_state_rows[row] = true;
                 }
-                inputs.extend(slot.signals_in.iter().copied());
-                inputs.extend(slot.signals_out.iter().copied());
-                inputs.sort_unstable();
-                inputs.dedup();
-                let mut base = vec![0.0; n];
-                let mut perturbed = vec![0.0; n];
-                let mut xp = x.to_vec();
-                let mut rp = rate.to_vec();
-                eval(x, rate, &mut base, &mut b, &mut wrenches);
-                for &col in &inputs {
-                    let rows = &self.sparsity.rows[col];
-                    let eps = 1.0e-6 * (1.0 + x[col].abs());
-                    xp[col] = x[col] + eps;
-                    eval(&xp, rate, &mut perturbed, &mut b, &mut wrenches);
-                    xp[col] = x[col];
-                    for &row in rows {
-                        let v = (perturbed[row] - base[row]) / eps;
-                        if v != 0.0 {
-                            dx.push((row, col, v));
+                if !state_rows.is_empty() {
+                    let lanes: Vec<Vec<usize>> = slot.ports.iter().map(|p| p.lane_indices()).collect();
+                    let flat: Vec<usize> = lanes.iter().flatten().copied().collect();
+                    for &(output, input, value) in &local.entries {
+                        let Output::State(row) = output else {
+                            panic!("state-row Jacobian can supply only local state outputs");
+                        };
+                        assert!(row < slot.state_count && supplied_state_rows[row],
+                            "state-row Jacobian entry must belong to a claimed row");
+                        let column = match input {
+                            Input::State(j) => Some(slot.state_start + j),
+                            Input::Across(port, lane) => Some(lanes[port][lane]),
+                            Input::Signal(j) => Some(slot.signals_in[j]),
+                            Input::AcrossRate(port, lane) => slot.rate_map
+                                .get(slot.offsets[port] + lane).copied().flatten().map(|i| flat[i]),
+                            Input::StateRate(_) | Input::AcrossDerivative(_, _) => None,
+                        };
+                        if let Some(column) = column {
+                            dx.push((slot.state_start + row, column, value));
                         }
                     }
-                    if !self.algebraic[col] {
-                        let eps = 1.0e-6 * (1.0 + rate[col].abs());
-                        rp[col] = rate[col] + eps;
-                        eval(x, &rp, &mut perturbed, &mut b, &mut wrenches);
-                        rp[col] = rate[col];
+                }
+                sim_solve::profile::FD_SLOTS.count(1);
+                let inputs = &slot.fd_columns;
+                let prepared = {
+                    // The analytic hook may inspect its view; gather again so
+                    // preparation sees the same unperturbed operating point.
+                    slot.gather(x, rate, &mut b);
+                    let view = slot.view(t, x, &b);
+                    behavior.prepare_linearization(&view, &rate[slot.state_start..slot.state_start + slot.state_count])
+                };
+                let eval = |x: &[f64], rate: &[f64], out: &mut [f64], b: &mut Buffers, wrenches: &mut Vec<f64>| {
+                    // Rows outside this slot's write set start and remain
+                    // zero. Avoid clearing the whole island on every probe.
+                    for &row in &slot.fd_written {out[row]=0.0;}
+                    wrenches.iter_mut().for_each(|v| *v = 0.0);
+                    slot.gather(x, rate, b);
+                    {
+                        let mut ctx = Context::new(
+                            t,
+                            &x[slot.state_start..slot.state_start + slot.state_count],
+                            &rate[slot.state_start..slot.state_start + slot.state_count],
+                            &slot.offsets,
+                            &slot.rate_map,
+                            &b.across,
+                            &b.across_rates,
+                            &b.signals,
+                            &mut b.state_residuals,
+                            &mut b.through,
+                            &mut b.signals_out,
+                        ).with_noise(draws, noise_step);
+                        match &prepared {
+                            Some(evaluator) => evaluator.residual(&mut ctx),
+                            None => behavior.residual(&mut ctx),
+                        }
+                    }
+                    out[slot.state_start..slot.state_start + slot.state_count].copy_from_slice(&b.state_residuals);
+                    for (port, binding) in slot.ports.iter().enumerate() {
+                        binding.scatter(&b.through[slot.offsets[port]..slot.offsets[port + 1]], out, wrenches);
+                    }
+                    for (i, row) in wrench_rows.iter().enumerate() {
+                        out[*row] += wrenches[i];
+                    }
+                    for (j, index) in slot.signals_out.iter().enumerate() {
+                        out[*index] = x[*index] - b.signals_out[j];
+                    }
+                };
+                let mut base = vec![0.0; n];
+                eval(x, rate, &mut base, &mut b, &mut wrenches);
+                sim_solve::profile::FD_RESIDUALS.count(1);
+                let differentiate = |columns: &[FdColumn]| {
+                    // Count in batches to avoid an atomic increment on every
+                    // worker probe. Each column evaluates x, and differential
+                    // columns additionally evaluate its rate perturbation.
+                    sim_solve::profile::FD_RESIDUALS.count((columns.len()
+                        + if knows_rates {0} else {columns.iter().filter(|c| !self.algebraic[c.index]).count()}) as u64);
+                    let mut dx = Vec::new();
+                    let mut drate = Vec::new();
+                    let mut perturbed = vec![0.0; n];
+                    let mut xp = x.to_vec();
+                    let mut rp = rate.to_vec();
+                    let mut b = Buffers::default();
+                    let mut wrenches = vec![0.0; self.wrench_count];
+                    for column in columns {
+                        let col=column.index;
+                        let rows=&column.rows;
+                        // Resolve sub-micrometre contact penetration without
+                        // stepping across the contact branch when differentiating.
+                        // Analytic behaviors still provide their exact derivatives.
+                        let eps = 1.0e-8 * (1.0 + x[col].abs());
+                        xp[col] = x[col] + eps;
+                        eval(&xp, rate, &mut perturbed, &mut b, &mut wrenches);
+                        xp[col] = x[col];
                         for &row in rows {
+                            if !state_rows.is_empty() && row >= slot.state_start
+                                && row < slot.state_start + slot.state_count
+                                && supplied_state_rows[row - slot.state_start] { continue; }
                             let v = (perturbed[row] - base[row]) / eps;
                             if v != 0.0 {
-                                drate.push((row, col, v));
+                                dx.push((row, col, v));
+                            }
+                        }
+                        if !knows_rates && !self.algebraic[col] {
+                            let eps = 1.0e-8 * (1.0 + rate[col].abs());
+                            rp[col] = rate[col] + eps;
+                            eval(x, &rp, &mut perturbed, &mut b, &mut wrenches);
+                            rp[col] = rate[col];
+                            for &row in rows {
+                                let v = (perturbed[row] - base[row]) / eps;
+                                if v != 0.0 {
+                                    drate.push((row, col, v));
+                                }
                             }
                         }
                     }
+                    (dx, drate)
+                };
+                // A large behavior (for example an articulated assembly) can
+                // dominate an entire island. Split its independent columns as
+                // well as the outer behavior list. Each chunk owns scratch
+                // buffers; indexed collection preserves serial triplet order.
+                // Fine batches limit imbalance between expensive and cacheable
+                // probes; small pools retain larger batches to amortize scratch.
+                // Small elements avoid task/buffer overhead. WASM and builds
+                // without `parallel` use precisely the same column arithmetic.
+                #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
+                if inputs.len() >= 32 && crate::derivative_worker_capacity() > 1 {
+                    let parts: Vec<_> = inputs.par_chunks(sim_core::linearization_batch_columns(crate::derivative_worker_capacity())).map(differentiate).collect();
+                    for (state, rates) in parts {
+                        dx.extend(state);
+                        drate.extend(rates);
+                    }
+                    return (dx, drate);
                 }
-                (dx, drate)
+                let (state,rates)=differentiate(&inputs);
+                dx.extend(state);
+                drate.extend(rates);
+                (dx,drate)
             })
             .collect();
         for (dx, drate) in slot_parts {
@@ -635,6 +745,21 @@ impl Island {
             let before = guards.len();
             behavior.guards(&slot.view(t, x, &b), guards);
             debug_assert_eq!(guards.len() - before, slot.guard_count, "guard count must be constant");
+        }
+    }
+
+    fn scheduled_events_full(&self, t: f64, x: &[f64], out: &mut Vec<(usize, f64)>) {
+        let rate = vec![0.0; x.len()];
+        let mut b = Buffers::default();
+        let mut own = Vec::new();
+        for (slot, (_, behavior)) in self.slots.iter().zip(&self.behaviors).filter(|(s, _)| s.guard_count > 0) {
+            slot.gather(x, &rate, &mut b);
+            own.clear();
+            behavior.scheduled_events(&slot.view(t, x, &b), &mut own);
+            for &(guard, deadline) in &own {
+                assert!(guard < slot.guard_count, "scheduled guard index must exist");
+                out.push((slot.guard_offset + guard, deadline));
+            }
         }
     }
 
@@ -1050,6 +1175,15 @@ impl System for Island {
         self.begin_step_full(h)
     }
 
+    fn scheduled_events(&self, t: f64, x: &[f64], events: &mut Vec<(usize, f64)>) {
+        let mut scratch = self.scratch.lock().unwrap_or_else(|p| p.into_inner());
+        let Scratch { xf, rf, full } = &mut *scratch;
+        full.clear();
+        full.resize(x.len(), 0.0);
+        self.expand_into(t, x, full, xf, rf);
+        self.scheduled_events_full(t, xf, events);
+    }
+
     fn seed_noise(&mut self, seed: u64) {
         self.seed_noise_full(seed)
     }
@@ -1164,7 +1298,7 @@ fn build_island(
             names.push((format!("{}.{}", model.objects[model.behaviors[*id].object].name, d.name), d.kind));
         }
         dimension += decls.len();
-        slots.push(Slot { behavior: *id, state_start: start, state_count: decls.len(), ports: Vec::new(), signals_in: Vec::new(), signals_out: Vec::new(), owned: Vec::new(), offsets: vec![0], rate_map: Vec::new(), thermal_ports: Vec::new(), guard_offset: 0, guard_count: 0 });
+        slots.push(Slot { behavior: *id, fd_written: Vec::new(), fd_columns: Vec::new(), state_start: start, state_count: decls.len(), ports: Vec::new(), across_indices: Vec::new(), signals_in: Vec::new(), signals_out: Vec::new(), owned: Vec::new(), offsets: vec![0], rate_map: Vec::new(), thermal_ports: Vec::new(), guard_offset: 0, guard_count: 0 });
     }
     let state_rows = dimension;
     // Providers: (port id, lane) → unknown index of the providing state.
@@ -1400,6 +1534,7 @@ fn build_island(
             }
         }
         slot.rate_map = rate_map;
+        slot.across_indices = slot.ports.iter().flat_map(PortBinding::lane_indices).collect();
         // Count guards once at the initial state.
         let mut b = Buffers::default();
         slot.gather(&initial, &vec![0.0; initial.len()], &mut b);
@@ -1416,7 +1551,7 @@ fn build_island(
     }
     // Sparsity: each unknown a behavior touches can affect every row it writes.
     let mut rows: Vec<Vec<usize>> = vec![Vec::new(); dimension];
-    for slot in &slots {
+    for slot in &mut slots {
         let mut touched: Vec<usize> = (slot.state_start..slot.state_start + slot.state_count).collect();
         let mut written: Vec<usize> = touched.clone();
         for binding in &slot.ports {
@@ -1426,6 +1561,10 @@ fn build_island(
         touched.extend(slot.signals_in.iter().copied());
         touched.extend(slot.signals_out.iter().copied());
         written.extend(slot.signals_out.iter().copied());
+        slot.fd_written=written.clone();
+        slot.fd_written.sort_unstable();slot.fd_written.dedup();
+        let mut inputs=touched.clone();inputs.sort_unstable();inputs.dedup();
+        slot.fd_columns=inputs.into_iter().map(|index|FdColumn {index,rows:Vec::new()}).collect();
         for column in &touched {
             for row in &written {
                 if !rows[*column].contains(row) {
@@ -1439,6 +1578,14 @@ fn build_island(
             if !rows[column].contains(lane) {
                 rows[column].push(*lane);
             }
+        }
+    }
+    // Filter the existing global row order rather than sorting local rows:
+    // preserving triplet order also preserves downstream summation order.
+    for slot in &mut slots {
+        for column in &mut slot.fd_columns {
+            column.rows=rows[column.index].iter().copied()
+                .filter(|r|slot.fd_written.binary_search(r).is_ok()).collect();
         }
     }
     let mut island = Island {
@@ -1547,4 +1694,152 @@ fn node_initial(model: &ModelWorld, connection: &CompiledConnection, lane_index:
         }
     }
     Ok(selected.map(|(_, value)| value))
+}
+
+#[cfg(test)]
+mod local_fd_tests {
+    use super::*;
+    use sim_domain_multibody::contact as body;
+    use sim_domain_rotational::elements as rot;
+    use sim_domain_sensing as sense;
+
+    #[test]
+    fn signal_balance_derivatives_preserve_rounding_and_feedback() {
+        use sim_core::{signal_in, signal_out, BehaviorDescriptor};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        static CALLS: AtomicUsize = AtomicUsize::new(0);
+        struct Outputs { feedback: bool }
+        impl Behavior for Outputs {
+            fn states(&self) -> Vec<StateDeclaration> {
+                (0..64).map(|i| StateDeclaration::new(format!("x{i}"),
+                    QuantityKind::Dimensionless, 0.0)).collect()
+            }
+            fn residual(&self, ctx: &mut Context) {
+                CALLS.fetch_add(1, Ordering::Relaxed);
+                let feedback = if self.feedback { ctx.signal_in(0) } else { 0.0 };
+                for i in 0..64 {
+                    ctx.set_state_residual(i, ctx.state_rate(i) + ctx.state(i).sin() - feedback);
+                }
+                // The large output deliberately makes the numerical balance
+                // derivative differ from an exact identity at small unknowns.
+                ctx.set_signal(0, 1.0e16 + ctx.state(0));
+                for i in 1..32 {
+                    ctx.set_signal(i, ctx.state(i).cos() + 0.3 * feedback);
+                }
+            }
+        }
+        for feedback in [false, true] {
+            let mut registry = BehaviorRegistry::default();
+            let mut ports: Vec<_> = (0..32).map(|i|
+                signal_out(Box::leak(format!("out{i}").into_boxed_str()),
+                    QuantityKind::Dimensionless)).collect();
+            if feedback { ports.push(signal_in("feedback", QuantityKind::Dimensionless)); }
+            let factory: sim_core::Equations = if feedback {
+                |_| Ok(Box::new(Outputs { feedback: true }))
+            } else {
+                |_| Ok(Box::new(Outputs { feedback: false }))
+            };
+            registry.register(BehaviorDescriptor::new("test.outputs", "Outputs", ports, factory)).unwrap();
+            let mut model = ModelWorld::default();
+            let part = model.part(&registry, "outputs", "test.outputs", []).unwrap();
+            if feedback { model.connect([part.port("out1"), part.port("feedback")]); }
+            let mut runtime = crate::Runtime::new(model, &registry,
+                sim_dynamics::Integrator::implicit_midpoint()).unwrap();
+            let system = &mut runtime.islands[0].system;
+            let x: Vec<_> = (0..system.dimension).map(|i| 0.2 * (i as f64).sin()).collect();
+            let rates: Vec<_> = (0..system.dimension).map(|i| 0.1 * (i as f64).cos()).collect();
+            let evaluate = |system: &Island| {
+                CALLS.store(0, Ordering::Relaxed);
+                let mut result = JacobianParts::default();
+                assert!(system.jacobian_full(0.2, &x, &rates, &mut result));
+                (result.d_dx, result.d_drate, CALLS.load(Ordering::Relaxed))
+            };
+            // Independent full-residual finite differences: do not reuse the
+            // compiler's local probe or output-balance shortcuts as reference.
+            CALLS.store(0, Ordering::Relaxed);
+            let mut base = vec![0.0; system.dimension];
+            system.residual_full(0.2, &x, &rates, &mut base);
+            let mut expected = JacobianParts::default();
+            for col in 0..system.dimension {
+                for rate_probe in [false, true] {
+                    if rate_probe && system.algebraic[col] { continue; }
+                    let mut xp = x.clone();
+                    let mut rp = rates.clone();
+                    let value = if rate_probe { rates[col] } else { x[col] };
+                    let eps = 1.0e-8 * (1.0 + value.abs());
+                    if rate_probe { rp[col] += eps; } else { xp[col] += eps; }
+                    let mut perturbed = vec![0.0; system.dimension];
+                    system.residual_full(0.2, &xp, &rp, &mut perturbed);
+                    for &row in &system.sparsity.rows[col] {
+                        let v = (perturbed[row] - base[row]) / eps;
+                        if v != 0.0 {
+                            if rate_probe { expected.d_drate.push((row,col,v)); }
+                            else { expected.d_dx.push((row,col,v)); }
+                        }
+                    }
+                }
+            }
+            let reference = (expected.d_dx, expected.d_drate, CALLS.load(Ordering::Relaxed));
+            let check = |actual: (Vec<_>, Vec<_>, usize)| {
+                assert_eq!(actual.0, reference.0);
+                assert_eq!(actual.1, reference.1);
+                assert!(actual.2 <= reference.2);
+            };
+            check(evaluate(system));
+            let first = system.slots[0].signals_out[0];
+            assert!(!reference.0.iter().any(|&(r,c,_)| r == first && c == first),
+                "fixture must distinguish rounded numerical derivative from exact identity");
+            #[cfg(all(feature="parallel",not(target_arch="wasm32")))]
+            for workers in [1,2,4,8,16] {
+                check(rayon::ThreadPoolBuilder::new().num_threads(workers).build().unwrap()
+                    .install(|| evaluate(system)));
+            }
+        }
+    }
+
+    #[test]
+    fn local_probe_rows_match_global_bookkeeping_with_owned_and_provided_lanes() {
+        let mut registry=BehaviorRegistry::default();
+        body::register(&mut registry).unwrap();rot::register(&mut registry).unwrap();
+        sense::register(&mut registry).unwrap();
+        let mut model=ModelWorld::default();
+        let rigid=model.part(&registry,"body",body::PLANAR_RIGID_BODY,[("mass",1.0),("inertia",0.1)]).unwrap();
+        let imu=model.part(&registry,"imu",sense::IMU,[("period",0.001),("bandwidth",20.0)]).unwrap();
+        let wheel=model.part(&registry,"wheel",body::WHEEL,[("radius",0.1),("inertia",0.2)]).unwrap();
+        let rotor=model.part(&registry,"rotor",rot::ANGLE_SENSOR,[]).unwrap();
+        let mut frames=vec![rigid.port("frame"),imu.port("frame"),wheel.port("frame")];
+        for i in 0..12 {
+            let drag=model.part(&registry,&format!("drag {i}"),body::DRAG,[("coefficient",0.02)]).unwrap();
+            frames.push(drag.port("frame"));
+        }
+        model.connect(frames);model.connect([wheel.port("axle"),rotor.port("shaft")]);
+        let mut runtime=crate::Runtime::new(model,&registry,sim_dynamics::Integrator::implicit_midpoint()).unwrap();
+        assert_eq!(runtime.islands.len(),1);
+        let system=&mut runtime.islands[0].system;
+        let x:Vec<_>=system.full_of.iter().enumerate().map(|(j,i)|system.initial[*i]+0.02*(j as f64+0.3).sin()).collect();
+        let rate:Vec<_>=(0..x.len()).map(|i|0.2*(i as f64+0.7).cos()).collect();
+        let original=system.slots.clone();
+        let global_rows:usize=system.slots.iter().flat_map(|s|&s.fd_columns).map(|c|system.sparsity.rows[c.index].len()).sum();
+        let local_rows:usize=system.slots.iter().flat_map(|s|&s.fd_columns).map(|c|c.rows.len()).sum();
+        assert!(local_rows<global_rows,"fixture must exercise shared-column row pollution");
+        let evaluate=|system:&Island| {
+            let mut out=JacobianParts::default();assert!(system.jacobian(0.2,&x,&rate,&mut out));
+            (out.d_dx,out.d_drate)
+        };
+        let local=evaluate(system);
+        // Reproduce the former full-buffer clearing and global row traversal
+        // through the same arithmetic, including rows this slot never writes.
+        for slot in &mut system.slots {
+            slot.fd_written=(0..system.dimension).collect();
+            for column in &mut slot.fd_columns {column.rows=system.sparsity.rows[column.index].clone();}
+        }
+        assert_eq!(local,evaluate(system));
+        system.slots=original;
+        #[cfg(all(feature="parallel",not(target_arch="wasm32")))]
+        for workers in [1,2,4,8,16] {
+            let result=rayon::ThreadPoolBuilder::new().num_threads(workers).build().unwrap()
+                .install(||evaluate(system));
+            assert_eq!(local,result,"workers={workers}");
+        }
+    }
 }

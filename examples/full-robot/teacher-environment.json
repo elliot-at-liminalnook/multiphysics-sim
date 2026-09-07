@@ -1,0 +1,514 @@
+{
+  "version": 1,
+  "observation_source": "ideal_runtime_teacher_only",
+  "period_s": 0.02,
+  "observations": [
+    {
+      "name": "motor.0.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.0.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.0.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.-Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.0.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "-Y · Hip swing (belt) · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.1.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.1.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.1.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.-Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.1.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "-Y · Worm drive · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.2.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.2.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.2.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.-Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.2.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "-Y · Foot slide · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.3.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.3.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.3.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.+X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.3.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "+X · Hip swing (belt) · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.4.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.4.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.4.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.+X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.4.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "+X · Worm drive · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.5.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.5.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.5.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.+X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.5.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "+X · Foot slide · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.6.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.6.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.6.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.+Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.6.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "+Y · Hip swing (belt) · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.7.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.7.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.7.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.+Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.7.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "+Y · Worm drive · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.8.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.8.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.8.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.+Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.8.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "+Y · Foot slide · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.9.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.9.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.9.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.-X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.9.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "-X · Hip swing (belt) · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.10.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.10.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.10.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.-X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.10.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "-X · Worm drive · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.11.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.11.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.11.reference",
+      "source": {
+        "kind": "reference_position",
+        "coordinate": "joint.-X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.11.current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "-X · Foot slide · HX-30HM"
+      }
+    },
+    {
+      "name": "body.position.x",
+      "source": {
+        "kind": "body_position",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "body.velocity.x",
+      "source": {
+        "kind": "body_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "body.position.y",
+      "source": {
+        "kind": "body_position",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "body.velocity.y",
+      "source": {
+        "kind": "body_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "body.position.z",
+      "source": {
+        "kind": "body_position",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "body.velocity.z",
+      "source": {
+        "kind": "body_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "z"
+      }
+    }
+  ],
+  "rewards": [
+    {
+      "name": "motor.0.tracking",
+      "observation": "motor.0.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.0.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.1.tracking",
+      "observation": "motor.1.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.1.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.2.tracking",
+      "observation": "motor.2.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.2.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.3.tracking",
+      "observation": "motor.3.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.3.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.4.tracking",
+      "observation": "motor.4.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.4.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.5.tracking",
+      "observation": "motor.5.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.5.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.6.tracking",
+      "observation": "motor.6.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.6.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.7.tracking",
+      "observation": "motor.7.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.7.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.8.tracking",
+      "observation": "motor.8.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.8.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.9.tracking",
+      "observation": "motor.9.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.9.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.10.tracking",
+      "observation": "motor.10.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.10.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    },
+    {
+      "name": "motor.11.tracking",
+      "observation": "motor.11.angle",
+      "target": {
+        "kind": "observation",
+        "name": "motor.11.reference"
+      },
+      "scale": 0.05,
+      "weight_per_s": 0.08333333333333333
+    }
+  ],
+  "termination_bounds": []
+}

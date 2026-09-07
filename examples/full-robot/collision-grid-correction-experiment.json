@@ -1,0 +1,14 @@
+{
+  "cad": "examples/full-robot/baseline/robot.rcad",
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "scene": "runs/full-robot/learning/catalog-stall-consistent.scene.json",
+  "scene_sha256": "932306374b8db9ddcdfce1ea05d21dad551c7c6e3395a3bde5c969db74fe80f4",
+  "links": [
+    "-Y | Thigh sector gear",
+    "+X | Thigh sector gear",
+    "+Y | Thigh sector gear",
+    "-X | Thigh sector gear"
+  ],
+  "algorithm": "triangle_aabb_exact_v1",
+  "tolerance_mm": 0.15
+}

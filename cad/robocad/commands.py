@@ -1015,6 +1015,23 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
         self.stack.push(AddNodes("Cable", [node]))
         return node.id
 
+    def save_motion(self, program: dict) -> dict:
+        """Save or replace a named, unit-aware CAD motion pattern (undoable)."""
+        from .motion import validate_program
+        from copy import deepcopy
+        p = validate_program(self.doc, program)
+        programs = deepcopy(self.doc.robot_settings.get('motion_programs', {}))
+        programs[p['name']] = p
+        self.set_robot_setting('motion_programs', programs)
+        return p
+
+    def delete_motion(self, name: str):
+        from copy import deepcopy
+        programs = deepcopy(self.doc.robot_settings.get('motion_programs', {}))
+        if name not in programs: raise KernelError('Motion pattern not found')
+        del programs[name]
+        self.set_robot_setting('motion_programs', programs)
+
     def set_robot_setting(self, key: str, value) -> dict:
         """Document-level robot settings: battery, control, uncertainty, world, identification."""
         previous = self.doc.robot_settings.get(key)
@@ -1070,8 +1087,9 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
         return self.doc.materials[material_id].props()
 
     def set_joint_physics(self, joint_id: str, **overrides) -> dict:
-        """Override inferred joint physics (SI): clearance, backlash, friction,
+        """Override joint physics (SI): clearance, explicit drive_backlash, friction,
         stiffness, or flex_patch_radius (m; None restores the inferred patch).
+        Legacy scalar backlash edits declare an estimated drive gap.
         """
         n = self.doc.nodes[joint_id]
         if n.kind != "joint":
@@ -1087,12 +1105,38 @@ class Ops(AnnotationOps, ReferenceOps, SavedViewOps):
                 phys[k] = {**phys[k], **v}
             else:
                 phys[k] = v
+        from .physical import validate_drive_backlash, legacy_drive_backlash_override
+        if 'backlash' in overrides and 'drive_backlash' not in overrides:
+            phys['drive_backlash'] = legacy_drive_backlash_override(overrides['backlash'])
+        if 'drive_backlash' in phys:
+            validate_drive_backlash(phys['drive_backlash'])
         meta["physics"] = phys
-        self.stack.push(SetAttributes("Joint physics", {joint_id: {"robot": meta}}))
+        # A new authored value must not be silently replaced by an older fit.
+        # Retain that evidence and restore it with the same undo operation.
+        from copy import deepcopy
+        previous_identification = deepcopy(self.doc.robot_settings.get('identification', {}))
+        fitted = previous_identification.get(n.name, {})
+        if ('drive_backlash' in overrides or 'backlash' in overrides) and 'backlash' in fitted:
+            updated_identification = deepcopy(previous_identification)
+            entry = updated_identification[n.name]
+            entry.setdefault('superseded_backlash', []).append({'width_rad': entry.pop('backlash'),
+                'source_log': entry.get('source_log'), 'fitted_at': entry.get('fitted_at')})
+            class EditJointPhysics(SetAttributes):
+                def do(self, doc):
+                    doc.robot_settings['identification'] = deepcopy(updated_identification)
+                    return super().do(doc)
+
+                def undo(self, doc):
+                    doc.robot_settings['identification'] = deepcopy(previous_identification)
+                    super().undo(doc)
+            command = EditJointPhysics('Joint physics', {joint_id: {'robot': meta}})
+        else:
+            command = SetAttributes('Joint physics', {joint_id: {'robot': meta}})
+        self.stack.push(command)
         return phys
 
     def physical(self, path: Optional[str] = None, flex: bool = True) -> dict:
-        """The v3 physical model (written to `path` when given)."""
+        """The v4 physical model (written to `path` when given)."""
         from .physical import export_physical_model
 
         return export_physical_model(self.doc, path, flex=flex)

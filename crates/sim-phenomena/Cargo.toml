@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+sim-runtime = { path = "../sim-runtime" }
 clap.workspace = true
 nalgebra.workspace = true
 serde.workspace = true

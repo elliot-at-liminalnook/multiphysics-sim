@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "observation_source": "ideal_runtime_teacher_only",
+  "period_s": 0.02,
+  "observations": [
+    {
+      "name": "angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.pivot"
+      }
+    },
+    {
+      "name": "speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.pivot"
+      }
+    },
+    {
+      "name": "current",
+      "source": {
+        "kind": "motor_current",
+        "motor": "servo"
+      }
+    }
+  ],
+  "rewards": [
+    {
+      "name": "tracking",
+      "observation": "angle",
+      "target": {
+        "kind": "constant",
+        "value": 0.3
+      },
+      "scale": 0.2,
+      "weight_per_s": 2
+    }
+  ],
+  "termination_bounds": []
+}

@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "scope": "Experimental reduced QR and motor coupling; complete goal remains active and unachieved",
+  "cases": [
+    {
+      "name": "mechanical-implicit-no-contact-qr",
+      "path": "runs/full-robot/learning/mechanical-implicit-no-contact-qr.json",
+      "sha256": "3271d57fe1aef3784d97377af244e687d44c41ddea5d13134a567e5087374f83",
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "stepping_wall_s": 5.559745908999997,
+      "timing_scope": "single diagnostic run, not a performance promotion; trace adds overhead where enabled"
+    },
+    {
+      "name": "mechanical-implicit-contact-qr",
+      "path": "runs/full-robot/learning/mechanical-implicit-contact-qr.json",
+      "sha256": "d2b5c9d9b788cd36c6d6ed22e63e8cf6db092341c26b29ff8856e699117a35d4",
+      "completed": false,
+      "error": "step 75: implicit mechanical solve: Newton did not converge after 40 iterations; residual=5.151962409149904e0; last rejected endpoint: None",
+      "simulated_s": 0.0375,
+      "stepping_wall_s": 10.938165041999998,
+      "timing_scope": "single diagnostic run, not a performance promotion; trace adds overhead where enabled"
+    },
+    {
+      "name": "mechanical-implicit-contact-qr-refined",
+      "path": "runs/full-robot/learning/mechanical-implicit-contact-qr-refined.json",
+      "sha256": "f1761892abca89c3653ef5cf9203e3bd73163eeb49bcd324f6fa346c6368c9a4",
+      "completed": false,
+      "error": "step 260: implicit mechanical solve: Newton did not converge after 40 iterations; residual=7.734714557618996e-3; last rejected endpoint: None",
+      "simulated_s": 0.065,
+      "stepping_wall_s": 25.19987124799999,
+      "timing_scope": "single diagnostic run, not a performance promotion; trace adds overhead where enabled"
+    },
+    {
+      "name": "mechanical-motor-boundary",
+      "path": "runs/full-robot/learning/mechanical-motor-boundary.json",
+      "sha256": "35c995d05db420d729395066045fd6ca9f088082f8ccaf55923ad4158dcfd6fe",
+      "completed": false,
+      "error": "step 26: implicit mechanical solve: Newton did not converge after 40 iterations; residual=4.897037631301579e-2; last rejected endpoint: None",
+      "simulated_s": 0.013000000000000001,
+      "stepping_wall_s": 8.961454901,
+      "timing_scope": "single diagnostic run, not a performance promotion; trace adds overhead where enabled"
+    },
+    {
+      "name": "mechanical-motor-boundary-refined",
+      "path": "runs/full-robot/learning/mechanical-motor-boundary-refined.json",
+      "sha256": "293e93165527e2077cb385a305aae6b0443deb99a9cbb8c70e7f8394ffb5f97b",
+      "completed": false,
+      "error": "step 67: implicit mechanical solve: Newton did not converge after 27 iterations; residual=1.5302916703859894e-3; last rejected endpoint: None",
+      "simulated_s": 0.01675,
+      "stepping_wall_s": 10.145316893,
+      "timing_scope": "single diagnostic run, not a performance promotion; trace adds overhead where enabled"
+    },
+    {
+      "name": "mechanical-motor-boundary-trials",
+      "path": "runs/full-robot/learning/mechanical-motor-boundary-trials.json",
+      "sha256": "9b592e5cb6a395a5dcb00034e4e3bf9759de31d1d68b2d4229664edecd6f5b3d",
+      "completed": false,
+      "error": "step 26: implicit mechanical solve: Newton did not converge after 40 iterations; residual=4.897037631301579e-2; last rejected endpoint: None",
+      "simulated_s": 0.013000000000000001,
+      "stepping_wall_s": 7.012953341999999,
+      "timing_scope": "single diagnostic run, not a performance promotion; trace adds overhead where enabled"
+    }
+  ],
+  "trial_summary": {
+    "source": "runs/full-robot/learning/mechanical-motor-boundary-trials.json",
+    "interpretation": "Observed endpoint probes across engagement; does not prove absence of a coupled root.",
+    "crossings": [
+      {
+        "dof": "joint.+X | Foot servo output",
+        "half_backlash_rad": 0.0006652428658690664,
+        "closest_opposite_modes": [
+          {
+            "trial": 72,
+            "gap_rad": 0.0006652418299799263,
+            "engaged": false,
+            "relative_speed_rad_s": 0.10603777351391043,
+            "torque_nm": 0.0005301888675695522
+          },
+          {
+            "trial": 71,
+            "gap_rad": 0.0006652463777782358,
+            "engaged": true,
+            "relative_speed_rad_s": 0.10604686911052931,
+            "torque_nm": 0.010604862506511402
+          }
+        ],
+        "gap_separation_rad": 4.547798309489405e-09,
+        "torque_change_nm": 0.01007467363894185
+      }
+    ]
+  },
+  "notes": [
+    "Worktree is broadly dirty; snapshots cover directly changed components, not a clean release checkout.",
+    "Early uncoupled outputs predate the auxiliary coupling refactor; final trial capture has unchanged committed motor/joint motion against the earlier motor-boundary capture.",
+    "Local raw outputs are ignored diagnostic evidence, not versioned golden trajectories.",
+    "Motor boundaries are explicitly shorted/isothermal; driver, battery, firmware, event and thermal-network integration remains incomplete."
+  ],
+  "local_manifest": "runs/full-robot/learning/coupled-manifest.json",
+  "checks": {
+    "native_embedding_step_motor_tests": 17,
+    "no_default_embedding_step_motor_tests": 17,
+    "motor_jacobian_tests": 5,
+    "runtime_session_tests": 18,
+    "wasm_runtime_check": "passes; pre-existing unused rotor_speed warning"
+  }
+}

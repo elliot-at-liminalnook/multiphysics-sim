@@ -1,0 +1,1345 @@
+{
+  "milestone": "generic_auxiliary_condensation",
+  "promoted_default": false,
+  "training_model_accepted": false,
+  "scope": "Detailed equations, trial-local nonlinear auxiliary elimination, no assumed motor independence. Numerical equivalence, sampled task outcome and performance are separate. Timings include concurrent development work; no controlled speedup claim. Small browser fixture portability does not prove full-robot portability or hardware accuracy.",
+  "manifest": {
+    "scope": "Experimental nonlinear elimination of the complete auxiliary block. Same detailed motor equations, CAD, world, policy, timestep and outer tolerances as the corresponding reference. Inner solves use 100x tighter tolerances and verify original auxiliary residuals against the outer absolute floor. No promoted speedup or accuracy claim.",
+    "scene": "runs/full-robot/learning/point-feedback/scene.json",
+    "inputs": {
+      "runs/full-robot/learning/sample-reuse/final-refresh.base.config.json": "b659b0996fb0051ab1dda1d491c7c7a5ba0c12d0aa95b1934156c25fdcc67928",
+      "runs/full-robot/learning/sample-reuse/final-refresh.full.config.json": "8de8266d6c114a8a149313e41e739e45743c9d36ab9dea08610e54d4ac0a30d9",
+      "runs/full-robot/learning/fast-motor/config.json": "e70c500c55dc2e11d326acdabbdabf49c28241f367d37555d09026d96d1cc18f",
+      "runs/full-robot/learning/point-feedback/scene.json": "ef3027a8228d8aa2e051b8d02a8742f1e988a82564496c08b51e41b487dea3fd",
+      "/Users/elliot/physics-simulator/examples/full-robot/prepare_auxiliary_condensation.mjs": "f729d1ef91559e403b3d532b1827ffab904d892b9b84904607b65c20d9d6953c"
+    },
+    "outputs": {
+      "base.config.json": "0b405566d8c3023a58d0f4781c1c20a677c7ad3b1bf279f6ae25589c9d894818",
+      "diagnostic.reference.config.json": "04a3af02790862f43f1c81e8e6502720c5949f06dd326f6964d1fcb816caf065",
+      "diagnostic.condensed.config.json": "38a09f9446e573b53b7878d53b84692fa698187048ed9190bf659976e1a0902f",
+      "refined.config.json": "9e04a29f2560b49be1c4264b35586e729e8e89a01c6ce3b3ebb6c22bfa4f32ca",
+      "coarse.config.json": "c1c9a49ed34b6004a03403d38d98221d9806e1e0e418c39242d491d3f545d0c2"
+    },
+    "diagnostic_scope": "The 0.03 s prefixes deliberately end before the motion program finishes; they are event/subdivision diagnostics, never complete-motion acceptance cases.",
+    "comparisons": {
+      "base": "runs/full-robot/learning/sample-reuse/final-refresh.base.execution.json",
+      "refined": "runs/full-robot/learning/sample-reuse/final-refresh.full.execution.json",
+      "coarse": "runs/full-robot/learning/fast-motor/detailed.execution.json"
+    }
+  },
+  "cases": [
+    {
+      "name": "base",
+      "step_s": 0.00025,
+      "simulated_s": 2.8000000000000003,
+      "candidate_wall_s": 126.28150115700005,
+      "reference_wall_s": 127.9457100029999,
+      "candidate_successful_trial_work": {
+        "successful_trial_auxiliary_evaluations": 9103560,
+        "successful_trial_auxiliary_newton_iterations": 1213584,
+        "successful_trial_auxiliary_solves": 145083,
+        "successful_trial_dynamics_cache_hits": 11754,
+        "successful_trial_dynamics_preparations": 133329,
+        "successful_trial_endpoint_evaluations": 145083,
+        "successful_trial_mechanical_cache_hits": 11754,
+        "successful_trial_mechanical_preparations": 133329,
+        "successful_trial_newton_iterations": 73259,
+        "successful_trials": 11754,
+        "successful_trials_with_reused_jacobian": 9538
+      },
+      "reference_successful_trial_work": {
+        "successful_trial_dynamics_cache_hits": 251298,
+        "successful_trial_dynamics_preparations": 223657,
+        "successful_trial_endpoint_evaluations": 474955,
+        "successful_trial_mechanical_cache_hits": 251298,
+        "successful_trial_mechanical_preparations": 223657,
+        "successful_trial_newton_iterations": 114695,
+        "successful_trials": 11738,
+        "successful_trials_with_reused_jacobian": 10675
+      },
+      "maximum_marker_difference_m": 0.0004058295290951109,
+      "maximum_contact_impulse_difference_ns": 0.16266974222039915,
+      "maximum_event_time_difference_s": 0.13629111658716608,
+      "event_counts_match": false,
+      "sampled_contact_pair_mismatches": 1,
+      "maximum_sampled_differences": {
+        "current_a": 0.1637796808502464,
+        "gear_speed_rad_s": 0.2893612730775801,
+        "heating_w": 0.3834097832010721,
+        "joint_positions": 0.0028218990013714196,
+        "joint_velocities": 0.4437978599763551,
+        "motor_states": 1,
+        "motor_voltage_v": 1.1767941203689092,
+        "power_difference_w": 0.005181115713796869,
+        "servo_commands": 0.10628763001699981,
+        "servo_states": 0.25953789755029943,
+        "shaft_torque_nm": 0.16613495149596966,
+        "supply_current_a": 0.0358727259098183
+      },
+      "strict_numerical_equivalence_passed": false,
+      "original_closure_maxima": {
+        "1": {
+          "position": 7.686993402922226e-17,
+          "velocity": 1.1102230246251565e-16,
+          "acceleration": 1.0658141036401503e-14
+        },
+        "m": {
+          "position": 9.643674747650266e-13,
+          "velocity": 1.1340754724198376e-15,
+          "acceleration": 9.525713551283843e-14
+        },
+        "rad": {
+          "position": 5.551115123125783e-17,
+          "velocity": 4.2327252813834093e-16,
+          "acceleration": 5.258016244624741e-13
+        }
+      },
+      "lift": {
+        "failed_clearance_samples": 51,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 40,
+        "longest_qualifying_span_s": 0.19999999999999996,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032111541252725084,
+        "qualifying_start_s": 1.23,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "maximum_auxiliary_residual": 3.60961260881254e-14,
+      "accepted_segments": 11282,
+      "rejected_trials": 2,
+      "rejection_details": [
+        {
+          "nominal_step": 5459,
+          "attempted_step_s": 0.000001182199266924755,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 17: residual=NaN, candidate=6.055861160947283e-2\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 31 iterations; residual=3.462941738918701e-16; component error: None; trial reduced velocity [0.002800345126634318, 0.0022583582567510608, 0.0010874771380395291, -0.004462787381201295, 0.0037583184574214354, -0.0007388057449980718, -0.12818212655242064, -0.0012797969182322328, 0.37135493975658845, -0.0006154929237578092, 0.009777539615840596, -0.010723755905704216, 0.0061049552895862435, -0.001507667405304289, -0.004496723420821277, 0.0021658224775749327, -0.01799021498708198, 0.06055861160947283]\")",
+          "start_time_s": 1.364998817800733
+        },
+        {
+          "nominal_step": 5459,
+          "attempted_step_s": 5.910996334623775e-7,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 17: residual=NaN, candidate=6.055962415762731e-2\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 16 iterations; residual=2.7755575615628914e-17; component error: None; trial reduced velocity [0.002800350075694516, 0.0022583931518742623, 0.0010874828755033383, -0.004462738390505182, 0.00375854673951228, -0.0007382972728708838, -0.1281831875563532, -0.001280690890892318, 0.37135932490060997, -0.0006166193717001774, 0.00977634561611135, -0.010724037142305954, 0.006103701017269583, -0.0015067620714206663, -0.004496782657805293, 0.002165177184427532, -0.017989169106915052, 0.06055962415762731]\")",
+          "start_time_s": 1.364998817800733
+        }
+      ],
+      "profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 156883,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1287794,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 160969,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 40,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 1451642,
+          "name": "residual evaluations",
+          "seconds": 81.322137573
+        },
+        {
+          "calls": 160969,
+          "name": "jacobian assembly",
+          "seconds": 85.271051958
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 160969,
+          "name": "factorisation",
+          "seconds": 2.5190112150000004
+        },
+        {
+          "calls": 160969,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.333365972
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1287787,
+          "name": "back-substitution",
+          "seconds": 1.7316814020000002
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 147371,
+          "name": "embedded closure mapping",
+          "seconds": 35.706660209
+        },
+        {
+          "calls": 133371,
+          "name": "embedded contact history",
+          "seconds": 14.779885502
+        },
+        {
+          "calls": 144569,
+          "name": "embedded dynamics preparation",
+          "seconds": 16.492303961
+        },
+        {
+          "calls": 156323,
+          "name": "embedded applied force solve",
+          "seconds": 0.5604133840000001
+        },
+        {
+          "calls": 9109476,
+          "name": "embedded component equations",
+          "seconds": 45.19801539
+        },
+        {
+          "calls": 381319,
+          "name": "  closure Jacobian",
+          "seconds": 11.174175870000001
+        },
+        {
+          "calls": 381319,
+          "name": "  closure factorization",
+          "seconds": 11.725612163000001
+        },
+        {
+          "calls": 381319,
+          "name": "    closure SVD",
+          "seconds": 7.550765602
+        }
+      ]
+    },
+    {
+      "name": "refined",
+      "step_s": 0.000125,
+      "simulated_s": 2.8000000000000003,
+      "candidate_wall_s": 216.54970383300005,
+      "reference_wall_s": 205.29768896299854,
+      "candidate_successful_trial_work": {
+        "successful_trial_auxiliary_evaluations": 14381041,
+        "successful_trial_auxiliary_newton_iterations": 1724496,
+        "successful_trial_auxiliary_solves": 235079,
+        "successful_trial_dynamics_cache_hits": 22917,
+        "successful_trial_dynamics_preparations": 212162,
+        "successful_trial_endpoint_evaluations": 235079,
+        "successful_trial_mechanical_cache_hits": 22917,
+        "successful_trial_mechanical_preparations": 212162,
+        "successful_trial_newton_iterations": 119206,
+        "successful_trials": 22917,
+        "successful_trials_with_reused_jacobian": 19246
+      },
+      "reference_successful_trial_work": {
+        "successful_trial_dynamics_cache_hits": 367540,
+        "successful_trial_dynamics_preparations": 357253,
+        "successful_trial_endpoint_evaluations": 724793,
+        "successful_trial_mechanical_cache_hits": 367540,
+        "successful_trial_mechanical_preparations": 357253,
+        "successful_trial_newton_iterations": 194738,
+        "successful_trials": 22926,
+        "successful_trials_with_reused_jacobian": 21004
+      },
+      "maximum_marker_difference_m": 4.350510149376226e-8,
+      "maximum_contact_impulse_difference_ns": 0.00010326518382174714,
+      "maximum_event_time_difference_s": 0.0000021755152928015775,
+      "event_counts_match": true,
+      "sampled_contact_pair_mismatches": 0,
+      "maximum_sampled_differences": {
+        "current_a": 0.04099562173456295,
+        "gear_speed_rad_s": 0.013308255862709546,
+        "heating_w": 0.12647407769643648,
+        "joint_positions": 0.000006295135664635687,
+        "joint_velocities": 0.0018752974889701705,
+        "motor_states": 0.04099562173456295,
+        "motor_voltage_v": 0.001980142460784373,
+        "power_difference_w": 0.0017046065975895308,
+        "servo_commands": 0.00011240766151658643,
+        "servo_states": 0.0005551049600085838,
+        "shaft_torque_nm": 0.0016639407109067528,
+        "supply_current_a": 0.006145458308333754
+      },
+      "strict_numerical_equivalence_passed": false,
+      "original_closure_maxima": {
+        "1": {
+          "position": 5.746271514173174e-17,
+          "velocity": 1.3877787807814457e-16,
+          "acceleration": 7.105427357601002e-15
+        },
+        "m": {
+          "position": 8.303358001171546e-13,
+          "velocity": 4.020059025250378e-15,
+          "acceleration": 5.990624662999267e-13
+        },
+        "rad": {
+          "position": 1.249000902703301e-16,
+          "velocity": 2.396086801192965e-16,
+          "acceleration": 2.1088686352754848e-13
+        }
+      },
+      "lift": {
+        "failed_clearance_samples": 50,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.20999999999999996,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032032764362429633,
+        "qualifying_start_s": 1.23,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "maximum_auxiliary_residual": 3.988476215965875e-14,
+      "accepted_segments": 22482,
+      "rejected_trials": 3,
+      "rejection_details": [
+        {
+          "nominal_step": 171,
+          "attempted_step_s": 5.31511519515776e-7,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 17: residual=NaN, candidate=7.342975635719722e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 24 iterations; residual=1.5178830414797062e-16; component error: None; trial reduced velocity [-0.002294175521646865, 0.00021263415882930955, 0.011401616759174112, 0.0011037707910502054, 0.033470008672471324, -0.000246892448186477, 0.0740436969201193, -0.8451253789109818, 0.7061741734121135, -0.0006159428543821631, -0.9452303736674865, 0.7619054871535391, -0.0732740145647418, -0.7847235283429529, 0.6853896136252451, 0.0014188707787654196, -0.4948446417273207, 0.7342975635719722]\")",
+          "start_time_s": 0.021499468488480486
+        },
+        {
+          "nominal_step": 176,
+          "attempted_step_s": 0.0001250000000000001,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 10: residual=-6.496364315287169e-3, candidate=-8.074985705758858e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 40 iterations; residual=2.082535532910157e-10; component error: None; trial reduced velocity [-0.0018371269212636657, 0.00018903222807087957, 0.01723269942171581, 0.0012642416409526713, 0.021653050516219515, -0.0002760150422709073, 0.06295261176913025, -0.8710972227636795, 0.8490042489165222, -0.0007551989413532681, -0.8074985705758858, 0.9435504936404675, -0.062125762131100846, -0.8077178011385041, 0.8273139531574413, 0.0016584452003075988, -0.5973640000840698, 0.8477357879188188]\")",
+          "start_time_s": 0.022
+        },
+        {
+          "nominal_step": 12158,
+          "attempted_step_s": 0.0000456913836728301,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 8: residual=3.959982375834781e-3, candidate=-3.6335529706489555e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 40 iterations; residual=6.106226635438361e-16; component error: None; trial reduced velocity [-0.0012377169578435233, -0.003042259435842769, -0.0011369417213395346, 0.0322039353046699, -0.007258873869088575, -0.01892205594034494, -0.08691437138146346, -0.10684163243019672, -0.36335623861834926, -0.01838142169534329, 0.011311192280220523, -0.005353769058919377, 0.032721344708543515, 0.1935177680195919, 0.06175306197764638, 0.0764770647072019, -0.0352058916464795, -0.06288368077435051]\")",
+          "start_time_s": 1.519829308616327
+        }
+      ],
+      "profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 258385,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1858112,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 263686,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 225,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 2124370,
+          "name": "residual evaluations",
+          "seconds": 143.625006085
+        },
+        {
+          "calls": 263686,
+          "name": "jacobian assembly",
+          "seconds": 140.131156548
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 263685,
+          "name": "factorisation",
+          "seconds": 4.518591429000001
+        },
+        {
+          "calls": 263685,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.602722132
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1858041,
+          "name": "back-substitution",
+          "seconds": 2.7296982570000003
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 237747,
+          "name": "embedded closure mapping",
+          "seconds": 60.43285456
+        },
+        {
+          "calls": 212547,
+          "name": "embedded contact history",
+          "seconds": 25.530354177000003
+        },
+        {
+          "calls": 234883,
+          "name": "embedded dynamics preparation",
+          "seconds": 29.000619774
+        },
+        {
+          "calls": 257800,
+          "name": "embedded applied force solve",
+          "seconds": 1.026051304
+        },
+        {
+          "calls": 14687033,
+          "name": "embedded component equations",
+          "seconds": 77.66208237100001
+        },
+        {
+          "calls": 598297,
+          "name": "  closure Jacobian",
+          "seconds": 18.826768811
+        },
+        {
+          "calls": 598297,
+          "name": "  closure factorization",
+          "seconds": 19.710850717
+        },
+        {
+          "calls": 598297,
+          "name": "    closure SVD",
+          "seconds": 12.685691648
+        }
+      ]
+    }
+  ],
+  "divergence": {
+    "scope": "Same sampled duration and physical metadata. First current threshold crossing brackets a diagnostic window; temporal association does not prove causation. Legacy captures omit rejection reasons.",
+    "current_threshold_a": 1e-7,
+    "first": {
+      "frame": 3,
+      "time_s": 0.03,
+      "motor": 0,
+      "dof": "joint.-Y | Hip servo output",
+      "candidate_a": 0.03347501324384276,
+      "reference_a": 0.03347385769208647,
+      "difference_a": 0.0000011555517562961137
+    },
+    "maximum": {
+      "frame": 143,
+      "time_s": 1.43,
+      "motor": 0,
+      "dof": "joint.-Y | Hip servo output",
+      "candidate_a": 0.16425434731436606,
+      "reference_a": 0.32803402816461247,
+      "difference_a": 0.1637796808502464
+    },
+    "window": {
+      "start_s": 0.02,
+      "end_s": 0.03
+    },
+    "completion": {
+      "candidate": {
+        "completed": true,
+        "error": null
+      },
+      "reference": {
+        "completed": true,
+        "error": null
+      }
+    },
+    "nominal_steps_with_different_accepted_segment_counts": 84,
+    "rejection_diagnostics_available": true,
+    "window_steps": [
+      {
+        "nominal_step": 87,
+        "end_s": 0.022,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 10,
+          "events": [
+            {
+              "guard": 12,
+              "time": 0.021834366016067863
+            },
+            {
+              "guard": 36,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 37,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 38,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 39,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 40,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 41,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 42,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 43,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 44,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 45,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 46,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 47,
+              "time": 0.022000000000000002
+            }
+          ],
+          "minimum_accepted_step_s": 0.00008436601606786146,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 12,
+          "events": [
+            {
+              "guard": 12,
+              "time": 0.021834366016780193
+            },
+            {
+              "guard": 36,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 37,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 38,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 39,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 40,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 41,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 42,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 43,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 44,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 45,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 46,
+              "time": 0.022000000000000002
+            },
+            {
+              "guard": 47,
+              "time": 0.022000000000000002
+            }
+          ],
+          "minimum_accepted_step_s": 0.00008436601678019041,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      },
+      {
+        "nominal_step": 91,
+        "end_s": 0.023,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 3,
+              "time": 0.02289571750486881
+            },
+            {
+              "guard": 36,
+              "time": 0.023
+            },
+            {
+              "guard": 37,
+              "time": 0.023
+            },
+            {
+              "guard": 38,
+              "time": 0.023
+            },
+            {
+              "guard": 39,
+              "time": 0.023
+            },
+            {
+              "guard": 40,
+              "time": 0.023
+            },
+            {
+              "guard": 41,
+              "time": 0.023
+            },
+            {
+              "guard": 42,
+              "time": 0.023
+            },
+            {
+              "guard": 43,
+              "time": 0.023
+            },
+            {
+              "guard": 44,
+              "time": 0.023
+            },
+            {
+              "guard": 45,
+              "time": 0.023
+            },
+            {
+              "guard": 46,
+              "time": 0.023
+            },
+            {
+              "guard": 47,
+              "time": 0.023
+            }
+          ],
+          "minimum_accepted_step_s": 0.0001042824951311902,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 3,
+              "time": 0.022895717488503563
+            },
+            {
+              "guard": 36,
+              "time": 0.023
+            },
+            {
+              "guard": 37,
+              "time": 0.023
+            },
+            {
+              "guard": 38,
+              "time": 0.023
+            },
+            {
+              "guard": 39,
+              "time": 0.023
+            },
+            {
+              "guard": 40,
+              "time": 0.023
+            },
+            {
+              "guard": 41,
+              "time": 0.023
+            },
+            {
+              "guard": 42,
+              "time": 0.023
+            },
+            {
+              "guard": 43,
+              "time": 0.023
+            },
+            {
+              "guard": 44,
+              "time": 0.023
+            },
+            {
+              "guard": 45,
+              "time": 0.023
+            },
+            {
+              "guard": 46,
+              "time": 0.023
+            },
+            {
+              "guard": 47,
+              "time": 0.023
+            }
+          ],
+          "minimum_accepted_step_s": 0.00010428251149643616,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      },
+      {
+        "nominal_step": 93,
+        "end_s": 0.0235,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 21,
+              "time": 0.023387504351997015
+            }
+          ],
+          "minimum_accepted_step_s": 0.00011249564800298525,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 21,
+              "time": 0.023387504352251887
+            }
+          ],
+          "minimum_accepted_step_s": 0.00011249564774811274,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      },
+      {
+        "nominal_step": 105,
+        "end_s": 0.0265,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 30,
+              "time": 0.02635567130793142
+            }
+          ],
+          "minimum_accepted_step_s": 0.00010567130793142247,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 30,
+              "time": 0.02635567130908079
+            }
+          ],
+          "minimum_accepted_step_s": 0.00010567130908078892,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      },
+      {
+        "nominal_step": 111,
+        "end_s": 0.028,
+        "candidate": {
+          "accepted_segments": 1,
+          "continuous_attempts": 1,
+          "events": [
+            {
+              "guard": 36,
+              "time": 0.028
+            },
+            {
+              "guard": 37,
+              "time": 0.028
+            },
+            {
+              "guard": 38,
+              "time": 0.028
+            },
+            {
+              "guard": 39,
+              "time": 0.028
+            },
+            {
+              "guard": 40,
+              "time": 0.028
+            },
+            {
+              "guard": 41,
+              "time": 0.028
+            },
+            {
+              "guard": 42,
+              "time": 0.028
+            },
+            {
+              "guard": 43,
+              "time": 0.028
+            },
+            {
+              "guard": 44,
+              "time": 0.028
+            },
+            {
+              "guard": 45,
+              "time": 0.028
+            },
+            {
+              "guard": 46,
+              "time": 0.028
+            },
+            {
+              "guard": 47,
+              "time": 0.028
+            }
+          ],
+          "minimum_accepted_step_s": 0.00025,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 3,
+          "events": [
+            {
+              "guard": 36,
+              "time": 0.028
+            },
+            {
+              "guard": 37,
+              "time": 0.028
+            },
+            {
+              "guard": 38,
+              "time": 0.028
+            },
+            {
+              "guard": 39,
+              "time": 0.028
+            },
+            {
+              "guard": 40,
+              "time": 0.028
+            },
+            {
+              "guard": 41,
+              "time": 0.028
+            },
+            {
+              "guard": 42,
+              "time": 0.028
+            },
+            {
+              "guard": 43,
+              "time": 0.028
+            },
+            {
+              "guard": 44,
+              "time": 0.028
+            },
+            {
+              "guard": 45,
+              "time": 0.028
+            },
+            {
+              "guard": 46,
+              "time": 0.028
+            },
+            {
+              "guard": 47,
+              "time": 0.028
+            }
+          ],
+          "minimum_accepted_step_s": 0.0001250000000000001,
+          "rejected_trials": 1,
+          "rejection_details": [
+            {
+              "attempted_step_s": 0.0002500000000000002,
+              "reason": "implicit mechanical solve: Newton did not converge after 40 iterations; residual=5.434774457768401e-2; largest final residual: Some(\"mechanical velocity row 16: residual=5.434774457768401e-2, candidate=-2.028323821901316e-1\"); last rejected endpoint: None",
+              "start_time_s": 0.02775
+            }
+          ]
+        }
+      }
+    ],
+    "inputs": {
+      "runs/full-robot/learning/auxiliary-condensation/base.execution.json": "98e69dbbd36be57ec52a5336390baf65ba6fe1f839885965c8cc31d35505d710",
+      "runs/full-robot/learning/sample-reuse/final-refresh.base.execution.json": "0cbe0b1b39145d58afef1e569be5ab0dd72a56d6ce0dff7ed82f13c28aa822f9"
+    }
+  },
+  "refined_divergence": {
+    "scope": "Same sampled duration and physical metadata. First current threshold crossing brackets a diagnostic window; temporal association does not prove causation. Legacy captures omit rejection reasons.",
+    "current_threshold_a": 1e-7,
+    "first": {
+      "frame": 111,
+      "time_s": 1.11,
+      "motor": 0,
+      "dof": "joint.-Y | Hip servo output",
+      "candidate_a": -0.1349080126903769,
+      "reference_a": -0.13490811942772546,
+      "difference_a": 1.0673734857080674e-7
+    },
+    "maximum": {
+      "frame": 280,
+      "time_s": 2.8000000000000003,
+      "motor": 2,
+      "dof": "joint.-Y | Foot servo output",
+      "candidate_a": 0.39530429810582296,
+      "reference_a": 0.4362999198403859,
+      "difference_a": 0.04099562173456295
+    },
+    "window": {
+      "start_s": 1.1,
+      "end_s": 1.11
+    },
+    "completion": {
+      "candidate": {
+        "completed": true,
+        "error": null
+      },
+      "reference": {
+        "completed": true,
+        "error": null
+      }
+    },
+    "nominal_steps_with_different_accepted_segment_counts": 2,
+    "rejection_diagnostics_available": true,
+    "window_steps": [
+      {
+        "nominal_step": 8868,
+        "end_s": 1.108625,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 18,
+              "time": 1.108566707158528
+            }
+          ],
+          "minimum_accepted_step_s": 0.00005829284147207403,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 18,
+              "time": 1.108566705593974
+            }
+          ],
+          "minimum_accepted_step_s": 0.000058294406025893863,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      }
+    ],
+    "inputs": {
+      "runs/full-robot/learning/auxiliary-condensation/refined.execution.json": "fc3e5e87f0e09a7d364ab8e2867027d940ba807a2783e7339821da2d64be91b0",
+      "runs/full-robot/learning/sample-reuse/final-refresh.full.execution.json": "d2fdcf068fb0231c54845c5e4c5dda4e7b5db28651f3b1d3bfd61b1681e12fc2"
+    }
+  },
+  "diagnostic": {
+    "scope": "Same sampled duration and physical metadata. First current threshold crossing brackets a diagnostic window; temporal association does not prove causation. Legacy captures omit rejection reasons.",
+    "current_threshold_a": 1e-7,
+    "first": {
+      "frame": 112,
+      "time_s": 0.028,
+      "motor": 0,
+      "dof": "joint.-Y | Hip servo output",
+      "candidate_a": 0.010848794033069814,
+      "reference_a": 0.011045582444341015,
+      "difference_a": 0.00019678841127120095
+    },
+    "maximum": {
+      "frame": 112,
+      "time_s": 0.028,
+      "motor": 10,
+      "dof": "joint.-X | Worm servo output",
+      "candidate_a": 0.38895831956972887,
+      "reference_a": 0.38827216508182044,
+      "difference_a": 0.0006861544879084303
+    },
+    "window": {
+      "start_s": 0.02775,
+      "end_s": 0.028
+    },
+    "completion": {
+      "candidate": {
+        "completed": false,
+        "error": "simulation horizon ended before motion completed: reference time 0.03s"
+      },
+      "reference": {
+        "completed": false,
+        "error": "simulation horizon ended before motion completed: reference time 0.03s"
+      }
+    },
+    "nominal_steps_with_different_accepted_segment_counts": 1,
+    "rejection_diagnostics_available": true,
+    "window_steps": [
+      {
+        "nominal_step": 111,
+        "end_s": 0.028,
+        "candidate": {
+          "accepted_segments": 1,
+          "continuous_attempts": 1,
+          "events": [
+            {
+              "guard": 36,
+              "time": 0.028
+            },
+            {
+              "guard": 37,
+              "time": 0.028
+            },
+            {
+              "guard": 38,
+              "time": 0.028
+            },
+            {
+              "guard": 39,
+              "time": 0.028
+            },
+            {
+              "guard": 40,
+              "time": 0.028
+            },
+            {
+              "guard": 41,
+              "time": 0.028
+            },
+            {
+              "guard": 42,
+              "time": 0.028
+            },
+            {
+              "guard": 43,
+              "time": 0.028
+            },
+            {
+              "guard": 44,
+              "time": 0.028
+            },
+            {
+              "guard": 45,
+              "time": 0.028
+            },
+            {
+              "guard": 46,
+              "time": 0.028
+            },
+            {
+              "guard": 47,
+              "time": 0.028
+            }
+          ],
+          "minimum_accepted_step_s": 0.00025,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 3,
+          "events": [
+            {
+              "guard": 36,
+              "time": 0.028
+            },
+            {
+              "guard": 37,
+              "time": 0.028
+            },
+            {
+              "guard": 38,
+              "time": 0.028
+            },
+            {
+              "guard": 39,
+              "time": 0.028
+            },
+            {
+              "guard": 40,
+              "time": 0.028
+            },
+            {
+              "guard": 41,
+              "time": 0.028
+            },
+            {
+              "guard": 42,
+              "time": 0.028
+            },
+            {
+              "guard": 43,
+              "time": 0.028
+            },
+            {
+              "guard": 44,
+              "time": 0.028
+            },
+            {
+              "guard": 45,
+              "time": 0.028
+            },
+            {
+              "guard": 46,
+              "time": 0.028
+            },
+            {
+              "guard": 47,
+              "time": 0.028
+            }
+          ],
+          "minimum_accepted_step_s": 0.0001250000000000001,
+          "rejected_trials": 1,
+          "rejection_details": [
+            {
+              "attempted_step_s": 0.0002500000000000002,
+              "reason": "implicit mechanical solve: Newton did not converge after 40 iterations; residual=5.434774457768401e-2; largest final residual: Some(\"mechanical velocity row 16: residual=5.434774457768401e-2, candidate=-2.028323821901316e-1\"); last rejected endpoint: None",
+              "start_time_s": 0.02775
+            }
+          ]
+        }
+      }
+    ],
+    "inputs": {
+      "runs/full-robot/learning/auxiliary-condensation/diagnostic.condensed.execution.json": "fe8cd54b7b549869478d2556965f103eef02e74f21fe1026be8344011bfae679",
+      "runs/full-robot/learning/auxiliary-condensation/diagnostic.reference.execution.json": "621a9b218554786f1ec74bee60f0b54a76588390aff8790aa5b7dc5b1054ab7f"
+    }
+  },
+  "browser": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "pendulum-condensed",
+    "compared_frames": 11,
+    "simulated_s": 0.02,
+    "maximum_native_wasm_entry_difference": 1.734723475976807e-18,
+    "worst_path": "frame[5].joint_velocities.0",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 149.18000000715256,
+    "simulation_ms": 32.14999997615814,
+    "max_chunk_ms": 13.639999985694885,
+    "main_thread_heartbeats": 16,
+    "replay_progress_messages": 10,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "robot-forward-solid-sign motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "robot-point-feedback gain, world foot tracking, phase activation and replay",
+      "robot-point-block-factor gain, world foot tracking, phase activation and replay",
+      "robot-point-sample-reuse gain, world foot tracking, phase activation and replay",
+      "robot-point-final-refresh gain, world foot tracking, phase activation and replay",
+      "body feedback gain, world target/actual diagnostics, support weights and replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-embedded: incremental servo preset execution, target readings and recipe replay",
+      "pendulum-condensed: incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "artifacts": {
+    "runs/full-robot/learning/auxiliary-condensation/manifest.json": "5ed4340c47d2a8bebd98a2ff9b6a0c4da8d162b1d55b346a5bc223e18dd0facc",
+    "runs/full-robot/learning/auxiliary-condensation/base.execution.json": "98e69dbbd36be57ec52a5336390baf65ba6fe1f839885965c8cc31d35505d710",
+    "runs/full-robot/learning/sample-reuse/final-refresh.base.execution.json": "0cbe0b1b39145d58afef1e569be5ab0dd72a56d6ce0dff7ed82f13c28aa822f9",
+    "runs/full-robot/learning/auxiliary-condensation/base.comparison.json": "82deb94d419b45b270044b4c4f052f67b1ae5befb9192a75e3693bf5ddfdf6b8",
+    "runs/full-robot/learning/auxiliary-condensation/base.lift.json": "26f46db62b1db2834ce027e0c036f685c7b97ad4ece41bb53181362152a69069",
+    "runs/full-robot/learning/auxiliary-condensation/base.config.json": "0b405566d8c3023a58d0f4781c1c20a677c7ad3b1bf279f6ae25589c9d894818",
+    "runs/full-robot/learning/auxiliary-condensation/refined.execution.json": "fc3e5e87f0e09a7d364ab8e2867027d940ba807a2783e7339821da2d64be91b0",
+    "runs/full-robot/learning/sample-reuse/final-refresh.full.execution.json": "d2fdcf068fb0231c54845c5e4c5dda4e7b5db28651f3b1d3bfd61b1681e12fc2",
+    "runs/full-robot/learning/auxiliary-condensation/refined.comparison.json": "b399982663173b5b7de3d4918d36076ddd571fc24edc7d6424306f8ac76a88ce",
+    "runs/full-robot/learning/auxiliary-condensation/refined.lift.json": "9a165465aa38e2a11ab6930cdc87f749712395eeb9160546a29e0593b9dff8b9",
+    "runs/full-robot/learning/auxiliary-condensation/refined.config.json": "9e04a29f2560b49be1c4264b35586e729e8e89a01c6ce3b3ebb6c22bfa4f32ca",
+    "runs/full-robot/learning/auxiliary-condensation/base.divergence.json": "bd7cbe3a8b8c4abbe54091bf6889c844f3d45846de941c4518c8b92c5e465470",
+    "runs/full-robot/learning/auxiliary-condensation/refined.divergence.json": "77c8521f411e522a2f3b31c33e816dcc8e80cf5de913ca3c6dbf463f9aff1c0f",
+    "runs/full-robot/learning/auxiliary-condensation/diagnostic.divergence.json": "cbc31f5c6be2c4546f2fa2ee9f233bd00fe624c7f3b47f219a4e9a40ce8093d6",
+    "runs/full-robot/learning/auxiliary-condensation/diagnostic.reference.config.json": "04a3af02790862f43f1c81e8e6502720c5949f06dd326f6964d1fcb816caf065",
+    "runs/full-robot/learning/auxiliary-condensation/diagnostic.reference.execution.json": "621a9b218554786f1ec74bee60f0b54a76588390aff8790aa5b7dc5b1054ab7f",
+    "runs/full-robot/learning/auxiliary-condensation/diagnostic.condensed.config.json": "38a09f9446e573b53b7878d53b84692fa698187048ed9190bf659976e1a0902f",
+    "runs/full-robot/learning/auxiliary-condensation/diagnostic.condensed.execution.json": "fe8cd54b7b549869478d2556965f103eef02e74f21fe1026be8344011bfae679",
+    "runs/interactive/auxiliary-condensation/pendulum-browser.json": "8141d337df33fa6526c98be43ff821c115cba1b07014322fc8a66287f64f8188",
+    "runs/interactive/auxiliary-condensation/viewer-report.json": "82fc6e9f18095779209de4517c011827745d6f953dbb2aae2d48b9c3036111b1",
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "31bbf82d78f7d5e1f7d673055e1e7a307d0c002270234b33b9b3ae58c28ae388",
+    "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs": "80d5b77aa51aa1d9cd5f3daea303dab48258d4a6324f38d553234c0effb5a821",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "df6d06f1b551fe40276532c6a7fdb1e1db2def78406d5223974e83c46f8d471b",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "3c36469e0a12c01648338434f51532de4bd8dd21309efaeae4f7285dbcb4a4f5",
+    "crates/sim-runtime/tests/embedded_session.rs": "88e0e4a6d0eb1c3d6f04d61f01040fb4e2c0cbcb0343cdb599e23e15197fcaa9",
+    "examples/interactive/pendulum.condensed.json": "2618e94ec7e6536914a9798c0716fb84c1f7f478ffd132a59170700eca6fdfed",
+    "examples/full-robot/prepare_auxiliary_condensation.mjs": "f729d1ef91559e403b3d532b1827ffab904d892b9b84904607b65c20d9d6953c",
+    "examples/full-robot/summarize_auxiliary_condensation.mjs": "7021b5d82d47178f5a63e94fffa70700901e0b7cc9194aa7be877586498732c8",
+    "examples/full-robot/auxiliary-condensation-validation.md": "3817540b4ae547280448b3c8f02d1d11a5d0dc016d2c360a26149f38c5ac170d",
+    "web/tests/viewer.mjs": "3a70e4a14a7034f587619d07d2fcc016f19fcdfe1178b5578a0e97a1e82035d0",
+    ".github/workflows/browser.yml": "b0040d58c1d385de51bcecd283586cf85b40bd4f588ca939eb77936d326d6d27",
+    "runs/interactive/auxiliary-condensation/native-runner": "cf97bd78d8c4a596a4ac5507f7cd21fd12ab882fd97db87025c09173b603ed9a",
+    "runs/interactive/auxiliary-condensation/source-manifest.json": "66b8aa88c95274be5d740fa5df01b07410901179e926511e183520344028b4fc",
+    "runs/interactive/auxiliary-condensation/pendulum.execution.json": "7e3a63496c5b1f02ba1458dc382ac2641131dea7a0a20b54ce8f355696ee23e2",
+    "runs/interactive/auxiliary-condensation/viewer/build-manifest.json": "86041836c11ba0ec608dd22655af9112bb36b6d32691fd0fd2276356bfc2ad09",
+    "runs/interactive/auxiliary-condensation/viewer/sim_web_bg.wasm": "01ac6aa1ada8536afd0894a052b084e82963007fc7f8108d6dc6c680353c2b91",
+    "runs/interactive/robot-lab-auxiliary-condensation-2026-09-07.zip": "d373888281fcdc97bc74af03bfe018ef10c235469ea315fcf02d2978af9ff379"
+  }
+}

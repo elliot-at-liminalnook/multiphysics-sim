@@ -1,0 +1,499 @@
+{
+  "version": 1,
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "experimental_opt_in": "implicit.reuse_mechanical_dynamics requires implicit.reuse_mechanical_endpoint",
+  "default_enabled": false,
+  "physics_changed": false,
+  "training_ready": false,
+  "realtime": false,
+  "validation_scope": "CAD-derived 100 ms release/hold at 0.25 and 0.125 ms with regularized floor friction, plus independent small-body/circuit/linkage tests. No claim of hardware accuracy or arbitrary trajectory validity.",
+  "exact_comparisons": [
+    {
+      "artifact": "runs/full-robot/learning/dynamics-reuse-off-coarse.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-reuse-on-coarse.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-reuse-on-refined.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-profile-off.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-profile-on.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-benchmark-1-off.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-benchmark-1-on.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-benchmark-2-off.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-benchmark-2-on.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-benchmark-3-off.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    },
+    {
+      "artifact": "runs/full-robot/learning/dynamics-benchmark-3-on.json",
+      "exact_original_trajectory": {
+        "frames": true,
+        "terminal_frame": true,
+        "contact_steps": true,
+        "hybrid_steps": true
+      },
+      "original_solver_counts_and_residuals_unchanged": true
+    }
+  ],
+  "counts_successful_trials_only": {
+    "off": {
+      "successful_trial_endpoint_evaluations": 36718,
+      "successful_trial_mechanical_preparations": 13019,
+      "successful_trial_dynamics_preparations": 36718,
+      "successful_trial_dynamics_cache_hits": 0,
+      "successful_trial_newton_iterations": 3144
+    },
+    "on": {
+      "successful_trial_endpoint_evaluations": 36718,
+      "successful_trial_mechanical_preparations": 13019,
+      "successful_trial_dynamics_preparations": 13019,
+      "successful_trial_dynamics_cache_hits": 23699,
+      "successful_trial_newton_iterations": 3144
+    }
+  },
+  "unprofiled_benchmark": {
+    "cpu": "Intel Core i9-9980HK @ 2.40GHz, 8 cores/16 threads",
+    "compiler": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "simulated_s": 0.1,
+    "pairs": [
+      {
+        "repeat": 1,
+        "order": [
+          "off",
+          "on"
+        ],
+        "off_wall_s": 20.040779191999988,
+        "on_wall_s": 17.725329148,
+        "paired_speedup": 1.1306294526136484
+      },
+      {
+        "repeat": 2,
+        "order": [
+          "on",
+          "off"
+        ],
+        "off_wall_s": 24.276418779999993,
+        "on_wall_s": 17.66046287500001,
+        "paired_speedup": 1.3746196207782
+      },
+      {
+        "repeat": 3,
+        "order": [
+          "off",
+          "on"
+        ],
+        "off_wall_s": 25.303220679,
+        "on_wall_s": 21.90026371399999,
+        "paired_speedup": 1.1553842916889001
+      }
+    ],
+    "median_paired_speedup": 1.1553842916889001,
+    "note": "Sequential same-executable runs; timers disabled. Desktop load/thermal state are not controlled. Report paired ratios and ranges rather than attributing all timing variation to the option."
+  },
+  "profiles": {
+    "off": {
+      "wall_s": 20.24301184899998,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0.0
+        },
+        {
+          "calls": 434,
+          "name": "newton calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "newton iterations",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "fresh jacobians",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "stale full-step refreshes",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3614,
+          "name": "residual evaluations",
+          "seconds": 4.801328465
+        },
+        {
+          "calls": 495,
+          "name": "jacobian assembly",
+          "seconds": 15.058093477000002
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "factorisation",
+          "seconds": 0.021535515
+        },
+        {
+          "calls": 495,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.0016238020000000001
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "back-substitution",
+          "seconds": 0.010977557
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 13419,
+          "name": "embedded closure mapping",
+          "seconds": 13.968573061
+        },
+        {
+          "calls": 13019,
+          "name": "embedded contact history",
+          "seconds": 1.510881171
+        },
+        {
+          "calls": 37118,
+          "name": "embedded dynamics preparation",
+          "seconds": 4.185724547
+        },
+        {
+          "calls": 37118,
+          "name": "embedded applied force solve",
+          "seconds": 0.12123078500000001
+        },
+        {
+          "calls": 36718,
+          "name": "embedded component equations",
+          "seconds": 0.24658738300000002
+        }
+      ],
+      "newton_unknowns": 66
+    },
+    "on": {
+      "wall_s": 17.51328622399999,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0.0
+        },
+        {
+          "calls": 434,
+          "name": "newton calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "newton iterations",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "fresh jacobians",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "stale full-step refreshes",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3614,
+          "name": "residual evaluations",
+          "seconds": 4.748388784
+        },
+        {
+          "calls": 495,
+          "name": "jacobian assembly",
+          "seconds": 12.428473678000001
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "factorisation",
+          "seconds": 0.021717261
+        },
+        {
+          "calls": 495,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.001585323
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "back-substitution",
+          "seconds": 0.010985963000000001
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 13419,
+          "name": "embedded closure mapping",
+          "seconds": 13.881155806
+        },
+        {
+          "calls": 13019,
+          "name": "embedded contact history",
+          "seconds": 1.5006711000000001
+        },
+        {
+          "calls": 13419,
+          "name": "embedded dynamics preparation",
+          "seconds": 1.6042583920000002
+        },
+        {
+          "calls": 37118,
+          "name": "embedded applied force solve",
+          "seconds": 0.110217143
+        },
+        {
+          "calls": 36718,
+          "name": "embedded component equations",
+          "seconds": 0.229026524
+        }
+      ],
+      "newton_unknowns": 66
+    }
+  },
+  "profile_interpretation": "Phase buckets overlap enclosing Jacobian/residual buckets. In the reuse-on case, closure mapping takes about 79.3% of stepping wall time, numerical Jacobian assembly 71.0%, dynamics preparation 9.2%, and outer Newton factorization 0.12%. This does not isolate the cost of SVD within mapping.",
+  "tests": {
+    "robot_native": 28,
+    "robot_no_default": 28,
+    "solver_convergence": 10,
+    "comparator": 3,
+    "wasm_runtime_compile": true
+  },
+  "remaining_work": [
+    "Optimize repeated closure mapping and actual Newton derivative construction with independent validation.",
+    "Loaded tracking/contact refinement remains materially timestep-sensitive; this optimization reproduces that limitation exactly.",
+    "Calibration, operating envelope, planner, teacher/student learning, robust evaluation and viewable walking remain unfinished."
+  ],
+  "artifacts_sha256": {
+    "runs/full-robot/learning/dynamics-reuse-off-coarse.json": "02a05e8473830f3c6832bc9e337d744351f67a20dd7b54005767dd0e0323150d",
+    "runs/full-robot/learning/dynamics-reuse-on-coarse.json": "8ab054fb4d68d18744168fbea32fc1ce18dcfd7ece821b5fba8cb31018bed8b7",
+    "runs/full-robot/learning/dynamics-reuse-on-refined.json": "fab29efd2452f2b4f0decc50648744616fcfc29d98a125cda4518e77ab467e4c",
+    "runs/full-robot/learning/dynamics-profile-off.json": "2fe0cd6204923ba86ecb18270f465e0979435b13d8d8b615361426a1fea48c4d",
+    "runs/full-robot/learning/dynamics-profile-on.json": "4a2e5205dacbcf53e758cbda2adba72f746bd49c59278bb3eac034ca7822e0c7",
+    "runs/full-robot/learning/dynamics-benchmark-1-off.json": "54ffd5cba48b3b7e50444c156b4cda7b8615402026327b3e09d78131056c61af",
+    "runs/full-robot/learning/dynamics-benchmark-1-on.json": "8b31f03277320e086a03132a623a745c8a6eafbf31d0e3496b87a8e7af8d1508",
+    "runs/full-robot/learning/dynamics-benchmark-2-off.json": "93063b88df3a3882553cc01b1ecdb818d3fcc824fc5345f61d4c1e89a0936029",
+    "runs/full-robot/learning/dynamics-benchmark-2-on.json": "739e389483bec83f36d7aedaaa1c0b41965051e7f1f8fb8b83d22a1b40a9c8af",
+    "runs/full-robot/learning/dynamics-benchmark-3-off.json": "6d0487cfe102252f22152f8c4a49697aac2d6276b457062fbddc1679ac1fe09f",
+    "runs/full-robot/learning/dynamics-benchmark-3-on.json": "1e1e890df654bb064e9763b059857025dd4ea50ab30cc7e6f476164545b7160d",
+    "runs/full-robot/learning/prepared-dynamics-source-manifest.json": "3f6294c8de9a42c47f7e8f80930beb18adfc936923938ccaf7060d7b6b136502",
+    "runs/full-robot/learning/prepared-dynamics-profile-source-manifest.json": "3dcf1027f22d6da69790bcfc1ffc4117df2e4bde4a692b2eb9b033dbc5086efe",
+    "runs/full-robot/learning/dynamics-reuse-coarse-comparison.json": "26365615c53b372e1e6b4bcf32b9f734449041d02bf865be9b17e8bea3aec489",
+    "runs/full-robot/learning/dynamics-reuse-refined-comparison.json": "03545f242f9530500aa22ee37b298a992b4063d8f2882e2492e226e83715fa43",
+    "runs/full-robot/learning/dynamics-profile-comparison.json": "6ab2de2bfcaf62e90714e5b26c944610a5f1232cce7baaa20ae4d21236b4913b",
+    "runs/full-robot/learning/servo-regularized-floor.scene.json": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2",
+    "examples/full-robot/mechanical-servo-prepared-coarse.json": "3e122784601ca03776a2a4434f150cb7e4a35844b7f206d0ab1fb062a77533d7",
+    "examples/full-robot/mechanical-servo-prepared-refined.json": "55a9f7c661e21e6df4d12819a6007ddada1a3e5406d58942e22c293c7b42c7a0",
+    "examples/full-robot/mechanical-servo-dynamics-profile-off.json": "a95a279d12dec400cc39184cdc02a11bc6b02976ca5aec6b704d2ba3edad199d",
+    "examples/full-robot/mechanical-servo-dynamics-profile-on.json": "55bdefd35f0ea60db6db42ce9b11421fbaa76aca4fac41f9e3e3179cb83b75d4",
+    "examples/full-robot/mechanical-servo-retracted-100ms-coarse.json": "352bf5f567d7c458509cf8c54fafc9a8310e5773058517ab4f79ed12d9e78f96",
+    "examples/full-robot/mechanical-servo-retracted-100ms-refined.json": "fd9decc00cb356587bbde6eff83ad6f7c0db3ba950c77dfbf30707988f9322b2"
+  }
+}

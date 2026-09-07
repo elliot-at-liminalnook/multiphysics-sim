@@ -1,9 +1,11 @@
-//! The physical assembly description the CAD tool writes (`simrobot` v3):
+//! The physical assembly description the CAD tool writes (`simrobot` v4,
+//! with legacy v3 parsing and backlash semantics preserved):
 //! links with full inertia, collision meshes and signed-distance grids,
 //! modal flexibility, joints with the physics their geometry implies,
 //! motors with electrical, gearbox, thermal and firmware blocks, sensors,
 //! cables, a battery, control targets and uncertainty. Every field has a
-//! default so a partial file still loads; SI units throughout.
+//! legacy default so a partial file still loads. Explicit v4 drive properties
+//! are validated before motor construction; SI units throughout.
 //! See `cad/PHYSICAL_MODEL.md`.
 
 use serde::{Deserialize, Serialize};
@@ -446,6 +448,33 @@ impl Bearing {
     }
 }
 
+/// Full lost-rotation width at a drive connection, additional to motor gearbox
+/// backlash. Radial bearing clearance is a separate physical quantity.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DriveBacklash {
+    pub width_rad: Option<f64>,
+    pub provenance: BacklashProvenance,
+    pub reference: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uncertainty_rad: Option<f64>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BacklashProvenance { Unmeasured, Estimated, Measured, Derived }
+
+impl DriveBacklash {
+    pub fn validate(&self) -> Result<(), String> {
+        if self.reference.trim().is_empty()
+            || self.width_rad.is_some_and(|x| !x.is_finite() || x < 0.0)
+            || self.uncertainty_rad.is_some_and(|x| !x.is_finite() || x < 0.0)
+            || (self.provenance == BacklashProvenance::Unmeasured) != self.width_rad.is_none()
+        { return Err("drive_backlash requires a nonempty reference, finite nonnegative radians, and a value exactly when provenance is estimated, measured or derived".into()); }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct JointPhysics {
     #[serde(default)]
@@ -460,6 +489,10 @@ pub struct JointPhysics {
     pub clearance: f64,
     #[serde(default)]
     pub backlash: f64,
+    /// Missing preserves v3 interpretation of `backlash`. New v4 motorized
+    /// joints require this explicit record; null width means unknown, not zero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drive_backlash: Option<DriveBacklash>,
     #[serde(default)]
     pub wobble: f64,
     #[serde(default)]
@@ -472,6 +505,24 @@ pub struct JointPhysics {
     pub bearing: Bearing,
 }
 impl JointPhysics {
+    pub fn drive_backlash_rad(&self, require_explicit: bool) -> Result<f64, String> {
+        if let Some(value) = &self.drive_backlash {
+            value.validate()?;
+            value.width_rad.ok_or_else(|| "drive backlash is unmeasured; author a measured value or an explicit estimate with provenance in CAD".into())
+        } else if require_explicit {
+            Err("v4 motorized joints require an explicit drive_backlash record; radial bearing clearance cannot supply it".into())
+        } else if self.backlash.is_finite() && self.backlash >= 0.0 {
+            Ok(self.backlash)
+        } else { Err("legacy joint backlash must be finite and nonnegative".into()) }
+    }
+
+    /// Update an experimental/fitted value without altering the legacy bearing
+    /// estimate in models that have the explicit drive field.
+    pub fn set_drive_backlash_rad(&mut self, width: f64, reference: String) {
+        if self.drive_backlash.is_some() {
+            self.drive_backlash = Some(DriveBacklash { width_rad: Some(width), provenance: BacklashProvenance::Derived, reference, uncertainty_rad: None });
+        } else { self.backlash = width; }
+    }
     fn default_radius() -> f64 {
         2.0e-3
     }
@@ -1039,7 +1090,7 @@ impl PhysicalModel {
                     j.physics.friction = f.clone();
                 }
                 if let Some(b) = id.backlash {
-                    j.physics.backlash = b;
+                    j.physics.set_drive_backlash_rad(b, format!("identified from {}; fitted at {}", id.source_log, id.fitted_at));
                 }
                 if let Some(s) = id.stiffness_scale {
                     j.physics.stiffness.radial *= s;

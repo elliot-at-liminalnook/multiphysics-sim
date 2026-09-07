@@ -2596,9 +2596,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "899def5c37c4fd7b2664648c28120ecec138e4d395b459e5ca34f9cce2dd77fd"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "r-efi 5.3.0",
  "wasip2",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -4693,6 +4695,7 @@ checksum = "5e6e1be9d697d537ce450766df42ad6adf1a93f25f21d73217354ad7e3d3dae1"
 dependencies = [
  "ahash",
  "bitflags 2.13.1",
+ "getrandom 0.3.4",
  "no-std-compat",
  "num-traits",
  "once_cell",
@@ -5110,12 +5113,14 @@ version = "0.1.0"
 dependencies = [
  "approx",
  "nalgebra",
+ "rayon",
  "serde",
  "serde_json",
  "sim-compile",
  "sim-core",
  "sim-domain-control",
  "sim-domain-electrical",
+ "sim-domain-multibody",
  "sim-domain-rotational",
  "sim-domain-thermal",
  "sim-dynamics",
@@ -5167,6 +5172,7 @@ dependencies = [
  "approx",
  "nalgebra",
  "serde",
+ "serde_json",
  "sim-solve",
  "thiserror 2.0.20",
 ]
@@ -5209,8 +5215,42 @@ dependencies = [
  "sim-domain-thermal",
  "sim-domain-translational",
  "sim-dynamics",
+ "sim-runtime",
  "sim-script",
  "sim-solve",
+]
+
+[[package]]
+name = "sim-runtime"
+version = "0.1.0"
+dependencies = [
+ "nalgebra",
+ "serde",
+ "serde_json",
+ "sim-compile",
+ "sim-core",
+ "sim-couple",
+ "sim-domain-acoustic",
+ "sim-domain-bridges",
+ "sim-domain-chemical",
+ "sim-domain-control",
+ "sim-domain-electrical",
+ "sim-domain-fluid",
+ "sim-domain-granular",
+ "sim-domain-hydraulic",
+ "sim-domain-line",
+ "sim-domain-magnetic",
+ "sim-domain-multibody",
+ "sim-domain-radiative",
+ "sim-domain-robot",
+ "sim-domain-rotational",
+ "sim-domain-sensing",
+ "sim-domain-thermal",
+ "sim-domain-translational",
+ "sim-dynamics",
+ "sim-script",
+ "sim-solve",
+ "web-time",
 ]
 
 [[package]]
@@ -5247,6 +5287,16 @@ dependencies = [
  "nalgebra",
  "serde",
  "thiserror 2.0.20",
+ "web-time",
+]
+
+[[package]]
+name = "sim-web"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "sim-runtime",
+ "wasm-bindgen",
 ]
 
 [[package]]

@@ -9,13 +9,21 @@ nalgebra.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sim-core = { path = "../sim-core" }
+sim-solve = { path = "../sim-solve" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-domain-multibody = { path = "../sim-domain-multibody" }
 
 [dev-dependencies]
 approx.workspace = true
 sim-compile = { path = "../sim-compile" }
-sim-dynamics = { path = "../sim-dynamics" }
-sim-solve = { path = "../sim-solve" }
 sim-domain-electrical = { path = "../sim-domain-electrical" }
 sim-domain-thermal = { path = "../sim-domain-thermal" }
 sim-domain-rotational = { path = "../sim-domain-rotational" }
 sim-domain-control = { path = "../sim-domain-control" }
+
+[features]
+default = ["parallel"]
+parallel = ["dep:rayon"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rayon = { version = "1", optional = true }

@@ -1,0 +1,13 @@
+{
+  "scene": "runs/full-robot/learning/forward-slow/chassis-solid-sign.scene.json",
+  "config": "runs/full-robot/learning/forward-slow/config.json",
+  "plan": "runs/full-robot/learning/forward-slow/chassis-solid-sign.plan.json",
+  "controller": "examples/interactive/controllers/body-position-feedback.rhai",
+  "output_directory": "runs/full-robot/learning/body-feedback",
+  "body_gain": 0.25,
+  "velocity_damping_s": 0.0,
+  "damping_m_per_rad": 0.002,
+  "maximum_correction_rad": 0.04,
+  "full_support_force_n": 5.0,
+  "scope": "Bounded ideal-state body-translation feedback experiment. Same motor reference, joint feedback gain, controller clocks and physics. Gains are provisional policy settings, not calibrated robot properties."
+}

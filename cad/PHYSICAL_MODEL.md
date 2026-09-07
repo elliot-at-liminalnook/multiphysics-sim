@@ -1,13 +1,14 @@
-# Physical assembly description (simrobot v3)
+# Physical assembly description (simrobot v4)
 
 The CAD tool derives a **physical description** of a robot from the `.rcad`
 document and the simulator treats it as a coupled multiphysics model. Python
-owns geometry and derivation; Rust owns dynamics. Nothing is hand-declared
-that geometry and materials can provide.
+owns geometry and derivation; Rust owns dynamics. Geometry-derived quantities,
+authored estimates and measured properties must remain distinguishable.
 
-File: `<name>.simrobot.json`, `"version": 3`. **SI units throughout** (m, kg,
+File: `<name>.simrobot.json`, `"version": 4`. **SI units throughout** (m, kg,
 s, rad, N, Pa, V, A, K or °C where the key says `_c`). v2 (mm, planar) stays
-readable by the planar path; v3 is what the CAD tool writes.
+readable by the planar path. v3 exports retain their legacy backlash behavior;
+v4 requires explicit drive-backlash provenance for motorized joints.
 
 Index conventions: matrices are row-major nested lists; the SDF grid is a
 flat list with `index = (ix * ny + iy) * nz + iz`; quaternions are `[w, x, y, z]`.
@@ -27,7 +28,7 @@ flat list with `index = (ix * ny + iy) * nz + iz`; quaternions are `[w, x, y, z]
 
 ```
 {
-  "version": 3,
+  "version": 4,
   "source": {"file": "leg.rcad", "exported": "2026-09-03T12:00:00"},
   "gravity": [0, 0, -9.81],
   "world": {"floor_z": 0.0, "floor_friction": 0.8, "floor_stiffness": 2e5, "floor_damping": 2e3,
@@ -91,7 +92,11 @@ replay uses scaled boundary arrows alongside rigid CAD meshes.
  "physics": {
     "source": "inferred"|"declared", "pin_radius", "hole_radius", "contact_length",
     "flex_patch_radius": m, "flex_patch_source": "inferred"|"declared",
-    "clearance": radial m, "backlash": rad (≈ clearance / lever radius, from geometry),
+    "clearance": radial m,
+    "backlash": rad (legacy bearing-clearance angle, not a v4 motor parameter),
+    "bearing_clearance_angle_rad": rad (clearance / max(COM lever, 0.005 m)),
+    "drive_backlash": {"width_rad": null | rad, "provenance": "unmeasured"|"estimated"|"measured"|"derived",
+                       "reference": nonempty string, "uncertainty_rad": optional nonnegative rad},
     "wobble": rad (angular play from clearance/contact_length),
     "friction": {"coulomb": N·m, "viscous": N·m·s/rad, "stribeck": N·m, "stribeck_speed": rad/s, "static_ratio": 1.2},
     "stiffness": {"radial": N/m, "axial": N/m, "bending": N·m/rad}, "damping_ratio": 0.05,
@@ -102,6 +107,30 @@ replay uses scaled boundary arrows alongside rigid CAD meshes.
 Tree joints (`revolute|continuous|prismatic|fixed|ball`) must form a forest;
 `loop_*` joints close loops and are solved as constraints. Prismatic
 `limits` are metres. Fixed joints are compliant (`stiffness`, `fastened`).
+
+The geometric bearing-angle heuristic does not establish drivetrain lost
+motion. In v4, motor adapters use only `drive_backlash.width_rad`, added to the
+motor's `gearbox.backlash_rad`. This is the **full width** of additional lost
+rotation at the drive connection, with engagement boundaries at ±half-width.
+Do not enter a measured total drivetrain gap in both fields. Bearing clearance
+is retained separately; this field does not introduce a radial clearance-contact
+model into ideal revolute constraints.
+
+New exports mark drive backlash unmeasured (`width_rad: null`). Both runtime
+hosts require an explicit value to simulate a motorized connection. Zero is an
+explicit idealization unless supported by measurement; it is never the meaning
+of null. Known values must be finite and nonnegative, with provenance and a
+reference. Optional `uncertainty_rad` records a standard uncertainty estimate;
+its omission means unspecified, and does not imply zero uncertainty or trigger
+automatic randomization. Geometry-cache keys include the physical-semantics
+version so old inferred values cannot bypass this distinction.
+
+Older v3 scenes with no `drive_backlash` retain the previous scalar `backlash`
+interpretation for reproducibility. An explicit record takes precedence in any
+version. Legacy CAD scalar **overrides** migrate as labeled estimates; fitted
+identification updates the drive value and preserves its bearing-angle diagnostic.
+The [hip investigation](../examples/full-robot/hip-timestep-validation.md)
+explains why the old inference needs re-evaluation before controller training.
 
 ### Motor
 ```

@@ -1,0 +1,431 @@
+{
+  "version": 1,
+  "scope": "Registered averaged H-bridge feedback in the experimental reduced motor/mechanism solve. Controlled position/stepping and the full learning goal remain incomplete.",
+  "source": {
+    "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "scene": {
+      "path": "runs/full-robot/solver-performance/bracket-option-off.scene.json",
+      "sha256": "f54321e4d94266c8cc184e4ecc9d6436ce08b1cd48bf230949f65e37e6f875ac"
+    },
+    "snapshot": {
+      "path": "runs/full-robot/learning/driver-source-manifest.json",
+      "sha256": "5c7dcccdeb2337ce7bfc84221c2713c3f7eab7c29ebd7d48ae0ad975fabeb71e"
+    }
+  },
+  "cases": [
+    {
+      "name": "zero",
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-driver-zero.json",
+        "sha256": "61323af207b9ad96aa1d4dd677af97a9c577af1ee04a222cd219b4878389a731"
+      },
+      "configuration": {
+        "path": "examples/full-robot/mechanical-driver-zero.json",
+        "sha256": "34b0b2705409997a3be71408d76d3b5db590d7f51424b614c56cee76c6b29ade"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "stepping_wall_s": 70.91259061199996,
+      "motor_experiment": {
+        "drivers": [
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          }
+        ],
+        "events": {
+          "maximum_events": 64,
+          "maximum_halvings": 6,
+          "maximum_segments": 256,
+          "relative_event_tolerance": 1e-7
+        },
+        "residual_scales": [
+          1,
+          1,
+          1
+        ]
+      },
+      "driver_components": [
+        {
+          "dof": "joint.-Y | Hip servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-Y | Worm servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-Y | Foot servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+X | Hip servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+X | Worm servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+X | Foot servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+Y | Hip servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+Y | Worm servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+Y | Foot servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-X | Hip servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-X | Worm servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-X | Foot servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        }
+      ],
+      "events": 76,
+      "accepted_segments": 465,
+      "note": "Single diagnostic run; different duty commands mean timings are not a speedup comparison."
+    },
+    {
+      "name": "worm",
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-driver-worm.json",
+        "sha256": "f2cf2971e6fcc326bc4ade894d7ae8e37f61b6082ef536844adab1915a7e029e"
+      },
+      "configuration": {
+        "path": "examples/full-robot/mechanical-driver-worm.json",
+        "sha256": "a28c1b462937301f7d8cbb7488ef732c31a330e26e55bc6ce8658950418229e5"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "stepping_wall_s": 61.14237468599998,
+      "motor_experiment": {
+        "drivers": [
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0.05,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          },
+          {
+            "duty": 0,
+            "supply_voltage_v": 11.1,
+            "winding_temperature_k": 293.15
+          }
+        ],
+        "events": {
+          "maximum_events": 64,
+          "maximum_halvings": 6,
+          "maximum_segments": 256,
+          "relative_event_tolerance": 1e-7
+        },
+        "residual_scales": [
+          1,
+          1,
+          1
+        ]
+      },
+      "driver_components": [
+        {
+          "dof": "joint.-Y | Hip servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-Y | Worm servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-Y | Foot servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+X | Hip servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+X | Worm servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+X | Foot servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+Y | Hip servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+Y | Worm servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.+Y | Foot servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-X | Hip servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-X | Worm servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        },
+        {
+          "dof": "joint.-X | Foot servo output",
+          "parameters": {
+            "current_limit": 3,
+            "on_resistance": 0.05
+          }
+        }
+      ],
+      "events": 68,
+      "accepted_segments": 457,
+      "note": "Single diagnostic run; different duty commands mean timings are not a speedup comparison."
+    }
+  ],
+  "zero_equivalence": {
+    "artifact": {
+      "path": "runs/full-robot/learning/driver-zero-equivalence.json",
+      "sha256": "f87755657ed4a26c4723718e6987bc6a5b9a71f1a873f84b8e29441dd2cfac4f"
+    },
+    "scope": "Zero-duty registered H-bridge versus direct zero-voltage winding boundaries at equal temperature. Only driver-only telemetry is omitted from frame equality; physical inputs differ explicitly by this algebraic-equivalence experiment.",
+    "completed": true,
+    "frames_exact": true,
+    "terminal_exact": true,
+    "event_history_exact": true,
+    "accepted_contact_steps_exact": true,
+    "all_driver_voltages_zero": true,
+    "all_supply_currents_zero": true
+  },
+  "command_effect": {
+    "dof": "joint.+X | Worm servo output",
+    "duty": 0.05,
+    "terminal_driver": {
+      "motor_current_a": 0.114425890448081,
+      "motor_voltage_v": 0.549278705477596,
+      "power_difference_w": 0.0006546642202418101,
+      "supply_current_a": 0.005721294522404051
+    },
+    "terminal_motor": {
+      "current_a": 0.114425890448081,
+      "gear_speed_rad_s": -0.16018141113868434,
+      "heating_w": 0.12297462157858366,
+      "shaft_torque_nm": 0.261971486441864
+    },
+    "terminal_joint_rad": -0.047092323516587355,
+    "zero_terminal_joint_rad": -0.05811942401376971,
+    "maximum_sampled_joint_difference_rad": 0.012422465066377779,
+    "maximum_sampled_absolute_current_a": 0.5786447164673748,
+    "sampled_voltage_range_v": [
+      0.5260677641766313,
+      0.555
+    ]
+  },
+  "verification": {
+    "embedded_motor_native": 7,
+    "embedded_motor_no_default": 7,
+    "runtime_session": 18,
+    "comparison_example": 2,
+    "wasm": "cargo check --locked -p sim-web --target wasm32-unknown-unknown passed; existing unused rotor_speed warning"
+  },
+  "limits": [
+    "Driver equations are reused with trial-current feedback. Existing foldback is not a hard current cap; averaged clamping/regeneration limitations remain.",
+    "Supply voltage and winding temperature are prescribed. No battery sag, driver switching, firmware latency or thermal-network dynamics are supplied.",
+    "CAD parameter floors and estimates are retained, not calibrated against hardware.",
+    "The command changes loading/motion but does not establish position holding, tracking, balance, walking or a trained policy.",
+    "Prior timestep/contact/traction sensitivity remains unresolved. This is not a model-accuracy or realtime promotion.",
+    "Raw captures, binary and source snapshot are ignored local evidence, not versioned golden tests."
+  ],
+  "next": "Connect registered sampled firmware with explicit state, deadlines, quantization, latency, saturation and atomic failure; retain contact/trajectory audits before controlled task gates and learning."
+}

@@ -340,11 +340,10 @@ meshes; they do not perform exact section analysis or alter the document.
   load is simulated), the control loop period and latency, joint targets,
   and the Monte Carlo uncertainty (print tolerance, friction spread).
 
-## The physical model (simrobot v3)
+## The physical model (simrobot v4)
 
 *Export sim…* and the live link write a **physical assembly description**
-rather than an idealised linkage; everything below is derived from the
-geometry and the materials, nothing is declared twice:
+with geometric derivations, authored estimates and measurements:
 
 - **Links**: bodies merged with their mounted motors and fixed children;
   mass, centre of mass and the full inertia tensor from the B-rep; a
@@ -353,7 +352,7 @@ geometry and the materials, nothing is declared twice:
   end stops need no hand-placed contact points).
 - **Joints as the printer made them**: from the coaxial pin/hole pair the
   export reads pin and hole radius, contact length, radial clearance, the
-  backlash and wobble that clearance gives, friction from the material pair
+  bearing wobble estimate, friction from the material pair
   under the outboard weight (Coulomb, Stribeck, viscous), the compliance of
   the printed wall around the hole, and the bearing pressure against the
   material's allowable. Screws recorded by the fastener tool that pass
@@ -361,6 +360,14 @@ geometry and the materials, nothing is declared twice:
   stiffness and shear capacity. Select a joint to see the inferred numbers
   in the Properties panel and override any of them (overridden fields are
   marked `*`).
+- **Drive backlash** is separate from radial bearing clearance. The joint
+  inspector shows it as **Unmeasured** until you enter a value; editing the
+  field declares an estimate in degrees, and clearing it restores unknown.
+  REST `set_joint_physics` accepts a `drive_backlash` record with `width_rad`,
+  `provenance`, `reference`, and optional `uncertainty_rad`. This is additional
+  lost rotation at the connection, beyond the motor's gearbox backlash. New
+  motor simulations require an explicit value; entering zero is an idealization,
+  not a hardware measurement. Older exported scenes preserve their old behavior.
 - **Flexible links**: each printed link is meshed with voxel finite
   elements (orthotropic across layers by the material's print anisotropy,
   infill homogenised), clamped at its parent joint and reduced to its
@@ -413,3 +420,77 @@ background, and inspect synchronized plots and captured CAD replay. Candidate
 review and run-linked comments support collaboration through the same REST API.
 See [CAD + Rhai experiments](EXPERIMENTS.md) for setup, authoring, process
 controllers, reproducible seeds, comparisons, caching and current limitations.
+
+## Programmable motion in the Pose panel
+
+Open **Pose**, then **Enter pose mode**. Select a driver joint to move it manually,
+or choose a saved pattern and press **Play pattern**. **Pause** holds the current
+position; the timeline scrubs in seconds; **Return to CAD pose** (or Esc) restores
+the original display without editing geometry or the undo history.
+
+**Make joint sweep** creates a modest sweep for the selected joint using the
+cycle duration control. Edit its JSON to name it, add tracks, or change keyframes,
+then **Save pattern**. Patterns are stored in the CAD file and support undo.
+Angular tracks declare `deg` or `rad`; sliding tracks declare `mm`. Keys are
+`[seconds, value]` pairs, ordered from zero through the pattern duration. Each
+segment uses smooth cosine easing. A looping pattern must end where it starts.
+Use driver joint IDs or unambiguous joint names; dependent joints are computed.
+
+```json
+{
+  "name": "Inspect worm drive",
+  "duration": 8,
+  "loop": true,
+  "tracks": [{
+    "joint": "+X | Worm servo output",
+    "unit": "deg",
+    "keys": [[0, 0], [2, 150], [6, -150], [8, 0]]
+  }]
+}
+```
+
+Ideal transmission ratios are shared with physical export: a 5:1 drive turns the
+thigh by 30 degrees for 150 degrees at the worm input. Motor-driven closed hinges
+solve their passive rotation and sliding coordinates, so the curved knee link
+stays connected to the foot. The readout shows joint positions and closure error.
+An infeasible pose stops playback and keeps the last valid displayed pose.
+
+This is geometric inspection, not dynamic simulation: collision, torque, contact,
+backlash, belt motion/deformation and worm self-locking are not evaluated. Unset
+limits use labeled preview bounds. Cut planes still clip moving geometry; exact
+CAD section outlines are hidden during preview. Large assemblies reuse mesh
+buffers for motion. Isolate a leg with the outliner or annotation part links to
+see its enclosed mechanisms more clearly.
+
+The local REST API supports `GET /motion`, `GET/POST /motion/programs`, and
+`DELETE /motion/programs` with `{"name":"..."}`. `POST /motion/play` or
+`POST /motion/seek` accepts `{"program": "saved name", "time": 2}` (or a program
+object). `POST /motion/pause` and `POST /motion/stop` control the visible preview.
+Program CRUD also works headlessly; playback requires the desktop window.
+
+### Export a motion video
+
+Choose a pattern and frame it using the current camera or **Focus mechanism**.
+Select **720p** or **1080p**, choose **24, 30, or 60 fps**, then click **Export MP4…**.
+The exporter records one cycle at fixed time steps, independent of playback speed.
+It captures the 3D viewport without sidebars or comment widgets, preserving the
+viewport aspect ratio with borders when needed. Progress and **Cancel export**
+remain available while a worker encodes H.264 video. The previous pose is restored
+when export finishes. Cancellation removes the partial export and preserves an
+existing destination file. The camera is held fixed during recording.
+
+`POST /motion/export` starts an export and returns immediately:
+
+```json
+{
+  "program": "+X knee drives foot",
+  "path": "/absolute/path/knee.mp4",
+  "fps": 24,
+  "width": 1280,
+  "height": 720
+}
+```
+
+Poll `GET /motion/export` for frame progress or use `DELETE /motion/export` to
+cancel. `POST /motion/focus` frames the selected mechanism. Video encoding uses
+the FFmpeg executable supplied by the `imageio-ffmpeg` CAD dependency.

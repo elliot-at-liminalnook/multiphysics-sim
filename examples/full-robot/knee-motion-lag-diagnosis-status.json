@@ -1,0 +1,80 @@
+{
+  "purpose": "Diagnostic separation of command speed and external loading; neither new run completed, so no full-run conclusion or promotion.",
+  "scene_overrides": {
+    "base": "runs/full-robot/learning/servo-regularized-floor.scene.json",
+    "diagnostic": "runs/full-robot/learning/knee-motion-zero-gravity-no-contact.scene.json",
+    "changes": {
+      "robot.gravity": [
+        0,
+        0,
+        0
+      ],
+      "options.contact": false
+    },
+    "note": "Inertia, internal losses, motor and firmware parameters unchanged. CAD artifact unchanged."
+  },
+  "source_manifest": "runs/full-robot/learning/target-motion-final-source-manifest.json",
+  "results": {
+    "coarse": {
+      "completed": true,
+      "completed_steps": 4000,
+      "simulated_s": 1.0,
+      "error": null,
+      "stepping_wall_s": 41.761820045000086,
+      "minus_y_foot_return_sample": {
+        "time_s": 0.6900000000000001,
+        "target_deg": -6.796733330656704,
+        "actual_deg": -10.500200839985974,
+        "target_minus_actual_deg": 3.7034675093292684,
+        "note": "Same 45% progress through the commanded return segment; slow run is incomplete."
+      }
+    },
+    "refined": {
+      "completed": true,
+      "completed_steps": 8000,
+      "simulated_s": 1.0,
+      "error": null,
+      "stepping_wall_s": 58.881421376999945,
+      "minus_y_foot_return_sample": {
+        "time_s": 0.6900000000000001,
+        "target_deg": -6.796733330656704,
+        "actual_deg": -10.5032793322302,
+        "target_minus_actual_deg": 3.706546001573496,
+        "note": "Same 45% progress through the commanded return segment; slow run is incomplete."
+      }
+    },
+    "slow": {
+      "completed": false,
+      "completed_steps": 5419,
+      "simulated_s": 1.3547500000000001,
+      "error": "step 5419: hybrid advancement at 1.3549999999999616 with step 0.0000000000000006036837696399289: implicit mechanical solve: Newton did not converge after 4 iterations; residual=7.166161824597999e-4; last rejected endpoint: None",
+      "stepping_wall_s": 52.68633007500003,
+      "minus_y_foot_return_sample": {
+        "time_s": 0.98,
+        "target_deg": -6.79673333065671,
+        "actual_deg": -9.688635324176447,
+        "target_minus_actual_deg": 2.8919019935197374,
+        "note": "Same 45% progress through the commanded return segment; slow run is incomplete."
+      }
+    },
+    "zero-gravity-no-contact": {
+      "completed": false,
+      "completed_steps": 961,
+      "simulated_s": 0.24025,
+      "error": "step 961: hybrid advancement at 0.24044929004289003 with step 0.000000792343079843074: hybrid guard 34 location: Evaluation(\"implicit mechanical solve: Newton did not converge after 11 iterations; residual=4.919453297212739e-10; last rejected endpoint: None\")",
+      "stepping_wall_s": 3.1189890410000034
+    }
+  },
+  "sha256": {
+    "examples/full-robot/mechanical-servo-knee-motion-slow.json": "cf804242426972ce96829fd20ed062c4e03106f2ca259d4dd7c98ad2e29d0bdd",
+    "examples/full-robot/knee-motion-slow-sweep.json": "f34802230396c8fce60e8a3f57b733b097301700ae602ea01f532ea6ce2fbdbc",
+    "runs/full-robot/learning/servo-regularized-floor.scene.json": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2",
+    "runs/full-robot/learning/knee-motion-zero-gravity-no-contact.scene.json": "c334d812ef7cd1cd97e1a991e71e1a9a59243d647c7d136cd089b21d57e56935",
+    "runs/full-robot/learning/target-motion-final-source-manifest.json": "293feccd3b8cd8093c2f38c91c156ac6253d5abede76154528ec49cb53c9eab1",
+    "runs/full-robot/learning/knee-motion-slow-sweep.json": "dbd766d0c2f861f0508936673f41800155d6024fa8bd9b7cd0111cfa0c9fa882",
+    "runs/full-robot/learning/knee-motion-coarse.json": "e3568d7fde93d13d39ea461dcde3ae58ba9ee9f1a4f118ccbdb1fcdafa8d3bf5",
+    "runs/full-robot/learning/knee-motion-refined.json": "c64bac322ed9c4dcda706b01fb96435d31cf3508e7892f8d239527d2596a2983",
+    "runs/full-robot/learning/knee-motion-slow.json": "f13a7d2273f2279271fe0a4168dae7087cb256af11d5d5eb337be5aa8f523310",
+    "runs/full-robot/learning/knee-motion-zero-gravity-no-contact.json": "dd14bf89c95176529118c6a38684ef86dd5f5eaed729d829cf6bdcddccc0b047"
+  }
+}

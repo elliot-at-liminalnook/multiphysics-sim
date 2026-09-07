@@ -65,6 +65,54 @@ fn box_drops_rests_and_bounces() {
 }
 
 #[test]
+fn floor_contact_reports_geometric_depth_independently_of_normal_speed() {
+    let depth = 0.0001;
+    let mut forces = Vec::new();
+    for speed in [-0.5, 0.0, 0.5] {
+        let mut model = empty_model();
+        model.links.push(box_link("box", [0.1; 3], 0.5,
+            [0.0, 0.0, 0.05 - depth], false));
+        let rig = Rig::new(model, &[("initial.base.vz", speed)], euler());
+        let evaluated = rig.art.evaluate(&rig.generalized());
+        assert!(!evaluated.contacts.is_empty());
+        for contact in &evaluated.contacts {
+            assert!(contact.other.is_none());
+            assert!((contact.penetration - depth).abs() < 1e-12,
+                "speed {speed}: reported {} instead of geometric depth {depth}", contact.penetration);
+            assert!((contact.penetration + contact.point.z).abs() < 1e-12);
+        }
+        forces.push(evaluated.contacts.iter().map(|c| c.force.z).sum::<f64>());
+    }
+    // Damping legitimately changes force at fixed depth. It must not be
+    // confused with geometry in clearance/contact-validation reports.
+    assert!(forces[0] > forces[1] && forces[1] > forces[2]);
+}
+
+#[test]
+fn shallow_contact_jacobian_retains_the_active_normal_stiffness() {
+    use sim_dynamics::{JacobianParts, System};
+    let mut model = empty_model();
+    // A 0.1 micrometre penetration is common at the onset of floor contact.
+    // Perturbing the coordinate by 1 micrometre crosses the inactive branch
+    // and reports only a fraction of the physical tangent stiffness.
+    model.links.push(box_link("box", [0.1; 3], 0.5,
+        [0.0, 0.0, 0.05 - 1e-7], false));
+    let rig = Rig::new(model, &[], euler());
+    let island = &rig.runtime.islands[0];
+    let z = island.system.state_index(rig.behavior, "base.z").unwrap();
+    let vz = island.system.state_index(rig.behavior, "base.vz").unwrap();
+    let mut jac = JacobianParts::default();
+    let rates = vec![0.0; island.state.len()];
+    assert!(island.system.jacobian(0.0, &island.state, &rates, &mut jac));
+    let actual: f64 = jac.d_dx.iter().filter(|(r, c, _)| *r == vz && *c == z)
+        .map(|(_, _, value)| value).sum();
+    let bottom = rig.art.links[0].contact.iter().filter(|c| c.z < -0.049).count();
+    let expected = rig.art.floor_k * bottom as f64;
+    assert!((actual / expected - 1.0).abs() < 1e-6,
+        "contact tangent {actual} N/m, expected {expected} N/m");
+}
+
+#[test]
 fn sliding_block_stops_by_friction() {
     let mut m = empty_model();
     let k = m.world.floor_stiffness;
@@ -86,6 +134,24 @@ fn sliding_block_stops_by_friction() {
 
 #[test]
 fn four_bar_loop_holds_closure() {
+    four_bar_trajectory(&[]);
+}
+
+#[test]
+fn loop_identities_preserve_five_second_linkage_trajectory() {
+    let reference = four_bar_trajectory(&[]);
+    for hybrid in [0.0, 1.0] {
+        let candidate = four_bar_trajectory(&[("loop.structural_identities", 1.0), ("jacobian.hybrid", hybrid)]);
+        for (frame, (a, b)) in reference.iter().zip(candidate.iter()).enumerate() {
+            for (axis, (a, b)) in a.iter().zip(b).enumerate() {
+                assert!((a - b).abs() < 1e-6,
+                    "frame {frame}, joint {axis}, hybrid={hybrid}: {a} vs {b}");
+            }
+        }
+    }
+}
+
+fn four_bar_trajectory(extra: &[(&str, f64)]) -> Vec<Vec<f64>> {
     let mut m = empty_model();
     m.links.push(box_link("ground", [0.4, 0.05, 0.02], 1.0, [0.15, 0.0, -0.01], true));
     m.links.push(box_link("crank", [0.02, 0.02, 0.1], 0.05, [0.0, 0.0, 0.05], false));
@@ -99,10 +165,27 @@ fn four_bar_loop_holds_closure() {
     for j in &mut m.joints {
         j.physics.friction = Friction::default();
     }
-    let mut rig = Rig::new(m, &[("contact", 0.0), ("initial.joint.a.angle", 0.4), ("initial.joint.b.angle", -0.4), ("initial.joint.d.angle", 0.4)], midpoint());
+    let mut parameters = vec![("contact", 0.0), ("initial.joint.a.angle", 0.4), ("initial.joint.b.angle", -0.4), ("initial.joint.d.angle", 0.4)];
+    parameters.extend_from_slice(extra);
+    let mut rig = Rig::new(m, &parameters, midpoint());
+    assert_eq!(rig.art.loops[0].angular_redundant, extra.contains(&("loop.structural_identities", 1.0)));
+    // Multipliers are instantaneous reaction forces, not integrated states.
+    // A bulk state-rate read used to misclassify them and the fixed base.
+    {
+        use sim_dynamics::System;
+        let system = &rig.runtime.islands[0].system;
+        let algebraic = system.algebraic().unwrap();
+        for name in rig.art.state_names() {
+            let full = system.state_index(rig.behavior, &name).unwrap();
+            let Some(index) = system.reduced_of[full] else { continue };
+            let expected = name.starts_with("base.") || name.contains(".lambda");
+            assert_eq!(algebraic[index], expected, "wrong rate classification for {name}");
+        }
+    }
     let h = 1e-3;
     let mut worst: f64 = 0.0;
     let mut swing = 0.0f64;
+    let mut trajectory = Vec::new();
     for _ in 0..(5.0 / h) as usize {
         rig.runtime.advance(h, h).unwrap();
         let g = rig.generalized();
@@ -112,10 +195,12 @@ fn four_bar_loop_holds_closure() {
         let pb = poses[lp.b].1 + poses[lp.b].0 * lp.r_b;
         worst = worst.max((pa - pb).norm());
         swing = swing.max(rig.angle(0).abs());
+        trajectory.push(g.q);
     }
     println!("four-bar closure error over 5 s: {worst:.2e} m; crank swing up to {swing:.3} rad");
     assert!(worst < 1e-6, "closure drift {worst}");
     assert!(swing > 0.3, "the linkage moved");
+    trajectory
 }
 
 #[test]

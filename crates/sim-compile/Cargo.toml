@@ -8,7 +8,6 @@ license.workspace = true
 serde.workspace = true
 nalgebra.workspace = true
 petgraph.workspace = true
-rayon = "1"
 sim-core = { path = "../sim-core" }
 sim-couple = { path = "../sim-couple" }
 sim-dynamics = { path = "../sim-dynamics" }
@@ -19,3 +18,10 @@ thiserror.workspace = true
 sim-domain-rotational = { path = "../sim-domain-rotational" }
 sim-domain-multibody = { path = "../sim-domain-multibody" }
 sim-domain-sensing = { path = "../sim-domain-sensing" }
+
+[features]
+default = ["parallel"]
+parallel = ["dep:rayon"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rayon = { version = "1", optional = true }

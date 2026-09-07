@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "scope": "Uncalibrated explicit drive-connection experiment, frozen for the sampled teacher environment. Additional connection backlash estimated zero, motor gearbox parameters retained. No physical source CAD mutation or hardware-accuracy claim.",
+  "derivation": "examples/full-robot/prepare_drive_backlash_model.mjs",
+  "inputs": {
+    "examples/full-robot/baseline/robot.rcad": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "examples/full-robot/teacher-baseline/scene.json": "09e3e8c6c79fea5e141ed9629fb7b17b55042c141aa81b5e55c2f506f1c3c90a",
+    "examples/full-robot/teacher-baseline/config.json": "723bf2ba848dc1d8ad9211037f74602dfcab68eb6b3436f29be5d15346b8b622",
+    "examples/full-robot/teacher-environment.json": "826b8b9203c27293a253bc3de344daec114de7f62842852cbfb13f3edd585f30"
+  }
+}

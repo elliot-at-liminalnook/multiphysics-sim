@@ -257,6 +257,42 @@ class Service:
         with self.doc._lock:
             return fn()
 
+    def motion_request(self, method, parts, body):
+        if parts == ['motion', 'programs']:
+            if method == 'GET': return self.doc.robot_settings.get('motion_programs', {})
+            if method == 'POST': return self.ops.save_motion(body)
+            if method == 'DELETE': self.ops.delete_motion(body['name']); return {'deleted':body['name']}
+        if self.app is None: raise ApiError(409, 'Motion playback requires a desktop window')
+        panel = self.app.pose_panel
+        if parts == ['motion','export']:
+            if method == 'GET': return panel.video.state()
+            if method == 'DELETE': panel.video.cancel(); return panel.video.state()
+            if method == 'POST':
+                panel.prepare(body.get('program')) if isinstance(body.get('program'),dict) else None
+                if isinstance(body.get('program'),str):
+                    program = self.doc.robot_settings.get('motion_programs',{}).get(body['program'])
+                    if program is None: raise ApiError(404, 'Motion pattern not found')
+                    panel.prepare(program)
+                return panel.video.start(body['path'],body.get('fps',24),body.get('width',1280),body.get('height',720))
+        if panel.video.running and method != 'GET' and parts != ['motion','stop']: raise ApiError(409, 'Cancel or finish the video export first')
+        if parts == ['motion'] and method == 'GET': return panel.state()
+        if method != 'POST': raise ApiError(405, 'Use POST for playback controls')
+        action = parts[1] if len(parts) == 2 else ''
+        if action in ('play','seek'):
+            program = body.get('program')
+            if isinstance(program,str):
+                program = self.doc.robot_settings.get('motion_programs',{}).get(program)
+                if program is None: raise ApiError(404, 'Motion pattern not found')
+            panel.pause()
+            panel.prepare(program)
+            panel.seek(float(body.get('time',0.)))
+            if action == 'play': panel.toggle_play()
+        elif action == 'focus': panel.focus_mechanism()
+        elif action == 'pause': panel.pause()
+        elif action == 'stop': panel.stop()
+        else: raise ApiError(404, 'Unknown motion action')
+        return panel.state()
+
     def annotation_request(self, method, parts, query, body):
         try:
             if len(parts) == 3 and parts[0] == 'threads' and parts[2] == 'show' and method == 'POST':
@@ -1027,6 +1063,8 @@ def make_handler(service: Service):
                 if method == "GET":
                     return self._send(200, run(s.view))
                 return self._send(200, run(lambda: s.set_view(body)))
+            if head == 'motion':
+                return self._send(200, run(lambda: s.motion_request(method, parts, body)))
             if head == 'views':
                 return self._send(201 if method == 'POST' and len(parts) == 1 else 200,
                                   run(lambda: s.saved_view_request(method, parts, body)))

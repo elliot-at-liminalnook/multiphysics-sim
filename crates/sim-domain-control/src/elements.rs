@@ -96,6 +96,9 @@ impl Behavior for SampledProportional {
     fn guards(&self, view: &View, out: &mut Vec<f64>) {
         out.push(view.state(1) - view.time);
     }
+    fn scheduled_events(&self, view: &View, out: &mut Vec<(usize, f64)>) {
+        out.push((0, view.state(1)));
+    }
     fn jump(&mut self, _index: usize, view: &View, states: &mut [f64]) {
         let command = self.gain * (self.setpoint - view.signal_in(0));
         states[0] = command.clamp(-self.limit, self.limit);
@@ -143,5 +146,6 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     ] {
         registry.register(descriptor)?;
     }
+    crate::motion_clock::register(registry)?;
     crate::external::register(registry)
 }

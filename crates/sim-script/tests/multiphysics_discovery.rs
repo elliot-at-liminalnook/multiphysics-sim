@@ -105,8 +105,15 @@ fn sensor_catalogue_and_rhai_validation_share_channel_units_and_constraints() {
     sim_domain_sensing::register(&mut r).unwrap();
     let catalog = catalogue(&r);
     let components = catalog.as_array().unwrap();
-    assert_eq!(components.len(), 9);
+    assert_eq!(components.len(), 11);
     assert!(components.iter().all(|c| c["parameters_complete"] == true));
+    for (kind, output, unit) in [("sensor.linear_encoder", "position", "m"),
+                                  ("sensor.linear_velocity", "velocity", "m/s")] {
+        let component = components.iter().find(|c| c["type"] == kind).unwrap();
+        assert!(component["ports"].as_array().unwrap().iter().any(|p| p["name"] == output && p["unit"] == unit));
+        assert!(component["parameters"].as_array().unwrap().iter().any(|p| p["name"] == "quantum" && p["unit"] == unit));
+        evaluate(&Sources::single("linear.rhai", &format!("let s = part(\"s\", \"{kind}\", #{{period:0.01, quantum:0.001}});")), &r, Map::new()).unwrap();
+    }
     let imu = components.iter().find(|c| c["type"] == "sensor.imu").unwrap();
     assert!(imu["ports"].as_array().unwrap().iter().any(|p| p["name"] == "ax" && p["unit"] == "m/s²"));
     assert!(imu["parameters"].as_array().unwrap().iter().any(|p| p["name"] == "noise.gyro" && p["unit"] == "rad/s"));

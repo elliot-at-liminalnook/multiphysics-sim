@@ -140,6 +140,21 @@ fn encoder_counts_are_whole_and_track_the_shaft() {
 }
 
 #[test]
+fn sampled_sensor_ticks_include_reporting_endpoints_for_each_timestep() {
+    for h in [0.0005, 0.00025, 0.000125, 0.0000625] {
+        // Constant speed isolates clock boundaries from the midpoint
+        // integrator's time location for algebraic sensor tap states.
+        let (mut rt, held, speed) = tacho(vec![("period", 0.001)], 0.0);
+        for frame in 1..=10 {
+            rt.advance(0.002, h).unwrap();
+            approx(rt.get(held), rt.get(speed), 1e-10);
+            let events: u64 = rt.islands.iter().map(|island| island.stats.events).sum();
+            assert_eq!(events, 2 * frame + 1, "h={h}, frame={frame}");
+        }
+    }
+}
+
+#[test]
 fn sample_and_hold_changes_only_at_sample_instants() {
     let (period, h) = (1.0e-3, 2.5e-4);
     let (mut rt, held, _) = tacho(vec![("period", period)], 2.0);
@@ -392,4 +407,23 @@ fn quantiser_rounds_and_clamps() {
     approx(run(0.37, f64::INFINITY), 0.4, 1.0e-12);
     approx(run(-0.24, f64::INFINITY), -0.2, 1.0e-12);
     approx(run(3.0, 1.0), 1.0, 1.0e-12);
+}
+
+#[test]
+fn linear_measurements_use_translational_lanes_and_declared_units() {
+    let registry = registry();
+    let mut m = ModelWorld::default();
+    let mass = m.part(&registry, "mass", tr::MASS, [("mass", 1.0), ("initial.velocity", 0.3)]).unwrap();
+    let encoder = m.part(&registry, "encoder", sense::LINEAR_ENCODER, []).unwrap();
+    let velocity = m.part(&registry, "velocity", sense::LINEAR_VELOCITY, []).unwrap();
+    m.connect([mass.port("axis"), encoder.port("axis"), velocity.port("axis")]);
+    let mut rt = Runtime::new(m, &registry, Integrator::BackwardEuler(NewtonConfig::default())).unwrap();
+    let x = rt.signal_id(encoder.port("position"));
+    let v = rt.signal_id(velocity.port("velocity"));
+    let x0 = rt.get(x);
+    rt.advance(0.1, 0.001).unwrap();
+    approx(rt.get(x) - x0, 0.03, 1e-9);
+    approx(rt.get(v), 0.3, 1e-9);
+    assert_eq!(rt.model.state.entry(x).unwrap().quantity, sim_core::QuantityKind::Length);
+    assert_eq!(rt.model.state.entry(v).unwrap().quantity, sim_core::QuantityKind::LinearVelocity);
 }

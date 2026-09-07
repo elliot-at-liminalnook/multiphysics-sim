@@ -1,0 +1,43 @@
+{
+  "step_s": 0.00025,
+  "steps": 1600,
+  "report_every": 40,
+  "applied_generalized_loads": [
+    0
+  ],
+  "implicit": {
+    "reuse_mechanical_endpoint": true,
+    "reuse_mechanical_dynamics": true,
+    "reuse_step_jacobian": true,
+    "auxiliary_rate_unknowns": true
+  },
+  "embedding": {
+    "direct_closure_jacobian": true,
+    "dependent_solve": "pivoted_qr"
+  },
+  "motors": {
+    "residual_scales": [
+      1,
+      1,
+      1
+    ],
+    "events": {},
+    "servos": [
+      {
+        "target_rad": 0.2,
+        "supply_voltage_v": 5,
+        "winding_temperature_k": 298.15
+      }
+    ]
+  },
+  "audit_contact_steps": true,
+  "policy": {
+    "observation_source": "ideal_joint_state_diagnostics",
+    "target_bounds_rad": {
+      "joint.pivot": [
+        -1,
+        1
+      ]
+    }
+  }
+}

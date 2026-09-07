@@ -5,7 +5,7 @@
 use sim_compile::Runtime;
 use sim_core::{BehaviorId, BehaviorRegistry, ModelWorld, PortId, StateId};
 use sim_domain_robot::model::*;
-use sim_domain_robot::{register_model, Articulated, Generalized, Options, ARTICULATED};
+use sim_domain_robot::{ARTICULATED, Articulated, Generalized, Options, register_model};
 use sim_dynamics::Integrator;
 use sim_solve::NewtonConfig;
 use std::collections::BTreeMap;
@@ -252,12 +252,31 @@ pub fn options_from(extra: &[(&str, f64)]) -> Options {
     opts.contact = map.get("contact").copied().unwrap_or(1.0) > 0.5;
     opts.flex = map.get("flex").copied().unwrap_or(1.0) > 0.5;
     opts.planar = map.get("planar").copied().unwrap_or(0.0) > 0.5;
+    opts.hybrid_jacobian = map.get("jacobian.hybrid").copied().unwrap_or(0.0) > 0.5;
+    opts.floor_friction =
+        sim_domain_robot::articulated::friction::FloorFrictionModel::from_registry_speed(
+            map.get("floor.regularized_slip_speed")
+                .copied()
+                .unwrap_or(0.0),
+        )
+        .unwrap();
+    opts.structural_loop_identities = map
+        .get("loop.structural_identities")
+        .copied()
+        .unwrap_or(0.0)
+        > 0.5;
     for (k, v) in &map {
         if let Some(rest) = k.strip_prefix("initial.") {
             if let Some(n) = rest.strip_suffix(".angle") {
                 opts.initial_angles.insert(n.into(), *v);
             }
             if let Some(n) = rest.strip_suffix(".speed") {
+                opts.initial_speeds.insert(n.into(), *v);
+            }
+            if let Some(n) = rest
+                .strip_suffix(".velocity")
+                .filter(|n| n.starts_with("slide."))
+            {
                 opts.initial_speeds.insert(n.into(), *v);
             }
         }

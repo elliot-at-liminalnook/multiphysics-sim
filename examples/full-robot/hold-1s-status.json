@@ -1,0 +1,392 @@
+{
+  "version": 1,
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "experiment": "One-second fixed sampled-servo target hold from the explicitly retracted common-height startup",
+  "physics": "Unchanged experimental CAD-derived reduced mechanisms, registered motors/drivers/1kHz firmware and regularized floor friction. Imposed supply/temperature. No learned balance policy.",
+  "training_ready": false,
+  "realtime": false,
+  "results": {
+    "refined": {
+      "step_s": 0.000125,
+      "simulated_s": 1.0,
+      "stepping_wall_s": 45.021320226999805,
+      "completed": true,
+      "posture": {
+        "final_body_displacement_m": [
+          -6.032056187903201e-05,
+          -4.642119133965402e-07,
+          -0.00033572395137762166
+        ],
+        "final_marker_displacement_m": {
+          "+X-foot-surface": [
+            0.0007560125221255376,
+            1.733730405240817e-06,
+            -6.987702823413322e-05
+          ],
+          "+Y-foot-surface": [
+            0.00015844451501101364,
+            0.0009555615885246116,
+            -3.1768739130300094e-05
+          ],
+          "-X-foot-surface": [
+            -0.0009189871017983853,
+            -3.187294871490403e-06,
+            -2.1908243527934967e-05
+          ],
+          "-Y-foot-surface": [
+            0.00016186310403710526,
+            -0.0009594207373803121,
+            -3.1753886229890504e-05
+          ]
+        },
+        "maximum_body_height_change_m": 0.00033572395137762166,
+        "maximum_body_horizontal_displacement_m": 6.495118552567538e-05,
+        "maximum_body_tilt_rad": 0.00035223349536024466,
+        "maximum_marker_displacement_m": {
+          "+X-foot-surface": 0.0007592369449036107,
+          "+Y-foot-surface": 0.0009691294374781335,
+          "-X-foot-surface": 0.0009192537317057097,
+          "-Y-foot-surface": 0.0009734968541575311
+        },
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "samples": 101,
+        "scope": "Sampled motion relative to the first frame, with declared local/world up directions. No static-equilibrium, between-sample clearance, actuator-load, walking, or hardware-accuracy gate is established."
+      },
+      "accepted_segments": 8008,
+      "continuous_attempts": 8057,
+      "minimum_accepted_step_s": 2.6909993532907295e-06,
+      "internal_contact_samples": 0,
+      "final_upward_floor_force_n": 39.006454843555595,
+      "servo_tick_counts": {
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "maximum_sampled_original_closure": {
+        "position": 9.813538870417915e-13,
+        "velocity": 6.6769506590347305e-15,
+        "acceleration": 7.688072400924284e-12
+      }
+    },
+    "coarse": {
+      "step_s": 0.00025,
+      "simulated_s": 1.0,
+      "stepping_wall_s": 30.469707075999974,
+      "completed": true,
+      "posture": {
+        "final_body_displacement_m": [
+          -7.818850824491737e-06,
+          -1.4051688264466095e-05,
+          -0.0003270547956776373
+        ],
+        "final_marker_displacement_m": {
+          "+X-foot-surface": [
+            0.0007893611173742099,
+            1.535081283117267e-06,
+            -6.928888145413259e-05
+          ],
+          "+Y-foot-surface": [
+            8.70864812653983e-05,
+            0.0009125818522324747,
+            -3.189468292419395e-05
+          ],
+          "-X-foot-surface": [
+            -0.0008365014041033514,
+            7.963337344838181e-07,
+            -2.207459435238368e-05
+          ],
+          "-Y-foot-surface": [
+            9.06371414978813e-05,
+            -0.0009421350505782744,
+            -3.188045263724515e-05
+          ]
+        },
+        "maximum_body_height_change_m": 0.0003270547956776373,
+        "maximum_body_horizontal_displacement_m": 6.10360943515708e-05,
+        "maximum_body_tilt_rad": 0.0004021949724068792,
+        "maximum_marker_displacement_m": {
+          "+X-foot-surface": 0.0007923978036251562,
+          "+Y-foot-surface": 0.0009172823791189263,
+          "-X-foot-surface": 0.0008367929976583918,
+          "-Y-foot-surface": 0.0009470215985960353
+        },
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "samples": 101,
+        "scope": "Sampled motion relative to the first frame, with declared local/world up directions. No static-equilibrium, between-sample clearance, actuator-load, walking, or hardware-accuracy gate is established."
+      },
+      "accepted_segments": 4008,
+      "continuous_attempts": 4045,
+      "minimum_accepted_step_s": 7.416731123156517e-06,
+      "internal_contact_samples": 0,
+      "final_upward_floor_force_n": 39.00670739994368,
+      "servo_tick_counts": {
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "maximum_sampled_original_closure": {
+        "position": 3.569089468413722e-13,
+        "velocity": 2.536599402747086e-15,
+        "acceleration": 4.580225088091083e-13
+      },
+      "comparison_to_125us": {
+        "maximum_marker_difference_m": 0.00022752312479654995,
+        "maximum_sampled_differences": {
+          "current_a": 0.07454784577715116,
+          "gear_speed_rad_s": 0.14906444753505033,
+          "heating_w": 0.1583027633011428,
+          "joint_positions": 0.0037434710809858243,
+          "joint_velocities": 0.23931014381722931,
+          "motor_states": 1.0,
+          "motor_voltage_v": 1.0063552285408264,
+          "power_difference_w": 0.0008842308378849972,
+          "servo_commands": 0.09099843430898052,
+          "servo_states": 0.17724483939668695,
+          "shaft_torque_nm": 0.07913958700087602,
+          "supply_current_a": 0.018996973649554494
+        },
+        "same_event_counts": true,
+        "maximum_ordered_event_time_difference_s": 0.17996250404396663,
+        "maximum_10ms_window_impulse_difference_ns": 0.03451980511907758
+      }
+    },
+    "500us": {
+      "step_s": 0.0005,
+      "simulated_s": 1.0,
+      "stepping_wall_s": 25.395364321999974,
+      "completed": true,
+      "posture": {
+        "final_body_displacement_m": [
+          3.391488055370646e-05,
+          -2.5953925624699447e-05,
+          -0.00031698075606452947
+        ],
+        "final_marker_displacement_m": {
+          "+X-foot-surface": [
+            0.0007977441070701197,
+            1.5365625393281793e-06,
+            -6.874439051618442e-05
+          ],
+          "+Y-foot-surface": [
+            3.267331213763821e-05,
+            0.0008673835000262975,
+            -3.210948100396127e-05
+          ],
+          "-X-foot-surface": [
+            -0.0007718858311328569,
+            1.5278286948141792e-06,
+            -2.2172740940129554e-05
+          ],
+          "-Y-foot-surface": [
+            3.360282171934164e-05,
+            -0.0009188234725237554,
+            -3.2095657417574586e-05
+          ]
+        },
+        "maximum_body_height_change_m": 0.00031698075606452947,
+        "maximum_body_horizontal_displacement_m": 0.00010744812703359619,
+        "maximum_body_tilt_rad": 0.000491811845702223,
+        "maximum_marker_displacement_m": {
+          "+X-foot-surface": 0.0008007020748174576,
+          "+Y-foot-surface": 0.000868592367117198,
+          "-X-foot-surface": 0.0007722057374851472,
+          "-Y-foot-surface": 0.0009199977470152742
+        },
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "samples": 101,
+        "scope": "Sampled motion relative to the first frame, with declared local/world up directions. No static-equilibrium, between-sample clearance, actuator-load, walking, or hardware-accuracy gate is established."
+      },
+      "accepted_segments": 2008,
+      "continuous_attempts": 2045,
+      "minimum_accepted_step_s": 4.05602161760131e-05,
+      "internal_contact_samples": 0,
+      "final_upward_floor_force_n": 39.006946915931366,
+      "servo_tick_counts": {
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "maximum_sampled_original_closure": {
+        "position": 8.03301869467532e-13,
+        "velocity": 3.4165378859363216e-15,
+        "acceleration": 4.722888746755416e-13
+      },
+      "comparison_to_125us": {
+        "maximum_marker_difference_m": 0.00044656695137176844,
+        "maximum_sampled_differences": {
+          "current_a": 0.1582916637507661,
+          "gear_speed_rad_s": 0.17931837262062966,
+          "heating_w": 0.21899431989107304,
+          "joint_positions": 0.007692855490037477,
+          "joint_velocities": 0.3831450024353093,
+          "motor_states": 1.0,
+          "motor_voltage_v": 1.753229417810165,
+          "power_difference_w": 0.00143289591794582,
+          "servo_commands": 0.15866162171150483,
+          "servo_states": 0.3668917037780871,
+          "shaft_torque_nm": 0.11767079507690029,
+          "supply_current_a": 0.02423931675349706
+        },
+        "same_event_counts": true,
+        "maximum_ordered_event_time_difference_s": 0.4393478896320638,
+        "maximum_10ms_window_impulse_difference_ns": 0.03509195826066455
+      }
+    },
+    "1ms": {
+      "step_s": 0.001,
+      "simulated_s": 1.0,
+      "stepping_wall_s": 14.234394810999992,
+      "completed": true,
+      "posture": {
+        "final_body_displacement_m": [
+          -5.249559017943208e-05,
+          -1.9770154006911345e-05,
+          -0.0003112764070602569
+        ],
+        "final_marker_displacement_m": {
+          "+X-foot-surface": [
+            0.0006871194428071381,
+            7.561273876692507e-07,
+            -6.908847016789954e-05
+          ],
+          "+Y-foot-surface": [
+            7.094345323529344e-06,
+            0.0008573825017874626,
+            -3.209507143475676e-05
+          ],
+          "-X-foot-surface": [
+            -0.0008487705391725942,
+            1.2166261448140288e-06,
+            -2.2368499254576957e-05
+          ],
+          "-Y-foot-surface": [
+            7.168874665708022e-06,
+            -0.0008959672354746373,
+            -3.208129522230818e-05
+          ]
+        },
+        "maximum_body_height_change_m": 0.0003112764070602569,
+        "maximum_body_horizontal_displacement_m": 0.00019891312071046454,
+        "maximum_body_tilt_rad": 0.0005148606281465838,
+        "maximum_marker_displacement_m": {
+          "+X-foot-surface": 0.0006905844750082057,
+          "+Y-foot-surface": 0.0008580123412383413,
+          "-X-foot-surface": 0.0008490661093845487,
+          "-Y-foot-surface": 0.0008965700693817398
+        },
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "samples": 101,
+        "scope": "Sampled motion relative to the first frame, with declared local/world up directions. No static-equilibrium, between-sample clearance, actuator-load, walking, or hardware-accuracy gate is established."
+      },
+      "accepted_segments": 1008,
+      "continuous_attempts": 1057,
+      "minimum_accepted_step_s": 4.1275327657254655e-05,
+      "internal_contact_samples": 0,
+      "final_upward_floor_force_n": 39.00719447500424,
+      "servo_tick_counts": {
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "maximum_sampled_original_closure": {
+        "position": 9.885425811262394e-13,
+        "velocity": 2.0105445086571194e-15,
+        "acceleration": 3.7247982476174e-13
+      },
+      "comparison_to_125us": {
+        "maximum_marker_difference_m": 0.0004972570919895829,
+        "maximum_sampled_differences": {
+          "current_a": 0.16638394092779052,
+          "gear_speed_rad_s": 0.1790448179250973,
+          "heating_w": 0.33302683073471734,
+          "joint_positions": 0.009168682755201841,
+          "joint_velocities": 0.45050423352982466,
+          "motor_states": 1.0,
+          "motor_voltage_v": 1.7314355094452145,
+          "power_difference_w": 0.00212449857009496,
+          "servo_commands": 0.1566939374580494,
+          "servo_states": 0.35079879235944555,
+          "shaft_torque_nm": 0.14007392302693328,
+          "supply_current_a": 0.02655068536897577
+        },
+        "same_event_counts": true,
+        "maximum_ordered_event_time_difference_s": 0.5660384425034981,
+        "maximum_10ms_window_impulse_difference_ns": 0.032910530496571624
+      }
+    }
+  },
+  "timing_scope": "Single exploratory native CPU runs, not matched-error speedups or controlled repeat benchmarks. Larger-step measurements may overlap small diagnostic builds.",
+  "comparison_scope": "101 snapshots at 10 ms spacing, plus complete accepted BE contact-impulse coverage and event logs. The prior 100 ms comparison sampled every 2 ms; its 0.235 mm maximum is not superseded by the sparser one-second comparison.",
+  "reference_limit": "125 us is the finest tested one-second run, not a verified continuous-time or hardware reference.",
+  "validation": {
+    "shared_posture_tests": 3,
+    "wasm_runtime_compile": true,
+    "ci_posture_test": true
+  },
+  "decision": "Keep all timestep choices experimental. All complete and remain nearly upright, but transient motor/force differences and sustained foot displacement still need task budgets/calibration. No timestep is promoted on marker agreement alone.",
+  "next": [
+    "Check loaded tracking and contact differences on representative commanded steps, with declared placement/clearance and actuator margins.",
+    "Derive a bounded coupled operating envelope and attach those bounds to planner references.",
+    "Complete shared observation/action contract and quadruped planning, then teacher/student and robust learning."
+  ],
+  "artifacts_sha256": {
+    "runs/full-robot/learning/servo-hold-1s-refined-execution.json": "3baa2f0021a2489fc1223cfb71c571809125f09a24b89c11fd8a0fafe4920bbb",
+    "runs/full-robot/learning/servo-hold-1s-500us.json": "1cc84400f76c8b57116f33a891b6222f1f8131b48a7bd07d3c6a75a9dc649eac",
+    "runs/full-robot/learning/servo-hold-1s-refined.json": "536bb54db74ebab8612c8fb095e54dcc12b58d044015d9d928fd06c5907d82df",
+    "runs/full-robot/learning/servo-hold-1s-refined-posture.json": "1a841e905a6c9a11b07ff6fa19bace9f127a817948d860c6957d6c3cfbc9110a",
+    "runs/full-robot/learning/servo-hold-1s-coarse-posture.json": "a2fbd89dc25401cb7051cb88d642af178a25aa23288a5bc9e9e128f7b363b764",
+    "runs/full-robot/learning/servo-hold-1s-500us-comparison.json": "96e99b6b77bb38bf808c1cd68df0f278d98e818a0c233b688a04bc2407ace8f7",
+    "runs/full-robot/learning/servo-hold-1s-1ms-comparison.json": "89b6fbb5077d9c662fed5aa861eb835d9db4d4201c09ff68cb8d6c2f23723a24",
+    "runs/full-robot/learning/servo-hold-1s-500us-posture.json": "77a9473afb48e62f8f7d3281edca6846487ae604f796388d279855775890d6dd",
+    "runs/full-robot/learning/servo-hold-1s-500us-execution.json": "14f23b0483b01ca5484600e4513687807cc45280daba3e2adc2d5d9d4c0244da",
+    "runs/full-robot/learning/servo-hold-1s-coarse-execution.json": "0a48cb3cde75269556cf53f5fa2e326360fff8d9ae47f524facdca0396d2f28c",
+    "runs/full-robot/learning/servo-hold-1s-1ms.json": "4e1ede74893824685f8e3753492a193687cb63e48503add22e4b58aa684cda6a",
+    "runs/full-robot/learning/servo-hold-1s-1ms-posture.json": "bc7cf31dd0c931d12d699ec76a439ea541d48b0cd158a290a77c7b67579aea03",
+    "runs/full-robot/learning/servo-hold-1s-coarse.json": "2d0d01d7baef665cbe8a9bdcac5b16631d5bf5f1d51fa068899e6480951bfc1c",
+    "runs/full-robot/learning/servo-hold-1s-comparison.json": "a6012868a58ad1dbf96e91a12a25103aa7b8517344d69202eb3ba2ad3731567b",
+    "runs/full-robot/learning/servo-hold-1s-1ms-execution.json": "8f81d9330fd51e8f462ba9605e71a0743f4930f5efd625632f01400c5a1bca7d",
+    "runs/full-robot/learning/hold-posture-source-manifest.json": "0363017d292c0301de602f84b83445fdb58fc760f70e58acf13d893668edc168",
+    "runs/full-robot/learning/jacobian-reuse-source-manifest.json": "67a0ef360885701b0f288fa08725ca562f375a29bae32e57f073fba68fb56d42",
+    "examples/full-robot/mechanical-servo-hold-1s-refined.json": "416156695077ed0627b04f1a091b18d9d7427785b66dec4ea2ba29780ffc2a2d",
+    "examples/full-robot/mechanical-servo-hold-1s-500us.json": "b9363198cd2bd1b9a4ae26b62ea2463ede829fec54e2efc1685d49417b03bec4",
+    "examples/full-robot/mechanical-servo-hold-1s-coarse.json": "93c3c0c7f0c458521de6ea0c4374b962941b045a001dda0fe6291289d025473e",
+    "examples/full-robot/mechanical-servo-hold-1s-1ms.json": "c9586bda3a3ab7f05f4a02411e6568740b00a298e319af8c2dbfcaf3bdc091af",
+    "examples/full-robot/hold-1s-metrics.json": "b9a22e34c2b0c0c9ba706a06ab9fdcf51e36d17eeac5aef9ba80dfd6b4337643"
+  }
+}

@@ -2,6 +2,17 @@
 
 pub mod island;
 
+/// Available workers for compiled numerical derivatives in the current pool.
+/// This is capacity, not measured utilization; small components may run serially.
+/// Builds without native parallel support (including WASM) report one.
+#[inline]
+pub fn derivative_worker_capacity() -> usize {
+    #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
+    { rayon::current_num_threads() }
+    #[cfg(not(all(feature = "parallel", not(target_arch = "wasm32"))))]
+    { 1 }
+}
+
 static ELIMINATION: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Turn the compile-time elimination of signal and rate-lane unknowns on

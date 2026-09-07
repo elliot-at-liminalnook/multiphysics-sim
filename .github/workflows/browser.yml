@@ -1,0 +1,189 @@
+name: Native and browser runtime
+on:
+  push:
+    paths: ['crates/**', 'Cargo.*', 'web/**', 'examples/interactive/**', 'examples/full-robot/teacher-*', 'examples/full-robot/teacher-baseline/**', '.github/workflows/browser.yml']
+  pull_request:
+    paths: ['crates/**', 'Cargo.*', 'web/**', 'examples/interactive/**', 'examples/full-robot/teacher-*', 'examples/full-robot/teacher-baseline/**', '.github/workflows/browser.yml']
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix web
+      - run: cd web && npx playwright install --with-deps chromium
+      - run: cargo test --locked -p sim-runtime --lib --test session
+      - run: cargo test --locked -p sim-runtime --test tracking
+      - run: cargo test --locked -p sim-runtime --test motion_tracking
+      - name: Sampled task-space tracking fixture
+        run: cargo run --locked -p sim-runtime --bin sim-track -- compare examples/interactive/tracking/candidate.json examples/interactive/tracking/reference.json examples/interactive/tracking/requirements.json
+      - run: cargo test --locked -p sim-compile --test rate_jacobian --test state_row_jacobian
+      - run: cargo test --locked -p sim-compile --lib local_fd_tests
+      - run: cargo test --locked -p sim-runtime --example compare_matrices
+      - run: cargo test --locked -p sim-runtime --example capture_trajectory --example resolve_captured_step
+      - run: cargo test --locked -p sim-runtime --example capture_embedded_window
+      - run: cargo check --locked -p sim-runtime --example capture_contact_impulses
+      - run: cargo check --locked -p sim-runtime --example check_captured_stage
+      - run: cargo test --locked -p sim-compile --no-default-features --test rate_jacobian --test state_row_jacobian
+      - run: cargo test --locked -p sim-compile --no-default-features --lib local_fd_tests
+      - run: cargo test --locked -p sim-solve --lib --test convergence
+      - run: cargo test --locked -p sim-solve --test coloring
+      - run: cargo test --locked -p sim-runtime --test posture
+      - run: cargo test --locked -p sim-domain-control --test trajectory
+      - run: cargo test --locked -p sim-domain-control --test motion_clock
+      - run: cargo test --locked -p sim-runtime --test planning
+      - run: cargo test --locked -p sim-runtime --test lift
+      - run: cargo test --locked -p sim-runtime --test embedded_session --test task_observation
+      - run: cargo test --locked -p sim-runtime --test drive_backlash
+      - run: cargo test --locked -p sim-runtime --test environment
+      - run: cargo test --locked -p sim-runtime --test body_feedback --test point_feedback
+      - run: cargo test --locked -p sim-runtime --lib support::tests
+      - run: cargo check --locked -p sim-runtime --example plan_marker_motion --example summarize_marker_clearance --example evaluate_lift
+      - run: SIM_SPARSE_FROM=0 cargo test --locked -p sim-solve --test convergence numerical_cache_snapshots_refresh_and_handle_dimension_changes
+      - run: cargo test --locked -p sim-dynamics --test jacobian_check
+      - run: cargo test --locked -p sim-dynamics --test scheduled_events
+      - run: cargo test --locked -p sim-dynamics --test implicit_audit
+      - run: cargo test --locked -p sim-dynamics --test hybrid_stepper
+      - run: cargo test --locked -p sim-dynamics --test root_order
+      - run: cargo test --locked -p sim-dynamics --test step_breakpoints
+      - run: cargo test --locked -p sim-domain-sensing --test sensing
+      - run: cargo test --locked -p sim-domain-robot --test jacobian
+      - run: cargo test --locked -p sim-domain-robot --test constraint_audit
+      - run: cargo test --locked -p sim-domain-robot --no-default-features --test constraint_audit
+      - run: cargo test --locked -p sim-domain-robot --test transmission_coordinates
+      - run: cargo test --locked -p sim-domain-robot --lib --test embedding
+      - run: cargo test --locked -p sim-domain-robot --test embedded_step
+      - run: cargo test --locked -p sim-domain-robot --test embedded_motor
+      - run: cargo test --locked -p sim-domain-robot --test motor_reduction --test motor_jacobian
+      - run: cargo test --locked -p sim-domain-robot --lib actuator_audit
+      - run: cargo check --locked -p sim-runtime --example audit_actuators
+      - run: cargo test --locked -p sim-domain-robot --test servo_clock
+      - run: cargo test --locked -p sim-domain-robot --no-default-features --test embedding
+      - run: cargo test --locked -p sim-domain-robot --no-default-features --test embedded_step
+      - run: cargo test --locked -p sim-domain-robot --no-default-features --test embedded_motor
+      - run: cargo check --locked -p sim-runtime --example audit_embedding
+      - run: cargo check --locked -p sim-runtime --example audit_analytic_mechanisms
+      - run: cargo check --locked -p sim-runtime --example place_supports
+      - run: cargo check --locked -p sim-runtime --example integrate_embedding
+      - run: cargo test --locked -p sim-runtime --example compare_embedding
+      - run: cargo check --locked -p sim-runtime --example compare_motion --example summarize_hold
+      - run: cargo test --locked -p sim-domain-robot --test rigid_inertia
+      - run: cargo test --locked -p sim-domain-robot --no-default-features --test rigid_inertia
+      - run: cargo test --locked -p sim-domain-robot --no-default-features --test transmission_coordinates
+      - run: cargo check --locked -p sim-runtime --example compare_transmission_block --example compare_constraint_rows
+      - run: cargo test --locked -p sim-domain-robot --test motor_jacobian
+      - run: cargo test --locked -p sim-domain-robot --test backlash_events
+      - run: cargo test --locked -p sim-domain-robot --lib band_tests
+      - run: cargo test --locked -p sim-domain-robot --lib exclusion_tests
+      - run: cargo test --locked -p sim-domain-robot --test articulated
+      - run: cargo test --locked -p sim-domain-multibody --test regularized_friction
+      - run: cargo test --locked -p sim-domain-robot --test regularized_friction
+      - run: cargo test --locked -p sim-domain-robot --no-default-features --test regularized_friction
+      - run: cargo test --locked -p sim-domain-robot --no-default-features --test jacobian
+      - run: cargo test --locked -p sim-compile --test parallel_jacobian
+      - run: cargo test --locked -p sim-compile --no-default-features --test island
+      - run: cargo build --locked --release -p sim-web --target wasm32-unknown-unknown
+      - run: cargo install wasm-bindgen-cli --version 0.2.127 --locked
+      - name: Package worker and run the native reference
+        run: |
+          mkdir -p runs/interactive/web
+          wasm-bindgen target/wasm32-unknown-unknown/release/sim_web.wasm --target web --out-dir runs/interactive/web
+          cp web/worker.js runs/interactive/web/worker.js
+          cargo run --locked --release -p sim-runtime --bin sim-session -- examples/interactive/pendulum.scene.json 20 runs/interactive/native.recording.json > runs/interactive/native.frame.json
+      - name: Jacobian checks and independent numerical trajectory reference
+        run: |
+          cargo run --locked --release -p sim-runtime --bin sim-validate -- jacobian examples/interactive/pendulum.scene.json 5 > runs/interactive/jacobian-check.json
+          cargo run --locked --release -p sim-runtime --bin sim-validate -- compare runs/interactive/native.recording.json > runs/interactive/jacobian-trajectory-comparison.json
+      - name: Browser physics, Rhai control, replay, responsiveness and parity
+        run: node web/tests/runtime.mjs runs/interactive/web examples/interactive/pendulum.scene.json runs/interactive/native.frame.json runs/interactive/browser-runtime-report.json
+      - name: Interactive viewer with live Rust and Rhai fixture
+        run: |
+          node web/build-viewer.mjs runs/interactive/viewer --fixture-only
+          node web/tests/viewer.mjs runs/interactive/viewer runs/interactive/viewer-report.json
+      - name: Incremental motor session native and WASM lifecycle
+        run: |
+          cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.embedded.json > runs/interactive/pendulum-embedded-native.json
+          node web/tests/embedded.mjs runs/interactive/viewer pendulum-embedded runs/interactive/pendulum-embedded-native.json runs/interactive/pendulum-embedded-browser.json
+      - name: Teacher environment transitions and task replay in native and WASM
+        run: |
+          cargo run --locked --release -p sim-runtime --example run_environment -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.policy.json examples/interactive/pendulum.environment.json > runs/interactive/pendulum-environment-native.json
+          node web/tests/environment.mjs runs/interactive/viewer pendulum-environment runs/interactive/pendulum-environment-native.json runs/interactive/pendulum-environment-browser.json
+      - name: Versioned quadruped environment in native and WASM
+        run: |
+          node web/build-viewer.mjs runs/interactive/teacher-viewer --environment-only
+          cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/teacher-baseline/scene.json examples/full-robot/teacher-baseline/config.json examples/full-robot/teacher-environment.json > runs/interactive/robot-environment-native.json
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-teacher-environment runs/interactive/robot-environment-native.json runs/interactive/robot-environment-browser.json
+      - name: Read-only bounded diagnostic capture
+        run: |
+          cargo build --locked --release -p sim-runtime --example capture_embedded_window
+          node examples/interactive/check_capture_window.mjs target/release/examples/capture_embedded_window target/release/examples/integrate_embedding
+      - name: Explicit drive-backlash provenance in native and WASM
+        run: |
+          cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.drive-backlash.scene.json examples/interactive/pendulum.embedded.json > runs/interactive/drive-backlash-native.json
+          node web/tests/embedded.mjs runs/interactive/viewer pendulum-drive-backlash runs/interactive/drive-backlash-native.json runs/interactive/drive-backlash-browser.json
+      - name: Condensed detailed motor native and WASM parity
+        run: |
+          cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.condensed.json > runs/interactive/pendulum-condensed-native.json
+          node web/tests/embedded.mjs runs/interactive/viewer pendulum-condensed runs/interactive/pendulum-condensed-native.json runs/interactive/pendulum-condensed-browser.json
+      - name: Sampled Rhai motor policy native and WASM parity
+        run: |
+          cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.policy.json > runs/interactive/pendulum-policy-native.json
+          node web/tests/embedded.mjs runs/interactive/viewer pendulum-policy runs/interactive/pendulum-policy-native.json runs/interactive/pendulum-policy-browser.json
+      - name: Experimental hybrid derivative path in native and WASM
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const s=JSON.parse(readFileSync("examples/interactive/pendulum.scene.json")); s.options.hybrid_articulated_jacobian=true; writeFileSync("runs/interactive/hybrid.scene.json",JSON.stringify(s));'
+          cargo run --locked --release -p sim-runtime --bin sim-session -- runs/interactive/hybrid.scene.json 20 runs/interactive/hybrid.recording.json > runs/interactive/hybrid.frame.json
+          cargo run --locked --release -p sim-runtime --bin sim-validate -- compare runs/interactive/hybrid.recording.json > runs/interactive/hybrid-trajectory-comparison.json
+          node web/tests/runtime.mjs runs/interactive/web runs/interactive/hybrid.scene.json runs/interactive/hybrid.frame.json runs/interactive/hybrid-browser-report.json
+      - name: Experimental motor derivative path in native and WASM
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const s=JSON.parse(readFileSync("examples/interactive/pendulum.scene.json")); s.options.analytic_motor_jacobian=true; writeFileSync("runs/interactive/motor-analytic.scene.json",JSON.stringify(s));'
+          cargo run --locked --release -p sim-runtime --bin sim-session -- runs/interactive/motor-analytic.scene.json 20 runs/interactive/motor-analytic.recording.json > runs/interactive/motor-analytic.frame.json
+          cargo run --locked --release -p sim-runtime --bin sim-validate -- compare runs/interactive/motor-analytic.recording.json > runs/interactive/motor-analytic-trajectory-comparison.json
+          node web/tests/runtime.mjs runs/interactive/web runs/interactive/motor-analytic.scene.json runs/interactive/motor-analytic.frame.json runs/interactive/motor-analytic-browser-report.json
+      - name: Contact-enabled native and WASM parity and replay
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const s=JSON.parse(readFileSync("examples/interactive/pendulum.scene.json")); s.options.contact=true; s.options.step=0.000125; s.robot.world.floor_z+=1e-6; writeFileSync("runs/interactive/contact.scene.json",JSON.stringify(s));'
+          cargo run --locked --release -p sim-runtime --bin sim-session -- runs/interactive/contact.scene.json 20 runs/interactive/contact.recording.json runs/interactive/contact.frames.json > runs/interactive/contact.frame.json
+          node web/tests/runtime.mjs runs/interactive/web runs/interactive/contact.scene.json runs/interactive/contact.frames.json runs/interactive/contact-browser-report.json --require-contacts --audit
+      - name: Experimental guarded backtracking scene in native and WASM
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const s=JSON.parse(readFileSync("runs/interactive/contact.scene.json")); s.options.guarded_backtracking=true; writeFileSync("runs/interactive/guarded-search.scene.json",JSON.stringify(s));'
+          cargo run --locked --release -p sim-runtime --bin sim-session -- runs/interactive/guarded-search.scene.json 20 runs/interactive/guarded-search.recording.json runs/interactive/guarded-search.frames.json > runs/interactive/guarded-search.frame.json
+          cargo run --locked --release -p sim-runtime --example capture_contact_impulses -- runs/interactive/guarded-search.recording.json > runs/interactive/guarded-search.impulses.json
+          node web/tests/runtime.mjs runs/interactive/web runs/interactive/guarded-search.scene.json runs/interactive/guarded-search.frames.json runs/interactive/guarded-search-browser-report.json --require-contacts --audit --require-guarded-search --impulses=runs/interactive/guarded-search.impulses.json
+      - name: Experimental backlash events in native and WASM
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const s=JSON.parse(readFileSync("runs/interactive/contact.scene.json")); s.options.backlash_events=true; writeFileSync("runs/interactive/backlash-events.scene.json",JSON.stringify(s));'
+          cargo run --locked --release -p sim-runtime --bin sim-session -- runs/interactive/backlash-events.scene.json 20 runs/interactive/backlash-events.recording.json runs/interactive/backlash-events.frames.json > runs/interactive/backlash-events.frame.json
+          node web/tests/runtime.mjs runs/interactive/web runs/interactive/backlash-events.scene.json runs/interactive/backlash-events.frames.json runs/interactive/backlash-events-browser-report.json --require-contacts --audit
+      - name: Experimental rate partials with independent reference and browser parity
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const s=JSON.parse(readFileSync("runs/interactive/contact.scene.json")); s.options.articulated_rate_partials=true; writeFileSync("runs/interactive/rate-partials.scene.json",JSON.stringify(s));'
+          cargo run --locked --release -p sim-runtime --bin sim-session -- runs/interactive/rate-partials.scene.json 20 runs/interactive/rate-partials.recording.json runs/interactive/rate-partials.frames.json > runs/interactive/rate-partials.frame.json
+          cargo run --locked --release -p sim-runtime --bin sim-validate -- compare runs/interactive/rate-partials.recording.json > runs/interactive/rate-partials-comparison.json
+          node web/tests/runtime.mjs runs/interactive/web runs/interactive/rate-partials.scene.json runs/interactive/rate-partials.frames.json runs/interactive/rate-partials-browser-report.json --require-contacts --audit
+      - name: Experimental event matrix reuse with independent reference
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const s=JSON.parse(readFileSync("runs/interactive/backlash-events.scene.json")); s.options.event_jacobian_reuse=true; writeFileSync("runs/interactive/event-reuse.scene.json",JSON.stringify(s));'
+          cargo run --locked --release -p sim-runtime --bin sim-session -- runs/interactive/event-reuse.scene.json 20 runs/interactive/event-reuse.recording.json runs/interactive/event-reuse.frames.json > runs/interactive/event-reuse.frame.json
+          cargo run --locked --release -p sim-runtime --bin sim-validate -- compare runs/interactive/event-reuse.recording.json > runs/interactive/event-reuse-comparison.json
+          node web/tests/runtime.mjs runs/interactive/web runs/interactive/event-reuse.scene.json runs/interactive/event-reuse.frames.json runs/interactive/event-reuse-browser-report.json --require-contacts --audit
+      - name: Experimental hybrid contact preparation in native and WASM
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const s=JSON.parse(readFileSync("runs/interactive/event-reuse.scene.json")); s.options.hybrid_articulated_jacobian=true; writeFileSync("runs/interactive/hybrid-contact.scene.json",JSON.stringify(s));'
+          cargo run --locked --release -p sim-runtime --bin sim-session -- runs/interactive/hybrid-contact.scene.json 20 runs/interactive/hybrid-contact.recording.json runs/interactive/hybrid-contact.frames.json > runs/interactive/hybrid-contact.frame.json
+          cargo run --locked --release -p sim-runtime --bin sim-validate -- compare runs/interactive/hybrid-contact.recording.json > runs/interactive/hybrid-contact-comparison.json
+          node web/tests/runtime.mjs runs/interactive/web runs/interactive/hybrid-contact.scene.json runs/interactive/hybrid-contact.frames.json runs/interactive/hybrid-contact-browser-report.json --require-contacts --audit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-runtime-evidence
+          path: runs/interactive/

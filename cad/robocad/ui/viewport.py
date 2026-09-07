@@ -103,7 +103,7 @@ class Camera:
         self.distance = max(0.5, min(1.0e6, self.distance * factor))
 
     def focus(self, lo: Vec3, hi: Vec3):
-        self.target = v_scale(v_add(lo, hi), 0.5)
+        self.target = tuple(float(v) for v in v_scale(v_add(lo, hi), 0.5))
         radius = 0.5 * v_dist(lo, hi) or 10.0
         self.distance = radius / math.sin(math.radians(self.fov) / 2) * 1.1
 
@@ -309,6 +309,7 @@ class Viewport(QOpenGLWidget):
         self.show_comment_pins = True
         self.pose_matrices = {}
         self._pose_base = None
+        self._pose_gpu = False
         self._image_textures = {}
         self.comment_hit = lambda x, y: None
         self._consume_left = False
@@ -349,11 +350,13 @@ class Viewport(QOpenGLWidget):
                 self.items = self._pose_base
             self._pose_base = None
             self.pose_matrices = {}
+            self._pose_gpu = False
             self.update()
             return
         if self._pose_base is None:
             self.sync()
             self._pose_base = self.items
+            self._pose_gpu = sum(it.indices.size for it in self.items.values()) > 150000
         self.pose_matrices = matrices
         posed = {}
         for nid,it in self._pose_base.items():
@@ -364,6 +367,13 @@ class Viewport(QOpenGLWidget):
             rotation, offset = matrix[:3,:3], matrix[:3,3]
             def points(arr):
                 return np.ascontiguousarray(np.asarray(arr).reshape(-1,3) @ rotation.T + offset, dtype=np.float32)
+            if self._pose_gpu:
+                # Transform only eight bounds corners on the CPU. OpenGL moves
+                # the original buffers, so million-triangle imports stay cheap.
+                from itertools import product
+                corners = points(list(product(*zip(*it.bbox))))
+                posed[nid] = replace(it, bbox=(tuple(map(float,corners.min(axis=0))),tuple(map(float,corners.max(axis=0)))))
+                continue
             vertices = points(it.vertices)
             posed[nid] = replace(it, vertices=vertices,
                 normals=np.ascontiguousarray(it.normals @ rotation.T, dtype=np.float32),
@@ -706,8 +716,11 @@ class Viewport(QOpenGLWidget):
             if not self.is_visible(nid):
                 continue
             node = self.doc.nodes[nid]
+            GL.glPushMatrix()
+            if self._pose_gpu and nid in self.pose_matrices: GL.glMultMatrixd(self.pose_matrices[nid].T)
             if it.kind == "curve":
                 self._draw_curve_item(it, nid in selected_nodes)
+                GL.glPopMatrix()
                 continue
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
             GL.glEnableClientState(GL.GL_NORMAL_ARRAY)
@@ -796,6 +809,7 @@ class Viewport(QOpenGLWidget):
             GL.glEnable(GL.GL_LIGHTING)
             GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
             GL.glDisableClientState(GL.GL_NORMAL_ARRAY)
+            GL.glPopMatrix()
         if mode == "matcap":
             GL.glDisable(GL.GL_TEXTURE_GEN_S)
             GL.glDisable(GL.GL_TEXTURE_GEN_T)
@@ -872,10 +886,13 @@ class Viewport(QOpenGLWidget):
         for nid, it in self.items.items():
             if it.kind == "curve" or not self.is_visible(nid):
                 continue
+            GL.glPushMatrix()
+            if self._pose_gpu and nid in self.pose_matrices: GL.glMultMatrixd(self.pose_matrices[nid].T)
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
             GL.glVertexPointer(3, GL.GL_FLOAT, 0, it.vertices)
             GL.glDrawElements(GL.GL_TRIANGLES, it.indices.size, GL.GL_UNSIGNED_INT, it.indices)
             GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+            GL.glPopMatrix()
         GL.glPopMatrix()
         GL.glDepthMask(GL.GL_TRUE)
         GL.glDisable(GL.GL_BLEND)
@@ -917,6 +934,7 @@ class Viewport(QOpenGLWidget):
         GL.glEnable(GL.GL_LIGHTING)
 
     def _draw_section_outline(self):
+        if self.pose_matrices: return  # Exact B-rep section curves belong to the CAD pose.
         # Exact OCCT sectioning can take minutes on an imported assembly and
         # must never run inside paintGL. Reuse the display tessellation instead.
         visible = {nid: it for nid, it in self.items.items()
@@ -947,6 +965,7 @@ class Viewport(QOpenGLWidget):
 
     def _draw_robotics(self):
         """Joint glyphs and motor shaft axes."""
+        if self.pose_matrices and not getattr(self, "pose_show_connectors", False): return
         from ..robotics import joint_glyph
 
         shapes = []
@@ -1240,6 +1259,8 @@ class Viewport(QOpenGLWidget):
         mode = self.selection_mode
         for ni, nid in enumerate(node_ids):
             it = self.items[nid]
+            GL.glPushMatrix()
+            if self._pose_gpu and nid in self.pose_matrices: GL.glMultMatrixd(self.pose_matrices[nid].T)
             if it.kind == "curve":
                 for ei, seg in enumerate(it.edge_samples):
                     GL.glColor3ub(ni + 1, (ei + 1) & 0xFF, ((ei + 1) >> 8) & 0xFF)
@@ -1248,6 +1269,7 @@ class Viewport(QOpenGLWidget):
                     for p in seg:
                         GL.glVertex3f(*p)
                     GL.glEnd()
+                GL.glPopMatrix()
                 continue
             GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
             GL.glVertexPointer(3, GL.GL_FLOAT, 0, it.vertices)
@@ -1287,6 +1309,7 @@ class Viewport(QOpenGLWidget):
                     GL.glColor3ub(ni + 1, (vi + 1) & 0xFF, ((vi + 1) >> 8) & 0xFF)
                     GL.glVertex3f(*p)
                 GL.glEnd()
+            GL.glPopMatrix()
         GL.glDisable(GL.GL_CLIP_PLANE0)
         GL.glFlush()
         r = 3

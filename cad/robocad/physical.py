@@ -1,12 +1,12 @@
-"""The physical assembly description (simrobot v3): everything the
-simulator needs, derived from the document's geometry and materials.
+"""The physical assembly description (simrobot v4): geometric derivations
+and explicit physical properties with their provenance.
 
 Python owns geometry and derivation, Rust owns dynamics. This module turns
 bodies, joints, motors, sensors and cables into `PHYSICAL_MODEL.md`'s
 schema: links with full inertia tensors, collision meshes and signed
-distance grids; joints with the clearance, backlash, friction and wall
+distance grids; joints with the clearance, friction and wall
 compliance a printed pin-in-hole actually has (inferred from the coaxial
-features and the material pair); fastened fixed joints; flexible links as
+features and the material pair), separate drive backlash; fastened fixed joints; flexible links as
 reduced modal models (`flex.py`); motors with their electrical, gearbox,
 thermal and firmware blocks; battery, sensors, cables, control targets
 and the uncertainty the Monte Carlo runs sample. SI units throughout.
@@ -33,7 +33,7 @@ from .kernel.base import v_add, v_cross, v_dist, v_dot, v_norm, v_scale, v_sub, 
 
 MM = 1.0e-3
 G = 9.81
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # Tightening torque (N·m) into plastic / heat-set inserts, screw stress area (mm²), class 8.8 yield (Pa).
 _SCREW = {
@@ -219,55 +219,34 @@ def _decimate(verts: np.ndarray, tris: np.ndarray, target: int) -> tuple[np.ndar
     return new_verts, t[keep]
 
 
-def _point_triangle_distance(p: np.ndarray, a: np.ndarray, b: np.ndarray, c: np.ndarray) -> np.ndarray:
-    """Vectorised point–triangle distance (Ericson, Real-Time Collision Detection)."""
-    ab, ac, ap = b - a, c - a, p - a
-    d1, d2 = np.einsum("ij,ij->i", ab, ap), np.einsum("ij,ij->i", ac, ap)
-    out = np.full(len(p), np.nan)
-    m = (d1 <= 0) & (d2 <= 0)
-    out[m] = np.linalg.norm(ap[m], axis=1)
-    bp = p - b
-    d3, d4 = np.einsum("ij,ij->i", ab, bp), np.einsum("ij,ij->i", ac, bp)
-    m = np.isnan(out) & (d3 >= 0) & (d4 <= d3)
-    out[m] = np.linalg.norm(bp[m], axis=1)
-    vc = d1 * d4 - d3 * d2
-    m = np.isnan(out) & (vc <= 0) & (d1 >= 0) & (d3 <= 0)
-    v = np.where((d1 - d3) != 0, d1 / np.where((d1 - d3) != 0, d1 - d3, 1), 0)
-    q = a + v[:, None] * ab
-    out[m] = np.linalg.norm(p[m] - q[m], axis=1)
-    cp = p - c
-    d5, d6 = np.einsum("ij,ij->i", ab, cp), np.einsum("ij,ij->i", ac, cp)
-    m = np.isnan(out) & (d6 >= 0) & (d5 <= d6)
-    out[m] = np.linalg.norm(cp[m], axis=1)
-    vb = d5 * d2 - d1 * d6
-    m = np.isnan(out) & (vb <= 0) & (d2 >= 0) & (d6 <= 0)
-    w = np.where((d2 - d6) != 0, d2 / np.where((d2 - d6) != 0, d2 - d6, 1), 0)
-    q = a + w[:, None] * ac
-    out[m] = np.linalg.norm(p[m] - q[m], axis=1)
-    va = d3 * d6 - d5 * d4
-    m = np.isnan(out) & (va <= 0) & ((d4 - d3) >= 0) & ((d5 - d6) >= 0)
-    den = (d4 - d3) + (d5 - d6)
-    w = np.where(den != 0, (d4 - d3) / np.where(den != 0, den, 1), 0)
-    q = b + w[:, None] * (c - b)
-    out[m] = np.linalg.norm(p[m] - q[m], axis=1)
-    m = np.isnan(out)
-    if m.any():
-        denom = va + vb + vc
-        denom = np.where(denom != 0, denom, 1)
-        v = vb / denom
-        w = vc / denom
-        q = a + v[:, None] * ab + w[:, None] * ac
-        out[m] = np.linalg.norm(p[m] - q[m], axis=1)
-    return out
+def solid_collision_meshes(kernel, body, com_m):
+    """Separate watertight CAD solids for union membership, in link metres.
 
-
-def signed_distance_grid(meshes: list[tuple[np.ndarray, np.ndarray]], cell: float, pad: float = 2.0) -> dict:
-    """A signed distance grid (negative inside) over the union of watertight
-    meshes: nearest surface sample by k-d tree, refined to exact
-    point–triangle distance within two cells of the surface, sign by ray
-    parity per member mesh."""
+    A compound's welded mesh can be nonmanifold even when its individual solids
+    are closed. Free sheets still contribute distance through the surface mesh,
+    but cannot define an interior volume. Do not silently repair open solids.
+    """
     import trimesh
-    from scipy.spatial import cKDTree
+    result = []
+    for index, solid in enumerate(kernel.solid_components(body)):
+        v, t = _weld_np(kernel.tessellate(solid, .15))
+        if not trimesh.Trimesh(v, t, process=False).is_watertight:
+            raise KernelError(f'Collision solid {index} has a non-watertight tessellation; repair or explicitly derive its collision volume')
+        result.append((v * MM - com_m, t))
+    return result
+
+
+def signed_distance_grid(meshes: list[tuple[np.ndarray, np.ndarray]], cell: float, pad: float = 2.0,
+                         *, solid_meshes=None) -> dict:
+    """Distance to member surfaces, signed by membership in their solid union.
+
+    Triangle AABB queries retain every possible nearest face. Triangle centroids
+    are not distance bounds: a long nearby face can have a distant centroid.
+    Interior magnitudes in overlapping members are not exact union distances.
+    CAD callers supply separate solid_meshes for sign classification. With None,
+    the caller's member meshes define interiors (legacy mesh-only derivation).
+    """
+    import trimesh
 
     allv = np.vstack([v for v, _ in meshes])
     lo = allv.min(axis=0) - pad * cell
@@ -277,42 +256,22 @@ def signed_distance_grid(meshes: list[tuple[np.ndarray, np.ndarray]], cell: floa
     gx, gy, gz = np.meshgrid(xs, ys, zs, indexing="ij")
     pts = np.stack([gx.ravel(), gy.ravel(), gz.ravel()], axis=1)
     tms = [trimesh.Trimesh(v, t, process=False) for v, t in meshes]
-    # Surface samples (vertices plus even samples at half-cell spacing).
-    samples = [allv]
-    tri_centroids, tri_index = [], []
-    for k, tm in enumerate(tms):
-        n = int(max(200, min(60000, tm.area / (0.5 * cell) ** 2)))
-        # Geometry derivation has its own fixed stream, independent of scenario
-        # sensor seeds and NumPy's global state. Cold exports must reproduce.
-        s, _ = trimesh.sample.sample_surface(tm, n, seed=0)
-        samples.append(np.asarray(s))
-        tri_centroids.append(tm.triangles_center)
-        tri_index.append(np.full(len(tm.faces), k))
-    samples = np.vstack(samples)
-    dist, _ = cKDTree(samples).query(pts, k=1)
-    # Exact distance near the surface.
-    near = dist < 2.0 * cell
-    if near.any():
-        cents = np.vstack(tri_centroids)
-        owner = np.concatenate(tri_index)
-        tris = np.vstack([tms[k].triangles for k in range(len(tms))])
-        _, idx = cKDTree(cents).query(pts[near], k=min(8, len(cents)))
-        idx = np.atleast_2d(idx)
-        p = pts[near]
-        best = np.full(len(p), np.inf)
-        for j in range(idx.shape[1]):
-            tri = tris[idx[:, j]]
-            best = np.minimum(best, _point_triangle_distance(p, tri[:, 0], tri[:, 1], tri[:, 2]))
-        dist[near] = best
+    combined = trimesh.util.concatenate(tms)
+    dist = np.empty(len(pts))
+    # Bound temporary candidate arrays; mesh trees remain cached across chunks.
+    for start in range(0, len(pts), 256):
+        end = min(start + 256, len(pts))
+        _, dist[start:end], _ = trimesh.proximity.closest_point(combined, pts[start:end])
     inside = np.zeros(len(pts), dtype=bool)
-    for tm in tms:
+    sign_meshes = tms if solid_meshes is None else [trimesh.Trimesh(v, t, process=False) for v, t in solid_meshes]
+    for tm in sign_meshes:
         try:
             # Explicit direction disables trimesh's random retry for ambiguous
             # ray intersections. Distances on the surface round to zero below.
             inside |= trimesh.ray.ray_util.contains_points(tm.ray, pts,
                 check_direction=[0.4395064455, 0.617598629942, 0.652231566745])
-        except Exception:
-            pass
+        except Exception as exc:
+            raise KernelError(f'Collision inside/outside classification failed: {exc}') from exc
     values = np.where(inside, -dist, dist)
     return {"origin": lo.tolist(), "cell": float(cell), "dims": [int(d) for d in dims], "values": [round(float(v), 6) for v in values]}
 
@@ -323,6 +282,7 @@ def collision_block(doc: Document, members: list[Node], com_m: np.ndarray, cache
     import trimesh
 
     meshes = []
+    solid_meshes = []
     for n in members:
         def tessellate():
             m = doc.mesh_of(n.id, 0.15)
@@ -334,6 +294,14 @@ def collision_block(doc: Document, members: list[Node], com_m: np.ndarray, cache
             continue
         v, t = np.asarray(mesh[0]), np.asarray(mesh[1], dtype=int)
         meshes.append((v * MM - com_m, t))
+        def tessellate_solids():
+            body = doc.resolved_body(n.id)
+            if body is None:
+                raise KernelError(f'Explicit solid collision volume required for {n.name}')
+            return [[v.tolist(), t.tolist()] for v, t in solid_collision_meshes(doc.kernel, body, np.zeros(3))]
+        solids = cache.get('body_solid_meshes', {'geometry': geometry_keys[n.id], 'algorithm': 'solid_union_ray_v1',
+                           'tolerance_mm': .15}, tessellate_solids) if cache else tessellate_solids()
+        solid_meshes.extend((np.asarray(v) - com_m, np.asarray(t, dtype=int)) for v, t in solids)
     if not meshes:
         return {"vertices": [], "triangles": [], "hull": [], "sdf": None}, []
     verts = np.vstack([v for v, _ in meshes])
@@ -346,12 +314,14 @@ def collision_block(doc: Document, members: list[Node], com_m: np.ndarray, cache
     extent = verts.max(axis=0) - verts.min(axis=0)
     cell = max(1.0e-3, float(extent.max()) / (_MAX_SDF_DIM - 5))
     cell = min(cell, 2.0e-3) if float(extent.max()) / 2.0e-3 <= _MAX_SDF_DIM - 5 else cell
-    sdf = signed_distance_grid(meshes, cell)
+    sdf = signed_distance_grid(meshes, cell, solid_meshes=solid_meshes)
     block = {
         "vertices": [[round(float(c), 6) for c in p] for p in dv],
         "triangles": [[int(i) for i in t] for t in dt],
         "hull": [[round(float(c), 6) for c in p] for p in hull],
         "sdf": sdf,
+        "sign_derivation": {"algorithm": "solid_union_ray_v1", "solid_count": len(solid_meshes),
+                            "non_solid_surfaces": "unsigned_distance_only"},
     }
     return block, meshes
 
@@ -423,6 +393,27 @@ def _subtree_mass(doc: Document, link_of: dict, links: dict, joints: list[dict],
     return mass, com
 
 
+def validate_drive_backlash(value):
+    """Shared command/export validation; full rotational width in radians."""
+    if not isinstance(value, dict) or set(value) - {'width_rad', 'provenance', 'reference', 'uncertainty_rad'}:
+        raise KernelError('drive_backlash must contain width_rad, provenance, reference and optional uncertainty_rad')
+    width, source, reference = value.get('width_rad'), value.get('provenance'), value.get('reference')
+    if source not in ('unmeasured', 'estimated', 'measured', 'derived') or not isinstance(reference, str) or not reference.strip():
+        raise KernelError('drive_backlash requires a provenance and nonempty reference')
+    if (source == 'unmeasured') != (width is None):
+        raise KernelError('drive_backlash is null only when unmeasured; author an explicit estimate or measurement to simulate')
+    for field in ('width_rad', 'uncertainty_rad'):
+        number = value.get(field)
+        if number is not None and (isinstance(number, bool) or not isinstance(number, (int, float)) or not math.isfinite(number) or number < 0):
+            raise KernelError(f'drive_backlash.{field} must be finite nonnegative radians')
+    return value
+
+
+def legacy_drive_backlash_override(width):
+    return validate_drive_backlash({'width_rad': width, 'provenance': 'estimated',
+        'reference': 'Explicit legacy scalar joint backlash override; uncertainty not supplied'})
+
+
 def joint_physics(doc: Document, j: dict, parent_members: list[Node], child_members: list[Node], parent_mat: Optional[str], child_mat: Optional[str], outboard_mass: float, outboard_com: np.ndarray, motor: Optional[dict]) -> dict:
     """What the printer made of this joint: pin/hole radii, contact length,
     clearance, backlash and wobble, friction from the material pair under
@@ -478,8 +469,8 @@ def joint_physics(doc: Document, j: dict, parent_members: list[Node], child_memb
         try:
             from .printing import wall_thickness
 
-            thin = wall_thickness(k, pair[0].body, 6.0)
-            near = [t for t in thin if v_dist(tuple(t.point), pivot) < (hole_r / MM) * 3 + 6]
+            near = wall_thickness(k, pair[0].body, 6.0,
+                                  near=(pivot, (hole_r / MM) * 3 + 6))
             if near:
                 wall = max(0.8e-3, min(t.thickness for t in near) * MM)
         except Exception:
@@ -489,7 +480,11 @@ def joint_physics(doc: Document, j: dict, parent_members: list[Node], child_memb
         radial *= 4.0  # a steel spline in a plastic horn is stiffer than a printed pin
     physics = {
         "source": source, "pin_radius": pin_r, "hole_radius": hole_r, "contact_length": contact,
-        "clearance": clearance, "backlash": backlash, "wobble": wobble,
+        # Retain the old geometric estimate for inspection and old exports.
+        # It is not a drive lost-motion measurement or a motor parameter in v4.
+        "clearance": clearance, "backlash": backlash, "bearing_clearance_angle_rad": backlash, "wobble": wobble,
+        "drive_backlash": {"width_rad": None, "provenance": "unmeasured",
+            "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion"},
         "friction": {"coulomb": coulomb, "viscous": viscous, "stribeck": stribeck, "stribeck_speed": 0.1, "static_ratio": mu_s / max(mu_k, 1e-6)},
         "stiffness": {"radial": radial, "axial": 0.5 * radial, "bending": radial * contact * contact / 12.0}, "damping_ratio": 0.05,
         "bearing": {"kind": kind, "allowable_pressure": hole_props["bearing_pressure"], "pressure": N / max(2 * pin_r * contact, 1e-9)},
@@ -709,6 +704,8 @@ def _assembly_properties(doc, cache=None, joint_ids=None, verbose=False):
     for j in joints:
         if joint_ids is not None and j["id"] not in joint_ids:
             continue
+        if verbose:
+            print("Joint:", j["name"], flush=True)
         child_link = link_of_body.get(j["child"])
         parent_link = link_of_body.get(j["parent"]) if j["parent"] else None
         if child_link is None or (j["parent"] and parent_link is None):
@@ -737,7 +734,7 @@ def _assembly_properties(doc, cache=None, joint_ids=None, verbose=False):
 
             spec = MOTOR_LIBRARY[doc.nodes[j["motor"]["id"]].robot["spec"]]
             motor_meta = {"shaft_diameter": spec.shaft_diameter, "kind": spec.kind}
-        phys = cached('joint', {'joint': j, 'parent': member_inputs(pm), 'child': member_inputs(cm), 'materials': material_inputs,
+        phys = cached('joint', {'physics_semantics': 4, 'joint': j, 'parent': member_inputs(pm), 'child': member_inputs(cm), 'materials': material_inputs,
                                'mass': outboard_mass, 'com': outboard_com.tolist(), 'motor': motor_meta},
                       lambda: joint_physics(doc, j, pm, cm, links[parent_link]["material"] if parent_link else None, links[child_link]["material"], outboard_mass, outboard_com, motor_meta))
         override = (doc.nodes[j["id"]].robot or {}).get("physics") if j["id"] in doc.nodes else None
@@ -748,6 +745,9 @@ def _assembly_properties(doc, cache=None, joint_ids=None, verbose=False):
                 phys[key] = v
         if override:
             phys["source"] = "declared"
+        if override and 'backlash' in override and 'drive_backlash' not in override:
+            phys['drive_backlash'] = legacy_drive_backlash_override(override['backlash'])
+        validate_drive_backlash(phys['drive_backlash'])
         radius = phys.get('flex_patch_radius')
         if radius is not None and (isinstance(radius, bool) or not isinstance(radius, (int, float))
                                    or not math.isfinite(radius) or radius <= 0):
@@ -757,6 +757,9 @@ def _assembly_properties(doc, cache=None, joint_ids=None, verbose=False):
         ident = settings(doc)["identification"].get(j["name"])
         if ident:
             phys["identified"] = ident
+            if ident.get('backlash') is not None:
+                phys['drive_backlash'] = validate_drive_backlash({'width_rad': ident['backlash'], 'provenance': 'derived',
+                    'reference': f'identified from {ident.get("source_log", "unspecified source log")}; fitted at {ident.get("fitted_at", "unspecified time")}'})
         limits = j.get("limits")
         if limits and j["type"] == "prismatic":
             limits = [None if v is None else v * MM for v in limits]
@@ -775,10 +778,16 @@ def inspect_joint_physics(doc, joint_id):
 
 
 def export_physical_model(doc: Document, path: Optional[str] = None, planar=None, flex: bool = True, verbose: bool = False, cache=None) -> dict:
-    """The v3 physical assembly description; written to `path` when given.
+    """The v4 physical assembly description; written to `path` when given.
     `planar` is a Plane hint the simulator may project onto; `flex=False`
     skips the modal reduction (fast exports for the live link)."""
     t_start = time.time()
+    import trimesh
+    import importlib.metadata
+    ray_backend = {'name': 'embreex' if trimesh.ray.has_embree else 'triangle',
+                   'trimesh': trimesh.__version__}
+    if trimesh.ray.has_embree:
+        ray_backend['version'] = importlib.metadata.version('embreex')
     transmissions=[]
     for t in doc.robot_settings.get('transmissions',[]):
         pair=[doc.nodes.get(t.get(k)) for k in ('driver_joint','driven_joint')]
@@ -796,7 +805,10 @@ def export_physical_model(doc: Document, path: Optional[str] = None, planar=None
     out_links = []
     for lid, l in links.items():
         t0 = time.time()
-        collision_inputs = {'members': [geometry_keys.get(m.id) for m in members_of[lid]], 'com': l['com']}
+        collision_inputs = {'members': [geometry_keys.get(m.id) for m in members_of[lid]],
+                            'com': l['com'], 'ray_backend': ray_backend,
+                            'surface_distance_algorithm': 'triangle_aabb_exact_v1',
+                            'inside_algorithm': 'solid_union_ray_v1'}
         def build_collision():
             block, meshes = collision_block(doc, members_of[lid], np.array(l['com']), cache, geometry_keys)
             return {'block': block, 'meshes': [[v.tolist(), t.tolist()] for v, t in meshes]}
@@ -861,7 +873,8 @@ def export_physical_model(doc: Document, path: Optional[str] = None, planar=None
     world["floor_friction_static"] = float(np.mean([m[0] for m in mus])) if mus else 0.7
     model = {
         "format": "simrobot", "version": SCHEMA_VERSION,
-        "source": {"file": doc.path, "exported": time.strftime("%Y-%m-%dT%H:%M:%S")},
+        "source": {"file": doc.path, "exported": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                   "collision_ray_backend": ray_backend},
         "gravity": [0.0, 0.0, -G],
         "world": world,
         "materials": {mid: material_block(doc, mid) for mid in sorted(materials_used | {l["material"] for l in out_links})},

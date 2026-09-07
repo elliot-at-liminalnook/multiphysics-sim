@@ -1,0 +1,25 @@
+{
+  "archives": [
+    {
+      "path": "/Users/elliot/robot-drive-definition-evidence-2026-09-07.zip",
+      "sha256": "c0712071ed30c6fbc2badedd34a2a6ffec26fd7bbe39ca8b56fab1bb697c8187",
+      "bytes": 200805136
+    },
+    {
+      "path": "/Users/elliot/robot-lab-drive-definition-2026-09-07.zip",
+      "sha256": "ff43026ae1b41d735a6e53ea818445482487059f644de3760d8a5d475d2ab20f",
+      "bytes": 33343769
+    }
+  ],
+  "verified_evidence_files": 418,
+  "viewer_url": "http://127.0.0.1:4174",
+  "preset": "robot-drive-definition",
+  "tests": {
+    "rust_drive_definition": 4,
+    "rust_session": 9,
+    "cad_and_targeted_ui": 17,
+    "browser_ui": 24,
+    "native_browser_robot_frames": 281
+  },
+  "scope": "Explicit uncalibrated drive experiment, not accepted hardware accuracy, walking, learning or realtime."
+}

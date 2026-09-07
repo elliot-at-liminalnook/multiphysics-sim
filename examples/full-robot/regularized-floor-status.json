@@ -1,0 +1,238 @@
+{
+  "version": 1,
+  "scope": "Explicit kinetic-Coulomb floor-patch experiment; force-capacity and simple-body tests pass, full robot timestep/control convergence not established. Not promoted to default or a walking/training-ready model.",
+  "source": {
+    "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "scene": {
+      "path": "runs/full-robot/learning/servo-regularized-floor.scene.json",
+      "sha256": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2"
+    },
+    "recipe": {
+      "path": "examples/full-robot/regularized-floor-experiment.json",
+      "sha256": "7fd95f68379c6a2968a6bd221757a932508481fe529b1993e3a7dae40ca9d3dd"
+    },
+    "snapshot": {
+      "path": "runs/full-robot/learning/regularized-floor-source-manifest.json",
+      "sha256": "bb72c98ab5b718c12dd21a570ed4cfa539d74462e11fbbec1240bec457dfcf7b"
+    }
+  },
+  "cases": [
+    {
+      "name": "coarse",
+      "artifact": {
+        "path": "runs/full-robot/learning/servo-regularized-floor-coarse.json",
+        "sha256": "24c270b28ce5187496e84ac8d2d196e8285c17bf4e7b638007a7f35766103b99"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "stepping_wall_s": 73.50235087099996,
+      "accepted_segments": 448,
+      "controller_tick_counts": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "name": "refined",
+      "artifact": {
+        "path": "runs/full-robot/learning/servo-regularized-floor-refined.json",
+        "sha256": "979597019ff7a8971f771eea515c0aa1422f78782e5f2f20c44d4da62ff1a545"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.000125,
+      "stepping_wall_s": 100.98533293400011,
+      "accepted_segments": 869,
+      "controller_tick_counts": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ]
+    }
+  ],
+  "comparison": {
+    "artifact": {
+      "path": "runs/full-robot/learning/servo-regularized-floor-comparison.json",
+      "sha256": "10390ac21d2e872e05cf605ddd7fb4076d96284af59eb4f33a047e1c42b99e93"
+    },
+    "markers": [
+      {
+        "id": "+X-foot-surface",
+        "maximum_error_m": 0.0006030366284930234,
+        "rms_error_m": 0.00019610360646558203,
+        "worst_time_s": 0.056
+      },
+      {
+        "id": "+Y-foot-surface",
+        "maximum_error_m": 0.0007174228291645702,
+        "rms_error_m": 0.00028415060831348064,
+        "worst_time_s": 0.066
+      },
+      {
+        "id": "-X-foot-surface",
+        "maximum_error_m": 0.0008558753545150735,
+        "rms_error_m": 0.00032415559881734707,
+        "worst_time_s": 0.056
+      },
+      {
+        "id": "-Y-foot-surface",
+        "maximum_error_m": 0.0007653748997257335,
+        "rms_error_m": 0.00029143944833546,
+        "worst_time_s": 0.066
+      }
+    ],
+    "maximum_sampled_differences": {
+      "current_a": 0.7982731888883277,
+      "gear_speed_rad_s": 3.2251424545124845,
+      "heating_w": 4.440182677260589,
+      "joint_positions": 0.012099553651303815,
+      "joint_velocities": 5.478002710114498,
+      "motor_states": 3.2251424545124845,
+      "motor_voltage_v": 11.757001208778531,
+      "power_difference_w": 0.028234283447742252,
+      "servo_commands": 1.0627851232633287,
+      "servo_states": 4.181141334862998,
+      "shaft_torque_nm": 0.47095401620179705,
+      "supply_current_a": 0.7499753416635313
+    },
+    "worst_servo_duty_difference": {
+      "difference": 1.0627851232633287,
+      "motor": "joint.-X | Worm servo output",
+      "time_s": 0.066,
+      "coarse": -0.06278512326332869,
+      "refined": 1
+    },
+    "floor_force_ratios": {
+      "candidate": [
+        {
+          "endpoint_time_s": 0.017492703468828523,
+          "link": 11,
+          "maximum_ratio": 0.25000000000000006,
+          "normal_force_n": 2.387142796596122,
+          "qualifying_steps": 372,
+          "step_s": 0.00007600979117533893,
+          "tangential_force_n": 0.5967856991490306
+        },
+        {
+          "endpoint_time_s": 0.053,
+          "link": 25,
+          "maximum_ratio": 0.25000000000000006,
+          "normal_force_n": 6.14076086749179,
+          "qualifying_steps": 226,
+          "step_s": 0.0002500000000000002,
+          "tangential_force_n": 1.5351902168729477
+        }
+      ],
+      "minimum_normal_force_n": 0.1,
+      "reference": [
+        {
+          "endpoint_time_s": 0.01725,
+          "link": 11,
+          "maximum_ratio": 0.25000000000000006,
+          "normal_force_n": 1.4630025541560696,
+          "qualifying_steps": 649,
+          "step_s": 0.0001250000000000001,
+          "tangential_force_n": 0.36575063853901746
+        },
+        {
+          "endpoint_time_s": 0.051125000000000004,
+          "link": 25,
+          "maximum_ratio": 0.25000000000000006,
+          "normal_force_n": 7.339751858563271,
+          "qualifying_steps": 342,
+          "step_s": 0.0001250000000000001,
+          "tangential_force_n": 1.834937964640818
+        }
+      ],
+      "scope": "Patch resultant |F_xy|/F_z for current world-Z floor law, excluding internal contacts and loads below the stated reporting cutoff. Not a calibrated coefficient, torsional capacity or an acceptance gate."
+    },
+    "contact_pair_mismatch_samples": 12,
+    "worst_floor_impulse_window": {
+      "candidate_ns": [
+        -0.0010197936273452436,
+        0.00001379270474567248,
+        0.005758384441018204
+      ],
+      "difference_norm_ns": 0.19226279653627615,
+      "link": 25,
+      "other": null,
+      "reference_ns": [
+        0.04429354523761497,
+        -0.00029966981106327076,
+        0.19260480799284857
+      ],
+      "start_s": 0.066,
+      "end_s": 0.068
+    }
+  },
+  "initial_geometry": {
+    "scope": "Rest-pose collision vertices/hull plus exported COM, before physical settling. Masses/properties unchanged; hardware symmetry question pending.",
+    "floor_z_m": -0.4410181228863441,
+    "feet": [
+      {
+        "name": "-Y | Sliding foot crosshead",
+        "mass_kg": 0.07688822984477414,
+        "minimum_export_collision_z_m": -0.4330003395491248,
+        "initial_floor_clearance_m": 0.008017783337219309
+      },
+      {
+        "name": "+X | Sliding foot crosshead",
+        "mass_kg": 0.22144365154678408,
+        "minimum_export_collision_z_m": -0.4409999895781116,
+        "initial_floor_clearance_m": 0.000018133308232526346
+      },
+      {
+        "name": "+Y | Sliding foot crosshead",
+        "mass_kg": 0.07688822984369227,
+        "minimum_export_collision_z_m": -0.4330003395508621,
+        "initial_floor_clearance_m": 0.008017783335482032
+      },
+      {
+        "name": "-X | Sliding foot crosshead",
+        "mass_kg": 0.0768883368903688,
+        "minimum_export_collision_z_m": -0.43300015474839754,
+        "initial_floor_clearance_m": 0.008017968137946585
+      }
+    ]
+  },
+  "tests": {
+    "shared_kernel": 2,
+    "robot_regularized_friction_native": 5,
+    "robot_regularized_friction_no_default": 5,
+    "original_articulated_embedding_step_motor": 33,
+    "runtime_existing_session": 18,
+    "new_runtime_replay_and_numeric_comparison": 1,
+    "wasm_compile": "passed; existing unused rotor_speed warning"
+  },
+  "limitations": [
+    "Kinetic coefficient only; no exact static stiction or stored tangential elastic energy. Finite regularization permits creep.",
+    "Combined sliding/twist capacity is a patch approximation with normal-weighted tangential RMS radius; not measured distributed foot contact.",
+    "Normal compliance/damping, internal body-contact law and estimated servo/motor properties remain unchanged.",
+    "Full-robot command and contact-impulse discrepancies remain material despite bounded floor friction.",
+    "Initial exported feet are not coplanar and one has a different provisional mass; these runs start with an uneven landing, not a preloaded four-foot stance.",
+    "Fixed 11.1 V supply and 293.15 K winding temperature; no battery/thermal evolution or deployed external sensor contract.",
+    "Native single-run timings exclude build, snapshots, rendering and serialization; no speedup or realtime claim."
+  ]
+}

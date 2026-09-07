@@ -1,0 +1,118 @@
+{
+  "step_s": 0.00025,
+  "steps": 400,
+  "report_every": 8,
+  "applied_generalized_loads": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "implicit": {
+    "reuse_mechanical_endpoint": true
+  },
+  "embedding": {
+    "dependent_solve": "pivoted_qr"
+  },
+  "motors": {
+    "residual_scales": [
+      1,
+      1,
+      1
+    ],
+    "events": {},
+    "drivers": [
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0.05,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "supply_voltage_v": 11.1,
+        "duty": 0,
+        "winding_temperature_k": 293.15
+      }
+    ]
+  },
+  "audit_contact_steps": true
+}

@@ -74,6 +74,7 @@ impl Runtime {
     /// own step, see [`Self::set_island_step`]), islands in parallel, then commit.
     pub fn advance(&mut self, duration: f64, h: f64) -> Result<(), RuntimeError> {
         let steps = &self.island_steps;
+        #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
         let results: Vec<Result<(), DynamicsError>> = if self.islands.len() > 1 {
             std::thread::scope(|scope| {
                 let handles: Vec<_> = self
@@ -90,6 +91,8 @@ impl Runtime {
         } else {
             self.islands.iter_mut().enumerate().map(|(k, island)| island.run(duration, steps.get(k).copied().flatten().unwrap_or(h))).collect()
         };
+        #[cfg(not(all(feature = "parallel", not(target_arch = "wasm32"))))]
+        let results: Vec<Result<(), DynamicsError>> = self.islands.iter_mut().enumerate().map(|(k, island)| island.run(duration, steps.get(k).copied().flatten().unwrap_or(h))).collect();
         for result in results {
             result?;
         }
@@ -198,6 +201,7 @@ impl Runtime {
 
     /// Attach a Python controller script (see `sim_couple::python`); the
     /// clients root is the repository's `clients/` directory.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn attach_python(&mut self, behavior: BehaviorId, clients_root: impl AsRef<std::path::Path>, script: impl AsRef<std::path::Path>, args: &[&str]) -> Result<(), RuntimeError> {
         let coupler = sim_couple::python(clients_root, script, args).map_err(|e| RuntimeError::State(e.to_string()))?;
         self.attach(behavior, Box::new(coupler))

@@ -880,6 +880,9 @@ class OcctKernel(GeometryKernel):
             result.append({'index': index, 'bbox_min': list(bounds[:3]), 'bbox_max': list(bounds[3:])})
         return result
 
+    def solid_components(self, body: Body) -> list[Body]:
+        return [Body(shape) for shape in explore(body.shape, TopAbs_SOLID)]
+
     def extract_components(self, body: Body, components: list[list[int]]) -> tuple[Body, list[Body]]:
         solids = explore(body.shape, TopAbs_SOLID)
         indices = [i for group in components for i in group]

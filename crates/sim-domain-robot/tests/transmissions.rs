@@ -35,6 +35,13 @@ fn different_axis_gears_conserve_virtual_power_and_enforce_ratio() {
 #[test]
 fn coupled_rotation_integrates_without_ratio_drift() {
     let mut rig=Rig::new(geared_pair(),&[("contact",0.0),("initial.joint.input.speed",1.0),("initial.joint.output.speed",0.2)],midpoint());
+    {
+        use sim_dynamics::System;
+        let system = &rig.runtime.islands[0].system;
+        let full = system.state_index(rig.behavior, "worm.lambda").unwrap();
+        assert!(system.algebraic().unwrap()[system.reduced_of[full].unwrap()],
+            "ideal transmission reaction must be algebraic");
+    }
     for _ in 0..50 {rig.runtime.advance(1e-3,1e-3).unwrap();}
     let g=rig.generalized();let t=&rig.art.transmissions[0];
     assert!((g.q[t.driver]-5.0*g.q[t.driven]).abs()<1e-7);

@@ -27,3 +27,6 @@ sim-domain-line = { path = "../sim-domain-line" }
 sim-domain-control = { path = "../sim-domain-control" }
 sim-domain-sensing = { path = "../sim-domain-sensing" }
 sim-domain-multibody = { path = "../sim-domain-multibody" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+rhai = { version = "1.25.1", features = ["wasm-bindgen"] }

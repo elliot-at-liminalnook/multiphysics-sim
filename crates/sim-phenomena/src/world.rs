@@ -5,32 +5,7 @@ use sim_core::{BehaviorRegistry, ModelWorld, StateId};
 use sim_dynamics::{Integrator, Trace};
 use sim_solve::NewtonConfig;
 
-/// Every domain's compiled elements in one registry.
-pub fn registry() -> BehaviorRegistry {
-    let mut registry = BehaviorRegistry::default();
-    sim_domain_rotational::elements::register(&mut registry).unwrap();
-    sim_domain_translational::elements::register(&mut registry).unwrap();
-    sim_domain_electrical::elements::register(&mut registry).unwrap();
-    sim_domain_thermal::register(&mut registry).unwrap();
-    sim_domain_hydraulic::register(&mut registry).unwrap();
-    sim_domain_acoustic::register(&mut registry).unwrap();
-    sim_domain_fluid::register(&mut registry).unwrap();
-    sim_domain_fluid::twophase::register(&mut registry).unwrap();
-    sim_domain_control::elements::register(&mut registry).unwrap();
-    sim_domain_bridges::elements::register(&mut registry).unwrap();
-    sim_domain_multibody::elements::register(&mut registry).unwrap();
-    sim_domain_multibody::planar::register(&mut registry).unwrap();
-    sim_domain_multibody::contact::register(&mut registry).unwrap();
-    sim_domain_multibody::chain::register(&mut registry).unwrap();
-    sim_domain_magnetic::register(&mut registry).unwrap();
-    sim_domain_chemical::register(&mut registry).unwrap();
-    sim_domain_radiative::register(&mut registry).unwrap();
-    sim_domain_line::register(&mut registry).unwrap();
-    sim_domain_granular::register(&mut registry).unwrap();
-    sim_domain_sensing::register(&mut registry).unwrap();
-    sim_domain_robot::register(&mut registry).unwrap();
-    registry
-}
+pub use sim_runtime::registry;
 
 /// Compile a model with the implicit midpoint rule and a patient Newton:
 /// compiled islands carry stiff constitutive kinks (regularised friction,

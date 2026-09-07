@@ -106,7 +106,9 @@ def motor_physics(spec: "MotorSpec", gear_extra: float = 1.0) -> dict:
     """Electrical, gearbox, thermal, firmware and driver blocks (SI) for a
     library motor with an extra external reduction `gear_extra`.
     Constants not on a datasheet are derived from stall torque, no-load
-    speed and voltage: ke = V/ω_motor,no-load, kt = ke, R = kt·V/τ_motor,stall."""
+    speed and voltage: ke = V/ω_motor,no-load, kt = ke, R = kt·V/τ_motor,stall.
+    Declared stall current instead sets kt = τ_motor,stall/I_stall and, when
+    resistance is missing, R = V/I_stall. These are estimates, not calibration."""
     d = MOTOR_DATASHEETS.get(spec.id, {})
     ratio_int = d.get("internal_ratio", spec.gear_ratio if spec.gear_ratio > 1 else 1.0)
     eta = d.get("efficiency", 0.7 if ratio_int > 1 else 0.95)
@@ -127,9 +129,14 @@ def motor_physics(spec: "MotorSpec", gear_extra: float = 1.0) -> dict:
     i_stall = d.get("stall_current") or V / R
     if d.get("resistance") and not d.get("stall_current"):
         i_stall = V / R
-    # With a datasheet resistance, kt is rebalanced to the measured stall current.
+    # Rebalance kt to a declared stall current when one is available.
     if d.get("stall_current"):
         kt = tau_m / max(i_stall, 1e-9)
+        if not d.get("resistance"):
+            # Stall-current data replaces the earlier kt=ke estimate. Recompute
+            # its dependent resistance too, otherwise V/R and the current used
+            # to derive kt describe incompatible stall conditions.
+            R = V / max(i_stall, 1e-9)
     L = d.get("inductance") or R * (0.4e-3 if spec.kind in ("servo", "dc_gearmotor", "linear") else 1.2e-3)
     rotor_inertia = spec.rotor_inertia if spec.rotor_inertia > 0 else 1.2e-9 * (spec.mass_g / 9.0) ** (5.0 / 3.0)
     out_inertia = rotor_inertia * (ratio_int * gear_extra) ** 2

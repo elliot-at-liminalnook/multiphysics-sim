@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "date": "2026-09-06",
+  "scope": "Explicit mechanical integration diagnostic; stiff robot cases fail, separate actuators not coupled; no promotion",
+  "cases": [
+    {
+      "name": "mechanical-midpoint-tight",
+      "completed": false,
+      "error": "step 46: original closure motion check failed: position 0.0000000000000005551115123125783, velocity 0.00000000010459189070388675, acceleration 0.0000059604644775390625",
+      "simulated_s": 0.023,
+      "terminal_time_s": 0.023,
+      "stepping_wall_s": 0.2088792090000001,
+      "same_motion_as_prior_capture": true,
+      "scene": "runs/full-robot/solver-performance/bracket-option-off.scene.json",
+      "config": "runs/full-robot/learning/mechanical-midpoint.config.json",
+      "output": "runs/full-robot/learning/mechanical-midpoint-tight-terminal.json",
+      "sha256": "f63f4282abc9890135ffd2c06f8d770d30a6dcc0d0f250e86f0f4ed067d7f67e"
+    },
+    {
+      "name": "mechanical-midpoint-refined",
+      "completed": false,
+      "error": "step 76: original closure motion check failed: position 0.000000000000043853809472693683, velocity 0.00000000000369038133385402, acceleration 0.000000015133991837501526",
+      "simulated_s": 0.019,
+      "terminal_time_s": 0.019,
+      "stepping_wall_s": 0.3048123279999999,
+      "same_motion_as_prior_capture": true,
+      "scene": "runs/full-robot/solver-performance/bracket-option-off.scene.json",
+      "config": "runs/full-robot/learning/mechanical-midpoint-refined.config.json",
+      "output": "runs/full-robot/learning/mechanical-midpoint-refined-terminal.json",
+      "sha256": "2c06610704b658a3cd6788aac11915760e8b2a77cf5b86797733f4020b3e6124"
+    },
+    {
+      "name": "mechanical-no-contact",
+      "completed": false,
+      "error": "step 22: independent coordinates violate original closure velocity directions",
+      "simulated_s": 0.011,
+      "terminal_time_s": 0.011,
+      "stepping_wall_s": 0.049599412999999995,
+      "same_motion_as_prior_capture": true,
+      "scene": "runs/full-robot/learning/mechanical-no-contact.scene.json",
+      "config": "runs/full-robot/learning/mechanical-midpoint.config.json",
+      "output": "runs/full-robot/learning/mechanical-no-contact-terminal.json",
+      "sha256": "794293ae845fd0fdbf0b5773c8b10e89d82c3d1d3ee8c9b8d37115f373823af8"
+    },
+    {
+      "name": "mechanical-smooth",
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "terminal_time_s": 0.1,
+      "stepping_wall_s": 0.3412432110000001,
+      "same_motion_as_prior_capture": true,
+      "scene": "runs/full-robot/learning/mechanical-smooth.scene.json",
+      "config": "runs/full-robot/learning/mechanical-midpoint.config.json",
+      "output": "runs/full-robot/learning/mechanical-smooth-terminal.json",
+      "sha256": "0e04b58c3b05a1192f1fd143b25aba4b1028cde7918bd03f2fae65a8e9053f78"
+    }
+  ],
+  "tests": {
+    "native": 9,
+    "no_default": 9,
+    "wasm_runtime_compile": "pass; existing unused rotor_speed warning"
+  },
+  "sources": [
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding.rs",
+      "sha256": "2deeb2e1d353990ae78af8136943f97225931739be3cc71d89e324bb040d77d7"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/step.rs",
+      "sha256": "a0f086524f0b0cbbd22d3d0de088b33543b2811e38eb3c90f2584db3416e9924"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedded_step.rs",
+      "sha256": "beed017dd4a22588f23f7d7d0584e56e55ed93155d1dd6432e6db27668a40516"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedding.rs",
+      "sha256": "84cbc5466c7851b6e7efdd620b38d041ceb1795be8f2f17ad645e32582de0e86"
+    },
+    {
+      "path": "crates/sim-runtime/examples/integrate_embedding.rs",
+      "sha256": "fc1f7ef219edbbb6f93de52f8dd538708dead10db222dfe7b6d9d4c38f05773e"
+    }
+  ],
+  "evidence_status": "Raw data and source archive are local/ignored diagnostics; not a golden trajectory."
+}

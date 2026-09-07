@@ -61,6 +61,12 @@ def verify(model, ref, runs, logs, limits, elapsed):
         ts = trace["t"]
         angle = trace["joints"]["pivot"]
         motor = trace["motors"]["servo"]
+        # Validate alignment before indexing controller samples or comparing runs.
+        # zip() would otherwise silently discard a truncated signal.
+        if any(len(v) != len(ts) for v in [angle, *motor.values()]):
+            raise ValueError(f"{name}: trace signals have different lengths")
+        if len(ts) != len(runs["nominal"]["trace"]["t"]):
+            raise ValueError("cannot compare traces of different lengths")
         check(name + " duration", abs(run["duration_s"] - limits["duration_s"]), 1e-9)
         check(name + " sample count", abs(len(ts) - round(limits["duration_s"] / limits["sample_s"])), 0)
         check(name + " sample cadence", max(abs(t - (k+1)*limits["sample_s"]) for k,t in enumerate(ts)), 1e-9)

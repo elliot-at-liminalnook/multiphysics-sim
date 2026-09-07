@@ -400,6 +400,17 @@
       "description": "A student trained with a heading-aware walking task across ordinary and refined physics timesteps. WASD requests live walking. Inspect heading error, supported steps and learned motor corrections.",
       "readiness": "Experimental heading-aware student · five walking checks pass · rendered minute keeps up at 1× · active p95 23.6 ms exceeds 20 ms target · ideal observations.",
       "evidence": "A nine-evaluation paired weight search improves the weakest reward per simulated second from 0.8020 to 0.8674. The ordinary minute completes 26 supported steps and ends with 0.00354 rad heading error; the 5 ms minute ends with 0.00411 rad, both below the 0.005 rad heading budget. Independent trajectory and reserved-disturbance results are versioned separately. The task score does not provide heading observations to the student. Actual sensors, heading estimation, useful walking speed, broad terrain and hardware transfer remain unresolved. This is live shared Rust physics; measured browser performance is reported separately for this build. On the documented Intel Mac/Chrome host, active speed is 1.00033× and transition p95 is 23.6 ms. The largest WASM call is 153 ms; rendering schedule p95 is 16.67 ms. This is a single flat-floor minute, not general command/terrain or command-to-visible-response acceptance."
+    },
+    {
+      "id": "robot-browser-solver",
+      "label": "Quadruped · Browser solver",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/browser-precision/guarded.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "The heading controller with less solver work and drawing only when the view changes. WASD drives live Rust physics; earlier controller presets remain available.",
+      "readiness": "Experimental browser improvement · tested walks pass · realtime average speed · minute p95 20.98 ms misses 20 ms · turning/reversing p95 18.97 ms passes.",
+      "evidence": "The selected profile uses independent constraint-block factorization, 1e-5 Newton precision, a 12-correction cached-attempt cap and guarded backtracking. Fresh restarts retain 80 corrections; all original closure and rank checks remain. The native minute needs 26196 Newton iterations versus 39405; sampled foot difference is below 1.34 nm, not a hardware accuracy claim. Short, refined-minute, two reserved twists and forward/turn/reverse/stop cases pass unchanged walking gates. All 50 Hz physics updates execute; unchanged views avoid redundant drawing. The rendered minute keeps up with realtime but still misses the 20 ms p95 target; maximum measured WASM call is 74.2 ms. The rendered turning/reversing case passes both timing targets. These are limited flat-floor tests at 1.25 mm/s, with ideal observations and a privileged planner. Broader terrain, useful walking speed and command-to-visible-motion latency remain unvalidated."
     }
   ]
 }

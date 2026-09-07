@@ -13,10 +13,30 @@ let browser;const errors=[];const checks=[];
 try {
  browser=await chromium.launch({headless:true,...(process.env.CHROME_EXECUTABLE?{executablePath:process.env.CHROME_EXECUTABLE}:{})});
  const page=await browser.newPage({viewport:{width:1440,height:950}});page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{
+  window.renderDrawCalls=0;
+  for(const Type of [window.WebGLRenderingContext,window.WebGL2RenderingContext].filter(Boolean)){
+   for(const name of ['drawArrays','drawElements']){const original=Type.prototype[name];
+    Type.prototype[name]=function(...args){window.renderDrawCalls++;return original.apply(this,args);};
+   }
+  }
+ });
  const ready=()=>page.locator('#overlay').waitFor({state:'hidden',timeout:30000});
  await page.goto(url);await ready();assert(await page.locator('canvas').isVisible());
  const transport=await page.locator('.transport').boundingBox();assert(transport.y+transport.height<=950,'desktop transport stays inside viewport');
  const catalog=JSON.parse(await readFile(resolve(directory,'catalog.json')));const recorded=catalog.presets.find(p=>p.mode==='recorded');
+ const drawCalls=()=>page.evaluate(()=>window.renderDrawCalls);
+ const displayFrames=n=>page.evaluate(n=>new Promise(resolve=>{
+  const frame=()=>{if(--n<=0)resolve();else requestAnimationFrame(frame);};requestAnimationFrame(frame);
+ }),n);
+ await displayFrames(45);const idleDraws=await drawCalls();assert(idleDraws>0);
+ await displayFrames(12);assert.equal(await drawCalls(),idleDraws,'paused unchanged scene avoids redundant WebGL draws');
+ await page.locator('#contacts').uncheck();await displayFrames(2);assert((await drawCalls())>idleDraws);
+ await page.locator('#contacts').check();
+ const beforeSelect=await drawCalls();await page.locator('#parts button').first().click();await displayFrames(2);assert((await drawCalls())>beforeSelect);
+ const beforeFit=await drawCalls();await page.locator('#fit-selected').click();await displayFrames(2);assert((await drawCalls())>beforeFit);
+ await page.locator('#fit').click();
+ checks.push('unchanged paused scenes stop drawing; contact visibility, selection and camera fit redraw');
  if(recorded){
   assert.equal(await page.locator('#mode').textContent(),'RECORDED PHYSICS');
   assert.equal(await page.locator('#parts button').count(),29);
@@ -202,12 +222,12 @@ try {
   assert(!(await page.locator('#motion-progress').isVisible()));
   checks.push('synthetic missing-support timeout is visible, replayable, and recoverable by reset');
  }
- for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact','robot-residual-policy','robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student']) {
+ for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact','robot-residual-policy','robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student','robot-browser-solver']) {
   if(!catalog.presets.some(p=>p.id===id))continue;
   await page.locator('#preset').selectOption(id);await ready();
   assert(await page.locator('#learning-progress').isVisible());
   assert.match(await page.locator('#input-help').textContent(),/20 ms/);
-  if(['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student'].includes(id)){
+  if(['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student','robot-browser-solver'].includes(id)){
     assert.equal(await page.locator('#inputs input:disabled').count(),16);
     assert(!(await page.locator('#residual-inputs').isVisible()));
     await page.locator('#neural-residuals summary').click();
@@ -225,21 +245,23 @@ try {
     await page.locator('#residual-inputs input').first().fill('0.001');
     assert.match(await page.locator('#residual-inputs label').first().textContent(),/0\.0010 rad/);
   }
+  const beforeStepDraws=await drawCalls();
   await page.locator('#step').click();await page.waitForFunction(()=>document.querySelector('#sim-time').textContent==='0.020 s');
+  await displayFrames(2);assert((await drawCalls())>beforeStepDraws,'new physical state redraws');
   assert.equal(await page.locator('#sim-time').textContent(),'0.020 s');
   assert.match(await page.locator('#learning-progress').textContent(),/Last 20 ms score:/);
   const score=await page.locator('#learning-progress').textContent();
-  if(['robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student'].includes(id)) {
+  if(['robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student','robot-browser-solver'].includes(id)) {
     assert(await page.locator('#walking-overlay').isVisible());
     assert.match(await page.locator('#walking-overlay').textContent(),/qualified.*failed/);
     assert.match(score,/Body reference error:/);
   }
-  if(id==='robot-heading-student'){
+  if(['robot-heading-student','robot-browser-solver'].includes(id)){
     assert.match(await page.locator('#walking-overlay').textContent(),/heading .*°/);
     assert.match(score,/Heading error: .*°; heading score:/);
     assert.match(await page.locator('#input-help').textContent(),/supported steps, plus heading/);
   }
-  const neuralText=['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student'].includes(id)?await page.locator('#neural-residuals').textContent():null;
+  const neuralText=['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student','robot-browser-solver'].includes(id)?await page.locator('#neural-residuals').textContent():null;
   if(neuralText){
     const outputs=[...neuralText.matchAll(/: (-?\d+\.\d+) rad/g)].map(m=>Number(m[1]));
     assert.equal(outputs.length,12);assert(outputs.some(v=>v!==0));assert(outputs.every(v=>Math.abs(v)<=(id==='robot-neural-teacher'?.001:.05)));

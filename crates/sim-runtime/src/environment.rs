@@ -624,7 +624,17 @@ impl EmbeddedEnvironment {
         Ok((next, actions))
     }
     pub fn metadata(&self) -> Value {
+        // Full frame order includes dependent mechanism coordinates; the
+        // independent controller-coordinate list alone cannot label q/qd.
+        let frame_coordinates: Vec<_> = self.session.articulated().dofs().enumerate().map(|(index,(joint,dof))| {
+            let (position_unit,velocity_unit)=match dof.kind {
+                sim_domain_robot::articulated::DofKind::Revolute => ("rad","rad/s"),
+                sim_domain_robot::articulated::DofKind::Prismatic => ("m","m/s"),
+            };
+            json!({"index":index,"name":dof.name,"joint":joint.name,"position_unit":position_unit,"velocity_unit":velocity_unit})
+        }).collect();
         json!({"coordinate_names":self.session.coordinate_names(),"joint_indices":self.session.joint_indices(),
+            "frame_coordinates":frame_coordinates,
             "step_s":self.session.config().step_s,"steps":self.session.config().steps,
             "report_every":self.stride,"policy_contract":self.session.policy_metadata(),
             "environment_contract":self.contract()})

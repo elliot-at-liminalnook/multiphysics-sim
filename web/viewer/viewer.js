@@ -13,6 +13,8 @@ catch (error) {
   throw error;
 }
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+// Read-only diagnostics distinguish actual drawing from display scheduling.
+export function renderedFrameCount() { return renderer.info.render.frame; }
 viewport.prepend(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -24,12 +26,15 @@ let grid, selectionBox, meshes = new Map(), current, frame, playback, worker, ep
 let abort, playing = false, busy = false, inputs = [], values = [], tick = 0, replaySaved;
 let lastDraw = performance.now(), simulatedWork = 0, wallWork = 0, selectedName;
 let liveTimer, liveStartWall = 0, liveStartSim = 0;
+let drawNeeded = true;
+controls.addEventListener('change', () => { drawNeeded = true; });
 const driveKeys = new Set();
 const ray = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 new ResizeObserver(() => {
   const w = viewport.clientWidth, h = viewport.clientHeight;
   renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  drawNeeded = true;
 }).observe(viewport);
 
 function status(message, error = false) {
@@ -72,6 +77,7 @@ function setPlaying(value) { playing = value; clearTimeout(liveTimer);
   $('play').textContent = playing ? 'Pause' : 'Play';
   $('execution-state').textContent = playing ? (playback ? 'Playing recorded physics' : 'Running physics in background…') : (busy ? 'Pausing after the current physics chunk…' : 'Paused'); }
 function selectPart(name) {
+  drawNeeded = true;
   selectedName = name;
   for (const [n, mesh] of meshes) mesh.material.emissive.set(n === name ? 0x225c54 : 0x000000);
   if (selectionBox) { scene.remove(selectionBox); dispose(selectionBox); selectionBox = null; }
@@ -82,6 +88,7 @@ function selectPart(name) {
   for (const b of $('parts').children) b.classList.toggle('selected', b.dataset.name === name);
 }
 function fit(object = model) {
+  drawNeeded = true;
   scene.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(object); if (box.isEmpty()) return;
   const center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()).length();
@@ -164,6 +171,7 @@ function showMotionProgress(next) {
   box.append(heading, detail);
 }
 function showFrame(next) {
+  drawNeeded = true;
   frame = next; tick = next.time_s; applyPoses(next.poses); showTaskObservations(next); showMotionProgress(next);
   const load=$('world-load-readout');
   if(load&&next.environment_load){
@@ -300,7 +308,12 @@ let replayClock = 0;
 renderer.setAnimationLoop(now => {
   const elapsed = Math.min((now-lastDraw)/1000, .1); lastDraw = now;
   if (playing && playback) { replayClock += elapsed * Number($('speed').value); replayAt(replayClock); if (replayClock >= playback.at(-1).time_s) setPlaying(false); }
-  controls.update(); scene.updateMatrixWorld(true); selectionBox?.update(); arrows.visible = $('contacts').checked; renderer.render(scene,camera);
+  controls.update();
+  if (arrows.visible !== $('contacts').checked) drawNeeded = true;
+  if (drawNeeded) {
+    scene.updateMatrixWorld(true); selectionBox?.update(); arrows.visible = $('contacts').checked;
+    renderer.render(scene,camera); drawNeeded = false;
+  }
 });
 $('fit').onclick = () => fit(); $('fit-selected').onclick = () => { if (meshes.has(selectedName)) fit(meshes.get(selectedName)); };
 $('search').oninput = () => { for (const b of $('parts').children) b.hidden = !b.dataset.name.toLowerCase().includes($('search').value.toLowerCase()); };

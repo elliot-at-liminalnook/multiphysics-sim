@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "scene": "examples/full-robot/student-distillation/scene.json",
+  "task": "examples/full-robot/heading-task/task.json",
+  "cases": [
+    {
+      "name": "short",
+      "config": "examples/full-robot/browser-precision/guarded-short.config.json",
+      "actions": "examples/full-robot/neural-teacher/train.actions.json"
+    },
+    {
+      "name": "refined-minute",
+      "config": "examples/full-robot/browser-precision/guarded-refined-minute.config.json",
+      "actions": "examples/full-robot/browser-residual-policy/sustained.actions.json"
+    },
+    {
+      "name": "reserved-positive",
+      "config": "examples/full-robot/browser-precision/guarded-reserved-positive-yaw.selected.config.json",
+      "actions": "examples/full-robot/neural-teacher/train.actions.json",
+      "reserved": true
+    },
+    {
+      "name": "reserved-negative",
+      "config": "examples/full-robot/browser-precision/guarded-reserved-negative-yaw.selected.config.json",
+      "actions": "examples/full-robot/neural-teacher/heldout.actions.json",
+      "reserved": true
+    },
+    {
+      "name": "turn-reverse",
+      "config": "examples/full-robot/browser-precision/guarded-short.config.json",
+      "actions": "examples/full-robot/browser-precision/turn-reverse.actions.json",
+      "reserved": true
+    }
+  ],
+  "scope": "Existing heading-task cases plus a new 24-second forward/turn/reverse/stop schedule, declared before execution. Same walking thresholds. Not parameter-training data."
+}

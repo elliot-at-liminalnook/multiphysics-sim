@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "passed": true,
+  "metrics": {
+    "maximum_foot_difference_m": 1.2944356033457412e-9,
+    "maximum_body_difference_m": 2.778052283093393e-9,
+    "maximum_joint_difference_rad": 1.2960004103224065e-7,
+    "maximum_slider_difference_m": 3.030108872148496e-9,
+    "maximum_heading_difference_rad": 5.129473457966827e-9,
+    "maximum_per_foot_impulse_difference_ns": 0.000037945939789315816
+  },
+  "limits": {
+    "maximum_foot_difference_m": 0.0001,
+    "maximum_body_difference_m": 0.00005,
+    "maximum_joint_difference_rad": 0.0001,
+    "maximum_heading_difference_rad": 0.0001,
+    "maximum_per_foot_impulse_difference_ns": 0.01,
+    "maximum_slider_difference_m": 0.0001
+  },
+  "contact_pair_mismatches": 0,
+  "phase_mismatches": 0,
+  "per_foot_signed_impulse_difference_ns": {
+    "-Y | Sliding foot crosshead": [
+      0.0000024191915388143447,
+      0.0000012780450101919594,
+      0.000002299025879340084
+    ],
+    "+X | Sliding foot crosshead": [
+      -8.668885109732157e-7,
+      9.877188776954283e-7,
+      -7.080333974895246e-7
+    ],
+    "+Y | Sliding foot crosshead": [
+      1.0292764619324263e-7,
+      0.0000013704996944933154,
+      -0.000004788018876147489
+    ],
+    "-X | Sliding foot crosshead": [
+      -0.0000017481978417354397,
+      -0.000002246795639869108,
+      -8.543956891093865e-7
+    ]
+  },
+  "per_foot_integrated_force_discrepancy_ns": {
+    "-Y | Sliding foot crosshead": 0.000028792233736887062,
+    "+X | Sliding foot crosshead": 0.00002600354395856156,
+    "+Y | Sliding foot crosshead": 0.000037945939789315816,
+    "-X | Sliding foot crosshead": 0.000022384822723368613
+  },
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/heading-performance/baseline.native.json",
+      "sha256": "b289721e09333abf886669169bf3775df0d19879c4b9fa00dd8bfedcbf8f98c1"
+    },
+    {
+      "path": "runs/full-robot/learning/heading-performance/block-1e-5.native.json",
+      "sha256": "0ea58e1866e799294a0ff48c8c3dc02af0c75ef7bdf3937618b8d5f5c958481f"
+    },
+    {
+      "path": "examples/full-robot/browser-precision/block-1e-5.comparison.json",
+      "sha256": "f5bac78b554d16c54d4bccce2bc73155999fad69bcae9f21681c3430d684ea80"
+    },
+    {
+      "path": "runs/full-robot/learning/heading-performance/short.native.json",
+      "sha256": "3865d2d8935e6947e1ccdf98a620024724a33b6560f66b7d6c8c4b0bebf37885"
+    }
+  ],
+  "scope": "Whole 50 Hz sampled trajectory differences against the retained 1e-8 solve, with runtime-declared rotational and translational units. Integrated force discrepancy is trapezoidal integration of force-difference magnitude, so cancellation cannot hide disagreement. Not resolved impact accuracy, hardware calibration or independent walking acceptance."
+}

@@ -1,5 +1,13 @@
 # CAD-derived walking and learning delivery
 
+The [browser solver experiment](browser-precision/README.md) reduces numerical
+work and avoids redrawing unchanged views. Six tested walks pass, including a
+new forward/turn/reverse/stop case. Its rendered turning case keeps up with
+realtime at 18.97 ms active p95; the straight minute keeps up but still misses
+the 20 ms p95 target at 20.98 ms. Maximum measured WASM call in that minute is
+74.2 ms. The **Browser solver** preset remains experimental: useful walking speed,
+broader terrain/control, sensing and sustained timing margin are unfinished.
+
 The [heading-aware student](heading-task/README.md) adds an explicit task penalty
 for heading drift and retrains the student across short and minute-long walks
 at two physics timesteps. The selected weights improve the weakest development

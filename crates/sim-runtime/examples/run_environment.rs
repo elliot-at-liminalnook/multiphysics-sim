@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "{}",
         serde_json::to_string(&json!({"version":1,"kind":"sampled_environment_capture",
-        "completed":completed,"error":error,"contract":env.contract(),"task":env.task(),
+        "completed":completed,"error":error,"contract":env.contract(),"task":env.task(),"metadata":env.metadata(),
         "recording":env.recording(),"transitions":transitions,"frames":frames,"wall_s":wall_s,
         "transition_wall_s":transition_wall_s,
         "scope":"Teacher-only endpoint task diagnostic; includes observation and capture overhead. No learning or hardware accuracy claim."}))?

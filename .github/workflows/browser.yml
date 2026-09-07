@@ -191,6 +191,16 @@ jobs:
           target/release/examples/run_environment examples/full-robot/neural-teacher/scene.json examples/full-robot/neural-teacher/config.json examples/full-robot/neural-teacher/task.json examples/full-robot/browser-residual-policy/sustained.actions.json > runs/interactive/neural-sustained-native.json
           node examples/full-robot/check_online_steps.mjs runs/interactive/neural-sustained-native.json runs/interactive/neural-sustained-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-neural-teacher runs/interactive/neural-sustained-native.json runs/interactive/neural-browser.json
+      - name: Distilled student held-out stepping and browser replay
+        run: |
+          cargo check --locked -p sim-runtime --example distill_policy
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/student-distillation/short.config.json examples/full-robot/student-distillation/task.json examples/full-robot/neural-teacher/heldout.actions.json > runs/interactive/student-heldout-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/student-heldout-native.json runs/interactive/student-heldout-acceptance
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs";const c=JSON.parse(readFileSync("examples/full-robot/student-distillation/short.config.json"));delete c.policy.feedback_observations;c.policy.task_observations.floor_forces=true;writeFileSync("runs/interactive/student-full.config.json",JSON.stringify(c));'
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json runs/interactive/student-full.config.json examples/full-robot/student-distillation/task.json examples/full-robot/neural-teacher/heldout.actions.json > runs/interactive/student-full-native.json
+          node examples/full-robot/check_unused_feedback.mjs runs/interactive/student-full-native.json runs/interactive/student-heldout-native.json runs/interactive/student-unused-feedback.json
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/student-distillation/config.json examples/full-robot/student-distillation/task.json examples/full-robot/browser-residual-policy/sustained.actions.json > runs/interactive/student-sustained-native.json
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-distilled-student runs/interactive/student-sustained-native.json runs/interactive/student-browser.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

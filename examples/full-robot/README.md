@@ -1,5 +1,11 @@
 # Four-leg robot commissioning
 
+The [distilled student](student-distillation.md) learns the teacher's larger
+body/foot motor feedback using proposed encoder/IMU-style observations. It passes
+the short walking cases and qualifies 28 swings over a minute, but its 1.127 mm
+stopping error still exceeds the 1 mm gate. Unused teacher-feedback work is removed
+with exact trajectory checks; the planner and sensor feeds remain provisional.
+
 The [first neural teacher](neural-teacher.md) trains a small bounded residual
 network and runs the same artifact in Rust and WASM. Short training and held-out
 rewards improve only slightly; the nominal minute passes 28 swings with a larger

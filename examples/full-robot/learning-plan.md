@@ -9,6 +9,15 @@ faster solver kernel does not complete this goal.
 
 ## Current evidence and sequence
 
+The [distilled student](student-distillation.md) now replaces the teacher's
+body/foot motor feedback through a shared Rust supervised-learning path. Typed
+datasets, analytic-gradient checks and held-out imitation are implemented.
+The student passes short walking cases; its sustained stopping error improves
+with broader demonstrations but still misses 1 mm (1.127 mm). Its motor network
+excludes privileged geometry/contact signals, while the upstream planner remains
+privileged and CAD still declares no sensors. Resolve that boundary and improve
+closed-loop behavior through further learning and bounded perturbations.
+
 The [first neural teacher](neural-teacher.md) now closes the initial training →
 artifact → native/WASM inference loop through shared Rust components. Nine
 evaluations give a tiny reward improvement on training and held-out commands.

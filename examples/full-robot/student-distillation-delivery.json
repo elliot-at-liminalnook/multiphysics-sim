@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "kind": "experimental_wasm_distilled_student_bundle",
+  "path": "/Users/elliot/robot-distilled-student-2026-09-07.zip",
+  "bytes": 18835066,
+  "sha256": "251494f661d2892e6f6679c90ef94ba53978875c41b8efa4974304b8acf131cf",
+  "build_manifest_sha256": "180c6e3d5566a6ea55ca633c6b8fedd71effa8eaade455e6baf3a5abe822d093",
+  "local_url": "http://127.0.0.1:4183/?preset=robot-distilled-student",
+  "scope": "Shared Rust/WASM distilled motor-feedback controller. Short walking tests pass; sustained run completes 28 swings but 1.127 mm stopping error fails the 1 mm gate. Rendered active speed reaches realtime, with p95 22.7 ms still above 20 ms. Ideal sensor values and privileged upstream planner remain. No robustness or hardware-transfer claim."
+}

@@ -11,7 +11,7 @@
 use crate::QuantityKind;
 
 /// One named signal crossing the seam.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Channel {
     pub name: String,
     pub kind: QuantityKind,

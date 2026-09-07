@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "minimum_clearance_m": 0.001,
+  "maximum_swing_force_n": 0.1,
+  "minimum_support_force_n": 1,
+  "qualifying_duration_s": 0.2,
+  "body_position_scale_m": 0.005,
+  "body_position_weight_per_s": 0.5,
+  "qualified_step_reward": 0.1,
+  "failed_step_penalty": 1,
+  "body_position_cost_cap": 1
+}

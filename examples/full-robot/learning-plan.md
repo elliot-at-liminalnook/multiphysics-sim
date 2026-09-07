@@ -1,5 +1,13 @@
 # CAD-derived walking and learning delivery
 
+The [walking task objective](walking-objective.md) now scores body-reference error
+and actual supported swings through shared Rust code, with visible browser
+counts. It fixes the observed success/failure ranking without changing physical
+trajectories or actor observations. A 6 mm reference candidate improves short-run
+qualification but still fails sustained stopping and one refined solve; it is
+not promoted. Robust controller training and full realtime acceptance remain open.
+
+
 See [physical disturbances](student-disturbances.md): bounded world-force
 schedules now execute through the shared Rust runtime and the WASM viewer.
 Four small pushes pass the short gate; 5/15 N pushes and timestep refinement

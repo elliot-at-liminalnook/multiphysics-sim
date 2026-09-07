@@ -175,9 +175,12 @@ function showFrame(next) {
     row.textContent=`${row.dataset.target.replace(/\.target$/,'')}: ${(next.policy?.neural_residual?.[row.dataset.target]??0).toFixed(6)} rad`;
   }
   const learning=next.learning, panel=$('learning-progress');panel.hidden=!learning;
+  const walking=learning?.walking,overlay=$('walking-overlay');overlay.hidden=!walking;
+  if(walking)overlay.textContent=`${walking.qualified_steps} qualified · ${walking.failed_steps} failed · body error ${(Math.hypot(...walking.body_error_world_m)*1000).toFixed(2)} mm`;
   if (learning) {
     const state=learning.terminated?'Task bound reached':learning.truncated?'Time limit reached':'Episode in progress';
-    panel.textContent=`Teacher environment · ${state}. Last ${(learning.elapsed_s*1000).toFixed(0)} ms score: ${learning.reward.toFixed(6)}. ${learning.observations.length} ideal observations; not hardware sensor readings.${learning.termination_reasons.length?' '+learning.termination_reasons.join('; '):''}`;
+    const w=learning.walking,walking=w?` Qualified steps: ${w.qualified_steps}; failed: ${w.failed_steps}. Body reference error: ${(Math.hypot(...w.body_error_world_m)*1000).toFixed(2)} mm.${w.outcome?' Last step '+w.outcome.step+': '+(w.outcome.passed?'qualified':'failed')+'.':''}`:'';
+    panel.textContent=`Learning environment · ${state}. Last ${(learning.elapsed_s*1000).toFixed(0)} ms score: ${learning.reward.toFixed(6)}. ${learning.observations.length} ideal observations; not hardware sensor readings.${walking}${learning.termination_reasons.length?' '+learning.termination_reasons.join('; '):''}`;
   }
   $('time').textContent = `${tick.toFixed(3)} s`; $('sim-time').textContent = `${tick.toFixed(3)} s`; $('timeline').value = tick;
   $('execution-state').textContent = next.error ? 'Experiment stopped with an error' : learning?.terminated ? 'Task bound reached' : learning?.truncated ? 'Episode time limit reached' : next.done ? 'Experiment complete' : playing ? (playback ? 'Playing recorded physics' : `Running · ${next.completed_steps ?? ''}${next.requested_steps ? ' / '+next.requested_steps+' physics steps' : ''}`) : 'Paused';

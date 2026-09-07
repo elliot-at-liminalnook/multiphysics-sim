@@ -599,6 +599,9 @@ impl EmbeddedSession {
     pub fn scene(&self) -> &Scene {
         &self.session.scene
     }
+    pub(crate) fn articulated(&self) -> &sim_domain_robot::Articulated {
+        &self.session.robot.art
+    }
     pub fn config(&self) -> &Config {
         &self.config
     }

@@ -9,3 +9,5 @@
 #teleop button { margin: 0 5px 7px 0; }
 #teleop button[aria-pressed="true"] { background: #88e1c7; color: #10231e; }
 #stop-motion { width: 100%; }
+
+#walking-overlay{position:absolute;left:20px;bottom:70px;max-width:calc(100% - 40px);padding:7px 10px;border:1px solid #3a5965;border-radius:7px;background:#12212ee8;color:#d9eee8;font-size:12px;pointer-events:none}#walking-overlay[hidden]{display:none}

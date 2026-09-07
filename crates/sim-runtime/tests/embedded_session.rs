@@ -259,7 +259,8 @@ fn rhai_observes_actual_joint_state_and_rejects_out_of_bounds_outputs() {
         "fn control(t,s,c,state){ c[\"pivot.target\"] = 2.0; #{commands:c,state:state} }".into(),
     );
     let mut invalid = EmbeddedSession::new(scene, config, 0, CaptureMode::Latest).unwrap();
-    assert!(invalid.advance(1).unwrap_err().contains("bounds"));
+    let error = invalid.advance(1).unwrap_err();
+    assert!(error.contains("software/CAD command bounds at 0 s: pivot.target requested 2 rad; allowed ["), "{error}");
     assert_eq!(invalid.completed_steps(), 0);
     assert!(invalid.done());
     let (mut replay, steps) =

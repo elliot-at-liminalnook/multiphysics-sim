@@ -342,12 +342,16 @@ impl SampledPolicy {
         sim_solve::profile::POLICY_SCRIPT
             .time(|| self.policy.sample(time, &sensors, &mut targets))
             .map_err(|e| e.to_string())?;
-        if targets
+        if let Some((index, (value, bounds))) = targets
             .iter()
             .zip(&self.limits)
-            .any(|(x, b)| !x.is_finite() || *x < b[0] || *x > b[1])
+            .enumerate()
+            .find(|(_, (x, b))| !x.is_finite() || **x < b[0] || **x > b[1])
         {
-            return Err("policy output violates software/CAD command bounds".into());
+            return Err(format!(
+                "policy output violates software/CAD command bounds at {time} s: {} requested {value} rad; allowed [{}, {}] rad",
+                self.contract.actuators[index].name, bounds[0], bounds[1]
+            ));
         }
         self.telemetry = json!({"time_s":time,"observations":self.contract.sensors.iter().zip(&sensors).map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>(),"targets":self.contract.actuators.iter().zip(&targets).map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>(),"observation_source":"ideal_joint_state_diagnostics"});
         if let Some(p) = online {

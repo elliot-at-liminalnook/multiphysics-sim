@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "reference": {
+    "path": "runs/full-robot/learning/speed-envelope/1.5x-refined-5ms.native.json",
+    "sha256": "189fb5feecc74ceecf5da2a718bba58b3f60b48f8e711b6aa7026b3fac24619f"
+  },
+  "candidate": {
+    "path": "runs/full-robot/learning/speed-envelope/1.5x-stop-feedback-1.native.json",
+    "sha256": "87e11310298c08dd5841836e01e92de254bcf66629360683a93f08352829d2fd"
+  },
+  "completed": true,
+  "simulated_s": 24,
+  "maximum_foot_difference_m": {
+    "-Y-foot-surface": 0.0027974685259883007,
+    "+X-foot-surface": 0.0024132796044978528,
+    "+Y-foot-surface": 0.003149901633317255,
+    "-X-foot-surface": 0.002661045517121626
+  },
+  "maximum_body_position_difference_m": 0.002606350632436224,
+  "maximum_motor_angle_difference_rad": 0.012504282367956287,
+  "maximum_penetration_m": 0.00009940959031551344,
+  "maximum_effective_torque_nm": 0.9643024050408812,
+  "scope": "Unpromoted 1.5x-speed controller: full 24-second sampled trajectories at identical 50 Hz control and phase timing, 5 ms versus 20 ms physics. The 10 ms run fails at 3.04 s. Foot/body differences exceed the existing 1 mm/0.5 mm numerical screen. The 5 ms run is a refinement comparison, not a converged ground-truth reference.",
+  "phase_comparison": {
+    "different_phase_samples": 0,
+    "maximum_body_reference_difference_m": 0
+  }
+}

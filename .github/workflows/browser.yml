@@ -37,7 +37,8 @@ jobs:
       - run: cargo test --locked -p sim-solve --test coloring
       - run: cargo test --locked -p sim-runtime --test posture
       - run: cargo test --locked -p sim-domain-control --test trajectory
-      - run: cargo test --locked -p sim-domain-control --test motion_clock
+      - run: cargo test --locked -p sim-domain-control --test motion_clock --test stepping --test support_preload
+      - run: cargo test --locked -p sim-runtime --test step_reference
       - run: cargo test --locked -p sim-runtime --test planning
       - run: cargo test --locked -p sim-runtime --test lift
       - run: cargo test --locked -p sim-runtime --test embedded_session --test task_observation
@@ -133,6 +134,12 @@ jobs:
           target/release/examples/run_environment examples/full-robot/browser-crawl-startup/scene.json examples/full-robot/browser-crawl-startup/refined.config.json examples/full-robot/browser-crawl-startup/task.json > runs/interactive/crawl-refined-native.json
           node examples/full-robot/compare_effective_servo.mjs runs/interactive/crawl-refined-native.json runs/interactive/crawl-native.json runs/interactive/crawl-refinement.json
           node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/crawl-refinement.json")); assert(Object.values(r.maximum_foot_difference_m).every(x=>x<=0.001)); assert(r.maximum_body_position_difference_m<=0.0005);'
+      - name: Online forward commands, support acceptance and WASM replay
+        run: |
+          target/release/examples/run_environment examples/full-robot/browser-online-steps/scene.json examples/full-robot/browser-online-steps/scheduled-posture-screen.config.json examples/full-robot/browser-online-steps/task.json examples/full-robot/browser-online-steps/forward-stop.actions.json > runs/interactive/online-forward-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/online-forward-native.json runs/interactive/online-forward-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-online-steps runs/interactive/online-forward-native.json runs/interactive/online-forward-browser.json
+          node web/tests/viewer.mjs runs/interactive/teacher-viewer runs/interactive/online-viewer-report.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

@@ -202,7 +202,7 @@ try {
   assert(!(await page.locator('#motion-progress').isVisible()));
   checks.push('synthetic missing-support timeout is visible, replayable, and recoverable by reset');
  }
- for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup']) {
+ for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps']) {
   if(!catalog.presets.some(p=>p.id===id))continue;
   await page.locator('#preset').selectOption(id);await ready();
   assert(await page.locator('#learning-progress').isVisible());
@@ -220,6 +220,23 @@ try {
   await page.screenshot({path:reportPath.replace(/\.json$/,`.${id}.png`)});
   await page.locator('#reset').click();await ready();assert.equal(await page.locator('#sim-time').textContent(),'0.000 s');
   checks.push(id+': 50 Hz task score, held-action recording, visible replay and reset');
+ }
+ if(catalog.presets.some(p=>p.id==='robot-online-steps')) {
+  await page.locator('#preset').selectOption('robot-online-steps');await ready();
+  assert(await page.locator('#teleop').isVisible());
+  await page.locator('#viewport').click({position:{x:20,y:200}});
+  const speed=page.getByLabel('command.forward_speed',{exact:true}),turn=page.getByLabel('command.yaw_rate',{exact:true});
+  await page.keyboard.down('w');assert(Number(await speed.inputValue())>0);
+  await page.keyboard.down('a');assert(Number(await turn.inputValue())>0);
+  await page.keyboard.up('w');assert.equal(Number(await speed.inputValue()),0);assert(Number(await turn.inputValue())>0);
+  await page.keyboard.up('a');assert.equal(Number(await turn.inputValue()),0);
+  await page.keyboard.down('s');await page.keyboard.down('d');assert(Number(await speed.inputValue())<0&&Number(await turn.inputValue())<0);
+  await page.evaluate(()=>window.dispatchEvent(new Event('blur')));assert.equal(Number(await speed.inputValue()),0);assert.equal(Number(await turn.inputValue()),0);
+  await page.keyboard.up('s');await page.keyboard.up('d');
+  await page.locator('#search').fill('');await page.locator('#search').press('w');assert.equal(Number(await speed.inputValue()),0);
+  await page.locator('#search').fill('');await page.locator('#viewport').click({position:{x:20,y:200}});
+  await page.keyboard.down('w');await page.locator('#stop-motion').click();assert.equal(Number(await speed.inputValue()),0);await page.keyboard.up('w');
+  checks.push('WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button');
  }
  await page.setViewportSize({width:500,height:900});assert(await page.locator('canvas').isVisible());assert(await page.locator('#inputs input').count());
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));checks.push('narrow layout without horizontal overflow; controller input remains available');

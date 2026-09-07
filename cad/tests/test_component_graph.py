@@ -96,7 +96,12 @@ def test_native_catalogue_crud_checks_units_and_merges_connection_nodes(tmp_path
     try:
         from robocad.component_graph import RegistryView
         catalogue = client.get('/experiments/catalogue')
-        assert len(catalogue) == 117
+        # New reusable components may extend the registry without changing this
+        # API contract. Check identity and the capabilities this flow relies on.
+        kinds = [component['type'] for component in catalogue]
+        assert len(set(kinds)) == len(kinds)
+        assert {'robot.articulated', 'thermal.capacitance', 'thermal.heat_source',
+                'rotational.ground', 'control.support_preload'} <= set(kinds)
         assert all(component['parameters_complete'] for component in catalogue)
         registry = RegistryView(catalogue)
         robot = {'id': 'robot', 'name': 'Assembly', 'type': 'robot.articulated',

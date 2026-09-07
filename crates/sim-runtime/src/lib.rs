@@ -54,3 +54,4 @@ pub fn newton() -> sim_solve::NewtonConfig {
 pub mod task_observation;
 
 pub mod point_feedback;
+pub mod step_reference;

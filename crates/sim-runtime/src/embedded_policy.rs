@@ -26,6 +26,9 @@ pub struct PolicyConfig {
     pub body_feedback: Option<BodyFeedbackConfig>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub point_feedback: Option<PointFeedbackConfig>,
+    /// Online geometric references; executed through ordinary Rhai motor targets.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub step_reference: Option<crate::step_reference::StepReferenceConfig>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -45,6 +48,7 @@ pub(crate) struct SampledPolicy {
     task_observer: Option<TaskObserver>,
     body_feedback: Option<BodyFeedback>,
     point_feedback: Option<PointFeedback>,
+    step_reference: Option<crate::step_reference::OnlineStepReference>,
     contract: Contract,
     inputs: Vec<InputChannel>,
     values: Vec<f64>,
@@ -200,11 +204,33 @@ impl SampledPolicy {
         )
         .map_err(|e| e.to_string())?;
         policy.open(&contract).map_err(|e| e.to_string())?;
+        let step_reference = config
+            .step_reference
+            .clone()
+            .map(|c| {
+                crate::step_reference::OnlineStepReference::new(
+                    art,
+                    c,
+                    config
+                        .body_feedback
+                        .as_ref()
+                        .ok_or("stepping requires body feedback")?,
+                    config
+                        .point_feedback
+                        .as_ref()
+                        .ok_or("stepping requires point feedback")?,
+                    &program.inputs,
+                    &limits,
+                    period,
+                )
+            })
+            .transpose()?;
         Ok(Self {
             policy: Box::new(policy),
             task_observer,
             body_feedback,
             point_feedback,
+            step_reference,
             contract,
             inputs: program.inputs.clone(),
             values: program.inputs.iter().map(|i| i.initial).collect(),
@@ -254,6 +280,14 @@ impl SampledPolicy {
         if reference.len() != self.indices.len() {
             return Err("policy reference dimension mismatch".into());
         }
+        let online = self
+            .step_reference
+            .as_mut()
+            .map(|r| r.sample(art, map, g, time, &self.values))
+            .transpose()?;
+        let reference = online
+            .as_ref()
+            .map_or(reference, |p| p.coordinates.as_slice());
         let mut sensors = Vec::new();
         for (&i, &r) in self.indices.iter().zip(reference) {
             sensors.extend([g.q[i], g.qd[i], r]);
@@ -264,7 +298,12 @@ impl SampledPolicy {
         let body_feedback = self
             .body_feedback
             .as_ref()
-            .map(|feedback| feedback.sample(art, map, g, reference_time, reference_advancing))
+            .map(|feedback| match &online {
+                Some(p) => {
+                    feedback.sample_target(art, map, g, time, p.reference.body_world_m, [0.; 3])
+                }
+                None => feedback.sample(art, map, g, reference_time, reference_advancing),
+            })
             .transpose()?;
         if let Some(sample) = &body_feedback {
             sensors.extend(&sample.correction_rad);
@@ -272,7 +311,17 @@ impl SampledPolicy {
         let point_feedback = self
             .point_feedback
             .as_ref()
-            .map(|feedback| feedback.sample(art, map, g, reference_time))
+            .map(|feedback| match &online {
+                Some(p) => feedback.sample_target(
+                    art,
+                    map,
+                    g,
+                    time,
+                    &p.feedback_feet_world_m,
+                    &vec![1.; p.reference.feet_world_m.len()],
+                ),
+                None => feedback.sample(art, map, g, reference_time),
+            })
             .transpose()?;
         if let Some(sample) = &point_feedback {
             sensors.extend(&sample.correction_rad);
@@ -293,6 +342,9 @@ impl SampledPolicy {
             return Err("policy output violates software/CAD command bounds".into());
         }
         self.telemetry = json!({"time_s":time,"observations":self.contract.sensors.iter().zip(&sensors).map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>(),"targets":self.contract.actuators.iter().zip(&targets).map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>(),"observation_source":"ideal_joint_state_diagnostics"});
+        if let Some(p) = online {
+            self.telemetry["step_reference"] = json!({"reference":p.reference,"coordinates":p.coordinates,"maximum_marker_error_m":p.maximum_marker_error_m,"static_support":p.support,"feedback_feet_world_m":p.feedback_feet_world_m,"preload_extension_m":p.preload_extension_m,"measured_support_force_n":p.measured_support_force_n});
+        }
         if let Some(sample) = body_feedback {
             self.telemetry["body_feedback"] = json!(sample);
         }
@@ -313,6 +365,9 @@ impl SampledPolicy {
                 .collect::<Vec<_>>()
         };
         let mut metadata = json!({"period_s":self.contract.period,"observation_source":"ideal_joint_state_diagnostics","deployable":false,"observations":channels(&self.contract.sensors),"actuators":channels(&self.contract.actuators),"software_target_bounds_rad":self.limits,"timing":"Sample committed state before the next physics interval; targets are held until subsequent firmware sampling. Rendering does not set either clock."});
+        if let Some(r) = &self.step_reference {
+            metadata["step_reference"] = json!({"config":r.config(),"scope":"Online support sequence and bounded CAD inverse kinematics. Commands latch at foot-transfer boundaries; geometric references never mutate physical state. Ideal floor loads qualify lift/landing transitions."});
+        }
         if let Some(observer) = &self.task_observer {
             metadata["task_observations"] = json!({"config":observer.config(),"coordinate_frame":"Body gravity direction, absolute COM velocity and angular velocity resolved in reference-link axes. Marker position and its time derivative relative to reference-link COM/axes. Floor force in world axes; link resultant excluding internal contacts, not force at marker."});
         }

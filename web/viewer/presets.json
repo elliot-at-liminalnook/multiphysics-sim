@@ -268,6 +268,17 @@
       "description": "A small held-action training-interface fixture with the same Rust environment as the quadruped.",
       "readiness": "Synthetic interface fixture, not a trained policy.",
       "evidence": "Exercises endpoint observations, task scores, bounded actions, reset and replay."
+    },
+    {
+      "id": "robot-online-steps",
+      "label": "Quadruped · WASD crawl prototype",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-online-steps/scene.json",
+      "config": "examples/full-robot/browser-online-steps/scheduled-posture-screen.config.json",
+      "task": "examples/full-robot/browser-online-steps/task.json",
+      "description": "Live Rust controller generates upcoming foot placements from speed and turn commands. Press Play, then hold W/S to move and A/D to turn. The motors and ground contact produce the motion.",
+      "readiness": "Experimental 24-second flat-floor sandbox · forward-stop checked · reverse/turn transitions can fail · ideal observations · realtime targets remain under validation.",
+      "evidence": "Shared support phases qualify lift and landing from simulated foot loads. CAD inverse kinematics checks every requested motor pose and rejects internal collision. Releasing a key completes the current foot transfer before standing. Effective actuators retain their documented approximations."
     }
   ]
 }

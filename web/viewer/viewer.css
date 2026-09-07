@@ -5,3 +5,7 @@
 .execution-state{position:absolute;left:20px;bottom:38px;font-size:12px;color:var(--accent);pointer-events:none}
 
 .notice[data-state="failed"]{background:#382426;border-color:#a55b61;color:#ffd7da}
+#teleop { margin-bottom: 18px; }
+#teleop button { margin: 0 5px 7px 0; }
+#teleop button[aria-pressed="true"] { background: #88e1c7; color: #10231e; }
+#stop-motion { width: 100%; }

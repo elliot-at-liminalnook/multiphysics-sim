@@ -65,6 +65,7 @@ fn body_feedback_uses_reference_phase_and_current_floor_support_without_mutating
         "velocity_damping_s":0.1,"damping_m_per_rad":0.001,"maximum_correction_rad":1.0,"full_support_force_n":1.0
     })).unwrap();
     let helper = BodyFeedback::new(&art, config.clone()).unwrap();
+    assert!(helper.sample_target(&art, &map, &g, f64::NAN, [0.;3], [0.;3]).is_err());
     let paused = helper.sample(&art, &map, &g, 0.5, false).unwrap();
     assert!((paused.position_error_world_m[0] - 0.005).abs() < 1e-14);
     assert_eq!(paused.support_weights, vec![1.0]);

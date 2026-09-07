@@ -24,6 +24,7 @@ let grid, selectionBox, meshes = new Map(), current, frame, playback, worker, ep
 let abort, playing = false, busy = false, inputs = [], values = [], tick = 0, replaySaved;
 let lastDraw = performance.now(), simulatedWork = 0, wallWork = 0, selectedName;
 let liveTimer, liveStartWall = 0, liveStartSim = 0;
+const driveKeys = new Set();
 const ray = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 new ResizeObserver(() => {
@@ -66,6 +67,7 @@ function scheduleLive() {
   liveTimer = setTimeout(() => advanceLive(), delay);
 }
 function setPlaying(value) { playing = value; clearTimeout(liveTimer);
+  if (!playing && driveKeys.size) {driveKeys.clear();applyDriveKeys();}
   if (playing) { liveStartWall = performance.now(); liveStartSim = tick; scheduleLive(); }
   $('play').textContent = playing ? 'Pause' : 'Play';
   $('execution-state').textContent = playing ? (playback ? 'Playing recorded physics' : 'Running physics in background…') : (busy ? 'Pausing after the current physics chunk…' : 'Paused'); }
@@ -117,6 +119,7 @@ function showTaskObservations(next) {
   $('task-observation-panel').hidden = !config && !feedbackConfig && !pointConfig;
   const box = $('task-observation-readings'); box.replaceChildren();
   if (!config && !feedbackConfig && !pointConfig) return;
+  if (!$('task-observation-details').open) return;
   const observations = next.policy?.observations;
   if (!observations) { box.textContent = 'Waiting for the first controller sample.'; return; }
   const stamp = document.createElement('p'); stamp.className = 'muted'; stamp.textContent = `Controller sample: ${next.policy.time_s.toFixed(3)} s · vectors shown as x, y, z`; box.append(stamp);
@@ -143,6 +146,15 @@ function showTaskObservations(next) {
   }
 }
 function showMotionProgress(next) {
+  const step = next.policy?.step_reference?.reference;
+  if (step) {
+    const box=$('motion-progress');box.hidden=false;box.replaceChildren();
+    const title=document.createElement('strong');
+    const marker=current.data.policy_contract?.point_feedback?.config.markers[step.foot]?.id;
+    title.textContent=next.done?'Episode ended · reset to continue':step.phase==='idle'?'Standing · ready for a command':step.phase==='hold'?'Settling initial stance':`${marker || 'Foot'} · ${step.phase}${step.waiting?' · waiting for support':''}`;
+    const detail=document.createElement('p');detail.textContent=`Completed transfers: ${step.step}. Current transfer: ${(step.progress*100).toFixed(0)}%. Latched speed: ${(step.latched_twist[0]*1000).toFixed(2)} mm/s · turn: ${(step.latched_twist[2]*180/Math.PI).toFixed(3)}°/s. Changes apply at the next transfer.`;
+    box.append(title,detail);return;
+  }
   const p = next.motion_progress, box = $('motion-progress'); box.hidden = !p;
   if (!p) return;
   const labels = {initial:'Preparing motion',following_reference:'Following the plan',waiting_for_condition:'Waiting for sustained foot support',condition_qualified:'Foot support qualified',complete:'Planned motion complete',timed_out:'Support checkpoint timed out'};
@@ -180,10 +192,23 @@ function restoreInputs(restored) {
 }
 function makeInputs(channels) {
   inputs = channels; values = channels.map(c => c.initial); $('inputs').replaceChildren();
+  driveKeys.clear();const drive=channels.length&&current.data?.policy_contract?.step_reference?.config;
+  $('teleop').hidden=!drive;$('teleop').replaceChildren();
+  if (drive) {
+    const help=document.createElement('p');help.textContent='Press Play, then hold W/S to move, A/D to turn. Release to request a stop after the current foot transfer.';$('teleop').append(help);
+    for (const [key,label] of [['w','W · Forward'],['a','A · Left'],['s','S · Back'],['d','D · Right']]) {
+      const button=document.createElement('button');button.textContent=label;button.dataset.driveKey=key;
+      button.onpointerdown=e=>{e.preventDefault();button.setPointerCapture(e.pointerId);driveKeys.add(key);applyDriveKeys();};
+      const release=()=>{driveKeys.delete(key);applyDriveKeys();};button.onpointerup=release;button.onpointercancel=release;button.onlostpointercapture=release;
+      $('teleop').append(button);
+    }
+    const stop=document.createElement('button');stop.id='stop-motion';stop.textContent='Stop motion';stop.onclick=()=>{driveKeys.clear();applyDriveKeys();};$('teleop').append(stop);
+  }
   channels.forEach((c, i) => { const label = document.createElement('label'), output = document.createElement('span'), slider = document.createElement('input');
-    output.textContent = `${c.name}: ${values[i].toFixed(2)} ${c.kind === 'Angle' ? 'rad' : ''}`;
-    slider.type = 'range'; slider.min = c.lower; slider.max = c.upper; slider.step = (c.upper-c.lower)/200; slider.value = c.initial; slider.setAttribute('aria-label', c.name);
-    slider.oninput = () => { values[i] = Number(slider.value); output.textContent = `${c.name}: ${values[i].toFixed(2)} ${c.kind === 'Angle' ? 'rad' : ''}`; };
+    const display=()=>c.kind==='LinearVelocity'?`${(values[i]*1000).toFixed(2)} mm/s`:c.kind==='AngularVelocity'?`${(values[i]*180/Math.PI).toFixed(3)}°/s`:`${values[i].toFixed(2)} ${c.kind==='Angle'?'rad':''}`;
+    output.textContent = `${c.name}: ${display()}`;
+    slider.type = 'range'; slider.min = c.lower; slider.max = c.upper; slider.step = (c.upper-c.lower)/200 || 1; slider.disabled=c.lower===c.upper; slider.value = c.initial; slider.setAttribute('aria-label', c.name);
+    slider.oninput = () => { values[i] = Number(slider.value); output.textContent = `${c.name}: ${display()}`; };
     label.append(output, slider); $('inputs').append(label);
   });
 }
@@ -202,6 +227,7 @@ async function loadPreset(id) {
       if (result.metadata) Object.assign(current.data, result.metadata);
       makeInputs(result.inputs); showFrame(result.frame); $('timeline').max = result.metadata ? result.metadata.steps * result.metadata.step_s : data.duration_s;
       $('input-help').textContent = result.metadata?.environment_contract ? `Each command is held for ${result.metadata.environment_contract.period_s*1000} ms of simulation time. The selected controller and actuator profile determine the motor response. The score measures endpoint joint tracking; it is not yet a walking objective. Saving and replay preserve the task and command sequence.` : result.metadata?.policy_contract ? 'Rhai reads ideal simulated joint state and sends motor targets at its declared sampling rate. Adjust the commands above; save and replay preserve when they changed. Hardware sensor bindings and walking commands are not yet available.' : preset.mode === 'embedded' ? 'The Rust servo controller executes this experiment live. Pause and reset are available; this preset does not yet declare WASD walking commands.' : 'Use the position slider while running. This fixture has no walking command; WASD locomotion is unavailable.';
+      if (current.data.policy_contract?.step_reference) $('input-help').textContent+=' Motion requests are latched at foot-transfer boundaries. Releasing a key finishes the current transfer before standing; this provisional crawl is deliberately slow.';
       $('performance').textContent = 'Waiting for physics'; $('speed').disabled = true;
     } else {
       playback = data.frames; showFrame(playback[0]); $('timeline').max = playback.at(-1).time_s; $('timeline').disabled = false; $('speed').disabled = false;
@@ -258,7 +284,21 @@ renderer.domElement.addEventListener('pointerdown', e => { dragStart = [e.client
 renderer.domElement.addEventListener('pointerup', e => { if (!dragStart || Math.hypot(e.clientX-dragStart[0],e.clientY-dragStart[1])>4) return;
   const b = renderer.domElement.getBoundingClientRect(); pointer.set((e.clientX-b.left)/b.width*2-1,-(e.clientY-b.top)/b.height*2+1); ray.setFromCamera(pointer,camera); selectPart(ray.intersectObjects([...meshes.values()])[0]?.object.name || null);
 });
-window.addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.key.toLowerCase()==='f') fit(selectedName ? meshes.get(selectedName) : model); if (e.code==='Space') {e.preventDefault(); if (!$('play').disabled) $('play').click();} });
+function applyDriveKeys() {
+  const drive=current?.data?.policy_contract?.step_reference?.config;if(!drive)return;
+  const directions=[Number(driveKeys.has('w'))-Number(driveKeys.has('s')),0,Number(driveKeys.has('a'))-Number(driveKeys.has('d'))];
+  drive.command_channels.forEach((name,axis)=>{
+    const i=inputs.findIndex(c=>c.name===name);if(i<0)return;const c=inputs[i];
+    const slider=$('inputs').querySelectorAll('input')[i];slider.value=directions[axis]>0?c.upper:directions[axis]<0?c.lower:0;slider.dispatchEvent(new Event('input'));
+  });
+  for(const b of $('teleop').querySelectorAll('[data-drive-key]'))b.setAttribute('aria-pressed',String(driveKeys.has(b.dataset.driveKey)));
+}
+window.addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable) return;
+  const key=e.key.toLowerCase();if('wasd'.includes(key)&&key.length===1&&current?.data?.policy_contract?.step_reference){e.preventDefault();driveKeys.add(key);applyDriveKeys();return;}
+  if (key==='f') fit(selectedName ? meshes.get(selectedName) : model); if (e.code==='Space') {e.preventDefault(); if (!$('play').disabled) $('play').click();} });
+window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(driveKeys.delete(key)){e.preventDefault();applyDriveKeys();}});
+window.addEventListener('blur',()=>{driveKeys.clear();applyDriveKeys();});
+$('task-observation-details').addEventListener('toggle',()=>{if(frame)showTaskObservations(frame);});
 let catalog;
 try { catalog = await fetchData('catalog.json'); for (const p of catalog.presets) { const option = document.createElement('option'); option.value = p.id; option.textContent = p.label; $('preset').append(option); }
   $('preset').disabled = false; $('preset').onchange = () => loadPreset($('preset').value);

@@ -103,6 +103,41 @@ impl PointFeedback {
         g: &Generalized,
         phase: f64,
     ) -> Result<PointFeedbackSample, String> {
+        let reference = self.path.sample(phase)?;
+        let targets = reference
+            .values
+            .chunks_exact(3)
+            .map(|v| [v[0], v[1], v[2]])
+            .collect::<Vec<_>>();
+        self.sample_target(
+            art,
+            map,
+            g,
+            phase,
+            &targets,
+            &self.activation.sample(phase)?.values,
+        )
+    }
+    pub fn sample_target(
+        &self,
+        art: &Articulated,
+        map: &RigidEmbedding<'_>,
+        g: &Generalized,
+        phase: f64,
+        targets: &[[f64; 3]],
+        activation: &[f64],
+    ) -> Result<PointFeedbackSample, String> {
+        if !phase.is_finite()
+            || phase < 0.
+            || targets.len() != self.points.len()
+            || activation.len() != self.points.len()
+            || targets.iter().flatten().any(|v| !v.is_finite())
+            || activation
+                .iter()
+                .any(|v| !v.is_finite() || !(0.0..=1.0).contains(v))
+        {
+            return Err("finite target and bounded activation per feedback marker required".into());
+        }
         let dofs = art.dofs().map(|(_, d)| d).collect::<Vec<_>>();
         if map.independent_joint_indices().iter().any(|&i| {
             !matches!(
@@ -112,8 +147,7 @@ impl PointFeedback {
         }) {
             return Err("point feedback correction coordinates must be angular".into());
         }
-        let reference = self.path.sample(phase)?;
-        let activation = self.activation.sample(phase)?.values;
+        let activation = activation.to_vec();
         let coordinates = map
             .independent_joint_indices()
             .iter()
@@ -128,10 +162,10 @@ impl PointFeedback {
             .iter()
             .map(|p| links[p.link].p + links[p.link].r * Vector3::from(p.local_point_m))
             .collect::<Vec<_>>();
-        let targets = reference
-            .values
-            .chunks_exact(3)
-            .map(Vector3::from_column_slice)
+        let targets = targets
+            .iter()
+            .copied()
+            .map(Vector3::from)
             .collect::<Vec<_>>();
         let errors = targets
             .iter()

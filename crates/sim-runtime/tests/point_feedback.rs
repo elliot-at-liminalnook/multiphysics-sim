@@ -53,6 +53,7 @@ fn actual_world_marker_error_drives_bounded_phase_activated_angular_suggestion()
     }))
     .unwrap();
     let helper = PointFeedback::new(&art, config.clone()).unwrap();
+    assert!(helper.sample_target(&art, &map, &g, -1., &[[0.;3]], &[1.]).is_err());
     let off = helper.sample(&art, &map, &g, 0.0).unwrap();
     assert_eq!(off.correction_rad, vec![0.0]);
     let on = helper.sample(&art, &map, &g, 1.0).unwrap();

@@ -129,6 +129,25 @@ impl BodyFeedback {
         advancing: bool,
     ) -> Result<BodyFeedbackSample, String> {
         let reference = self.path.sample(phase)?;
+        let position = std::array::from_fn(|i| reference.values[i]);
+        let velocity = std::array::from_fn(|i| if advancing { reference.rates[i] } else { 0. });
+        self.sample_target(art, map, g, phase, position, velocity)
+    }
+    pub fn sample_target(
+        &self,
+        art: &Articulated,
+        map: &RigidEmbedding<'_>,
+        g: &Generalized,
+        phase: f64,
+        position: [f64; 3],
+        velocity: [f64; 3],
+    ) -> Result<BodyFeedbackSample, String> {
+        if !phase.is_finite()
+            || phase < 0.
+            || position.iter().chain(&velocity).any(|v| !v.is_finite())
+        {
+            return Err("finite body reference required".into());
+        }
         let dofs = art.dofs().map(|(_, d)| d).collect::<Vec<_>>();
         if map.independent_joint_indices().iter().any(|&i| {
             !matches!(
@@ -140,12 +159,8 @@ impl BodyFeedback {
         }
         let evaluation = art.evaluate(g);
         let body = &evaluation.links[self.reference];
-        let error = Vector3::from_column_slice(&reference.values) - body.p;
-        let target_velocity = if advancing {
-            Vector3::from_column_slice(&reference.rates)
-        } else {
-            Vector3::zeros()
-        };
+        let error = Vector3::from(position) - body.p;
+        let target_velocity = Vector3::from(velocity);
         let correction = error + self.config.velocity_damping_s * (target_velocity - body.vel);
         let coordinates = map
             .independent_joint_indices()
@@ -178,7 +193,7 @@ impl BodyFeedback {
         )?;
         Ok(BodyFeedbackSample {
             reference_time_s: phase,
-            target_position_world_m: Vector3::from_column_slice(&reference.values).into(),
+            target_position_world_m: position,
             actual_position_world_m: body.p.into(),
             position_error_world_m: error.into(),
             support_weights: weights,

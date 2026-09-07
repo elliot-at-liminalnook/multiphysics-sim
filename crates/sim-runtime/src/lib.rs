@@ -7,6 +7,7 @@ pub mod body_feedback;
 pub mod embedded;
 pub mod embedded_policy;
 pub mod environment;
+pub mod policy_evaluation;
 pub mod lift;
 pub mod physical;
 pub mod planning;

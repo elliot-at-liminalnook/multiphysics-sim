@@ -211,7 +211,8 @@ jobs:
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-student-push runs/interactive/student-push-native.json runs/interactive/student-push-browser.json
       - name: Walking objective preserves physics and rejects known bad outcomes
         run: |
-          cargo test --locked -p sim-runtime --test walking_task --test lift --test environment
+          cargo test --locked -p sim-runtime --test walking_task --test lift --test environment --test policy_evaluation
+          cargo check --locked -p sim-runtime --example train_policy_suite
           cargo build --locked --release -p sim-runtime --example rescore_walking
           target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/student-disturbances/lateral.config.json examples/full-robot/walking-objective/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/walking-task-native.json
           target/release/examples/rescore_walking runs/interactive/student-push-native.json examples/full-robot/walking-objective/walking.json > runs/interactive/walking-task-rescore.json
@@ -220,6 +221,13 @@ jobs:
           target/release/examples/rescore_walking runs/interactive/walking-stress-original.json examples/full-robot/walking-objective/walking.json > runs/interactive/walking-stress-rescore.json
           node -e 'const a=require("./runs/interactive/walking-task-rescore.json"),b=require("./runs/interactive/walking-stress-rescore.json"),assert=require("node:assert/strict");assert.equal(a.final.failed_steps,0);assert(b.final.failed_steps>0);assert(a.total_reward>b.total_reward);'
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-walking-objective runs/interactive/walking-task-native.json runs/interactive/walking-task-browser.json
+      - name: Improved student walking and browser parity
+        run: |
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/student-robustness/short.config.json examples/full-robot/walking-objective/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/improved-student-short.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/improved-student-short.json runs/interactive/improved-student-short-acceptance
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/student-robustness/config.json examples/full-robot/walking-objective/task.json examples/full-robot/browser-residual-policy/sustained.actions.json > runs/interactive/improved-student-sustained.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/improved-student-sustained.json runs/interactive/improved-student-sustained-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-improved-student runs/interactive/improved-student-short.json runs/interactive/improved-student-browser.json examples/full-robot/student-robustness/short.config.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

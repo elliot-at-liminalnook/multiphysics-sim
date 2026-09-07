@@ -1,7 +1,7 @@
 //! Episodic policy search through the shared Rust environment, with full recipes.
 use serde::{Deserialize, Serialize};
 use sim_domain_control::{neural::Network, policy_search::{SearchConfig, search}};
-use sim_runtime::{embedded::Config, environment::{EmbeddedEnvironment,Task}, session::Scene};
+use sim_runtime::{embedded::Config, environment::Task, policy_evaluation::evaluate_episode, session::Scene};
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -29,19 +29,9 @@ fn main()->Result<(),Box<dyn std::error::Error>> {
     let result=search(initial,&recipe.search,|network:&Network| {
         let index=evaluation;evaluation+=1;
         let mut config=recipe.config.clone();config.policy.as_mut().unwrap().neural_residual=Some(network.clone());
-        let run=(||->Result<f64,String>{
-            let mut env=EmbeddedEnvironment::new(recipe.scene.clone(),config.clone(),recipe.task.clone(),recipe.environment_seed)?;
-            let expected=((config.steps as f64*config.step_s)/recipe.task.period_s).round() as usize;
-            if recipe.actions.len()!=expected {return Err("training actions must cover the complete episode".into());}
-            let mut score=0.0;
-            for action in &recipe.actions {
-                let t=env.step(action)?;score+=t.reward;
-                if t.terminated {return Err(format!("sampled task termination at {} s: {:?}",t.time_s,t.termination_reasons));}
-            }
-            if !env.transition().truncated {return Err("training episode did not reach its declared horizon".into());}
-            Ok(score)
-        })();
-        let record=serde_json::json!({"evaluation":index,"score":run.as_ref().ok(),"error":run.as_ref().err(),"policy":network});
+        let report = evaluate_episode(recipe.scene.clone(), config, recipe.task.clone(), &recipe.actions, recipe.environment_seed);
+        let run = report.score.ok_or_else(|| report.error.clone().unwrap_or_else(|| "episode has no completed score".into()));
+        let record=serde_json::json!({"evaluation":index,"score":run.as_ref().ok(),"error":run.as_ref().err(),"policy":network,"episode":report});
         std::fs::write(format!("{}/evaluation-{index:04}.json",args[1]),serde_json::to_vec(&record).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
         eprintln!("evaluation {index}: {:?}; elapsed {:.1}s",run,start.elapsed().as_secs_f64());
         run

@@ -1,5 +1,13 @@
 # Four-leg robot commissioning
 
+The [student improvement experiment](student-robustness/README.md) now searches
+neural weights across pushed walks at two timesteps and a minute-long walk.
+The selected network passes those development checks and improves minute-long
+stopping from 1.127 to 0.685 mm, but still misses a swing in the reserved push
+case and in an additional 5 ms refinement. It remains experimental; broader
+robustness and full realtime acceptance
+are incomplete. Earlier checkpoints below describe their original evidence.
+
 The [walking task objective](walking-objective.md) now scores body-reference error
 and actual supported swings through shared Rust code, with visible browser
 counts. It fixes the observed success/failure ranking without changing physical
@@ -11,8 +19,8 @@ not promoted. Robust controller training and full realtime acceptance remain ope
 The [student push test](student-disturbances.md) adds reproducible bounded world
 forces to native and WASM simulation, with visible timing and exact replay.
 Small challenges pass; stronger pushes and finer timesteps expose task failures.
-The reward audit also finds that a failed stopping run can score higher than a
-successful run. Improving task-relevant learning objectives is the next priority.
+Its reward audit found that a failed stopping run could score higher than a
+successful run; that finding motivated the shared walking objective.
 
 
 The [distilled student](student-distillation.md) learns the teacher's larger

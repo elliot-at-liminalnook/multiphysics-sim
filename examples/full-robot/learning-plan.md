@@ -1,5 +1,13 @@
 # CAD-derived walking and learning delivery
 
+The [student improvement experiment](student-robustness/README.md) now searches
+neural weights across pushed walks at two timesteps and a minute-long walk.
+The selected network passes those development checks and improves minute-long
+stopping from 1.127 to 0.685 mm, but still misses a swing in the reserved push
+case and in an additional 5 ms refinement. It remains experimental; broader
+robustness and full realtime acceptance
+are incomplete. Earlier checkpoints below describe their original evidence.
+
 The [walking task objective](walking-objective.md) now scores body-reference error
 and actual supported swings through shared Rust code, with visible browser
 counts. It fixes the observed success/failure ranking without changing physical
@@ -11,11 +19,10 @@ not promoted. Robust controller training and full realtime acceptance remain ope
 See [physical disturbances](student-disturbances.md): bounded world-force
 schedules now execute through the shared Rust runtime and the WASM viewer.
 Four small pushes pass the short gate; 5/15 N pushes and timestep refinement
-expose failed steps. No robustness training has been performed. The existing
-reward gives a higher score to a 41 mm stopping failure than to a successful
-small-push run. Fix task-relevant observations/rewards and step margin before
-promoting disturbance-trained controllers. Earlier sections retain historical
-checkpoints; these measured failures are current.
+expose failed steps. This initial probe preceded multi-episode policy search.
+Its original reward ranked a 41 mm stopping failure above a successful small
+push; the walking objective corrected that observed ranking. These historical
+failures remain useful development cases, not untouched final validation data.
 
 
 The active goal is the complete workflow: quadruped-appropriate PLANC-inspired

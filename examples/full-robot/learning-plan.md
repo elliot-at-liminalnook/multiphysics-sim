@@ -9,6 +9,14 @@ faster solver kernel does not complete this goal.
 
 ## Current evidence and sequence
 
+The [walking-speed experiments](speed-envelope.md) now distinguish geometry,
+command-bound, support-duration and numerical failures. A 1.5× candidate passes
+13 swings and native/WASM parity over 24 s, but fails the sustained run at
+30.94 s and disagrees with a 5 ms refinement by up to 3.15 mm at the feet. No
+faster controller is promoted. Keep the maintained browser crawl available;
+investigate the faster actuator/contact response and timestep sensitivity before
+using this candidate as a planning or learning baseline.
+
 The [terrain-contact profile](terrain-contact.md) now omits inter-link impact
 forces explicitly while preserving full sampled geometry guards and audits.
 The sustained native minute matches every retained-model frame exactly, passes

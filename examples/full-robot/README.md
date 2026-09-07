@@ -1,5 +1,9 @@
 # Four-leg robot commissioning
 
+The [walking-speed investigation](speed-envelope.md) tests longer steps, faster
+cadence and standing feedback. A faster short run passes, but sustained and
+timestep checks prevent promotion; the existing browser controllers stay intact.
+
 The new [terrain-contact experiment](terrain-contact.md) omits link-to-link
 forces while retaining independent overlap checks and floor contact. Its tested
 minute matches the retained native trajectory exactly and runs at realtime

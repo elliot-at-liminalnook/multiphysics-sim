@@ -1,0 +1,508 @@
+{
+  "version": 1,
+  "manifest": {
+    "version": 1,
+    "cases": [
+      {
+        "name": "2x",
+        "scale": 2
+      },
+      {
+        "name": "4x",
+        "scale": 4
+      },
+      {
+        "name": "2x-posture",
+        "scale": 2,
+        "front_support_x_m": -0.014
+      },
+      {
+        "name": "2x-cadence",
+        "scale": 2,
+        "phases_s": [
+          0.24,
+          0.2,
+          0.2,
+          0.26,
+          0.1
+        ]
+      },
+      {
+        "name": "2x-cadence-retry",
+        "scale": 2,
+        "phases_s": [
+          0.24,
+          0.2,
+          0.2,
+          0.26,
+          0.1
+        ],
+        "max_iterations": 80
+      },
+      {
+        "name": "1.5x-cadence",
+        "scale": 1.5,
+        "phases_s": [
+          0.34,
+          0.28,
+          0.28,
+          0.34,
+          0.1
+        ]
+      },
+      {
+        "name": "1.5x-long-swing",
+        "scale": 1.5,
+        "phases_s": [
+          0.34,
+          0.36,
+          0.36,
+          0.18,
+          0.1
+        ]
+      },
+      {
+        "name": "1.5x-stop-feedback",
+        "scale": 1.5,
+        "phases_s": [
+          0.34,
+          0.36,
+          0.36,
+          0.18,
+          0.1
+        ],
+        "standing_gain_increment": 0.75
+      },
+      {
+        "name": "1.5x-stop-feedback-1",
+        "scale": 1.5,
+        "phases_s": [
+          0.34,
+          0.36,
+          0.36,
+          0.18,
+          0.1
+        ],
+        "standing_gain_increment": 1
+      },
+      {
+        "name": "1.5x-stop-feedback-1-refined",
+        "scale": 1.5,
+        "phases_s": [
+          0.34,
+          0.36,
+          0.36,
+          0.18,
+          0.1
+        ],
+        "standing_gain_increment": 1,
+        "step_s": 0.01,
+        "max_iterations": 80
+      },
+      {
+        "name": "1.5x-refined-backtracking",
+        "scale": 1.5,
+        "phases_s": [
+          0.34,
+          0.36,
+          0.36,
+          0.18,
+          0.1
+        ],
+        "standing_gain_increment": 1,
+        "step_s": 0.01,
+        "max_iterations": 80,
+        "guarded_backtracking": true
+      },
+      {
+        "name": "1.5x-refined-5ms",
+        "scale": 1.5,
+        "phases_s": [
+          0.34,
+          0.36,
+          0.36,
+          0.18,
+          0.1
+        ],
+        "standing_gain_increment": 1,
+        "step_s": 0.005,
+        "max_iterations": 80
+      },
+      {
+        "name": "1.5x-sustained",
+        "scale": 1.5,
+        "phases_s": [
+          0.34,
+          0.36,
+          0.36,
+          0.18,
+          0.1
+        ],
+        "standing_gain_increment": 1,
+        "duration_s": 60,
+        "command_duration_s": 56
+      }
+    ],
+    "sources": {
+      "scene": "examples/full-robot/browser-terrain-contact/scene.json",
+      "config": "examples/full-robot/browser-reversal/short.config.json",
+      "task": "examples/full-robot/browser-reversal/task.json"
+    },
+    "inputs": {
+      "examples/full-robot/browser-terrain-contact/scene.json": "441b9feb249b57b6325d32d96dac138c0818aae091aad2be33e5b11afa554102",
+      "examples/full-robot/browser-reversal/short.config.json": "a2b49e4cbb69c4c89e032314167f1d65222425dd89c74559ef06e8bb8b458ea3",
+      "examples/full-robot/browser-reversal/task.json": "c41684bf9ca1ce73dc84905dc9eeefe5bee75adf571f80a9963442d460194752",
+      "examples/full-robot/prepare_speed_envelope.mjs": "c6213ea4a8bd0a0a44e8f54753e2ace6b61087ba71e3e6f2f749cfb191664ccf"
+    },
+    "command_duration_s": 16.8,
+    "scope": "Flat-floor forward-speed experiments with ideal observations. Changes only command range, posture schedule, phase timing and explicitly listed iteration allowance or standing feedback. Physical properties, solver tolerances, actuator bounds, collision guards and acceptance budgets remain unchanged. No promotion implied."
+  },
+  "results": [
+    {
+      "name": "2x",
+      "scale": 2,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/2x.native.json",
+        "sha256": "0e8058a7b3536bfebf19509248e7ff211a4a4ab7ae869380b485d3ea045c55cf"
+      },
+      "completed": false,
+      "last_committed_time_s": 5.0200000000000005,
+      "last_phase": "raise",
+      "error": "step 2 Raise reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0"
+    },
+    {
+      "name": "4x",
+      "scale": 4,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/4x.native.json",
+        "sha256": "f6f1824bd7cd3c585b4e386c87174337e7f2f80ddf8fe7561d2f259f45d4fc47"
+      },
+      "completed": false,
+      "last_committed_time_s": 1,
+      "last_phase": "raise",
+      "error": "policy output violates software/CAD command bounds"
+    },
+    {
+      "name": "2x-posture",
+      "scale": 2,
+      "front_support_x_m": -0.014,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/2x-posture.native.json",
+        "sha256": "417177192a401f00ec8f92124c0183d2bbe9e24aa706c5b79f6498679c4e373a"
+      },
+      "completed": false,
+      "last_committed_time_s": 6.5,
+      "last_phase": "shift",
+      "error": "step 3 Shift reference has internal contact: -X | Thigh sector gear / -X | Hip output shaft and pulley"
+    },
+    {
+      "name": "2x-cadence",
+      "scale": 2,
+      "phases_s": [
+        0.24,
+        0.2,
+        0.2,
+        0.26,
+        0.1
+      ],
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/2x-cadence.native.json",
+        "sha256": "3c9e697317c62a26378bd4ddc99b982dfaed95cfcc5bc57583cbefe2d6a298fc"
+      },
+      "completed": false,
+      "last_committed_time_s": 16.56,
+      "last_phase": "raise",
+      "error": "step 828: implicit mechanical solve: Newton did not converge after 40 iterations; residual=3.1641164366572397e-3; largest final residual: Some(\"mechanical velocity row 9: residual=3.1641164366572397e-3, candidate=-8.397054428345359e-5\"); last rejected endpoint: None"
+    },
+    {
+      "name": "2x-cadence-retry",
+      "scale": 2,
+      "phases_s": [
+        0.24,
+        0.2,
+        0.2,
+        0.26,
+        0.1
+      ],
+      "max_iterations": 80,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/2x-cadence-retry.native.json",
+        "sha256": "2c778ecb35778551d9dcb319b773adbd3303281c4c364a3e396bd6adf7cfd7e5"
+      },
+      "completed": true,
+      "last_committed_time_s": 24,
+      "last_phase": "idle",
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/speed-envelope/2x-cadence-retry-acceptance/summary.json",
+        "sha256": "9b689f889a05bdfddc5cb85df37cc9804f4850304f6d9309f1f19488842ac2a5",
+        "passed": false,
+        "swings": 17,
+        "passing_swings": 0,
+        "minimum_qualifying_span_s": 0.03999999999999915,
+        "final_body_error_m": 0.0007877670782668534,
+        "final_yaw_error_rad": 0.0034665567617144354,
+        "maximum_body_tilt_rad": 0.003734316951121699,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.042414766186000596,
+          0.0004446357828250009,
+          -0.0006446791350616272
+        ]
+      }
+    },
+    {
+      "name": "1.5x-cadence",
+      "scale": 1.5,
+      "phases_s": [
+        0.34,
+        0.28,
+        0.28,
+        0.34,
+        0.1
+      ],
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-cadence.native.json",
+        "sha256": "f963b2d5b34efa042acf046db7c3d170f6e5d4e7fd0672fcbd53e08de905707a"
+      },
+      "completed": true,
+      "last_committed_time_s": 24,
+      "last_phase": "idle",
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-cadence-acceptance/summary.json",
+        "sha256": "07325b3194d68561c59840ef80325bc88cbb2e6a35b4cfd58d69f4ac8e21869d",
+        "passed": false,
+        "swings": 13,
+        "passing_swings": 0,
+        "minimum_qualifying_span_s": 0.11999999999999922,
+        "final_body_error_m": 0.0007474075382981575,
+        "final_yaw_error_rad": 0.001979523446449883,
+        "maximum_body_tilt_rad": 0.0035710897866437826,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.03249842185728517,
+          0.0003409480959659462,
+          -0.0006445547201327124
+        ]
+      }
+    },
+    {
+      "name": "1.5x-long-swing",
+      "scale": 1.5,
+      "phases_s": [
+        0.34,
+        0.36,
+        0.36,
+        0.18,
+        0.1
+      ],
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-long-swing.native.json",
+        "sha256": "54916b7f56ba1f9afe1e3f8e04f62eb494e3b39faeb4508bdb1bbd14495a691f"
+      },
+      "completed": true,
+      "last_committed_time_s": 24,
+      "last_phase": "idle",
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-long-swing-acceptance/summary.json",
+        "sha256": "f631e4f5237c504a997e5294a75791bd3533475b6a3083721c693d1c813db057",
+        "passed": false,
+        "swings": 13,
+        "passing_swings": 13,
+        "minimum_qualifying_span_s": 0.1999999999999993,
+        "final_body_error_m": 0.0011771342074396855,
+        "final_yaw_error_rad": 0.0011657506923638038,
+        "maximum_body_tilt_rad": 0.0035654752657665705,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.03346952735743578,
+          0.0005637480032705793,
+          -0.0006453990823384534
+        ]
+      }
+    },
+    {
+      "name": "1.5x-stop-feedback",
+      "scale": 1.5,
+      "phases_s": [
+        0.34,
+        0.36,
+        0.36,
+        0.18,
+        0.1
+      ],
+      "standing_gain_increment": 0.75,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-stop-feedback.native.json",
+        "sha256": "019cacbe32b0a3e351783c1ee66e94ff78e0fb4d2313961a54f052cc6dba7c9f"
+      },
+      "completed": true,
+      "last_committed_time_s": 24,
+      "last_phase": "idle",
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-stop-feedback-acceptance/summary.json",
+        "sha256": "bd397131397e9d87d2d07b2477832449e8d9581ff8ff07fa5213da9dce182277",
+        "passed": false,
+        "swings": 13,
+        "passing_swings": 13,
+        "minimum_qualifying_span_s": 0.1999999999999993,
+        "final_body_error_m": 0.0010160218821757387,
+        "final_yaw_error_rad": 0.001036697858904278,
+        "maximum_body_tilt_rad": 0.0035654752657665705,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.03339399654236411,
+          0.0004014123713649439,
+          -0.000579725263969464
+        ]
+      }
+    },
+    {
+      "name": "1.5x-stop-feedback-1",
+      "scale": 1.5,
+      "phases_s": [
+        0.34,
+        0.36,
+        0.36,
+        0.18,
+        0.1
+      ],
+      "standing_gain_increment": 1,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-stop-feedback-1.native.json",
+        "sha256": "87e11310298c08dd5841836e01e92de254bcf66629360683a93f08352829d2fd"
+      },
+      "completed": true,
+      "last_committed_time_s": 24,
+      "last_phase": "idle",
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-stop-feedback-1-acceptance/summary.json",
+        "sha256": "dff04222fb4492dfb93cb864a97df1037c9769ebd16d22c946afa33ede1da596",
+        "passed": true,
+        "swings": 13,
+        "passing_swings": 13,
+        "minimum_qualifying_span_s": 0.1999999999999993,
+        "final_body_error_m": 0.000884502531291786,
+        "final_yaw_error_rad": 0.0007710792591103268,
+        "maximum_body_tilt_rad": 0.0035654752657665705,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.03333415665086081,
+          0.0002333500732214908,
+          -0.0005260891697645396
+        ]
+      }
+    },
+    {
+      "name": "1.5x-stop-feedback-1-refined",
+      "scale": 1.5,
+      "phases_s": [
+        0.34,
+        0.36,
+        0.36,
+        0.18,
+        0.1
+      ],
+      "standing_gain_increment": 1,
+      "step_s": 0.01,
+      "max_iterations": 80,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-stop-feedback-1-refined.native.json",
+        "sha256": "3e8a374614b2ef0a10e511861255fb2e4697ecd5bd690c187b6ba24d40d026ed"
+      },
+      "completed": false,
+      "last_committed_time_s": 3.04,
+      "last_phase": "shift",
+      "error": "step 305: implicit mechanical solve: Newton did not converge after 80 iterations; residual=2.377632595052237e0; largest final residual: Some(\"mechanical velocity row 11: residual=-2.377632595052237e0, candidate=3.4242429636393135e-1\"); last rejected endpoint: None"
+    },
+    {
+      "name": "1.5x-refined-backtracking",
+      "scale": 1.5,
+      "phases_s": [
+        0.34,
+        0.36,
+        0.36,
+        0.18,
+        0.1
+      ],
+      "standing_gain_increment": 1,
+      "step_s": 0.01,
+      "max_iterations": 80,
+      "guarded_backtracking": true,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-refined-backtracking.native.json",
+        "sha256": "cdc002938b0bd28583bc5fb6e9eb966b925b3087bcfa1e65174089e04c895c4b"
+      },
+      "completed": false,
+      "last_committed_time_s": 3.04,
+      "last_phase": "shift",
+      "error": "step 305: implicit mechanical solve: Newton did not converge after 80 iterations; residual=2.377632595052237e0; largest final residual: Some(\"mechanical velocity row 11: residual=-2.377632595052237e0, candidate=3.4242429636393135e-1\"); last rejected endpoint: None"
+    },
+    {
+      "name": "1.5x-refined-5ms",
+      "scale": 1.5,
+      "phases_s": [
+        0.34,
+        0.36,
+        0.36,
+        0.18,
+        0.1
+      ],
+      "standing_gain_increment": 1,
+      "step_s": 0.005,
+      "max_iterations": 80,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-refined-5ms.native.json",
+        "sha256": "189fb5feecc74ceecf5da2a718bba58b3f60b48f8e711b6aa7026b3fac24619f"
+      },
+      "completed": true,
+      "last_committed_time_s": 24,
+      "last_phase": "idle",
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-refined-5ms-acceptance/summary.json",
+        "sha256": "6ed6ac82e035e30ac752cc64581f8befd607e782ab1135ea994c7dd3ae4d31c1",
+        "passed": false,
+        "swings": 13,
+        "passing_swings": 13,
+        "minimum_qualifying_span_s": 0.1999999999999993,
+        "final_body_error_m": 0.0018348826122473966,
+        "final_yaw_error_rad": 0.0014181214787950167,
+        "maximum_body_tilt_rad": 0.003988385249094071,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.0343772670634162,
+          0.0003860233845417795,
+          -0.0005266441545652423
+        ]
+      }
+    },
+    {
+      "name": "1.5x-sustained",
+      "scale": 1.5,
+      "phases_s": [
+        0.34,
+        0.36,
+        0.36,
+        0.18,
+        0.1
+      ],
+      "standing_gain_increment": 1,
+      "duration_s": 60,
+      "command_duration_s": 56,
+      "capture": {
+        "path": "runs/full-robot/learning/speed-envelope/1.5x-sustained.native.json",
+        "sha256": "d46af642f14f1553211d73b097f0c576e65d1e40e26919c5e20fd8ffc39390c7"
+      },
+      "completed": false,
+      "last_committed_time_s": 30.94,
+      "last_phase": "settle",
+      "error": "step 1547: implicit mechanical solve: Newton did not converge after 40 iterations; residual=2.413335859066756e-3; largest final residual: Some(\"mechanical velocity row 13: residual=2.413335859066756e-3, candidate=-1.4335243825999244e-2\"); last rejected endpoint: None"
+    }
+  ],
+  "scope": "Controller development on the explicit terrain-contact profile. Existing sampled clearance/support, stop and overlap gates are unchanged. Passing a short run does not establish sustained walking, timestep accuracy, realtime performance or hardware feasibility. Timings deliberately omitted: some independent validation/build jobs overlapped."
+}

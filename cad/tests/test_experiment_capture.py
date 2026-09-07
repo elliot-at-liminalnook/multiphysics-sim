@@ -9,13 +9,13 @@ from robocad.snapshots import digest
 
 def test_queued_run_captures_binary_and_derivation_sources_before_execution(tmp_path, monkeypatch):
     package = tmp_path/'source'/'robocad'; package.mkdir(parents=True)
-    source = package/'experiments.py'; source.write_text('VERSION = 1\n')
+    source = package/'experiments.py'; source.write_bytes(b'VERSION = 1\n')
     monkeypatch.setattr(experiments, '__file__', str(source))
     executable = tmp_path/'sim-experiment'; executable.write_bytes(b'binary version one')
     manager = experiments.Experiments(root=tmp_path/'runs', binary=executable)
     monkeypatch.setattr(manager, '_run', lambda run_id: None)
     first = manager.create({'system': 'let a = 1;'})
-    source.write_text('VERSION = 2\n'); executable.write_bytes(b'binary version two')
+    source.write_bytes(b'VERSION = 2\n'); executable.write_bytes(b'binary version two')
     second = manager.create({'system': 'let a = 1;'})
     a, b = first['runner'], second['runner']
     assert Path(a['binary']).read_bytes() == b'binary version one'

@@ -36,6 +36,13 @@ try {
  const beforeSelect=await drawCalls();await page.locator('#parts button').first().click();await displayFrames(2);assert((await drawCalls())>beforeSelect);
  const beforeFit=await drawCalls();await page.locator('#fit-selected').click();await displayFrames(2);assert((await drawCalls())>beforeFit);
  await page.locator('#fit').click();
+ const drawnDiagnostic=await page.evaluate(async()=>{
+  const viewer=await import('./viewer.js'),a=viewer.renderedFrameInfo();
+  if(a)a.time_s=-123;
+  return viewer.renderedFrameInfo();
+ });
+ assert(Number.isFinite(drawnDiagnostic?.time_s)&&drawnDiagnostic.time_s>=0,'render diagnostics return an independent snapshot');
+ assert(Number.isFinite(drawnDiagnostic.submitted_at_ms));
  checks.push('unchanged paused scenes stop drawing; contact visibility, selection and camera fit redraw');
  if(recorded){
   assert.equal(await page.locator('#mode').textContent(),'RECORDED PHYSICS');

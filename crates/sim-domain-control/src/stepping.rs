@@ -31,6 +31,13 @@ pub struct StepSequenceConfig {
     /// Replan a crawl cycle at the next transfer after a translational reversal.
     #[serde(default, skip_serializing_if = "is_false")]
     pub restart_order_on_translation_reversal: bool,
+    /// Reconsider the command after the support shift, before lifting a foot.
+    /// A stop cancels the unstarted swing and recenters with all feet planted.
+    /// Direction changes preserve the completed support shift and retarget only
+    /// the unstarted swing and subsequent body return. The caller still checks
+    /// inverse kinematics, clearance and support of every reference.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub update_command_before_lift: bool,
     pub maximum_speed_m_s: f64,
     pub maximum_yaw_rate_rad_s: f64,
 }
@@ -44,8 +51,9 @@ pub enum StepPhase {
     Lower,
     Return,
     Settle,
+    Recenter,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct StepReference {
     pub sample: u64,
     pub phase: StepPhase,
@@ -73,6 +81,7 @@ pub struct StepSequence {
     step: usize,
     order_slot: usize,
     last_translation: [f64; 2],
+    restart_pending: bool,
     center: [f64; 3], // world x,y,yaw
     center_z: f64,
     home: Vec<[f64; 3]>, // heading-local XYZ relative to initial center
@@ -213,6 +222,7 @@ impl StepSequence {
             step: 0,
             order_slot: 0,
             last_translation: [0.; 2],
+            restart_pending: false,
             center: [body[0], body[1], yaw],
             center_z: body[2],
             home,
@@ -257,15 +267,30 @@ impl StepSequence {
     }
     fn start(&mut self, command: [f64; 3]) {
         if self.config.restart_order_on_translation_reversal
-            && self.last_translation[0] * command[0] + self.last_translation[1] * command[1]
-                < -1e-24
+            && (self.restart_pending
+                || self.last_translation[0] * command[0] + self.last_translation[1] * command[1]
+                    < -1e-24)
         {
             self.order_slot = 0;
         }
+        self.restart_pending = false;
         if command[0].hypot(command[1]) > 1e-12 {
             self.last_translation = [command[0], command[1]];
         }
         self.command = command;
+        let foot = self.next_foot();
+        self.plan_landing(command);
+        let (shift, _) = self.posture(command[0], foot);
+        let xy = rotate(self.center[2], [shift[0], shift[1]]);
+        self.shift_body = [
+            self.center[0] + xy[0],
+            self.center[1] + xy[1],
+            self.center_z + shift[2],
+        ];
+        self.phase = StepPhase::Shift;
+        self.phase_tick = 0;
+    }
+    fn plan_landing(&mut self, command: [f64; 3]) {
         let foot = self.next_foot();
         let slot = self.order_slot;
         let seconds = self.config.phase_durations_s.iter().sum::<f64>();
@@ -275,7 +300,7 @@ impl StepSequence {
             command,
             seconds * (self.config.order.len() - slot) as f64,
         );
-        let (shift, stance) = self.posture(command[0], foot);
+        let (_, stance) = self.posture(command[0], foot);
         let offset = rotate(
             landing[2],
             [
@@ -289,14 +314,6 @@ impl StepSequence {
             landing[1] + offset[1],
             self.center_z + self.home[foot][2],
         ];
-        let xy = rotate(self.center[2], [shift[0], shift[1]]);
-        self.shift_body = [
-            self.center[0] + xy[0],
-            self.center[1] + xy[1],
-            self.center_z + shift[2],
-        ];
-        self.phase = StepPhase::Shift;
-        self.phase_tick = 0;
     }
     /// Exactly one call per controller sample. Readiness comes from the caller's
     /// declared observations. A failed call leaves the sequence unchanged.
@@ -336,13 +353,14 @@ impl StepSequence {
             Lower => self.ticks[2],
             Return => self.ticks[3],
             Settle => self.ticks[4],
+            Recenter => self.ticks[3] + self.ticks[4],
         };
         let condition = match self.phase {
             Shift => support_ready,
-            Lower => landed,
+            Lower | Recenter => landed,
             _ => true,
         };
-        let guarded = matches!(self.phase, Shift | Lower);
+        let guarded = matches!(self.phase, Shift | Lower | Recenter);
         self.qualified = if condition {
             self.qualified.saturating_add(1)
         } else {
@@ -370,7 +388,29 @@ impl StepSequence {
                         self.phase = Idle
                     }
                 }
-                Shift => self.phase = Raise,
+                Shift => {
+                    if self.config.update_command_before_lift {
+                        if !enabled {
+                            self.command = [0.; 3];
+                            self.phase = Recenter;
+                        } else {
+                            if self.last_translation[0] * command[0]
+                                + self.last_translation[1] * command[1]
+                                < -1e-24
+                            {
+                                self.restart_pending = true;
+                            }
+                            if command[0].hypot(command[1]) > 1e-12 {
+                                self.last_translation = [command[0], command[1]];
+                            }
+                            self.command = command;
+                            self.plan_landing(command);
+                            self.phase = Raise;
+                        }
+                    } else {
+                        self.phase = Raise;
+                    }
+                }
                 Raise => self.phase = Lower,
                 Lower => {
                     let foot = self.next_foot();
@@ -384,6 +424,14 @@ impl StepSequence {
                 Settle => {
                     self.step += 1;
                     self.order_slot = (self.order_slot + 1) % self.config.order.len();
+                    if enabled {
+                        self.start(command)
+                    } else {
+                        self.phase = Idle
+                    }
+                }
+                Recenter => {
+                    // No foot transfer took place: preserve its index and order.
                     if enabled {
                         self.start(command)
                     } else {
@@ -429,12 +477,20 @@ impl StepSequence {
                 yaw = self.center[2] + s * (self.next_center[2] - self.center[2]);
             }
             Settle => progress = self.phase_tick as f64 / self.ticks[4] as f64,
+            Recenter => {
+                progress = self.phase_tick as f64 / (self.ticks[3] + self.ticks[4]) as f64;
+                body = lerp(
+                    self.shift_body,
+                    body,
+                    smooth(self.phase_tick as f64 / self.ticks[3] as f64),
+                );
+            }
             Hold | Idle => {}
         }
         let reference = StepReference {
             sample: self.sample,
             phase: self.phase.clone(),
-            foot: if matches!(self.phase, Hold | Idle) {
+            foot: if matches!(self.phase, Hold | Idle | Recenter) {
                 None
             } else {
                 Some(foot)

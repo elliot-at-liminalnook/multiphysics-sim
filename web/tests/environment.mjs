@@ -51,9 +51,13 @@ try {
    return {frames,record,preserved,recipePreserved,replayExact:stable(replay)===stable(frames.at(-1)),resetExact:stable(reset)===stable(loaded.frame),contract:loaded.metadata.environment_contract,progress,ticks,transitionWall};
   }finally{clearInterval(pulse);worker.terminate();}
  },{data,events:native.recording.input_events??[]});
- const differences=[];let maximum=0,worst='';
+ // Internal rotor speeds have much larger magnitudes than output-joint angles.
+ // Use explicit absolute + relative portability budgets, matching the default
+ // Newton relative correction scale. Task/physical accuracy gates are separate.
+ const absoluteTolerance=1e-7,relativeTolerance=1e-8;
+ const differences=[];let maximum=0,worst='',maximumToleranceFraction=0;
  function compare(a,b,path){
-  if(typeof a==='number'&&typeof b==='number'){const d=Math.abs(a-b);if(d>maximum){maximum=d;worst=path;}if(!Number.isFinite(a)||!Number.isFinite(b)||d>1e-7)differences.push(path);return;}
+  if(typeof a==='number'&&typeof b==='number'){const d=Math.abs(a-b),bound=absoluteTolerance+relativeTolerance*Math.max(Math.abs(a),Math.abs(b));if(d>maximum){maximum=d;worst=path;}maximumToleranceFraction=Math.max(maximumToleranceFraction,d/bound);if(!Number.isFinite(a)||!Number.isFinite(b)||d>bound)differences.push(path);return;}
   if(a&&b&&typeof a==='object'&&typeof b==='object'){if(Array.isArray(a)&&a.length!==b.length)differences.push(path+'.length');for(const k of Object.keys(a)){if(k!=='stepping_wall_s')compare(a[k],b[k],path+'.'+k);}return;}
   if(a!==b)differences.push(path);
  }
@@ -67,7 +71,9 @@ try {
   transition_p95_s:timed[Math.ceil(timed.length*.95)-1],
   scope:'Headless browser worker round trips including serialization; excludes loading, replay and rendering. Short episode, not sustained walking or visible responsiveness acceptance.'};
  const passed=!differences.length&&result.preserved&&result.recipePreserved&&result.replayExact&&result.resetExact&&result.progress>0&&result.ticks>0;
- const report={passed,preset:presetId,transitions:result.frames.length-1,maximum_native_wasm_difference:maximum,worst,differences:differences.slice(0,20),invalid_action_preserved:result.preserved,changed_task_replay_preserved:result.recipePreserved,replay_exact:result.replayExact,reset_exact:result.resetExact,main_thread_heartbeats:result.ticks,replay_progress_messages:result.progress,scope:'Same task and physical frames through production Rust environment, 1e-7 absolute numeric portability tolerance; not physical accuracy or learned control.'};
+ const report={passed,preset:presetId,transitions:result.frames.length-1,maximum_native_wasm_difference:maximum,worst,differences:differences.slice(0,20),invalid_action_preserved:result.preserved,changed_task_replay_preserved:result.recipePreserved,replay_exact:result.replayExact,reset_exact:result.resetExact,main_thread_heartbeats:result.ticks,replay_progress_messages:result.progress,
+ numeric_tolerance:{absolute:absoluteTolerance,relative:relativeTolerance,maximum_fraction:maximumToleranceFraction},
+ scope:'Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.'};
  report.performance=performance;
  report.host={platform:platform(),architecture:arch(),cpu:cpus()[0]?.model,logical_cpus:cpus().length,browser:await browser.version()};
  await writeFile(reportPath,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));assert(passed);

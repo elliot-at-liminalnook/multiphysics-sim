@@ -21,7 +21,22 @@ fn run() -> Result<(), String> {
             .map_err(|e| e.to_string())
     };
     let scene: Scene = serde_json::from_value(read(&args[0])?).map_err(|e| e.to_string())?;
-    let capture = read(&args[1])?;
+    let mut capture = read(&args[1])?;
+    // Environment captures preserve the entire typed scene in their recording.
+    // Accept that native/WASM path directly instead of requiring metadata to be
+    // copied by a robot-specific conversion script.
+    if capture["kind"] == "sampled_environment_capture" {
+        let recorded: Scene = serde_json::from_value(capture["recording"]["scene"].clone())
+            .map_err(|e| format!("environment scene: {e}"))?;
+        if serde_json::to_value(&recorded).map_err(|e|e.to_string())?
+            != serde_json::to_value(&scene).map_err(|e|e.to_string())? {
+            return Err("environment capture and supplied scene differ".into());
+        }
+        capture["source"] = recorded.robot.source.clone();
+        capture["scene_options"] = serde_json::to_value(&recorded.options).map_err(|e|e.to_string())?;
+        capture["world"] = serde_json::to_value(&recorded.robot.world).map_err(|e|e.to_string())?;
+        capture["motion_gate"] = capture["recording"]["config"]["motion_gate"].clone();
+    }
     let requirements: LiftRequirements =
         serde_json::from_value(read(&args[2])?).map_err(|e| e.to_string())?;
     if capture["completed"] != true

@@ -5,9 +5,20 @@ let simulation;
 let embedded = false, environment = false, chunk = 8, loaded;
 let queue = Promise.resolve();
 self.onmessage = ({ data }) => {
+  // Opt-in transport diagnostics stay outside Rust frames and recordings.
+  const received = data.profile_timing ? performance.now() : undefined;
   queue = queue.then(async () => {
     try {
       await ready;
+      const started = received === undefined ? undefined : performance.now();
+      let wasmCallMs = 0, parseMs = 0;
+      const stepResult = call => {
+        if (started === undefined) return JSON.parse(call());
+        const before = performance.now(), json = call(), parsedAt = performance.now();
+        const value = JSON.parse(json);
+        wasmCallMs += parsedAt - before; parseMs += performance.now() - parsedAt;
+        return value;
+      };
       let result;
       switch (data.type) {
         case 'load': {
@@ -23,13 +34,13 @@ self.onmessage = ({ data }) => {
         case 'step': {
           if (environment) {
             if (data.steps !== undefined && data.steps !== 1) throw new Error('environment step is exactly one action interval');
-            result = JSON.parse(simulation.step(new Float64Array(data.action)));
+            result = stepResult(() => simulation.step(new Float64Array(data.action)));
             break;
           }
           const count = data.steps ?? chunk;
           if (embedded && (!Number.isInteger(count) || count < 1 || count > 1000)) throw new Error('browser work chunk must be an integer in 1..1000');
           if (embedded && data.action !== undefined) simulation.set_inputs(new Float64Array(data.action));
-          result = JSON.parse(embedded ? simulation.advance(count) : simulation.step(new Float64Array(data.action))); break;
+          result = stepResult(() => embedded ? simulation.advance(count) : simulation.step(new Float64Array(data.action))); break;
         }
         case 'frame': result = JSON.parse(simulation.frame()); break;
         case 'set_attempt_audit_limit': {
@@ -72,7 +83,13 @@ self.onmessage = ({ data }) => {
         }
         default: throw new Error(`Unknown simulation request: ${data.type}`);
       }
-      self.postMessage({ id: data.id, result });
+      const timing = started === undefined ? undefined : {
+        queue_s: (started - received) / 1000,
+        worker_s: (performance.now() - started) / 1000,
+        wasm_call_s: wasmCallMs / 1000,
+        json_parse_s: parseMs / 1000,
+      };
+      self.postMessage({ id: data.id, result, ...(timing ? { timing } : {}) });
     } catch (error) {
       self.postMessage({ id: data.id, error: String(error) });
     }

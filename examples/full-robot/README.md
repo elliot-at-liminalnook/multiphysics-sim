@@ -10,6 +10,10 @@ General commands, terrain, useful walking speed and learned control remain open.
 The earlier [online prototype](online-control-validation.md) and accepted
 [two-cycle fixed crawl](crawl-validation.md) remain available.
 
+The [latency investigation](latency-profile.md) attributes the main cost to
+numerical derivatives and inter-part collision queries. A precision experiment
+retains sampled motion but misses the latency target; no setting is promoted.
+
 The active walking/learning delivery and acceptance backlog is in
 [learning-plan.md](learning-plan.md). Sampled foot tracking can now use the
 shared Rust [tracking tool](../interactive/tracking/README.md). Neither the fast

@@ -116,6 +116,8 @@ jobs:
         run: |
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.policy.json examples/interactive/pendulum.environment.json > runs/interactive/pendulum-environment-native.json
           node web/tests/environment.mjs runs/interactive/viewer pendulum-environment runs/interactive/pendulum-environment-native.json runs/interactive/pendulum-environment-browser.json
+          target/release/examples/run_environment examples/interactive/pendulum.scene.json examples/interactive/pendulum.policy.json examples/interactive/pendulum.environment.json --profile runs/interactive/pendulum-environment-profile.json > runs/interactive/pendulum-environment-profiled.json
+          node examples/interactive/check_profile_capture.mjs runs/interactive/pendulum-environment-native.json runs/interactive/pendulum-environment-profiled.json
       - name: Versioned quadruped environment in native and WASM
         run: |
           node web/build-viewer.mjs runs/interactive/teacher-viewer --environment-only

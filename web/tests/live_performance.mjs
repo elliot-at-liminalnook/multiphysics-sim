@@ -30,9 +30,9 @@ try{
   window.Worker=class extends Original{
    constructor(...args){super(...args);this.starts=new Map();this.addEventListener('message',({data})=>{
     if(data.progress)return;const start=this.starts.get(data.id);if(start!=null){const p=window.liveProbe,now=performance.now(),wall=(now-start)/1000;
-      p.steps.push(wall);p.samples.push({wall_s:wall,interval_s:(now-(p.previousResponse??p.started))/1000,phase:data.result?.policy?.step_reference?.reference.phase});p.previousResponse=now;p.finalPhase=data.result?.policy?.step_reference?.reference.phase;this.starts.delete(data.id);}
+      p.steps.push(wall);p.samples.push({time_s:data.result?.time_s,wall_s:wall,interval_s:(now-(p.previousResponse??p.started))/1000,phase:data.result?.policy?.step_reference?.reference.phase,...data.timing});p.previousResponse=now;p.finalPhase=data.result?.policy?.step_reference?.reference.phase;this.starts.delete(data.id);}
    });}
-   postMessage(data,...args){if(data.type==='step')this.starts.set(data.id,performance.now());return super.postMessage(data,...args);}
+   postMessage(data,...args){if(data.type==='step'){this.starts.set(data.id,performance.now());data={...data,profile_timing:true};}return super.postMessage(data,...args);}
   };
  });
  await page.goto(`${url}/?preset=${encodeURIComponent(preset)}`);
@@ -44,6 +44,7 @@ try{
   if(steering)key('keydown',schedule[0][1]);
   const draw=now=>{if(!p.running)return;p.frames.push((now-p.previous)/1000);p.previous=now;requestAnimationFrame(draw);};requestAnimationFrame(draw);
   p.observer=new MutationObserver(()=>{
+   const last=p.samples.at(-1);if(last&&last.view_update_s===undefined)last.view_update_s=(performance.now()-p.previousResponse)/1000;
    const time=parseFloat(document.querySelector('#sim-time').textContent);
    while(steering&&schedule[stage+1]&&time>=schedule[stage+1][0]){
     if(schedule[stage][1])key('keyup',schedule[stage][1]);stage++;
@@ -67,6 +68,11 @@ try{
   transitions:result.worker_transitions_s.length,wall_s:result.wall_s,simulated_s:result.simulated_s};
  const active=result.transition_samples.filter(s=>s.phase&&s.phase!=='hold'&&s.phase!=='idle');
  if(active.length){const wall=active.reduce((n,s)=>n+s.interval_s,0);performance.active_motion={transitions:active.length,simulated_s:active.length*data.task.period_s,wall_s:wall,simulation_per_wall_second:active.length*data.task.period_s/wall,transition_p95_s:p95(active.map(s=>s.wall_s))};}
+ const summarize=samples=>Object.fromEntries(['wall_s','worker_s','wasm_call_s','json_parse_s','queue_s','view_update_s','transport_and_dispatch_s'].map(k=>{
+  const values=samples.map(s=>k==='transport_and_dispatch_s'?s.wall_s-s.worker_s-s.queue_s:s[k]).filter(Number.isFinite);
+  return [k,{samples:values.length,mean:values.reduce((a,b)=>a+b,0)/values.length,p95:p95(values),maximum:Math.max(...values)}];
+ }));
+ performance.breakdown={all:summarize(result.transition_samples),by_phase:Object.fromEntries([...new Set(result.transition_samples.map(s=>s.phase))].map(phase=>[phase,summarize(result.transition_samples.filter(s=>s.phase===phase))])),scope:'WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive.'};
  const report={completed,preset,scenario,performance,meets_speed_target:performance.simulation_per_wall_second>=1&&(!performance.active_motion||performance.active_motion.simulation_per_wall_second>=1),meets_transition_target:performance.transition_p95_s<=.02&&(!performance.active_motion||performance.active_motion.transition_p95_s<=.02),
   host:{cpu:cpus()[0]?.model,logical_cpus:cpus().length,platform:platform(),architecture:arch(),browser:await browser.version(),gpu:result.gpu,headless:process.env.HEADED!=='1'},errors,status:result.status,
   scope:'One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.'};
@@ -81,5 +87,6 @@ try{
   report.keyboard_commands_recorded=true;
  }
  await page.screenshot({path:reportPath.replace(/\.json$/,'.png')});
+ await writeFile(reportPath.replace(/\.json$/,'.timing.json'),JSON.stringify(result.transition_samples)+'\n');
  await writeFile(reportPath,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));assert(completed);
 }finally{await browser?.close();server.kill();}

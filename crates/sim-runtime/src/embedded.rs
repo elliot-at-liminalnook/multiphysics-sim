@@ -513,6 +513,12 @@ impl EmbeddedSession {
         {
             return Err("mechanical subdivision requires pure implicit mechanics or effective servos; coupled motor events use their own adapter".into());
         }
+        if config.implicit.as_ref().is_some_and(|c|
+            (c.restart_failed_reused_mechanics || c.cached_mechanical_iteration_limit.is_some())
+                && config.mechanical_subdivision.is_none())
+        {
+            return Err("mechanical fresh-restart options require the mechanical subdivision adapter".into());
+        }
 
         let independent_joint_indices = map.independent_joint_indices().to_vec();
         let policy = config
@@ -1040,8 +1046,17 @@ impl EmbeddedSession {
                     Ok(result)
                 };
             if let Some(refinement) = &config.mechanical_subdivision {
-                map.advance_implicit_mechanics(
-                    &g, time, config.step_s, implicit, refinement,
+                // The opt-in mechanical adapter now owns a persistent numerical
+                // workspace. Default to fresh derivatives at sampled commands;
+                // the existing explicit reuse flag declares unchanged force-law
+                // structure across those updates. Physical loads remain current.
+                if policy_stride.is_some_and(|stride| i % stride == 0)
+                    && !implicit.reuse_controller_sample_jacobian
+                {
+                    workspace.clear();
+                }
+                map.advance_implicit_mechanics_cached(
+                    &g, time, config.step_s, implicit, refinement, workspace,
                     |t, g| coupling(t, 0.0, g, &[]).map(|f| f.generalized_loads),
                 ).map(|step| {
                     solver_steps.extend(step.segments.into_iter().map(|s| s.diagnostics));

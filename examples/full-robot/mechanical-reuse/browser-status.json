@@ -1,0 +1,619 @@
+{
+  "version": 1,
+  "preset": "robot-reused-student",
+  "status": "Experimental numerical optimization of the paced student; not general walking or hardware-transfer acceptance",
+  "changes": "Guarded cross-step derivative reuse, with a 24-correction first-attempt cap and fresh restart at the original 80-correction allowance before subdivision. Robot, policy weights, force laws and tolerances unchanged.",
+  "limitations": [
+    "Three-push 5 ms minute misses heading gate.",
+    "Unforced 5 ms reference also misses heading; coarse model remains timestep-sensitive.",
+    "Requested speed only 1.25 mm/s; ideal observations and privileged planner.",
+    "No broad terrain, hardware-transfer or command-to-visible-response acceptance."
+  ],
+  "parity": {
+    "passed": true,
+    "preset": "robot-reused-student",
+    "transitions": 1200,
+    "maximum_native_wasm_difference": 2.220712502776223e-10,
+    "worst": "transition[783].observations.74",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 3236,
+    "replay_progress_messages": 1200,
+    "numeric_tolerance": {
+      "absolute": 1e-7,
+      "relative": 1e-8,
+      "maximum_fraction": 0.0010941358374539523
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control. Uses the explicitly recorded configuration override, not the packaged preset horizon.",
+    "performance": {
+      "simulated_s": 24,
+      "transition_wall_s": 8.540234999775882,
+      "simulation_per_wall_second": 2.810227119116725,
+      "transition_p95_s": 0.015769999980926513,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance."
+    },
+    "config_override": {
+      "path": "examples/full-robot/mechanical-reuse/restart-short.config.json",
+      "sha256": "13f45eb0cbfdec67caba4826790b4d8abdccbbf4881df55ce9bae8414caeaf4f"
+    },
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-online-steps: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reversal-crawl: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-terrain-contact: 50 Hz task score, held-action recording, visible replay and reset",
+      "teacher motor corrections: bounded sliders, readable precision, recorded action replay and clear",
+      "robot-residual-policy: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-neural-teacher: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-neural-teacher: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-distilled-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-distilled-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-student-push: live bounded output readouts, policy artifact recording and exact visible replay",
+      "scheduled physical push: visible onset, force units/direction, release and recorded schedule",
+      "robot-student-push: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-walking-objective: live bounded output readouts, policy artifact recording and exact visible replay",
+      "scheduled physical push: visible onset, force units/direction, release and recorded schedule",
+      "robot-walking-objective: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-improved-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-improved-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-paced-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-paced-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reused-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-reused-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "final_metadata": {
+    "passed": true,
+    "preset": "robot-reused-student",
+    "performance_limit_visible": true,
+    "heading_limit_visible": true
+  },
+  "performance": {
+    "completed": true,
+    "preset": "robot-reused-student",
+    "scenario": "sustained-forward",
+    "performance": {
+      "simulation_per_wall_second": 1.00015268997678,
+      "transition_p95_s": 0.022105000019073485,
+      "render_interval_p95_s": 0.01667000000000189,
+      "render_frames": 3586,
+      "transitions": 3000,
+      "wall_s": 59.99084000003338,
+      "simulated_s": 60,
+      "active_motion": {
+        "transitions": 2860,
+        "simulated_s": 57.2,
+        "wall_s": 57.16562000000488,
+        "simulation_per_wall_second": 1.0006014104280707,
+        "transition_p95_s": 0.022504999995231628
+      },
+      "breakdown": {
+        "all": {
+          "wall_s": {
+            "samples": 3000,
+            "mean": 0.012853298333028946,
+            "p95": 0.022105000019073485,
+            "maximum": 0.1410149999856949
+          },
+          "worker_s": {
+            "samples": 3000,
+            "mean": 0.010544975000560288,
+            "p95": 0.020814999997615814,
+            "maximum": 0.1406550000309944
+          },
+          "wasm_call_s": {
+            "samples": 3000,
+            "mean": 0.010384813332557696,
+            "p95": 0.020689999997615813,
+            "maximum": 0.1405199999809265
+          },
+          "json_parse_s": {
+            "samples": 3000,
+            "mean": 0.00015719166757663229,
+            "p95": 0.00019999998807907106,
+            "maximum": 0.0007249999642372131
+          },
+          "queue_s": {
+            "samples": 3000,
+            "mean": 0.000005665000200271506,
+            "p95": 0.000010000050067901611,
+            "maximum": 0.00008499997854232789
+          },
+          "view_update_s": {
+            "samples": 3000,
+            "mean": 0.0004207366674741127,
+            "p95": 0.0005299999713897706,
+            "maximum": 0.0019200000166893006
+          },
+          "transport_and_dispatch_s": {
+            "samples": 3000,
+            "mean": 0.002302658332268391,
+            "p95": 0.00842500001192093,
+            "maximum": 0.0181449999809265
+          }
+        },
+        "by_phase": {
+          "hold": {
+            "wall_s": {
+              "samples": 10,
+              "mean": 0.021191499996185297,
+              "p95": 0.0669200000166893,
+              "maximum": 0.0669200000166893
+            },
+            "worker_s": {
+              "samples": 10,
+              "mean": 0.014569000005722043,
+              "p95": 0.06635500001907349,
+              "maximum": 0.06635500001907349
+            },
+            "wasm_call_s": {
+              "samples": 10,
+              "mean": 0.01439749999642372,
+              "p95": 0.06605000001192093,
+              "maximum": 0.06605000001192093
+            },
+            "json_parse_s": {
+              "samples": 10,
+              "mean": 0.00016250000596046448,
+              "p95": 0.00024000000953674317,
+              "maximum": 0.00024000000953674317
+            },
+            "queue_s": {
+              "samples": 10,
+              "mean": 0.000007999998331069945,
+              "p95": 0.000029999971389770506,
+              "maximum": 0.000029999971389770506
+            },
+            "view_update_s": {
+              "samples": 10,
+              "mean": 0.0009745000004768372,
+              "p95": 0.0019200000166893006,
+              "maximum": 0.0019200000166893006
+            },
+            "transport_and_dispatch_s": {
+              "samples": 10,
+              "mean": 0.0066144999921321865,
+              "p95": 0.009414999961853028,
+              "maximum": 0.009414999961853028
+            }
+          },
+          "shift": {
+            "wall_s": {
+              "samples": 650,
+              "mean": 0.01138460769194824,
+              "p95": 0.020259999990463257,
+              "maximum": 0.059294999957084656
+            },
+            "worker_s": {
+              "samples": 650,
+              "mean": 0.00932911538463373,
+              "p95": 0.01858499997854233,
+              "maximum": 0.05883499997854233
+            },
+            "wasm_call_s": {
+              "samples": 650,
+              "mean": 0.009167807691830841,
+              "p95": 0.018464999973773957,
+              "maximum": 0.058685000002384184
+            },
+            "json_parse_s": {
+              "samples": 650,
+              "mean": 0.00015823846147610624,
+              "p95": 0.00020000004768371582,
+              "maximum": 0.00035999995470046995
+            },
+            "queue_s": {
+              "samples": 650,
+              "mean": 0.000005869231315759473,
+              "p95": 0.000014999985694885253,
+              "maximum": 0.000034999966621398926
+            },
+            "view_update_s": {
+              "samples": 650,
+              "mean": 0.0004352769226294297,
+              "p95": 0.0005450000166893006,
+              "maximum": 0.0009250000119209289
+            },
+            "transport_and_dispatch_s": {
+              "samples": 650,
+              "mean": 0.0020496230759987468,
+              "p95": 0.008080000042915345,
+              "maximum": 0.0144099999666214
+            }
+          },
+          "raise": {
+            "wall_s": {
+              "samples": 650,
+              "mean": 0.013114376922479057,
+              "p95": 0.022305000007152558,
+              "maximum": 0.048694999992847446
+            },
+            "worker_s": {
+              "samples": 650,
+              "mean": 0.011064600000289769,
+              "p95": 0.020365000009536744,
+              "maximum": 0.04693999999761581
+            },
+            "wasm_call_s": {
+              "samples": 650,
+              "mean": 0.010905276922354337,
+              "p95": 0.020200000047683717,
+              "maximum": 0.04678500002622604
+            },
+            "json_parse_s": {
+              "samples": 650,
+              "mean": 0.00015620000041448195,
+              "p95": 0.0001899999976158142,
+              "maximum": 0.00038499999046325684
+            },
+            "queue_s": {
+              "samples": 650,
+              "mean": 0.0000057076920912815595,
+              "p95": 0.000010000050067901611,
+              "maximum": 0.0000350000262260437
+            },
+            "view_update_s": {
+              "samples": 650,
+              "mean": 0.00040168461680412267,
+              "p95": 0.0004900000095367431,
+              "maximum": 0.0005700000524520874
+            },
+            "transport_and_dispatch_s": {
+              "samples": 650,
+              "mean": 0.0020440692300979935,
+              "p95": 0.008100000023841857,
+              "maximum": 0.014670000076293946
+            }
+          },
+          "lower": {
+            "wall_s": {
+              "samples": 650,
+              "mean": 0.017041953846307908,
+              "p95": 0.0336350000500679,
+              "maximum": 0.1410149999856949
+            },
+            "worker_s": {
+              "samples": 650,
+              "mean": 0.014629492308726679,
+              "p95": 0.033240000009536745,
+              "maximum": 0.1406550000309944
+            },
+            "wasm_call_s": {
+              "samples": 650,
+              "mean": 0.014471546153288625,
+              "p95": 0.03308999997377396,
+              "maximum": 0.1405199999809265
+            },
+            "json_parse_s": {
+              "samples": 650,
+              "mean": 0.0001550461555444281,
+              "p95": 0.00019999998807907106,
+              "maximum": 0.000375
+            },
+            "queue_s": {
+              "samples": 650,
+              "mean": 0.000005415384769439665,
+              "p95": 0.000010000050067901611,
+              "maximum": 0.000030000030994415284
+            },
+            "view_update_s": {
+              "samples": 650,
+              "mean": 0.00039572307733388995,
+              "p95": 0.0005,
+              "maximum": 0.0009100000262260437
+            },
+            "transport_and_dispatch_s": {
+              "samples": 650,
+              "mean": 0.0024070461528117844,
+              "p95": 0.008569999992847441,
+              "maximum": 0.011894999980926513
+            }
+          },
+          "return": {
+            "wall_s": {
+              "samples": 650,
+              "mean": 0.012350415383852448,
+              "p95": 0.023899999976158142,
+              "maximum": 0.13338499999046324
+            },
+            "worker_s": {
+              "samples": 650,
+              "mean": 0.00959153846236376,
+              "p95": 0.023439999997615816,
+              "maximum": 0.11524000000953674
+            },
+            "wasm_call_s": {
+              "samples": 650,
+              "mean": 0.009432184614768404,
+              "p95": 0.023285000026226042,
+              "maximum": 0.11461000001430512
+            },
+            "json_parse_s": {
+              "samples": 650,
+              "mean": 0.00015676923183294484,
+              "p95": 0.00019999998807907106,
+              "maximum": 0.0007249999642372131
+            },
+            "queue_s": {
+              "samples": 650,
+              "mean": 0.000005392308143468973,
+              "p95": 0.000010000050067901611,
+              "maximum": 0.00008499997854232789
+            },
+            "view_update_s": {
+              "samples": 650,
+              "mean": 0.00041344615541971663,
+              "p95": 0.0005199999809265137,
+              "maximum": 0.0016899999976158141
+            },
+            "transport_and_dispatch_s": {
+              "samples": 650,
+              "mean": 0.002753484613345216,
+              "p95": 0.008800000011920928,
+              "maximum": 0.0181449999809265
+            }
+          },
+          "settle": {
+            "wall_s": {
+              "samples": 260,
+              "mean": 0.010345692307215474,
+              "p95": 0.017060000002384185,
+              "maximum": 0.020775000035762787
+            },
+            "worker_s": {
+              "samples": 260,
+              "mean": 0.007708596154818166,
+              "p95": 0.015,
+              "maximum": 0.017220000028610228
+            },
+            "wasm_call_s": {
+              "samples": 260,
+              "mean": 0.007545519229081957,
+              "p95": 0.014840000033378601,
+              "maximum": 0.017069999992847442
+            },
+            "json_parse_s": {
+              "samples": 260,
+              "mean": 0.0001601346174111734,
+              "p95": 0.00019999998807907106,
+              "maximum": 0.0002900000214576721
+            },
+            "queue_s": {
+              "samples": 260,
+              "mean": 0.000005999999779921303,
+              "p95": 0.000014999985694885253,
+              "maximum": 0.000029999971389770506
+            },
+            "view_update_s": {
+              "samples": 260,
+              "mean": 0.00045925000195319837,
+              "p95": 0.0005550000071525573,
+              "maximum": 0.0008100000023841858
+            },
+            "transport_and_dispatch_s": {
+              "samples": 260,
+              "mean": 0.002631096152617387,
+              "p95": 0.008370000004768372,
+              "maximum": 0.0104549999833107
+            }
+          },
+          "idle": {
+            "wall_s": {
+              "samples": 130,
+              "mean": 0.0048363076943617606,
+              "p95": 0.012879999995231628,
+              "maximum": 0.01462999999523163
+            },
+            "worker_s": {
+              "samples": 130,
+              "mean": 0.003733961538168099,
+              "p95": 0.007680000007152557,
+              "maximum": 0.011044999957084656
+            },
+            "wasm_call_s": {
+              "samples": 130,
+              "mean": 0.0035669230745388903,
+              "p95": 0.007530000030994416,
+              "maximum": 0.010875
+            },
+            "json_parse_s": {
+              "samples": 130,
+              "mean": 0.00016346153937853283,
+              "p95": 0.00020000004768371582,
+              "maximum": 0.00024500000476837156
+            },
+            "queue_s": {
+              "samples": 130,
+              "mean": 0.000006192308205824645,
+              "p95": 0.000010000050067901611,
+              "maximum": 0.000015000045299530029
+            },
+            "view_update_s": {
+              "samples": 130,
+              "mean": 0.00048519230760060825,
+              "p95": 0.0005799999833106995,
+              "maximum": 0.0012549999952316284
+            },
+            "transport_and_dispatch_s": {
+              "samples": 130,
+              "mean": 0.0010961538479878348,
+              "p95": 0.007879999995231628,
+              "maximum": 0.009649999976158143
+            }
+          }
+        },
+        "scope": "WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive."
+      }
+    },
+    "meets_speed_target": true,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+    "keyboard_commands_recorded": true
+  },
+  "keyboard_matches_native_minute": true,
+  "comparison": {
+    "version": 1,
+    "timestep_reference": false,
+    "baseline": {
+      "path": "runs/full-robot/learning/step-margin/retry-sustained.native.json",
+      "sha256": "d6e37cceda7e3bb367e2a90e2f762f81649b92c9258934d1a10405506fd254d6"
+    },
+    "candidate": {
+      "path": "runs/full-robot/learning/mechanical-reuse/restart-sustained.native.json",
+      "sha256": "bba7cca77e3bade733331eca824ba6f83691cf1038b181105c1829be6b2c1cf2"
+    },
+    "markers": {
+      "path": "examples/full-robot/foot-markers.json",
+      "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+    },
+    "frames": 3001,
+    "metrics": {
+      "foot_marker_position_m": {
+        "maximum": 4.693270951475091e-13,
+        "samples": 12004,
+        "worst": {
+          "time_s": 49.44,
+          "identity": "+X-foot-surface"
+        },
+        "rms": 1.5002728451149777e-13
+      },
+      "link_position_m": {
+        "maximum": 3.294439508234021e-12,
+        "samples": 87029,
+        "worst": {
+          "time_s": 17.8,
+          "identity": "+Y | Foot servo crank 3689"
+        },
+        "rms": 3.4486648449794695e-13
+      },
+      "link_velocity_m_s": {
+        "maximum": 7.971737586329896e-11,
+        "samples": 87029,
+        "worst": {
+          "time_s": 17.92,
+          "identity": "-X | Foot servo crank 9a9b"
+        },
+        "rms": 4.9666226565600984e-12
+      },
+      "link_angular_velocity_rad_s": {
+        "maximum": 1.4149212401509307e-9,
+        "samples": 87029,
+        "worst": {
+          "time_s": 17.92,
+          "identity": "-X | Foot servo crank 9a9b"
+        },
+        "rms": 4.5721759624803424e-11
+      },
+      "rotation_matrix_entry": {
+        "maximum": 5.026179472622516e-11,
+        "samples": 87029,
+        "worst": {
+          "time_s": 17.84,
+          "identity": "-X | Foot servo crank 9a9b"
+        },
+        "rms": 2.706166225918985e-12
+      },
+      "joint_positions": {
+        "maximum": 9.722334048944958e-11,
+        "samples": 84028,
+        "worst": {
+          "time_s": 17.84,
+          "identity": 27
+        },
+        "rms": 4.4190037943364925e-12
+      },
+      "joint_velocities": {
+        "maximum": 2.555838707340996e-9,
+        "samples": 84028,
+        "worst": {
+          "time_s": 17.92,
+          "identity": 27
+        },
+        "rms": 7.151804970629633e-11
+      },
+      "servo_targets_rad": {
+        "maximum": 5.6311566520861334e-11,
+        "samples": 36012,
+        "worst": {
+          "time_s": 17.84,
+          "identity": 11
+        },
+        "rms": 3.981714766237126e-12
+      },
+      "contact_pair_force_n": {
+        "maximum": 1.5741661746042834e-8,
+        "samples": 11246,
+        "worst": {
+          "time_s": 2.08,
+          "identity": "6:null"
+        },
+        "rms": 8.501865192563697e-10
+      }
+    },
+    "contact_pair_mismatches": 0,
+    "phase_mismatches": 0,
+    "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate."
+  },
+  "manifest_sha256": "2ef9853b301513f7ad924b236c317dad461b8fd2176579c8bc70b581432be8a1",
+  "sources": [
+    {
+      "path": "examples/full-robot/mechanical-reuse/study-status.json",
+      "sha256": "8f1840fc6cf122a25042f0e330ad77a093af64e026fe16f5f876cf0ab9f448fa"
+    },
+    {
+      "path": "examples/full-robot/mechanical-reuse/restart-sustained.config.json",
+      "sha256": "02ec717df608a028111a4d52d6f683bd1949c001f55a3b7a4d3bf2a823b75836"
+    },
+    {
+      "path": "examples/full-robot/mechanical-reuse/restart-short.config.json",
+      "sha256": "13f45eb0cbfdec67caba4826790b4d8abdccbbf4881df55ce9bae8414caeaf4f"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/mechanical_advance.rs",
+      "sha256": "0da58169d43e315f317dbbf162a2b860f0d546790a3b93f6ded1a63c128b1241"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/implicit.rs",
+      "sha256": "89a4f3aab6bcb6392cca87569ad96aebdb2b7d238cc4fbdc4d665100e378700b"
+    },
+    {
+      "path": "crates/sim-runtime/src/embedded.rs",
+      "sha256": "c39441641e7d62b68a8ded798f755db291599d2692ae078a5840224c4f6da26f"
+    }
+  ]
+}

@@ -238,6 +238,12 @@ jobs:
           node examples/full-robot/check_online_steps.mjs runs/interactive/paced-student-refined.json runs/interactive/paced-student-refined-acceptance
           node -e 'const p=require("./runs/interactive/paced-student-refined-profile.json"),a=require("node:assert/strict");a(p.completed);a.equal(p.accepted_intervals.length,4800);a(p.accepted_implicit_steps.length>=4800);'
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-paced-student runs/interactive/paced-student-short.json runs/interactive/paced-student-browser.json examples/full-robot/step-margin/retry-short.config.json
+      - name: Mechanical derivative reuse and browser parity
+        run: |
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/mechanical-reuse/restart-short.config.json examples/full-robot/walking-objective/task.json examples/full-robot/neural-teacher/train.actions.json --profile runs/interactive/reused-student-profile.json > runs/interactive/reused-student-short.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/reused-student-short.json runs/interactive/reused-student-short-acceptance
+          node -e 'const p=require("./runs/interactive/reused-student-profile.json"),a=require("node:assert/strict");a(p.completed);a(p.accepted_implicit_steps.some(s=>s.started_with_reused_jacobian));'
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-reused-student runs/interactive/reused-student-short.json runs/interactive/reused-student-browser.json examples/full-robot/mechanical-reuse/restart-short.config.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

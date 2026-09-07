@@ -27,6 +27,10 @@ fn mechanical_subdivision_is_explicit_preserves_direct_accuracy_and_replays() {
     config.applied_generalized_loads = vec![0.01];
     let mut direct_config = config.clone();
     direct_config.mechanical_subdivision = None;
+    let mut unsupported = direct_config.clone();
+    unsupported.implicit.as_mut().unwrap().restart_failed_reused_mechanics = true;
+    assert!(EmbeddedSession::new(scene.clone(),unsupported,0,CaptureMode::Latest)
+        .err().unwrap().contains("mechanical fresh-restart options"));
     let mut direct = EmbeddedSession::new(scene.clone(), direct_config, 0, CaptureMode::Full).unwrap();
     let mut refined = EmbeddedSession::new(scene, config, 0, CaptureMode::Full).unwrap();
     direct.advance(80).unwrap();refined.advance(80).unwrap();

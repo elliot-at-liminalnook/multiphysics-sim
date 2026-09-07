@@ -9,6 +9,14 @@ faster solver kernel does not complete this goal.
 
 ## Current evidence and sequence
 
+The [teacher motor-action interface](residual-policy.md) now exposes twelve
+bounded corrections with 90 typed, ideal teacher observations. Zero corrections
+preserve all 3,001 baseline physical frames over a minute; a twelve-motor probe
+passes nine swings and native/WASM parity. The maintained browser includes
+correction controls and replay. Next implement reusable Rust policy learning
+and inference with held-out evaluation; there is no trained neural policy yet.
+Keep externally requested motion separate from policy-owned motor corrections.
+
 The [response investigation](response-diagnosis.md) reproduces all source targets
 exactly, then shows that timestep sensitivity persists with motor decisions held
 fixed. Explicit floor dissipation is now available through the shared registry

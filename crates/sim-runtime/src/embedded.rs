@@ -616,6 +616,10 @@ impl EmbeddedSession {
     pub fn inputs(&self) -> &[crate::session::InputChannel] {
         self.policy.as_ref().map(|p| p.inputs()).unwrap_or(&[])
     }
+    /// Currently held validated policy inputs, including their reset values.
+    pub fn input_values(&self) -> &[f64] {
+        self.policy.as_ref().map(|p| p.values()).unwrap_or(&[])
+    }
     pub fn policy_metadata(&self) -> serde_json::Value {
         self.policy
             .as_ref()

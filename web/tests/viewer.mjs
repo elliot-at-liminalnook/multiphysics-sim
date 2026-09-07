@@ -202,11 +202,19 @@ try {
   assert(!(await page.locator('#motion-progress').isVisible()));
   checks.push('synthetic missing-support timeout is visible, replayable, and recoverable by reset');
  }
- for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact']) {
+ for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact','robot-residual-policy']) {
   if(!catalog.presets.some(p=>p.id===id))continue;
   await page.locator('#preset').selectOption(id);await ready();
   assert(await page.locator('#learning-progress').isVisible());
   assert.match(await page.locator('#input-help').textContent(),/20 ms/);
+  if(id==='robot-residual-policy'){
+    assert.equal(await page.locator('#inputs input').count(),18);
+    assert.equal(await page.locator('#inputs input:disabled').count(),4);
+    await page.locator('#residual-inputs summary').click();
+    assert.equal(await page.locator('#residual-inputs input').count(),12);
+    await page.locator('#residual-inputs input').first().fill('0.001');
+    assert.match(await page.locator('#residual-inputs label').first().textContent(),/0\.0010 rad/);
+  }
   await page.locator('#step').click();await page.waitForFunction(()=>document.querySelector('#sim-time').textContent==='0.020 s');
   assert.equal(await page.locator('#sim-time').textContent(),'0.020 s');
   assert.match(await page.locator('#learning-progress').textContent(),/Last 20 ms score:/);
@@ -216,6 +224,13 @@ try {
   assert.equal(recipe.kind,'sampled_environment_recording');assert.equal(recipe.runtime.completed_steps*recipe.runtime.config.step_s,0.02);
   await page.locator('#replay').click();await ready();
   assert.equal(await page.locator('#learning-progress').textContent(),score);
+  if(id==='robot-residual-policy'){
+    assert.equal(recipe.runtime.input_events[0].values[6],.001);
+    assert.equal(Number(await page.locator('#residual-inputs input').first().inputValue()),.001);
+    await page.locator('#clear-residuals').click();
+    for(const slider of await page.locator('#residual-inputs input').all())assert.equal(Number(await slider.inputValue()),0);
+    checks.push('teacher motor corrections: bounded sliders, readable precision, recorded action replay and clear');
+  }
   await page.locator('#fit').click();
   await page.screenshot({path:reportPath.replace(/\.json$/,`.${id}.png`)});
   await page.locator('#reset').click();await ready();assert.equal(await page.locator('#sim-time').textContent(),'0.000 s');

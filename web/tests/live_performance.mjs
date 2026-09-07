@@ -80,10 +80,17 @@ try{
   assert.match(await page.locator('#motion-progress').textContent(),/Episode ended/);assert.equal(result.final_phase,'idle');
   const download=page.waitForEvent('download');await page.locator('#download').click();const file=await download;await file.saveAs(reportPath.replace(/\.json$/,'.recording.json'));
   const record=JSON.parse(await readFile(reportPath.replace(/\.json$/,'.recording.json'))),events=record.runtime.input_events;
-  assert(events.some(e=>e.values[3]>0));
-  if(scenario!=='sustained-forward')assert(events.some(e=>e.values[3]<0));
-  if(scenario==='turn-reverse')assert(events.some(e=>e.values[5]>0));
-  assert.deepEqual(events.at(-1).values.slice(3),[0,0,0]);
+  const channels=data.scene.controller.inputs;
+  const motion=data.config.policy.step_reference.command_channels.map(name=>channels.findIndex(c=>c.name===name));
+  assert.equal(motion.length,3);assert(motion.every(i=>i>=0));
+  assert(events.some(e=>e.values[motion[0]]>0));
+  if(scenario!=='sustained-forward')assert(events.some(e=>e.values[motion[0]]<0));
+  if(scenario==='turn-reverse')assert(events.some(e=>e.values[motion[2]]>0));
+  assert.deepEqual(motion.map(i=>events.at(-1).values[i]),[0,0,0]);
+  // Keyboard scenarios must not silently modify gains or policy corrections.
+  for(const event of events)for(const [i,channel] of channels.entries()){
+   if(!motion.includes(i))assert.equal(event.values[i],channel.initial);
+  }
   report.keyboard_commands_recorded=true;
  }
  await page.screenshot({path:reportPath.replace(/\.json$/,'.png')});

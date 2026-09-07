@@ -44,6 +44,7 @@ jobs:
       - run: cargo test --locked -p sim-runtime --test embedded_session --test task_observation
       - run: cargo test --locked -p sim-runtime --test drive_backlash
       - run: cargo test --locked -p sim-runtime --test environment
+      - run: cargo test --locked -p sim-runtime --test residual_policy
       - run: cargo test --locked -p sim-runtime --test body_feedback --test point_feedback
       - run: cargo test --locked -p sim-runtime --lib support::tests
       - run: cargo check --locked -p sim-runtime --example plan_marker_motion --example summarize_marker_clearance --example evaluate_lift
@@ -169,6 +170,15 @@ jobs:
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-terrain-contact runs/interactive/terrain-contact-native.json runs/interactive/terrain-contact-browser.json
           if target/release/examples/run_environment examples/full-robot/browser-terrain-contact/scene.json examples/full-robot/browser-terrain-contact/unsafe-posture.config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/switch-4.4.actions.json > runs/interactive/terrain-contact-rejected.json; then exit 1; fi
           node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/terrain-contact-rejected.json")); assert.equal(r.completed,false); assert.match(r.error,/reference has internal contact/);'
+      - name: Teacher motor corrections preserve baseline physics and run in WASM
+        run: |
+          target/release/examples/run_environment examples/full-robot/browser-terrain-contact/scene.json examples/full-robot/browser-reversal/short.config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/forward-reverse.actions.json > runs/interactive/residual-baseline-native.json
+          target/release/examples/run_environment examples/full-robot/browser-residual-policy/scene.json examples/full-robot/browser-residual-policy/short.config.json examples/full-robot/browser-residual-policy/task.json examples/full-robot/browser-residual-policy/forward-reverse.actions.json > runs/interactive/residual-zero-native.json
+          target/release/examples/run_environment examples/full-robot/browser-residual-policy/scene.json examples/full-robot/browser-residual-policy/short.config.json examples/full-robot/browser-residual-policy/task.json examples/full-robot/browser-residual-policy/probe.actions.json > runs/interactive/residual-probe-native.json
+          node examples/full-robot/check_residual_policy.mjs runs/interactive/residual-baseline-native.json runs/interactive/residual-zero-native.json runs/interactive/residual-probe-native.json runs/interactive/residual-interface-report.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/residual-zero-native.json runs/interactive/residual-zero-acceptance
+          node examples/full-robot/check_online_steps.mjs runs/interactive/residual-probe-native.json runs/interactive/residual-probe-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-residual-policy runs/interactive/residual-probe-native.json runs/interactive/residual-browser.json examples/full-robot/browser-residual-policy/short.config.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

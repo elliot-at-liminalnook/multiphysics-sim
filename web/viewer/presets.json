@@ -301,6 +301,17 @@
       "description": "W/S requests forward/back motion; A/D turns. Rust simulates motors, mechanisms and floor contact. Geometry checks stop the controller when sampled links overlap.",
       "readiness": "Experimental reduced collision physics \u00b7 link-to-link contact forces omitted \u00b7 sampled geometry checks retained \u00b7 uncalibrated model; performance under test.",
       "evidence": "Same CAD properties, controller and numerical tolerances as Crawl and reverse. Floor/height-field contact retained. No inter-link impact response or between-sample collision guarantee. Full recorded-pose geometry audit required."
+    },
+    {
+      "id": "robot-residual-policy",
+      "label": "Quadruped · Teacher motor corrections",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-residual-policy/scene.json",
+      "config": "examples/full-robot/browser-residual-policy/config.json",
+      "task": "examples/full-robot/browser-residual-policy/task.json",
+      "description": "WASD controls the baseline crawl. Expand Motor corrections to adjust any of the twelve motor targets; clear corrections to request the baseline again.",
+      "readiness": "Teacher-action experiment · no trained neural policy yet · ideal simulation observations · corrections remain subject to motor and geometry limits.",
+      "evidence": "The same Rust mechanism, effective motors and terrain-contact profile remain active. Zero corrections reproduce the baseline. Added teacher observations and provisional rewards prepare individual motor actions for learning; they do not establish hardware transfer or arbitrary correction safety."
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "kind": "experimental_wasm_teacher_action_bundle",
+  "path": "/Users/elliot/robot-teacher-actions-2026-09-07.zip",
+  "bytes": 15196424,
+  "sha256": "879d83cabac7e98e7449d51adcd73568c5612681e9674024366131a28a8bba98",
+  "build_manifest_sha256": "6d6a1b597da53e0b78f9f0a23c18a336717028571a51638cec4c8fb20fcce6f9",
+  "local_url": "http://127.0.0.1:4181/?preset=robot-residual-policy",
+  "scope": "Live Rust/WASM baseline crawl with twelve bounded motor corrections and ideal teacher observations. No trained policy. Small corrections pass sampled flat-floor tests; arbitrary corrections and terrain remain unvalidated. Rendered active p95 22.1 ms misses the 20 ms target, while average walking keeps pace with realtime."
+}

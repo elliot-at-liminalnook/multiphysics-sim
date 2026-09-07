@@ -231,6 +231,7 @@ pub struct Island {
     lane_of_rate: Vec<(usize, usize)>,
     reduced_sparsity: Sparsity,
     reduced_algebraic: Vec<bool>,
+    residual_row_scales: Option<Vec<f64>>,
     sparsity: Sparsity,
     noise: std::sync::Mutex<Noise>,
     algebraic: Vec<bool>,
@@ -238,6 +239,21 @@ pub struct Island {
 }
 
 impl Island {
+    /// Explicit equation-unit conversion after elimination. Multiplies both
+    /// residuals and supplied Jacobians; full physical residuals remain available
+    /// through `residual_full`. This changes numerical acceptance units, not roots.
+    /// Configure before integrating, or discard the enclosing solver's caches.
+    pub fn set_residual_row_scales(&mut self, scales: Vec<f64>) -> Result<(), String> {
+        if scales.len() != self.reduced_dimension()
+            || scales.iter().any(|s| !s.is_finite() || *s <= 0.0) {
+            return Err("one positive finite residual scale per reduced equation required".into());
+        }
+        self.residual_row_scales = Some(scales);
+        Ok(())
+    }
+    pub fn residual_row_scales(&self) -> Option<&[f64]> {
+        self.residual_row_scales.as_deref()
+    }
     pub fn dimension(&self) -> usize {
         self.dimension
     }
@@ -1080,6 +1096,9 @@ impl System for Island {
         for (r, f) in self.full_of.iter().enumerate() {
             out[r] = full[*f];
         }
+        if let Some(scales) = &self.residual_row_scales {
+            for (value, scale) in out.iter_mut().zip(scales) { *value *= scale; }
+        }
     }
 
     fn jacobian(&self, t: f64, x: &[f64], rate: &[f64], out: &mut JacobianParts) -> bool {
@@ -1148,6 +1167,11 @@ impl System for Island {
             let Some(rr) = self.reduced_of[*r] else { continue };
             if let Some(rc) = self.reduced_of[*c] {
                 out.drate(rr, rc, *v);
+            }
+        }
+        if let Some(scales) = &self.residual_row_scales {
+            for (r, _, v) in out.d_dx.iter_mut().chain(out.d_drate.iter_mut()) {
+                *v *= scales[*r];
             }
         }
         true
@@ -1589,6 +1613,7 @@ fn build_island(
         }
     }
     let mut island = Island {
+        residual_row_scales: None,
         behaviors,
         slots,
         dimension,

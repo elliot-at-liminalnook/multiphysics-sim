@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "phase": "Effective-servo browser experiment; no walking controller yet",
+  "host": {
+    "platform": "darwin",
+    "arch": "x64",
+    "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+    "logical_cpus": 16,
+    "browser": "Chrome 152.0.7977.76"
+  },
+  "native_10ms": {
+    "version": 1,
+    "reference": {
+      "path": "runs/full-robot/learning/effective-servo-reference/native.json",
+      "sha256": "277b37b28e8cca67acf4776f4a948eda53a3be2d2b7f4d22ba90b898fd8b44ae"
+    },
+    "candidate": {
+      "path": "runs/full-robot/learning/effective-servo-10ms/native-portable.json",
+      "sha256": "9b7486ff95cff4fbb7df4f3e8411f83e91f8f43592d826960267fd1b103fca4c"
+    },
+    "completed": true,
+    "simulated_s": 2.8000000000000003,
+    "wall_s": 2.377604774,
+    "simulation_per_wall_second": 1.177655778041435,
+    "transition_p95_s": 0.03018315,
+    "maximum_foot_difference_m": {
+      "-Y-foot-surface": 0.00034785569092711977,
+      "+X-foot-surface": 0.000029604483254635977,
+      "+Y-foot-surface": 0.00007913307399069186,
+      "-X-foot-surface": 0.000035619270355471326
+    },
+    "maximum_body_position_difference_m": 0.00021177385823351638,
+    "maximum_motor_angle_difference_rad": 0.006787559891863942,
+    "maximum_penetration_m": 0.0000974113710284219,
+    "maximum_effective_torque_nm": 0.8149813821702611,
+    "scope": "Single native capture comparison over one short stepping reference. Endpoint samples at 50 Hz; does not bound between-sample peaks, validate impact impulses, establish sustained gait or hardware accuracy."
+  },
+  "browser_10ms": {
+    "passed": true,
+    "preset": "robot-effective-servo",
+    "transitions": 140,
+    "maximum_native_wasm_difference": 9.994494121201569e-11,
+    "worst": "physics[99].policy.observations.marker.-Y-foot-surface.floor_force_world.z",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 1212,
+    "replay_progress_messages": 140,
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute numeric portability tolerance; not physical accuracy or learned control.",
+    "performance": {
+      "simulated_s": 2.8000000000000003,
+      "transition_wall_s": 2.8556900001764296,
+      "simulation_per_wall_second": 0.980498583469148,
+      "transition_p95_s": 0.03612000000476837,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. Short episode, not sustained walking or visible responsiveness acceptance."
+    }
+  },
+  "browser_20ms": {
+    "passed": true,
+    "preset": "robot-effective-servo",
+    "transitions": 140,
+    "maximum_native_wasm_difference": 1.3323386838237639e-10,
+    "worst": "physics[10].policy.observations.marker.+Y-foot-surface.floor_force_world.z",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 949,
+    "replay_progress_messages": 140,
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute numeric portability tolerance; not physical accuracy or learned control.",
+    "performance": {
+      "simulated_s": 2.8000000000000003,
+      "transition_wall_s": 1.6333750000596046,
+      "simulation_per_wall_second": 1.7142419835603113,
+      "transition_p95_s": 0.022264999985694884,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. Short episode, not sustained walking or visible responsiveness acceptance."
+    }
+  },
+  "remaining": [
+    "20 ms p95 target not met",
+    "Sustained walking/turning/stopping and WASD not implemented",
+    "Contact impulse, longer-run and hardware calibration gates pending",
+    "Existing CI thermoelastic convergence and detailed pendulum numerical portability failures remain under investigation"
+  ],
+  "notes": "Short runs, not replicated performance claims. Browser timings exclude loading/replay/rendering. Detailed model unchanged.",
+  "native_20ms": {
+    "version": 1,
+    "reference": {
+      "path": "runs/full-robot/learning/effective-servo-reference/native.json",
+      "sha256": "277b37b28e8cca67acf4776f4a948eda53a3be2d2b7f4d22ba90b898fd8b44ae"
+    },
+    "candidate": {
+      "path": "runs/full-robot/learning/effective-servo-20ms/native.json",
+      "sha256": "74e21e2d7e491ec6c5f796aa5590de3ea6262162a630d9dd4b75423d2be98e71"
+    },
+    "completed": true,
+    "simulated_s": 2.8000000000000003,
+    "wall_s": 1.3202761619999999,
+    "simulation_per_wall_second": 2.120768427537511,
+    "transition_p95_s": 0.019849075,
+    "maximum_foot_difference_m": {
+      "-Y-foot-surface": 0.0006270332122921599,
+      "+X-foot-surface": 0.000042874738250081574,
+      "+Y-foot-surface": 0.00011046310778891586,
+      "-X-foot-surface": 0.00004293797684528458
+    },
+    "maximum_body_position_difference_m": 0.0004139362550077247,
+    "maximum_motor_angle_difference_rad": 0.007936048901896003,
+    "maximum_penetration_m": 0.00009741567014820429,
+    "maximum_effective_torque_nm": 0.8149911388324305,
+    "scope": "Single native capture comparison over one short stepping reference. Endpoint samples at 50 Hz; does not bound between-sample peaks, validate impact impulses, establish sustained gait or hardware accuracy."
+  },
+  "ui_20ms": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "delivery": {
+    "file": "/Users/elliot/robot-effective-servo-2026-09-07.zip",
+    "bytes": 6121655,
+    "sha256": "7564b9ad03f9aea40dfc8a20a72c646f529e7aa47361cd38451692ad75aec271",
+    "local_url": "http://127.0.0.1:4176/?preset=robot-effective-servo",
+    "deep_link_and_step_checked": true
+  },
+  "validation": {
+    "effective_component_tests": 3,
+    "runtime_regression_tests": 21,
+    "cad_capture_and_pendulum_acceptance_tests": 21,
+    "workspace_all_targets_check": true
+  }
+}

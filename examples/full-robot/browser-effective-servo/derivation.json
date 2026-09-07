@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "source_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "inputs": {
+    "examples/full-robot/teacher-baseline/scene.json": "09e3e8c6c79fea5e141ed9629fb7b17b55042c141aa81b5e55c2f506f1c3c90a",
+    "examples/full-robot/teacher-baseline/config.json": "723bf2ba848dc1d8ad9211037f74602dfcab68eb6b3436f29be5d15346b8b622",
+    "examples/full-robot/teacher-environment.json": "826b8b9203c27293a253bc3de344daec114de7f62842852cbfb13f3edd585f30",
+    "examples/full-robot/derive_effective_servo.mjs": "b29df1a52de9c51f7266b3352f36418012404208e4e9df578a5f5c8e538d3a7c"
+  },
+  "approximations": [
+    "Static bounded PD torque with linear motoring torque-speed envelope",
+    "No electrical, thermal, internal rotor, firmware timing, quantization, backlash or gearbox compliance states",
+    "Effective damping is not an identified gearbox friction/efficiency model"
+  ],
+  "integration": {
+    "step_s": 0.02,
+    "controller_period_s": 0.02,
+    "motion_clock": {
+      "period_s": 0.02,
+      "duration_s": 2.4000000000000004,
+      "guard_start_s": 1.6600000000000001,
+      "guard_end_s": 2.1,
+      "qualification_s": 0.1,
+      "maximum_pause_s": 0.3
+    },
+    "newton": {
+      "absolute_tolerance": 1e-8,
+      "guarded_backtracking": false,
+      "max_iterations": 40,
+      "min_line_search": 0.000244140625,
+      "reject_nonfinite_trials": true,
+      "relative_tolerance": 1e-8,
+      "refresh_before_iteration_limit": true
+    }
+  },
+  "preserved": [
+    "Source robot definition",
+    "All mechanism bodies and closure constraints",
+    "Gravity and contact",
+    "Reference controller source"
+  ],
+  "components": [
+    {
+      "dof": "joint.-Y | Hip servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.-Y | Worm servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.-Y | Foot servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.+X | Hip servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.+X | Worm servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.+X | Foot servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.+Y | Hip servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.+Y | Worm servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.+Y | Foot servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.-X | Hip servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.-X | Worm servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    },
+    {
+      "dof": "joint.-X | Foot servo output",
+      "parameters": {
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625,
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615
+      }
+    }
+  ]
+}

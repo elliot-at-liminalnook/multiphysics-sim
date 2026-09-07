@@ -69,6 +69,11 @@ pub struct Config {
 #[derive(Clone, Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MotorExperiment {
+    /// Explicit browser/training reduction. Bypasses electronics, internal
+    /// inertia, gearbox compliance/backlash, firmware, latency and thermal
+    /// behavior. All parameters and their assumption reference are required.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective: Option<EffectiveServoProfile>,
     /// CAD motor order; these are imposed boundaries, not battery/driver models.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub boundaries: Option<Vec<MotorBoundary>>,
@@ -89,6 +94,20 @@ pub struct MotorExperiment {
     pub residual_scales: [f64; 3],
     #[serde(default)]
     pub events: Option<sim_dynamics::hybrid::HybridConfig>,
+}
+
+#[derive(Clone, Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct EffectiveServoProfile {
+    pub version: u32,
+    pub assumption_reference: String,
+    pub components: Vec<EffectiveServoBinding>,
+}
+#[derive(Clone, Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct EffectiveServoBinding {
+    pub dof: String,
+    pub parameters: std::collections::BTreeMap<String,f64>,
 }
 
 /// Full diagnostics for reproducible headless experiments, or bounded latest
@@ -119,6 +138,7 @@ pub struct EmbeddedRecording {
 /// driver and servo components. No robot-specific topology lives here.
 /// The constructor's scene and experiment are immutable for the session.
 pub struct EmbeddedSession {
+    effective_servos: Vec<sim_domain_robot::effective_servo::EffectiveServo>,
     policy: Option<SampledPolicy>,
     input_events: Vec<InputEvent>,
     replay_inputs: std::collections::VecDeque<InputEvent>,
@@ -189,7 +209,10 @@ impl EmbeddedSession {
                         .into(),
                 );
             }
-            if m.servos.is_some() && m.events.is_none() {
+            if m.effective.is_some() && (m.servos.is_none() || m.events.is_some()) {
+                return Err("effective servo profile requires targets and no detailed firmware event schedule".into());
+            }
+            if m.servos.is_some() && m.events.is_none() && m.effective.is_none() {
                 return Err("servo targets require explicit event scheduling".into());
             }
         }
@@ -280,6 +303,15 @@ impl EmbeddedSession {
             return Err("target trajectory requires exact named motor coordinates".into());
         }
         let map = RigidEmbedding::new(art, &names, config.embedding.clone())?;
+        let effective_servos = config.motors.as_ref().and_then(|m|m.effective.as_ref()).map(|profile| {
+            if profile.version!=1 || profile.assumption_reference.trim().is_empty()
+                || names.is_empty() || profile.components.len()!=names.len() || profile.components.iter().zip(&names).any(|(c,n)|&c.dof!=n)
+                || config.motors.as_ref().unwrap().servos.as_ref().unwrap().len()!=names.len()
+                || config.motors.as_ref().unwrap().servos.as_ref().unwrap().iter().any(|s|!s.target_rad.is_finite()) {
+                return Err("effective servo profile requires v1, an assumption reference and exact motor-coordinate bindings".into());
+            }
+            profile.components.iter().map(|c|sim_domain_robot::effective_servo::EffectiveServo::new(&c.parameters).map_err(|e|e.to_string())).collect::<Result<Vec<_>,String>>()
+        }).transpose()?.unwrap_or_default();
         if config.applied_generalized_loads.len() != map.full_dimension()
             || config
                 .applied_generalized_loads
@@ -330,6 +362,7 @@ impl EmbeddedSession {
         let motor_configs: Vec<_> = config
             .motors
             .as_ref()
+            .filter(|m|m.effective.is_none())
             .map(|experiment| {
                 session
                     .scene
@@ -375,6 +408,7 @@ impl EmbeddedSession {
         let mut bank = config
             .motors
             .as_ref()
+            .filter(|m|m.effective.is_none())
             .map(|m| {
                 if m.events.is_some() {
                     EmbeddedMotorBank::new_with_events(art, &motor_configs)
@@ -399,7 +433,7 @@ impl EmbeddedSession {
         let driver_configs: Vec<_> = if config
             .motors
             .as_ref()
-            .is_some_and(|m| m.drivers.is_some() || m.servos.is_some())
+            .is_some_and(|m| m.effective.is_none() && (m.drivers.is_some() || m.servos.is_some()))
         {
             session
                 .scene
@@ -423,7 +457,7 @@ impl EmbeddedSession {
                 &driver_configs,
             )?)
         };
-        let servo_configs: Vec<_> = if config.motors.as_ref().is_some_and(|m| m.servos.is_some()) {
+        let servo_configs: Vec<_> = if config.motors.as_ref().is_some_and(|m| m.effective.is_none() && m.servos.is_some()) {
             session
                 .scene
                 .robot
@@ -495,6 +529,7 @@ impl EmbeddedSession {
             sim_solve::profile::reset();
         }
         let mut runner = Self {
+            effective_servos,
             policy,
             input_events: vec![],
             replay_inputs: Default::default(),
@@ -710,6 +745,7 @@ impl EmbeddedSession {
 
     fn advance_one(&mut self) -> Result<(), String> {
         let Self {
+            effective_servos,
             policy,
             session,
             config,
@@ -911,6 +947,20 @@ impl EmbeddedSession {
                             auxiliary_residuals: vec![],
                         }
                     };
+                    if !effective_servos.is_empty() {
+                        let targets=if let Some(p)=policy.as_ref() {p.targets.clone()}
+                            else if let Some(traj)=trajectory.as_ref() {
+                                let reference=motion_clock.as_ref()
+                                    .map(|clock|clock.reference_at(&pending_clock,t)).transpose()?.unwrap_or(t);
+                                traj.sample(reference)?.values
+                            }
+                            else {config.motors.as_ref().unwrap().servos.as_ref().unwrap().iter().map(|s|s.target_rad).collect()};
+                        let base=map.full_dimension()-g.q.len();
+                        for (i,servo) in effective_servos.iter().enumerate() {
+                            let j=map.independent_joint_indices()[i];
+                            result.generalized_loads[base+j]+=servo.torque(g.q[j],g.qd[j],targets[i]);
+                        }
+                    }
                     for (a, b) in result
                         .generalized_loads
                         .iter_mut()
@@ -965,6 +1015,7 @@ impl EmbeddedSession {
     /// here are diagnostics, not a claim of deployed hardware sensor channels.
     pub fn frame(&self) -> Result<serde_json::Value, String> {
         let Self {
+            effective_servos,
             session,
             config,
             g,
@@ -1041,6 +1092,8 @@ impl EmbeddedSession {
                 .unwrap()
                 .evaluate(time_s, motor_states, &inputs)?;
             (b, Some(r))
+        } else if !effective_servos.is_empty() {
+            (vec![],None)
         } else {
             (boundaries_at(time_s, motor_states)?, None)
         };
@@ -1069,8 +1122,8 @@ impl EmbeddedSession {
         if driver_bank.is_none() {
             frame.as_object_mut().unwrap().remove("driver_readings");
         }
-        if let Some(commands) = servo_commands {
-            frame["servo_commands"] = json!(commands);
+        if servo_commands.is_some() || !effective_servos.is_empty() {
+            if let Some(commands)=servo_commands {frame["servo_commands"] = json!(commands);}
             if let Some(trajectory) = &trajectory {
                 let reference = if let Some(clock) = &motion_clock {
                     if clock_state.samples == 0 {
@@ -1091,7 +1144,7 @@ impl EmbeddedSession {
                         .progress(clock_state, time_s)?);
                 }
             }
-            frame["servo_states"] = json!(held);
+            if effective_servos.is_empty() {frame["servo_states"] = json!(held);}
         }
         if let Some(p) = &self.policy {
             frame["policy"] = p.telemetry().clone();
@@ -1099,6 +1152,18 @@ impl EmbeddedSession {
                 frame["reference_targets_rad"] = reference;
             }
             frame["servo_targets_rad"] = json!(p.targets);
+        }
+        if !effective_servos.is_empty() {
+            let targets:Vec<f64>=if let Some(p)=&self.policy {p.targets.clone()}
+                else if trajectory.is_some() {serde_json::from_value(frame["servo_targets_rad"].clone()).map_err(|e|format!("effective targets: {e}"))?}
+                else {config.motors.as_ref().unwrap().servos.as_ref().unwrap().iter().map(|s|s.target_rad).collect()};
+            frame["servo_targets_rad"]=json!(targets);
+            frame["motor_readings"]=json!(effective_servos.iter().enumerate().map(|(i,s)| {
+                let j=self.independent_joint_indices[i];
+                json!({"shaft_torque_nm":s.torque(g.q[j],g.qd[j],targets[i]),"gear_speed_rad_s":g.qd[j]})
+            }).collect::<Vec<_>>());
+            frame["actuator_profile"]=json!({"kind":"effective_servo","calibrated":false,
+                "omitted":"winding/rotor dynamics, gearbox compliance/backlash and identified friction/efficiency, firmware, latency, quantization and heat"});
         }
         Ok(frame)
     }

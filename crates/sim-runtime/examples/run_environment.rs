@@ -28,6 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut transitions = vec![env.transition().clone()];
     let start = std::time::Instant::now();
     let mut error = None;
+    let mut transition_wall_s = Vec::new();
     while !env.transition().terminated && !env.transition().truncated {
         let action = match &actions {
             Some(a) => a
@@ -35,6 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .ok_or("action schedule exhausted before episode end")?,
             None => &initial_action,
         };
+        let transition_start = std::time::Instant::now();
         match env.step(action) {
             Ok(t) => transitions.push(t),
             Err(e) => {
@@ -43,6 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         frames.push(env.frame()?);
+        transition_wall_s.push(transition_start.elapsed().as_secs_f64());
     }
     let wall_s = start.elapsed().as_secs_f64();
     let completed = error.is_none() && env.transition().completed_steps == steps;
@@ -51,6 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         serde_json::to_string(&json!({"version":1,"kind":"sampled_environment_capture",
         "completed":completed,"error":error,"contract":env.contract(),"task":env.task(),
         "recording":env.recording(),"transitions":transitions,"frames":frames,"wall_s":wall_s,
+        "transition_wall_s":transition_wall_s,
         "scope":"Teacher-only endpoint task diagnostic; includes observation and capture overhead. No learning or hardware accuracy claim."}))?
     );
     if error.is_some() {

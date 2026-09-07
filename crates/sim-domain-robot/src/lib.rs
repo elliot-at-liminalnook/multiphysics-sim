@@ -9,6 +9,7 @@ pub mod actuator_audit;
 pub mod math;
 pub mod model;
 pub mod motor;
+pub mod effective_servo;
 pub mod sdf;
 
 pub use articulated::{Articulated, Generalized, Options, ARTICULATED};
@@ -20,5 +21,6 @@ use sim_core::{BehaviorRegistry, RegistryError};
 /// Register every element of this crate.
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     articulated::register(registry)?;
+    effective_servo::register(registry)?;
     motor::register(registry)
 }

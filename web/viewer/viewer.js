@@ -15,6 +15,9 @@ catch (error) {
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 // Read-only diagnostics distinguish actual drawing from display scheduling.
 export function renderedFrameCount() { return renderer.info.render.frame; }
+let lastRenderedFrame = null;
+// This records WebGL submission, not monitor presentation or a physical response.
+export function renderedFrameInfo() { return lastRenderedFrame && structuredClone(lastRenderedFrame); }
 viewport.prepend(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -265,6 +268,7 @@ function makeInputs(channels) {
 async function loadPreset(id) {
   const token = ++epoch; abort?.abort(); worker?.close(); worker = null; abort = new AbortController();
   setPlaying(false); busy = false; replaySaved = null; simulatedWork = wallWork = 0; playback = null;
+  frame = null; lastRenderedFrame = null;
   for (const id of ['play','step','reset','timeline','download','replay']) $(id).disabled = true;
   $('cancel').hidden = false; status('Loading model and controller…');
   try {
@@ -313,6 +317,12 @@ renderer.setAnimationLoop(now => {
   if (drawNeeded) {
     scene.updateMatrixWorld(true); selectionBox?.update(); arrows.visible = $('contacts').checked;
     renderer.render(scene,camera); drawNeeded = false;
+    const reference = frame?.policy?.step_reference?.reference;
+    lastRenderedFrame = frame ? {
+      frame: renderer.info.render.frame, time_s: frame.time_s, submitted_at_ms: performance.now(),
+      reference_sample: reference?.sample ?? null,
+      latched_twist: reference?.latched_twist?.slice() ?? null,
+    } : null;
   }
 });
 $('fit').onclick = () => fit(); $('fit-selected').onclick = () => { if (meshes.has(selectedName)) fit(meshes.get(selectedName)); };

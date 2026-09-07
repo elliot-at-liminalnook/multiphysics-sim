@@ -105,3 +105,43 @@ Use a fresh search directory for subsequent runs. The collector saves every
 candidate's scores and errors and materializes selected configurations. Do not
 replace the maintained browser preset until validation and browser checks pass.
 The CAD document and detailed validation model are untouched by this study.
+
+## Completed learning attempt
+
+All nine evaluations completed. One candidate improved the worst development
+reward rate from 0.683521 to 0.698503, a **2.19%** increase. The first candidate
+improved the ordinary minute but made the refined minute worse and was rejected.
+`search-status.json` preserves every case score, error, endpoint and outcome;
+`search-result.json` preserves the selected network and optimizer history.
+
+Independent re-execution in `validation-status.json` shows that the selected
+weights still do not pass sustained acceptance:
+
+| Selected-weight case | Supported lifts | Final body error | Final heading error | Passed |
+| --- | --- | --- | --- | --- |
+| 24-second walk | 13 | 0.810 mm | 0.00210 rad | Yes |
+| 60 seconds, 20 ms physics | 41 | 1.178 mm | 0.00689 rad | No |
+| 60 seconds, 5 ms physics | 41 | 0.818 mm | 0.00683 rad | No |
+
+Every lift passes and no recorded pose has an audited internal overlap. The
+ordinary minute fails both endpoint budgets; the refined minute fails heading.
+A higher average reward therefore does not establish readiness, and no faster
+controller is promoted. These development cases provide no new held-out evidence.
+The selected minute's maximum 20/5 ms foot difference falls from 2.116 to
+1.294 mm, but still exceeds the retained 1 mm numerical screen. There are
+20 contact-pair identity differences and no phase differences; see
+`selected-minute-refinement.json`.
+The feed-forward student still receives instantaneous gyro/gravity-style inputs,
+not an accumulated heading estimate. This attempt does not establish that weight
+search cannot succeed; it does show that these four search directions did not
+produce a controller meeting the retained acceptance gates.
+
+Reproduce the independent selected-weight audit in a new directory with:
+
+```sh
+node examples/full-robot/heading-task/validate_selected.mjs runs/full-robot/learning/student-speed/selected-recheck examples/full-robot/student-speed/validation.recipe.json examples/full-robot/student-speed/validation-status.json
+```
+
+The selected configurations keep the same physics, bounds, timing and task.
+Further work needs to address sustained heading, numerical agreement and broader
+command handling while maintaining the delivered browser experience.

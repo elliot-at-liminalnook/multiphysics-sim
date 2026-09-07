@@ -267,6 +267,12 @@ jobs:
           target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/browser-precision/guarded-short.config.json examples/full-robot/heading-task/task.json examples/full-robot/browser-precision/turn-reverse.actions.json > runs/interactive/browser-solver-turn.json
           node examples/full-robot/check_online_steps.mjs runs/interactive/browser-solver-turn.json runs/interactive/browser-solver-turn-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-browser-solver runs/interactive/browser-solver-short.json runs/interactive/browser-solver-browser.json examples/full-robot/browser-precision/guarded-short.config.json
+      - name: Keyboard request and drawn reference association
+        run: |
+          node examples/full-robot/browser-response/prepare.mjs
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json runs/interactive/command-response/probe.config.json examples/full-robot/heading-task/task.json runs/interactive/command-response/probe.actions.json > runs/interactive/command-response/probe.native.json
+          node web/tests/live_performance.mjs runs/interactive/teacher-viewer robot-browser-solver runs/interactive/command-response/probe.json sustained-forward runs/interactive/command-response/probe.config.json
+          node web/tests/check_command_response.mjs runs/interactive/command-response/probe.json runs/interactive/command-response/probe.recording.json runs/interactive/command-response/probe.native.json runs/interactive/command-response/probe-check.json
       - name: Condensed detailed motor native and WASM parity
         run: |
           cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.condensed.json > runs/interactive/pendulum-condensed-native.json

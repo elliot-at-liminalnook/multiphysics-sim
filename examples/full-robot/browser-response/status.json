@@ -1,0 +1,1093 @@
+{
+  "version": 1,
+  "ui": {
+    "passed": true,
+    "checks": 35,
+    "source": {
+      "path": "runs/interactive/command-response/ui.json",
+      "sha256": "6e065abf65e49ca3ab1793f71b1a1010ccb4556af35fce521992f76eaae10894"
+    }
+  },
+  "cases": [
+    {
+      "name": "probe",
+      "concurrent_training": true,
+      "completed": true,
+      "host": {
+        "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+        "logical_cpus": 16,
+        "platform": "darwin",
+        "architecture": "x64",
+        "browser": "152.0.7977.76",
+        "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+        "headless": true
+      },
+      "performance": {
+        "simulation_per_wall_second": 1.0014511026486932,
+        "transition_p95_s": 0.01984500002861023,
+        "render_interval_p95_s": 0.016670000000000074,
+        "render_frames": 600,
+        "actual_drawn_frames": 438,
+        "command_response": {
+          "drawn_reference_supported": true,
+          "commands": [
+            {
+              "stage": 0,
+              "requested_twist": [
+                0.00125,
+                0,
+                0
+              ],
+              "issued_at_ms": 2501.3900000452995,
+              "issued_at_simulation_s": 0,
+              "previous_reference_sample": -1,
+              "reference_response_s": 0.24634499996900558,
+              "reference_frame_time_s": 0.22,
+              "drawn_reference_s": 0.2610799999833107,
+              "drawn_frame_time_s": 0.22,
+              "drawn_frame": 13
+            },
+            {
+              "stage": 1,
+              "requested_twist": [
+                0,
+                0,
+                0
+              ],
+              "issued_at_ms": 8495.950000047684,
+              "issued_at_simulation_s": 6,
+              "previous_reference_sample": 298,
+              "reference_response_s": 0.8201399999856949,
+              "reference_frame_time_s": 6.82,
+              "drawn_reference_s": 0.8295649999976158,
+              "drawn_frame_time_s": 6.82,
+              "drawn_frame": 290
+            }
+          ],
+          "scope": "Keyboard dispatch to the first received/drawn frame carrying the requested latched walking reference. Drawing timestamps follow WebGL submission; controller transfer-boundary waits are included. This does not establish physical stopping time, causal body-motion response or monitor presentation latency."
+        },
+        "transitions": 500,
+        "wall_s": 9.985509999990462,
+        "simulated_s": 10,
+        "active_motion": {
+          "transitions": 330,
+          "simulated_s": 6.6000000000000005,
+          "wall_s": 6.561249999999996,
+          "simulation_per_wall_second": 1.0059058868355883,
+          "transition_p95_s": 0.020509999990463258
+        },
+        "breakdown": {
+          "all": {
+            "wall_s": {
+              "samples": 500,
+              "mean": 0.009169970000505437,
+              "p95": 0.01984500002861023,
+              "maximum": 0.06462000000476838
+            },
+            "worker_s": {
+              "samples": 500,
+              "mean": 0.0073073900009393705,
+              "p95": 0.0166700000166893,
+              "maximum": 0.06433999997377396
+            },
+            "wasm_call_s": {
+              "samples": 500,
+              "mean": 0.007126379999637605,
+              "p95": 0.01644499999284744,
+              "maximum": 0.06421499997377396
+            },
+            "json_parse_s": {
+              "samples": 500,
+              "mean": 0.00017760000181198148,
+              "p95": 0.0003349999785423279,
+              "maximum": 0.0004600000381469727
+            },
+            "queue_s": {
+              "samples": 500,
+              "mean": 0.000006419999837875342,
+              "p95": 0.00002499997615814209,
+              "maximum": 0.00006499999761581421
+            },
+            "view_update_s": {
+              "samples": 500,
+              "mean": 0.000560790002942085,
+              "p95": 0.0009300000071525574,
+              "maximum": 0.001800000011920929
+            },
+            "transport_and_dispatch_s": {
+              "samples": 500,
+              "mean": 0.001856159999728207,
+              "p95": 0.008254999995231629,
+              "maximum": 0.012514999985694887
+            }
+          },
+          "by_phase": {
+            "hold": {
+              "wall_s": {
+                "samples": 10,
+                "mean": 0.018680500006675718,
+                "p95": 0.05980500000715256,
+                "maximum": 0.05980500000715256
+              },
+              "worker_s": {
+                "samples": 10,
+                "mean": 0.014393499994277956,
+                "p95": 0.05919999998807907,
+                "maximum": 0.05919999998807907
+              },
+              "wasm_call_s": {
+                "samples": 10,
+                "mean": 0.014220999997854233,
+                "p95": 0.05893000000715256,
+                "maximum": 0.05893000000715256
+              },
+              "json_parse_s": {
+                "samples": 10,
+                "mean": 0.0001635000050067902,
+                "p95": 0.00024500000476837156,
+                "maximum": 0.00024500000476837156
+              },
+              "queue_s": {
+                "samples": 10,
+                "mean": 0.0000075000226497650136,
+                "p95": 0.00001999998092651367,
+                "maximum": 0.00001999998092651367
+              },
+              "view_update_s": {
+                "samples": 10,
+                "mean": 0.0012200000047683716,
+                "p95": 0.001800000011920929,
+                "maximum": 0.001800000011920929
+              },
+              "transport_and_dispatch_s": {
+                "samples": 10,
+                "mean": 0.0042794999897480005,
+                "p95": 0.012514999985694887,
+                "maximum": 0.012514999985694887
+              }
+            },
+            "shift": {
+              "wall_s": {
+                "samples": 75,
+                "mean": 0.0099542000023524,
+                "p95": 0.0192150000333786,
+                "maximum": 0.04817500001192093
+              },
+              "worker_s": {
+                "samples": 75,
+                "mean": 0.00789133333683014,
+                "p95": 0.017839999973773956,
+                "maximum": 0.047879999995231626
+              },
+              "wasm_call_s": {
+                "samples": 75,
+                "mean": 0.007731333338419596,
+                "p95": 0.017685000002384186,
+                "maximum": 0.047740000009536744
+              },
+              "json_parse_s": {
+                "samples": 75,
+                "mean": 0.00015646666765213016,
+                "p95": 0.0002749999761581421,
+                "maximum": 0.00030000001192092895
+              },
+              "queue_s": {
+                "samples": 75,
+                "mean": 0.000007200000286102302,
+                "p95": 0.000025000035762786864,
+                "maximum": 0.000030000030994415284
+              },
+              "view_update_s": {
+                "samples": 75,
+                "mean": 0.000563200003306071,
+                "p95": 0.0009800000190734862,
+                "maximum": 0.001415000021457672
+              },
+              "transport_and_dispatch_s": {
+                "samples": 75,
+                "mean": 0.0020556666652361555,
+                "p95": 0.009180000007152557,
+                "maximum": 0.010305000007152558
+              }
+            },
+            "raise": {
+              "wall_s": {
+                "samples": 75,
+                "mean": 0.012657133333683013,
+                "p95": 0.022305000007152558,
+                "maximum": 0.043529999971389774
+              },
+              "worker_s": {
+                "samples": 75,
+                "mean": 0.010092066671053567,
+                "p95": 0.021885000050067903,
+                "maximum": 0.04314999997615814
+              },
+              "wasm_call_s": {
+                "samples": 75,
+                "mean": 0.009923466664155329,
+                "p95": 0.021705000042915343,
+                "maximum": 0.04301999998092652
+              },
+              "json_parse_s": {
+                "samples": 75,
+                "mean": 0.00016586667378743492,
+                "p95": 0.00029500001668930056,
+                "maximum": 0.0003799999952316284
+              },
+              "queue_s": {
+                "samples": 75,
+                "mean": 0.000005199998219807949,
+                "p95": 0.000020000040531158448,
+                "maximum": 0.000030000030994415284
+              },
+              "view_update_s": {
+                "samples": 75,
+                "mean": 0.000504333333969116,
+                "p95": 0.0008799999952316285,
+                "maximum": 0.0010149999856948852
+              },
+              "transport_and_dispatch_s": {
+                "samples": 75,
+                "mean": 0.002559866664409637,
+                "p95": 0.008805000066757203,
+                "maximum": 0.010009999990463255
+              }
+            },
+            "lower": {
+              "wall_s": {
+                "samples": 75,
+                "mean": 0.0134002666648229,
+                "p95": 0.028360000014305116,
+                "maximum": 0.06462000000476838
+              },
+              "worker_s": {
+                "samples": 75,
+                "mean": 0.010560933330059056,
+                "p95": 0.028030000030994415,
+                "maximum": 0.06433999997377396
+              },
+              "wasm_call_s": {
+                "samples": 75,
+                "mean": 0.010399999995231628,
+                "p95": 0.027895000040531158,
+                "maximum": 0.06421499997377396
+              },
+              "json_parse_s": {
+                "samples": 75,
+                "mean": 0.00015846666812896726,
+                "p95": 0.0002800000309944153,
+                "maximum": 0.0003399999737739563
+              },
+              "queue_s": {
+                "samples": 75,
+                "mean": 0.000005466665426890061,
+                "p95": 0.000020000040531158448,
+                "maximum": 0.000030000030994415284
+              },
+              "view_update_s": {
+                "samples": 75,
+                "mean": 0.0005066000008583069,
+                "p95": 0.0008350000381469727,
+                "maximum": 0.0009599999785423279
+              },
+              "transport_and_dispatch_s": {
+                "samples": 75,
+                "mean": 0.0028338666693369543,
+                "p95": 0.008949999928474426,
+                "maximum": 0.012089999973773958
+              }
+            },
+            "return": {
+              "wall_s": {
+                "samples": 75,
+                "mean": 0.009637066665490466,
+                "p95": 0.01825,
+                "maximum": 0.020740000009536744
+              },
+              "worker_s": {
+                "samples": 75,
+                "mean": 0.007923466669718425,
+                "p95": 0.017110000014305116,
+                "maximum": 0.020224999964237215
+              },
+              "wasm_call_s": {
+                "samples": 75,
+                "mean": 0.007761400000254313,
+                "p95": 0.016944999992847442,
+                "maximum": 0.019979999959468843
+              },
+              "json_parse_s": {
+                "samples": 75,
+                "mean": 0.00015880000432332358,
+                "p95": 0.0002799999713897705,
+                "maximum": 0.0003799999952316284
+              },
+              "queue_s": {
+                "samples": 75,
+                "mean": 0.000006866664091746016,
+                "p95": 0.00002499997615814209,
+                "maximum": 0.00006499999761581421
+              },
+              "view_update_s": {
+                "samples": 75,
+                "mean": 0.0005112000044186907,
+                "p95": 0.0007900000214576721,
+                "maximum": 0.001050000011920929
+              },
+              "transport_and_dispatch_s": {
+                "samples": 75,
+                "mean": 0.0017067333316802976,
+                "p95": 0.007504999995231628,
+                "maximum": 0.010529999971389769
+              }
+            },
+            "settle": {
+              "wall_s": {
+                "samples": 30,
+                "mean": 0.009767499999205268,
+                "p95": 0.017415000021457672,
+                "maximum": 0.019314999997615816
+              },
+              "worker_s": {
+                "samples": 30,
+                "mean": 0.007445666664838791,
+                "p95": 0.015360000014305115,
+                "maximum": 0.015615000009536743
+              },
+              "wasm_call_s": {
+                "samples": 30,
+                "mean": 0.007281333331267039,
+                "p95": 0.015204999983310699,
+                "maximum": 0.01540499997138977
+              },
+              "json_parse_s": {
+                "samples": 30,
+                "mean": 0.0001623333354791005,
+                "p95": 0.0002749999761581421,
+                "maximum": 0.0003050000071525574
+              },
+              "queue_s": {
+                "samples": 30,
+                "mean": 0.000005666665236155191,
+                "p95": 0.00001999998092651367,
+                "maximum": 0.000025000035762786864
+              },
+              "view_update_s": {
+                "samples": 30,
+                "mean": 0.000582333340247472,
+                "p95": 0.0009750000238418579,
+                "maximum": 0.0009950000047683717
+              },
+              "transport_and_dispatch_s": {
+                "samples": 30,
+                "mean": 0.002316166669130326,
+                "p95": 0.008980000019073488,
+                "maximum": 0.009634999990463257
+              }
+            },
+            "idle": {
+              "wall_s": {
+                "samples": 160,
+                "mean": 0.004259406251460316,
+                "p95": 0.008944999992847442,
+                "maximum": 0.01347000002861023
+              },
+              "worker_s": {
+                "samples": 160,
+                "mean": 0.003445656250044703,
+                "p95": 0.006495000004768371,
+                "maximum": 0.013084999978542329
+              },
+              "wasm_call_s": {
+                "samples": 160,
+                "mean": 0.0032270312502980228,
+                "p95": 0.006344999969005585,
+                "maximum": 0.012935000002384185
+              },
+              "json_parse_s": {
+                "samples": 160,
+                "mean": 0.00021453124843537797,
+                "p95": 0.00039499998092651367,
+                "maximum": 0.0004600000381469727
+              },
+              "queue_s": {
+                "samples": 160,
+                "mean": 0.000006937500834465029,
+                "p95": 0.00002499997615814209,
+                "maximum": 0.00004500001668930054
+              },
+              "view_update_s": {
+                "samples": 160,
+                "mean": 0.0005895312532782556,
+                "p95": 0.0009200000166893006,
+                "maximum": 0.0013050000071525574
+              },
+              "transport_and_dispatch_s": {
+                "samples": 160,
+                "mean": 0.0008068125005811447,
+                "p95": 0.00552999997138977,
+                "maximum": 0.007239999949932099
+              }
+            }
+          },
+          "scope": "WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive."
+        }
+      },
+      "meets_speed_target": true,
+      "meets_transition_target": false,
+      "association_check": {
+        "version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "stage": 0,
+            "requested_twist": [
+              0.00125,
+              0,
+              0
+            ],
+            "issued_at_ms": 2501.3900000452995,
+            "issued_at_simulation_s": 0,
+            "previous_reference_sample": -1,
+            "reference_response_s": 0.24634499996900558,
+            "reference_frame_time_s": 0.22,
+            "drawn_reference_s": 0.2610799999833107,
+            "drawn_frame_time_s": 0.22,
+            "drawn_frame": 13
+          },
+          {
+            "stage": 1,
+            "requested_twist": [
+              0,
+              0,
+              0
+            ],
+            "issued_at_ms": 8495.950000047684,
+            "issued_at_simulation_s": 6,
+            "previous_reference_sample": 298,
+            "reference_response_s": 0.8201399999856949,
+            "reference_frame_time_s": 6.82,
+            "drawn_reference_s": 0.8295649999976158,
+            "drawn_frame_time_s": 6.82,
+            "drawn_frame": 290
+          }
+        ],
+        "sources": [
+          {
+            "path": "runs/interactive/command-response/probe.json",
+            "sha256": "8dd6bc8cc82563b272588e91357a3e05ec24f40303dcae36e6462fb00821dd60"
+          },
+          {
+            "path": "runs/interactive/command-response/probe.recording.json",
+            "sha256": "e8a1ce0964396f39fd67f13ce9ee8a9750716ed00b850c04017abfbffc16bb31"
+          },
+          {
+            "path": "runs/interactive/command-response/probe.native.json",
+            "sha256": "c8339c7011c31806eab0a716f3f497baca0fe92293ab597e7bad1d3015fe2910"
+          }
+        ],
+        "scope": "Every keyboard request matches recorded inputs and the first updated walking-reference frame in an independent native execution. The drawn snapshot carries that reference at its reported simulation time. This validates measurement association, not monitor presentation, causal physical response, acceptable latency or realtime throughput."
+      },
+      "sources": [
+        {
+          "path": "runs/interactive/command-response/probe.json",
+          "sha256": "8dd6bc8cc82563b272588e91357a3e05ec24f40303dcae36e6462fb00821dd60"
+        },
+        {
+          "path": "runs/interactive/command-response/probe-check.json",
+          "sha256": "d15aae1a3477d1fd9d3b43a69c8710b5e878c73ffb261df3f95cb60d62503347"
+        }
+      ]
+    },
+    {
+      "name": "turn-reverse",
+      "concurrent_training": false,
+      "completed": true,
+      "host": {
+        "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+        "logical_cpus": 16,
+        "platform": "darwin",
+        "architecture": "x64",
+        "browser": "152.0.7977.76",
+        "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+        "headless": true
+      },
+      "performance": {
+        "simulation_per_wall_second": 1.0001937875478277,
+        "transition_p95_s": 0.018810000002384187,
+        "render_interval_p95_s": 0.01667000000000189,
+        "render_frames": 1436,
+        "actual_drawn_frames": 1020,
+        "command_response": {
+          "drawn_reference_supported": true,
+          "commands": [
+            {
+              "stage": 0,
+              "requested_twist": [
+                0.00125,
+                0,
+                0
+              ],
+              "issued_at_ms": 2388.3299999833107,
+              "issued_at_simulation_s": 0,
+              "previous_reference_sample": -1,
+              "reference_response_s": 0.21722500002384185,
+              "reference_frame_time_s": 0.22,
+              "drawn_reference_s": 0.2385,
+              "drawn_frame_time_s": 0.24,
+              "drawn_frame": 11
+            },
+            {
+              "stage": 1,
+              "requested_twist": [
+                0,
+                0,
+                0.001
+              ],
+              "issued_at_ms": 10783.839999973774,
+              "issued_at_simulation_s": 8.4,
+              "previous_reference_sample": 418,
+              "reference_response_s": 0.6156750000119209,
+              "reference_frame_time_s": 9.02,
+              "drawn_reference_s": 0.6241800000071526,
+              "drawn_frame_time_s": 9.02,
+              "drawn_frame": 385
+            },
+            {
+              "stage": 2,
+              "requested_twist": [
+                -0.00125,
+                0,
+                0
+              ],
+              "issued_at_ms": 19186.07499998808,
+              "issued_at_simulation_s": 16.8,
+              "previous_reference_sample": 838,
+              "reference_response_s": 1.0115500000119209,
+              "reference_frame_time_s": 17.82,
+              "drawn_reference_s": 1.0221850000023842,
+              "drawn_frame_time_s": 17.82,
+              "drawn_frame": 753
+            },
+            {
+              "stage": 3,
+              "requested_twist": [
+                0,
+                0,
+                0
+              ],
+              "issued_at_ms": 22382.480000019073,
+              "issued_at_simulation_s": 20,
+              "previous_reference_sample": 998,
+              "reference_response_s": 0.024469999969005583,
+              "reference_frame_time_s": 20.02,
+              "drawn_reference_s": 0.04458499997854233,
+              "drawn_frame_time_s": 20.04,
+              "drawn_frame": 846
+            }
+          ],
+          "scope": "Keyboard dispatch to the first received/drawn frame carrying the requested latched walking reference. Drawing timestamps follow WebGL submission; controller transfer-boundary waits are included. This does not establish physical stopping time, causal body-motion response or monitor presentation latency."
+        },
+        "transitions": 1200,
+        "wall_s": 23.995349999964237,
+        "simulated_s": 24,
+        "active_motion": {
+          "transitions": 990,
+          "simulated_s": 19.8,
+          "wall_s": 19.80044999998805,
+          "simulation_per_wall_second": 0.9999772732443934,
+          "transition_p95_s": 0.019660000026226043
+        },
+        "breakdown": {
+          "all": {
+            "wall_s": {
+              "samples": 1200,
+              "mean": 0.009035058331638568,
+              "p95": 0.018810000002384187,
+              "maximum": 0.11461500000953674
+            },
+            "worker_s": {
+              "samples": 1200,
+              "mean": 0.007578666666994479,
+              "p95": 0.01627999997138977,
+              "maximum": 0.11418000000715256
+            },
+            "wasm_call_s": {
+              "samples": 1200,
+              "mean": 0.007408395833124728,
+              "p95": 0.016125,
+              "maximum": 0.11402999997138977
+            },
+            "json_parse_s": {
+              "samples": 1200,
+              "mean": 0.00016752083296577117,
+              "p95": 0.00022000002861022948,
+              "maximum": 0.0005249999761581421
+            },
+            "queue_s": {
+              "samples": 1200,
+              "mean": 0.000006016667385895999,
+              "p95": 0.000014999985694885253,
+              "maximum": 0.00007999998331069946
+            },
+            "view_update_s": {
+              "samples": 1200,
+              "mean": 0.00046338333512345914,
+              "p95": 0.0005950000286102295,
+              "maximum": 0.0017699999809265136
+            },
+            "transport_and_dispatch_s": {
+              "samples": 1200,
+              "mean": 0.0014503749972581798,
+              "p95": 0.007355000019073486,
+              "maximum": 0.01116500002145767
+            }
+          },
+          "by_phase": {
+            "hold": {
+              "wall_s": {
+                "samples": 10,
+                "mean": 0.015449500006437304,
+                "p95": 0.06006499999761582,
+                "maximum": 0.06006499999761582
+              },
+              "worker_s": {
+                "samples": 10,
+                "mean": 0.013816500020027161,
+                "p95": 0.059580000042915346,
+                "maximum": 0.059580000042915346
+              },
+              "wasm_call_s": {
+                "samples": 10,
+                "mean": 0.013647500008344651,
+                "p95": 0.05928500002622605,
+                "maximum": 0.05928500002622605
+              },
+              "json_parse_s": {
+                "samples": 10,
+                "mean": 0.00015799999833106994,
+                "p95": 0.00023500001430511476,
+                "maximum": 0.00023500001430511476
+              },
+              "queue_s": {
+                "samples": 10,
+                "mean": 0.000012999993562698363,
+                "p95": 0.000050000011920928954,
+                "maximum": 0.000050000011920928954
+              },
+              "view_update_s": {
+                "samples": 10,
+                "mean": 0.0008884999990463258,
+                "p95": 0.0017699999809265136,
+                "maximum": 0.0017699999809265136
+              },
+              "transport_and_dispatch_s": {
+                "samples": 10,
+                "mean": 0.0016199999928474425,
+                "p95": 0.006100000023841858,
+                "maximum": 0.006100000023841858
+              }
+            },
+            "shift": {
+              "wall_s": {
+                "samples": 225,
+                "mean": 0.008288022221194373,
+                "p95": 0.016269999980926514,
+                "maximum": 0.04627999997138977
+              },
+              "worker_s": {
+                "samples": 225,
+                "mean": 0.006897599999374816,
+                "p95": 0.013274999976158141,
+                "maximum": 0.046025000035762785
+              },
+              "wasm_call_s": {
+                "samples": 225,
+                "mean": 0.006731977778540713,
+                "p95": 0.013110000014305115,
+                "maximum": 0.04589500004053116
+              },
+              "json_parse_s": {
+                "samples": 225,
+                "mean": 0.00016337777508629674,
+                "p95": 0.00019999998807907106,
+                "maximum": 0.0002749999761581421
+              },
+              "queue_s": {
+                "samples": 225,
+                "mean": 0.00000522222306993273,
+                "p95": 0.000010000050067901611,
+                "maximum": 0.000015000045299530029
+              },
+              "view_update_s": {
+                "samples": 225,
+                "mean": 0.0004800000037087333,
+                "p95": 0.0006050000190734863,
+                "maximum": 0.0008550000190734864
+              },
+              "transport_and_dispatch_s": {
+                "samples": 225,
+                "mean": 0.0013851999987496261,
+                "p95": 0.0077299999594688425,
+                "maximum": 0.010129999995231629
+              }
+            },
+            "raise": {
+              "wall_s": {
+                "samples": 225,
+                "mean": 0.01135635555134879,
+                "p95": 0.020245000004768372,
+                "maximum": 0.11461500000953674
+              },
+              "worker_s": {
+                "samples": 225,
+                "mean": 0.009702466665903723,
+                "p95": 0.018610000014305114,
+                "maximum": 0.11418000000715256
+              },
+              "wasm_call_s": {
+                "samples": 225,
+                "mean": 0.009534755554464128,
+                "p95": 0.018435000002384187,
+                "maximum": 0.11402999997138977
+              },
+              "json_parse_s": {
+                "samples": 225,
+                "mean": 0.00016497777753406075,
+                "p95": 0.0001950000524520874,
+                "maximum": 0.0003650000095367432
+              },
+              "queue_s": {
+                "samples": 225,
+                "mean": 0.0000060888907644483746,
+                "p95": 0.000014999985694885253,
+                "maximum": 0.00004000002145767212
+              },
+              "view_update_s": {
+                "samples": 225,
+                "mean": 0.00043551111618677767,
+                "p95": 0.0005349999666213989,
+                "maximum": 0.000684999942779541
+              },
+              "transport_and_dispatch_s": {
+                "samples": 225,
+                "mean": 0.0016477999946806154,
+                "p95": 0.007444999992847443,
+                "maximum": 0.009209999978542327
+              }
+            },
+            "lower": {
+              "wall_s": {
+                "samples": 225,
+                "mean": 0.011830955553849538,
+                "p95": 0.023875,
+                "maximum": 0.07031000000238419
+              },
+              "worker_s": {
+                "samples": 225,
+                "mean": 0.010127600001229179,
+                "p95": 0.02360000002384186,
+                "maximum": 0.07001999998092652
+              },
+              "wasm_call_s": {
+                "samples": 225,
+                "mean": 0.00996262222131093,
+                "p95": 0.0234650000333786,
+                "maximum": 0.06986000001430512
+              },
+              "json_parse_s": {
+                "samples": 225,
+                "mean": 0.00016237777921888544,
+                "p95": 0.00022000002861022948,
+                "maximum": 0.0002649999856948853
+              },
+              "queue_s": {
+                "samples": 225,
+                "mean": 0.000005755555894639752,
+                "p95": 0.00001999998092651367,
+                "maximum": 0.00007999998331069946
+              },
+              "view_update_s": {
+                "samples": 225,
+                "mean": 0.00042008888827429894,
+                "p95": 0.0005500000119209289,
+                "maximum": 0.0008799999952316285
+              },
+              "transport_and_dispatch_s": {
+                "samples": 225,
+                "mean": 0.001697599996725717,
+                "p95": 0.007055000007152558,
+                "maximum": 0.01012000000476837
+              }
+            },
+            "return": {
+              "wall_s": {
+                "samples": 225,
+                "mean": 0.009162866666052078,
+                "p95": 0.01673499995470047,
+                "maximum": 0.02677999997138977
+              },
+              "worker_s": {
+                "samples": 225,
+                "mean": 0.007575422221554648,
+                "p95": 0.014219999969005585,
+                "maximum": 0.026339999973773957
+              },
+              "wasm_call_s": {
+                "samples": 225,
+                "mean": 0.007408444445663029,
+                "p95": 0.014049999952316284,
+                "maximum": 0.026185000002384187
+              },
+              "json_parse_s": {
+                "samples": 225,
+                "mean": 0.0001645777757962543,
+                "p95": 0.00020499998331069947,
+                "maximum": 0.00025999999046325684
+              },
+              "queue_s": {
+                "samples": 225,
+                "mean": 0.000005822223292456735,
+                "p95": 0.000010000050067901611,
+                "maximum": 0.000030000030994415284
+              },
+              "view_update_s": {
+                "samples": 225,
+                "mean": 0.0004501555556721157,
+                "p95": 0.0005350000262260437,
+                "maximum": 0.0007599999904632568
+              },
+              "transport_and_dispatch_s": {
+                "samples": 225,
+                "mean": 0.0015816222212049673,
+                "p95": 0.007199999988079072,
+                "maximum": 0.01116500002145767
+              }
+            },
+            "settle": {
+              "wall_s": {
+                "samples": 90,
+                "mean": 0.008710333331425986,
+                "p95": 0.01609500002861023,
+                "maximum": 0.021429999947547913
+              },
+              "worker_s": {
+                "samples": 90,
+                "mean": 0.006920444445477589,
+                "p95": 0.013019999980926514,
+                "maximum": 0.020889999985694886
+              },
+              "wasm_call_s": {
+                "samples": 90,
+                "mean": 0.006749777776665158,
+                "p95": 0.012855000019073486,
+                "maximum": 0.020715000033378603
+              },
+              "json_parse_s": {
+                "samples": 90,
+                "mean": 0.00016816666854752442,
+                "p95": 0.0002099999785423279,
+                "maximum": 0.00023000001907348634
+              },
+              "queue_s": {
+                "samples": 90,
+                "mean": 0.000006055556403266065,
+                "p95": 0.000014999985694885253,
+                "maximum": 0.000029999971389770506
+              },
+              "view_update_s": {
+                "samples": 90,
+                "mean": 0.0004792777789963616,
+                "p95": 0.0005649999976158142,
+                "maximum": 0.0006949999928474427
+              },
+              "transport_and_dispatch_s": {
+                "samples": 90,
+                "mean": 0.0017838333295451272,
+                "p95": 0.007914999961853027,
+                "maximum": 0.009505000054836274
+              }
+            },
+            "idle": {
+              "wall_s": {
+                "samples": 200,
+                "mean": 0.0038002499988675107,
+                "p95": 0.012245000004768372,
+                "maximum": 0.01830000001192093
+              },
+              "worker_s": {
+                "samples": 200,
+                "mean": 0.00307600000143051,
+                "p95": 0.006050000011920929,
+                "maximum": 0.017850000023841857
+              },
+              "wasm_call_s": {
+                "samples": 200,
+                "mean": 0.0028880749988555894,
+                "p95": 0.005870000004768372,
+                "maximum": 0.017694999992847443
+              },
+              "json_parse_s": {
+                "samples": 200,
+                "mean": 0.00018432500094175323,
+                "p95": 0.00023499995470046997,
+                "maximum": 0.0005249999761581421
+              },
+              "queue_s": {
+                "samples": 200,
+                "mean": 0.000006974999606609348,
+                "p95": 0.000014999985694885253,
+                "maximum": 0.000030000030994415284
+              },
+              "view_update_s": {
+                "samples": 200,
+                "mean": 0.0005112250009179112,
+                "p95": 0.0006150000095367431,
+                "maximum": 0.0008499999642372131
+              },
+              "transport_and_dispatch_s": {
+                "samples": 200,
+                "mean": 0.000717274997830391,
+                "p95": 0.0005749999880790708,
+                "maximum": 0.010849999964237213
+              }
+            }
+          },
+          "scope": "WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive."
+        }
+      },
+      "meets_speed_target": false,
+      "meets_transition_target": true,
+      "association_check": {
+        "version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "stage": 0,
+            "requested_twist": [
+              0.00125,
+              0,
+              0
+            ],
+            "issued_at_ms": 2388.3299999833107,
+            "issued_at_simulation_s": 0,
+            "previous_reference_sample": -1,
+            "reference_response_s": 0.21722500002384185,
+            "reference_frame_time_s": 0.22,
+            "drawn_reference_s": 0.2385,
+            "drawn_frame_time_s": 0.24,
+            "drawn_frame": 11
+          },
+          {
+            "stage": 1,
+            "requested_twist": [
+              0,
+              0,
+              0.001
+            ],
+            "issued_at_ms": 10783.839999973774,
+            "issued_at_simulation_s": 8.4,
+            "previous_reference_sample": 418,
+            "reference_response_s": 0.6156750000119209,
+            "reference_frame_time_s": 9.02,
+            "drawn_reference_s": 0.6241800000071526,
+            "drawn_frame_time_s": 9.02,
+            "drawn_frame": 385
+          },
+          {
+            "stage": 2,
+            "requested_twist": [
+              -0.00125,
+              0,
+              0
+            ],
+            "issued_at_ms": 19186.07499998808,
+            "issued_at_simulation_s": 16.8,
+            "previous_reference_sample": 838,
+            "reference_response_s": 1.0115500000119209,
+            "reference_frame_time_s": 17.82,
+            "drawn_reference_s": 1.0221850000023842,
+            "drawn_frame_time_s": 17.82,
+            "drawn_frame": 753
+          },
+          {
+            "stage": 3,
+            "requested_twist": [
+              0,
+              0,
+              0
+            ],
+            "issued_at_ms": 22382.480000019073,
+            "issued_at_simulation_s": 20,
+            "previous_reference_sample": 998,
+            "reference_response_s": 0.024469999969005583,
+            "reference_frame_time_s": 20.02,
+            "drawn_reference_s": 0.04458499997854233,
+            "drawn_frame_time_s": 20.04,
+            "drawn_frame": 846
+          }
+        ],
+        "sources": [
+          {
+            "path": "runs/interactive/command-response/turn-reverse.json",
+            "sha256": "68e6703d74fdaaabc732de14d8f495ecc6ed58338b5ca60e246c3d24d7b10223"
+          },
+          {
+            "path": "runs/interactive/command-response/turn-reverse.recording.json",
+            "sha256": "713152df868f159398475b354cf7a1088c942f530596a7d187c36c95d799bb85"
+          },
+          {
+            "path": "runs/full-robot/learning/heading-performance/guarded-validation-001/turn-reverse.native.json",
+            "sha256": "902112a2362373e69c56056a14d6af01244e7e46b279754c77fbd0d4be1a34fa"
+          }
+        ],
+        "scope": "Every keyboard request matches recorded inputs and the first updated walking-reference frame in an independent native execution. The drawn snapshot carries that reference at its reported simulation time. This validates measurement association, not monitor presentation, causal physical response, acceptable latency or realtime throughput."
+      },
+      "sources": [
+        {
+          "path": "runs/interactive/command-response/turn-reverse.json",
+          "sha256": "68e6703d74fdaaabc732de14d8f495ecc6ed58338b5ca60e246c3d24d7b10223"
+        },
+        {
+          "path": "runs/interactive/command-response/turn-reverse-check.json",
+          "sha256": "50e367bbec7854ee9fa2ba5e31c8b2a96f1b40453d3877697e8eef330a877dbb"
+        }
+      ]
+    }
+  ],
+  "rejected_probe": {
+    "duration_s": 5,
+    "error": "Error: \"world load boundaries must align with physics steps inside the horizon\"",
+    "scope": "Shortening the horizon left the inherited seven-second push outside the episode; rejected before physics advanced.",
+    "sources": [
+      {
+        "path": "runs/interactive/command-response/rejected-five-second.config.json",
+        "sha256": "90bf568e5119aa5a475f0a4de6d9eede3695b4a21546bf8d8c4f8b47fb4334c4"
+      },
+      {
+        "path": "runs/interactive/command-response/rejected-five-second.log",
+        "sha256": "791ee15f38a4b02b3bd9e58a7dfd2c960916008390191f04d7cad4428131f60c"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "path": "runs/interactive/command-response/viewer/build-manifest.json",
+      "sha256": "a7fa04b6717646740089b827c1a74b8fe3e3840a750e7d45cf73c25f86329592"
+    },
+    {
+      "path": "web/tests/live_performance.mjs",
+      "sha256": "8e05bd85b0ed4a1004ddc330ffe2c524fd4d507b2096965650915d2477d65677"
+    },
+    {
+      "path": "web/tests/check_command_response.mjs",
+      "sha256": "92c581120bdddbdaa0571c0bb0e285b2dedb3bfe282b6e5832f2257013aea7b1"
+    },
+    {
+      "path": "web/viewer/viewer.js",
+      "sha256": "55535f604e0032f25dd89bae576fb1566110c7b54be47e371d16ffd7fc35bedb"
+    }
+  ],
+  "scope": "Command-reference association and UI checks. The ten-second functional probe overlapped training and is not performance acceptance. The 24-second turn/reverse measurement ran after training stopped. Render submission is distinct from monitor presentation and physical motion/stopping response; those remain unmeasured."
+}

@@ -1,12 +1,14 @@
 # Four-leg robot commissioning
 
-The latest [online-control prototype](online-control-validation.md) accepts WASD
-requests through shared Rust stepping references and Rhai motor feedback. One
-24-second forward/turn/reverse/stop keyboard sequence runs at realtime average
-speed with rendering enabled. General direction changes, the 20 ms p95 target,
-sustained terrain walking and learned control remain open. Its limitations are
-visible in the browser. The accepted [two-cycle fixed crawl](crawl-validation.md)
-remains available alongside the experimental controller.
+The latest [reversal-aware crawl](reversal-validation.md) accepts WASD requests
+through shared Rust stepping references and Rhai motor feedback. Both reversal
+directions and three switching times pass the sampled support checks. A one-minute
+rendered keyboard run completes 28 supported swings, travels about 70 mm and stops
+within the provisional 1 mm body-error budget. Active crawling keeps up with
+realtime, but p95 transition latency is 29 ms, above the 20 ms target.
+General commands, terrain, useful walking speed and learned control remain open.
+The earlier [online prototype](online-control-validation.md) and accepted
+[two-cycle fixed crawl](crawl-validation.md) remain available.
 
 The active walking/learning delivery and acceptance backlog is in
 [learning-plan.md](learning-plan.md). Sampled foot tracking can now use the

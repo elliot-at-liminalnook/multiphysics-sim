@@ -17,6 +17,7 @@ fn sequence() -> StepSequence {
             ],
             stance_offsets_m: vec![[0.01, 0.], [0., 0.], [0.01, 0.], [0., 0.]],
             command_postures: vec![],
+            restart_order_on_translation_reversal: false,
             maximum_speed_m_s: 0.01,
             maximum_yaw_rate_rad_s: 0.1,
         },
@@ -201,4 +202,39 @@ fn velocity_posture_interpolates_and_latches_without_moving_planted_feet() {
             .unwrap_err()
             .contains("sorted")
     );
+}
+
+#[test]
+fn reversal_restarts_order_at_transfer_boundary_and_preserves_planted_positions() {
+    let mut config = sequence().config().clone();
+    config.restart_order_on_translation_reversal = true;
+    let feet = vec![
+        [0., -0.3, -0.4],
+        [0.3, 0., -0.4],
+        [0., 0.3, -0.4],
+        [-0.3, 0., -0.4],
+    ];
+    let mut s = StepSequence::new(config, [0.; 3], 0., feet).unwrap();
+    let mut previous: Option<StepReference> = None;
+    let mut starts = vec![];
+    for i in 0..900 {
+        let command = if i < 420 { 0.00125 } else { -0.00125 };
+        let r = s
+            .sample(i as f64 * 0.02, [command, 0., 0.], true, true)
+            .unwrap();
+        if r.phase == StepPhase::Shift && r.progress == 0. {
+            starts.push((r.step, r.foot.unwrap(), r.latched_twist[0]));
+            if let Some(p) = &previous {
+                assert_eq!(r.feet_world_m, p.feet_world_m);
+                assert_eq!(r.body_world_m, p.body_world_m);
+            }
+        }
+        previous = Some(r);
+    }
+    assert_eq!(
+        starts.iter().take(9).map(|x| x.1).collect::<Vec<_>>(),
+        vec![0, 2, 1, 3, 0, 0, 2, 1, 3]
+    );
+    assert_eq!(starts[4].2, 0.00125);
+    assert_eq!(starts[5].2, -0.00125);
 }

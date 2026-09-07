@@ -69,7 +69,7 @@ try {
  const performance={simulated_s:result.frames.at(-1).time_s,transition_wall_s:wall,
   simulation_per_wall_second:result.frames.at(-1).time_s/wall,
   transition_p95_s:timed[Math.ceil(timed.length*.95)-1],
-  scope:'Headless browser worker round trips including serialization; excludes loading, replay and rendering. Short episode, not sustained walking or visible responsiveness acceptance.'};
+  scope:'Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance.'};
  const passed=!differences.length&&result.preserved&&result.recipePreserved&&result.replayExact&&result.resetExact&&result.progress>0&&result.ticks>0;
  const report={passed,preset:presetId,transitions:result.frames.length-1,maximum_native_wasm_difference:maximum,worst,differences:differences.slice(0,20),invalid_action_preserved:result.preserved,changed_task_replay_preserved:result.recipePreserved,replay_exact:result.replayExact,reset_exact:result.resetExact,main_thread_heartbeats:result.ticks,replay_progress_messages:result.progress,
  numeric_tolerance:{absolute:absoluteTolerance,relative:relativeTolerance,maximum_fraction:maximumToleranceFraction},

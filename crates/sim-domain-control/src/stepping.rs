@@ -28,6 +28,9 @@ pub struct StepSequenceConfig {
     pub stance_offsets_m: Vec<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub command_postures: Vec<CommandPosture>,
+    /// Replan a crawl cycle at the next transfer after a translational reversal.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub restart_order_on_translation_reversal: bool,
     pub maximum_speed_m_s: f64,
     pub maximum_yaw_rate_rad_s: f64,
 }
@@ -68,6 +71,8 @@ pub struct StepSequence {
     qualified: u64,
     phase: StepPhase,
     step: usize,
+    order_slot: usize,
+    last_translation: [f64; 2],
     center: [f64; 3], // world x,y,yaw
     center_z: f64,
     home: Vec<[f64; 3]>, // heading-local XYZ relative to initial center
@@ -77,6 +82,9 @@ pub struct StepSequence {
     swing_start: [f64; 3],
     swing_end: [f64; 3],
     command: [f64; 3],
+}
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 fn rotate(yaw: f64, v: [f64; 2]) -> [f64; 2] {
     let (s, c) = yaw.sin_cos();
@@ -203,6 +211,8 @@ impl StepSequence {
             qualified: 0,
             phase: StepPhase::Hold,
             step: 0,
+            order_slot: 0,
+            last_translation: [0.; 2],
             center: [body[0], body[1], yaw],
             center_z: body[2],
             home,
@@ -218,7 +228,7 @@ impl StepSequence {
         &self.config
     }
     pub fn next_foot(&self) -> usize {
-        self.config.order[self.step % self.config.order.len()]
+        self.config.order[self.order_slot]
     }
     fn posture(&self, speed: f64, foot: usize) -> ([f64; 3], [f64; 2]) {
         let knots = &self.config.command_postures;
@@ -246,9 +256,18 @@ impl StepSequence {
         )
     }
     fn start(&mut self, command: [f64; 3]) {
+        if self.config.restart_order_on_translation_reversal
+            && self.last_translation[0] * command[0] + self.last_translation[1] * command[1]
+                < -1e-24
+        {
+            self.order_slot = 0;
+        }
+        if command[0].hypot(command[1]) > 1e-12 {
+            self.last_translation = [command[0], command[1]];
+        }
         self.command = command;
         let foot = self.next_foot();
-        let slot = self.step % self.config.order.len();
+        let slot = self.order_slot;
         let seconds = self.config.phase_durations_s.iter().sum::<f64>();
         self.next_center = advance_planar(self.center, command, seconds);
         let landing = advance_planar(
@@ -364,6 +383,7 @@ impl StepSequence {
                 }
                 Settle => {
                     self.step += 1;
+                    self.order_slot = (self.order_slot + 1) % self.config.order.len();
                     if enabled {
                         self.start(command)
                     } else {

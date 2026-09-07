@@ -16,14 +16,20 @@ Do not wait for detailed-model realtime or completed RL before delivering browse
 walking. `teacher-environment.md` provides the shared sampled task interface,
 versioned robot recipe and native/WASM replay path for this next stage.
 
-Latest controller work: `online-control-validation.md` adds shared sampled step
-references, bounded CAD IK, live WASD requests, and velocity-indexed stance
-experiments. A 24 s keyboard sequence completes in 23.99 s with WebGL rendering;
-p95 transition latency is 26.7 ms, above the 20 ms target. The matching native
-sequence passes all ten sampled swing/support checks. Forward-to-reverse switching
-still fails one support check, so general teleoperation is not yet accepted. The
-next controller task is feasible stance transitions; optional force preload did
-not solve that failure. The two-cycle fixed crawl remains available.
+Latest controller work: `reversal-validation.md` and `reversal-status.json` add
+reversal-aware foot ordering, a smaller reverse body shift to avoid a reference
+collision, and support-dependent standing feedback. Both reversal directions,
+three switch timings, and a turn/reverse/stop sequence pass the sampled gates.
+The 60 s sustained recipe passes 28 swings and stops with 0.965 mm body error.
+A 10 ms refinement changes foot/body positions by at most 0.479/0.221 mm in the
+24 s reversal case. The 60 s turn/reverse native/WASM trajectory agrees within
+1.78e-10, with exact replay/reset. The rendered sustained keyboard run reaches
+1.001× realtime during active motion, but p95 transition latency is 29 ms.
+Next measure the expensive active transitions, improve latency and gait speed,
+and expand command/terrain coverage before treating this as general teleoperation.
+The fixed crawl and earlier online prototype remain available. Planning,
+teacher/student learning, disturbance training and hardware calibration remain
+required work; this controller checkpoint does not complete the active goal.
 
 Earlier browser profile: `effective-servo.md` introduces a registered bounded
 position servo with explicit CAD-derived gains and torque/speed limits. The

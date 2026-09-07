@@ -7,7 +7,7 @@ on:
 jobs:
   runtime:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -140,6 +140,22 @@ jobs:
           node examples/full-robot/check_online_steps.mjs runs/interactive/online-forward-native.json runs/interactive/online-forward-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-online-steps runs/interactive/online-forward-native.json runs/interactive/online-forward-browser.json
           node web/tests/viewer.mjs runs/interactive/teacher-viewer runs/interactive/online-viewer-report.json
+      - name: Reversal gait, collision regression and batched lift checks
+        run: |
+          target/release/examples/run_environment examples/full-robot/browser-reversal/scene.json examples/full-robot/browser-reversal/short.config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/forward-reverse.actions.json > runs/interactive/reversal-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/reversal-native.json runs/interactive/reversal-acceptance
+          node examples/full-robot/check_lift_batch.mjs runs/interactive/reversal-native.json runs/interactive/reversal-acceptance
+          target/release/examples/run_environment examples/full-robot/browser-reversal/scene.json examples/full-robot/browser-reversal/short.config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/switch-4.4.actions.json > runs/interactive/reversal-early-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/reversal-early-native.json runs/interactive/reversal-early-acceptance
+          target/release/examples/run_environment examples/full-robot/browser-reversal/scene.json examples/full-robot/browser-reversal/short-refined.config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/forward-reverse.actions.json > runs/interactive/reversal-refined-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/reversal-refined-native.json runs/interactive/reversal-refined-acceptance
+          node examples/full-robot/compare_effective_servo.mjs runs/interactive/reversal-refined-native.json runs/interactive/reversal-native.json runs/interactive/reversal-refinement.json
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/reversal-refinement.json")); assert(Object.values(r.maximum_foot_difference_m).every(x=>x<=0.001)); assert(r.maximum_body_position_difference_m<=0.0005);'
+      - name: Reversal controller minute in native and WASM
+        run: |
+          target/release/examples/run_environment examples/full-robot/browser-reversal/scene.json examples/full-robot/browser-reversal/config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/turn-reverse.actions.json > runs/interactive/reversal-long-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/reversal-long-native.json runs/interactive/reversal-long-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-reversal-crawl runs/interactive/reversal-long-native.json runs/interactive/reversal-browser.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

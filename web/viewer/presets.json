@@ -279,6 +279,17 @@
       "description": "Live Rust controller generates upcoming foot placements from speed and turn commands. Press Play, then hold W/S to move and A/D to turn. The motors and ground contact produce the motion.",
       "readiness": "Experimental 24-second flat-floor sandbox · forward-stop checked · reverse/turn transitions can fail · ideal observations · realtime targets remain under validation.",
       "evidence": "Shared support phases qualify lift and landing from simulated foot loads. CAD inverse kinematics checks every requested motor pose and rejects internal collision. Releasing a key completes the current foot transfer before standing. Effective actuators retain their documented approximations."
+    },
+    {
+      "id": "robot-reversal-crawl",
+      "label": "Quadruped · Crawl and reverse",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-reversal/scene.json",
+      "config": "examples/full-robot/browser-reversal/config.json",
+      "task": "examples/full-robot/browser-reversal/task.json",
+      "description": "Press Play, then hold W/S to move and A/D to turn. Reversing restarts the foot order after the current transfer finishes. Rust simulates the motors, linkages and ground contact.",
+      "readiness": "Provisional flat-floor crawl · 60 seconds at realtime average; p95 update 29 ms exceeds 20 ms target · uncalibrated physics · about 70 mm traveled.",
+      "evidence": "Restarting the foot order avoids mixed forward/reverse stances. A smaller reverse body shift preserves gear clearance. Stronger stopping correction requires four loaded feet; moving feedback stays unchanged. Original physical checks remain in force."
     }
   ]
 }

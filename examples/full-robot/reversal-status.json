@@ -1,0 +1,330 @@
+{
+  "version": 1,
+  "status": "Provisional flat-floor crawl; p95 latency, general commands, terrain and learned control incomplete",
+  "recipe_manifest_sha256": "84ffa49532c0e66cc66689446c5da899deb0fe8d302d6419f51af1d2e1888ef0",
+  "cases": {
+    "forward-reverse": {
+      "passed": true,
+      "simulated_s": 24,
+      "swings": 9,
+      "all_swings_passed": true,
+      "minimum_qualifying_span_s": 0.2599999999999998,
+      "final_body_error_m": 0.0006820840019620647,
+      "maximum_body_tilt_rad": 0.003544495370857945,
+      "final_yaw_error_rad": 0.0010334505535528635,
+      "body_advance_world_m": [
+        0.0023817860266840455,
+        0.00016082725725286164,
+        -0.000652225908386015
+      ],
+      "sampled_internal_contacts": 0,
+      "final_phase": "idle",
+      "capture_sha256": "233cd23027223d274f1b9727a61472ef7b66d9bbfc0aa3ec74176bcbf6e19fb5",
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      }
+    },
+    "reverse-forward": {
+      "passed": true,
+      "simulated_s": 24,
+      "swings": 9,
+      "all_swings_passed": true,
+      "minimum_qualifying_span_s": 0.2599999999999998,
+      "final_body_error_m": 0.0006667607763146819,
+      "maximum_body_tilt_rad": 0.0035940182889049304,
+      "final_yaw_error_rad": 0.00010033517020560182,
+      "body_advance_world_m": [
+        -0.0026277073485970704,
+        -2.669319776196468e-05,
+        -0.000653871729882325
+      ],
+      "sampled_internal_contacts": 0,
+      "final_phase": "idle",
+      "capture_sha256": "6c6d5d2d92c0e50e1ccb9befa7c27a8e23ec0c5603e7d49885c03e17dec8a3c7",
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      }
+    },
+    "switch-2.4": {
+      "passed": true,
+      "simulated_s": 24,
+      "swings": 10,
+      "all_swings_passed": true,
+      "minimum_qualifying_span_s": 0.2400000000000002,
+      "final_body_error_m": 0.000657930224957733,
+      "maximum_body_tilt_rad": 0.0035912004790543896,
+      "final_yaw_error_rad": 0.0006264686744252224,
+      "body_advance_world_m": [
+        -0.015068488361273167,
+        5.2227613954011125e-05,
+        -0.0006522681976179126
+      ],
+      "sampled_internal_contacts": 0,
+      "final_phase": "idle",
+      "capture_sha256": "95e9e4b3de7e8f12f9f293cb8476116d296e0b64c9a31e8c6b242de1e49e3edd",
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      }
+    },
+    "switch-4.4": {
+      "passed": true,
+      "simulated_s": 24,
+      "swings": 10,
+      "all_swings_passed": true,
+      "minimum_qualifying_span_s": 0.2599999999999998,
+      "final_body_error_m": 0.000694409065175636,
+      "maximum_body_tilt_rad": 0.0035907453654122424,
+      "final_yaw_error_rad": 0.0011459570550927725,
+      "body_advance_world_m": [
+        -0.009999569876762144,
+        0.00014290860904900157,
+        -0.0006795446227083109
+      ],
+      "sampled_internal_contacts": 0,
+      "final_phase": "idle",
+      "capture_sha256": "d709946e0b16f3e96ae972ff1df39ee6def2ff6eb3cc0b4d92c005f004ca8e3f",
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      }
+    },
+    "switch-6.4": {
+      "passed": true,
+      "simulated_s": 24,
+      "swings": 10,
+      "all_swings_passed": true,
+      "minimum_qualifying_span_s": 0.2599999999999998,
+      "final_body_error_m": 0.0006793274817809667,
+      "maximum_body_tilt_rad": 0.0035919910738612935,
+      "final_yaw_error_rad": 0.0003163743796101664,
+      "body_advance_world_m": [
+        -0.005142871001058053,
+        4.568749585695422e-06,
+        -0.0006641180851977777
+      ],
+      "sampled_internal_contacts": 0,
+      "final_phase": "idle",
+      "capture_sha256": "e4881b3f4a32d41a2a2a60ea24005a80170d7ceeca18ee1e6916b58c0b5a03eb",
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      }
+    },
+    "turn-reverse": {
+      "passed": true,
+      "simulated_s": 60,
+      "swings": 10,
+      "all_swings_passed": true,
+      "minimum_qualifying_span_s": 0.2599999999999998,
+      "final_body_error_m": 0.0006884301865035429,
+      "maximum_body_tilt_rad": 0.00354255738685192,
+      "final_yaw_error_rad": 0.000642719527502682,
+      "body_advance_world_m": [
+        0.009836887523480456,
+        8.801219900187764e-05,
+        -0.0006600285966439391
+      ],
+      "sampled_internal_contacts": 0,
+      "final_phase": "idle",
+      "capture_sha256": "77f0fb46e7c4e562d5167b52426d233a5c99d2b6246c2dc885aa98798dca0bb4",
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      }
+    },
+    "sustained": {
+      "passed": true,
+      "simulated_s": 60,
+      "swings": 28,
+      "all_swings_passed": true,
+      "minimum_qualifying_span_s": 0.2599999999999998,
+      "final_body_error_m": 0.0009654415228928088,
+      "maximum_body_tilt_rad": 0.00354255738685192,
+      "final_yaw_error_rad": 0.00401633132176855,
+      "body_advance_world_m": [
+        0.06954762024322986,
+        0.0005480000513446679,
+        -0.000653548646633426
+      ],
+      "sampled_internal_contacts": 0,
+      "final_phase": "idle",
+      "capture_sha256": "7627d5e9bc53b2eac78589c7dab12cb5c7f80e7e396d16e59bb49d5053c18ceb",
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      }
+    },
+    "refined": {
+      "passed": true,
+      "simulated_s": 24,
+      "swings": 9,
+      "all_swings_passed": true,
+      "minimum_qualifying_span_s": 0.240000000000002,
+      "final_body_error_m": 0.0006867816034956269,
+      "maximum_body_tilt_rad": 0.0035597626113455173,
+      "final_yaw_error_rad": 0.0010832269296435187,
+      "body_advance_world_m": [
+        0.002361973518751975,
+        0.00016504847275090954,
+        -0.0006522090638874205
+      ],
+      "sampled_internal_contacts": 0,
+      "final_phase": "idle",
+      "capture_sha256": "23046dec1e86dcb9bbb3376a5221e1d93417c2af60bbb972a7e0763916c9f42f",
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      }
+    }
+  },
+  "refinement": {
+    "version": 1,
+    "reference": {
+      "path": "runs/full-robot/learning/reversal/final-refined.native.json",
+      "sha256": "23046dec1e86dcb9bbb3376a5221e1d93417c2af60bbb972a7e0763916c9f42f"
+    },
+    "candidate": {
+      "path": "runs/full-robot/learning/reversal/final-forward-reverse.native.json",
+      "sha256": "233cd23027223d274f1b9727a61472ef7b66d9bbfc0aa3ec74176bcbf6e19fb5"
+    },
+    "completed": true,
+    "simulated_s": 24,
+    "wall_s": 14.18254567,
+    "simulation_per_wall_second": 1.6922208860406935,
+    "transition_p95_s": 0.020444426,
+    "maximum_foot_difference_m": {
+      "-Y-foot-surface": 0.0004786827723711561,
+      "+X-foot-surface": 0.00017231062089414798,
+      "+Y-foot-surface": 0.00047002034158615495,
+      "-X-foot-surface": 0.00015019004689581446
+    },
+    "maximum_body_position_difference_m": 0.00022139912935251698,
+    "maximum_motor_angle_difference_rad": 0.00319681864124588,
+    "maximum_penetration_m": 9.860123249350039e-05,
+    "maximum_effective_torque_nm": 0.9625562945298721,
+    "scope": "Single native capture comparison over one short stepping reference. Endpoint samples at 50 Hz; does not bound between-sample peaks, validate impact impulses, establish sustained gait or hardware accuracy."
+  },
+  "native_wasm": {
+    "passed": true,
+    "preset": "robot-reversal-crawl",
+    "transitions": 3000,
+    "maximum_native_wasm_difference": 1.7764634208106145e-10,
+    "worst": "physics[1145].policy.observations.marker.+Y-foot-surface.floor_force_world.z",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 8709,
+    "replay_progress_messages": 3000,
+    "numeric_tolerance": {
+      "absolute": 1e-07,
+      "relative": 1e-08,
+      "maximum_fraction": 0.0008968226664127713
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "rendered_keyboard": {
+    "completed": true,
+    "preset": "robot-reversal-crawl",
+    "scenario": "sustained-forward",
+    "performance": {
+      "simulation_per_wall_second": 1.000062337219179,
+      "transition_p95_s": 0.02847000002861023,
+      "render_interval_p95_s": 0.01667000000000189,
+      "render_frames": 3590,
+      "transitions": 3000,
+      "wall_s": 59.996259999990464,
+      "simulated_s": 60,
+      "active_motion": {
+        "transitions": 2800,
+        "simulated_s": 56,
+        "wall_s": 55.9477549999952,
+        "simulation_per_wall_second": 1.0009338176304805,
+        "transition_p95_s": 0.028990000009536745
+      }
+    },
+    "meets_speed_target": true,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+    "keyboard_commands_recorded": true
+  },
+  "keyboard_recording_sha256": "6923d5ee1bafa6d4fe2669d8d2cec5522b5397cd50a2015467d99e6f55299ff9",
+  "keyboard_native_recipe_equality": "Exact JSON equality of runtime recording and task against final-sustained.native.json; includes scene, config, seed, events and completed steps.",
+  "viewer_ui": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-online-steps: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reversal-crawl: 50 Hz task score, held-action recording, visible replay and reset",
+      "WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "batch_equivalence": {
+    "passed": true,
+    "windows": 3,
+    "rejected_clearance_case": true,
+    "scope": "Batched and single-window CLI reports are identical for distinct and repeated swing links, including a deliberately impossible clearance requirement."
+  },
+  "local_tests": {
+    "stepping_tests": 7,
+    "workspace_all_targets_check": "passed"
+  },
+  "scope": "Provisional sampled flat-floor gates with privileged observations. No between-sample collision, hardware accuracy, general teleoperation, terrain, learned-policy or complete realtime acceptance claim.",
+  "ci_checkpoint": {
+    "commit": "bdf5ef1",
+    "cad_acceptance": "passed",
+    "generic_runtime": "failed Generic runtime tests and phenomena acceptance",
+    "browser_runtime": "failed Sampled Rhai motor policy native and WASM parity",
+    "scope": "Previous pushed checkpoint; new reversal gates verified locally and awaiting push/CI. Standalone robocad workflow queued."
+  },
+  "recipe_reproduction": "Generated recipe directory matches versioned browser-reversal byte-for-byte."
+}

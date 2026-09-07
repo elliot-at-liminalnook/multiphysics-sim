@@ -5,13 +5,20 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 import {cpus,platform,arch} from 'node:os';
 import {chromium} from 'playwright';
-const [directory,preset,reportPath]=process.argv.slice(2);assert(directory&&preset&&reportPath);
+const [directory,preset,reportPath,scenario='turn-reverse']=process.argv.slice(2);assert(directory&&preset&&reportPath);
 await mkdir(dirname(reportPath),{recursive:true});
 const catalog=JSON.parse(await readFile(resolve(directory,'catalog.json')));
 const entry=catalog.presets.find(p=>p.id===preset);assert(entry?.task);
 const data=JSON.parse(await readFile(resolve(directory,entry.path)));
 const duration=data.config.step_s*data.config.steps;
 const steering=Boolean(data.config.policy?.step_reference);
+const schedules={
+ 'turn-reverse':[[0,'w'],[8.4,'a'],[16.8,'s'],[20,null]],
+ 'forward-reverse':[[0,'w'],[8.4,'s'],[16.8,null]],
+ 'reverse-forward':[[0,'s'],[8.4,'w'],[16.8,null]],
+ 'sustained-forward':[[0,'w'],[duration-4,null]],
+};
+assert(schedules[scenario],'unknown keyboard scenario');const schedule=schedules[scenario];
 const server=spawn(process.execPath,['web/serve-viewer.mjs',directory,'0']);
 const url=await new Promise((resolve,reject)=>{server.stdout.on('data',c=>{const m=String(c).match(/http:\/\/127.0.0.1:\d+/);if(m)resolve(m[0]);});server.once('error',reject);server.once('exit',c=>reject(Error(`server exited ${c}`)));});
 let browser;
@@ -19,10 +26,11 @@ try{
  browser=await chromium.launch({headless:process.env.HEADED!=='1',...(process.env.CHROME_EXECUTABLE?{executablePath:process.env.CHROME_EXECUTABLE}:{})});
  const page=await browser.newPage({viewport:{width:1440,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(()=>{
-  window.liveProbe={steps:[]};const Original=window.Worker;
+  window.liveProbe={steps:[],samples:[]};const Original=window.Worker;
   window.Worker=class extends Original{
    constructor(...args){super(...args);this.starts=new Map();this.addEventListener('message',({data})=>{
-    if(data.progress)return;const start=this.starts.get(data.id);if(start!=null){window.liveProbe.steps.push((performance.now()-start)/1000);this.starts.delete(data.id);}
+    if(data.progress)return;const start=this.starts.get(data.id);if(start!=null){const p=window.liveProbe,now=performance.now(),wall=(now-start)/1000;
+      p.steps.push(wall);p.samples.push({wall_s:wall,interval_s:(now-(p.previousResponse??p.started))/1000,phase:data.result?.policy?.step_reference?.reference.phase});p.previousResponse=now;p.finalPhase=data.result?.policy?.step_reference?.reference.phase;this.starts.delete(data.id);}
    });}
    postMessage(data,...args){if(data.type==='step')this.starts.set(data.id,performance.now());return super.postMessage(data,...args);}
   };
@@ -30,40 +38,45 @@ try{
  await page.goto(`${url}/?preset=${encodeURIComponent(preset)}`);
  await page.locator('#overlay').waitFor({state:'hidden',timeout:30000});
  assert.equal(await page.locator('#preset').inputValue(),preset);
- await page.evaluate(({steering})=>{
+ await page.evaluate(({steering,schedule})=>{
   const p=window.liveProbe;p.started=performance.now();p.frames=[];p.previous=p.started;p.running=true;
   let stage=0;const key=(type,key)=>window.dispatchEvent(new KeyboardEvent(type,{key,bubbles:true,cancelable:true}));
-  if(steering)key('keydown','w');
+  if(steering)key('keydown',schedule[0][1]);
   const draw=now=>{if(!p.running)return;p.frames.push((now-p.previous)/1000);p.previous=now;requestAnimationFrame(draw);};requestAnimationFrame(draw);
   p.observer=new MutationObserver(()=>{
    const time=parseFloat(document.querySelector('#sim-time').textContent);
-   if(steering&&stage===0&&time>=8.4){key('keyup','w');key('keydown','a');stage=1;}
-   if(steering&&stage===1&&time>=16.8){key('keyup','a');key('keydown','s');stage=2;}
-   if(steering&&stage===2&&time>=20){key('keyup','s');stage=3;}
+   while(steering&&schedule[stage+1]&&time>=schedule[stage+1][0]){
+    if(schedule[stage][1])key('keyup',schedule[stage][1]);stage++;
+    if(schedule[stage][1])key('keydown',schedule[stage][1]);
+   }
    if(/complete|Episode time limit reached|error/i.test(document.querySelector('#execution-state').textContent)){
    p.ended=performance.now();p.running=false;p.observer.disconnect();
   }});p.observer.observe(document.querySelector('#execution-state'),{childList:true,subtree:true});
   document.querySelector('#play').click();
- },{steering});
+ },{steering,schedule});
  await page.waitForFunction(()=>window.liveProbe.ended!=null,null,{timeout:180000});
  const result=await page.evaluate(()=>{
   const p=window.liveProbe,canvas=document.querySelector('canvas'),gl=canvas.getContext('webgl2');const ext=gl?.getExtension('WEBGL_debug_renderer_info');
   return {wall_s:(p.ended-p.started)/1000,simulated_s:parseFloat(document.querySelector('#sim-time').textContent),status:document.querySelector('#execution-state').textContent,
-   worker_transitions_s:p.steps,render_intervals_s:p.frames,gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null};
+   worker_transitions_s:p.steps,transition_samples:p.samples,final_phase:p.finalPhase,render_intervals_s:p.frames,gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null};
  });
  const p95=a=>[...a].sort((a,b)=>a-b)[Math.ceil(a.length*.95)-1];
  const completed=Math.abs(result.simulated_s-duration)<1e-9&&!errors.length
   &&result.worker_transitions_s.length===Math.round(duration/data.task.period_s);
  const performance={simulation_per_wall_second:result.simulated_s/result.wall_s,transition_p95_s:p95(result.worker_transitions_s),render_interval_p95_s:p95(result.render_intervals_s),render_frames:result.render_intervals_s.length,
   transitions:result.worker_transitions_s.length,wall_s:result.wall_s,simulated_s:result.simulated_s};
- const report={completed,preset,performance,meets_speed_target:performance.simulation_per_wall_second>=1,meets_transition_target:performance.transition_p95_s<=.02,
+ const active=result.transition_samples.filter(s=>s.phase&&s.phase!=='hold'&&s.phase!=='idle');
+ if(active.length){const wall=active.reduce((n,s)=>n+s.interval_s,0);performance.active_motion={transitions:active.length,simulated_s:active.length*data.task.period_s,wall_s:wall,simulation_per_wall_second:active.length*data.task.period_s/wall,transition_p95_s:p95(active.map(s=>s.wall_s))};}
+ const report={completed,preset,scenario,performance,meets_speed_target:performance.simulation_per_wall_second>=1&&(!performance.active_motion||performance.active_motion.simulation_per_wall_second>=1),meets_transition_target:performance.transition_p95_s<=.02&&(!performance.active_motion||performance.active_motion.transition_p95_s<=.02),
   host:{cpu:cpus()[0]?.model,logical_cpus:cpus().length,platform:platform(),architecture:arch(),browser:await browser.version(),gpu:result.gpu,headless:process.env.HEADED!=='1'},errors,status:result.status,
-  scope:'One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise W, A, S and key release through the UI. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.'};
+  scope:'One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.'};
  if(steering&&completed){
-  assert.match(await page.locator('#motion-progress').textContent(),/Standing/);
+  assert.match(await page.locator('#motion-progress').textContent(),/Episode ended/);assert.equal(result.final_phase,'idle');
   const download=page.waitForEvent('download');await page.locator('#download').click();const file=await download;await file.saveAs(reportPath.replace(/\.json$/,'.recording.json'));
   const record=JSON.parse(await readFile(reportPath.replace(/\.json$/,'.recording.json'))),events=record.runtime.input_events;
-  assert(events.some(e=>e.values[3]>0)&&events.some(e=>e.values[3]<0)&&events.some(e=>e.values[5]>0));
+  assert(events.some(e=>e.values[3]>0));
+  if(scenario!=='sustained-forward')assert(events.some(e=>e.values[3]<0));
+  if(scenario==='turn-reverse')assert(events.some(e=>e.values[5]>0));
   assert.deepEqual(events.at(-1).values.slice(3),[0,0,0]);
   report.keyboard_commands_recorded=true;
  }

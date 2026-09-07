@@ -19,14 +19,22 @@ for(const f of capture.frames){const r=f.policy?.step_reference?.reference;if(!r
  if(r.phase==='return'||r.phase==='settle')p.returned=true;
  phases.set(r.step,p);
 }
-const lifts=[];
-for(const p of phases.values())if(p.returned){
+const windows=[...phases.values()].filter(p=>p.returned);
+const requirements=windows.map(p=>{
  assert(Number.isFinite(p.start)&&Number.isFinite(p.end));
- const req={start_s:p.start,end_s:p.end,maximum_sample_gap_s:.020001,qualifying_duration_s:.2,swing_link:markers[p.foot].link,minimum_clearance_m:.001,maximum_swing_force_n:.1,minimum_support_forces_n:Object.fromEntries(markers.filter((_,i)=>i!==p.foot).map(m=>[m.link,1]))};
- const name=`${output}/step-${p.step}`;writeFileSync(`${name}.requirements.json`,JSON.stringify(req));
- const text=execFileSync('target/release/examples/evaluate_lift',[scenePath,capturePath,`${name}.requirements.json`],{encoding:'utf8',maxBuffer:32*1024*1024});
- writeFileSync(`${name}.report.json`,text);lifts.push({step:p.step,foot:p.foot,...JSON.parse(text).report});
-}
+ return {start_s:p.start,end_s:p.end,maximum_sample_gap_s:.020001,qualifying_duration_s:.2,swing_link:markers[p.foot].link,minimum_clearance_m:.001,maximum_swing_force_n:.1,minimum_support_forces_n:Object.fromEntries(markers.filter((_,i)=>i!==p.foot).map(m=>[m.link,1]))};
+});
+assert(requirements.length>0,'no completed swings');
+writeFileSync(`${output}/lifts.requirements.json`,JSON.stringify(requirements));
+const text=execFileSync('target/release/examples/evaluate_lift',[scenePath,capturePath,`${output}/lifts.requirements.json`],{encoding:'utf8',maxBuffer:128*1024*1024});
+writeFileSync(`${output}/lifts.report.json`,text);
+const batch=JSON.parse(text);assert.equal(batch.reports.length,windows.length);
+const lifts=windows.map((p,i)=>{
+ const evaluated=batch.reports[i];assert.deepEqual(evaluated.requirements,requirements[i]);
+ const name=`${output}/step-${p.step}`;writeFileSync(`${name}.requirements.json`,JSON.stringify(requirements[i]));
+ writeFileSync(`${name}.report.json`,JSON.stringify({...evaluated,sample_series_file:'lifts.report.json',sample_series_key:requirements[i].swing_link}));
+ return {step:p.step,foot:p.foot,...evaluated.report};
+});
 const body=f=>f.poses.find(p=>p.name===config.policy.body_feedback.reference_link),final=capture.frames.at(-1),r=final.policy.step_reference.reference,b=body(final);
 const internal=capture.frames.reduce((n,f)=>n+f.contacts.filter(c=>c.other!=null).length,0);
 const tilt=Math.max(...capture.frames.map(f=>Math.acos(Math.max(-1,Math.min(1,body(f).rotation[2][2])))));

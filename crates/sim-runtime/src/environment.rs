@@ -46,6 +46,8 @@ pub enum ObservationSource {
     FloorForce { link: String, axis: Axis },
     /// The currently held, validated action input; units come from its declaration.
     ControllerInput { name: String },
+    /// Current held neural motor-angle correction, zero before the first sample.
+    NeuralCorrection { actuator: String },
     MotorCurrent { motor: String },
     MotorTorque { motor: String },
 }
@@ -133,12 +135,14 @@ enum EndpointSource {
     Scalar(String),
     Projection { vector: String, rotation: String, column: usize },
     Input(usize),
+    Neural(String),
     FloorForce { link: usize, axis: usize },
 }
 impl Binding {
-    fn read(&self, frame: &Value, inputs: &[f64]) -> Option<f64> {
+    fn read(&self, frame: &Value, session: &EmbeddedSession) -> Option<f64> {
         match &self.source {
-            EndpointSource::Input(index) => inputs.get(*index).copied(),
+            EndpointSource::Input(index) => session.input_values().get(*index).copied(),
+            EndpointSource::Neural(target) => session.neural_correction(target),
             EndpointSource::Scalar(pointer) => frame.pointer(pointer)?.as_f64(),
             EndpointSource::Projection { vector, rotation, column } => {
                 let vector = frame.pointer(vector)?;
@@ -245,6 +249,7 @@ impl EmbeddedEnvironment {
             let mut projection = None;
             let mut input_index = None;
             let mut floor_force = None;
+            let mut neural = None;
             let (pointer, kind) = match &o.source {
                 CoordinatePosition { coordinate: name } => (
                     format!(
@@ -295,6 +300,11 @@ impl EmbeddedEnvironment {
                     input_index = Some(i);
                     (format!("/policy_inputs/{i}"), session.inputs()[i].kind)
                 }
+                NeuralCorrection { actuator } => {
+                    session.neural_correction(actuator).ok_or_else(|| format!("unknown neural correction {actuator}"))?;
+                    neural = Some(actuator.clone());
+                    (String::new(), QuantityKind::Angle)
+                }
                 MotorCurrent { motor } | MotorTorque { motor } => {
                     let index = session
                         .scene()
@@ -310,7 +320,8 @@ impl EmbeddedEnvironment {
                     }
                 }
             };
-            let source = if let Some(index) = input_index { EndpointSource::Input(index) }
+            let source = if let Some(target) = neural { EndpointSource::Neural(target) }
+                else if let Some(index) = input_index { EndpointSource::Input(index) }
                 else if let Some((rotation, column)) = projection { EndpointSource::Projection { vector: pointer, rotation, column } }
                 else if let Some((link, axis)) = floor_force { EndpointSource::FloorForce { link, axis } }
                 else { EndpointSource::Scalar(pointer) };
@@ -390,7 +401,7 @@ impl EmbeddedEnvironment {
             .iter()
             .zip(&self.task.observations)
             .map(|(b, o)| {
-                b.read(frame, self.session.input_values())
+                b.read(frame, &self.session)
                     .filter(|v| v.is_finite())
                     .ok_or_else(|| format!("missing or nonfinite endpoint observation {}", o.name))
             })

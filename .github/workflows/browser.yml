@@ -37,6 +37,7 @@ jobs:
       - run: cargo test --locked -p sim-solve --test coloring
       - run: cargo test --locked -p sim-runtime --test posture
       - run: cargo test --locked -p sim-domain-control --test trajectory
+      - run: cargo test --locked -p sim-domain-control --test neural
       - run: cargo test --locked -p sim-domain-control --test motion_clock --test stepping --test support_preload
       - run: cargo test --locked -p sim-runtime --test step_reference
       - run: cargo test --locked -p sim-runtime --test planning
@@ -45,6 +46,7 @@ jobs:
       - run: cargo test --locked -p sim-runtime --test drive_backlash
       - run: cargo test --locked -p sim-runtime --test environment
       - run: cargo test --locked -p sim-runtime --test residual_policy
+      - run: cargo test --locked -p sim-runtime --test neural_policy
       - run: cargo test --locked -p sim-runtime --test body_feedback --test point_feedback
       - run: cargo test --locked -p sim-runtime --lib support::tests
       - run: cargo check --locked -p sim-runtime --example plan_marker_motion --example summarize_marker_clearance --example evaluate_lift
@@ -179,6 +181,16 @@ jobs:
           node examples/full-robot/check_online_steps.mjs runs/interactive/residual-zero-native.json runs/interactive/residual-zero-acceptance
           node examples/full-robot/check_online_steps.mjs runs/interactive/residual-probe-native.json runs/interactive/residual-probe-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-residual-policy runs/interactive/residual-probe-native.json runs/interactive/residual-browser.json examples/full-robot/browser-residual-policy/short.config.json
+      - name: Learned neural teacher artifact, held-out stepping and WASM replay
+        run: |
+          cargo check --locked -p sim-runtime --example train_residual_policy
+          target/release/examples/run_environment examples/full-robot/neural-teacher/scene.json examples/full-robot/neural-teacher/initial.config.json examples/full-robot/neural-teacher/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/neural-zero-native.json
+          target/release/examples/run_environment examples/full-robot/neural-teacher/scene.json examples/full-robot/neural-teacher/short.config.json examples/full-robot/neural-teacher/task.json examples/full-robot/neural-teacher/heldout.actions.json > runs/interactive/neural-heldout-native.json
+          node examples/full-robot/check_neural_teacher.mjs runs/interactive/residual-zero-native.json runs/interactive/neural-zero-native.json runs/interactive/neural-heldout-native.json runs/interactive/neural-artifact-report.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/neural-heldout-native.json runs/interactive/neural-heldout-acceptance
+          target/release/examples/run_environment examples/full-robot/neural-teacher/scene.json examples/full-robot/neural-teacher/config.json examples/full-robot/neural-teacher/task.json examples/full-robot/browser-residual-policy/sustained.actions.json > runs/interactive/neural-sustained-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/neural-sustained-native.json runs/interactive/neural-sustained-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-neural-teacher runs/interactive/neural-sustained-native.json runs/interactive/neural-browser.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

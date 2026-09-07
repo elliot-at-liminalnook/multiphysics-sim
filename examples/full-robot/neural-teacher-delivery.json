@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "kind": "experimental_wasm_neural_teacher_bundle",
+  "path": "/Users/elliot/robot-neural-teacher-2026-09-07.zip",
+  "bytes": 17008840,
+  "sha256": "ee982b734732d570ab178f65e5e4c4b146c7773d06c0716628535aba2e33ba6f",
+  "build_manifest_sha256": "6be86c56419a2d7529425fef133ee6f0464a30da3b70f06d7bc98fac27cd6e2c",
+  "local_url": "http://127.0.0.1:4182/?preset=robot-neural-teacher",
+  "scope": "First small learned Rust residual network, shared with WASM. Nominal minute passes 28 swings and native/WASM replay; active browser p95 22.6 ms still misses 20 ms. Refined final body error 1.013 mm misses the 1 mm gate. Tiny reward gains, ideal teacher observations and no robustness or hardware-transfer claim."
+}

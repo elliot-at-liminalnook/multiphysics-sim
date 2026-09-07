@@ -9,6 +9,14 @@ faster solver kernel does not complete this goal.
 
 ## Current evidence and sequence
 
+The [first neural teacher](neural-teacher.md) now closes the initial training →
+artifact → native/WASM inference loop through shared Rust components. Nine
+evaluations give a tiny reward improvement on training and held-out commands.
+The nominal minute passes 28 swings using 80 solver iterations, but the refined
+minute misses final body-position acceptance (1.013 mm versus 1 mm). Preserve
+the baseline and these failures. Meaningful multi-scenario learning, deployable
+student observations/distillation and bounded disturbance training remain open.
+
 The [teacher motor-action interface](residual-policy.md) now exposes twelve
 bounded corrections with 90 typed, ideal teacher observations. Zero corrections
 preserve all 3,001 baseline physical frames over a minute; a twelve-motor probe

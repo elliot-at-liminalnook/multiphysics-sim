@@ -29,6 +29,9 @@ pub struct PolicyConfig {
     /// Online geometric references; executed through ordinary Rhai motor targets.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub step_reference: Option<crate::step_reference::StepReferenceConfig>,
+    /// Bounded neural angle corrections applied after baseline Rhai feedback.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub neural_residual: Option<sim_domain_control::neural::Network>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -57,6 +60,8 @@ pub(crate) struct SampledPolicy {
     stride: usize,
     pub targets: Vec<f64>,
     telemetry: serde_json::Value,
+    neural: Option<sim_domain_control::neural::BoundNetwork>,
+    corrections: Vec<f64>,
 }
 impl SampledPolicy {
     pub fn new(
@@ -197,6 +202,7 @@ impl SampledPolicy {
             sensors,
             actuators,
         };
+        let neural = config.neural_residual.clone().map(|n| n.bind(&contract.sensors, &contract.actuators)).transpose()?;
         let mut policy = RhaiController::with_seed(
             program.sources.clone(),
             parameter_map(&program.parameters).map_err(|e| e.to_string())?,
@@ -239,6 +245,8 @@ impl SampledPolicy {
             stride: n.round() as usize,
             targets: initial.to_vec(),
             telemetry: json!(null),
+            neural,
+            corrections: vec![0.0; initial.len()],
         })
     }
     pub fn inputs(&self) -> &[InputChannel] {
@@ -246,6 +254,10 @@ impl SampledPolicy {
     }
     pub fn values(&self) -> &[f64] {
         &self.values
+    }
+    pub fn correction(&self, target: &str) -> Option<f64> {
+        self.neural.as_ref()?;
+        self.contract.actuators.iter().position(|c| c.name == target).map(|i| self.corrections[i])
     }
     pub fn validate_inputs(&self, values: &[f64]) -> Result<(), String> {
         if values.len() != self.inputs.len()
@@ -342,6 +354,12 @@ impl SampledPolicy {
         sim_solve::profile::POLICY_SCRIPT
             .time(|| self.policy.sample(time, &sensors, &mut targets))
             .map_err(|e| e.to_string())?;
+        let corrections = self.neural.as_ref().map(|n| n.sample(&sensors)).transpose()?;
+        if let Some(corrections) = &corrections {
+            for (target, correction) in targets.iter_mut().zip(corrections) {
+                if *correction != 0.0 { *target += correction; }
+            }
+        }
         if let Some((index, (value, bounds))) = targets
             .iter()
             .zip(&self.limits)
@@ -354,6 +372,10 @@ impl SampledPolicy {
             ));
         }
         self.telemetry = json!({"time_s":time,"observations":self.contract.sensors.iter().zip(&sensors).map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>(),"targets":self.contract.actuators.iter().zip(&targets).map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>(),"observation_source":"ideal_joint_state_diagnostics"});
+        if let Some(corrections) = corrections {
+            self.telemetry["neural_residual"] = json!(self.contract.actuators.iter().zip(&corrections).map(|(c,v)| (c.name.clone(),*v)).collect::<BTreeMap<_,_>>());
+            self.corrections = corrections;
+        }
         if let Some(p) = online {
             self.telemetry["step_reference"] = json!({"reference":p.reference,"coordinates":p.coordinates,"maximum_marker_error_m":p.maximum_marker_error_m,"static_support":p.support,"feedback_feet_world_m":p.feedback_feet_world_m,"preload_extension_m":p.preload_extension_m,"measured_support_force_n":p.measured_support_force_n});
         }
@@ -377,6 +399,9 @@ impl SampledPolicy {
                 .collect::<Vec<_>>()
         };
         let mut metadata = json!({"period_s":self.contract.period,"observation_source":"ideal_joint_state_diagnostics","deployable":false,"observations":channels(&self.contract.sensors),"actuators":channels(&self.contract.actuators),"software_target_bounds_rad":self.limits,"timing":"Sample committed state before the next physics interval; targets are held until subsequent firmware sampling. Rendering does not set either clock."});
+        if let Some(neural) = &self.neural {
+            metadata["neural_residual"] = json!({"definition":neural.definition(),"scope":"Bounded corrections after Rhai feedback, before software/CAD command validation. Pure Rust inference from current sampled observations; no physics bypass."});
+        }
         if let Some(r) = &self.step_reference {
             metadata["step_reference"] = json!({"config":r.config(),"scope":"Online support sequence and bounded CAD inverse kinematics. Commands latch at foot-transfer boundaries; geometric references never mutate physical state. Ideal floor loads qualify lift/landing transitions."});
         }

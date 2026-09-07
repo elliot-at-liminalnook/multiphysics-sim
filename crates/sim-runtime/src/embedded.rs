@@ -620,6 +620,9 @@ impl EmbeddedSession {
     pub fn input_values(&self) -> &[f64] {
         self.policy.as_ref().map(|p| p.values()).unwrap_or(&[])
     }
+    pub fn neural_correction(&self, target: &str) -> Option<f64> {
+        self.policy.as_ref()?.correction(target)
+    }
     pub fn policy_metadata(&self) -> serde_json::Value {
         self.policy
             .as_ref()

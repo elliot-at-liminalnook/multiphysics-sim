@@ -344,10 +344,17 @@ def test_flex_overlay_scrubs_scales_and_keeps_physical_plot_values(window, tmp_p
         review.close()
 
 
-def test_automatic_reruns_coalesce_replace_queued_runs_and_stop_when_disabled(window, monkeypatch):
+def test_automatic_reruns_coalesce_replace_queued_runs_and_stop_when_disabled(window, monkeypatch, tmp_path):
     from PySide6.QtTest import QTest
     app, w, _, _ = window
     panel = w.experiments_panel; manager = w.experiments
+    # This tests queued-run scheduling, with execution deliberately stubbed.
+    # Capturing a run still requires an immutable executable artifact. Supply
+    # that artifact explicitly instead of depending on a local Rust build that
+    # the CAD-only CI job does not install.
+    runner = tmp_path/'queued-only-runner'
+    runner.write_bytes(b'UI scheduling fixture; execution is stubbed.\n')
+    monkeypatch.setattr(manager, 'binary', str(runner))
     monkeypatch.setattr(manager, '_run', lambda run_id: None)
     original = {job['id'] for job in manager.list()}
     panel.auto.setChecked(True)

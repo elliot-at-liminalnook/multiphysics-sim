@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "scope": "Single native diagnostic captures, including endpoint observation/render-frame preparation. No replicated timing claim, browser timing, complete task acceptance, or hardware calibration. All mechanism geometry, contact, firmware and controller remain detailed.",
+  "inputs": {
+    "examples/full-robot/teacher-baseline/scene.json": "09e3e8c6c79fea5e141ed9629fb7b17b55042c141aa81b5e55c2f506f1c3c90a",
+    "examples/full-robot/teacher-baseline/config.json": "723bf2ba848dc1d8ad9211037f74602dfcab68eb6b3436f29be5d15346b8b622",
+    "examples/full-robot/teacher-environment.json": "826b8b9203c27293a253bc3de344daec114de7f62842852cbfb13f3edd585f30",
+    "examples/full-robot/foot-markers.json": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c",
+    "target/release/examples/run_environment": "9112ebca7a3554ed5953620cdaaf89ec1792c57c33f91bc319a0157db8d4b451"
+  },
+  "cases": [
+    {
+      "mode": "detailed",
+      "completed": true,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 14.734869852,
+      "simulation_per_wall_second": 0.1900254313830909,
+      "maximum_foot_difference_m": {
+        "-Y-foot-surface": 0,
+        "+X-foot-surface": 0,
+        "+Y-foot-surface": 0,
+        "-X-foot-surface": 0
+      },
+      "maximum_motor_angle_difference_rad": 0,
+      "maximum_motor_current_difference_a": 0,
+      "capture": "runs/full-robot/learning/browser-fidelity-screen/detailed.native.json",
+      "sha256": "c75de5e913256d9b306a8e0773b4d11d233e749a313060b8de9bc3078092adba"
+    },
+    {
+      "mode": "quasistatic_winding",
+      "completed": true,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 16.079458523,
+      "simulation_per_wall_second": 0.17413521705316695,
+      "maximum_foot_difference_m": {
+        "-Y-foot-surface": 0.000020875952132421448,
+        "+X-foot-surface": 0.000002245804054730854,
+        "+Y-foot-surface": 0.000004650600104363745,
+        "-X-foot-surface": 0.0000010527418210054075
+      },
+      "maximum_motor_angle_difference_rad": 0.0003156279448880417,
+      "maximum_motor_current_difference_a": 0.049398434207354125,
+      "capture": "runs/full-robot/learning/browser-fidelity-screen/quasistatic_winding.native.json",
+      "sha256": "32f2c1309f019b36fd6f6e119d6646e3696e04a3bbd78566233cdd79d53b2f87"
+    },
+    {
+      "mode": "quasistatic_rotor",
+      "completed": true,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 16.445583275,
+      "simulation_per_wall_second": 0.1702584793241394,
+      "maximum_foot_difference_m": {
+        "-Y-foot-surface": 9.197645191787795e-10,
+        "+X-foot-surface": 4.035777171561664e-10,
+        "+Y-foot-surface": 3.3000543021933975e-10,
+        "-X-foot-surface": 1.1551801363306237e-10
+      },
+      "maximum_motor_angle_difference_rad": 2.4631031547706073e-8,
+      "maximum_motor_current_difference_a": 0.000007040208265474135,
+      "capture": "runs/full-robot/learning/browser-fidelity-screen/quasistatic_rotor.native.json",
+      "sha256": "69640589789a6067738b48670aaaddb31648dab68abbf07007a6c01dc5fa4ddd"
+    },
+    {
+      "mode": "quasistatic",
+      "completed": true,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 17.910222044,
+      "simulation_per_wall_second": 0.15633530355577094,
+      "maximum_foot_difference_m": {
+        "-Y-foot-surface": 0.000020874925843327985,
+        "+X-foot-surface": 0.000002245965727092315,
+        "+Y-foot-surface": 0.0000046504985696490195,
+        "-X-foot-surface": 0.0000010528475229102543
+      },
+      "maximum_motor_angle_difference_rad": 0.00031564986491411373,
+      "maximum_motor_current_difference_a": 0.04939842836595859,
+      "capture": "runs/full-robot/learning/browser-fidelity-screen/quasistatic.native.json",
+      "sha256": "49703cbcc938c124f819457160e50772c975999d196d8f48bdc3f159c7b65438"
+    }
+  ],
+  "decision": "Removing the fast winding/rotor storage terms alone does not establish realtime. Investigate a broader explicit browser reduction of actuator integration, internal linkage dynamics and contact geometry while retaining this detailed comparison path."
+}

@@ -10,6 +10,7 @@ pub mod math;
 pub mod model;
 pub mod motor;
 pub mod effective_servo;
+pub mod world_load;
 pub mod sdf;
 
 pub use articulated::{Articulated, Generalized, Options, ARTICULATED};

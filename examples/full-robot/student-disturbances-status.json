@@ -1,0 +1,781 @@
+{
+  "version": 1,
+  "stage": "bounded physical disturbance development evaluation",
+  "training_performed": false,
+  "sources": [
+    {
+      "path": "crates/sim-domain-robot/src/world_load.rs",
+      "sha256": "2be360142bdef81572197bd82756d4aa2b2c88e54454b88355a33e54a884af5d"
+    },
+    {
+      "path": "crates/sim-runtime/src/embedded.rs",
+      "sha256": "0ec68aa2dec12d8466e0507c969c865f6dfbbe51d957f9edfd9b8cb840a7505b"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/world_load.rs",
+      "sha256": "1da24bb53186ff1811a744c0d3587bb5109da55d53b871146ceade29373b2a6b"
+    },
+    {
+      "path": "crates/sim-runtime/tests/world_load.rs",
+      "sha256": "9c08bb1823756beba929522ff19bf6c7784f3bed06bf96f9dcd560e760c0d8f2"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedded_step.rs",
+      "sha256": "54f6eb9e4ecce0f11635e034f1da56a216feccf2815a3b32e3eadd2eebdc7b60"
+    },
+    {
+      "path": "web/viewer/viewer.js",
+      "sha256": "9af75e7d4ca17d08630e757055be9f56ffbb8a4718782c73e39d53aad6b0c5dd"
+    },
+    {
+      "path": "web/tests/viewer.mjs",
+      "sha256": "0cef67b9bb1c24dfb83a63c8e29f61f7cc1585ce587e825f46dda44ca2672bdd"
+    },
+    {
+      "path": "examples/full-robot/summarize_student_disturbances.mjs",
+      "sha256": "92e09edba9e0c350396a82631d542a47ebe17abe56ce3910fc74fa111294a6aa"
+    }
+  ],
+  "baseline": {
+    "path": "runs/full-robot/learning/student-distillation/multi-train.native.json",
+    "sha256": "37eb00ea47f052ede0e9079313b64379ab26c85ca900b8eb436294461fe56385"
+  },
+  "manifest": {
+    "version": 1,
+    "kind": "development disturbance evaluation",
+    "training_performed": false,
+    "robot": {
+      "path": "examples/full-robot/student-distillation/scene.json",
+      "sha256": "1fd3c6103413010dbe5dee8a09084544af9a305f4eac5acb3c3965caa71a0c7b"
+    },
+    "policy": {
+      "path": "examples/full-robot/student-distillation/policy.json",
+      "sha256": "0b73031cb35acec612535f872f921ab3ead4c3f6efe5d5866d7b57f72973db7d"
+    },
+    "actions": {
+      "path": "examples/full-robot/neural-teacher/train.actions.json",
+      "sha256": "bf57e5ce3a89ef61ca89d0edc13a79ea1c5669bd1a3db8a64f84e3d35780130e"
+    },
+    "total_declared_mass_kg": 3.976239082561776,
+    "scope": "Predeclared finite challenge set for the current fixed student. No weight fitting or checkpoint selection. These observed development cases must not be reused as an independent final robustness test after training against them. Forces are hypothetical engineering probes; no empirical disturbance calibration.",
+    "cases": [
+      {
+        "name": "lateral",
+        "force": [
+          0,
+          0.1,
+          0
+        ],
+        "time": 7,
+        "duration_s": 0.2,
+        "impulse_world_ns": [
+          0,
+          0.020000000000000004,
+          0
+        ],
+        "config": {
+          "path": "examples/full-robot/student-disturbances/lateral.config.json",
+          "sha256": "0b67d777f6dd786bd52be4be4f609d4d3a9510188482291bfbd22ef227811a5c"
+        }
+      },
+      {
+        "name": "reverse-lateral",
+        "force": [
+          0,
+          -0.1,
+          0
+        ],
+        "time": 7,
+        "duration_s": 0.2,
+        "impulse_world_ns": [
+          0,
+          -0.020000000000000004,
+          0
+        ],
+        "config": {
+          "path": "examples/full-robot/student-disturbances/reverse-lateral.config.json",
+          "sha256": "5ee8c583b61dfee88188a4cd624748be61667ac59c83c1876e3e7e11fe3f6d60"
+        }
+      },
+      {
+        "name": "stronger-lateral",
+        "force": [
+          0,
+          0.5,
+          0
+        ],
+        "time": 7,
+        "duration_s": 0.2,
+        "impulse_world_ns": [
+          0,
+          0.1,
+          0
+        ],
+        "config": {
+          "path": "examples/full-robot/student-disturbances/stronger-lateral.config.json",
+          "sha256": "1a5291acdc002e4060881a6a00807a6f4ffa17c3ce507d0e97d70e8793a54555"
+        }
+      },
+      {
+        "name": "forward",
+        "force": [
+          0.5,
+          0,
+          0
+        ],
+        "time": 13,
+        "duration_s": 0.2,
+        "impulse_world_ns": [
+          0.1,
+          0,
+          0
+        ],
+        "config": {
+          "path": "examples/full-robot/student-disturbances/forward.config.json",
+          "sha256": "8e906790056b80c1eda30e8d22e97e177c08c8226af6c783b276ae7a43cd00cf"
+        }
+      }
+    ]
+  },
+  "cases": {
+    "lateral": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/lateral.config.json",
+        "sha256": "0b67d777f6dd786bd52be4be4f609d4d3a9510188482291bfbd22ef227811a5c"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/lateral.native.json",
+        "sha256": "9ac3002f49447cd28acd51db5b95a72cabdcfb26d14c624446d651e946da84a7"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/lateral-acceptance/summary.json",
+        "sha256": "579ae5c8cc3926009c6a96d405669e1c7d72c240bedd307d269539bb0e0d90c2"
+      },
+      "completed": true,
+      "accepted": true,
+      "swings": 9,
+      "qualified_swings": 9,
+      "failed_swings": [],
+      "final_body_error_m": 0.0006687248037341688,
+      "maximum_body_tilt_rad": 0.0036468867247888364,
+      "final_yaw_error_rad": 0.0015219605875160403,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0,
+        0.020000000000000004,
+        0
+      ],
+      "prefix_exact": true,
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.000028100676917388244,
+        "body_time_s": 7.1000000000000005,
+        "maximum_link_com_displacement_m": 0.00003518605302694658,
+        "link_time_s": 7.1000000000000005,
+        "link": "+Y | Foot servo crank 3689",
+        "maximum_coordinate_difference": 0.0006795983796465954,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.77513782472551
+    },
+    "reverse-lateral": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/reverse-lateral.config.json",
+        "sha256": "5ee8c583b61dfee88188a4cd624748be61667ac59c83c1876e3e7e11fe3f6d60"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/reverse-lateral.native.json",
+        "sha256": "fee408a1357f60f3764e85ead4436890843c8a903ba66309c37a0207894f4c90"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/reverse-lateral-acceptance/summary.json",
+        "sha256": "3b4f3a6b2fedaf3ebe9aee3476707c3cf7c7d9d797f85decb2ed76d7895a902e"
+      },
+      "completed": true,
+      "accepted": true,
+      "swings": 9,
+      "qualified_swings": 9,
+      "failed_swings": [],
+      "final_body_error_m": 0.0006693937466779253,
+      "maximum_body_tilt_rad": 0.0036468867247888364,
+      "final_yaw_error_rad": 0.0015243090251022445,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0,
+        -0.020000000000000004,
+        0
+      ],
+      "prefix_exact": true,
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.00007743364846066127,
+        "body_time_s": 7.82,
+        "maximum_link_com_displacement_m": 0.00009948795360681606,
+        "link_time_s": 7.84,
+        "link": "+Y | Foot servo crank 3689",
+        "maximum_coordinate_difference": 0.003697696109490889,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.774978785664715
+    },
+    "stronger-lateral": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/stronger-lateral.config.json",
+        "sha256": "1a5291acdc002e4060881a6a00807a6f4ffa17c3ce507d0e97d70e8793a54555"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/stronger-lateral.native.json",
+        "sha256": "b6f82de30855d8a696cf655d4298aa0694b5ac8dc00d2a4df6e0beff327c700f"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/stronger-lateral-acceptance/summary.json",
+        "sha256": "c66533890f5e27cf7ec13ba0bf2840e9d0d14450a430f14fb6859703516c89e4"
+      },
+      "completed": true,
+      "accepted": true,
+      "swings": 9,
+      "qualified_swings": 9,
+      "failed_swings": [],
+      "final_body_error_m": 0.0006703391811741458,
+      "maximum_body_tilt_rad": 0.0036468867247888364,
+      "final_yaw_error_rad": 0.0015230670490655016,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0,
+        0.09999999999999999,
+        0
+      ],
+      "prefix_exact": true,
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.00011055410206463933,
+        "body_time_s": 7.08,
+        "maximum_link_com_displacement_m": 0.00014329447404421043,
+        "link_time_s": 7.08,
+        "link": "+Y | Foot servo crank 3689",
+        "maximum_coordinate_difference": 0.0027700745914445157,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.77502703063938
+    },
+    "forward": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/forward.config.json",
+        "sha256": "8e906790056b80c1eda30e8d22e97e177c08c8226af6c783b276ae7a43cd00cf"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/forward.native.json",
+        "sha256": "4d0fdce2a6cd2a037e88d40ba059fdae542ca6388b57060367fd3c3cca8aeeb5"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/forward-acceptance/summary.json",
+        "sha256": "493c9e12d333762b3a7a6fcb120cf1d1d38b747a2270abecee8479359e695e2e"
+      },
+      "completed": true,
+      "accepted": true,
+      "swings": 9,
+      "qualified_swings": 9,
+      "failed_swings": [],
+      "final_body_error_m": 0.0006674438243535917,
+      "maximum_body_tilt_rad": 0.0036468867247888364,
+      "final_yaw_error_rad": 0.0015283334378981715,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0.09999999999999999,
+        0,
+        0
+      ],
+      "prefix_exact": true,
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.00004912203965271239,
+        "body_time_s": 13.200000000000001,
+        "maximum_link_com_displacement_m": 0.00005858511502466649,
+        "link_time_s": 13.200000000000001,
+        "link": "-X | Foot servo crank 9a9b",
+        "maximum_coordinate_difference": 0.0007773276324850587,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.775190067370374
+    },
+    "stress-5": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/stress-5.config.json",
+        "sha256": "adf2c4fc93040a54ee06f447dea026115d507bc5178613898cf91a117c4cf2c6"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/stress-5.native.json",
+        "sha256": "afa9819800f8e87854602ea7413bcf87cd054d35c706eaa2ac227c1e7f414130"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/stress-5-acceptance/summary.json",
+        "sha256": "1396a3b046c4b76f76fa05f315e1c53092a0d3f12dec89836c1dcb54efce839b"
+      },
+      "completed": true,
+      "accepted": false,
+      "swings": 9,
+      "qualified_swings": 8,
+      "failed_swings": [
+        {
+          "step": 3,
+          "foot": 3,
+          "failed_clearance_samples": 22,
+          "failed_support_samples": 8,
+          "failed_unloading_samples": 17,
+          "longest_qualifying_span_s": 0.17999999999999972,
+          "minimum_swing_force_n": 0,
+          "passed": false,
+          "peak_clearance_m": 0.003297834851199999,
+          "qualifying_start_s": 7.04,
+          "samples": 40,
+          "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+        }
+      ],
+      "final_body_error_m": 0.0006975493121877678,
+      "maximum_body_tilt_rad": 0.0036468867247888364,
+      "final_yaw_error_rad": 0.001494655502881526,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0,
+        0.9999999999999999,
+        0
+      ],
+      "prefix_exact": true,
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.0006768324902203034,
+        "body_time_s": 7.2,
+        "maximum_link_com_displacement_m": 0.000864087229824049,
+        "link_time_s": 7.2,
+        "link": "+Y | Foot servo crank 3689",
+        "maximum_coordinate_difference": 0.015716633239797106,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.775519404652076
+    },
+    "stress-15": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/stress-15.config.json",
+        "sha256": "3ecd4ac73992523c14fe0ccffb5410d06c2c7e6d9e8a4ace6ecba7831296e84c"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/stress-15.native.json",
+        "sha256": "5ed6b60a757c646716e1c594c2ea1be7bf7c37402442cfb0fe0f7f22541c77ad"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/stress-15-acceptance/summary.json",
+        "sha256": "34ac267b49d0ebc2e19e0b3b210a36d4730ae0e462b1ab7b8bd1c992ee2750f9"
+      },
+      "completed": true,
+      "accepted": false,
+      "swings": 9,
+      "qualified_swings": 8,
+      "failed_swings": [
+        {
+          "step": 3,
+          "foot": 3,
+          "failed_clearance_samples": 22,
+          "failed_support_samples": 10,
+          "failed_unloading_samples": 17,
+          "longest_qualifying_span_s": 0.15999999999999925,
+          "minimum_swing_force_n": 0,
+          "passed": false,
+          "peak_clearance_m": 0.0032252339173490796,
+          "qualifying_start_s": 7.0600000000000005,
+          "samples": 40,
+          "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+        }
+      ],
+      "final_body_error_m": 0.04091531025267378,
+      "maximum_body_tilt_rad": 0.003735088801859856,
+      "final_yaw_error_rad": 0.008967455805645756,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0,
+        2.9999999999999996,
+        0
+      ],
+      "prefix_exact": true,
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.0410509944478389,
+        "body_time_s": 7.3,
+        "maximum_link_com_displacement_m": 0.044401133244792994,
+        "link_time_s": 7.3,
+        "link": "-X | Rigid curved connecting link",
+        "maximum_coordinate_difference": 0.022905776535193656,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.77786037268964
+    },
+    "refined": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/refined.config.json",
+        "sha256": "4c9dac4b976f3cd1b1f8845ed25af1ef4a5ed28adbe18d2399c8884cf85d1285"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/refined.native.json",
+        "sha256": "366e347675f7370ab59d14dfa19a518a9fce60afab7929160bcf0e17077d9b2d"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/refined-acceptance/summary.json",
+        "sha256": "7b8f4045e3cace6194a8588378d04fd534c6c5121b652bb85d2137a2b83845c2"
+      },
+      "completed": true,
+      "accepted": false,
+      "swings": 9,
+      "qualified_swings": 8,
+      "failed_swings": [
+        {
+          "step": 8,
+          "foot": 3,
+          "failed_clearance_samples": 22,
+          "failed_support_samples": 8,
+          "failed_unloading_samples": 18,
+          "longest_qualifying_span_s": 0.18000000000000327,
+          "minimum_swing_force_n": 0,
+          "passed": false,
+          "peak_clearance_m": 0.0030674687353896557,
+          "qualifying_start_s": 17.06,
+          "samples": 40,
+          "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+        }
+      ],
+      "final_body_error_m": 0.0006735344900056418,
+      "maximum_body_tilt_rad": 0.0037165270283487976,
+      "final_yaw_error_rad": 0.0016446310752550935,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0,
+        0.09999999999999999,
+        0
+      ],
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.0005408946132740005,
+        "body_time_s": 7.48,
+        "maximum_link_com_displacement_m": 0.000695585408041523,
+        "link_time_s": 7.46,
+        "link": "-X | Foot servo crank 9a9b",
+        "maximum_coordinate_difference": 0.023420719793451616,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.782281800530082
+    },
+    "unforced-refined": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/unforced-refined.config.json",
+        "sha256": "a6bd9eb58a6f5d07b9e4eed494e882b3417f4c98b2b9041eaa1939190224d490"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/unforced-refined.native.json",
+        "sha256": "7700e64f16341fb45be33cf74488e44c526812d00dc93449d5c805e18930bf71"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/unforced-refined-acceptance/summary.json",
+        "sha256": "84e4ac2ac6b58c4512bab60e6e88a0498edb8199329de35d0049a050864339a1"
+      },
+      "completed": true,
+      "accepted": false,
+      "swings": 9,
+      "qualified_swings": 8,
+      "failed_swings": [
+        {
+          "step": 8,
+          "foot": 3,
+          "failed_clearance_samples": 22,
+          "failed_support_samples": 8,
+          "failed_unloading_samples": 18,
+          "longest_qualifying_span_s": 0.18000000000000327,
+          "minimum_swing_force_n": 0,
+          "passed": false,
+          "peak_clearance_m": 0.003067468735873713,
+          "qualifying_start_s": 17.06,
+          "samples": 40,
+          "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+        }
+      ],
+      "final_body_error_m": 0.0006729428596932599,
+      "maximum_body_tilt_rad": 0.0037165270283487976,
+      "final_yaw_error_rad": 0.0016391226792445686,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0,
+        0,
+        0
+      ],
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.0004954506563981581,
+        "body_time_s": 7.5,
+        "maximum_link_com_displacement_m": 0.0006465550270406594,
+        "link_time_s": 0.92,
+        "link": "-Y | Foot servo crank",
+        "maximum_coordinate_difference": 0.020807519066630142,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.78227150345362
+    },
+    "refined-5ms": {
+      "config": {
+        "path": "examples/full-robot/student-disturbances/refined-5ms.config.json",
+        "sha256": "2cdb823ce0e13e3d84ed4f14eb9df8eb6e5ea2ca734df732e734f8aac015f016"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/student-disturbances/refined-5ms.native.json",
+        "sha256": "76191123494b44cac6988f65688af624d975e88a95b168a7aa026d61974f1d0d"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/student-disturbances/refined-5ms-acceptance/summary.json",
+        "sha256": "873760534286408a83d1be1e50b50a12ac4e0895e7ba1a3674339650a0d13ed0"
+      },
+      "completed": true,
+      "accepted": false,
+      "swings": 9,
+      "qualified_swings": 8,
+      "failed_swings": [
+        {
+          "step": 0,
+          "foot": 0,
+          "failed_clearance_samples": 21,
+          "failed_support_samples": 6,
+          "failed_unloading_samples": 17,
+          "longest_qualifying_span_s": 0.17999999999999994,
+          "minimum_swing_force_n": 0,
+          "passed": false,
+          "peak_clearance_m": 0.003287934961946848,
+          "qualifying_start_s": 1.02,
+          "samples": 40,
+          "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+        }
+      ],
+      "final_body_error_m": 0.000676667520719458,
+      "maximum_body_tilt_rad": 0.0038007409236557343,
+      "final_yaw_error_rad": 0.001727168665349508,
+      "sampled_internal_contacts": 0,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "impulse_world_ns": [
+        0,
+        0.09999999999999999,
+        0
+      ],
+      "nominal_comparison": {
+        "maximum_body_displacement_m": 0.0005279290116717119,
+        "body_time_s": 7.44,
+        "maximum_link_com_displacement_m": 0.0009660246788414312,
+        "link_time_s": 0.92,
+        "link": "-Y | Foot servo crank",
+        "maximum_coordinate_difference": 0.023870826124750222,
+        "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+      },
+      "total_reward": 23.779121236976632
+    }
+  },
+  "refinements": {
+    "coarse_to_10ms": {
+      "maximum_body_displacement_m": 0.000547375228381565,
+      "body_time_s": 7.48,
+      "maximum_link_com_displacement_m": 0.0006973143259076653,
+      "link_time_s": 7.46,
+      "link": "-X | Foot servo crank 9a9b",
+      "maximum_coordinate_difference": 0.023452879572544605,
+      "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+    },
+    "10ms_to_5ms": {
+      "maximum_body_displacement_m": 0.0003942426444559055,
+      "body_time_s": 14.72,
+      "maximum_link_com_displacement_m": 0.0004413549187495287,
+      "link_time_s": 14.72,
+      "link": "-X | Foot servo crank 9a9b",
+      "maximum_coordinate_difference": 0.014578725527137237,
+      "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+    },
+    "push_effect_at_10ms": {
+      "maximum_body_displacement_m": 0.00014546117653490342,
+      "body_time_s": 7.46,
+      "maximum_link_com_displacement_m": 0.00020102181245016813,
+      "link_time_s": 7.46,
+      "link": "-X | Rigid curved connecting link",
+      "maximum_coordinate_difference": 0.006724226205154116,
+      "scope": "Matched 50 Hz samples. Link COM and generalized-coordinate differences; not contact-point error, between-sample agreement or hardware accuracy."
+    }
+  },
+  "reward_audit": {
+    "failed_stress_15_reward": 23.77786037268964,
+    "accepted_lateral_reward": 23.77513782472551,
+    "failed_run_scores_higher": true,
+    "explanation": "Current reward emphasizes survival, motor tracking/effort and upright posture; it omits executed step qualification and body position relative to the walking reference. Do not use this score alone to promote a robust walking policy."
+  },
+  "native_wasm": {
+    "passed": true,
+    "preset": "robot-student-push",
+    "transitions": 1200,
+    "maximum_native_wasm_difference": 1.5544010523171892e-10,
+    "worst": "transition[980].observations.74",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 3518,
+    "replay_progress_messages": 1200,
+    "numeric_tolerance": {
+      "absolute": 1e-7,
+      "relative": 1e-8,
+      "maximum_fraction": 0.0007890244901135922
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+    "performance": {
+      "simulated_s": 24,
+      "transition_wall_s": 10.998450000584116,
+      "simulation_per_wall_second": 2.182125663045737,
+      "transition_p95_s": 0.017790000021457673,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance."
+    },
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "viewer": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-online-steps: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reversal-crawl: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-terrain-contact: 50 Hz task score, held-action recording, visible replay and reset",
+      "teacher motor corrections: bounded sliders, readable precision, recorded action replay and clear",
+      "robot-residual-policy: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-neural-teacher: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-neural-teacher: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-distilled-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-distilled-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-student-push: live bounded output readouts, policy artifact recording and exact visible replay",
+      "scheduled physical push: visible onset, force units/direction, release and recorded schedule",
+      "robot-student-push: 50 Hz task score, held-action recording, visible replay and reset",
+      "WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "rendered": {
+    "completed": true,
+    "preset": "robot-student-push",
+    "scenario": "forward-reverse",
+    "performance": {
+      "simulation_per_wall_second": 1.000255690360451,
+      "transition_p95_s": 0.021950000047683715,
+      "render_interval_p95_s": 0.01667000000000189,
+      "render_frames": 1439,
+      "transitions": 1200,
+      "wall_s": 23.993865000009535,
+      "simulated_s": 24,
+      "active_motion": {
+        "transitions": 900,
+        "simulated_s": 18,
+        "wall_s": 17.943595000028633,
+        "simulation_per_wall_second": 1.0031434614953847,
+        "transition_p95_s": 0.022754999995231628
+      }
+    },
+    "meets_speed_target": true,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+    "keyboard_commands_recorded": true
+  },
+  "browser_bundle": {
+    "path": "runs/interactive/student-disturbances/viewer/build-manifest.json",
+    "sha256": "fed0d3d1b191336cb9708572a1e8c501d7fef03857beb91ef0b30d2287b8e7ae"
+  },
+  "tests": [
+    {
+      "path": "runs/full-robot/learning/student-disturbances/schedule-tests.log",
+      "sha256": "1e7bbc9143276e5e74bd9c8fd719b0952745ecbbb3b2bb002c3f90a2090ac21a"
+    },
+    {
+      "path": "runs/full-robot/learning/student-disturbances/library-tests.log",
+      "sha256": "af99b1c4e566006b46d5f28bc8bf11a0eab5ddfa91a6b45e9452d66a714871e7"
+    },
+    {
+      "path": "runs/full-robot/learning/student-disturbances/runtime-tests.log",
+      "sha256": "7fbf0359e6fe2ea35ac60e51fcaf3e3117ca381bb1816d03020387b1c65f22cf"
+    },
+    {
+      "path": "runs/full-robot/learning/student-disturbances/workspace-check.log",
+      "sha256": "67269dd3af2b995f6b0a9bdb17977fbb0c91f91a60fa221d9fe1bf86dc31c389"
+    },
+    {
+      "path": "runs/full-robot/learning/student-disturbances/wasm-build.log",
+      "sha256": "055fe4f13269c19776e2744d900bff753c6e3d28374bbcd3298ed8ca437125ee"
+    }
+  ],
+  "scope": "Live force scheduling, physical impulse checks and native/WASM replay are verified. Observed development challenges, not independent final robustness validation. Strong pushes and timestep refinement expose task failures; no controller promotion, weakened gate or hardware-transfer claim."
+}

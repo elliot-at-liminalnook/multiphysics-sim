@@ -65,6 +65,9 @@ pub struct Config {
     pub report_every: usize,
     /// Base world force/moment then all joint force/torque coordinates.
     pub applied_generalized_loads: Vec<f64>,
+    /// Explicit environment disturbance, additional to fixed loads and actuators.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub world_loads: Option<sim_domain_robot::world_load::WorldLoadSchedule>,
 }
 #[derive(Clone, Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
@@ -138,6 +141,7 @@ pub struct EmbeddedRecording {
 /// driver and servo components. No robot-specific topology lives here.
 /// The constructor's scene and experiment are immutable for the session.
 pub struct EmbeddedSession {
+    world_loads: Option<sim_domain_robot::world_load::BoundWorldLoads>,
     effective_servos: Vec<sim_domain_robot::effective_servo::EffectiveServo>,
     policy: Option<SampledPolicy>,
     input_events: Vec<InputEvent>,
@@ -532,7 +536,12 @@ impl EmbeddedSession {
             sim_solve::profile::enable();
             sim_solve::profile::reset();
         }
+        let world_loads = config.world_loads.as_ref().map(|loads| loads.bind(
+            &art.bases.iter().filter(|b| !b.grounded).map(|b| art.links[b.link].name.clone()).collect::<Vec<_>>(),
+            config.step_s, config.steps,
+        )).transpose()?;
         let mut runner = Self {
+            world_loads,
             effective_servos,
             policy,
             input_events: vec![],
@@ -756,6 +765,7 @@ impl EmbeddedSession {
 
     fn advance_one(&mut self) -> Result<(), String> {
         let Self {
+            world_loads,
             effective_servos,
             policy,
             session,
@@ -807,6 +817,8 @@ impl EmbeddedSession {
         };
 
         let i = *completed_steps;
+        let mut applied_loads = config.applied_generalized_loads.clone();
+        if let Some(loads) = world_loads { loads.add_to(i, &mut applied_loads)?; }
         trials.borrow_mut().clear();
         let start = Instant::now();
         let time = i as f64 * config.step_s;
@@ -899,7 +911,7 @@ impl EmbeddedSession {
                     config.motors.as_ref().unwrap().events.as_ref().unwrap(),
                     &mut control,
                     workspace,
-                    |_, _| Ok(config.applied_generalized_loads.clone()),
+                    |_, _| Ok(applied_loads.clone()),
                 )
                 .map(|result| {
                     *servo_states = result.control_state;
@@ -927,7 +939,7 @@ impl EmbeddedSession {
                     config.implicit.as_ref().unwrap(),
                     events,
                     |t, _, x| boundaries_at(t, x),
-                    |_, _| Ok(config.applied_generalized_loads.clone()),
+                    |_, _| Ok(applied_loads.clone()),
                 )
                 .map(|step| {
                     if let Some(all) = contact_steps.as_mut() {
@@ -975,7 +987,7 @@ impl EmbeddedSession {
                     for (a, b) in result
                         .generalized_loads
                         .iter_mut()
-                        .zip(&config.applied_generalized_loads)
+                        .zip(&applied_loads)
                     {
                         *a += b;
                     }
@@ -1000,7 +1012,7 @@ impl EmbeddedSession {
             })
         } else {
             map.step_midpoint(&g, i as f64 * config.step_s, config.step_s, |_, _| {
-                Ok(config.applied_generalized_loads.clone())
+                Ok(applied_loads.clone())
             })
             .map(|step| step.endpoint)
         };
@@ -1132,6 +1144,14 @@ impl EmbeddedSession {
                 "rotation":(0..3).map(|i|(0..3).map(|j|k.r[(i,j)]).collect::<Vec<_>>()).collect::<Vec<_>>()})).collect::<Vec<_>>()});
         if driver_bank.is_none() {
             frame.as_object_mut().unwrap().remove("driver_readings");
+        }
+        if let Some(loads) = &self.world_loads {
+            let w = loads.wrench(self.completed_steps);
+            frame["environment_load"] = json!({
+                "base_link":config.world_loads.as_ref().unwrap().base_link,
+                "force_world_n":&w[..3], "moment_world_nm":&w[3..],
+                "sampling":"held over next nominal step; moment about base COM"
+            });
         }
         if servo_commands.is_some() || !effective_servos.is_empty() {
             if let Some(commands)=servo_commands {frame["servo_commands"] = json!(commands);}

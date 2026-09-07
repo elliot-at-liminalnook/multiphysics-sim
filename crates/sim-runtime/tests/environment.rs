@@ -40,6 +40,12 @@ fn teacher_motion_and_action_observations_use_current_frames_and_declared_units(
         ("torque", ObservationSource::MotorTorque { motor: "servo".into() }),
     ] { task.observations.push(Observation { name: name.into(), source }); }
     let mut env = EmbeddedEnvironment::new(s.clone(), c.clone(), task.clone(), 0).unwrap();
+    let metadata=env.metadata();
+    let coordinates=metadata["frame_coordinates"].as_array().unwrap();
+    assert_eq!(coordinates.len(),env.frame().unwrap()["joint_positions"].as_array().unwrap().len());
+    let joint=coordinates.iter().find(|c|c["name"]=="joint.pivot").unwrap();
+    assert_eq!(joint["position_unit"],"rad");assert_eq!(joint["velocity_unit"],"rad/s");
+    assert_eq!(env.frame().unwrap()["joint_positions"][joint["index"].as_u64().unwrap() as usize],env.transition().observations[0]);
     assert_eq!(env.transition().observations[7], 0.2);
     for (i, unit) in [(4,"m/s"),(5,"rad/s"),(6,"1"),(7,"rad"),(8,"N·m")] {
         assert_eq!(env.contract()["observations"][i]["unit"], unit);

@@ -1,0 +1,1433 @@
+{
+  "version": 1,
+  "preset": "robot-browser-solver",
+  "status": "Experimental browser improvement; straight-minute p95 still exceeds target",
+  "numerical_screen": {
+    "version": 1,
+    "passed": true,
+    "metrics": {
+      "maximum_foot_difference_m": 1.332592658037222e-9,
+      "maximum_body_difference_m": 2.803441452692087e-9,
+      "maximum_joint_difference_rad": 1.3155822309318665e-7,
+      "maximum_slider_difference_m": 3.0758920549489588e-9,
+      "maximum_heading_difference_rad": 4.426995757825236e-9,
+      "maximum_per_foot_impulse_difference_ns": 0.00003293340971567504
+    },
+    "limits": {
+      "maximum_foot_difference_m": 0.0001,
+      "maximum_body_difference_m": 0.00005,
+      "maximum_joint_difference_rad": 0.0001,
+      "maximum_heading_difference_rad": 0.0001,
+      "maximum_per_foot_impulse_difference_ns": 0.01,
+      "maximum_slider_difference_m": 0.0001
+    },
+    "contact_pair_mismatches": 0,
+    "phase_mismatches": 0,
+    "per_foot_signed_impulse_difference_ns": {
+      "-Y | Sliding foot crosshead": [
+        0.000002708789472735281,
+        0.000001102563692749396,
+        0.0000021985999705102244
+      ],
+      "+X | Sliding foot crosshead": [
+        -4.205714364716681e-7,
+        7.581916362222617e-7,
+        -0.0000010671535704553084
+      ],
+      "+Y | Sliding foot crosshead": [
+        1.2017831019356857e-7,
+        0.000001233861454221496,
+        -0.000004880312626438638
+      ],
+      "-X | Sliding foot crosshead": [
+        -0.0000012030956909786928,
+        -0.0000019403844679611225,
+        -0.0000014304763195171804
+      ]
+    },
+    "per_foot_integrated_force_discrepancy_ns": {
+      "-Y | Sliding foot crosshead": 0.000025288623615846187,
+      "+X | Sliding foot crosshead": 0.00002113795920534064,
+      "+Y | Sliding foot crosshead": 0.00003293340971567504,
+      "-X | Sliding foot crosshead": 0.000018692876150167662
+    },
+    "sources": [
+      {
+        "path": "runs/full-robot/learning/heading-performance/baseline.native.json",
+        "sha256": "b289721e09333abf886669169bf3775df0d19879c4b9fa00dd8bfedcbf8f98c1"
+      },
+      {
+        "path": "runs/full-robot/learning/heading-performance/guarded.native.json",
+        "sha256": "78b150a9874b6c4237465e84d17d70d36920a320438ba3b91501f5929af6220a"
+      },
+      {
+        "path": "examples/full-robot/browser-precision/guarded.comparison.json",
+        "sha256": "49f678c2eb3f90d041de76c39df9700d317ff724a685f6861de03482e368e0e8"
+      },
+      {
+        "path": "runs/full-robot/learning/heading-performance/short.native.json",
+        "sha256": "3865d2d8935e6947e1ccdf98a620024724a33b6560f66b7d6c8c4b0bebf37885"
+      }
+    ],
+    "scope": "Whole 50 Hz sampled trajectory differences against the retained 1e-8 solve, with runtime-declared rotational and translational units. Integrated force discrepancy is trapezoidal integration of force-difference magnitude, so cancellation cannot hide disagreement. Not resolved impact accuracy, hardware calibration or independent walking acceptance."
+  },
+  "minute_walking": {
+    "version": 1,
+    "passed": true,
+    "capture": {
+      "path": "runs/full-robot/learning/heading-performance/guarded.native.json",
+      "sha256": "78b150a9874b6c4237465e84d17d70d36920a320438ba3b91501f5929af6220a"
+    },
+    "simulated_s": 60,
+    "lifts": [
+      {
+        "step": 0,
+        "foot": 0,
+        "failed_clearance_samples": 28,
+        "failed_support_samples": 1,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.41999999999999993,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0030781995942936735,
+        "qualifying_start_s": 1.02,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 1,
+        "foot": 2,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 2,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.3999999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003173948804060689,
+        "qualifying_start_s": 3.24,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 2,
+        "foot": 1,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 1,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4399999999999995,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031028896308465947,
+        "qualifying_start_s": 5.4,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 3,
+        "foot": 3,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.3800000000000008,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003267550363859728,
+        "qualifying_start_s": 7.66,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 4,
+        "foot": 0,
+        "failed_clearance_samples": 28,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.41999999999999993,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003086449723245843,
+        "qualifying_start_s": 9.82,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 5,
+        "foot": 2,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 2,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.3999999999999986,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003165707005284457,
+        "qualifying_start_s": 12.040000000000001,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 6,
+        "foot": 1,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 1,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4399999999999995,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031029258672260474,
+        "qualifying_start_s": 14.200000000000001,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 7,
+        "foot": 3,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.379999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032675907515288816,
+        "qualifying_start_s": 16.46,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 8,
+        "foot": 0,
+        "failed_clearance_samples": 28,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.41999999999999815,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003086447775365153,
+        "qualifying_start_s": 18.62,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 9,
+        "foot": 2,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 2,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.40000000000000213,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031657070077187877,
+        "qualifying_start_s": 20.84,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 10,
+        "foot": 1,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 1,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4400000000000013,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003102925867580708,
+        "qualifying_start_s": 23,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 11,
+        "foot": 3,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.379999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032675907523438408,
+        "qualifying_start_s": 25.26,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 12,
+        "foot": 0,
+        "failed_clearance_samples": 28,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.41999999999999815,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0030864477753280717,
+        "qualifying_start_s": 27.42,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 13,
+        "foot": 2,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 2,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.3999999999999986,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031657070077190097,
+        "qualifying_start_s": 29.64,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 14,
+        "foot": 1,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 1,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4400000000000013,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031029258675807636,
+        "qualifying_start_s": 31.8,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 15,
+        "foot": 3,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.37999999999999545,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032675907523435632,
+        "qualifying_start_s": 34.06,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 16,
+        "foot": 0,
+        "failed_clearance_samples": 28,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4200000000000017,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0030864477753269615,
+        "qualifying_start_s": 36.22,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 17,
+        "foot": 2,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 2,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4000000000000057,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031657070077191207,
+        "qualifying_start_s": 38.44,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 18,
+        "foot": 1,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 1,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4399999999999977,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031029258675804305,
+        "qualifying_start_s": 40.6,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 19,
+        "foot": 3,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.38000000000000256,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032675907523435077,
+        "qualifying_start_s": 42.86,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 20,
+        "foot": 0,
+        "failed_clearance_samples": 28,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4199999999999946,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003086447775325629,
+        "qualifying_start_s": 45.02,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 21,
+        "foot": 2,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 2,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.3999999999999986,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031657070077195093,
+        "qualifying_start_s": 47.24,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 22,
+        "foot": 1,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 1,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.44000000000000483,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003102925867580264,
+        "qualifying_start_s": 49.4,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 23,
+        "foot": 3,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.37999999999999545,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032675907523431746,
+        "qualifying_start_s": 51.660000000000004,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 24,
+        "foot": 0,
+        "failed_clearance_samples": 28,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4200000000000017,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003086447775324075,
+        "qualifying_start_s": 53.82,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 25,
+        "foot": 2,
+        "failed_clearance_samples": 27,
+        "failed_support_samples": 1,
+        "failed_unloading_samples": 21,
+        "longest_qualifying_span_s": 0.4199999999999946,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.00316367629824299,
+        "qualifying_start_s": 56.02,
+        "samples": 50,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      }
+    ],
+    "final_phase": "idle",
+    "body_advance_world_m": [
+      0.07142729412431179,
+      0.00019127646891936332,
+      -0.0005171973243788541
+    ],
+    "final_yaw_rad": -0.0035361551047980292,
+    "final_target_yaw_rad": 0,
+    "final_yaw_error_rad": 0.0035361551047980292,
+    "final_body_error_m": 0.0005562067100157109,
+    "maximum_body_tilt_rad": 0.0036509616786250076,
+    "sampled_internal_contacts": 0,
+    "inter_link_geometry_audit": {
+      "frames": 3001,
+      "maximum_penetration_m": 0,
+      "penetrating_samples": 0,
+      "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+    },
+    "budgets": {
+      "minimum_transfers": 4,
+      "maximum_final_body_error_m": 0.001,
+      "maximum_body_tilt_rad": 0.01,
+      "maximum_final_yaw_error_rad": 0.005
+    },
+    "scope": "Initial flat-floor commissioning with ideal observations. Actual clearance/support samples, endpoint tracking and stop checked; not between-sample impact accuracy, terrain robustness, hardware calibration or sustained realtime acceptance."
+  },
+  "validation": [
+    {
+      "name": "short",
+      "passed": true,
+      "swings": 8,
+      "final_heading_rad": -0.0008721876073783507,
+      "final_body_error_m": 0.0006194820578705191
+    },
+    {
+      "name": "refined-minute",
+      "passed": true,
+      "swings": 26,
+      "final_heading_rad": -0.0041088604734238225,
+      "final_body_error_m": 0.0005947008116213914
+    },
+    {
+      "name": "reserved-positive",
+      "passed": true,
+      "swings": 8,
+      "final_heading_rad": -0.0008711559479625956,
+      "final_body_error_m": 0.0006194641574455152
+    },
+    {
+      "name": "reserved-negative",
+      "passed": true,
+      "swings": 8,
+      "final_heading_rad": -0.000757260907471541,
+      "final_body_error_m": 0.0006853230053562324
+    },
+    {
+      "name": "turn-reverse",
+      "passed": true,
+      "swings": 9,
+      "final_heading_rad": -0.00040849140175435415,
+      "final_body_error_m": 0.0007809225310023492
+    }
+  ],
+  "parity": {
+    "passed": true,
+    "preset": "robot-browser-solver",
+    "transitions": 1200,
+    "maximum_native_wasm_difference": 9.99303750859326e-10,
+    "worst": "transition[368].observations.74",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 2791,
+    "replay_progress_messages": 1200,
+    "numeric_tolerance": {
+      "absolute": 1e-7,
+      "relative": 1e-8,
+      "maximum_fraction": 0.0069912560227723165
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control. Uses the explicitly recorded configuration override, not the packaged preset horizon.",
+    "performance": {
+      "simulated_s": 24,
+      "transition_wall_s": 8.565400000274183,
+      "simulation_per_wall_second": 2.8019707193162895,
+      "transition_p95_s": 0.01712999999523163,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance."
+    },
+    "config_override": {
+      "path": "examples/full-robot/browser-precision/guarded-short.config.json",
+      "sha256": "c218304e8abcd2aacaba153c0f70b628904a0c1e9bcd4eed94cf591575d84737"
+    },
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "unchanged paused scenes stop drawing; contact visibility, selection and camera fit redraw",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-online-steps: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reversal-crawl: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-terrain-contact: 50 Hz task score, held-action recording, visible replay and reset",
+      "teacher motor corrections: bounded sliders, readable precision, recorded action replay and clear",
+      "robot-residual-policy: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-neural-teacher: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-neural-teacher: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-distilled-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-distilled-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-student-push: live bounded output readouts, policy artifact recording and exact visible replay",
+      "scheduled physical push: visible onset, force units/direction, release and recorded schedule",
+      "robot-student-push: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-walking-objective: live bounded output readouts, policy artifact recording and exact visible replay",
+      "scheduled physical push: visible onset, force units/direction, release and recorded schedule",
+      "robot-walking-objective: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-improved-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-improved-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-paced-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-paced-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reused-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-reused-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-heading-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-heading-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-browser-solver: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-browser-solver: 50 Hz task score, held-action recording, visible replay and reset",
+      "WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "episodes": [
+    {
+      "name": "sustained",
+      "report": {
+        "completed": true,
+        "preset": "robot-browser-solver",
+        "scenario": "sustained-forward",
+        "performance": {
+          "simulation_per_wall_second": 1.0000525027559972,
+          "transition_p95_s": 0.02035999995470047,
+          "render_interval_p95_s": 0.01667000000000189,
+          "render_frames": 3600,
+          "actual_drawn_frames": 2578,
+          "transitions": 3000,
+          "wall_s": 59.99685000002384,
+          "simulated_s": 60,
+          "active_motion": {
+            "transitions": 2860,
+            "simulated_s": 57.2,
+            "wall_s": 57.19619999998799,
+            "simulation_per_wall_second": 1.0000664379803557,
+            "transition_p95_s": 0.02097500002384186
+          },
+          "breakdown": {
+            "all": {
+              "wall_s": {
+                "samples": 3000,
+                "mean": 0.009984781666219236,
+                "p95": 0.02035999995470047,
+                "maximum": 0.07465499997138977
+              },
+              "worker_s": {
+                "samples": 3000,
+                "mean": 0.008445444999754428,
+                "p95": 0.018920000016689302,
+                "maximum": 0.07434499996900558
+              },
+              "wasm_call_s": {
+                "samples": 3000,
+                "mean": 0.008287879999538278,
+                "p95": 0.01877499997615814,
+                "maximum": 0.07419999998807907
+              },
+              "json_parse_s": {
+                "samples": 3000,
+                "mean": 0.00015484500000874387,
+                "p95": 0.00019999998807907106,
+                "maximum": 0.00036000001430511473
+              },
+              "queue_s": {
+                "samples": 3000,
+                "mean": 0.000005918333371480205,
+                "p95": 0.000014999985694885253,
+                "maximum": 0.0000350000262260437
+              },
+              "view_update_s": {
+                "samples": 3000,
+                "mean": 0.00042716999987760994,
+                "p95": 0.0005400000214576721,
+                "maximum": 0.0016100000143051147
+              },
+              "transport_and_dispatch_s": {
+                "samples": 3000,
+                "mean": 0.0015334183330933122,
+                "p95": 0.007515000045299531,
+                "maximum": 0.011389999985694888
+              }
+            },
+            "by_phase": {
+              "hold": {
+                "wall_s": {
+                  "samples": 10,
+                  "mean": 0.01523149999976158,
+                  "p95": 0.05513999998569488,
+                  "maximum": 0.05513999998569488
+                },
+                "worker_s": {
+                  "samples": 10,
+                  "mean": 0.012699000000953675,
+                  "p95": 0.054679999947547915,
+                  "maximum": 0.054679999947547915
+                },
+                "wasm_call_s": {
+                  "samples": 10,
+                  "mean": 0.012544000005722044,
+                  "p95": 0.0544200000166893,
+                  "maximum": 0.0544200000166893
+                },
+                "json_parse_s": {
+                  "samples": 10,
+                  "mean": 0.00014649999737739562,
+                  "p95": 0.0002149999737739563,
+                  "maximum": 0.0002149999737739563
+                },
+                "queue_s": {
+                  "samples": 10,
+                  "mean": 0.000006000000238418578,
+                  "p95": 0.000014999985694885253,
+                  "maximum": 0.000014999985694885253
+                },
+                "view_update_s": {
+                  "samples": 10,
+                  "mean": 0.0008505000054836274,
+                  "p95": 0.0016100000143051147,
+                  "maximum": 0.0016100000143051147
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 10,
+                  "mean": 0.002526499998569488,
+                  "p95": 0.010459999978542328,
+                  "maximum": 0.010459999978542328
+                }
+              },
+              "shift": {
+                "wall_s": {
+                  "samples": 650,
+                  "mean": 0.008888246153959856,
+                  "p95": 0.016620000004768373,
+                  "maximum": 0.05136500000953674
+                },
+                "worker_s": {
+                  "samples": 650,
+                  "mean": 0.00726665384705251,
+                  "p95": 0.014194999992847443,
+                  "maximum": 0.05097500002384186
+                },
+                "wasm_call_s": {
+                  "samples": 650,
+                  "mean": 0.007107961539121772,
+                  "p95": 0.01405000001192093,
+                  "maximum": 0.05083499997854233
+                },
+                "json_parse_s": {
+                  "samples": 650,
+                  "mean": 0.00015584615423129184,
+                  "p95": 0.00019999998807907106,
+                  "maximum": 0.00031499999761581423
+                },
+                "queue_s": {
+                  "samples": 650,
+                  "mean": 0.000006269231209388109,
+                  "p95": 0.000014999985694885253,
+                  "maximum": 0.0000350000262260437
+                },
+                "view_update_s": {
+                  "samples": 650,
+                  "mean": 0.00044084615239730257,
+                  "p95": 0.0005500000119209289,
+                  "maximum": 0.00110999995470047
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 650,
+                  "mean": 0.0016153230756979797,
+                  "p95": 0.008060000002384186,
+                  "maximum": 0.01071000003814697
+                }
+              },
+              "raise": {
+                "wall_s": {
+                  "samples": 650,
+                  "mean": 0.01120486153868529,
+                  "p95": 0.022560000002384187,
+                  "maximum": 0.043060000002384184
+                },
+                "worker_s": {
+                  "samples": 650,
+                  "mean": 0.009669384615512993,
+                  "p95": 0.021939999997615815,
+                  "maximum": 0.0427950000166893
+                },
+                "wasm_call_s": {
+                  "samples": 650,
+                  "mean": 0.009512592308246167,
+                  "p95": 0.021785000026226044,
+                  "maximum": 0.0426599999666214
+                },
+                "json_parse_s": {
+                  "samples": 650,
+                  "mean": 0.0001539384603500368,
+                  "p95": 0.0001899999976158142,
+                  "maximum": 0.00035500001907348634
+                },
+                "queue_s": {
+                  "samples": 650,
+                  "mean": 0.00000587692334101747,
+                  "p95": 0.000010000050067901611,
+                  "maximum": 0.0000350000262260437
+                },
+                "view_update_s": {
+                  "samples": 650,
+                  "mean": 0.0004069692311837126,
+                  "p95": 0.0005049999952316285,
+                  "maximum": 0.0008449999690055847
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 650,
+                  "mean": 0.0015295999998312785,
+                  "p95": 0.00726500004529953,
+                  "maximum": 0.008929999947547913
+                }
+              },
+              "lower": {
+                "wall_s": {
+                  "samples": 650,
+                  "mean": 0.012598169229397414,
+                  "p95": 0.030819999992847444,
+                  "maximum": 0.07465499997138977
+                },
+                "worker_s": {
+                  "samples": 650,
+                  "mean": 0.010887584616129212,
+                  "p95": 0.030514999985694884,
+                  "maximum": 0.07434499996900558
+                },
+                "wasm_call_s": {
+                  "samples": 650,
+                  "mean": 0.010732015384252254,
+                  "p95": 0.030384999990463256,
+                  "maximum": 0.07419999998807907
+                },
+                "json_parse_s": {
+                  "samples": 650,
+                  "mean": 0.0001531615396646354,
+                  "p95": 0.0002099999785423279,
+                  "maximum": 0.0003199999928474426
+                },
+                "queue_s": {
+                  "samples": 650,
+                  "mean": 0.000005607691361353922,
+                  "p95": 0.000014999985694885253,
+                  "maximum": 0.000034999966621398926
+                },
+                "view_update_s": {
+                  "samples": 650,
+                  "mean": 0.00039604615358205945,
+                  "p95": 0.0005199999809265137,
+                  "maximum": 0.0008299999833106995
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 650,
+                  "mean": 0.0017049769219068416,
+                  "p95": 0.007154999971389771,
+                  "maximum": 0.011389999985694888
+                }
+              },
+              "return": {
+                "wall_s": {
+                  "samples": 650,
+                  "mean": 0.009230438460111623,
+                  "p95": 0.01761500000953674,
+                  "maximum": 0.043189999997615816
+                },
+                "worker_s": {
+                  "samples": 650,
+                  "mean": 0.0075992076909542,
+                  "p95": 0.01344999998807907,
+                  "maximum": 0.042810000002384184
+                },
+                "wasm_call_s": {
+                  "samples": 650,
+                  "mean": 0.007442346152158879,
+                  "p95": 0.013300000011920929,
+                  "maximum": 0.042685000002384184
+                },
+                "json_parse_s": {
+                  "samples": 650,
+                  "mean": 0.00015420000012104335,
+                  "p95": 0.00019499999284744261,
+                  "maximum": 0.00036000001430511473
+                },
+                "queue_s": {
+                  "samples": 650,
+                  "mean": 0.000005861538923703671,
+                  "p95": 0.000010000050067901611,
+                  "maximum": 0.0000350000262260437
+                },
+                "view_update_s": {
+                  "samples": 650,
+                  "mean": 0.0004287923076519601,
+                  "p95": 0.0005350000262260437,
+                  "maximum": 0.000875
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 650,
+                  "mean": 0.0016253692302337151,
+                  "p95": 0.007360000014305116,
+                  "maximum": 0.010414999961853027
+                }
+              },
+              "settle": {
+                "wall_s": {
+                  "samples": 260,
+                  "mean": 0.007968269231227728,
+                  "p95": 0.015179999947547913,
+                  "maximum": 0.022264999985694884
+                },
+                "worker_s": {
+                  "samples": 260,
+                  "mean": 0.006993769227082919,
+                  "p95": 0.01373499995470047,
+                  "maximum": 0.018219999969005585
+                },
+                "wasm_call_s": {
+                  "samples": 260,
+                  "mean": 0.00683467307434632,
+                  "p95": 0.013579999983310699,
+                  "maximum": 0.0180799999833107
+                },
+                "json_parse_s": {
+                  "samples": 260,
+                  "mean": 0.00015648076763519886,
+                  "p95": 0.0001899999976158142,
+                  "maximum": 0.0002649999856948853
+                },
+                "queue_s": {
+                  "samples": 260,
+                  "mean": 0.00000586538475293379,
+                  "p95": 0.000010000050067901611,
+                  "maximum": 0.000015000045299530029
+                },
+                "view_update_s": {
+                  "samples": 260,
+                  "mean": 0.00047186538554154863,
+                  "p95": 0.0005649999976158142,
+                  "maximum": 0.0009600000381469727
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 260,
+                  "mean": 0.0009686346193918812,
+                  "p95": 0.006724999964237213,
+                  "maximum": 0.010660000026226043
+                }
+              },
+              "idle": {
+                "wall_s": {
+                  "samples": 130,
+                  "mean": 0.0037012692318512835,
+                  "p95": 0.012409999966621399,
+                  "maximum": 0.014375
+                },
+                "worker_s": {
+                  "samples": 130,
+                  "mean": 0.0028163461533876567,
+                  "p95": 0.005069999992847443,
+                  "maximum": 0.007759999990463257
+                },
+                "wasm_call_s": {
+                  "samples": 130,
+                  "mean": 0.0026499230751624477,
+                  "p95": 0.0049150000214576725,
+                  "maximum": 0.007585000038146972
+                },
+                "json_parse_s": {
+                  "samples": 130,
+                  "mean": 0.00016338461637496944,
+                  "p95": 0.00020499998331069947,
+                  "maximum": 0.00021999996900558472
+                },
+                "queue_s": {
+                  "samples": 130,
+                  "mean": 0.0000063076917941753835,
+                  "p95": 0.000010000050067901611,
+                  "maximum": 0.000015000045299530029
+                },
+                "view_update_s": {
+                  "samples": 130,
+                  "mean": 0.0004853461554417241,
+                  "p95": 0.0005500000119209289,
+                  "maximum": 0.0007250000238418579
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 130,
+                  "mean": 0.0008786153866694521,
+                  "p95": 0.0076650000214576715,
+                  "maximum": 0.0101599999666214
+                }
+              }
+            },
+            "scope": "WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive."
+          }
+        },
+        "meets_speed_target": true,
+        "meets_transition_target": false,
+        "host": {
+          "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+          "logical_cpus": 16,
+          "platform": "darwin",
+          "architecture": "x64",
+          "browser": "152.0.7977.76",
+          "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+          "headless": true
+        },
+        "errors": [],
+        "status": "Episode time limit reached",
+        "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+        "keyboard_commands_recorded": true
+      },
+      "keyboard_matches_native": true,
+      "native_capture_sha256": "78b150a9874b6c4237465e84d17d70d36920a320438ba3b91501f5929af6220a",
+      "recording_sha256": "521fd17366db6259c580456a32398ee3dc48a9f6c57980eee235025fae6fbfc7"
+    },
+    {
+      "name": "turn-reverse",
+      "report": {
+        "completed": true,
+        "preset": "robot-browser-solver",
+        "scenario": "turn-reverse",
+        "config_override": {
+          "path": "examples/full-robot/browser-precision/guarded-short.config.json",
+          "sha256": "c218304e8abcd2aacaba153c0f70b628904a0c1e9bcd4eed94cf591575d84737"
+        },
+        "performance": {
+          "simulation_per_wall_second": 1.0003002984847453,
+          "transition_p95_s": 0.01840499997138977,
+          "render_interval_p95_s": 0.01667000000000189,
+          "render_frames": 1438,
+          "actual_drawn_frames": 1033,
+          "transitions": 1200,
+          "wall_s": 23.992795000016688,
+          "simulated_s": 24,
+          "active_motion": {
+            "transitions": 990,
+            "simulated_s": 19.8,
+            "wall_s": 19.799209999978544,
+            "simulation_per_wall_second": 1.0000399005829756,
+            "transition_p95_s": 0.018969999969005585
+          },
+          "breakdown": {
+            "all": {
+              "wall_s": {
+                "samples": 1200,
+                "mean": 0.00911077083319424,
+                "p95": 0.01840499997138977,
+                "maximum": 0.11449500000476837
+              },
+              "worker_s": {
+                "samples": 1200,
+                "mean": 0.007521341665635503,
+                "p95": 0.01655999994277954,
+                "maximum": 0.11414499998092652
+              },
+              "wasm_call_s": {
+                "samples": 1200,
+                "mean": 0.00735069583266972,
+                "p95": 0.01635999995470047,
+                "maximum": 0.11396999996900559
+              },
+              "json_parse_s": {
+                "samples": 1200,
+                "mean": 0.00016785833338896452,
+                "p95": 0.0002099999785423279,
+                "maximum": 0.0004500000476837158
+              },
+              "queue_s": {
+                "samples": 1200,
+                "mean": 0.000005587500085433279,
+                "p95": 0.000014999985694885253,
+                "maximum": 0.0000899999737739563
+              },
+              "view_update_s": {
+                "samples": 1200,
+                "mean": 0.0004621750003099435,
+                "p95": 0.0005750000476837158,
+                "maximum": 0.0020649999976158143
+              },
+              "transport_and_dispatch_s": {
+                "samples": 1200,
+                "mean": 0.0015838416674733079,
+                "p95": 0.008244999945163728,
+                "maximum": 0.014995000004768371
+              }
+            },
+            "by_phase": {
+              "hold": {
+                "wall_s": {
+                  "samples": 10,
+                  "mean": 0.014851500004529955,
+                  "p95": 0.05226999998092651,
+                  "maximum": 0.05226999998092651
+                },
+                "worker_s": {
+                  "samples": 10,
+                  "mean": 0.012795999997854229,
+                  "p95": 0.051855000019073484,
+                  "maximum": 0.051855000019073484
+                },
+                "wasm_call_s": {
+                  "samples": 10,
+                  "mean": 0.0126299999833107,
+                  "p95": 0.05160499995946884,
+                  "maximum": 0.05160499995946884
+                },
+                "json_parse_s": {
+                  "samples": 10,
+                  "mean": 0.0001565000057220459,
+                  "p95": 0.00023500001430511476,
+                  "maximum": 0.00023500001430511476
+                },
+                "queue_s": {
+                  "samples": 10,
+                  "mean": 0.000007000011205673217,
+                  "p95": 0.000025000035762786864,
+                  "maximum": 0.000025000035762786864
+                },
+                "view_update_s": {
+                  "samples": 10,
+                  "mean": 0.0010184999883174897,
+                  "p95": 0.0020649999976158143,
+                  "maximum": 0.0020649999976158143
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 10,
+                  "mean": 0.0020484999954700476,
+                  "p95": 0.012385000050067903,
+                  "maximum": 0.012385000050067903
+                }
+              },
+              "shift": {
+                "wall_s": {
+                  "samples": 225,
+                  "mean": 0.008576222223175901,
+                  "p95": 0.016175000011920928,
+                  "maximum": 0.0480900000333786
+                },
+                "worker_s": {
+                  "samples": 225,
+                  "mean": 0.006912866664462616,
+                  "p95": 0.013204999983310699,
+                  "maximum": 0.047674999952316284
+                },
+                "wasm_call_s": {
+                  "samples": 225,
+                  "mean": 0.006743244443204667,
+                  "p95": 0.013055000007152557,
+                  "maximum": 0.04754499995708466
+                },
+                "json_parse_s": {
+                  "samples": 225,
+                  "mean": 0.0001669333338737486,
+                  "p95": 0.0002250000238418579,
+                  "maximum": 0.0002549999952316284
+                },
+                "queue_s": {
+                  "samples": 225,
+                  "mean": 0.000005466665956709125,
+                  "p95": 0.000010000050067901611,
+                  "maximum": 0.00002499997615814209
+                },
+                "view_update_s": {
+                  "samples": 225,
+                  "mean": 0.000474333332909478,
+                  "p95": 0.0006100000143051148,
+                  "maximum": 0.0010649999976158142
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 225,
+                  "mean": 0.0016578888927565674,
+                  "p95": 0.008165000021457673,
+                  "maximum": 0.010694999992847443
+                }
+              },
+              "raise": {
+                "wall_s": {
+                  "samples": 225,
+                  "mean": 0.011426555554601883,
+                  "p95": 0.020269999980926514,
+                  "maximum": 0.11449500000476837
+                },
+                "worker_s": {
+                  "samples": 225,
+                  "mean": 0.009756088888910084,
+                  "p95": 0.018305000007152558,
+                  "maximum": 0.11414499998092652
+                },
+                "wasm_call_s": {
+                  "samples": 225,
+                  "mean": 0.00958977777693007,
+                  "p95": 0.018160000026226045,
+                  "maximum": 0.11396999996900559
+                },
+                "json_parse_s": {
+                  "samples": 225,
+                  "mean": 0.00016377777920828905,
+                  "p95": 0.0001899999976158142,
+                  "maximum": 0.00023500001430511476
+                },
+                "queue_s": {
+                  "samples": 225,
+                  "mean": 0.0000055111106236775736,
+                  "p95": 0.000010000050067901611,
+                  "maximum": 0.000029999971389770506
+                },
+                "view_update_s": {
+                  "samples": 225,
+                  "mean": 0.0004338000003496802,
+                  "p95": 0.0005349999666213989,
+                  "maximum": 0.0007950000166893006
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 225,
+                  "mean": 0.001664955555068122,
+                  "p95": 0.008244999945163728,
+                  "maximum": 0.00961000007390976
+                }
+              },
+              "lower": {
+                "wall_s": {
+                  "samples": 225,
+                  "mean": 0.01165526666535272,
+                  "p95": 0.02441500002145767,
+                  "maximum": 0.06388499999046325
+                },
+                "worker_s": {
+                  "samples": 225,
+                  "mean": 0.010025955553054805,
+                  "p95": 0.02407499998807907,
+                  "maximum": 0.06354500001668931
+                },
+                "wasm_call_s": {
+                  "samples": 225,
+                  "mean": 0.009858333333068427,
+                  "p95": 0.023935000002384185,
+                  "maximum": 0.0634000000357628
+                },
+                "json_parse_s": {
+                  "samples": 225,
+                  "mean": 0.00016517777575386877,
+                  "p95": 0.0002099999785423279,
+                  "maximum": 0.0004500000476837158
+                },
+                "queue_s": {
+                  "samples": 225,
+                  "mean": 0.000005622222688462996,
+                  "p95": 0.000014999985694885253,
+                  "maximum": 0.0000899999737739563
+                },
+                "view_update_s": {
+                  "samples": 225,
+                  "mean": 0.00041762222475475716,
+                  "p95": 0.0005300000309944152,
+                  "maximum": 0.0007100000381469727
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 225,
+                  "mean": 0.0016236888896094422,
+                  "p95": 0.007519999980926514,
+                  "maximum": 0.009469999969005584
+                }
+              },
+              "return": {
+                "wall_s": {
+                  "samples": 225,
+                  "mean": 0.00906702222267787,
+                  "p95": 0.018474999964237213,
+                  "maximum": 0.022594999969005585
+                },
+                "worker_s": {
+                  "samples": 225,
+                  "mean": 0.007432177777290341,
+                  "p95": 0.013599999964237212,
+                  "maximum": 0.022099999964237213
+                },
+                "wasm_call_s": {
+                  "samples": 225,
+                  "mean": 0.0072665555559264265,
+                  "p95": 0.013430000007152557,
+                  "maximum": 0.021924999952316285
+                },
+                "json_parse_s": {
+                  "samples": 225,
+                  "mean": 0.00016308888779746145,
+                  "p95": 0.0001950000524520874,
+                  "maximum": 0.0002749999761581421
+                },
+                "queue_s": {
+                  "samples": 225,
+                  "mean": 0.000005000001324547671,
+                  "p95": 0.000010000050067901611,
+                  "maximum": 0.000015000045299530029
+                },
+                "view_update_s": {
+                  "samples": 225,
+                  "mean": 0.000450177776813507,
+                  "p95": 0.0005550000071525573,
+                  "maximum": 0.0006750000119209289
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 225,
+                  "mean": 0.0016298444440629735,
+                  "p95": 0.008304999947547912,
+                  "maximum": 0.014995000004768371
+                }
+              },
+              "settle": {
+                "wall_s": {
+                  "samples": 90,
+                  "mean": 0.008645166666640178,
+                  "p95": 0.016050000011920928,
+                  "maximum": 0.02219999998807907
+                },
+                "worker_s": {
+                  "samples": 90,
+                  "mean": 0.006849222221639417,
+                  "p95": 0.013254999995231628,
+                  "maximum": 0.021529999971389772
+                },
+                "wasm_call_s": {
+                  "samples": 90,
+                  "mean": 0.006680444447861778,
+                  "p95": 0.013085000038146973,
+                  "maximum": 0.021355000019073485
+                },
+                "json_parse_s": {
+                  "samples": 90,
+                  "mean": 0.00016616666515668235,
+                  "p95": 0.00019499999284744261,
+                  "maximum": 0.0002149999737739563
+                },
+                "queue_s": {
+                  "samples": 90,
+                  "mean": 0.000005888887246449793,
+                  "p95": 0.000010000050067901611,
+                  "maximum": 0.00001999998092651367
+                },
+                "view_update_s": {
+                  "samples": 90,
+                  "mean": 0.000491555556323793,
+                  "p95": 0.0005849999785423279,
+                  "maximum": 0.0006149999499320983
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 90,
+                  "mean": 0.0017900555577543035,
+                  "p95": 0.007705000042915343,
+                  "maximum": 0.009370000064373015
+                }
+              },
+              "idle": {
+                "wall_s": {
+                  "samples": 200,
+                  "mean": 0.004216024999916552,
+                  "p95": 0.01417500001192093,
+                  "maximum": 0.02155000001192093
+                },
+                "worker_s": {
+                  "samples": 200,
+                  "mean": 0.003013124999999999,
+                  "p95": 0.006040000021457672,
+                  "maximum": 0.014550000011920928
+                },
+                "wasm_call_s": {
+                  "samples": 200,
+                  "mean": 0.0028263249975442888,
+                  "p95": 0.005830000042915344,
+                  "maximum": 0.014395000040531158
+                },
+                "json_parse_s": {
+                  "samples": 200,
+                  "mean": 0.00018320000201463667,
+                  "p95": 0.00022999995946884155,
+                  "maximum": 0.0004100000262260437
+                },
+                "queue_s": {
+                  "samples": 200,
+                  "mean": 0.00000622500002384186,
+                  "p95": 0.000014999985694885253,
+                  "maximum": 0.000029999971389770506
+                },
+                "view_update_s": {
+                  "samples": 200,
+                  "mean": 0.000503000000417232,
+                  "p95": 0.0005750000476837158,
+                  "maximum": 0.0008300000429153442
+                },
+                "transport_and_dispatch_s": {
+                  "samples": 200,
+                  "mean": 0.0011966749998927118,
+                  "p95": 0.008939999997615813,
+                  "maximum": 0.010654999971389773
+                }
+              }
+            },
+            "scope": "WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive."
+          }
+        },
+        "meets_speed_target": true,
+        "meets_transition_target": true,
+        "host": {
+          "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+          "logical_cpus": 16,
+          "platform": "darwin",
+          "architecture": "x64",
+          "browser": "152.0.7977.76",
+          "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+          "headless": true
+        },
+        "errors": [],
+        "status": "Episode time limit reached",
+        "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+        "keyboard_commands_recorded": true
+      },
+      "keyboard_matches_native": true,
+      "native_capture_sha256": "902112a2362373e69c56056a14d6af01244e7e46b279754c77fbd0d4be1a34fa",
+      "recording_sha256": "713152df868f159398475b354cf7a1088c942f530596a7d187c36c95d799bb85"
+    }
+  ],
+  "manifest_sha256": "81303cd8a257319ba62778842d743dc161eafc57a49e7d69452f428852121106",
+  "limitations": [
+    "Requested walking speed remains only 1.25 mm/s.",
+    "Ideal observations and privileged planner; no deployable sensing or general terrain acceptance.",
+    "Minute-long p95 remains above 20 ms despite realtime average speed.",
+    "Conditional drawing preserves physics updates but may combine multiple completed states into the next display frame.",
+    "rAF timing and draw counts do not measure actual display presentation or command-to-visible-motion latency."
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/browser-precision/guarded.config.json",
+      "sha256": "580367d3d7961864fb73714717a3c2d26958f0d07c4b15e5e66951cbb2a44a9f"
+    },
+    {
+      "path": "examples/full-robot/browser-precision/validation-status.json",
+      "sha256": "5668e4fcbf7633e57ebbcc2cf41b798b6c92c8b7302a3acc6f3cf24e910c547f"
+    },
+    {
+      "path": "examples/full-robot/browser-precision/plan.json",
+      "sha256": "7c5c70ca0238fe7c837ae5ebc34527e48fef02f701684fdc60fd4b2b47b52a6c"
+    },
+    {
+      "path": "web/viewer/viewer.js",
+      "sha256": "413932be861d1825364b76514c8fa5908e2cdca5c034beff0a95ee8aea52133f"
+    },
+    {
+      "path": "web/tests/live_performance.mjs",
+      "sha256": "b704c42f7fea181af40037e75d26678258a92db98283d87333a5b3319fc82cec"
+    },
+    {
+      "path": "crates/sim-runtime/src/environment.rs",
+      "sha256": "e3e225e041c9deff217583d6ca483459c68bbfdf0ac88a20c5593caeb8bf590b"
+    }
+  ]
+}

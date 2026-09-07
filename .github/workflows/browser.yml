@@ -259,6 +259,14 @@ jobs:
           target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/heading-task/short.config.json examples/full-robot/heading-task/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/heading-student-short.json
           node examples/full-robot/check_online_steps.mjs runs/interactive/heading-student-short.json runs/interactive/heading-student-short-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-heading-student runs/interactive/heading-student-short.json runs/interactive/heading-student-browser.json examples/full-robot/heading-task/short.config.json
+      - name: Browser solver walking, turning and parity
+        run: |
+          cargo test --locked -p sim-domain-robot --test embedding blocked_factorization_preserves_closed_motion_across_poses_and_toggle_rejection
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/browser-precision/guarded-short.config.json examples/full-robot/heading-task/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/browser-solver-short.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/browser-solver-short.json runs/interactive/browser-solver-short-acceptance
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/browser-precision/guarded-short.config.json examples/full-robot/heading-task/task.json examples/full-robot/browser-precision/turn-reverse.actions.json > runs/interactive/browser-solver-turn.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/browser-solver-turn.json runs/interactive/browser-solver-turn-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-browser-solver runs/interactive/browser-solver-short.json runs/interactive/browser-solver-browser.json examples/full-robot/browser-precision/guarded-short.config.json
       - name: Condensed detailed motor native and WASM parity
         run: |
           cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.condensed.json > runs/interactive/pendulum-condensed-native.json

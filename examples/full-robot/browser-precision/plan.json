@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "scope": "Browser-only numerical precision experiments; physical force laws, CAD, policy and independent walking acceptance unchanged. Not a relaxation of physical task gates.",
+  "baseline_config": "examples/full-robot/heading-task/sustained.config.json",
+  "candidates": [
+    "1e-7",
+    "1e-6",
+    "1e-5",
+    "block",
+    "block-1e-5",
+    "guarded"
+  ],
+  "comparison_limits": {
+    "maximum_foot_difference_m": 0.0001,
+    "maximum_body_difference_m": 0.00005,
+    "maximum_joint_difference_rad": 0.0001,
+    "maximum_heading_difference_rad": 0.0001,
+    "maximum_per_foot_impulse_difference_ns": 0.01,
+    "maximum_slider_difference_m": 0.0001
+  },
+  "notes": [
+    "Declared before inspecting candidate outcomes.",
+    "Compare all 50 Hz sampled states against the original 1e-8 tolerance run.",
+    "Foot impulses use trapezoidal integration of sampled floor forces; this is not a resolved impact impulse guarantee.",
+    "Retain contact identity/mode changes for diagnosis and independent stepping/geometry/stop checks.",
+    "A selected candidate also requires refined-timestep, reserved disturbance, native/WASM and rendered timing checks.",
+    "Added 1e-5 after completed 1e-7/1e-6 native profiles showed 11%/21% fewer Newton iterations but only modest total-work reduction. Same declared trajectory limits apply. Earlier pre-reuse controller trials tested this tolerance without meeting browser timing.",
+    "Joint coordinates include rotational and prismatic units: the 0.0001 numerical bound is applied separately as radians or metres using runtime-exported coordinate metadata. Contact-mode identity and gait-phase identity must also match exactly.",
+    "Added independent-block factorization at the original 1e-8 precision after inspecting the existing unpromoted library option. Same numerical screens and original closure/rank checks apply. This candidate is not a physical equation reduction.",
+    "Precision-only rendered minute completed at realtime but p95 22.86 ms still missed 20 ms; compare block factorization alone and combined with 1e-5 at the same screens. No precision-only promotion.",
+    "Combined block/1e-5 rendered minute misses p95 at 20.32 ms. Next candidate halves cached first-attempt cap to 12, retaining fresh-restart limit 80, and enables existing guarded backtracking. Same numerical and physical screens apply.",
+    "First guarded refined-minute recipe was rejected at step 0: its inherited reference profile did not enable fresh restarts while a cached-attempt cap was set. Preserve that invalid recipe and result; corrected recipe explicitly enables the same fresh-restart policy as the browser. No physical state advanced on the invalid trial."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "scene": "examples/full-robot/student-distillation/scene.json",
+  "task": "examples/full-robot/heading-task/task.json",
+  "cases": [
+    {
+      "name": "refined-minute",
+      "config": "examples/full-robot/browser-precision/guarded-refined-minute.config.json",
+      "actions": "examples/full-robot/browser-residual-policy/sustained.actions.json"
+    }
+  ],
+  "scope": "Existing heading-task cases plus a new 24-second forward/turn/reverse/stop schedule, declared before execution. Same walking thresholds. Not parameter-training data."
+}

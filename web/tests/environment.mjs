@@ -5,13 +5,21 @@ import {spawn} from 'node:child_process';
 import {resolve,dirname} from 'node:path';
 import {chromium} from 'playwright';
 import {cpus,platform,arch} from 'node:os';
-const [directory,presetId,nativePath,reportPath]=process.argv.slice(2);
-assert(directory&&presetId&&nativePath&&reportPath,'usage: environment.mjs bundle preset native-capture report');
+import {createHash} from 'node:crypto';
+const [directory,presetId,nativePath,reportPath,configOverride]=process.argv.slice(2);
+assert(directory&&presetId&&nativePath&&reportPath,'usage: environment.mjs bundle preset native-capture report [explicit-config-override]');
 await mkdir(dirname(reportPath),{recursive:true});
 const read=async p=>JSON.parse(await readFile(p));
 const catalog=await read(resolve(directory,'catalog.json'));
 const preset=catalog.presets.find(p=>p.id===presetId);assert(preset?.task);
 const data=await read(resolve(directory,preset.path)),native=await read(nativePath);
+// Scenario checks may use a versioned shorter horizon without altering the
+// packaged preset. Always report the override; default preset checks stay exact.
+let overrideEvidence;
+if(configOverride){
+ const bytes=await readFile(configOverride);data.config=JSON.parse(bytes);
+ overrideEvidence={path:configOverride,sha256:createHash('sha256').update(bytes).digest('hex')};
+}
 assert(native.completed);assert.deepEqual(native.task,data.task);
 // Both Rust hosts normalize optional schema defaults. Compare their recorded
 // recipes below, not a typed recording against unnormalized source JSON.
@@ -75,6 +83,7 @@ try {
  numeric_tolerance:{absolute:absoluteTolerance,relative:relativeTolerance,maximum_fraction:maximumToleranceFraction},
  scope:'Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.'};
  report.performance=performance;
+ if(overrideEvidence){report.config_override=overrideEvidence;report.scope+=' Uses the explicitly recorded configuration override, not the packaged preset horizon.';}
  report.host={platform:platform(),architecture:arch(),cpu:cpus()[0]?.model,logical_cpus:cpus().length,browser:await browser.version()};
  await writeFile(reportPath,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));assert(passed);
 }finally {await browser?.close();server.kill();}

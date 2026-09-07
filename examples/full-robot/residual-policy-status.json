@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "stage": "teacher motor-action interface; no trained neural policy",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/environment.rs",
+      "sha256": "f0d1497bf9a835fb3affe64cd1d26137ca90e1bd39b73d8d265c8198a1a5d13e"
+    },
+    {
+      "path": "crates/sim-runtime/src/embedded.rs",
+      "sha256": "dfb0a0641052e3045f5ee2234b29bb09bd4015ff35292b804180b07191b9c2ed"
+    },
+    {
+      "path": "crates/sim-runtime/tests/environment.rs",
+      "sha256": "357a95cf8aeab5af1f893cc69018f803caf91010b53bfc57cf348a017d898693"
+    },
+    {
+      "path": "crates/sim-runtime/tests/residual_policy.rs",
+      "sha256": "47af1867185290d6cdd707d9517dda23186b947587db0c56a5d11da5ae35cc38"
+    },
+    {
+      "path": "examples/full-robot/prepare_residual_policy.mjs",
+      "sha256": "68547015b8da158ba4dd1e75a118bb28a4df8323882bb6c1de7977f1409fe56a"
+    },
+    {
+      "path": "examples/full-robot/check_residual_policy.mjs",
+      "sha256": "dc594c9fac480c6aa247f32bc9f4531e7bea764ee986de0b6a8c6152f6f3147b"
+    },
+    {
+      "path": "examples/full-robot/summarize_residual_policy.mjs",
+      "sha256": "3a17fbcaa24eb10337ed9ef5a031630a4e6be8f5f8daf1784586bd78e1b2b8e3"
+    },
+    {
+      "path": "web/tests/environment.mjs",
+      "sha256": "4913088f7897eca6af8a71b6e1e38bcba938f5bb749634f5c446f24137ed67ec"
+    },
+    {
+      "path": "web/tests/viewer.mjs",
+      "sha256": "1efcbbb597f37ce49428a149b148f235be46f9b1aa54c4754fb272ba2708bfa6"
+    },
+    {
+      "path": "web/tests/live_performance.mjs",
+      "sha256": "1dff501e6bdb6933cfd8f40b9ab127d85977655f9bd0ffaffe668e619df6bc88"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/scene.json",
+      "sha256": "ddd12a8b98c58499e867ed0f39ef613d801d72f51137d5a475aea345ec74680d"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/config.json",
+      "sha256": "86341139f4437662ea65b2fd32ff7bb886ab136328aef8fb7d53ca4bbd7ac3a3"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/short.config.json",
+      "sha256": "a2b49e4cbb69c4c89e032314167f1d65222425dd89c74559ef06e8bb8b458ea3"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/task.json",
+      "sha256": "782b3b59153df4c13a43282c809b4adbfca4d120f22bc9cf149cb3a0e28d193d"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/learning.json",
+      "sha256": "3282cc3eb5a5945160a632d84f8b126f3c92785527ce396643634851fa477654"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/manifest.json",
+      "sha256": "04a7719696e86e1a86f89d2c4978b7422b86e37d2e6b4715530c44f7183d5952"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/sustained.actions.json",
+      "sha256": "0946f6606761688c0876ce3b540a611a68d2e6966b522228b3caee137b4fd7da"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/probe.actions.json",
+      "sha256": "18b0c59fde56b57101e17c0457b58a24c2a9761225286d569237493ec36cd43e"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/forward-reverse.actions.json",
+      "sha256": "bf57e5ce3a89ef61ca89d0edc13a79ea1c5669bd1a3db8a64f84e3d35780130e"
+    }
+  ],
+  "evidence": {
+    "interface": {
+      "path": "runs/full-robot/learning/residual-policy/interface-report.json",
+      "sha256": "9ef0846839cc40ee4eae68615ab6fa064ae5c5af68a9706cd7d2049b4b39cf10"
+    },
+    "probe_acceptance": {
+      "path": "runs/full-robot/learning/residual-policy/probe-acceptance/summary.json",
+      "sha256": "3511733d7ae3084798d6283329714a62a315e24e1408e415c52cf4fd5de72f34"
+    },
+    "neutral_acceptance": {
+      "path": "runs/full-robot/learning/residual-policy/sustained-acceptance/summary.json",
+      "sha256": "60f7581a8ceb1d3b029b5e945c4355032d4b7b1a42194c208477282157287256"
+    },
+    "parity": {
+      "path": "runs/interactive/residual-policy/probe-parity.json",
+      "sha256": "0b60dbad61b64517052149bca06936b7ff312965883a22aadab0d85a68169bb0"
+    },
+    "viewer": {
+      "path": "runs/interactive/residual-policy/viewer-report.json",
+      "sha256": "ea25a122330524bfbc2f36ee1b08ac9f2034a72f7e0189fc962903a72c65cf2f"
+    },
+    "rendered_timing": {
+      "path": "runs/interactive/residual-policy/live-performance.json",
+      "sha256": "8114365dfdda3f30a329b78ff2a73e30f27c61ee80fca3d9a3d818f6de0e8189"
+    },
+    "bundle": {
+      "path": "runs/interactive/residual-policy/viewer/build-manifest.json",
+      "sha256": "6d6a1b597da53e0b78f9f0a23c18a336717028571a51638cec4c8fb20fcce6f9"
+    },
+    "rendered_recording": {
+      "path": "runs/interactive/residual-policy/live-performance.recording.json",
+      "sha256": "0304ae62f2fe1b824a3ee13c935cc764fc563035fb84c7a3e63055c793bdca39"
+    }
+  },
+  "comparison": {
+    "version": 1,
+    "passed": true,
+    "baseline": {
+      "path": "runs/interactive/terrain-contact/sustained.native.json",
+      "sha256": "731afcf5f8c86dff32d9517e26f7cbe27a1a2a2dbeece642bac7728a93842793"
+    },
+    "zero": {
+      "path": "runs/full-robot/learning/residual-policy/sustained.native.json",
+      "sha256": "3f79e5e165dfe259f1f7f6efc481f8a6dd2988d2303a9225aa2aeab6272ff5fa"
+    },
+    "probe": {
+      "path": "runs/full-robot/learning/residual-policy/probe.native.json",
+      "sha256": "eca82a0e4d7c7f431679df0bb437fad10e529f6b2fd5c4c0b3d704e6d4ca55fb"
+    },
+    "exact_original_physical_frames": 3001,
+    "zero_simulated_s": 60,
+    "observed_motor_residuals": 12,
+    "teacher_observation_count": 90,
+    "zero_total_reward": 59.36356006768562,
+    "probe_total_reward": 23.786909476725047,
+    "scope": "No trained policy. Neutral residuals preserve physical frames and original controller values exactly; added task scores/observations are deliberately different. All twelve residual inputs and torque observations are checked at committed endpoints. Walking, geometry and support acceptance are separate reports."
+  },
+  "neutral": {
+    "simulated_s": 60,
+    "passed": true,
+    "supported_swings": 28,
+    "shortest_qualifying_span_s": 0.2599999999999998,
+    "final_body_error_m": 0.0009654415228928088,
+    "maximum_body_tilt_rad": 0.00354255738685192,
+    "final_yaw_error_rad": 0.00401633132176855,
+    "final_phase": "idle",
+    "inter_link_geometry_audit": {
+      "frames": 3001,
+      "maximum_penetration_m": 0,
+      "penetrating_samples": 0,
+      "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+    },
+    "scope": "Initial flat-floor commissioning with ideal observations. Actual clearance/support samples, endpoint tracking and stop checked; not between-sample impact accuracy, terrain robustness, hardware calibration or sustained realtime acceptance."
+  },
+  "probe": {
+    "simulated_s": 24,
+    "passed": true,
+    "supported_swings": 9,
+    "shortest_qualifying_span_s": 0.2599999999999998,
+    "final_body_error_m": 0.0006817282051639404,
+    "maximum_body_tilt_rad": 0.003544508926185989,
+    "final_yaw_error_rad": 0.0010225010042318543,
+    "final_phase": "idle",
+    "inter_link_geometry_audit": {
+      "frames": 1201,
+      "maximum_penetration_m": 0,
+      "penetrating_samples": 0,
+      "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+    },
+    "scope": "Initial flat-floor commissioning with ideal observations. Actual clearance/support samples, endpoint tracking and stop checked; not between-sample impact accuracy, terrain robustness, hardware calibration or sustained realtime acceptance."
+  },
+  "native_wasm": {
+    "passed": true,
+    "preset": "robot-residual-policy",
+    "transitions": 1200,
+    "maximum_native_wasm_difference": 1.7764989479474025e-10,
+    "worst": "transition[1093].observations.68",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 3677,
+    "replay_progress_messages": 1200,
+    "numeric_tolerance": {
+      "absolute": 1e-7,
+      "relative": 1e-8,
+      "maximum_fraction": 0.0009014722552064389
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control. Uses the explicitly recorded configuration override, not the packaged preset horizon.",
+    "performance": {
+      "simulated_s": 24,
+      "transition_wall_s": 10.459210000216958,
+      "simulation_per_wall_second": 2.294628370546357,
+      "transition_p95_s": 0.015480000019073487,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance."
+    },
+    "config_override": {
+      "path": "examples/full-robot/browser-residual-policy/short.config.json",
+      "sha256": "a2b49e4cbb69c4c89e032314167f1d65222425dd89c74559ef06e8bb8b458ea3"
+    },
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "viewer": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-online-steps: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reversal-crawl: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-terrain-contact: 50 Hz task score, held-action recording, visible replay and reset",
+      "teacher motor corrections: bounded sliders, readable precision, recorded action replay and clear",
+      "robot-residual-policy: 50 Hz task score, held-action recording, visible replay and reset",
+      "WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "rendered": {
+    "completed": true,
+    "preset": "robot-residual-policy",
+    "scenario": "sustained-forward",
+    "performance": {
+      "simulation_per_wall_second": 1.0002104609511584,
+      "transition_p95_s": 0.021660000026226044,
+      "render_interval_p95_s": 0.01667000000000189,
+      "render_frames": 3599,
+      "transitions": 3000,
+      "wall_s": 59.987375,
+      "simulated_s": 60,
+      "active_motion": {
+        "transitions": 2800,
+        "simulated_s": 56,
+        "wall_s": 55.96479000002141,
+        "simulation_per_wall_second": 1.0006291455748977,
+        "transition_p95_s": 0.022055000007152558
+      }
+    },
+    "meets_speed_target": true,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+    "keyboard_commands_recorded": true
+  },
+  "rendered_keyboard_schedule_matches_accepted_native": true,
+  "tests": {
+    "runtime_environment": 8,
+    "individual_motor_routing": 1,
+    "result": "passed",
+    "log": {
+      "path": "runs/full-robot/learning/residual-policy/runtime-tests.log",
+      "sha256": "3a857752f44bf363dab44a0e7ded5d8a8dfd3b80f4fe3a1a2e13c9bb0d435f64"
+    }
+  },
+  "remaining": [
+    "train and evaluate a policy",
+    "distill deployable student observations",
+    "bounded disturbance training",
+    "general command and terrain validation",
+    "hardware calibration",
+    "command-to-visible-response latency measurement",
+    "meet rendered 20 ms p95 transition target"
+  ],
+  "scope": "Versioned action/observation/reward commissioning evidence. Probes cover small corrections, not every permitted action. Native/WASM portability is separate from physical accuracy. No learned policy or hardware transfer is claimed."
+}

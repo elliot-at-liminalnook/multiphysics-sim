@@ -30,6 +30,60 @@ fn fixture() -> (Scene, Config, Task) {
 }
 
 #[test]
+fn teacher_motion_and_action_observations_use_current_frames_and_declared_units() {
+    let (s, c, mut task) = fixture();
+    for (name, source) in [
+        ("local.vx", ObservationSource::BodyLocalVelocity { link: "pendulum".into(), axis: Axis::X }),
+        ("world.wy", ObservationSource::BodyAngularVelocity { link: "pendulum".into(), axis: Axis::Y }),
+        ("up.x", ObservationSource::BodyAxis { link: "pendulum".into(), body_axis: Axis::Z, world_axis: Axis::X }),
+        ("command", ObservationSource::ControllerInput { name: "command.position".into() }),
+        ("torque", ObservationSource::MotorTorque { motor: "servo".into() }),
+    ] { task.observations.push(Observation { name: name.into(), source }); }
+    let mut env = EmbeddedEnvironment::new(s.clone(), c.clone(), task.clone(), 0).unwrap();
+    assert_eq!(env.transition().observations[7], 0.2);
+    for (i, unit) in [(4,"m/s"),(5,"rad/s"),(6,"1"),(7,"rad"),(8,"N·m")] {
+        assert_eq!(env.contract()["observations"][i]["unit"], unit);
+    }
+    let observed = env.step(&[0.6]).unwrap().observations;
+    // This pendulum's COM is 60 mm below its Y-axis pivot. Its local X
+    // velocity is -0.06 * angular velocity, even when its world axes rotate.
+    assert!((observed[4] + 0.06 * observed[5]).abs() < 1e-10);
+    assert!((observed[6] - observed[0].sin()).abs() < 1e-10);
+    assert_eq!(observed[7], 0.6);
+    assert_eq!(observed[8], env.frame().unwrap()["motor_readings"][0]["shaft_torque_nm"].as_f64().unwrap());
+    assert!(observed[5].abs() > 1e-6);
+    assert_eq!(env.reset(0).unwrap().observations[7], 0.2);
+
+    let mut wrong_units = task.clone();
+    wrong_units.rewards[0].target = Target::Observation { name: "torque".into() };
+    assert!(EmbeddedEnvironment::new(s.clone(), c.clone(), wrong_units, 0).err().unwrap().contains("units"));
+    task.observations[7].source = ObservationSource::ControllerInput { name: "missing".into() };
+    assert!(EmbeddedEnvironment::new(s, c, task, 0).err().unwrap().contains("unknown controller input"));
+}
+
+#[test]
+fn survival_and_failure_rewards_distinguish_task_failure_from_timeout() {
+    let (s, c, mut task) = fixture();
+    assert!(serde_json::to_value(&task).unwrap().get("termination_penalty").is_none());
+    task.rewards.clear();
+    task.survival_reward_per_s = 2.0;
+    task.termination_penalty = 5.0;
+    let mut env = EmbeddedEnvironment::new(s.clone(), c.clone(), task.clone(), 0).unwrap();
+    assert_eq!(env.transition().reward, 0.0);
+    for _ in 0..3 { assert_eq!(env.step(&[0.2]).unwrap().reward, 0.04); }
+    assert!(env.transition().truncated && !env.transition().terminated);
+    task.termination_bounds.push(TerminationBound { observation: "angle".into(), lower: 0.0, upper: 0.0 });
+    let mut failed = EmbeddedEnvironment::new(s.clone(), c.clone(), task.clone(), 0).unwrap();
+    let t = failed.step(&[0.8]).unwrap();
+    assert!(t.terminated);
+    assert_eq!(t.reward, 0.04 - 5.0);
+    assert!(failed.step(&[0.8]).is_err());
+    assert_eq!(failed.reset(0).unwrap().reward, 0.0);
+    task.termination_penalty = -1.0;
+    assert!(EmbeddedEnvironment::new(s, c, task, 0).is_err());
+}
+
+#[test]
 fn held_actions_match_the_production_runtime_and_reset_replays_exactly() {
     let (s, c, t) = fixture();
     let mut raw = EmbeddedSession::new(s.clone(), c.clone(), 42, CaptureMode::Latest).unwrap();

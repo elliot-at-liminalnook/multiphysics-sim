@@ -1,5 +1,11 @@
 # Four-leg robot commissioning
 
+The [teacher motor-action interface](residual-policy.md) adds twelve bounded
+motor corrections and typed teacher observations to the maintained browser
+crawl. Neutral corrections reproduce the full baseline minute exactly; small
+per-motor probes pass stepping and native/WASM checks. No neural policy is
+trained yet. This is the input/output contract for the next learning stage.
+
 The [response investigation](response-diagnosis.md) replays identical motor
 targets to isolate timestep sensitivity and exposes explicit floor dissipation
 in s/m. Contact trials remain unpromoted; default trajectories stay exact.

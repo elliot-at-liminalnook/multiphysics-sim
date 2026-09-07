@@ -36,7 +36,18 @@ pub enum ObservationSource {
     ReferencePosition { coordinate: String },
     BodyPosition { link: String, axis: Axis },
     BodyVelocity { link: String, axis: Axis },
+    /// Projection of world linear velocity onto an axis of the current body frame.
+    BodyLocalVelocity { link: String, axis: Axis },
+    /// World angular velocity, not Euler-angle derivatives.
+    BodyAngularVelocity { link: String, axis: Axis },
+    /// A body basis vector expressed in world coordinates (dimensionless).
+    BodyAxis { link: String, body_axis: Axis, world_axis: Axis },
+    /// Sum of terrain-contact forces on a named link, in world coordinates.
+    FloorForce { link: String, axis: Axis },
+    /// The currently held, validated action input; units come from its declaration.
+    ControllerInput { name: String },
     MotorCurrent { motor: String },
+    MotorTorque { motor: String },
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -83,7 +94,15 @@ pub struct Task {
     pub observations: Vec<Observation>,
     pub rewards: Vec<RewardTerm>,
     pub termination_bounds: Vec<TerminationBound>,
+    /// Optional positive reward rate for elapsed simulated time (1/s).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub survival_reward_per_s: f64,
+    /// Subtracted once when a sampled task bound terminates a transition.
+    /// Not applied at reset, timeout alone, or numerical failure.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub termination_penalty: f64,
 }
+fn is_zero(value: &f64) -> bool { *value == 0.0 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct RewardValue {
@@ -107,8 +126,40 @@ pub struct Transition {
 }
 
 struct Binding {
-    pointer: String,
+    source: EndpointSource,
     kind: QuantityKind,
+}
+enum EndpointSource {
+    Scalar(String),
+    Projection { vector: String, rotation: String, column: usize },
+    Input(usize),
+    FloorForce { link: usize, axis: usize },
+}
+impl Binding {
+    fn read(&self, frame: &Value, inputs: &[f64]) -> Option<f64> {
+        match &self.source {
+            EndpointSource::Input(index) => inputs.get(*index).copied(),
+            EndpointSource::Scalar(pointer) => frame.pointer(pointer)?.as_f64(),
+            EndpointSource::Projection { vector, rotation, column } => {
+                let vector = frame.pointer(vector)?;
+                let rotation = frame.pointer(rotation)?;
+                let mut value = 0.0;
+                for row in 0..3 {
+                    value += vector.get(row)?.as_f64()? * rotation.get(row)?.get(*column)?.as_f64()?;
+                }
+                Some(value)
+            }
+            EndpointSource::FloorForce { link, axis } => {
+                let mut force = 0.0;
+                for contact in frame.get("contacts")?.as_array()? {
+                    if contact.get("link")?.as_u64()? as usize == *link && contact.get("other")?.is_null() {
+                        force += contact.get("force_n")?.get(*axis)?.as_f64()?;
+                    }
+                }
+                Some(force)
+            }
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -191,6 +242,9 @@ impl EmbeddedEnvironment {
                     .ok_or_else(|| format!("unknown body {name}"))
             };
             use ObservationSource::*;
+            let mut projection = None;
+            let mut input_index = None;
+            let mut floor_force = None;
             let (pointer, kind) = match &o.source {
                 CoordinatePosition { coordinate: name } => (
                     format!(
@@ -218,7 +272,30 @@ impl EmbeddedEnvironment {
                     format!("/poses/{}/velocity_m_s/{}", body(link)?, axis.index()),
                     QuantityKind::LinearVelocity,
                 ),
-                MotorCurrent { motor } => {
+                BodyLocalVelocity { link, axis } => {
+                    let i = body(link)?;
+                    projection = Some((format!("/poses/{i}/rotation"), axis.index()));
+                    (format!("/poses/{i}/velocity_m_s"), QuantityKind::LinearVelocity)
+                }
+                BodyAngularVelocity { link, axis } => (
+                    format!("/poses/{}/angular_velocity_rad_s/{}", body(link)?, axis.index()),
+                    QuantityKind::AngularVelocity,
+                ),
+                BodyAxis { link, body_axis, world_axis } => (
+                    format!("/poses/{}/rotation/{}/{}", body(link)?, world_axis.index(), body_axis.index()),
+                    QuantityKind::Dimensionless,
+                ),
+                FloorForce { link, axis } => {
+                    floor_force = Some((body(link)?, axis.index()));
+                    ("/contacts".into(), QuantityKind::Force)
+                }
+                ControllerInput { name } => {
+                    let i = session.inputs().iter().position(|c| &c.name == name)
+                        .ok_or_else(|| format!("unknown controller input {name}"))?;
+                    input_index = Some(i);
+                    (format!("/policy_inputs/{i}"), session.inputs()[i].kind)
+                }
+                MotorCurrent { motor } | MotorTorque { motor } => {
                     let index = session
                         .scene()
                         .robot
@@ -226,13 +303,18 @@ impl EmbeddedEnvironment {
                         .iter()
                         .position(|m| &m.name == motor)
                         .ok_or_else(|| format!("unknown motor {motor}"))?;
-                    (
-                        format!("/motor_readings/{index}/current_a"),
-                        QuantityKind::Current,
-                    )
+                    if matches!(&o.source, MotorTorque { .. }) {
+                        (format!("/motor_readings/{index}/shaft_torque_nm"), QuantityKind::Torque)
+                    } else {
+                        (format!("/motor_readings/{index}/current_a"), QuantityKind::Current)
+                    }
                 }
             };
-            bindings.push(Binding { pointer, kind });
+            let source = if let Some(index) = input_index { EndpointSource::Input(index) }
+                else if let Some((rotation, column)) = projection { EndpointSource::Projection { vector: pointer, rotation, column } }
+                else if let Some((link, axis)) = floor_force { EndpointSource::FloorForce { link, axis } }
+                else { EndpointSource::Scalar(pointer) };
+            bindings.push(Binding { source, kind });
         }
         let index = |name: &str| {
             task.observations
@@ -244,7 +326,7 @@ impl EmbeddedEnvironment {
         let mut reward_indices = Vec::new();
         for r in &task.rewards {
             if r.name.trim().is_empty()
-                || !reward_names.insert(&r.name)
+                || !reward_names.insert(r.name.clone())
                 || !r.scale.is_finite()
                 || r.scale <= 0.0
                 || !r.weight_per_s.is_finite()
@@ -267,6 +349,11 @@ impl EmbeddedEnvironment {
             reward_indices.push((i, j));
         }
         let mut bound_indices = Vec::new();
+        for (name, value) in [("task.survival", task.survival_reward_per_s), ("task.termination", task.termination_penalty)] {
+            if !value.is_finite() || value < 0.0 || (value != 0.0 && reward_names.contains(name)) {
+                return Err("task survival/termination rewards must be finite, nonnegative and have distinct reserved names".into());
+            }
+        }
         for b in &task.termination_bounds {
             if !b.lower.is_finite() || !b.upper.is_finite() || b.lower > b.upper {
                 return Err("task bounds must be ordered and finite".into());
@@ -303,9 +390,7 @@ impl EmbeddedEnvironment {
             .iter()
             .zip(&self.task.observations)
             .map(|(b, o)| {
-                frame
-                    .pointer(&b.pointer)
-                    .and_then(Value::as_f64)
+                b.read(frame, self.session.input_values())
                     .filter(|v| v.is_finite())
                     .ok_or_else(|| format!("missing or nonfinite endpoint observation {}", o.name))
             })
@@ -330,10 +415,6 @@ impl EmbeddedEnvironment {
                 value,
             });
         }
-        let reward = reward_terms.iter().map(|r| r.value).sum::<f64>();
-        if !reward.is_finite() {
-            return Err("nonfinite total reward".into());
-        }
         let termination_reasons: Vec<_> = self
             .task
             .termination_bounds
@@ -342,6 +423,17 @@ impl EmbeddedEnvironment {
             .filter(|(b, i)| observations[**i] < b.lower || observations[**i] > b.upper)
             .map(|(b, _)| format!("{} outside [{}, {}]", b.observation, b.lower, b.upper))
             .collect();
+        if self.task.survival_reward_per_s != 0.0 {
+            reward_terms.push(RewardValue { name: "task.survival".into(), value: self.task.survival_reward_per_s * elapsed_s });
+        }
+        if self.task.termination_penalty != 0.0 {
+            reward_terms.push(RewardValue { name: "task.termination".into(),
+                value: if elapsed_s > 0.0 && !termination_reasons.is_empty() { -self.task.termination_penalty } else { 0.0 } });
+        }
+        let reward = reward_terms.iter().map(|r| r.value).sum::<f64>();
+        if !reward.is_finite() {
+            return Err("nonfinite total reward".into());
+        }
         Ok(Transition {
             time_s: frame["time_s"].as_f64().ok_or("missing endpoint time")?,
             elapsed_s,
@@ -488,11 +580,17 @@ impl EmbeddedEnvironment {
         &self.task
     }
     pub fn contract(&self) -> Value {
-        json!({"version":1,"period_s":self.task.period_s,"deployable":false,
+        let mut contract = json!({"version":1,"period_s":self.task.period_s,"deployable":false,
             "observation_source":self.task.observation_source,"actions":self.inputs(),
             "observations":self.task.observations.iter().zip(&self.bindings).map(|(o,b)|
                 json!({"name":o.name,"kind":b.kind,"unit":b.kind.unit(),"source":o.source})).collect::<Vec<_>>(),
             "reward":"sum of negative scaled squared endpoint errors times elapsed simulation seconds",
-            "termination_sampling":"action transition endpoints; not physical travel stops"})
+            "termination_sampling":"action transition endpoints; not physical travel stops"});
+        if self.task.survival_reward_per_s != 0.0 || self.task.termination_penalty != 0.0 {
+            contract["reward"] = json!("survival rate minus scaled squared endpoint errors, times elapsed simulation seconds; subtract termination penalty once for sampled task failure, not reset, timeout alone or numerical failure");
+            contract["survival_reward_per_s"] = json!(self.task.survival_reward_per_s);
+            contract["termination_penalty"] = json!(self.task.termination_penalty);
+        }
+        contract
     }
 }

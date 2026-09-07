@@ -204,12 +204,23 @@ function makeInputs(channels) {
     }
     const stop=document.createElement('button');stop.id='stop-motion';stop.textContent='Stop motion';stop.onclick=()=>{driveKeys.clear();applyDriveKeys();};$('teleop').append(stop);
   }
+  const residualStart=channels.findIndex(c=>c.name.startsWith('residual.'));
+  let residualGroup;
+  if(residualStart>=0&&channels.slice(residualStart).every(c=>c.name.startsWith('residual.'))){
+    residualGroup=document.createElement('details');residualGroup.id='residual-inputs';
+    const summary=document.createElement('summary');summary.textContent=`Motor corrections (${channels.length-residualStart})`;residualGroup.append(summary);
+    const help=document.createElement('p');help.textContent='Angle offsets added to the crawl controller. Zero uses the baseline. Command limits still apply.';residualGroup.append(help);
+    const clear=document.createElement('button');clear.id='clear-residuals';clear.textContent='Clear motor corrections';
+    clear.onclick=()=>{for(const slider of residualGroup.querySelectorAll('input')){slider.value=0;slider.dispatchEvent(new Event('input'));}};residualGroup.append(clear);
+  }
   channels.forEach((c, i) => { const label = document.createElement('label'), output = document.createElement('span'), slider = document.createElement('input');
-    const display=()=>c.kind==='LinearVelocity'?`${(values[i]*1000).toFixed(2)} mm/s`:c.kind==='AngularVelocity'?`${(values[i]*180/Math.PI).toFixed(3)}°/s`:`${values[i].toFixed(2)} ${c.kind==='Angle'?'rad':''}`;
+    const display=()=>c.kind==='LinearVelocity'?`${(values[i]*1000).toFixed(2)} mm/s`:c.kind==='AngularVelocity'?`${(values[i]*180/Math.PI).toFixed(3)}°/s`:`${values[i].toFixed(c.kind==='Angle'&&c.upper-c.lower<=.1?4:2)} ${c.kind==='Angle'?'rad':''}`;
     output.textContent = `${c.name}: ${display()}`;
     slider.type = 'range'; slider.min = c.lower; slider.max = c.upper; slider.step = (c.upper-c.lower)/200 || 1; slider.disabled=c.lower===c.upper; slider.value = c.initial; slider.setAttribute('aria-label', c.name);
     slider.oninput = () => { values[i] = Number(slider.value); output.textContent = `${c.name}: ${display()}`; };
-    label.append(output, slider); $('inputs').append(label);
+    label.append(output, slider);
+    if(residualGroup&&i>=residualStart){if(i===residualStart)$('inputs').append(residualGroup);residualGroup.append(label);}
+    else $('inputs').append(label);
   });
 }
 async function loadPreset(id) {

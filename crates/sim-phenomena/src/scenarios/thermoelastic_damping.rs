@@ -117,9 +117,21 @@ impl ThermoelasticBeam {
         for ports in layer_nodes {
             w.connect(ports);
         }
-        let runtime = Runtime::new(w, registry, sim_dynamics::Integrator::ImplicitMidpoint(sim_solve::NewtonConfig { max_iterations: 40, min_line_search: 1.0 / 4096.0, ..Default::default() })).ok()?;
+        let mut runtime = Runtime::new(w, registry, sim_dynamics::Integrator::ImplicitMidpoint(sim_solve::NewtonConfig { max_iterations: 40, min_line_search: 1.0 / 4096.0, ..Default::default() })).ok()?;
         let curvature = runtime.across_id(mode.port("shaft"));
-        let layer_temperatures = cap_ports.iter().map(|p| runtime.across_id(*p)).collect();
+        let layer_temperatures: Vec<_> = cap_ports.iter().map(|p| runtime.across_id(*p)).collect();
+        // Normalize only heat-balance rows from W to equivalent K using the
+        // layer conductance. G*(Ta-Tb) otherwise has a ~G*eps*300 K rounding
+        // floor above the generic 1e-10 raw tolerance. Mechanical rows and all
+        // physical coefficients stay unchanged; energy/loss checks remain in SI.
+        for island in &mut runtime.islands {
+            let scales = island.system.full_of.iter().map(|&full| {
+                if layer_temperatures.contains(&island.system.state_ids[full]) {
+                    1.0 / layer_conductance
+                } else { 1.0 }
+            }).collect();
+            island.system.set_residual_row_scales(scales).ok()?;
+        }
         let productions = runtime.model.behaviors.keys().map(|b| runtime.entropy_production_id(b)).collect();
         Some(Beam { runtime, curvature, layer_temperatures, layer_conductance, productions })
     }

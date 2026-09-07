@@ -356,6 +356,17 @@
       "description": "The same student and physical push, with body-reference tracking and measured step outcomes added to the learning score. WASD commands motion; the sidebar reports qualified/failed steps and body error.",
       "readiness": "Task-scoring experiment · controller weights unchanged · supported-step margin and disturbance recovery remain provisional.",
       "evidence": "The task reuses the independent sampled lift checker with unchanged clearance, unloading, support and 200 ms duration thresholds. Body tracking is scored against the held walking reference. Numerical/physical accuracy and learning success remain separate checks."
+    },
+    {
+      "id": "robot-improved-student",
+      "label": "Quadruped · Improved student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/student-robustness/config.json",
+      "task": "examples/full-robot/walking-objective/task.json",
+      "description": "WASD requests the crawl using student weights improved across short pushed walks and a minute-long walk. The viewport shows qualified steps and body tracking; inspect Learned motor corrections for live outputs.",
+      "readiness": "Experimental student improvement · development walks pass · held-out push and 5 ms refinement each miss one swing · ideal observations and privileged planner.",
+      "evidence": "Paired parameter search changes only network weights. It ranks the weakest reward per second across three fixed episodes, rejects numerical failures, and retains independent stepping and stopping gates. Physical calibration, wider terrain, faster walking and hardware transfer remain unverified. The reserved reverse-first, opposite-direction push fails one swing for both the original and improved student; this is not a robust-controller promotion. At 5 ms physics, the first swing qualifies for 180 rather than 200 ms, before the push. Stepping margin remains timestep-sensitive."
     }
   ]
 }

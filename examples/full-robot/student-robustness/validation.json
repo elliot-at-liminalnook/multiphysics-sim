@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "scope": "Candidate selection uses only search.recipe.json cases. This separate reverse-first command and push schedule is evaluated after selection.",
+  "scene": "examples/full-robot/student-distillation/scene.json",
+  "config": "examples/full-robot/student-robustness/heldout.config.json",
+  "task": "examples/full-robot/walking-objective/task.json",
+  "actions": "examples/full-robot/neural-teacher/heldout.actions.json",
+  "seed": 0,
+  "compare": [
+    "initial student",
+    "selected candidate"
+  ],
+  "acceptance": "examples/full-robot/check_online_steps.mjs; retain all existing gates; no promotion from score alone"
+}

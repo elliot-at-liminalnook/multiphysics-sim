@@ -29,13 +29,23 @@ pub struct ImplicitStepConfig {
     /// endpoint. Requires reuse_mechanical_endpoint. Applied loads stay fresh.
     pub reuse_mechanical_dynamics: bool,
     /// Experimental modified Newton across accepted steps. Requires a workspace
-    /// through advance_with_control_cached; ordinary APIs start a fresh workspace.
+    /// through a cached motor or mechanical advancement API; ordinary APIs start
+    /// a fresh workspace.
     pub reuse_step_jacobian: bool,
     /// Opt-in guarded matrix reuse across controller events whose adapter
     /// explicitly declares an unchanged continuous equation structure.
     /// Motor-mode events still invalidate. Requires reuse_step_jacobian.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub reuse_controller_sample_jacobian: bool,
+    /// Pure mechanical advancement only: after a failed cached trial, restart
+    /// once from the original state with fresh derivatives before subdivision.
+    /// Failed work remains diagnostic; no acceptance tolerance changes.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub restart_failed_reused_mechanics: bool,
+    /// Optional iteration cap for the first cached mechanical attempt. Requires
+    /// fresh restart; that restart retains the original Newton iteration limit.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cached_mechanical_iteration_limit: Option<usize>,
     /// Collect iteration diagnostics for trials starting in this inclusive
     /// simulation-time window. On failure, append a bounded convergence tail
     /// to the error. Observational only; absent by default.
@@ -78,6 +88,8 @@ impl Default for ImplicitStepConfig {
             reuse_mechanical_dynamics: false,
             reuse_step_jacobian: false,
             reuse_controller_sample_jacobian: false,
+            restart_failed_reused_mechanics: false,
+            cached_mechanical_iteration_limit: None,
             newton_audit_window_s: None,
             auxiliary_rate_unknowns: false,
             condense_auxiliary: false,
@@ -103,6 +115,9 @@ pub struct ImplicitSolverWorkspace {
     auxiliary_endpoint_correction_scale: Option<bool>,
 }
 impl ImplicitSolverWorkspace {
+    pub(super) fn has_jacobian(&self) -> bool {
+        self.cache.is_some()
+    }
     pub fn clear(&mut self) {
         *self = Self::default();
     }
@@ -114,6 +129,10 @@ pub struct ImplicitStepDiagnostics {
     /// Includes numerical derivative probes, backtracks and final verification.
     pub endpoint_evaluations: usize,
     pub started_with_reused_jacobian: bool,
+    /// A rejected cached mechanical attempt preceding this successful fresh
+    /// restart. Its work is excluded from the successful-attempt counters.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fresh_restart_reason: Option<String>,
     pub mechanical_preparations: usize,
     pub mechanical_cache_hits: usize,
     pub dynamics_preparations: usize,
@@ -690,6 +709,7 @@ impl RigidEmbedding<'_> {
                 nonlinear,
                 endpoint_evaluations: evaluations.get(),
                 started_with_reused_jacobian,
+                fresh_restart_reason: None,
                 mechanical_preparations: preparations.get(),
                 mechanical_cache_hits: cache_hits.get(),
                 dynamics_preparations: dynamics_preparations.get(),

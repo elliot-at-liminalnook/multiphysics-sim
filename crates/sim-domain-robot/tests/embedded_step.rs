@@ -45,6 +45,66 @@ fn body(slider: bool, contact: bool) -> (Articulated, Generalized) {
 }
 
 #[test]
+fn failed_cached_mechanics_restarts_fresh_before_subdivision() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    let (art, mut g)=body(true,false);g.q[0]=0.1;
+    let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+    let config=ImplicitStepConfig {reuse_step_jacobian:true,..Default::default()};
+    let mut workspace=ImplicitSolverWorkspace::default();
+    let load=|t:f64,g:&Generalized| Ok(vec![-40000.0*g.q[0].powi(3)-2.0*g.qd[0]+(20.0*t).sin()]);
+    g=map.advance_implicit_mechanics_cached(&g,0.0,0.01,&config,&HybridConfig::default(),&mut workspace,load).unwrap().endpoint.generalized;
+    let mut restart=config.clone();restart.restart_failed_reused_mechanics=true;restart.cached_mechanical_iteration_limit=Some(1);
+    let recovered=map.advance_implicit_mechanics_cached(&g,0.01,0.01,&restart,&HybridConfig::default(),&mut workspace,load).unwrap();
+    assert_eq!(recovered.segments.len(),1);
+    assert_eq!(recovered.refinement.rejected_trials,0);
+    assert!(recovered.segments[0].diagnostics.fresh_restart_reason.is_some());
+    assert!(!recovered.segments[0].diagnostics.started_with_reused_jacobian);
+    let fresh=map.advance_implicit_mechanics(&g,0.01,0.01,&config,&HybridConfig::default(),load).unwrap();
+    assert_eq!(fresh.endpoint.generalized.q,recovered.endpoint.generalized.q);
+    assert_eq!(fresh.endpoint.generalized.qd,recovered.endpoint.generalized.qd);
+    restart.restart_failed_reused_mechanics=false;
+    assert!(map.advance_implicit_mechanics(&g,0.01,0.01,&restart,&HybridConfig::default(),load).is_err());
+    restart.restart_failed_reused_mechanics=true;restart.reuse_step_jacobian=false;
+    assert!(map.advance_implicit_mechanics(&g,0.01,0.01,&restart,&HybridConfig::default(),load).is_err());
+}
+
+#[test]
+fn cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    let (art, mut g) = body(true, false);
+    g.q[0] = 0.1;
+    let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
+    let config = ImplicitStepConfig {reuse_step_jacobian: true, ..Default::default()};
+    let refinement = HybridConfig {maximum_halvings: 1, ..Default::default()};
+    let mut workspace = ImplicitSolverWorkspace::default();
+    let load = |_: f64, g: &Generalized| Ok(vec![-30.0*g.q[0]-2.0*g.qd[0]]);
+    let mut reused = 0;
+    for i in 0..40 {
+        let h = 0.01;
+        let expected_v = (2.0*g.qd[0]-h*30.0*g.q[0])/(2.0+h*2.0+h*h*30.0);
+        let expected_q = g.q[0]+h*expected_v;
+        let step = map.advance_implicit_mechanics_cached(&g,i as f64*h,h,&config,&refinement,&mut workspace,load).unwrap();
+        assert_eq!(step.segments.len(),1);
+        reused += usize::from(step.segments[0].diagnostics.started_with_reused_jacobian);
+        assert!((step.endpoint.generalized.q[0]-expected_q).abs()<1e-10);
+        assert!((step.endpoint.generalized.qd[0]-expected_v).abs()<1e-10);
+        g = step.endpoint.generalized;
+    }
+    assert!(reused>20);
+    let mut reference_workspace = workspace.clone();
+    assert!(map.advance_implicit_mechanics_cached(&g,0.4,0.01,&config,&refinement,&mut workspace,|_,_|Err("deliberate force failure".into())).is_err());
+    let actual = map.advance_implicit_mechanics_cached(&g,0.4,0.01,&config,&refinement,&mut workspace,load).unwrap();
+    let reference = map.advance_implicit_mechanics_cached(&g,0.4,0.01,&config,&refinement,&mut reference_workspace,load).unwrap();
+    assert_eq!(actual.endpoint.generalized.q,reference.endpoint.generalized.q);
+    assert_eq!(actual.endpoint.generalized.qd,reference.endpoint.generalized.qd);
+    assert_eq!(serde_json::to_value(actual.segments).unwrap(),serde_json::to_value(reference.segments).unwrap());
+    let smaller = map.advance_implicit_mechanics_cached(&actual.endpoint.generalized,0.41,0.005,&config,&refinement,&mut workspace,load).unwrap();
+    assert!(!smaller.segments[0].diagnostics.started_with_reused_jacobian);
+}
+
+#[test]
 fn mechanical_subdivision_preserves_direct_steps_and_recovers_nonlinear_drag() {
     use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
     use sim_dynamics::hybrid::HybridConfig;

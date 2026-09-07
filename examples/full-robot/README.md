@@ -1,5 +1,13 @@
 # Four-leg robot commissioning
 
+The [efficient student experiment](mechanical-reuse/README.md) connects guarded
+derivative reuse to the shared mechanical solver, with a fresh restart before
+subdivision. The native minute needs 40% fewer Jacobian builds and follows the
+paced baseline closely. Its rendered minute keeps up with realtime; active
+p95 improves from 28.5 to 22.5 ms but still misses 20 ms. A full unforced 5 ms
+reference also exposes heading failure, so timestep accuracy and heading
+robustness remain open alongside wider commands, terrain and hardware transfer.
+
 The [paced student experiment](step-margin/README.md) improves supported-swing
 margin using modest weight shifts and longer raise/lower phases, with the same
 network and force laws. Shared bounded implicit-step recovery completes the

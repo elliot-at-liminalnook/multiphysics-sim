@@ -1,0 +1,495 @@
+{
+  "version": 1,
+  "stage": "first experimental learned residual teacher; not a complete or deployable walking policy",
+  "sources": [
+    {
+      "path": "crates/sim-domain-control/src/neural.rs",
+      "sha256": "c638f484b927efec4d049d9594d8808da99b4ece91cf781d579c193aa03fb001"
+    },
+    {
+      "path": "crates/sim-domain-control/src/policy_search.rs",
+      "sha256": "28bddebcf1bc6a6149f4c8e2747fdfcddfac960026bda29eec4a94007bf52c7f"
+    },
+    {
+      "path": "crates/sim-domain-control/tests/neural.rs",
+      "sha256": "28686d76941a3704983cbaa09f3da3c47e6575c161a00c575b5bb84882f4a212"
+    },
+    {
+      "path": "crates/sim-runtime/src/embedded_policy.rs",
+      "sha256": "82c531dc9e45c88f4d8885f7c025fb7a048e41e98296c8856fcc6b8bfbf6380f"
+    },
+    {
+      "path": "crates/sim-runtime/src/embedded.rs",
+      "sha256": "a34192ffbb6487202248222046bf934ce074e1f25accc2a9f6ce70357ed09538"
+    },
+    {
+      "path": "crates/sim-runtime/src/environment.rs",
+      "sha256": "8ccfd6fb89a9041134a3f6e005986123ca27903c6483027b88bcfe0828c3469f"
+    },
+    {
+      "path": "crates/sim-runtime/examples/train_residual_policy.rs",
+      "sha256": "b82dc7bc7e7abdaeddb614ed554c86041662c51a24baddb702e4d6642607d082"
+    },
+    {
+      "path": "crates/sim-runtime/tests/neural_policy.rs",
+      "sha256": "6b5aaeb1b684a53bf0d90b5cdc1198566b5db23246136ef875133e62ca028011"
+    },
+    {
+      "path": "examples/full-robot/prepare_neural_teacher.mjs",
+      "sha256": "31e06d435d02c5d6e2386c32bb806cf397fbe2023954d35226efbeadd85bc932"
+    },
+    {
+      "path": "examples/full-robot/materialize_neural_teacher.mjs",
+      "sha256": "e9fb02d6eb15fc33fd592d8dcf5a6d7f22b118e48b59b9885eff081dffa2e7b6"
+    },
+    {
+      "path": "examples/full-robot/check_neural_teacher.mjs",
+      "sha256": "0135b5414447e9af22df39534fed6c3eb4f3f7a306e1fab770737e9d483b4741"
+    },
+    {
+      "path": "examples/full-robot/summarize_neural_teacher.mjs",
+      "sha256": "52b43efcd977ca157c051ac3bf9c69033c09ee0cae5e121deb783cbff41af224"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/scene.json",
+      "sha256": "f794d037a7912342dfcb486cf22c0ea1c93178c63e5bad936303c9f00facf2f8"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/config.json",
+      "sha256": "2773061b57cd4715fa03d4f1564e85409ce8a25104ccf58806ebe01ad5d204d0"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/short.config.json",
+      "sha256": "d6267fe34943240705005660c3f3057965e1befe70324f09ebbe86d88fccfde1"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/initial.config.json",
+      "sha256": "29a2e82d9efeed649965b313eb576666bad734b7951518bd8d5a1ef0a166817d"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/task.json",
+      "sha256": "c40f2b2c819022bd0ea12a879318a2563cc91bb2606bb09edfa1a6bf579c94e9"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/experiment.json",
+      "sha256": "0754c7cdfe4a420b3b7ae33e611cbd11cb5e77f46315e578afa793232bdababb"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/policy.json",
+      "sha256": "bd9a5fd191d9911b4458733ba83d5c5f94e9caeaa6e0ec2e2eb571c5e6b54051"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/search.json",
+      "sha256": "4a88b706cfe9a8ad67ff02ad9e0bafc13f729533d24cb02ad0d70d561641fabc"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/train.actions.json",
+      "sha256": "bf57e5ce3a89ef61ca89d0edc13a79ea1c5669bd1a3db8a64f84e3d35780130e"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/heldout.actions.json",
+      "sha256": "36cc64adde13d93c1c8ba830f4e7c62e06c1c319fafc4fa112a34f67d4b2c942"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/manifest.json",
+      "sha256": "79c8d2317c94116beb85ab2ab7e07e390fe45bac91cb0a360835150ab7bd410c"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0000.json",
+      "sha256": "43849feab365a31feb63b4dcec80b7092dd97ff7a352cf3a9860983d472fb173"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0001.json",
+      "sha256": "6ed75a855e99f1de6e52b3cbb0e5806c6ab6473b79aaf09df521ad48be9611fc"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0002.json",
+      "sha256": "f2ff91d347184223c6be566e8648452f3d16317bc74ab26229122027bbdbc525"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0003.json",
+      "sha256": "2e4bcd8ed898e873e5c419d0e3dec5744ef08bc8f903e029bcd452e4a205e6ed"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0004.json",
+      "sha256": "609d3bbb102be6a2557ef5c3ee9cf695efa45dfe913d036a8591c94eb5e39527"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0005.json",
+      "sha256": "ede2012713c98755fccb9b1bcc2d65e05e40f02502a5fe5c9465a3534573a476"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0006.json",
+      "sha256": "b9db928e5a037d284f7c8b1c9d1f8fb4ceb78064f5fabd373dd3b29e2ac04785"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0007.json",
+      "sha256": "c465dd1add1f84c161aa529c76e2c73dbd284d66d793f278011c0761dba3a38e"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/trials/evaluation-0008.json",
+      "sha256": "f50631176636deb1c982db13299174209e12644fa03482368dd098147f6d7102"
+    }
+  ],
+  "evidence": {
+    "zero": {
+      "path": "runs/full-robot/learning/neural-teacher/zero.native.json",
+      "sha256": "1d6381304915f7f04a4f9ca10bd38efb8f7d625bf7977017a8684ab7b34cd29c"
+    },
+    "train": {
+      "path": "runs/full-robot/learning/neural-teacher/train.native.json",
+      "sha256": "7435c2265b254cb36ab66cf461a38cb28611d796c3c5601c7a3848b75cc855d6"
+    },
+    "heldout": {
+      "path": "runs/full-robot/learning/neural-teacher/heldout.native.json",
+      "sha256": "9ffddc10f8200b4f255b6a6f99f473328e805c5fe9836f1c6cab8f3762c68e36"
+    },
+    "heldout-zero": {
+      "path": "runs/full-robot/learning/neural-teacher/heldout-zero.native.json",
+      "sha256": "af1e1e20dc395d6b3dd14cd8c2838df9daeaf597662d87cb52218768b0a33d49"
+    },
+    "heldout-refined": {
+      "path": "runs/full-robot/learning/neural-teacher/heldout-refined.native.json",
+      "sha256": "60f050877500421cf5c0e15c33807be70220b632a3080d3e9ed60d403ef7aedd"
+    },
+    "heldout-zero-refined": {
+      "path": "runs/full-robot/learning/neural-teacher/heldout-zero-refined.native.json",
+      "sha256": "b0c12dd01a1d5b5576c9e23921e90efa8ae160551c79022cddebf9c8f7f7d81a"
+    },
+    "sustained-80": {
+      "path": "runs/full-robot/learning/neural-teacher/sustained-80.native.json",
+      "sha256": "d47074c764d4893591a6ea3bd9986034dd0c5d3b446662e7b778c7fcebbb23f2"
+    },
+    "sustained": {
+      "path": "runs/full-robot/learning/neural-teacher/sustained.native.json",
+      "sha256": "d58bc6a2fccf778def6bd77dea9ab3f37b30a195eda7f29761f0c8dd2b4e3e3e"
+    },
+    "candidate-3-sustained": {
+      "path": "runs/full-robot/learning/neural-teacher/candidate-3-sustained.native.json",
+      "sha256": "0069b59a86b9c26c79fb8a7018ecc8259377c5ba7a8962d70bc89a6c3dbfe3da"
+    },
+    "sustained-refined": {
+      "path": "runs/full-robot/learning/neural-teacher/sustained-refined.native.json",
+      "sha256": "04f08e1e44decc5008362dfeb3f8b25b29b302dcc27f6d40d8956831ada0e81f"
+    },
+    "search": {
+      "path": "examples/full-robot/neural-teacher/search.json",
+      "sha256": "4a88b706cfe9a8ad67ff02ad9e0bafc13f729533d24cb02ad0d70d561641fabc"
+    },
+    "artifact": {
+      "path": "runs/full-robot/learning/neural-teacher/artifact-report.json",
+      "sha256": "2e42d6ca10e9a6427a9d8918b33e268cdc7732087004b274f5398b92162e214e"
+    },
+    "parity": {
+      "path": "runs/interactive/neural-teacher/sustained-parity.json",
+      "sha256": "a9b9ef0b1a2e8a1f4677f19efc96f60061d924cd5c6485ee101ea06b15b466b1"
+    },
+    "ui": {
+      "path": "runs/interactive/neural-teacher/viewer-report.json",
+      "sha256": "0635056e28e5f40e049b92e38c72fe2b43bfd33bf8bbb588d2b3616af70c3178"
+    },
+    "timing": {
+      "path": "runs/interactive/neural-teacher/live-performance.json",
+      "sha256": "8e2678f6b692eb2ae4e057e9c36bbf1a0369b2edff71936cbfdba327cb1149ed"
+    },
+    "bundle": {
+      "path": "runs/interactive/neural-teacher/viewer/build-manifest.json",
+      "sha256": "6be86c56419a2d7529425fef133ee6f0464a30da3b70f06d7bc98fac27cd6e2c"
+    },
+    "train_acceptance": {
+      "path": "runs/full-robot/learning/neural-teacher/train-acceptance/summary.json",
+      "sha256": "9ec9230f3bbf7a4d330e52918c8e10e1abb8cf88b1f94ded95338e2d935f3f5f"
+    },
+    "heldout_acceptance": {
+      "path": "runs/full-robot/learning/neural-teacher/heldout-acceptance/summary.json",
+      "sha256": "4cd5d122251dace33d7f61d0459bc929ccb5b89e0bba7dbf0ea3b225f35d9c5c"
+    },
+    "heldout-refined_acceptance": {
+      "path": "runs/full-robot/learning/neural-teacher/heldout-refined-acceptance/summary.json",
+      "sha256": "090f71ba31aaf596e2c238e547062b4ea33a001fc26be885fcd77f3e3d345f1f"
+    },
+    "sustained-80_acceptance": {
+      "path": "runs/full-robot/learning/neural-teacher/sustained-80-acceptance/summary.json",
+      "sha256": "64d6709a2ac58b8c04f26170e403c46a22765d22eb5b87cc7e8af6ce820e5975"
+    },
+    "sustained-refined-80_acceptance": {
+      "path": "runs/full-robot/learning/neural-teacher/sustained-refined-80-acceptance/summary.json",
+      "sha256": "dbcf62406d6ba77063dfe496f3ad6bd6aa37c1c1e6f5c4128ac463c27d9152f3"
+    },
+    "keyboard_recording": {
+      "path": "runs/interactive/neural-teacher/live-performance.recording.json",
+      "sha256": "5c2fe54fd4d5119d75f3ee11194e121b15941e89cd3732823e93929d0fa68d4f"
+    },
+    "sustained_refinement": {
+      "path": "runs/full-robot/learning/neural-teacher/sustained-refinement.json",
+      "sha256": "93c8fdd589d528a31c05e29aeaef6a15622a68d3e268d95d153ff1cd2def3772"
+    }
+  },
+  "network": {
+    "features": 36,
+    "hidden": 8,
+    "outputs": 12,
+    "parameters": 404,
+    "maximum_checked_correction_rad": 0.00009645377095433328
+  },
+  "search": {
+    "seed": 417,
+    "evaluations": 9,
+    "failed_candidates": 1,
+    "training_reward": {
+      "zero": 23.78693223389097,
+      "learned": 23.78696734151185,
+      "difference": 0.000035107620881547064
+    },
+    "heldout_reward": {
+      "zero": 23.786462445632893,
+      "learned": 23.78650768626686,
+      "difference": 0.000045240633966159294
+    },
+    "heldout_refined_reward": {
+      "zero": 23.790258644958822,
+      "learned": 23.79031201291703,
+      "difference": 0.00005336795820909401
+    },
+    "scope": "One seed, four paired random-search iterations, one 24 s training command sequence. Reverse-first commands excluded from training. Gains are tiny and do not establish a practically better or robust walking controller."
+  },
+  "geometry": {
+    "train": {
+      "passed": true,
+      "swings": 9,
+      "passed_swings": 9,
+      "final_body_error_m": 0.0006814884613915924,
+      "maximum_body_tilt_rad": 0.0035462257654645174,
+      "final_yaw_error_rad": 0.0010325921208133053,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "heldout": {
+      "passed": true,
+      "swings": 9,
+      "passed_swings": 9,
+      "final_body_error_m": 0.0006660697024686279,
+      "maximum_body_tilt_rad": 0.003593805439325112,
+      "final_yaw_error_rad": 0.00010275531564942689,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "heldout-refined": {
+      "passed": true,
+      "swings": 9,
+      "passed_swings": 9,
+      "final_body_error_m": 0.0006676933545781278,
+      "maximum_body_tilt_rad": 0.0036037676208167655,
+      "final_yaw_error_rad": 0.00008606406257563943,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "sustained-80": {
+      "passed": true,
+      "swings": 28,
+      "passed_swings": 28,
+      "final_body_error_m": 0.0009619810191780177,
+      "maximum_body_tilt_rad": 0.003547320865896704,
+      "final_yaw_error_rad": 0.0039933947229190145,
+      "inter_link_geometry_audit": {
+        "frames": 3001,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "sustained-refined-80": {
+      "passed": false,
+      "swings": 28,
+      "passed_swings": 28,
+      "final_body_error_m": 0.0010134776754032447,
+      "maximum_body_tilt_rad": 0.0035494076933127905,
+      "final_yaw_error_rad": 0.004439457921306655,
+      "inter_link_geometry_audit": {
+        "frames": 3001,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    }
+  },
+  "refinement": {
+    "version": 1,
+    "reference": {
+      "path": "runs/full-robot/learning/neural-teacher/sustained-refined-80.native.json",
+      "sha256": "b1998acbcfa3110553599bb2d8c2c6dc324adca430ff17e94f2e85b7de9d4633"
+    },
+    "candidate": {
+      "path": "runs/full-robot/learning/neural-teacher/sustained-80.native.json",
+      "sha256": "d47074c764d4893591a6ea3bd9986034dd0c5d3b446662e7b778c7fcebbb23f2"
+    },
+    "completed": true,
+    "simulated_s": 60,
+    "wall_s": 22.734559075,
+    "simulation_per_wall_second": 2.639153889110559,
+    "transition_p95_s": 0.014177304,
+    "maximum_foot_difference_m": {
+      "-Y-foot-surface": 0.0004793076441418499,
+      "+X-foot-surface": 0.00017266021487851466,
+      "+Y-foot-surface": 0.00046984342358310973,
+      "-X-foot-surface": 0.000211275229974388
+    },
+    "maximum_body_position_difference_m": 0.0002827873285772127,
+    "maximum_motor_angle_difference_rad": 0.003264097805315669,
+    "maximum_penetration_m": 0.00009867059551049717,
+    "maximum_effective_torque_nm": 0.9602739346672251,
+    "scope": "Single native capture comparison over one short stepping reference. Endpoint samples at 50 Hz; does not bound between-sample peaks, validate impact impulses, establish sustained gait or hardware accuracy."
+  },
+  "failed_diagnostics": [
+    {
+      "name": "sustained",
+      "completed": false,
+      "time_s": 34.9,
+      "error": "step 1745: implicit mechanical solve: Newton did not converge after 40 iterations; residual=5.805478427498359e-6; largest final residual: Some(\"mechanical velocity row 16: residual=-5.805478427498359e-6, candidate=-1.3097296273209895e-2\"); last rejected endpoint: None"
+    },
+    {
+      "name": "candidate-3-sustained",
+      "completed": false,
+      "time_s": 34.9,
+      "error": "step 1745: implicit mechanical solve: Newton did not converge after 40 iterations; residual=9.893451916997281e-6; largest final residual: Some(\"mechanical velocity row 16: residual=-9.893451916997281e-6, candidate=-1.3147893275731652e-2\"); last rejected endpoint: None"
+    },
+    {
+      "name": "sustained-refined",
+      "completed": false,
+      "time_s": 24.98,
+      "error": "step 2499: implicit mechanical solve: Newton did not converge after 40 iterations; residual=1.0909624114522252e-3; largest final residual: Some(\"mechanical velocity row 9: residual=1.0909624114522252e-3, candidate=-4.22793769800493e-4\"); last rejected endpoint: None"
+    }
+  ],
+  "native_wasm": {
+    "passed": true,
+    "preset": "robot-neural-teacher",
+    "transitions": 3000,
+    "maximum_native_wasm_difference": 1.7765522386525845e-10,
+    "worst": "transition[2952].observations.68",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 8875,
+    "replay_progress_messages": 3000,
+    "numeric_tolerance": {
+      "absolute": 1e-7,
+      "relative": 1e-8,
+      "maximum_fraction": 0.0009035346534078661
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+    "performance": {
+      "simulated_s": 60,
+      "transition_wall_s": 28.625190000653266,
+      "simulation_per_wall_second": 2.0960559562619747,
+      "transition_p95_s": 0.017589999973773956,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance."
+    },
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "viewer": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-online-steps: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reversal-crawl: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-terrain-contact: 50 Hz task score, held-action recording, visible replay and reset",
+      "teacher motor corrections: bounded sliders, readable precision, recorded action replay and clear",
+      "robot-residual-policy: 50 Hz task score, held-action recording, visible replay and reset",
+      "neural teacher: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-neural-teacher: 50 Hz task score, held-action recording, visible replay and reset",
+      "WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "rendered": {
+    "completed": true,
+    "preset": "robot-neural-teacher",
+    "scenario": "sustained-forward",
+    "performance": {
+      "simulation_per_wall_second": 1.0001492722786094,
+      "transition_p95_s": 0.022144999980926512,
+      "render_interval_p95_s": 0.01667000000000189,
+      "render_frames": 3587,
+      "transitions": 3000,
+      "wall_s": 59.99104500001669,
+      "simulated_s": 60,
+      "active_motion": {
+        "transitions": 2800,
+        "simulated_s": 56,
+        "wall_s": 55.96601999998091,
+        "simulation_per_wall_second": 1.0006071541270776,
+        "transition_p95_s": 0.022560000002384187
+      }
+    },
+    "meets_speed_target": true,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+    "keyboard_commands_recorded": true
+  },
+  "runtime_tests": {
+    "library": 2,
+    "runtime": 9,
+    "result": "passed",
+    "logs": [
+      {
+        "path": "runs/full-robot/learning/neural-teacher/library-tests.log",
+        "sha256": "02337be78372c69fc736887f222de9e6303b4f91ebdba4c80d278dc17bae4d00"
+      },
+      {
+        "path": "runs/full-robot/learning/neural-teacher/runtime-tests.log",
+        "sha256": "f4e377bc9feeb3d47aeea9e779e19522011673f3d04283db3d399761b3df5a76"
+      }
+    ]
+  },
+  "remaining": [
+    "refined sustained final body error exceeds 1 mm",
+    "meaningful multi-scenario policy improvement",
+    "teacher-to-student distillation",
+    "bounded disturbance training",
+    "hardware calibration",
+    "command-to-visible-response latency",
+    "20 ms rendered p95 transition target"
+  ],
+  "scope": "Native/WASM execution, bounded learned action effects and nominal sampled stepping are demonstrated. Detailed physics, the baseline controller and failed comparisons remain available. No robustness, sim-to-real accuracy or full-goal completion claim."
+}

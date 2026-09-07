@@ -312,6 +312,17 @@
       "description": "WASD controls the baseline crawl. Expand Motor corrections to adjust any of the twelve motor targets; clear corrections to request the baseline again.",
       "readiness": "Teacher-action experiment · no trained neural policy yet · ideal simulation observations · corrections remain subject to motor and geometry limits.",
       "evidence": "The same Rust mechanism, effective motors and terrain-contact profile remain active. Zero corrections reproduce the baseline. Added teacher observations and provisional rewards prepare individual motor actions for learning; they do not establish hardware transfer or arbitrary correction safety."
+    },
+    {
+      "id": "robot-neural-teacher",
+      "label": "Quadruped · First neural teacher",
+      "mode": "embedded",
+      "scene": "examples/full-robot/neural-teacher/scene.json",
+      "config": "examples/full-robot/neural-teacher/config.json",
+      "task": "examples/full-robot/neural-teacher/task.json",
+      "description": "WASD requests the slow baseline crawl. A small trained Rust network adds motor-angle corrections. Expand Learned motor corrections to inspect its live outputs.",
+      "readiness": "Initial policy-search experiment · ideal teacher observations · small training-score change · robustness and hardware transfer unverified.",
+      "evidence": "The policy was selected from paired parameter perturbations using one 24-second command sequence. Rust executes the same bounded network in native simulation and WASM, before motor-limit validation. This is an experimental learned correction to a hand-authored gait, not an independently learned or deployable walking controller."
     }
   ]
 }

@@ -165,6 +165,10 @@ function showMotionProgress(next) {
 }
 function showFrame(next) {
   frame = next; tick = next.time_s; applyPoses(next.poses); showTaskObservations(next); showMotionProgress(next);
+  const neural=$('neural-residuals');
+  if(neural?.open)for(const row of neural.querySelectorAll('[data-target]')){
+    row.textContent=`${row.dataset.target.replace(/\.target$/,'')}: ${(next.policy?.neural_residual?.[row.dataset.target]??0).toFixed(6)} rad`;
+  }
   const learning=next.learning, panel=$('learning-progress');panel.hidden=!learning;
   if (learning) {
     const state=learning.terminated?'Task bound reached':learning.truncated?'Time limit reached':'Episode in progress';
@@ -208,6 +212,7 @@ function makeInputs(channels) {
   let residualGroup;
   if(residualStart>=0&&channels.slice(residualStart).every(c=>c.name.startsWith('residual.'))){
     residualGroup=document.createElement('details');residualGroup.id='residual-inputs';
+    residualGroup.hidden=Boolean(current?.data?.config?.policy?.neural_residual);
     const summary=document.createElement('summary');summary.textContent=`Motor corrections (${channels.length-residualStart})`;residualGroup.append(summary);
     const help=document.createElement('p');help.textContent='Angle offsets added to the crawl controller. Zero uses the baseline. Command limits still apply.';residualGroup.append(help);
     const clear=document.createElement('button');clear.id='clear-residuals';clear.textContent='Clear motor corrections';
@@ -222,6 +227,15 @@ function makeInputs(channels) {
     if(residualGroup&&i>=residualStart){if(i===residualStart)$('inputs').append(residualGroup);residualGroup.append(label);}
     else $('inputs').append(label);
   });
+  const network=current?.data?.config?.policy?.neural_residual;
+  if(network&&channels.length){
+    const details=document.createElement('details');details.id='neural-residuals';
+    const title=document.createElement('summary');title.textContent='Learned motor corrections';details.append(title);
+    const note=document.createElement('p');note.textContent='Rust network outputs added to baseline feedback. These readouts are controlled by the policy; WASD requests the motion task.';details.append(note);
+    for(const output of network.outputs){const row=document.createElement('p');row.dataset.target=output.target;row.textContent=`${output.target.replace(/\.target$/,'')}: 0.000000 rad`;details.append(row);}
+    details.addEventListener('toggle',()=>{if(details.open&&frame)for(const row of details.querySelectorAll('[data-target]'))row.textContent=`${row.dataset.target.replace(/\.target$/,'')}: ${(frame.policy?.neural_residual?.[row.dataset.target]??0).toFixed(6)} rad`;});
+    $('inputs').append(details);
+  }
 }
 async function loadPreset(id) {
   const token = ++epoch; abort?.abort(); worker?.close(); worker = null; abort = new AbortController();

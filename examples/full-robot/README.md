@@ -1,5 +1,11 @@
 # Four-leg robot commissioning
 
+The [first neural teacher](neural-teacher.md) trains a small bounded residual
+network and runs the same artifact in Rust and WASM. Short training and held-out
+rewards improve only slightly; the nominal minute passes 28 swings with a larger
+solver iteration budget. Refined final body error still misses its 1 mm gate.
+This is an experimental learned correction, not a complete or deployable policy.
+
 The [teacher motor-action interface](residual-policy.md) adds twelve bounded
 motor corrections and typed teacher observations to the maintained browser
 crawl. Neutral corrections reproduce the full baseline minute exactly; small

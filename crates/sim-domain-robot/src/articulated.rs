@@ -249,6 +249,9 @@ pub struct Articulated {
     pub loop_angular_cfm: f64,
     pub floor_k: f64,
     pub floor_c: f64,
+    /// Floor-only Hunt–Crossley coefficient, seconds/metre. Explicit profile
+    /// values override the historical world damping/stiffness conversion.
+    pub floor_dissipation_s_m: f64,
     /// Hunt–Crossley factor (s/m): `F = k·d·(1 − α·v_separation)`.
     pub restitution_damping: f64,
     pub terrain: Option<Terrain>,
@@ -341,6 +344,8 @@ pub struct Options {
     pub contact: bool,
     pub omit_inter_link_contact: bool,
     pub floor_friction: FloorFrictionModel,
+    /// Explicit floor dissipation (s/m); None retains the historical conversion.
+    pub floor_dissipation_s_m: Option<f64>,
     /// Experimental exact/hybrid derivatives; validate convergence before enabling.
     pub hybrid_jacobian: bool,
     pub rate_partials: bool,
@@ -364,7 +369,7 @@ pub struct Options {
 }
 impl Default for Options {
     fn default() -> Self {
-        Self { gravity_scale: 1.0, planar: false, flex: true, contact: true, omit_inter_link_contact: false, floor_friction: FloorFrictionModel::Bristle, hybrid_jacobian: false, rate_partials: false, constraint_state_step: 0.0, structural_loop_identities: false, loop_alpha: 100.0, loop_cfm: 1e-6, loop_angular_cfm: 1e-6, flex_modes: 4, flex_max_hz: 500.0, initial_angles: BTreeMap::new(), initial_speeds: BTreeMap::new(), initial_twist: [0.0; 6], initial_offset: [0.0; 3] }
+        Self { gravity_scale: 1.0, planar: false, flex: true, contact: true, omit_inter_link_contact: false, floor_friction: FloorFrictionModel::Bristle, floor_dissipation_s_m: None, hybrid_jacobian: false, rate_partials: false, constraint_state_step: 0.0, structural_loop_identities: false, loop_alpha: 100.0, loop_cfm: 1e-6, loop_angular_cfm: 1e-6, flex_modes: 4, flex_max_hz: 500.0, initial_angles: BTreeMap::new(), initial_speeds: BTreeMap::new(), initial_twist: [0.0; 6], initial_offset: [0.0; 3] }
     }
 }
 
@@ -410,6 +415,9 @@ impl Articulated {
 
     pub fn new(model: Arc<PhysicalModel>, opts: &Options) -> Result<Self, String> {
         opts.floor_friction.validate()?;
+        if opts.floor_dissipation_s_m.is_some_and(|v| !v.is_finite() || v < 0.0) {
+            return Err("floor dissipation must be finite and nonnegative (s/m)".into());
+        }
         if !opts.constraint_state_step.is_finite() || !(0.0..=0.1).contains(&opts.constraint_state_step) {
             return Err("constraint state probe step must be finite and within 0..=0.1".into());
         }
@@ -806,6 +814,8 @@ impl Articulated {
             loop_angular_cfm: opts.loop_angular_cfm,
             floor_k: model.world.floor_stiffness,
             floor_c: model.world.floor_damping,
+            floor_dissipation_s_m: opts.floor_dissipation_s_m.unwrap_or_else(||
+                (model.world.floor_damping / model.world.floor_stiffness).clamp(0.2, 3.0)),
             restitution_damping: (model.world.floor_damping / model.world.floor_stiffness).clamp(0.2, 3.0),
             terrain: model.world.terrain.clone(),
             floor_z: model.world.floor_z,
@@ -1340,7 +1350,7 @@ impl Articulated {
                     }
                     let vp = k.vel + k.w.cross(&r);
                     let vn = vp.dot(&up);
-                    let fn_ = (self.floor_k * depth * (1.0 - self.restitution_damping * vn)).max(0.0);
+                    let fn_ = (self.floor_k * depth * (1.0 - self.floor_dissipation_s_m * vn)).max(0.0);
                     total += fn_;
                     touching.push((pt, r, fn_, vp, depth));
                 }
@@ -1826,6 +1836,7 @@ fn articulated(p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationError>
     let mut opts = Options { gravity_scale: param_or(p, "gravity", 1.0), planar: param_or(p, "planar", 0.0) > 0.5, flex: param_or(p, "flex", 1.0) > 0.5, contact: param_or(p, "contact", 1.0) > 0.5, omit_inter_link_contact: param_or(p, "collision.omit_inter_link", 0.0) > 0.5, hybrid_jacobian: param_or(p, "jacobian.hybrid", 0.0) > 0.5, rate_partials: param_or(p, "jacobian.rates", 0.0) > 0.5, constraint_state_step: param_or(p, "jacobian.constraint_state_step", 0.0), structural_loop_identities: param_or(p, "loop.structural_identities", 0.0) > 0.5, loop_alpha: param_or(p, "loop.alpha", 100.0), loop_cfm: param_or(p, "loop.cfm.translation", 1e-6), loop_angular_cfm: param_or(p, "loop.cfm.rotation", 1e-6), flex_modes: param_or(p, "flex.modes", 4.0) as usize, flex_max_hz: param_or(p, "flex.max_hz", 500.0), ..Options::default() };
     opts.floor_friction = FloorFrictionModel::from_registry_speed(param_or(p, "floor.regularized_slip_speed", 0.0))
         .map_err(|e| sim_core::EquationError::InvalidParameter("floor.regularized_slip_speed".into(), e))?;
+    opts.floor_dissipation_s_m = p.get("floor.dissipation").copied();
     for (k, name) in ["vx", "vy", "vz", "wx", "wy", "wz"].iter().enumerate() {
         opts.initial_twist[k] = param_or(p, &format!("initial.base.{name}"), 0.0);
     }
@@ -1906,6 +1917,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
         P::optional("jacobian.hybrid", "1", 0.).integer(0., 1.),
         P::optional("jacobian.rates", "1", 0.).integer(0., 1.),
         P::optional("floor.regularized_slip_speed", "m/s", 0.).nonnegative(),
+        P::alternative("floor.dissipation", "s/m").nonnegative(),
         P::optional("jacobian.constraint_state_step", "1", 0.),
         P::optional("loop.structural_identities", "1", 0.).integer(0., 1.),
         P::optional("loop.alpha", "1/s", 100.).nonnegative(), P::optional("loop.cfm.translation", "1/kg", 1e-6).nonnegative(),

@@ -1,5 +1,9 @@
 # Four-leg robot commissioning
 
+The [response investigation](response-diagnosis.md) replays identical motor
+targets to isolate timestep sensitivity and exposes explicit floor dissipation
+in s/m. Contact trials remain unpromoted; default trajectories stay exact.
+
 The [walking-speed investigation](speed-envelope.md) tests longer steps, faster
 cadence and standing feedback. A faster short run passes, but sustained and
 timestep checks prevent promotion; the existing browser controllers stay intact.

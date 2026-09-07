@@ -42,6 +42,10 @@ pub struct BuildOptions {
     /// Explicit experimental contact reduction. Default retains bristle physics.
     #[serde(default, skip_serializing_if = "FloorFrictionModel::is_bristle")]
     pub floor_friction: FloorFrictionModel,
+    /// Explicit depth-scaled floor dissipation (s/m), not a dashpot (N·s/m).
+    /// Absent preserves historical contact behavior.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub floor_dissipation_s_m: Option<f64>,
     /// Fixed integration step (s).
     pub step: f64,
     /// Results sampling interval (s).
@@ -85,7 +89,7 @@ pub struct BuildOptions {
 }
 impl Default for BuildOptions {
     fn default() -> Self {
-        Self { planar: false, flex: true, contact: true, omit_inter_link_contact: false, floor_friction: FloorFrictionModel::Bristle, step: 5.0e-4, sample: 0.01, seconds_hint: 2.0, verbose: false, report: 0.1, flex_modes: 4, driver_control: false, numerical_jacobian: false, hybrid_articulated_jacobian: false, articulated_rate_partials: false, constraint_state_step: None, structural_loop_identities: false, analytic_motor_jacobian: false, backlash_events: false, motor_dynamics: Default::default(), event_jacobian_reuse: false, guarded_backtracking: false }
+        Self { planar: false, flex: true, contact: true, omit_inter_link_contact: false, floor_friction: FloorFrictionModel::Bristle, floor_dissipation_s_m: None, step: 5.0e-4, sample: 0.01, seconds_hint: 2.0, verbose: false, report: 0.1, flex_modes: 4, driver_control: false, numerical_jacobian: false, hybrid_articulated_jacobian: false, articulated_rate_partials: false, constraint_state_step: None, structural_loop_identities: false, analytic_motor_jacobian: false, backlash_events: false, motor_dynamics: Default::default(), event_jacobian_reuse: false, guarded_backtracking: false }
     }
 }
 
@@ -190,13 +194,16 @@ impl PhysicalRobot {
         model.apply_identification();
         let model = Arc::new(model);
         let mut warnings = Vec::new();
-        let art_opts = Options { floor_friction: opts.floor_friction, hybrid_jacobian: opts.hybrid_articulated_jacobian, rate_partials:opts.articulated_rate_partials, constraint_state_step:opts.constraint_state_step.unwrap_or(0.0), structural_loop_identities: opts.structural_loop_identities, planar: opts.planar, flex: opts.flex, contact: opts.contact, omit_inter_link_contact: opts.omit_inter_link_contact, flex_modes: opts.flex_modes.max(1), ..Options::default() };
+        let art_opts = Options { floor_friction: opts.floor_friction, floor_dissipation_s_m: opts.floor_dissipation_s_m, hybrid_jacobian: opts.hybrid_articulated_jacobian, rate_partials:opts.articulated_rate_partials, constraint_state_step:opts.constraint_state_step.unwrap_or(0.0), structural_loop_identities: opts.structural_loop_identities, planar: opts.planar, flex: opts.flex, contact: opts.contact, omit_inter_link_contact: opts.omit_inter_link_contact, flex_modes: opts.flex_modes.max(1), ..Options::default() };
         let art = Articulated::new(model.clone(), &art_opts)?;
         warnings.extend(art.warnings.iter().cloned());
         let handle = register_model(model.as_ref().clone());
         let mut params: Vec<(&'static str, f64)> = vec![("model", handle), ("jacobian.hybrid", if opts.hybrid_articulated_jacobian { 1.0 } else { 0.0 }), ("jacobian.rates", if opts.articulated_rate_partials {1.0} else {0.0}), ("jacobian.constraint_state_step", opts.constraint_state_step.unwrap_or(0.0)), ("loop.structural_identities", if opts.structural_loop_identities { 1.0 } else { 0.0 }), ("planar", if opts.planar { 1.0 } else { 0.0 }), ("flex", if opts.flex { 1.0 } else { 0.0 }), ("contact", if opts.contact { 1.0 } else { 0.0 }), ("flex.modes", opts.flex_modes.max(1) as f64)];
         params.push(("collision.omit_inter_link", if opts.omit_inter_link_contact { 1.0 } else { 0.0 }));
         params.push(("floor.regularized_slip_speed", opts.floor_friction.registry_speed()));
+        if let Some(value) = opts.floor_dissipation_s_m {
+            params.push(("floor.dissipation", value));
+        }
         for (k, val) in art.port_parameters() {
             params.push((leak(k), val));
         }

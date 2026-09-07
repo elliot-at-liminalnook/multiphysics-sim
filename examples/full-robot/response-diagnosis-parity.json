@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "preset": "dissipation-experiment",
+  "transitions": 1200,
+  "maximum_native_wasm_difference": 2.817275301936206e-10,
+  "worst": "physics[2].policy.observations.marker.-Y-foot-surface.floor_force_world.z",
+  "differences": [],
+  "invalid_action_preserved": true,
+  "changed_task_replay_preserved": true,
+  "replay_exact": true,
+  "reset_exact": true,
+  "main_thread_heartbeats": 4365,
+  "replay_progress_messages": 1200,
+  "numeric_tolerance": {
+    "absolute": 1e-7,
+    "relative": 1e-8,
+    "maximum_fraction": 0.001578430389184047
+  },
+  "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+  "host": {
+    "platform": "darwin",
+    "architecture": "x64",
+    "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+    "logical_cpus": 16,
+    "browser": "152.0.7977.76"
+  },
+  "performance_note": "Not a rendered performance acceptance run; independent validation work overlapped."
+}

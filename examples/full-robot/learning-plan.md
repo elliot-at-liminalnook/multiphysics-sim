@@ -16,7 +16,16 @@ Do not wait for detailed-model realtime or completed RL before delivering browse
 walking. `teacher-environment.md` provides the shared sampled task interface,
 versioned robot recipe and native/WASM replay path for this next stage.
 
-Latest browser experiment: `effective-servo.md` introduces a registered bounded
+Latest controller work: `online-control-validation.md` adds shared sampled step
+references, bounded CAD IK, live WASD requests, and velocity-indexed stance
+experiments. A 24 s keyboard sequence completes in 23.99 s with WebGL rendering;
+p95 transition latency is 26.7 ms, above the 20 ms target. The matching native
+sequence passes all ten sampled swing/support checks. Forward-to-reverse switching
+still fails one support check, so general teleoperation is not yet accepted. The
+next controller task is feasible stance transitions; optional force preload did
+not solve that failure. The two-cycle fixed crawl remains available.
+
+Earlier browser profile: `effective-servo.md` introduces a registered bounded
 position servo with explicit CAD-derived gains and torque/speed limits. The
 20 ms browser profile preserves the mechanism/contact model and runs the short
 2.8 s reference at 1.71× realtime in headless Chrome, with p95 transition latency

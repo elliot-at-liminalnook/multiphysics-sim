@@ -1,9 +1,12 @@
 # Four-leg robot commissioning
 
-The [two-cycle crawl](crawl-validation.md) now lifts and replaces all four feet
-twice through live Rust physics. Its browser preset reaches realtime average
-speed in one rendered test; p95 latency, live steering, sustained walking and
-learned control remain open. This is the latest controller/viewer milestone.
+The latest [online-control prototype](online-control-validation.md) accepts WASD
+requests through shared Rust stepping references and Rhai motor feedback. One
+24-second forward/turn/reverse/stop keyboard sequence runs at realtime average
+speed with rendering enabled. General direction changes, the 20 ms p95 target,
+sustained terrain walking and learned control remain open. Its limitations are
+visible in the browser. The accepted [two-cycle fixed crawl](crawl-validation.md)
+remains available alongside the experimental controller.
 
 The active walking/learning delivery and acceptance backlog is in
 [learning-plan.md](learning-plan.md). Sampled foot tracking can now use the

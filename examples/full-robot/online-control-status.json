@@ -1,0 +1,576 @@
+{
+  "version": 1,
+  "status": "experimental; general WASD and full realtime acceptance incomplete",
+  "cases": {
+    "reverse_scheduled": {
+      "passed": true,
+      "simulated_s": 24,
+      "final_body_error_m": 0.0008878491401396236,
+      "maximum_body_tilt_rad": 0.0035940182889049304,
+      "final_yaw_error_rad": 0.00035565158830713674,
+      "final_phase": "idle",
+      "sampled_internal_contacts": 0,
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      },
+      "swings": [
+        {
+          "step": 0,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.30000000000000004,
+          "peak_clearance_m": 0.003188232810751812
+        },
+        {
+          "step": 1,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.30000000000000027,
+          "peak_clearance_m": 0.0031584238882406135
+        },
+        {
+          "step": 2,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3199999999999994,
+          "peak_clearance_m": 0.003071321565273122
+        },
+        {
+          "step": 3,
+          "foot": 3,
+          "passed": true,
+          "longest_qualifying_span_s": 0.2599999999999998,
+          "peak_clearance_m": 0.0030187239578811087
+        },
+        {
+          "step": 4,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.003182294901287852
+        },
+        {
+          "step": 5,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.0031610492012388303
+        },
+        {
+          "step": 6,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3200000000000003,
+          "peak_clearance_m": 0.0030717675928219057
+        },
+        {
+          "step": 7,
+          "foot": 3,
+          "passed": true,
+          "longest_qualifying_span_s": 0.2599999999999998,
+          "peak_clearance_m": 0.0030184743782375456
+        },
+        {
+          "step": 8,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.0031809041318221487
+        },
+        {
+          "step": 9,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.003162628498172837
+        }
+      ],
+      "capture_sha256": "1a0eacade606464ab566ae944aab466d4e558c858add830e9df449683968998f"
+    },
+    "forward_reverse_scheduled": {
+      "passed": false,
+      "simulated_s": 24,
+      "final_body_error_m": 0.0008912721050539529,
+      "maximum_body_tilt_rad": 0.0041672218186975096,
+      "final_yaw_error_rad": 0.0009710672962613983,
+      "final_phase": "idle",
+      "sampled_internal_contacts": 0,
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      },
+      "swings": [
+        {
+          "step": 0,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.30000000000000004,
+          "peak_clearance_m": 0.003180419132465029
+        },
+        {
+          "step": 1,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.28000000000000025,
+          "peak_clearance_m": 0.0031995406696433415
+        },
+        {
+          "step": 2,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.2999999999999998,
+          "peak_clearance_m": 0.0030853783810794733
+        },
+        {
+          "step": 3,
+          "foot": 3,
+          "passed": true,
+          "longest_qualifying_span_s": 0.2599999999999998,
+          "peak_clearance_m": 0.003280283183547783
+        },
+        {
+          "step": 4,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.0031783870268421444
+        },
+        {
+          "step": 5,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.0032021864014611934
+        },
+        {
+          "step": 6,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.33999999999999986,
+          "peak_clearance_m": 0.003179662898631197
+        },
+        {
+          "step": 7,
+          "foot": 3,
+          "passed": false,
+          "longest_qualifying_span_s": 0.05999999999999872,
+          "peak_clearance_m": 0.0030655954214626746
+        },
+        {
+          "step": 8,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.0031924251600981557
+        }
+      ],
+      "capture_sha256": "a96ed1fc5890bc1746e34ac7380379ace0b34549e80452f63e637d32d8a76208"
+    },
+    "turn_reverse_screen": {
+      "passed": true,
+      "simulated_s": 24,
+      "final_body_error_m": 0.0009663009537278734,
+      "maximum_body_tilt_rad": 0.0035438001283917813,
+      "final_yaw_error_rad": 0.0017538277939347124,
+      "final_phase": "idle",
+      "sampled_internal_contacts": 0,
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      },
+      "swings": [
+        {
+          "step": 0,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.30000000000000004,
+          "peak_clearance_m": 0.003180419132465029
+        },
+        {
+          "step": 1,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.28000000000000025,
+          "peak_clearance_m": 0.0031995406696433415
+        },
+        {
+          "step": 2,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.2999999999999998,
+          "peak_clearance_m": 0.0030853783810794733
+        },
+        {
+          "step": 3,
+          "foot": 3,
+          "passed": true,
+          "longest_qualifying_span_s": 0.2599999999999998,
+          "peak_clearance_m": 0.003280283183547783
+        },
+        {
+          "step": 4,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.0031783870268421444
+        },
+        {
+          "step": 5,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.003202649783796585
+        },
+        {
+          "step": 6,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.28000000000000114,
+          "peak_clearance_m": 0.003042377504618554
+        },
+        {
+          "step": 7,
+          "foot": 3,
+          "passed": true,
+          "longest_qualifying_span_s": 0.2599999999999998,
+          "peak_clearance_m": 0.0031938109785623614
+        },
+        {
+          "step": 8,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.003190067349161607
+        },
+        {
+          "step": 9,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.003172658003476214
+        }
+      ],
+      "capture_sha256": "6af0aed161d34309b950f8a765fbdfb98a7da185c57f0aa8924dfdb4a6a35a42"
+    },
+    "forward_preload": {
+      "passed": false,
+      "simulated_s": 24,
+      "final_body_error_m": 0.0009484120470183363,
+      "maximum_body_tilt_rad": 0.004197190114444982,
+      "final_yaw_error_rad": 0.0014611813882140262,
+      "final_phase": "idle",
+      "sampled_internal_contacts": 0,
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      },
+      "swings": [
+        {
+          "step": 0,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.30000000000000004,
+          "peak_clearance_m": 0.0031218883517685203
+        },
+        {
+          "step": 1,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.28000000000000025,
+          "peak_clearance_m": 0.0031409176062268673
+        },
+        {
+          "step": 2,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3799999999999999,
+          "peak_clearance_m": 0.0033610610418199904
+        },
+        {
+          "step": 3,
+          "foot": 3,
+          "passed": false,
+          "longest_qualifying_span_s": 0.040000000000000036,
+          "peak_clearance_m": 0.003124296577182273
+        },
+        {
+          "step": 4,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.003125328769301605
+        },
+        {
+          "step": 5,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.28000000000000114,
+          "peak_clearance_m": 0.0031439050686937753
+        },
+        {
+          "step": 6,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3800000000000008,
+          "peak_clearance_m": 0.0033702086364855166
+        },
+        {
+          "step": 7,
+          "foot": 3,
+          "passed": false,
+          "longest_qualifying_span_s": 0.03999999999999915,
+          "peak_clearance_m": 0.0031258410321887142
+        },
+        {
+          "step": 8,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.003126925240130085
+        },
+        {
+          "step": 9,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.28000000000000114,
+          "peak_clearance_m": 0.0031421375625273473
+        }
+      ],
+      "capture_sha256": "8d5f1843ec9bcb1eca5b119c72559b3669a53cee5e5d91dbfa866f66f16d7123"
+    },
+    "forward_faster_preload": {
+      "passed": false,
+      "simulated_s": 24,
+      "final_body_error_m": 0.000993945218502268,
+      "maximum_body_tilt_rad": 0.004639130207335578,
+      "final_yaw_error_rad": 0.001430610812421647,
+      "final_phase": "idle",
+      "sampled_internal_contacts": 0,
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      },
+      "swings": [
+        {
+          "step": 0,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.30000000000000004,
+          "peak_clearance_m": 0.0027712944419779895
+        },
+        {
+          "step": 1,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.28000000000000025,
+          "peak_clearance_m": 0.0027824818865857526
+        },
+        {
+          "step": 2,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.39999999999999947,
+          "peak_clearance_m": 0.00374062621256821
+        },
+        {
+          "step": 3,
+          "foot": 3,
+          "passed": false,
+          "longest_qualifying_span_s": 0,
+          "peak_clearance_m": 0.002673740024731419
+        },
+        {
+          "step": 4,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.29999999999999893,
+          "peak_clearance_m": 0.002791136722462284
+        },
+        {
+          "step": 5,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.27999999999999936,
+          "peak_clearance_m": 0.0028045897938207
+        },
+        {
+          "step": 6,
+          "foot": 1,
+          "passed": true,
+          "longest_qualifying_span_s": 0.40000000000000036,
+          "peak_clearance_m": 0.0037421050182606663
+        },
+        {
+          "step": 7,
+          "foot": 3,
+          "passed": false,
+          "longest_qualifying_span_s": 0,
+          "peak_clearance_m": 0.0026778595435397734
+        },
+        {
+          "step": 8,
+          "foot": 0,
+          "passed": true,
+          "longest_qualifying_span_s": 0.3000000000000007,
+          "peak_clearance_m": 0.002782914041652429
+        },
+        {
+          "step": 9,
+          "foot": 2,
+          "passed": true,
+          "longest_qualifying_span_s": 0.28000000000000114,
+          "peak_clearance_m": 0.002807666264604991
+        }
+      ],
+      "capture_sha256": "792183e380adaf9a0ab82b60bec73ceb3b27703fe18ecb27994e24587ca38a3c"
+    }
+  },
+  "rendered_keyboard": {
+    "completed": true,
+    "preset": "robot-online-steps",
+    "performance": {
+      "simulation_per_wall_second": 1.0003503310209838,
+      "transition_p95_s": 0.02670999997854233,
+      "render_interval_p95_s": 0.01667000000000189,
+      "render_frames": 1440,
+      "transitions": 1200,
+      "wall_s": 23.99159500002861,
+      "simulated_s": 24
+    },
+    "meets_speed_target": true,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise W, A, S and key release through the UI. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+    "keyboard_commands_recorded": true
+  },
+  "keyboard_recording_sha256": "96f4d947f1358d24b9ca064026752ee78570a3a9b4c13631b4a5503577aeac38",
+  "keyboard_native_recipe_equality": "Exact JSON equality of scene, config, seed, input events, completed steps and task against the accepted turn_reverse_screen native capture.",
+  "scope": "Task-specific sampled flat-floor evidence. Controller offsets and screen limits are provisional. No hardware transfer, sustained terrain, policy learning, or p95-20ms acceptance.",
+  "forward_native_wasm": {
+    "passed": true,
+    "preset": "robot-online-steps",
+    "transitions": 1200,
+    "maximum_native_wasm_difference": 1.5544010523171892e-10,
+    "worst": "physics[337].policy.observations.marker.+Y-foot-surface.floor_force_world.z",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 4580,
+    "replay_progress_messages": 1200,
+    "numeric_tolerance": {
+      "absolute": 1e-07,
+      "relative": 1e-08,
+      "maximum_fraction": 0.0008896700298725062
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "keyboard_native_wasm": {
+    "passed": true,
+    "preset": "robot-online-steps",
+    "transitions": 1200,
+    "maximum_native_wasm_difference": 1.6654055912113108e-10,
+    "worst": "physics[1060].policy.observations.marker.-X-foot-surface.floor_force_world.z",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 4566,
+    "replay_progress_messages": 1200,
+    "numeric_tolerance": {
+      "absolute": 1e-07,
+      "relative": 1e-08,
+      "maximum_fraction": 0.0008896700298725062
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "forward_acceptance": {
+    "version": 1,
+    "passed": true,
+    "simulated_s": 24,
+    "final_phase": "idle",
+    "body_advance_world_m": [
+      0.024876886239605284,
+      0.00038029481563480773,
+      -0.0008192944400800574
+    ],
+    "final_yaw_rad": -0.0015217336983186875,
+    "final_target_yaw_rad": 0,
+    "final_yaw_error_rad": 0.0015217336983186875,
+    "final_body_error_m": 0.0009116054652882101,
+    "maximum_body_tilt_rad": 0.00354255738685192,
+    "sampled_internal_contacts": 0,
+    "budgets": {
+      "minimum_transfers": 4,
+      "maximum_final_body_error_m": 0.001,
+      "maximum_body_tilt_rad": 0.01,
+      "maximum_final_yaw_error_rad": 0.005
+    },
+    "scope": "Initial flat-floor commissioning with ideal observations. Actual clearance/support samples, endpoint tracking and stop checked; not between-sample impact accuracy, terrain robustness, hardware calibration or sustained realtime acceptance.",
+    "capture_sha256": "6028cc1695b0f74c6d0722bbeb17a0b74ee6d069ca075675a1ed72f123dcb9e6",
+    "all_swings_passed": true,
+    "swing_count": 10
+  },
+  "viewer_ui": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-online-steps: 50 Hz task score, held-action recording, visible replay and reset",
+      "WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "local_tests": {
+    "sim_domain_control": 18,
+    "runtime_environment_body_point_and_online_reference": 14,
+    "cad_component_graph": 4,
+    "scope": "Focused suites passed. Full CI remains unaccepted for the separately documented failures."
+  }
+}

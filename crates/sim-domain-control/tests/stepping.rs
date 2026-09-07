@@ -18,6 +18,7 @@ fn sequence() -> StepSequence {
             stance_offsets_m: vec![[0.01, 0.], [0., 0.], [0.01, 0.], [0., 0.]],
             command_postures: vec![],
             restart_order_on_translation_reversal: false,
+            update_command_before_lift: false,
             maximum_speed_m_s: 0.01,
             maximum_yaw_rate_rad_s: 0.1,
         },
@@ -237,4 +238,133 @@ fn reversal_restarts_order_at_transfer_boundary_and_preserves_planted_positions(
     );
     assert_eq!(starts[4].2, 0.00125);
     assert_eq!(starts[5].2, -0.00125);
+}
+
+fn responsive_sequence() -> StepSequence {
+    let mut config = sequence().config().clone();
+    config.update_command_before_lift = true;
+    config.restart_order_on_translation_reversal = true;
+    StepSequence::new(
+        config,
+        [0.; 3],
+        0.,
+        vec![
+            [0., -0.3, -0.4],
+            [0.3, 0., -0.4],
+            [0., 0.3, -0.4],
+            [-0.3, 0., -0.4],
+        ],
+    )
+    .unwrap()
+}
+
+#[test]
+fn prelift_updates_preserve_constant_command_reference_exactly() {
+    let mut old = sequence();
+    let mut new = responsive_sequence();
+    for i in 0..500 {
+        let args = [0.00125, 0., 0.002];
+        let a = old.sample(i as f64 * 0.02, args, true, true).unwrap();
+        let b = new.sample(i as f64 * 0.02, args, true, true).unwrap();
+        assert_eq!(a, b);
+    }
+}
+
+#[test]
+fn stop_before_lift_recenters_without_moving_feet_or_counting_a_transfer() {
+    let mut s = responsive_sequence();
+    let initial = s.sample(0., [0.00125, 0., 0.], true, true).unwrap();
+    let mut previous = initial.clone();
+    for i in 1..=90 {
+        let command = if i < 20 || i >= 80 {
+            [0.00125, 0., 0.]
+        } else {
+            [0.; 3]
+        };
+        let r = s.sample(i as f64 * 0.02, command, true, true).unwrap();
+        assert_eq!(r.step, 0, "an unstarted swing is not a completed transfer");
+        assert_eq!(r.feet_world_m, initial.feet_world_m);
+        if i == 35 {
+            assert_eq!(r.phase, StepPhase::Recenter);
+            assert_eq!(r.foot, None);
+            assert_eq!(r.latched_twist, [0.; 3]);
+            assert_eq!(r.body_world_m, [0., 0.016, 0.]);
+        }
+        if (70..80).contains(&i) {
+            assert_eq!(r.phase, StepPhase::Idle);
+            assert_eq!(r.body_world_m, [0.; 3]);
+        }
+        if i == 80 {
+            assert_eq!(r.phase, StepPhase::Shift);
+            assert_eq!(r.foot, Some(0));
+            assert_eq!(r.body_world_m, previous.body_world_m);
+        }
+        assert!((r.body_world_m[1] - previous.body_world_m[1]).abs() < 0.0013);
+        previous = r;
+    }
+}
+
+#[test]
+fn airborne_stop_preserves_the_committed_landing() {
+    let mut old = sequence();
+    let mut new = responsive_sequence();
+    for i in 0..150 {
+        let command = if i < 45 { [0.00125, 0., 0.] } else { [0.; 3] };
+        let a = old.sample(i as f64 * 0.02, command, true, true).unwrap();
+        let b = new.sample(i as f64 * 0.02, command, true, true).unwrap();
+        assert_eq!(a, b);
+    }
+}
+
+#[test]
+fn prelift_reversal_keeps_the_support_shift_and_restarts_order_after_landing() {
+    let mut s = responsive_sequence();
+    let mut starts = vec![];
+    for i in 0..250 {
+        let command = if i < 120 {
+            [0.00125, 0., 0.]
+        } else {
+            [-0.00125, 0., 0.]
+        };
+        let r = s.sample(i as f64 * 0.02, command, true, true).unwrap();
+        if r.phase == StepPhase::Shift && r.progress == 0. {
+            starts.push(r.foot);
+        }
+        if i == 135 {
+            assert_eq!(r.phase, StepPhase::Raise);
+            assert_eq!(r.foot, Some(2), "do not change which foot was unloaded");
+            assert_eq!(r.latched_twist[0], -0.00125);
+            assert_eq!(r.body_world_m, [0.0025, -0.016, 0.]);
+        }
+        if i == 175 {
+            assert_eq!(r.phase, StepPhase::Return);
+            assert!(
+                r.feet_world_m[2][0] < 0.01,
+                "new landing follows the reverse request"
+            );
+        }
+    }
+    assert_eq!(starts, vec![Some(0), Some(2), Some(0)]);
+}
+
+#[test]
+fn recenter_waits_for_four_foot_support_and_timeout_is_transactional() {
+    let mut s = responsive_sequence();
+    for i in 0..=120 {
+        let before = format!("{s:?}");
+        let command = if i < 20 { [0.00125, 0., 0.] } else { [0.; 3] };
+        let result = s.sample(i as f64 * 0.02, command, true, false);
+        if i == 120 {
+            assert!(result.unwrap_err().contains("Recenter readiness timed out"));
+            assert_eq!(format!("{s:?}"), before);
+        } else {
+            let r = result.unwrap();
+            if i >= 70 {
+                assert_eq!(r.phase, StepPhase::Recenter);
+                assert!(r.waiting);
+                assert_eq!(r.body_world_m, [0.; 3]);
+                assert_eq!(r.step, 0);
+            }
+        }
+    }
 }

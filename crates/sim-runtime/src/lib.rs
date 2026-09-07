@@ -55,3 +55,4 @@ pub mod task_observation;
 
 pub mod point_feedback;
 pub mod step_reference;
+pub mod walking_task;

@@ -25,7 +25,7 @@ pub struct LiftSample {
     pub floor_forces_n: BTreeMap<String, f64>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct LiftReport {
     pub passed: bool,
     pub samples: usize,
@@ -36,7 +36,7 @@ pub struct LiftReport {
     pub failed_clearance_samples: usize,
     pub failed_unloading_samples: usize,
     pub failed_support_samples: usize,
-    pub scope: &'static str,
+    pub scope: String,
 }
 
 pub fn evaluate_lift(samples: &[LiftSample], r: &LiftRequirements) -> Result<LiftReport, String> {
@@ -107,7 +107,7 @@ pub fn evaluate_lift(samples: &[LiftSample], r: &LiftRequirements) -> Result<Lif
         failed_clearance_samples: 0,
         failed_unloading_samples: 0,
         failed_support_samples: 0,
-        scope: "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate.",
+        scope: "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate.".into(),
     };
     let mut start = None;
     for s in phase {

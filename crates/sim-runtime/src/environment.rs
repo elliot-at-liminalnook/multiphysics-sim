@@ -103,6 +103,9 @@ pub struct Task {
     /// Not applied at reset, timeout alone, or numerical failure.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub termination_penalty: f64,
+    /// Optional executed stepping/body tracking objective, separate from policy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub walking: Option<crate::walking_task::WalkingTaskConfig>,
 }
 fn is_zero(value: &f64) -> bool { *value == 0.0 }
 
@@ -114,6 +117,8 @@ pub struct RewardValue {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Transition {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub walking: Option<crate::walking_task::WalkingObservation>,
     pub time_s: f64,
     pub elapsed_s: f64,
     pub observations: Vec<f64>,
@@ -179,6 +184,7 @@ pub struct EnvironmentRecording {
 /// Shared native/WASM adapter. Solver errors are errors, never valid learning
 /// transitions. After a failed advance, reset is required to continue.
 pub struct EmbeddedEnvironment {
+    walking: Option<crate::walking_task::WalkingMonitor>,
     session: EmbeddedSession,
     task: Task,
     stride: usize,
@@ -371,7 +377,19 @@ impl EmbeddedEnvironment {
             }
             bound_indices.push(index(&b.observation)?);
         }
+        let walking=task.walking.clone().map(|config|{
+            let policy=session.config().policy.as_ref().ok_or("walking task requires policy")?;
+            if policy.step_reference.is_none() || !session.scene().options.contact
+                || session.scene().robot.gravity[0]!=0. || session.scene().robot.gravity[1]!=0. || session.scene().robot.gravity[2]>=0.
+                || ["walking.body_tracking","walking.step_outcome"].iter().any(|n|reward_names.contains(*n)) {
+                return Err("walking task requires online steps, world -Z gravity, contact and distinct reward names".into());
+            }
+            let body=policy.body_feedback.as_ref().ok_or("walking task requires body reference binding")?;
+            let feet=policy.point_feedback.as_ref().ok_or("walking task requires foot reference bindings")?;
+            crate::walking_task::WalkingMonitor::new(config,task.period_s,body.reference_link.clone(),feet.markers.iter().map(|m|m.link.clone()).collect(),session.articulated())
+        }).transpose()?;
         let mut result = Self {
+            walking,
             session,
             task,
             stride: n,
@@ -379,6 +397,7 @@ impl EmbeddedEnvironment {
             reward_indices,
             bound_indices,
             latest: Transition {
+                walking: None,
                 time_s: 0.0,
                 elapsed_s: 0.0,
                 observations: vec![],
@@ -395,7 +414,7 @@ impl EmbeddedEnvironment {
         Ok(result)
     }
 
-    fn observe(&self, frame: &Value, elapsed_s: f64) -> Result<Transition, String> {
+    fn observe(&mut self, frame: &Value, elapsed_s: f64) -> Result<Transition, String> {
         let observations: Vec<f64> = self
             .bindings
             .iter()
@@ -441,11 +460,18 @@ impl EmbeddedEnvironment {
             reward_terms.push(RewardValue { name: "task.termination".into(),
                 value: if elapsed_s > 0.0 && !termination_reasons.is_empty() { -self.task.termination_penalty } else { 0.0 } });
         }
+        let walking=self.walking.as_mut().map(|w|w.observe(self.session.articulated(),frame,elapsed_s,
+            self.session.remaining_steps()==0||!termination_reasons.is_empty())).transpose()?;
+        if let Some(w)=&walking {
+            reward_terms.push(RewardValue{name:"walking.body_tracking".into(),value:w.body_reward});
+            reward_terms.push(RewardValue{name:"walking.step_outcome".into(),value:w.step_reward});
+        }
         let reward = reward_terms.iter().map(|r| r.value).sum::<f64>();
         if !reward.is_finite() {
             return Err("nonfinite total reward".into());
         }
         Ok(Transition {
+            walking,
             time_s: frame["time_s"].as_f64().ok_or("missing endpoint time")?,
             elapsed_s,
             observations,
@@ -601,6 +627,14 @@ impl EmbeddedEnvironment {
             contract["reward"] = json!("survival rate minus scaled squared endpoint errors, times elapsed simulation seconds; subtract termination penalty once for sampled task failure, not reset, timeout alone or numerical failure");
             contract["survival_reward_per_s"] = json!(self.task.survival_reward_per_s);
             contract["termination_penalty"] = json!(self.task.termination_penalty);
+        }
+        if let Some(w)=&self.task.walking {
+            contract["walking_task"]=json!({"config":w,
+                "body_error_unit":"m","body_error_frame":"world",
+                "reference":"planning reference held over the current control interval; reference_sample records its controller sample",
+                "reward":"additional capped squared body-position error rate; one qualified-step bonus or failed-step penalty per observed swing outcome; interrupted swings fail",
+                "observation_scope":"privileged task diagnostics in transition.walking, not added to the actor sensor vector",
+                "qualification":"same sampled CAD-surface clearance, unloading and support checker as offline lift acceptance; not between-sample contact accuracy or complete walking acceptance"});
         }
         contract
     }

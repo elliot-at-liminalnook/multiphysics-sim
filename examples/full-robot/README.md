@@ -1,5 +1,13 @@
 # Four-leg robot commissioning
 
+The [walking task objective](walking-objective.md) now scores body-reference error
+and actual supported swings through shared Rust code, with visible browser
+counts. It fixes the observed success/failure ranking without changing physical
+trajectories or actor observations. A 6 mm reference candidate improves short-run
+qualification but still fails sustained stopping and one refined solve; it is
+not promoted. Robust controller training and full realtime acceptance remain open.
+
+
 The [student push test](student-disturbances.md) adds reproducible bounded world
 forces to native and WASM simulation, with visible timing and exact replay.
 Small challenges pass; stronger pushes and finer timesteps expose task failures.

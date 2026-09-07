@@ -345,6 +345,17 @@
       "description": "WASD controls the student crawl. At 7 seconds a 0.1 N sideways force acts on the chassis for 0.2 seconds. The push is a live physical load and repeats on reset or input replay.",
       "readiness": "Experimental disturbance probe · ideal observations · one small push is not a robustness guarantee.",
       "evidence": "The environment applies a declared world force at the chassis center of mass through shared Rust dynamics. Timing and force bounds are recorded in the experiment. Hypothetical engineering challenge, not a measured hardware disturbance distribution."
+    },
+    {
+      "id": "robot-walking-objective",
+      "label": "Quadruped · Walking task score",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/student-disturbances/lateral.config.json",
+      "task": "examples/full-robot/walking-objective/task.json",
+      "description": "The same student and physical push, with body-reference tracking and measured step outcomes added to the learning score. WASD commands motion; the sidebar reports qualified/failed steps and body error.",
+      "readiness": "Task-scoring experiment · controller weights unchanged · supported-step margin and disturbance recovery remain provisional.",
+      "evidence": "The task reuses the independent sampled lift checker with unchanged clearance, unloading, support and 200 ms duration thresholds. Body tracking is scored against the held walking reference. Numerical/physical accuracy and learning success remain separate checks."
     }
   ]
 }

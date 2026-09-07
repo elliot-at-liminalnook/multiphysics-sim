@@ -4,6 +4,65 @@ use crate::session::Session;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
+/// Full inter-link geometric inspection of a saved frame. Force-profile
+/// reductions cannot turn this into a vacuous no-contact check.
+pub fn sampled_inter_link_penetrations(
+    art: &sim_domain_robot::Articulated,
+    poses: &[crate::session::LinkPose],
+) -> Result<Vec<sim_domain_robot::articulated::InterLinkPenetration>, String> {
+    use nalgebra::{Matrix3, Vector3};
+    if poses.len() != art.links.len() {
+        return Err("one recorded rigid pose per articulated link required".into());
+    }
+    let links = art.links.iter().map(|l| {
+        let found = poses.iter().filter(|p| p.name == l.name).collect::<Vec<_>>();
+        if found.len() != 1 || !found[0].valid_rigid_transform() {
+            return Err(format!("missing, ambiguous or invalid collision pose: {}", l.name));
+        }
+        let p = found[0];
+        Ok(sim_domain_robot::articulated::LinkKin {
+            p: Vector3::from(p.position_m),
+            r: Matrix3::from_fn(|i,j| p.rotation[i][j]),
+            vel: Vector3::zeros(), w: Vector3::zeros(),
+            acc: Vector3::zeros(), alpha: Vector3::zeros(),
+        })
+    }).collect::<Result<Vec<_>, String>>()?;
+    art.inter_link_penetrations(&links)
+}
+
+#[cfg(test)]
+mod geometric_tests {
+    use super::*;
+    use sim_domain_robot::articulated::{Articulated, Options};
+    #[test]
+    fn recorded_overlap_remains_visible_when_forces_are_omitted() {
+        let model = serde_json::from_value(serde_json::json!({
+            "links":[{"name":"a"},{"name":"b"}],
+            "joints":[{"name":"ab","parent":"a","child":"b","type":"revolute"}]
+        })).unwrap();
+        let mut art = Articulated::new(std::sync::Arc::new(model),
+            &Options { flex:false, omit_inter_link_contact:true, ..Default::default() }).unwrap();
+        art.links[0].contact = vec![nalgebra::Vector3::new(0.05,0.,0.)];
+        art.links[0].excluded.clear(); art.links[1].contact.clear();
+        art.links[1].lo = nalgebra::Vector3::repeat(-0.1);
+        art.links[1].hi = nalgebra::Vector3::repeat(0.1);
+        art.links[1].sdf = Some(sim_domain_robot::model::Sdf {
+            origin:[-0.1;3], cell:0.2, dims:[2;3],
+            values:vec![-0.11,0.09,-0.11,0.09,-0.11,0.09,-0.11,0.09],
+        });
+        let pose = |name:&str| crate::session::LinkPose { name:name.into(),
+            position_m:[0.;3],rotation:[[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]] };
+        let mut poses=vec![pose("a"),pose("b")];
+        let hits=sampled_inter_link_penetrations(&art,&poses).unwrap();
+        assert_eq!(hits.len(),1);assert!((hits[0].penetration_m-0.01).abs()<1e-12);
+        poses[1].position_m[0]=1.;
+        assert!(sampled_inter_link_penetrations(&art,&poses).unwrap().is_empty());
+        poses[1].name="a".into();
+        assert!(sampled_inter_link_penetrations(&art,&poses).is_err());
+        assert!(sampled_inter_link_penetrations(&art,&poses[..1]).is_err());
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct FloorClearance {
     pub link: String,

@@ -290,6 +290,17 @@
       "description": "Press Play, then hold W/S to move and A/D to turn. Reversing restarts the foot order after the current transfer finishes. Rust simulates the motors, linkages and ground contact.",
       "readiness": "Provisional flat-floor crawl · 60 seconds at realtime average; p95 update 29 ms exceeds 20 ms target · uncalibrated physics · about 70 mm traveled.",
       "evidence": "Restarting the foot order avoids mixed forward/reverse stances. A smaller reverse body shift preserves gear clearance. Stronger stopping correction requires four loaded feet; moving feedback stays unchanged. Original physical checks remain in force."
+    },
+    {
+      "id": "robot-terrain-contact",
+      "label": "Quadruped \u00b7 Terrain-contact experiment",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-terrain-contact/scene.json",
+      "config": "examples/full-robot/browser-reversal/config.json",
+      "task": "examples/full-robot/browser-reversal/task.json",
+      "description": "W/S requests forward/back motion; A/D turns. Rust simulates motors, mechanisms and floor contact. Geometry checks stop the controller when sampled links overlap.",
+      "readiness": "Experimental reduced collision physics \u00b7 link-to-link contact forces omitted \u00b7 sampled geometry checks retained \u00b7 uncalibrated model; performance under test.",
+      "evidence": "Same CAD properties, controller and numerical tolerances as Crawl and reverse. Floor/height-field contact retained. No inter-link impact response or between-sample collision guarantee. Full recorded-pose geometry audit required."
     }
   ]
 }

@@ -202,7 +202,7 @@ try {
   assert(!(await page.locator('#motion-progress').isVisible()));
   checks.push('synthetic missing-support timeout is visible, replayable, and recoverable by reset');
  }
- for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl']) {
+ for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact']) {
   if(!catalog.presets.some(p=>p.id===id))continue;
   await page.locator('#preset').selectOption(id);await ready();
   assert(await page.locator('#learning-progress').isVisible());

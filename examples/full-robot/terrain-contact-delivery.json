@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "kind": "experimental_wasm_terrain_contact_bundle",
+  "path": "/Users/elliot/robot-terrain-contact-2026-09-07.zip",
+  "bytes": 13396627,
+  "sha256": "83ec5d1f894acfaad01380f6fca2fdb09d4c4b2cca547e5d901d1c3196cb5599",
+  "build_manifest_sha256": "132e0468b8e827510356deaa2326c7946778c6a04242982a54c1a956bb728504",
+  "local_url": "http://127.0.0.1:4180/?preset=robot-terrain-contact",
+  "scope": "Live Rust/WASM reduced contact profile. Sustained flat-floor crawl matches retained native frames and passes sampled geometry/support checks. Rendered active p95 21.6 ms still misses 20 ms. No inter-link impact response, continuous collision, general terrain walking or hardware accuracy claim."
+}

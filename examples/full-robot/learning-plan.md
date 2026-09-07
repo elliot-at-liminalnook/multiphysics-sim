@@ -9,6 +9,16 @@ faster solver kernel does not complete this goal.
 
 ## Current evidence and sequence
 
+The [terrain-contact profile](terrain-contact.md) now omits inter-link impact
+forces explicitly while preserving full sampled geometry guards and audits.
+The sustained native minute matches every retained-model frame exactly, passes
+28 swings and native/WASM parity, and remains usable in the viewer. Rendered
+active p95 improves to 21.6 ms but still misses 20 ms; the slow crawl, general
+commands, terrain, planning and learned policies remain required work. Keep both
+profiles available. Progress beyond the narrow crawl while improving remaining
+latency and command-to-visible-response measurement; do not treat this profile
+as a calibrated or generally collision-capable training model.
+
 The [browser latency investigation](latency-profile.md) now separates WASM work,
 transport and UI costs. Numerical Jacobian assembly dominates the native profile
 (60%); inter-part collision queries account for a nested 26.5%. A browser-only

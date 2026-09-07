@@ -27,6 +27,7 @@ pub(super) struct ContactSample {
 /// Geometry and exclusions belong to the immutable articulated model. Contact
 /// forces and bristle evolution are deliberately absent from this cache.
 pub(super) struct ContactGeometry {
+    inter_link: bool,
     // Exclusion metadata is shared only within this immutable model borrow.
     // Sparse adjacency avoids quadratic storage for large assemblies.
     bands: std::sync::Arc<Vec<Vec<(usize, (usize, V, f64))>>>,
@@ -56,12 +57,19 @@ impl ContactGeometry {
     /// `base` belongs to the same immutably borrowed articulated model; fresh
     /// evaluations after model edits construct a new cache with `new`.
     pub fn new_reusing(art: &Articulated, links: &[LinkKin], base: Option<&Self>) -> Self {
-        sim_solve::profile::CONTACT_GEOMETRY.time(|| Self::new_reusing_impl(art, links, base))
+        sim_solve::profile::CONTACT_GEOMETRY.time(|| Self::new_reusing_impl(art, links, base, !art.omit_inter_link_contact))
     }
 
-    fn new_reusing_impl(art: &Articulated, links: &[LinkKin], base: Option<&Self>) -> Self {
+    /// Full geometry inspection regardless of the dynamics fidelity reduction.
+    pub fn new_all(art: &Articulated, links: &[LinkKin]) -> Self {
+        Self::new_reusing_impl(art, links, None, true)
+    }
+
+    fn new_reusing_impl(art: &Articulated, links: &[LinkKin], base: Option<&Self>, inter_link: bool) -> Self {
+        let base = base.filter(|b| b.inter_link == inter_link);
         let bands = sim_solve::profile::CONTACT_TOPOLOGY.time(|| match base {
             Some(base) => base.bands.clone(),
+            None if !inter_link => std::sync::Arc::new(vec![vec![]; art.links.len()]),
             None => {
                 let mut rows: Vec<Vec<(usize, (usize, V, f64))>> = vec![Vec::new(); art.links.len()];
                 for (a, b) in art.joints.iter().map(|j| (j.parent, j.child))
@@ -106,6 +114,7 @@ impl ContactGeometry {
             .iter()
             .enumerate()
             .map(|(i, l)| {
+                if !inter_link { return Vec::new(); }
                 let candidates = contact_candidates(samples[i].iter().map(|s| &s.point), &boxes);
                 let mut hits: Vec<ContactHit> = if unchanged[i] {
                     base.unwrap().hits[i].iter().filter(|h| unchanged[h.other]).cloned().collect()
@@ -160,6 +169,7 @@ impl ContactGeometry {
             })
             .collect());
         Self {
+            inter_link,
             bands,
             poses: links.iter().map(|k| (k.r, k.p)).collect(),
             boxes,
@@ -360,9 +370,33 @@ mod exclusion_tests {
             art.links[1].sdf = Some(Sdf { origin:[-0.1;3], cell:0.2,
                 dims:[2;3], values:vec![-0.11,0.09,-0.11,0.09,-0.11,0.09,-0.11,0.09] });
             let pose = |r, p| LinkKin {r,p,w:V::zeros(),vel:V::zeros(),alpha:V::zeros(),acc:V::zeros()};
-            let original = vec![pose(M::identity(),V::zeros());2];
+            let mut original = vec![pose(M::identity(),V::zeros());2];
             let first = ContactGeometry::new(&art, &original);
             assert_eq!(first.hits[0].iter().map(|h| h.sample).collect::<Vec<_>>(),vec![1,2]);
+            // A dynamics reduction must not disable independent geometric checks.
+            art.floor_z = 0.005;
+            original[0].vel.x = 0.02;
+            let states = art.states().iter().map(|s| s.initial).collect();
+            let g = art.generalized(states, vec![0.;art.state_count],
+                &vec![0.;art.port_names.len()+1], vec![]);
+            let full_forces = art.contact_forces(&g, &original, true, V::zeros(), None);
+            assert!(full_forces.contacts.iter().any(|c| c.other.is_some()));
+            assert!(full_forces.contacts.iter().any(|c| c.other.is_none() && c.force.z > 0.));
+            art.omit_inter_link_contact = true;
+            let reduced = art.contact_forces(&g, &original, true, V::zeros(), None);
+            assert!(reduced.contacts.iter().all(|c| c.other.is_none()));
+            let floor = |e: &ContactForces| e.contacts.iter().filter(|c| c.other.is_none())
+                .map(|c| (c.link,c.point,c.force,c.penetration)).collect::<Vec<_>>();
+            assert_eq!(floor(&full_forces), floor(&reduced));
+            assert_eq!(full_forces.bristle_rates, reduced.bristle_rates);
+            assert!(reduced.bristle_rates.iter().any(|v| v.abs() > 1e-8));
+            let inspected = art.inter_link_penetrations(&original).unwrap();
+            assert_eq!(inspected.len(),2);
+            assert!(inspected.iter().all(|h| (h.penetration_m-0.01).abs()<1e-12));
+            assert!(art.inter_link_penetrations(&original[..1]).is_err());
+            let mut invalid = original.clone(); invalid[0].r[(0,0)] = 2.;
+            assert!(art.inter_link_penetrations(&invalid).is_err());
+            art.omit_inter_link_contact = false;
             let rotation = nalgebra::Rotation3::from_euler_angles(0.3,-0.6,1.1).into_inner();
             let moved = vec![pose(rotation,V::new(2.0,-3.0,4.0));2];
             let fresh = ContactGeometry::new(&art, &moved);

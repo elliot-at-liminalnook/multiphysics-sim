@@ -1,0 +1,924 @@
+{
+  "version": 1,
+  "complete": true,
+  "promoted": false,
+  "cases": [
+    {
+      "name": "1.5x",
+      "requested_speed_m_s": 0.001875,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000688 mm at world [0.004505529962634614, -0.11860189922076067, -0.04748056622268365] m; requested body [-0.0010288620079104774, 0.021568895800108682, -0.008820466700050357] m, time 1.100000 s",
+      "simulated_s": 1.1,
+      "passed": false,
+      "acceptance": null,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x.scene.json",
+          "sha256": "1a81907c051e8d967f8f691ab865c03b19667bdb494acfb78b77dbd62466765f"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x.config.json",
+          "sha256": "639784b1b9a2326080de27ee14fb53fa43105e4fe1f6165db992f3cbc165b72b"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x.actions.json",
+          "sha256": "dee39c6bc7f31a59883fa08612fab2fb03eacb9a7e14e42b54af7e8479616a42"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x.native.json",
+          "sha256": "3fa0faa9ed33fac3d828bf30dd70bbbafeed1a673559c18f9334d076b246a4a7"
+        }
+      ]
+    },
+    {
+      "name": "2x",
+      "requested_speed_m_s": 0.0025,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.001289 mm at world [0.004664049332472368, -0.11858739108816718, -0.04748459036780131] m; requested body [-0.0010288620079104774, 0.021568895800108682, -0.008820466700050357] m, time 1.040000 s",
+      "simulated_s": 1.04,
+      "passed": false,
+      "acceptance": null,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x.config.json",
+          "sha256": "f7fc565a2fa72e4cc200164d8eeb9a088ff913774e893a2b735cd850ba8309eb"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x.native.json",
+          "sha256": "848019f96cdc055cd37c41e53920976a0c182e43c93228faaf62e0b55a5d3555"
+        }
+      ]
+    },
+    {
+      "name": "1.5x-cadence",
+      "requested_speed_m_s": 0.001875,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "swings": 13,
+        "failed_swings": [],
+        "minimum_qualified_s": 0.21999999999999975,
+        "final_body_error_m": 0.0012426620270249986,
+        "final_yaw_error_rad": 0.003961820496998666,
+        "maximum_body_tilt_rad": 0.0038166409506729545,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.03338976205901329,
+          -0.0008619769249184157,
+          -0.0005218185430183805
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence.scene.json",
+          "sha256": "1a81907c051e8d967f8f691ab865c03b19667bdb494acfb78b77dbd62466765f"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence.config.json",
+          "sha256": "1d32ae40008526531a7e32bf8eaaf0840ea92692881fdea0dd7162c3dcd30b7d"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence.actions.json",
+          "sha256": "dee39c6bc7f31a59883fa08612fab2fb03eacb9a7e14e42b54af7e8479616a42"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence.native.json",
+          "sha256": "784b01d9b7c5659280d682d43492a4308e8f73fd278dc94b5a089d4e6faa3bd2"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence-acceptance/summary.json",
+          "sha256": "79f8440b1197893f593f2c9ebfd67e26a935622626356c60df38941b5fd16c4b"
+        }
+      ]
+    },
+    {
+      "name": "2x-cadence",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "swings": 14,
+        "failed_swings": [
+          {
+            "step": 5,
+            "foot": 2,
+            "failed_clearance_samples": 19,
+            "failed_support_samples": 10,
+            "failed_unloading_samples": 15,
+            "longest_qualifying_span_s": 0.14000000000000057,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.003161109953667973,
+            "qualifying_start_s": 6.92,
+            "samples": 36,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          }
+        ],
+        "minimum_qualified_s": 0.14000000000000057,
+        "final_body_error_m": 0.001382999190863963,
+        "final_yaw_error_rad": 0.004855147763426282,
+        "maximum_body_tilt_rad": 0.003958361504096432,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04384021228935759,
+          0.0011688479033677534,
+          -0.0005938808643336825
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence.config.json",
+          "sha256": "8dd78d778a37983a222bf10bb6a9bc03ba86b7c398fc52d9a7cd1c8e2472131f"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence.native.json",
+          "sha256": "84e2a834dc10fd62b69654f9040ceec73f44cf5233a20848b8415143c4cdb9b3"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence-acceptance/summary.json",
+          "sha256": "362e9704ef120f725892fab1fb1740bedb5a3abd686b6097dd8dee9f1b3af993"
+        }
+      ]
+    },
+    {
+      "name": "1.5x-cadence-refined",
+      "requested_speed_m_s": 0.001875,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "swings": 13,
+        "failed_swings": [],
+        "minimum_qualified_s": 0.22000000000000064,
+        "final_body_error_m": 0.00432433233830721,
+        "final_yaw_error_rad": 0.00633772717507819,
+        "maximum_body_tilt_rad": 0.004273495616970462,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.036717686816004125,
+          -0.0014143766440420067,
+          -0.0005048254829387398
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence-refined.scene.json",
+          "sha256": "1a81907c051e8d967f8f691ab865c03b19667bdb494acfb78b77dbd62466765f"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence-refined.config.json",
+          "sha256": "fe41aaf24eb6191324a3dd53fc1c260d096000b7f01409ce95f962da1b79dfb8"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence-refined.actions.json",
+          "sha256": "dee39c6bc7f31a59883fa08612fab2fb03eacb9a7e14e42b54af7e8479616a42"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence-refined.native.json",
+          "sha256": "06ad6b1a84ddafa81b22f5216df8dc57462ca507fbd02462051127ccbd64d0c0"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/1.5x-cadence-refined-acceptance/summary.json",
+          "sha256": "502b2d8cbeaa0cfbcdde17b9c6217515c80c29279a1e6f15d0f4ede05d395910"
+        }
+      ]
+    },
+    {
+      "name": "2x-cadence-refined",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "swings": 14,
+        "failed_swings": [
+          {
+            "step": 5,
+            "foot": 2,
+            "failed_clearance_samples": 19,
+            "failed_support_samples": 12,
+            "failed_unloading_samples": 15,
+            "longest_qualifying_span_s": 0.1200000000000001,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.003194633028578031,
+            "qualifying_start_s": 6.92,
+            "samples": 36,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          }
+        ],
+        "minimum_qualified_s": 0.1200000000000001,
+        "final_body_error_m": 0.002807050194444237,
+        "final_yaw_error_rad": 0.006973078045754314,
+        "maximum_body_tilt_rad": 0.00423461531806195,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04597084496775553,
+          0.000872238986097294,
+          -0.0007137829481203527
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence-refined.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence-refined.config.json",
+          "sha256": "db8bca602dd855287e13699785e5849033bf37f1ffcf3f876e901e482811a734"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence-refined.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence-refined.native.json",
+          "sha256": "175f2de16c91267867527718e8e15a04ef1ca24aca5a0d1611efedfe2f14c2cb"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-cadence-refined-acceptance/summary.json",
+          "sha256": "5775785dd6d1432ef879e6f5ccc33b722a3594c5b72aeea347d3e55ce4a622de"
+        }
+      ]
+    },
+    {
+      "name": "2x-balanced",
+      "requested_speed_m_s": 0.0025,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000435 mm at world [0.004467504952605355, -0.11926537727856656, -0.04865963585235139] m, time 1.140000 s",
+      "simulated_s": 1.1400000000000001,
+      "passed": false,
+      "acceptance": null,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced.config.json",
+          "sha256": "605a31189c5c9343956b470d6781ad7abea280fcd7376cc19ae36249d0bf416c"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced.native.json",
+          "sha256": "167dba4c6ace881d749859a7112e0f6ce1ad02bdb0a0a59a22d8805e818ae3e5"
+        }
+      ]
+    },
+    {
+      "name": "2x-balanced-refined",
+      "requested_speed_m_s": 0.0025,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000206 mm at world [0.004428248774680395, -0.11991984212099754, -0.049093045121089404] m, time 0.880000 s",
+      "simulated_s": 0.88,
+      "passed": false,
+      "acceptance": null,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-refined.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-refined.config.json",
+          "sha256": "428d658a12f2a3c3a55d4a62f03cd6dc9290a184b39a2c5f6ee1689ec0357f62"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-refined.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-refined.native.json",
+          "sha256": "030d3d1e5a0cfec3b10c3c8c36dd265c163225bce3cf6469ddb7f3d5269c495e"
+        }
+      ]
+    },
+    {
+      "name": "2x-balanced-stance",
+      "requested_speed_m_s": 0.0025,
+      "completed": false,
+      "error": "step 2 Raise reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000374 mm at world [0.15606547001126955, -0.00018098115843911272, 0.030312791145480425] m; requested body [-0.014128862007910477, -0.00043110419989131696, -0.011820466700050356] m, time 3.580000 s",
+      "simulated_s": 3.58,
+      "passed": false,
+      "acceptance": null,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-stance.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-stance.config.json",
+          "sha256": "a3d08bc15a84a1fd2b15e518bd02557dd75db8f7196591bb65277f440c0e897f"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-stance.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-stance.native.json",
+          "sha256": "b4d0cca523fddeddc44e0d4d27cbed8372eac4d1bb63e1df51e7ba951a2203e1"
+        }
+      ]
+    },
+    {
+      "name": "2x-balanced-stance-refined",
+      "requested_speed_m_s": 0.0025,
+      "completed": false,
+      "error": "step 2 Raise reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000374 mm at world [0.15606547001126955, -0.00018098115843911272, 0.030312791145480425] m; requested body [-0.014128862007910477, -0.00043110419989131696, -0.011820466700050356] m, time 3.580000 s",
+      "simulated_s": 3.58,
+      "passed": false,
+      "acceptance": null,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-stance-refined.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-stance-refined.config.json",
+          "sha256": "dbb9545876f7b9f9a9610e72ecfdeea7feadd3b372d5b70442ac398b5775e46d"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-stance-refined.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-balanced-stance-refined.native.json",
+          "sha256": "d50e6ed0aaa940a8d7bd075406f170753acda0dcffe107e923ec91102feaa5d5"
+        }
+      ]
+    },
+    {
+      "name": "2x-support-18-9",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "swings": 13,
+        "failed_swings": [],
+        "minimum_qualified_s": 0.2599999999999998,
+        "final_body_error_m": 0.000631052327669735,
+        "final_yaw_error_rad": 0.0021317682401950306,
+        "maximum_body_tilt_rad": 0.0038198420505066027,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04488283670076122,
+          0.00004602985329057389,
+          -0.0006285141557248793
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9.config.json",
+          "sha256": "ecf1a5692e4d4bd12c1945e96e11705956f39867de1177da16d450c812e433c2"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9.native.json",
+          "sha256": "5a2acf2831305ad9f2c478d13e24478012a612927d3e7a35d4ca5981881f99c2"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9-acceptance/summary.json",
+          "sha256": "8231bf5ffc9049a1bbc19cde35ac37b2dc08a142e7ee8fec4583fbf33e1bf851"
+        }
+      ]
+    },
+    {
+      "name": "2x-support-18-7",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "swings": 13,
+        "failed_swings": [
+          {
+            "step": 3,
+            "foot": 3,
+            "failed_clearance_samples": 20,
+            "failed_support_samples": 9,
+            "failed_unloading_samples": 16,
+            "longest_qualifying_span_s": 0.0600000000000005,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.0033787635430894136,
+            "qualifying_start_s": 5.14,
+            "samples": 38,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          {
+            "step": 7,
+            "foot": 3,
+            "failed_clearance_samples": 20,
+            "failed_support_samples": 9,
+            "failed_unloading_samples": 16,
+            "longest_qualifying_span_s": 0.0600000000000005,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.0033787488500668372,
+            "qualifying_start_s": 10.66,
+            "samples": 38,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          {
+            "step": 11,
+            "foot": 3,
+            "failed_clearance_samples": 20,
+            "failed_support_samples": 9,
+            "failed_unloading_samples": 16,
+            "longest_qualifying_span_s": 0.060000000000002274,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.0033787506062226136,
+            "qualifying_start_s": 16.18,
+            "samples": 38,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          }
+        ],
+        "minimum_qualified_s": 0.0600000000000005,
+        "final_body_error_m": 0.00063086937632022,
+        "final_yaw_error_rad": 0.0022869823888908352,
+        "maximum_body_tilt_rad": 0.003900350317654979,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04483093227561701,
+          0.00005037602000229559,
+          -0.0006285657073641909
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-7.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-7.config.json",
+          "sha256": "0f81c5e56231604ee09a585af905445398a2c1e9853773bef096002fab53da93"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-7.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-7.native.json",
+          "sha256": "7e11184e800b4f03b6a38cb9bf6843ac2d79d80e274a52b9e4c71e61e9018c70"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-7-acceptance/summary.json",
+          "sha256": "fc80bf15e26c031ed3717e428e4acbc3acaaab5b61ad66121469c951a40e09e3"
+        }
+      ]
+    },
+    {
+      "name": "2x-support-16-9",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "swings": 13,
+        "failed_swings": [],
+        "minimum_qualified_s": 0.2400000000000002,
+        "final_body_error_m": 0.0006356908193105297,
+        "final_yaw_error_rad": 0.0021498770500055376,
+        "maximum_body_tilt_rad": 0.0038900843581241773,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.044911657423756426,
+          0.00007146205022203064,
+          -0.0006286448562021953
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9.config.json",
+          "sha256": "c6d83c4a988dbae0820a2bd7f7432fbcb51e04e8cfd3c141656485e970087b22"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9.native.json",
+          "sha256": "579863ecb0c3c13a31e64fb2c02e4b3623c2757b759d3d40aa6c393190a191bf"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9-acceptance/summary.json",
+          "sha256": "6eb7b408316fb7e3af11b2f672ac5e744fedc0325cf7b9122fed22985e630aff"
+        }
+      ]
+    },
+    {
+      "name": "2x-support-16-7",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "swings": 13,
+        "failed_swings": [
+          {
+            "step": 3,
+            "foot": 3,
+            "failed_clearance_samples": 20,
+            "failed_support_samples": 9,
+            "failed_unloading_samples": 16,
+            "longest_qualifying_span_s": 0.08000000000000007,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.003379925022871988,
+            "qualifying_start_s": 4.92,
+            "samples": 38,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          {
+            "step": 7,
+            "foot": 3,
+            "failed_clearance_samples": 20,
+            "failed_support_samples": 9,
+            "failed_unloading_samples": 16,
+            "longest_qualifying_span_s": 0.08000000000000007,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.0033799089612909228,
+            "qualifying_start_s": 10.44,
+            "samples": 38,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          {
+            "step": 11,
+            "foot": 3,
+            "failed_clearance_samples": 20,
+            "failed_support_samples": 9,
+            "failed_unloading_samples": 16,
+            "longest_qualifying_span_s": 0.0799999999999983,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.003379905547803763,
+            "qualifying_start_s": 15.96,
+            "samples": 38,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          }
+        ],
+        "minimum_qualified_s": 0.0799999999999983,
+        "final_body_error_m": 0.0006325045540300055,
+        "final_yaw_error_rad": 0.002324068262649346,
+        "maximum_body_tilt_rad": 0.0039006252344862833,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04486414358640094,
+          0.00006881237578921704,
+          -0.000628591144362263
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-7.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-7.config.json",
+          "sha256": "f514c627dcd897ca70aa325d0064c8e1567fec0a9ca29ee110f156d728ba190e"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-7.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-7.native.json",
+          "sha256": "e246af3a4292e408d6713dcd1b739baf1cf94658e0214298d211d5bf9260e1d4"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-7-acceptance/summary.json",
+          "sha256": "9f539b548757c253f0fc79f500513948452d72c8ab5440de7c41f67ba1ebd182"
+        }
+      ]
+    },
+    {
+      "name": "2x-support-18-9-refined",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "swings": 13,
+        "failed_swings": [],
+        "minimum_qualified_s": 0.23999999999999844,
+        "final_body_error_m": 0.0005892752516165212,
+        "final_yaw_error_rad": 0.002198272614153994,
+        "maximum_body_tilt_rad": 0.0042560990995139415,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.044725328025170125,
+          -0.00006985410397060968,
+          -0.0005716840255055172
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9-refined.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9-refined.config.json",
+          "sha256": "7b7a7bf63032ec32c0059ac8eb853b897875f8ff99e66fa7c45f29c248b7f1df"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9-refined.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9-refined.native.json",
+          "sha256": "50ade887343086f42491d40831306cb8dbeb51793b2f46d96291e15a72a495b1"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-18-9-refined-acceptance/summary.json",
+          "sha256": "f7c48a823491402ed1f7f17660767e42ff8105bc93a4880031e73df77879a332"
+        }
+      ]
+    },
+    {
+      "name": "2x-support-16-9-refined",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 24,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "swings": 13,
+        "failed_swings": [],
+        "minimum_qualified_s": 0.23999999999999844,
+        "final_body_error_m": 0.0006957327089192972,
+        "final_yaw_error_rad": 0.0021531738809217322,
+        "maximum_body_tilt_rad": 0.0042557568676946595,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04445652334557572,
+          -0.00004892847769583927,
+          -0.000571687089895875
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9-refined.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9-refined.config.json",
+          "sha256": "2904a3f194b526e1361847ddf0eb9068b9dc63989dc90a2d407c2c9e486218d1"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9-refined.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9-refined.native.json",
+          "sha256": "25c8aa2083a0608bb885166015aec5c4dfe53fcf2c0c4b9d8c58b4a96053e2f0"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-16-9-refined-acceptance/summary.json",
+          "sha256": "79c5183286f0384459989948518575946aa24db20951db55870ba816f9297d71"
+        }
+      ]
+    },
+    {
+      "name": "2x-support-minute",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 60,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "swings": 41,
+        "failed_swings": [],
+        "minimum_qualified_s": 0.259999999999998,
+        "final_body_error_m": 0.0008678336438627386,
+        "final_yaw_error_rad": 0.006562490907837409,
+        "maximum_body_tilt_rad": 0.0038198420505066027,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.14100890738174351,
+          0.00044386869878767094,
+          -0.0006012928685559873
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute.config.json",
+          "sha256": "34afc188374883a7663aee7271d4a11338ccc31a9983851abf9b9b328eadb667"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute.actions.json",
+          "sha256": "ac09d7eeb87e7ab7632f62cc99ba55ae95bcdfc89d036f912c125bbe338b314a"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute.native.json",
+          "sha256": "e5ee7946af679b94a97da1f9afa57d4415a131aa20d7f9608cf04d0a11490fd3"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute-acceptance/summary.json",
+          "sha256": "479055a97557aa7bb934b08cc0fe5bf5a76badf8c5b5043a7c733ae939712468"
+        }
+      ]
+    },
+    {
+      "name": "2x-support-minute-refined",
+      "requested_speed_m_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "simulated_s": 60,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "swings": 41,
+        "failed_swings": [],
+        "minimum_qualified_s": 0.23999999999999488,
+        "final_body_error_m": 0.001313727445254394,
+        "final_yaw_error_rad": 0.006929783774820656,
+        "maximum_body_tilt_rad": 0.004256099112739309,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.14070590752512313,
+          0.0009552301367896537,
+          -0.0005096484818138125
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        }
+      },
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute-refined.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute-refined.config.json",
+          "sha256": "88b296b0dd154a6da7bac16bf1e851d8f9e0244eb9e497e6f71c5dd19628318b"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute-refined.actions.json",
+          "sha256": "ac09d7eeb87e7ab7632f62cc99ba55ae95bcdfc89d036f912c125bbe338b314a"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute-refined.native.json",
+          "sha256": "c1b5db1b7e007905b3e45d1d4f0884f5f246cc49e1351b56794948b75f14d9e3"
+        },
+        {
+          "path": "runs/full-robot/learning/student-speed/2x-support-minute-refined-acceptance/summary.json",
+          "sha256": "40185e7f89a1a54219f2601be31c694fc6ee8f98493b4074bbde941c16d02000"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/student-distillation/scene.json",
+      "sha256": "1fd3c6103413010dbe5dee8a09084544af9a305f4eac5acb3c3965caa71a0c7b"
+    },
+    {
+      "path": "examples/full-robot/browser-precision/guarded-short.config.json",
+      "sha256": "c218304e8abcd2aacaba153c0f70b628904a0c1e9bcd4eed94cf591575d84737"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "examples/full-robot/student-speed/prepare.mjs",
+      "sha256": "e669c2adbab3337c70b717f881751a20796f40062f8dc52ff67ba6365da45017"
+    },
+    {
+      "path": "runs/full-robot/learning/student-speed/plan.json",
+      "sha256": "5d7b97589e32865ebdc2b78924aef542b4966c75e9f381e6e938b01568e2bce9"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "f88e4ec76e9f999e6784e74c417d9618d1076cf25784868b7acb73acc6885261"
+    }
+  ],
+  "scope": "Development gait screening with the retained learned student. Every planned capture and every completed capture’s independent acceptance report required. Same parsed physical scene across cases; source CAD provenance retained. Parallel execution means wall times are not performance benchmarks. No browser, hardware, sustained or held-out acceptance implied."
+}

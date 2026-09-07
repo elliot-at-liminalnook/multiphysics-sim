@@ -158,6 +158,15 @@ jobs:
           target/release/examples/run_environment examples/full-robot/browser-reversal/scene.json examples/full-robot/browser-reversal/config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/turn-reverse.actions.json > runs/interactive/reversal-long-native.json
           node examples/full-robot/check_online_steps.mjs runs/interactive/reversal-long-native.json runs/interactive/reversal-long-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-reversal-crawl runs/interactive/reversal-long-native.json runs/interactive/reversal-browser.json
+      - name: Reduced inter-link forces retain geometry guards and native/WASM behavior
+        run: |
+          cargo test --locked -p sim-runtime --lib geometric_tests
+          target/release/examples/run_environment examples/full-robot/browser-terrain-contact/scene.json examples/full-robot/browser-reversal/config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/turn-reverse.actions.json > runs/interactive/terrain-contact-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/terrain-contact-native.json runs/interactive/terrain-contact-acceptance
+          node examples/full-robot/check_inter_link_reduction.mjs runs/interactive/reversal-long-native.json runs/interactive/terrain-contact-native.json
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-terrain-contact runs/interactive/terrain-contact-native.json runs/interactive/terrain-contact-browser.json
+          if target/release/examples/run_environment examples/full-robot/browser-terrain-contact/scene.json examples/full-robot/browser-terrain-contact/unsafe-posture.config.json examples/full-robot/browser-reversal/task.json examples/full-robot/browser-reversal/switch-4.4.actions.json > runs/interactive/terrain-contact-rejected.json; then exit 1; fi
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/terrain-contact-rejected.json")); assert.equal(r.completed,false); assert.match(r.error,/reference has internal contact/);'
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

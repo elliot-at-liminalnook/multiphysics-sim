@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "source": "examples/full-robot/browser-reversal",
+  "inputs": {
+    "examples/full-robot/browser-reversal/scene.json": "ba8367be73e61f56bb65e2cf846bd9e93417b5319a76e6fa0d08bd9e587fccb6",
+    "examples/full-robot/browser-reversal/config.json": "86341139f4437662ea65b2fd32ff7bb886ab136328aef8fb7d53ca4bbd7ac3a3",
+    "examples/full-robot/browser-reversal/short.config.json": "a2b49e4cbb69c4c89e032314167f1d65222425dd89c74559ef06e8bb8b458ea3",
+    "examples/full-robot/browser-reversal/task.json": "c41684bf9ca1ce73dc84905dc9eeefe5bee75adf571f80a9963442d460194752",
+    "examples/full-robot/prepare_terrain_contact.mjs": "e3c7a75e04d515a161f0ab0a139ea8c5465e2413be3c25492e88e767bec0433f"
+  },
+  "scope": "Experimental dynamics reduction: floor/height-field contact retained; all link-to-link forces omitted. Source masses, geometry, joints, actuators and physical parameters retained. Original numerical tolerances. Online reference and observed-pose overlap checks remain at controller samples; offline recorded-pose geometry audits are required. No inter-link impact response or between-sample collision guarantee."
+}

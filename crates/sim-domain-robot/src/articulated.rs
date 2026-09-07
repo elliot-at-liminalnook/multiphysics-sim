@@ -21,7 +21,8 @@
 //! Parameters: `model` (handle from [`crate::register_model`]), `gravity`
 //! multiplier (default 1), `planar` (1 confines the base to the model's
 //! planar hint with a stiff penalty), `flex` (0 disables modal
-//! flexibility), `contact` (0 disables geometry contact), `loop.alpha`
+//! flexibility), `contact` (0 disables geometry contact), `collision.omit_inter_link`
+//! (1 explicitly omits link-to-link forces while retaining terrain contact), `loop.alpha`
 //! (Baumgarte rate, default 100), `initial.joint.<name>.angle/.speed`.
 
 use crate::math::{frame_from_z, m3, quat, quat_rate, rot_axis, rot_vec, v, M, V};
@@ -235,6 +236,8 @@ pub struct Articulated {
     pub initial_twist: [f64; 6],
     pub planar: Option<(V, V)>,
     pub contact_on: bool,
+    /// Explicit fidelity reduction: retain terrain contact, omit forces between links.
+    pub omit_inter_link_contact: bool,
     pub floor_friction: FloorFrictionModel,
     pub hybrid_jacobian: bool,
     pub rate_partials: bool,
@@ -305,6 +308,16 @@ pub struct ContactPoint {
     pub penetration: f64,
 }
 
+/// Sampled surface/SDF overlap, independent of whether contact forces are enabled.
+#[derive(Clone, Debug, serde::Serialize)]
+pub struct InterLinkPenetration {
+    pub link: usize,
+    pub other: usize,
+    pub point_m: [f64; 3],
+    pub normal_world: [f64; 3],
+    pub penetration_m: f64,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Evaluation {
     pub links: Vec<LinkKin>,
@@ -326,6 +339,7 @@ pub struct Options {
     pub planar: bool,
     pub flex: bool,
     pub contact: bool,
+    pub omit_inter_link_contact: bool,
     pub floor_friction: FloorFrictionModel,
     /// Experimental exact/hybrid derivatives; validate convergence before enabling.
     pub hybrid_jacobian: bool,
@@ -350,7 +364,7 @@ pub struct Options {
 }
 impl Default for Options {
     fn default() -> Self {
-        Self { gravity_scale: 1.0, planar: false, flex: true, contact: true, floor_friction: FloorFrictionModel::Bristle, hybrid_jacobian: false, rate_partials: false, constraint_state_step: 0.0, structural_loop_identities: false, loop_alpha: 100.0, loop_cfm: 1e-6, loop_angular_cfm: 1e-6, flex_modes: 4, flex_max_hz: 500.0, initial_angles: BTreeMap::new(), initial_speeds: BTreeMap::new(), initial_twist: [0.0; 6], initial_offset: [0.0; 3] }
+        Self { gravity_scale: 1.0, planar: false, flex: true, contact: true, omit_inter_link_contact: false, floor_friction: FloorFrictionModel::Bristle, hybrid_jacobian: false, rate_partials: false, constraint_state_step: 0.0, structural_loop_identities: false, loop_alpha: 100.0, loop_cfm: 1e-6, loop_angular_cfm: 1e-6, flex_modes: 4, flex_max_hz: 500.0, initial_angles: BTreeMap::new(), initial_speeds: BTreeMap::new(), initial_twist: [0.0; 6], initial_offset: [0.0; 3] }
     }
 }
 
@@ -367,6 +381,33 @@ pub fn friction_torque(f: &Friction, qd: f64) -> f64 {
 }
 
 impl Articulated {
+    /// Inspect every inter-link pair allowed by the authored sample/joint-region
+    /// exclusions, even when dynamics omit inter-link contact. This queries the
+    /// shared sampled surfaces and SDFs, not exact CAD intersections. No forces,
+    /// history updates, or source-pose mutations occur.
+    pub fn inter_link_penetrations(&self, links: &[LinkKin]) -> Result<Vec<InterLinkPenetration>, String> {
+        if links.len() != self.links.len() || links.iter().any(|k| {
+            k.p.iter().chain(k.r.iter()).any(|v| !v.is_finite())
+                || (k.r.transpose() * k.r - M::identity()).norm() > 1e-8
+                || (k.r.determinant() - 1.0).abs() > 1e-8
+        }) {
+            return Err("finite proper rigid pose required for every articulated link".into());
+        }
+        let geometry = prepared::ContactGeometry::new_all(self, links);
+        let mut out = Vec::new();
+        for (i, hits) in geometry.hits.iter().enumerate() {
+            for hit in hits {
+                if !hit.depth.is_finite() || hit.normal.iter().any(|v| !v.is_finite()) {
+                    return Err("nonfinite inter-link geometry query".into());
+                }
+                out.push(InterLinkPenetration { link:i, other:hit.other,
+                    point_m:geometry.samples[i][hit.sample].point.into(),
+                    normal_world:hit.normal.into(), penetration_m:hit.depth });
+            }
+        }
+        Ok(out)
+    }
+
     pub fn new(model: Arc<PhysicalModel>, opts: &Options) -> Result<Self, String> {
         opts.floor_friction.validate()?;
         if !opts.constraint_state_step.is_finite() || !(0.0..=0.1).contains(&opts.constraint_state_step) {
@@ -755,6 +796,7 @@ impl Articulated {
             initial_twist: opts.initial_twist,
             planar,
             contact_on: opts.contact,
+            omit_inter_link_contact: opts.omit_inter_link_contact,
             floor_friction: opts.floor_friction,
             hybrid_jacobian: opts.hybrid_jacobian,
             rate_partials: opts.rate_partials,
@@ -1781,7 +1823,7 @@ impl Behavior for Articulated {
 fn articulated(p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationError> {
     let handle = param(p, "model")?;
     let model = crate::model::model_by_handle(handle).ok_or_else(|| sim_core::EquationError::InvalidParameter("model".into(), "no model registered under this handle".into()))?;
-    let mut opts = Options { gravity_scale: param_or(p, "gravity", 1.0), planar: param_or(p, "planar", 0.0) > 0.5, flex: param_or(p, "flex", 1.0) > 0.5, contact: param_or(p, "contact", 1.0) > 0.5, hybrid_jacobian: param_or(p, "jacobian.hybrid", 0.0) > 0.5, rate_partials: param_or(p, "jacobian.rates", 0.0) > 0.5, constraint_state_step: param_or(p, "jacobian.constraint_state_step", 0.0), structural_loop_identities: param_or(p, "loop.structural_identities", 0.0) > 0.5, loop_alpha: param_or(p, "loop.alpha", 100.0), loop_cfm: param_or(p, "loop.cfm.translation", 1e-6), loop_angular_cfm: param_or(p, "loop.cfm.rotation", 1e-6), flex_modes: param_or(p, "flex.modes", 4.0) as usize, flex_max_hz: param_or(p, "flex.max_hz", 500.0), ..Options::default() };
+    let mut opts = Options { gravity_scale: param_or(p, "gravity", 1.0), planar: param_or(p, "planar", 0.0) > 0.5, flex: param_or(p, "flex", 1.0) > 0.5, contact: param_or(p, "contact", 1.0) > 0.5, omit_inter_link_contact: param_or(p, "collision.omit_inter_link", 0.0) > 0.5, hybrid_jacobian: param_or(p, "jacobian.hybrid", 0.0) > 0.5, rate_partials: param_or(p, "jacobian.rates", 0.0) > 0.5, constraint_state_step: param_or(p, "jacobian.constraint_state_step", 0.0), structural_loop_identities: param_or(p, "loop.structural_identities", 0.0) > 0.5, loop_alpha: param_or(p, "loop.alpha", 100.0), loop_cfm: param_or(p, "loop.cfm.translation", 1e-6), loop_angular_cfm: param_or(p, "loop.cfm.rotation", 1e-6), flex_modes: param_or(p, "flex.modes", 4.0) as usize, flex_max_hz: param_or(p, "flex.max_hz", 500.0), ..Options::default() };
     opts.floor_friction = FloorFrictionModel::from_registry_speed(param_or(p, "floor.regularized_slip_speed", 0.0))
         .map_err(|e| sim_core::EquationError::InvalidParameter("floor.regularized_slip_speed".into(), e))?;
     for (k, name) in ["vx", "vy", "vz", "wx", "wy", "wz"].iter().enumerate() {
@@ -1860,6 +1902,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     let mut parameters = vec![
         P::required("model", "handle").integer(0., 9007199254740991.), P::optional("gravity", "1", 1.),
         P::optional("planar", "1", 0.).integer(0., 1.), P::optional("flex", "1", 1.).integer(0., 1.), P::optional("contact", "1", 1.).integer(0., 1.),
+        P::optional("collision.omit_inter_link", "1", 0.).integer(0., 1.),
         P::optional("jacobian.hybrid", "1", 0.).integer(0., 1.),
         P::optional("jacobian.rates", "1", 0.).integer(0., 1.),
         P::optional("floor.regularized_slip_speed", "m/s", 0.).nonnegative(),

@@ -97,12 +97,21 @@ fn run() -> Result<(), String> {
     }
     let mut series: BTreeMap<String, Vec<LiftSample>> =
         swings.iter().map(|n| (n.clone(), vec![])).collect();
+    let mut geometry_frames = 0usize;
+    let mut geometry_hits = 0usize;
+    let mut geometry_maximum_m = 0.0_f64;
     for frame in capture["frames"]
         .as_array()
         .ok_or("missing captured frames")?
     {
         let poses: Vec<LinkPose> =
             serde_json::from_value(frame["poses"].clone()).map_err(|e| e.to_string())?;
+        if art.omit_inter_link_contact {
+            let hits = sim_runtime::contact_audit::sampled_inter_link_penetrations(art, &poses)?;
+            geometry_frames += 1;
+            geometry_hits += hits.len();
+            for hit in hits { geometry_maximum_m = geometry_maximum_m.max(hit.penetration_m); }
+        }
         let clearance = sampled_floor_clearances(art, &poses, &swings)?;
         let mut forces: BTreeMap<String, f64> = names.iter().map(|n| (n.clone(), 0.0)).collect();
         for c in frame["contacts"]
@@ -145,6 +154,13 @@ fn run() -> Result<(), String> {
     let mut result = json!({"time_basis":"simulation_time","motion_gate":capture["motion_gate"],
         "source":capture["source"],"world":session.scene.robot.world,"world_recorded_in_capture":recorded_world,
         "provenance_scope":"Caller must supply the original experiment scene/world; historical embedded captures do not independently record their world. Preserve exact input hashes with the result. Forces are privileged simulated observations, not deployed sensors."});
+    if art.omit_inter_link_contact {
+        result["inter_link_geometry_audit"] = json!({
+            "frames":geometry_frames,"penetrating_samples":geometry_hits,
+            "maximum_penetration_m":geometry_maximum_m,
+            "scope":"Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+        });
+    }
     if batch {
         result["reports"] = json!(reports);
         result["sample_series"] = json!(series);

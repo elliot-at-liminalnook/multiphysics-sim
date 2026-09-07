@@ -188,6 +188,13 @@ impl OnlineStepReference {
         if art.bases.len() != 1 || art.bases[0].grounded {
             return Err("online body reference requires one floating base".into());
         }
+        if art.omit_inter_link_contact {
+            let observed = art.evaluate_kinematics_only(g);
+            if let Some(c) = art.inter_link_penetrations(&observed)?.first() {
+                return Err(format!("observed inter-link overlap outside reduced-contact operating envelope: {} / {}",
+                    art.links[c.link].name, art.links[c.other].name));
+            }
+        }
         let forces = crate::support::ideal_upward_floor_forces(art, g, &self.links)?;
         let foot = self.sequence.next_foot();
         let minimum = self.config.minimum_support_force_n;
@@ -230,18 +237,14 @@ impl OnlineStepReference {
         let fit = map
             .place_points(&seed, &targets, &self.config.bounds, &self.config.placement)
             .map_err(|e| format!("step {} {:?} IK: {e}", reference.step, reference.phase))?;
-        let evaluation = art.evaluate(&fit.motion.generalized);
-        if let Some(c) = evaluation
-            .contacts
-            .iter()
-            .find(|c| c.other.is_some() && c.penetration > 0.)
-        {
+        let links = art.evaluate_kinematics_only(&fit.motion.generalized);
+        if let Some(c) = art.inter_link_penetrations(&links)?.first() {
             return Err(format!(
                 "step {} {:?} reference has internal contact: {} / {}",
                 reference.step,
                 reference.phase,
                 art.links[c.link].name,
-                art.links[c.other.unwrap()].name
+                art.links[c.other].name
             ));
         }
         let support = if matches!(
@@ -249,8 +252,7 @@ impl OnlineStepReference {
             sim_domain_control::stepping::StepPhase::Raise
                 | sim_domain_control::stepping::StepPhase::Lower
         ) {
-            let poses = evaluation
-                .links
+            let poses = links
                 .iter()
                 .zip(&art.links)
                 .map(|(k, l)| crate::session::LinkPose {

@@ -1,5 +1,11 @@
 # Four-leg robot commissioning
 
+The new [terrain-contact experiment](terrain-contact.md) omits link-to-link
+forces while retaining independent overlap checks and floor contact. Its tested
+minute matches the retained native trajectory exactly and runs at realtime
+average speed in the browser; active p95 is 21.6 ms, still above the 20 ms target.
+It remains a slow, provisional flat-floor crawl with uncalibrated physics.
+
 The latest [reversal-aware crawl](reversal-validation.md) accepts WASD requests
 through shared Rust stepping references and Rhai motor feedback. Both reversal
 directions and three switching times pass the sampled support checks. A one-minute

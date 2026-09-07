@@ -46,6 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let frames = capture["frames"].as_array().ok_or("frames required")?;
     let mut body = 0.;
     let mut steps = 0.;
+    let mut heading = 0.;
     let mut outcomes = vec![];
     let mut final_state = None;
     for (i, f) in frames.iter().enumerate() {
@@ -57,6 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
         body += r.body_reward;
         steps += r.step_reward;
+        heading += r.heading.as_ref().map_or(0., |h| h.reward);
         if let Some(o) = &r.outcome {
             outcomes.push(o.clone());
         }
@@ -71,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "{}",
         serde_json::to_string_pretty(
-            &json!({"version":1,"config":walking,"original_reward":old,"body_reward":body,"step_reward":steps,"total_reward":old+body+steps,"outcomes":outcomes,"final":final_state,
+            &json!({"version":1,"config":walking,"original_reward":old,"body_reward":body,"heading_reward":heading,"step_reward":steps,"total_reward":old+body+heading+steps,"outcomes":outcomes,"final":final_state,
         "scope":"Task-only re-evaluation of immutable saved physics. Same shared monitor as the environment. Development audit, not controller training or independent task acceptance."})
         )?
     );

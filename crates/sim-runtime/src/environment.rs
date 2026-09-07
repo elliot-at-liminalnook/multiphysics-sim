@@ -465,6 +465,9 @@ impl EmbeddedEnvironment {
         if let Some(w)=&walking {
             reward_terms.push(RewardValue{name:"walking.body_tracking".into(),value:w.body_reward});
             reward_terms.push(RewardValue{name:"walking.step_outcome".into(),value:w.step_reward});
+            if let Some(heading) = &w.heading {
+                reward_terms.push(RewardValue{name:"walking.heading_tracking".into(),value:heading.reward});
+            }
         }
         let reward = reward_terms.iter().map(|r| r.value).sum::<f64>();
         if !reward.is_finite() {

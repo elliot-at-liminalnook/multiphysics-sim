@@ -389,6 +389,17 @@
       "description": "The same paced walking controller with lower simulation overhead. WASD requests live motion. Robot properties, motor force laws and learned policy weights are unchanged.",
       "readiness": "Experimental numerical optimization · rendered minute keeps up at 1× · active p95 22.5 ms exceeds 20 ms target · heading and timestep limits remain.",
       "evidence": "The native minute reduces Jacobian builds from 7232 to 4353. It uses 25 fresh restarts across 3000 updates, with zero subdivisions. Maximum sampled foot difference from the baseline is below 5e-13 m and pair-force difference below 1.6e-8 N. This is numerical agreement, not hardware accuracy. The unforced minute heading is close to its gate, and the 5 ms unforced reference fails heading. General commands, useful walking speed and terrain remain unverified. The rendered minute has active speed ratio 1.00060× and active transition p95 22.5 ms on the documented Intel Mac/Chrome host. Largest measured WASM call is 141 ms; rendering schedule p95 is 16.67 ms. Command-to-visible latency, broader commands, terrain and hardware transfer remain unvalidated."
+    },
+    {
+      "id": "robot-heading-student",
+      "label": "Quadruped · Heading student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/heading-task/sustained.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "A student trained with a heading-aware walking task across ordinary and refined physics timesteps. WASD requests live walking. Inspect heading error, supported steps and learned motor corrections.",
+      "readiness": "Experimental heading-aware student · five walking checks pass · rendered minute keeps up at 1× · active p95 23.6 ms exceeds 20 ms target · ideal observations.",
+      "evidence": "A nine-evaluation paired weight search improves the weakest reward per simulated second from 0.8020 to 0.8674. The ordinary minute completes 26 supported steps and ends with 0.00354 rad heading error; the 5 ms minute ends with 0.00411 rad, both below the 0.005 rad heading budget. Independent trajectory and reserved-disturbance results are versioned separately. The task score does not provide heading observations to the student. Actual sensors, heading estimation, useful walking speed, broad terrain and hardware transfer remain unresolved. This is live shared Rust physics; measured browser performance is reported separately for this build. On the documented Intel Mac/Chrome host, active speed is 1.00033× and transition p95 is 23.6 ms. The largest WASM call is 153 ms; rendering schedule p95 is 16.67 ms. This is a single flat-floor minute, not general command/terrain or command-to-visible-response acceptance."
     }
   ]
 }

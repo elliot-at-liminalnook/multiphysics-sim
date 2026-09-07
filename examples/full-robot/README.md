@@ -1,5 +1,14 @@
 # Four-leg robot commissioning
 
+The [heading-aware student](heading-task/README.md) adds an explicit task penalty
+for heading drift and retrains the student across short and minute-long walks
+at two physics timesteps. The selected weights improve the weakest development
+reward by 8.16% and pass all five independent re-executions, including the
+previously failing 5 ms minute and two reserved gentle twists. The maintained
+**Heading student** browser preset exposes heading error. This is still a slow
+flat-floor crawl with ideal observations and a privileged planner; broad recovery,
+useful walking speed, terrain and full realtime acceptance remain open.
+
 The [efficient student experiment](mechanical-reuse/README.md) connects guarded
 derivative reuse to the shared mechanical solver, with a fresh restart before
 subdivision. The native minute needs 40% fewer Jacobian builds and follows the

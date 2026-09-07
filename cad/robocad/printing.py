@@ -95,10 +95,12 @@ class ThinRegion:
     face: int
 
 
-def wall_thickness(k: GeometryKernel, body: Body, threshold: float, samples_per_face: int = 12) -> list[ThinRegion]:
+def wall_thickness(k: GeometryKernel, body: Body, threshold: float, samples_per_face: int = 12,
+                   *, near: Optional[tuple[Vec3, float]] = None) -> list[ThinRegion]:
     """Sample points on faces and shoot a ray inward; where the far wall is
     closer than `threshold`, report a thin region. Cheap, robust, and what
-    a slicer would flag."""
+    a slicer would flag. `near=(point, radius)` restricts the same samples to
+    a local region before casting expensive rays (all distances in mm)."""
     mesh = k.tessellate(body, 0.2)
     thin: list[ThinRegion] = []
     # Sample triangle centroids, a few per face, weighted by area.
@@ -110,6 +112,8 @@ def wall_thickness(k: GeometryKernel, body: Body, threshold: float, samples_per_
         for ti in tris_sorted[:samples_per_face]:
             a, b, c = (mesh.vertices[i] for i in mesh.triangles[ti])
             centroid = v_scale(v_add(v_add(a, b), c), 1 / 3)
+            if near is not None and v_norm(v_sub(centroid, near[0])) >= near[1]:
+                continue
             n = v_unit(v_cross(v_sub(b, a), v_sub(c, a)))
             origin = v_sub(centroid, v_scale(n, 1e-3))
             hits = k.ray_hits(body, origin, v_scale(n, -1.0))

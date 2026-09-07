@@ -1,0 +1,6 @@
+{
+  "scene": "runs/full-robot/learning/point-feedback/scene.json",
+  "config": "runs/full-robot/learning/point-feedback/config.json",
+  "output_directory": "runs/full-robot/learning/block-factor",
+  "scope": "Compare exact independent-block dependent-coordinate factorization with the whole-matrix path. Preserve every original closure equation, global rank thresholds, motor program, controller, robot and world. Opt-in numerical algorithm, not a physical model reduction."
+}

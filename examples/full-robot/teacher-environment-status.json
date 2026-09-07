@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "scope": "Sampled teacher environment validation, not walking, realtime, learned control, or hardware calibration. The detailed model remains the live profile in this milestone.",
+  "native_reference": {
+    "passed": true,
+    "transitions": 140,
+    "observations": 54,
+    "compared_physics_frames": 141,
+    "mismatches": [],
+    "return": -0.04291867187877349,
+    "final": {
+      "completed_steps": 2800,
+      "elapsed_s": 0.02,
+      "observations": [
+        0.046427354480349244,
+        -3.9724429699164584e-05,
+        0.04616790741958873,
+        -0.0013575918735637977,
+        -0.004743092827869533,
+        0.0006810848965544759,
+        -0.00021218650046756057,
+        0.21721267836777994,
+        -0.3551226650433164,
+        -0.00484381084465907,
+        -0.34992035128633303,
+        0.39557839501304304,
+        -5.702229647871874e-05,
+        0.00017828292710554835,
+        -4.025128270106074e-12,
+        -0.002140535955069568,
+        -0.28043837773203834,
+        0.0007369669541341366,
+        -0.27612813273270864,
+        0.23707597963733945,
+        -0.3540874785873235,
+        -0.001261226846177024,
+        -0.3500000005474452,
+        0.3599794826157854,
+        0.0005635046016713557,
+        -3.537762881445419e-05,
+        -2.464162808367574e-13,
+        -0.007661173537229107,
+        -0.003839591092299914,
+        -0.0007373830376196074,
+        -8.346436831921359e-05,
+        0.22306218579523474,
+        -0.35509354815349714,
+        0.0035822282006147594,
+        -0.35000000305706025,
+        0.3792550146590662,
+        -0.0005164191620624967,
+        -0.00012681105441136325,
+        4.848910718611857e-12,
+        0.011970320646638824,
+        -0.004319955428187332,
+        0.0005939754131259932,
+        -7.650520136839833e-05,
+        0.2202024319634716,
+        -0.3550997793277413,
+        -0.00021926366407374218,
+        -0.3500000005398423,
+        0.38577053249597837,
+        -0.0010758021564600065,
+        4.363554163064017e-05,
+        -0.0005169561251515811,
+        -0.00029328449024269653,
+        -0.009607790092298965,
+        -2.4923391088077072e-05
+      ],
+      "reward": -0.00011173397526337723,
+      "reward_terms": [
+        {
+          "name": "motor.0.tracking",
+          "value": -4.4875184891512066e-08
+        },
+        {
+          "name": "motor.1.tracking",
+          "value": -1.3686074765127487e-05
+        },
+        {
+          "name": "motor.2.tracking",
+          "value": -1.8042712284065677e-05
+        },
+        {
+          "name": "motor.3.tracking",
+          "value": -2.167694557775201e-09
+        },
+        {
+          "name": "motor.4.tracking",
+          "value": -1.2385474636164418e-05
+        },
+        {
+          "name": "motor.5.tracking",
+          "value": -1.1138317817658236e-05
+        },
+        {
+          "name": "motor.6.tracking",
+          "value": -2.1169162425500446e-07
+        },
+        {
+          "name": "motor.7.tracking",
+          "value": -9.405658644401325e-06
+        },
+        {
+          "name": "motor.8.tracking",
+          "value": -1.729613443295753e-05
+        },
+        {
+          "name": "motor.9.tracking",
+          "value": -1.777925039689814e-07
+        },
+        {
+          "name": "motor.10.tracking",
+          "value": -1.2004579884993103e-05
+        },
+        {
+          "name": "motor.11.tracking",
+          "value": -1.7338495790336177e-05
+        }
+      ],
+      "terminated": false,
+      "termination_reasons": [],
+      "time_s": 2.8000000000000003,
+      "truncated": true
+    },
+    "scope": "Environment nominal actions versus prior full production capture. Exact common frame fields; diagnostic reward is not walking success."
+  },
+  "robot_wasm": {
+    "passed": true,
+    "preset": "robot-teacher-environment",
+    "transitions": 140,
+    "maximum_native_wasm_difference": 3.3045687020116787e-10,
+    "worst": "physics[40].policy.observations.marker.-Y-foot-surface.floor_force_world.x",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 4989,
+    "replay_progress_messages": 140,
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute numeric portability tolerance; not physical accuracy or learned control."
+  },
+  "fixture_wasm": {
+    "passed": true,
+    "preset": "pendulum-environment",
+    "transitions": 20,
+    "maximum_native_wasm_difference": 5.876716357988698e-08,
+    "worst": "physics[9].motor_states.1",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 76,
+    "replay_progress_messages": 20,
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute numeric portability tolerance; not physical accuracy or learned control."
+  },
+  "rust_tests": 19,
+  "workspace_all_targets_check": true,
+  "viewer_checks": 26,
+  "standalone_viewer_checks": 6,
+  "files": {
+    "runs/interactive/teacher-environment/robot.native.json": "b411cffe925ed5c1eb16b508bdfdb116008bda30a3371ba3d7cfabfef323fad1",
+    "runs/interactive/teacher-environment/fixture.native.json": "5cdc0523ea898f973021f4ba2cd295f36f23589ee981ce8043bc6d829861c946",
+    "runs/interactive/teacher-environment/robot-baseline-comparison.json": "50a4d2c59d4ce06e22a7a4b289a257fb3eedb8b63f079f32c3e9575f0e5e1403",
+    "runs/interactive/teacher-environment/robot.browser.json": "0f1a1b350f0f858ccc5a834cf23aa932943c29ca300f421ebda067cdaa09291d",
+    "runs/interactive/teacher-environment/fixture.browser.json": "e32991dc49f7d3e87715da4f8c02f77e19284e222fadd592b70c43a1e2f76d3c",
+    "runs/interactive/teacher-environment/viewer-report.json": "feed785b6fcc2cf3eebf54fafebe786b0b6eabdd622ea246b911d1bacceed7cb",
+    "runs/interactive/teacher-environment/standalone-ui.json": "b058a551965f6326d681d30ccd2ad1ba158e2c6defb4bb84852d22cdae48fb7a",
+    "runs/interactive/teacher-environment/rust-tests.txt": "60a03c989adc900cb63e3d4b14c722feb6dd9af323e9a75ef5d5a3ab39036e31",
+    "runs/interactive/teacher-environment/workspace-check.txt": "75057bc146d05bbd1a64a729cc76cb5f5efae234032dd1f2ce9f13004c156fc8"
+  }
+}

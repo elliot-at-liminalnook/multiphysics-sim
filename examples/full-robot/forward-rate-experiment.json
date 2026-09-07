@@ -1,0 +1,9 @@
+{
+  "time_scale": 1.5,
+  "coarse_physics_step_s": 0.001,
+  "source_directory": "runs/full-robot/learning/forward-10mm",
+  "planner_source": "examples/full-robot/single-foot-marker-motion-forward-10mm.json",
+  "lift_requirements_source": "examples/full-robot/single-foot-lift-requirements.json",
+  "output_directory": "runs/full-robot/learning/forward-slow",
+  "scope": "Rate-only experiment: stretch the geometric reference and its phase windows; preserve physics timestep, controller clocks, gains, physical parameters, force/clearance/dwell thresholds and post-reference horizon allowance."
+}

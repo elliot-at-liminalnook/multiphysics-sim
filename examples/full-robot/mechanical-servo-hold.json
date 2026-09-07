@@ -1,0 +1,118 @@
+{
+  "step_s": 0.00025,
+  "steps": 400,
+  "report_every": 8,
+  "applied_generalized_loads": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "implicit": {
+    "reuse_mechanical_endpoint": true
+  },
+  "embedding": {
+    "dependent_solve": "pivoted_qr"
+  },
+  "motors": {
+    "residual_scales": [
+      1,
+      1,
+      1
+    ],
+    "events": {},
+    "servos": [
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      }
+    ]
+  },
+  "audit_contact_steps": true
+}

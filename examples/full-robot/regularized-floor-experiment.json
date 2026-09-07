@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "source_scene": "runs/full-robot/solver-performance/bracket-option-off.scene.json",
+  "source_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "scene_option_overrides": {
+    "floor_friction": {
+      "kind": "regularized_coulomb",
+      "slip_speed_m_s": 0.001
+    }
+  },
+  "coarse_configuration": "examples/full-robot/mechanical-servo-hold.json",
+  "refined_configuration": "examples/full-robot/mechanical-servo-hold-refined.json",
+  "scope": "Experimental kinetic-Coulomb floor patch with combined sliding/twist capacity and 1 mm/s slip regularization. No exact static stiction or stored tangential elastic energy. CAD material kinetic coefficients, geometry, normal compliance, internal contacts and all actuator settings retained. Uncalibrated diagnostic; no hardware, walking or realtime claim."
+}

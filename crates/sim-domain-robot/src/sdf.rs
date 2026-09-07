@@ -4,6 +4,41 @@
 use crate::model::{Collision, Link, Sdf, V3};
 use nalgebra::Vector3;
 
+/// Strict interior of a joint's contact-exclusion sphere. Boundary samples stay
+/// eligible for collision. World transforms and subtraction can move a sample
+/// on an invariant radius a few ULPs either side of that radius; do not turn that
+/// arithmetic noise into a discontinuous contact force. The guard scales with
+/// coordinate roundoff, not a fixed physical clearance or a derivative step.
+pub(crate) fn inside_exclusion_band(point: Vector3<f64>, center: Vector3<f64>, radius: f64) -> bool {
+    let roundoff = 32.0 * f64::EPSILON * (point.amax() + center.amax() + radius);
+    radius - (point - center).norm() > roundoff
+}
+
+#[cfg(test)]
+mod band_tests {
+    use super::*;
+    use nalgebra::Rotation3;
+
+    #[test]
+    fn rotating_boundary_samples_remain_eligible_for_collision() {
+        // The contact-enabled CAD fixture has +/-6 mm samples at a radius of
+        // exactly 10 mm. A raw norm<radius predicate flickered while rotating.
+        for scale in [1e-3, 1.0, 1e3] {
+            let center = Vector3::new(0.0, 0.0, 0.2)*scale;
+            for sign in [-1.0, 1.0] {
+                let local = Vector3::new(-0.008, sign*0.006, 0.0)*scale;
+                for i in 0..4096 {
+                    let rotation = Rotation3::from_axis_angle(&Vector3::y_axis(),i as f64*0.002);
+                    let point = center + rotation*local;
+                    assert!(!inside_exclusion_band(point,center,0.01*scale));
+                    assert!(inside_exclusion_band(center+(point-center)*(1.0-1e-9),center,0.01*scale));
+                    assert!(!inside_exclusion_band(center+(point-center)*(1.0+1e-9),center,0.01*scale));
+                }
+            }
+        }
+    }
+}
+
 impl Sdf {
     pub fn is_valid(&self) -> bool {
         self.dims.iter().all(|&d| d >= 2) && self.values.len() >= self.dims[0] * self.dims[1] * self.dims[2] && self.cell > 0.0
@@ -71,20 +106,23 @@ pub fn local_bounds(link: &Link) -> (Vector3<f64>, Vector3<f64>) {
 /// The vertices a link touches the world with: hull vertices first, then
 /// farthest-point samples of the surface mesh, up to `max`.
 pub fn contact_vertices(c: &Collision, max: usize) -> Vec<Vector3<f64>> {
-    let all: Vec<Vector3<f64>> = c.vertices.iter().map(|v| Vector3::new(v[0], v[1], v[2])).collect();
-    let hull: Vec<Vector3<f64>> = c.hull.iter().map(|v| Vector3::new(v[0], v[1], v[2])).collect();
+    if max == 0 { return Vec::new(); }
+    let all: Vec<Vector3<f64>> = c.hull.iter().chain(&c.vertices)
+        .map(|v| Vector3::new(v[0], v[1], v[2])).collect();
     let mut chosen: Vec<Vector3<f64>> = Vec::new();
-    for h in &hull {
-        if chosen.len() >= max {
-            break;
-        }
-        if !chosen.iter().any(|c| (c - h).norm() < 1e-6) {
-            chosen.push(*h);
-        }
-    }
-    if chosen.is_empty() {
-        if let Some(first) = all.first() {
-            chosen.push(*first);
+    // A mesh's hull order is not a contact priority. Preserve support extrema
+    // before sampling: truncating the first hull vertices can omit a thin foot
+    // entirely and let it pass through the floor. Z first covers gravity even
+    // for deliberately tiny budgets; normal budgets retain all six extrema.
+    for axis in [2, 0, 1] {
+        for maximum in [false, true] {
+            if chosen.len() >= max { break; }
+            let extremum = all.iter().min_by(|a, b| {
+                if maximum { b[axis].total_cmp(&a[axis]) } else { a[axis].total_cmp(&b[axis]) }
+            });
+            if let Some(p) = extremum {
+                if !chosen.iter().any(|q| (q-p).norm() < 1e-9) { chosen.push(*p); }
+            }
         }
     }
     // Farthest-point sampling over the remaining vertices.
@@ -137,6 +175,26 @@ pub fn keyed_normal(stream: u64, index: u64) -> f64 {
 
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn contact_budget_retains_thin_foot_and_all_support_extrema() {
+        let mut c = super::Collision::default();
+        c.hull = (0..100).map(|i| {
+            let a = i as f64 * std::f64::consts::TAU / 100.;
+            [a.cos(), a.sin(), 0.]
+        }).collect();
+        c.hull.push([0., 0., -10.]);
+        c.vertices = c.hull.clone();
+        let contacts = super::contact_vertices(&c, 24);
+        assert_eq!(contacts.len(), 24);
+        for axis in 0..3 {
+            let lo = c.hull.iter().map(|p| p[axis]).fold(f64::INFINITY, f64::min);
+            let hi = c.hull.iter().map(|p| p[axis]).fold(f64::NEG_INFINITY, f64::max);
+            assert!(contacts.iter().any(|p| p[axis] == lo));
+            assert!(contacts.iter().any(|p| p[axis] == hi));
+        }
+        assert!(super::contact_vertices(&c, 0).is_empty());
+    }
     use super::*;
 
     /// A grid of the signed distance to a box [-a, a]³.

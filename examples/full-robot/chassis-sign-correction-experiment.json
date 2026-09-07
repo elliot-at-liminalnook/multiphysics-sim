@@ -1,0 +1,12 @@
+{
+  "cad": "examples/full-robot/baseline/robot.rcad",
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "scene": "runs/full-robot/learning/forward-slow/scene.json",
+  "scene_sha256": "0e8d7f6d6427821987223336d6df4eb5730913947465d1cf0454fcf82f55fb43",
+  "links": [
+    "Robot | Chassis and hip mounts"
+  ],
+  "algorithm": "triangle_aabb_exact_v1",
+  "sign_algorithm": "solid_union_ray_v1",
+  "tolerance_mm": 0.15
+}

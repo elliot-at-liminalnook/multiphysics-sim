@@ -34,6 +34,16 @@ use sim_core::{
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+mod closure;
+mod jacobian;
+mod inertia;
+pub mod constraints;
+pub mod transmission_coordinates;
+pub mod embedding;
+mod prepared;
+pub mod friction;
+use friction::FloorFrictionModel;
+
 pub const ARTICULATED: &str = "robot.articulated";
 
 type Params = BTreeMap<String, f64>;
@@ -148,6 +158,10 @@ pub struct LoopC {
     pub r_b: V,
     /// Axis rows: `(e1, e2)` in a's frame and the axis in b's frame.
     pub axis: Option<(V, V, V)>,
+    /// The rigid tree already enforces axis alignment for every configuration.
+    /// Keep the multiplier lanes, but evaluate these identities without the
+    /// cancellation of separately transformed world-space vectors.
+    pub angular_redundant: bool,
     pub lambda_state: usize,
     pub rows: usize,
 }
@@ -221,6 +235,11 @@ pub struct Articulated {
     pub initial_twist: [f64; 6],
     pub planar: Option<(V, V)>,
     pub contact_on: bool,
+    pub floor_friction: FloorFrictionModel,
+    pub hybrid_jacobian: bool,
+    pub rate_partials: bool,
+    /// Experimental central state probes for angular loop rows; zero disables.
+    pub constraint_state_step: f64,
     pub loop_alpha: f64,
     /// Constraint-force mixing: a tiny compliance that keeps redundant loop rows solvable.
     pub loop_cfm: f64,
@@ -282,6 +301,7 @@ pub struct ContactPoint {
     pub other: Option<usize>,
     pub point: V,
     pub force: V,
+    /// Geometric overlap in metres; independent of velocity-dependent damping.
     pub penetration: f64,
 }
 
@@ -306,6 +326,15 @@ pub struct Options {
     pub planar: bool,
     pub flex: bool,
     pub contact: bool,
+    pub floor_friction: FloorFrictionModel,
+    /// Experimental exact/hybrid derivatives; validate convergence before enabling.
+    pub hybrid_jacobian: bool,
+    pub rate_partials: bool,
+    /// Experimental central state probes for angular loop rows; zero disables.
+    pub constraint_state_step: f64,
+    /// Experimental exact evaluation of loop identities certified by the tree.
+    /// Opt-in until whole-trajectory integration accuracy is established.
+    pub structural_loop_identities: bool,
     pub loop_alpha: f64,
     pub loop_cfm: f64,
     pub loop_angular_cfm: f64,
@@ -321,7 +350,7 @@ pub struct Options {
 }
 impl Default for Options {
     fn default() -> Self {
-        Self { gravity_scale: 1.0, planar: false, flex: true, contact: true, loop_alpha: 100.0, loop_cfm: 1e-6, loop_angular_cfm: 1e-6, flex_modes: 4, flex_max_hz: 500.0, initial_angles: BTreeMap::new(), initial_speeds: BTreeMap::new(), initial_twist: [0.0; 6], initial_offset: [0.0; 3] }
+        Self { gravity_scale: 1.0, planar: false, flex: true, contact: true, floor_friction: FloorFrictionModel::Bristle, hybrid_jacobian: false, rate_partials: false, constraint_state_step: 0.0, structural_loop_identities: false, loop_alpha: 100.0, loop_cfm: 1e-6, loop_angular_cfm: 1e-6, flex_modes: 4, flex_max_hz: 500.0, initial_angles: BTreeMap::new(), initial_speeds: BTreeMap::new(), initial_twist: [0.0; 6], initial_offset: [0.0; 3] }
     }
 }
 
@@ -339,6 +368,10 @@ pub fn friction_torque(f: &Friction, qd: f64) -> f64 {
 
 impl Articulated {
     pub fn new(model: Arc<PhysicalModel>, opts: &Options) -> Result<Self, String> {
+        opts.floor_friction.validate()?;
+        if !opts.constraint_state_step.is_finite() || !(0.0..=0.1).contains(&opts.constraint_state_step) {
+            return Err("constraint state probe step must be finite and within 0..=0.1".into());
+        }
         if model.links.is_empty() {
             return Err("the model has no links".into());
         }
@@ -618,7 +651,8 @@ impl Articulated {
             let rows = if j.kind == "loop_revolute" { 5 } else { 3 };
             let r_j = frame_from_z(axis);
             let axis_rows = if rows == 5 { Some((r_j.column(0).into_owned(), r_j.column(1).into_owned(), axis)) } else { None };
-            loops.push(LoopC { name: j.name.clone(), a, b, r_a: origin - links[a].com0, r_b: origin - links[b].com0, axis: axis_rows, lambda_state: state, rows });
+            let angular_redundant = opts.structural_loop_identities && rows == 5 && constraints::axis_alignment_is_implied(a, b, axis, &links, &joints);
+            loops.push(LoopC { name: j.name.clone(), a, b, r_a: origin - links[a].com0, r_b: origin - links[b].com0, axis: axis_rows, angular_redundant, lambda_state: state, rows });
             state += rows;
         }
         // Ideal belt/gear couplings act on joint coordinates, including shafts
@@ -721,6 +755,10 @@ impl Articulated {
             initial_twist: opts.initial_twist,
             planar,
             contact_on: opts.contact,
+            floor_friction: opts.floor_friction,
+            hybrid_jacobian: opts.hybrid_jacobian,
+            rate_partials: opts.rate_partials,
+            constraint_state_step: opts.constraint_state_step,
             loop_alpha: opts.loop_alpha,
             loop_cfm: opts.loop_cfm,
             loop_angular_cfm: opts.loop_angular_cfm,
@@ -781,10 +819,131 @@ impl Articulated {
         (p, q, vel, w, acc, alpha)
     }
 
+    fn write_residual(&self, ctx: &mut Context, g: &Generalized, e: &Evaluation) {
+        let s = &g.states;
+        let r = &g.rates;
+        // Bases.
+        for (bi, b) in self.bases.iter().enumerate() {
+            let o = b.state;
+            if b.grounded {
+                let target = [b.p0.x, b.p0.y, b.p0.z, 1.0, 0.0, 0.0, 0.0];
+                for k in 0..7 {
+                    ctx.set_state_residual(o + k, s[o + k] - target[k]);
+                }
+                for k in 7..13 {
+                    ctx.set_state_residual(o + k, s[o + k]);
+                }
+            } else {
+                for k in 0..3 {
+                    ctx.set_state_residual(o + k, r[o + k] - s[o + 7 + k]);
+                }
+                let q = quat(s[o + 3], s[o + 4], s[o + 5], s[o + 6]);
+                let w_body = q.inverse() * V::new(s[o + 10], s[o + 11], s[o + 12]);
+                let qr = quat_rate(&q, w_body);
+                let norm2 = (3..7).map(|k| s[o + k] * s[o + k]).sum::<f64>();
+                for k in 0..4 {
+                    ctx.set_state_residual(o + 3 + k, r[o + 3 + k] - qr[k] - 10.0 * (1.0 - norm2) * s[o + 3 + k]);
+                }
+                for k in 0..6 {
+                    ctx.set_state_residual(o + 7 + k, e.base_wrench[bi][k]);
+                }
+            }
+        }
+        // Joints.
+        let mut dof_index = 0usize;
+        for (ji, j) in self.joints.iter().enumerate() {
+            for (k, d) in j.dofs.iter().enumerate() {
+                let through = e.joints[ji].tau_needed[k] - e.joints[ji].tau_passive[k];
+                match d.port {
+                    Some(p) => {
+                        ctx.set_state_residual(d.qd_state, s[d.qd_state] - ctx.across_derivative(p, 0));
+                        ctx.add_through(p, through);
+                    }
+                    None => {
+                        let qs = d.q_state.unwrap();
+                        ctx.set_state_residual(qs, r[qs] - s[d.qd_state]);
+                        ctx.set_state_residual(d.qd_state, through);
+                    }
+                }
+                dof_index += 1;
+            }
+        }
+        let _ = dof_index;
+        // Flex.
+        for (li, l) in self.links.iter().enumerate() {
+            let Some(f) = &l.flex else { continue };
+            // Thermal nodes are in kelvin; the softening curve is in °C.
+            let temp = f.temperature_signal.map(|k| g.temperatures[k] - 273.15).unwrap_or(self.ambient_c);
+            let soft = f.softening.factor(temp);
+            for m in 0..f.modes {
+                let eta = s[f.state + m];
+                let etad = s[f.state + f.modes + m];
+                let etadd = r[f.state + f.modes + m];
+                ctx.set_state_residual(f.state + m, r[f.state + m] - etad);
+                // Scaled by the modal stiffness so the row is in metres like
+                // the coordinate, not in newtons a million times larger.
+                let scale = 1.0 / f.stiffness[m].max(1.0);
+                ctx.set_state_residual(f.state + f.modes + m, scale * (f.mass[m] * etadd + f.damping[m] * etad + f.stiffness[m] * soft * eta - e.modal_force[li][m]));
+            }
+        }
+        // Loops.
+        let mut row = 0;
+        for lp in &self.loops {
+            for k in 0..lp.rows {
+                ctx.set_state_residual(lp.lambda_state + k, e.loop_rows[row]);
+                row += 1;
+            }
+        }
+        for t in &self.transmissions {
+            ctx.set_state_residual(t.lambda_state, e.loop_rows[row]);
+            row += 1;
+        }
+        // Bristles.
+        for l in self.links.iter().filter(|l| !l.grounded) {
+            for k in 0..3 {
+                let idx = l.bristle_state + k;
+                ctx.set_state_residual(idx, r[idx] - e.bristle_rates[idx]);
+            }
+        }
+        // IMUs: held values, previous velocity, bias and clock are constant between samples.
+        for imu in &self.imus {
+            for k in 0..16 {
+                ctx.set_state_residual(imu.state + k, r[imu.state + k]);
+            }
+            for c in 0..6 {
+                ctx.set_signal(imu.signals[c], s[imu.state + c]);
+            }
+        }
+        for (li, l) in self.links.iter().enumerate() {
+            if let Some(sig) = l.contact_signal {
+                ctx.set_signal(sig, e.contact_normal[li]);
+            }
+        }
+    }
+
     /// Read the generalized coordinates from a residual context.
     fn read_ctx(&self, ctx: &Context) -> Generalized {
         let states = ctx.states().to_vec();
-        let rates = ctx.state_rates().to_vec();
+        // Rate reads declare differential unknowns to the compiler. In
+        // particular, constraint multipliers and fixed base coordinates
+        // must remain algebraic; copying state_rates() marks them dynamic
+        // even though their derivatives never occur in these equations.
+        let mut rates = vec![0.0; self.state_count];
+        let mut read_rates = |start: usize, count: usize| {
+            for k in start..start + count { rates[k] = ctx.state_rate(k); }
+        };
+        for b in &self.bases {
+            if !b.grounded { read_rates(b.state, BASE_STATES); }
+        }
+        for (_, d) in self.dofs() {
+            if let Some(q) = d.q_state { read_rates(q, 1); }
+            read_rates(d.qd_state, 1);
+        }
+        for l in &self.links {
+            if let Some(f) = &l.flex { read_rates(f.state, 2 * f.modes); }
+            if !l.grounded { read_rates(l.bristle_state, 3); }
+        }
+        for imu in &self.imus { read_rates(imu.state, 16); }
         let mut q = Vec::new();
         let mut qd = Vec::new();
         let mut qdd = Vec::new();
@@ -857,9 +1016,7 @@ impl Articulated {
         (out[0], out[1], out[2], out[3], out[4], out[5])
     }
 
-    /// Forward and backward passes, contacts, constraints: the whole
-    /// evaluation at one instant.
-    pub fn evaluate_with(&self, g: &Generalized, contact: bool) -> Evaluation {
+    fn kinematics(&self, g: &Generalized) -> (Vec<LinkKin>, Vec<V>, Vec<Vec<V>>) {
         let n = self.links.len();
         let mut kin: Vec<Option<LinkKin>> = vec![None; n];
         for b in 0..self.bases.len() {
@@ -868,7 +1025,6 @@ impl Articulated {
         }
         let mut joint_points = vec![V::zeros(); self.joints.len()];
         let mut joint_axes: Vec<Vec<V>> = vec![Vec::new(); self.joints.len()];
-        let mut joint_frames: Vec<M> = vec![M::identity(); self.joints.len()];
         let mut dof_index = 0usize;
         for (ji, j) in self.joints.iter().enumerate() {
             let pk = kin[j.parent].clone().expect("parents are evaluated first");
@@ -909,7 +1065,6 @@ impl Articulated {
             }
             joint_points[ji] = o;
             joint_axes[ji] = axes;
-            joint_frames[ji] = rot;
             let d = rot * j.r_jc;
             let r_c = rot * j.r_jc_rot;
             let p_c = o + d;
@@ -918,20 +1073,39 @@ impl Articulated {
             kin[j.child] = Some(LinkKin { r: r_c, p: p_c, w, vel: v_c, alpha, acc: a_c });
         }
         let links: Vec<LinkKin> = kin.into_iter().map(|k| k.unwrap_or(LinkKin { r: M::identity(), p: V::zeros(), w: V::zeros(), vel: V::zeros(), alpha: V::zeros(), acc: V::zeros() })).collect();
-        // External forces (world, about each COM).
-        let mut f_ext = vec![V::zeros(); n];
-        let mut t_ext = vec![V::zeros(); n];
-        for (i, l) in self.links.iter().enumerate() {
-            f_ext[i] += self.gravity * l.mass;
-        }
-        let mut contacts = Vec::new();
-        let mut bristle_rates = vec![0.0; g.states.len()];
-        let mut contact_normal = vec![0.0; n];
-        if contact {
-            self.contacts(g, &links, &mut f_ext, &mut t_ext, &mut contacts, &mut bristle_rates, &mut contact_normal);
-        }
+        (links, joint_points, joint_axes)
+    }
+
+    /// Forward and backward passes, contacts, constraints: the whole
+    /// evaluation at one instant.
+    pub fn evaluate_with(&self, g: &Generalized, contact: bool) -> Evaluation {
+        self.evaluate_forces(g, contact, false)
+    }
+
+    /// `inertia_only` omits acceleration-independent external loads. The
+    /// Jacobian applies this linear inertial operator to acceleration basis
+    /// vectors with velocities and constraint reactions zeroed.
+    fn evaluate_forces(&self, g: &Generalized, contact: bool, inertia_only: bool) -> Evaluation {
+        self.evaluate_reusing_contacts(g, contact, inertia_only, None, None, None)
+    }
+
+    fn evaluate_reusing_contacts(&self, g: &Generalized, contact: bool, inertia_only: bool,
+        cached_contacts: Option<&prepared::ContactForces>,
+        cached_geometry: Option<&prepared::ContactGeometry>,
+        cached_kinematics: Option<&prepared::Kinematics>) -> Evaluation {
+        let gravity = if inertia_only { V::zeros() } else { self.gravity };
+        let n = self.links.len();
+        // Borrow cached joint axes rather than cloning one allocation per joint.
+        // Only the links and points exposed in Evaluation need owned copies.
+        let kinematics = match cached_kinematics {
+            Some(cached) => std::borrow::Cow::Borrowed(cached),
+            None => std::borrow::Cow::Owned(self.kinematics(g)),
+        };
+        let (links, joint_points, joint_axes) = kinematics.as_ref();
+        let prepared::ContactForces { mut f_ext, mut t_ext, contacts, bristle_rates, contact_normal } =
+            cached_contacts.cloned().unwrap_or_else(|| self.contact_forces(g, &links, contact, gravity, cached_geometry));
         // Cables.
-        for c in &self.cables {
+        for c in self.cables.iter().filter(|_| !inertia_only) {
             let (ka, kb) = (&links[c.a], &links[c.b]);
             let ra = ka.r * c.r_a;
             let rb = kb.r * c.r_b;
@@ -944,67 +1118,17 @@ impl Articulated {
             let stretch = len - c.length;
             let tension = if stretch > 0.0 { (c.stiffness * stretch / c.length.max(1e-6) + c.damping * rate).max(0.0) } else { 0.0 };
             let f = dir * tension;
-            let weight = self.gravity * (0.5 * c.mass);
+            let weight = gravity * (0.5 * c.mass);
             f_ext[c.a] += f + weight;
             t_ext[c.a] += ra.cross(&(f + weight));
             f_ext[c.b] += -f + weight;
             t_ext[c.b] += rb.cross(&(-f + weight));
         }
-        // Loop constraint forces and rows.
-        let mut loop_rows = Vec::new();
-        for lp in &self.loops {
-            let (ka, kb) = (&links[lp.a], &links[lp.b]);
-            let ra = ka.r * lp.r_a;
-            let rb = kb.r * lp.r_b;
-            let lam = &g.states[lp.lambda_state..lp.lambda_state + lp.rows];
-            let f = V::new(lam[0], lam[1], lam[2]);
-            f_ext[lp.b] += f;
-            t_ext[lp.b] += rb.cross(&f);
-            f_ext[lp.a] -= f;
-            t_ext[lp.a] -= ra.cross(&f);
-            let pa = ka.p + ra;
-            let pb = kb.p + rb;
-            let va = ka.vel + ka.w.cross(&ra);
-            let vb = kb.vel + kb.w.cross(&rb);
-            let aa = ka.acc + ka.alpha.cross(&ra) + ka.w.cross(&ka.w.cross(&ra));
-            let ab = kb.acc + kb.alpha.cross(&rb) + kb.w.cross(&kb.w.cross(&rb));
-            let al = self.loop_alpha;
-            let phi = pb - pa;
-            let dphi = vb - va;
-            let ddphi = ab - aa;
-            for k in 0..3 {
-                loop_rows.push(ddphi[k] + 2.0 * al * dphi[k] + al * al * phi[k] + self.loop_cfm * lam[k]);
-            }
-            if let Some((e1, e2, ax)) = &lp.axis {
-                let a_w = kb.r * ax;
-                let da = kb.w.cross(&a_w);
-                let dda = kb.alpha.cross(&a_w) + kb.w.cross(&kb.w.cross(&a_w));
-                for (row, e_l) in [(3usize, e1), (4, e2)] {
-                    let e_w = ka.r * e_l;
-                    let de = ka.w.cross(&e_w);
-                    let dde = ka.alpha.cross(&e_w) + ka.w.cross(&ka.w.cross(&e_w));
-                    let phi = e_w.dot(&a_w);
-                    let dphi = de.dot(&a_w) + e_w.dot(&da);
-                    let ddphi = dde.dot(&a_w) + 2.0 * de.dot(&da) + e_w.dot(&dda);
-                    loop_rows.push(ddphi + 2.0 * al * dphi + al * al * phi + self.loop_angular_cfm * lam[row]);
-                    let torque = a_w.cross(&e_w) * lam[row];
-                    t_ext[lp.b] += torque;
-                    t_ext[lp.a] -= torque;
-                }
-            }
-        }
         let mut transmission_torque = vec![0.0; g.q.len()];
-        for t in &self.transmissions {
-            let lambda = g.states[t.lambda_state];
-            let phi = g.q[t.driver] - t.ratio * g.q[t.driven];
-            let velocity = g.qd[t.driver] - t.ratio * g.qd[t.driven];
-            let acceleration = g.qdd[t.driver] - t.ratio * g.qdd[t.driven];
-            loop_rows.push(acceleration + 2.0 * self.loop_alpha * velocity + self.loop_alpha.powi(2) * phi + self.loop_angular_cfm * lambda);
-            transmission_torque[t.driver] += lambda;
-            transmission_torque[t.driven] -= t.ratio * lambda;
-        }
+        let loop_rows = self.constraint_rows_with_reactions(
+            g, links, Some((&mut f_ext, &mut t_ext, &mut transmission_torque)));
         // Planar penalty on floating bases.
-        if let Some((nrm, org)) = &self.planar {
+        if let Some((nrm, org)) = self.planar.as_ref().filter(|_| !inertia_only) {
             for b in self.bases.iter().filter(|b| !b.grounded) {
                 let (p0, q0, v0, w0, _, _) = self.base_of(g, self.bases.iter().position(|x| x.link == b.link).unwrap());
                 let m_total = subtree_mass(&self.model, b.link);
@@ -1057,7 +1181,7 @@ impl Articulated {
         // Joint torques: needed vs passive.
         let mut dof_index = 0usize;
         for (ji, j) in self.joints.iter().enumerate() {
-            let axes = joint_axes[ji].clone();
+            let axes = &joint_axes[ji];
             let mut needed = Vec::with_capacity(j.dofs.len());
             let mut passive = Vec::with_capacity(j.dofs.len());
             for (k, d) in j.dofs.iter().enumerate() {
@@ -1086,7 +1210,6 @@ impl Articulated {
                 needed.push(tau);
                 passive.push(pas);
             }
-            joints[ji].axes = axes;
             joints[ji].tau_needed = needed;
             joints[ji].tau_passive = passive;
         }
@@ -1095,7 +1218,7 @@ impl Articulated {
         for (li, l) in self.links.iter().enumerate() {
             let Some(f) = &l.flex else { continue };
             let k = &links[li];
-            let a_loc = k.r.transpose() * (k.acc - self.gravity);
+            let a_loc = k.r.transpose() * (k.acc - gravity);
             let al_loc = k.r.transpose() * k.alpha;
             let mut out = vec![0.0; f.modes];
             for m in 0..f.modes {
@@ -1113,14 +1236,46 @@ impl Articulated {
             }
             modal_force[li] = out;
         }
+        // Evaluation owns its axes. Fresh kinematics can transfer them after
+        // the force calculations; only borrowed prepared axes require copies.
+        let (links, joint_points) = match kinematics {
+            std::borrow::Cow::Borrowed(cached) => {
+                for (joint, axes) in joints.iter_mut().zip(&cached.2) { joint.axes = axes.clone(); }
+                (cached.0.clone(), cached.1.clone())
+            }
+            std::borrow::Cow::Owned((links, points, axes)) => {
+                for (joint, axes) in joints.iter_mut().zip(axes) { joint.axes = axes; }
+                (links, points)
+            }
+        };
         Evaluation { links, joints, contacts, base_wrench, modal_force, loop_rows, bristle_rates, contact_normal, joint_points }
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn contacts(&self, g: &Generalized, links: &[LinkKin], f_ext: &mut [V], t_ext: &mut [V], out: &mut Vec<ContactPoint>, bristle_rates: &mut [f64], normal_sum: &mut [f64]) {
+    fn contact_forces(&self, g: &Generalized, links: &[LinkKin], contact: bool, gravity: V,
+        geometry: Option<&prepared::ContactGeometry>) -> prepared::ContactForces {
         let n = self.links.len();
-        // World boxes for the broad phase.
-        let boxes: Vec<(V, V)> = self.links.iter().zip(links).map(|(l, k)| world_box(l, k)).collect();
+        // External forces (world, about each COM).
+        let mut f_ext = vec![V::zeros(); n];
+        let mut t_ext = vec![V::zeros(); n];
+        for (i, l) in self.links.iter().enumerate() {
+            f_ext[i] += gravity * l.mass;
+        }
+        let mut contacts = Vec::new();
+        let mut bristle_rates = vec![0.0; g.states.len()];
+        let mut contact_normal = vec![0.0; n];
+        if contact {
+            sim_solve::profile::CONTACT_FORCES.time(|| self.contacts(g, links, &mut f_ext, &mut t_ext, &mut contacts, &mut bristle_rates, &mut contact_normal, geometry));
+        }
+        prepared::ContactForces { f_ext, t_ext, contacts, bristle_rates, contact_normal }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn contacts(&self, g: &Generalized, links: &[LinkKin], f_ext: &mut [V], t_ext: &mut [V], out: &mut Vec<ContactPoint>, bristle_rates: &mut [f64], normal_sum: &mut [f64], cached_geometry: Option<&prepared::ContactGeometry>) {
+        let fresh_geometry;
+        let geometry = match cached_geometry {
+            Some(geometry) if geometry.matches(links) => geometry,
+            base => { fresh_geometry = prepared::ContactGeometry::new_reusing(self, links, base); &fresh_geometry }
+        };
         let sigma0 = self.floor_k;
         let up = V::z();
         for (i, l) in self.links.iter().enumerate() {
@@ -1133,11 +1288,11 @@ impl Articulated {
                 let z = V::new(g.states[zs], g.states[zs + 1], 0.0);
                 let z_twist = g.states[zs + 2];
                 let mut total = 0.0;
-                let mut touching: Vec<(V, V, f64, V)> = Vec::new(); // point, offset, normal force, velocity
-                for c in &l.contact {
-                    let r = k.r * c;
-                    let pt = k.p + r;
-                    let depth = self.floor_height(pt.x, pt.y) - pt.z;
+                let mut touching: Vec<(V, V, f64, V, f64)> = Vec::new(); // point, offset, normal force, velocity, geometric depth
+                for sample in &geometry.samples[i] {
+                    let r = sample.offset;
+                    let pt = sample.point;
+                    let depth = sample.floor_depth;
                     if depth <= 0.0 {
                         continue;
                     }
@@ -1145,112 +1300,108 @@ impl Articulated {
                     let vn = vp.dot(&up);
                     let fn_ = (self.floor_k * depth * (1.0 - self.restitution_damping * vn)).max(0.0);
                     total += fn_;
-                    touching.push((pt, r, fn_, vp));
+                    touching.push((pt, r, fn_, vp, depth));
                 }
                 if total > 0.0 {
                     let sigma1 = 2.0 * (sigma0 * l.mass).sqrt();
                     let mut centroid = V::zeros();
                     let mut vt = V::zeros();
-                    for (pt, _, fn_, vp) in &touching {
+                    for (pt, _, fn_, vp, _) in &touching {
                         let w = fn_ / total;
                         centroid += pt * w;
                         vt += (vp - up * vp.dot(&up)) * w;
                     }
-                    let rg2 = touching.iter().map(|(pt, _, fn_, _)| (pt - centroid).norm_squared() * fn_ / total).sum::<f64>().max(1e-8);
+                    let rg2 = touching.iter().map(|(pt, _, fn_, _, _)| (pt - centroid).norm_squared() * fn_ / total).sum::<f64>().max(1e-8);
                     let (mus, muk) = l.floor_mu;
-                    let speed = vt.norm();
-                    let mu = muk + (mus - muk) * (-(speed / 0.01).powi(2)).exp();
-                    let gv = mu * total + 1.0e-3;
-                    let zd = vt - z * (sigma0 * speed / gv);
-                    let ft = -(z * sigma0 + zd * sigma1);
                     let wn = k.w.dot(&up);
-                    let k_twist = sigma0 * rg2;
-                    let g_twist = mu * total * rg2.sqrt() + 1.0e-6;
-                    let zd_twist = wn - z_twist * (k_twist * wn.abs() / g_twist);
-                    let torque = -(k_twist * z_twist + sigma1 * rg2 * zd_twist);
-                    bristle_rates[zs] = zd.x;
-                    bristle_rates[zs + 1] = zd.y;
-                    bristle_rates[zs + 2] = zd_twist;
-                    for (pt, r, fn_, _) in &touching {
+                    let (ft, torque) = match self.floor_friction {
+                        FloorFrictionModel::Bristle => {
+                            let speed = vt.norm();
+                            let mu = muk + (mus - muk) * (-(speed / 0.01).powi(2)).exp();
+                            let gv = mu * total + 1.0e-3;
+                            let zd = vt - z * (sigma0 * speed / gv);
+                            let ft = -(z * sigma0 + zd * sigma1);
+                            let k_twist = sigma0 * rg2;
+                            let g_twist = mu * total * rg2.sqrt() + 1.0e-6;
+                            let zd_twist = wn - z_twist * (k_twist * wn.abs() / g_twist);
+                            let torque = -(k_twist * z_twist + sigma1 * rg2 * zd_twist);
+                            bristle_rates[zs] = zd.x;
+                            bristle_rates[zs + 1] = zd.y;
+                            bristle_rates[zs + 2] = zd_twist;
+                            (ft, torque)
+                        }
+                        FloorFrictionModel::RegularizedCoulomb { slip_speed_m_s } => {
+                            // Tangential RMS radius from actual contact points.
+                            // A single point has no independent torsional capacity.
+                            let radius = touching.iter().map(|(pt, _, fn_, _, _)| {
+                                let dp = pt - centroid;
+                                (dp.x * dp.x + dp.y * dp.y) * fn_ / total
+                            }).sum::<f64>().sqrt();
+                            let wrench = sim_domain_multibody::contact::regularized_coulomb(
+                                [vt.x, vt.y, radius * wn], muk * total, slip_speed_m_s);
+                            // State layout stays compatible, but the memoryless
+                            // model never uses these values to generate a force.
+                            bristle_rates[zs] = friction::inactive_history_rate(z.x);
+                            bristle_rates[zs + 1] = friction::inactive_history_rate(z.y);
+                            bristle_rates[zs + 2] = friction::inactive_history_rate(z_twist);
+                            (V::new(wrench[0], wrench[1], 0.0), radius * wrench[2])
+                        }
+                    };
+                    for (pt, r, fn_, _, depth) in &touching {
                         let share = ft * (fn_ / total);
                         let force = up * *fn_ + share;
                         f_ext[i] += up * *fn_;
                         t_ext[i] += r.cross(&(up * *fn_));
-                        out.push(ContactPoint { link: i, other: None, point: *pt, force, penetration: *fn_ / self.floor_k });
+                        out.push(ContactPoint { link: i, other: None, point: *pt, force, penetration: *depth });
                     }
                     f_ext[i] += ft;
                     t_ext[i] += (centroid - k.p).cross(&ft) + up * torque;
                     normal_sum[i] += total;
                 } else {
-                    bristle_rates[zs] = -z.x * 200.0;
-                    bristle_rates[zs + 1] = -z.y * 200.0;
-                    bristle_rates[zs + 2] = -z_twist * 200.0;
+                    bristle_rates[zs] = friction::inactive_history_rate(z.x);
+                    bristle_rates[zs + 1] = friction::inactive_history_rate(z.y);
+                    bristle_rates[zs + 2] = friction::inactive_history_rate(z_twist);
                 }
             }
-            for (ci, c) in l.contact.iter().enumerate() {
-                let r = k.r * c;
-                let pt = k.p + r;
+            for hit in &geometry.hits[i] {
+                let j = hit.other;
+                let r = geometry.samples[i][hit.sample].offset;
+                let pt = geometry.samples[i][hit.sample].point;
                 let vp = k.vel + k.w.cross(&r);
-                // Other links' distance fields.
-                for j in 0..n {
-                    if j == i || self.links[j].sdf.is_none() {
-                        continue;
-                    }
-                    if l.excluded.get(&j).map(|f| f[ci]).unwrap_or(false) {
-                        continue;
-                    }
-                    let (lo, hi) = &boxes[j];
-                    if pt.x < lo.x || pt.y < lo.y || pt.z < lo.z || pt.x > hi.x || pt.y > hi.y || pt.z > hi.z {
-                        continue;
-                    }
-                    // Neighbours through a joint: skip the band around it.
-                    if let Some(band) = self.neighbour_band(i, j) {
-                        if (pt - band.0).norm() < band.1 {
-                            continue;
-                        }
-                    }
-                    let kj = &links[j];
-                    let local = kj.r.transpose() * (pt - kj.p);
-                    let (phi, grad) = self.links[j].sdf.as_ref().unwrap().sample(local);
-                    if phi >= 0.0 {
-                        continue;
-                    }
-                    let depth = -phi;
-                    let nrm = kj.r * grad;
-                    let v_rel = vp - (kj.vel + kj.w.cross(&(pt - kj.p)));
-                    let vn = v_rel.dot(&nrm);
-                    let fn_ = (self.link_k * depth * (1.0 - self.restitution_damping * vn)).max(0.0);
-                    let vt = v_rel - nrm * vn;
-                    let (_, muk) = self.model.friction_between(&l.material, &self.links[j].material);
-                    let ft = -vt * (muk * fn_ / (vt.norm() + 1e-3));
-                    let force = nrm * fn_ + ft;
-                    f_ext[i] += force;
-                    t_ext[i] += r.cross(&force);
-                    f_ext[j] -= force;
-                    t_ext[j] -= (pt - kj.p).cross(&force);
-                    normal_sum[i] += fn_;
-                    normal_sum[j] += fn_;
-                    out.push(ContactPoint { link: i, other: Some(j), point: pt, force, penetration: depth });
-                }
+                let kj = &links[j];
+                let depth = hit.depth;
+                let nrm = hit.normal;
+                let v_rel = vp - (kj.vel + kj.w.cross(&(pt - kj.p)));
+                let vn = v_rel.dot(&nrm);
+                let fn_ = (self.link_k * depth * (1.0 - self.restitution_damping * vn)).max(0.0);
+                let vt = v_rel - nrm * vn;
+                let (_, muk) = self.model.friction_between(&l.material, &self.links[j].material);
+                let ft = -vt * (muk * fn_ / (vt.norm() + 1e-3));
+                let force = nrm * fn_ + ft;
+                f_ext[i] += force;
+                t_ext[i] += r.cross(&force);
+                f_ext[j] -= force;
+                t_ext[j] -= (pt - kj.p).cross(&force);
+                normal_sum[i] += fn_;
+                normal_sum[j] += fn_;
+                out.push(ContactPoint { link: i, other: Some(j), point: pt, force, penetration: depth });
             }
         }
     }
 
-    /// `(joint point at export, band radius)` when links `i` and `j` share a joint.
-    fn neighbour_band(&self, i: usize, j: usize) -> Option<(V, f64)> {
+    /// `(anchor link, anchor-local joint point, band radius)` for a shared joint.
+    /// The exclusion region follows the anchor's current rigid pose.
+    fn neighbour_band(&self, i: usize, j: usize) -> Option<(usize, V, f64)> {
         for jc in &self.joints {
             if (jc.parent == i && jc.child == j) || (jc.parent == j && jc.child == i) {
-                let origin = self.links[jc.parent].com0 + jc.r_pj;
-                return Some((origin, jc.band));
+                return Some((jc.parent, jc.r_pj, jc.band));
             }
         }
         for lp in &self.loops {
             if (lp.a == i && lp.b == j) || (lp.a == j && lp.b == i) {
-                return Some((self.links[lp.a].com0 + lp.r_a, 0.01));
+                return Some((lp.a, lp.r_a, 0.01));
             }
         }
-        // Joint origins move with the parent; use the export pose band as an
-        // approximation (links near a joint stay near it).
         None
     }
 
@@ -1288,6 +1439,44 @@ impl Articulated {
         self.evaluate_with(g, self.contact_on)
     }
 
+    /// Prepare immutable kinematics/contact reuse for repeated evaluations near
+    /// a supplied point. Each query checks its actual dependencies, so pose or
+    /// velocity changes still refresh the affected calculations. The returned
+    /// evaluator can be shared across workers and cannot outlive this model.
+    pub fn prepare_evaluation(&self, base: Generalized) -> impl Fn(&Generalized) -> Evaluation + '_ {
+        let prepared = self.contact_on.then(|| prepared::ContactLinearization::at(self, base));
+        move |g| match &prepared {
+            Some(prepared) => prepared.evaluate(g),
+            None => self.evaluate(g),
+        }
+    }
+
+    /// Evaluate only the original contact-history rates, omitting the unused
+    /// inverse-dynamics/reaction calculation. The immutable preparation checks
+    /// pose and velocity dependencies for every query and recomputes contact
+    /// forces at the supplied history. Safe to share across derivative workers.
+    pub fn prepare_contact_history_rates(&self, base: Generalized) -> impl Fn(&Generalized) -> Vec<f64> + '_ {
+        // For memoryless friction this derivative is independent of contact
+        // geometry, motion and loads. Use the SAME law as full evaluation;
+        // actual contact forces are still evaluated in dynamics preparation.
+        let prepared = (self.contact_on && self.floor_friction.is_bristle())
+            .then(|| prepared::ContactHistoryPreparation::new(self, base));
+        move |g| match &prepared {
+            Some(prepared) => prepared.rates(g),
+            None => {
+                let mut rates = vec![0.0; g.states.len()];
+                if self.contact_on {
+                    for link in self.links.iter().filter(|l| !l.grounded) {
+                        for s in link.bristle_state..link.bristle_state+3 {
+                            rates[s] = friction::inactive_history_rate(g.states[s]);
+                        }
+                    }
+                }
+                rates
+            }
+        }
+    }
+
     fn imu_sample(&self, imu: &ImuC, view: &View, states: &mut [f64]) {
         let g = self.read_view(view);
         let kin = self.evaluate_kinematics_only(&g);
@@ -1318,6 +1507,20 @@ impl Articulated {
         states[s + 7] = vel.y;
         states[s + 8] = vel.z;
     }
+}
+
+fn contact_candidates<'a>(points: impl IntoIterator<Item = &'a V>, boxes: &[(V, V)]) -> Vec<usize> {
+    let mut points = points.into_iter().peekable();
+    if points.peek().is_none() { return Vec::new(); }
+    let mut lo = V::repeat(f64::INFINITY);
+    let mut hi = V::repeat(f64::NEG_INFINITY);
+    for p in points {
+        lo = lo.inf(p);
+        hi = hi.sup(p);
+    }
+    boxes.iter().enumerate().filter_map(|(j, (other_lo, other_hi))| {
+        (0..3).all(|axis| lo[axis] <= other_hi[axis] && hi[axis] >= other_lo[axis]).then_some(j)
+    }).collect()
 }
 
 fn world_box(l: &LinkC, k: &LinkKin) -> (V, V) {
@@ -1509,105 +1712,28 @@ impl Behavior for Articulated {
     fn residual(&self, ctx: &mut Context) {
         let g = self.read_ctx(ctx);
         let e = self.evaluate(&g);
-        let s = &g.states;
-        let r = &g.rates;
-        // Bases.
-        for (bi, b) in self.bases.iter().enumerate() {
-            let o = b.state;
-            if b.grounded {
-                let target = [b.p0.x, b.p0.y, b.p0.z, 1.0, 0.0, 0.0, 0.0];
-                for k in 0..7 {
-                    ctx.set_state_residual(o + k, s[o + k] - target[k]);
-                }
-                for k in 7..13 {
-                    ctx.set_state_residual(o + k, s[o + k]);
-                }
-            } else {
-                for k in 0..3 {
-                    ctx.set_state_residual(o + k, r[o + k] - s[o + 7 + k]);
-                }
-                let q = quat(s[o + 3], s[o + 4], s[o + 5], s[o + 6]);
-                let w_body = q.inverse() * V::new(s[o + 10], s[o + 11], s[o + 12]);
-                let qr = quat_rate(&q, w_body);
-                let norm2 = (3..7).map(|k| s[o + k] * s[o + k]).sum::<f64>();
-                for k in 0..4 {
-                    ctx.set_state_residual(o + 3 + k, r[o + 3 + k] - qr[k] - 10.0 * (1.0 - norm2) * s[o + 3 + k]);
-                }
-                for k in 0..6 {
-                    ctx.set_state_residual(o + 7 + k, e.base_wrench[bi][k]);
-                }
-            }
-        }
-        // Joints.
-        let mut dof_index = 0usize;
-        for (ji, j) in self.joints.iter().enumerate() {
-            for (k, d) in j.dofs.iter().enumerate() {
-                let through = e.joints[ji].tau_needed[k] - e.joints[ji].tau_passive[k];
-                match d.port {
-                    Some(p) => {
-                        ctx.set_state_residual(d.qd_state, s[d.qd_state] - ctx.across_derivative(p, 0));
-                        ctx.add_through(p, through);
-                    }
-                    None => {
-                        let qs = d.q_state.unwrap();
-                        ctx.set_state_residual(qs, r[qs] - s[d.qd_state]);
-                        ctx.set_state_residual(d.qd_state, through);
-                    }
-                }
-                dof_index += 1;
-            }
-        }
-        let _ = dof_index;
-        // Flex.
-        for (li, l) in self.links.iter().enumerate() {
-            let Some(f) = &l.flex else { continue };
-            // Thermal nodes are in kelvin; the softening curve is in °C.
-            let temp = f.temperature_signal.map(|k| g.temperatures[k] - 273.15).unwrap_or(self.ambient_c);
-            let soft = f.softening.factor(temp);
-            for m in 0..f.modes {
-                let eta = s[f.state + m];
-                let etad = s[f.state + f.modes + m];
-                let etadd = r[f.state + f.modes + m];
-                ctx.set_state_residual(f.state + m, r[f.state + m] - etad);
-                // Scaled by the modal stiffness so the row is in metres like
-                // the coordinate, not in newtons a million times larger.
-                let scale = 1.0 / f.stiffness[m].max(1.0);
-                ctx.set_state_residual(f.state + f.modes + m, scale * (f.mass[m] * etadd + f.damping[m] * etad + f.stiffness[m] * soft * eta - e.modal_force[li][m]));
-            }
-        }
-        // Loops.
-        let mut row = 0;
-        for lp in &self.loops {
-            for k in 0..lp.rows {
-                ctx.set_state_residual(lp.lambda_state + k, e.loop_rows[row]);
-                row += 1;
-            }
-        }
-        for t in &self.transmissions {
-            ctx.set_state_residual(t.lambda_state, e.loop_rows[row]);
-            row += 1;
-        }
-        // Bristles.
-        for l in self.links.iter().filter(|l| !l.grounded) {
-            for k in 0..3 {
-                let idx = l.bristle_state + k;
-                ctx.set_state_residual(idx, r[idx] - e.bristle_rates[idx]);
-            }
-        }
-        // IMUs: held values, previous velocity, bias and clock are constant between samples.
-        for imu in &self.imus {
-            for k in 0..16 {
-                ctx.set_state_residual(imu.state + k, r[imu.state + k]);
-            }
-            for c in 0..6 {
-                ctx.set_signal(imu.signals[c], s[imu.state + c]);
-            }
-        }
-        for (li, l) in self.links.iter().enumerate() {
-            if let Some(sig) = l.contact_signal {
-                ctx.set_signal(sig, e.contact_normal[li]);
-            }
-        }
+        self.write_residual(ctx, &g, &e);
+    }
+
+    fn prepare_linearization(&self, view: &View, rates: &[f64]) -> Option<Box<dyn sim_core::PreparedResidual + '_>> {
+        if !self.contact_on { return None; }
+        Some(Box::new(prepared::ContactLinearization::new(self, view, rates)))
+    }
+
+    fn jacobian_at(&self, view: &View, rates: &[f64], out: &mut sim_core::LocalJacobian) -> bool {
+        if !self.hybrid_jacobian { return false; }
+        self.hybrid_jacobian(view, rates, out);
+        true
+    }
+
+    fn state_row_jacobian_at(&self, view: &View, rates: &[f64], out: &mut sim_core::LocalJacobian) -> Vec<usize> {
+        self.constraint_state_jacobian(view, rates, out)
+    }
+
+    fn rate_jacobian_at(&self, view: &View, rates: &[f64], out: &mut sim_core::LocalJacobian) -> bool {
+        if !self.rate_partials {return false;}
+        self.structured_jacobian(view,rates,out,false);
+        true
     }
 
     fn guards(&self, view: &View, out: &mut Vec<f64>) {
@@ -1622,6 +1748,10 @@ impl Behavior for Articulated {
             self.imu_sample(&imu, view, states);
             states[imu.state + 15] += imu.period;
         }
+    }
+
+    fn scheduled_events(&self, view: &View, out: &mut Vec<(usize, f64)>) {
+        out.extend(self.imus.iter().enumerate().map(|(i, imu)| (i, view.state(imu.state + 15))));
     }
 
     fn energy(&self, view: &View) -> f64 {
@@ -1651,7 +1781,9 @@ impl Behavior for Articulated {
 fn articulated(p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationError> {
     let handle = param(p, "model")?;
     let model = crate::model::model_by_handle(handle).ok_or_else(|| sim_core::EquationError::InvalidParameter("model".into(), "no model registered under this handle".into()))?;
-    let mut opts = Options { gravity_scale: param_or(p, "gravity", 1.0), planar: param_or(p, "planar", 0.0) > 0.5, flex: param_or(p, "flex", 1.0) > 0.5, contact: param_or(p, "contact", 1.0) > 0.5, loop_alpha: param_or(p, "loop.alpha", 100.0), loop_cfm: param_or(p, "loop.cfm.translation", 1e-6), loop_angular_cfm: param_or(p, "loop.cfm.rotation", 1e-6), flex_modes: param_or(p, "flex.modes", 4.0) as usize, flex_max_hz: param_or(p, "flex.max_hz", 500.0), ..Options::default() };
+    let mut opts = Options { gravity_scale: param_or(p, "gravity", 1.0), planar: param_or(p, "planar", 0.0) > 0.5, flex: param_or(p, "flex", 1.0) > 0.5, contact: param_or(p, "contact", 1.0) > 0.5, hybrid_jacobian: param_or(p, "jacobian.hybrid", 0.0) > 0.5, rate_partials: param_or(p, "jacobian.rates", 0.0) > 0.5, constraint_state_step: param_or(p, "jacobian.constraint_state_step", 0.0), structural_loop_identities: param_or(p, "loop.structural_identities", 0.0) > 0.5, loop_alpha: param_or(p, "loop.alpha", 100.0), loop_cfm: param_or(p, "loop.cfm.translation", 1e-6), loop_angular_cfm: param_or(p, "loop.cfm.rotation", 1e-6), flex_modes: param_or(p, "flex.modes", 4.0) as usize, flex_max_hz: param_or(p, "flex.max_hz", 500.0), ..Options::default() };
+    opts.floor_friction = FloorFrictionModel::from_registry_speed(param_or(p, "floor.regularized_slip_speed", 0.0))
+        .map_err(|e| sim_core::EquationError::InvalidParameter("floor.regularized_slip_speed".into(), e))?;
     for (k, name) in ["vx", "vy", "vz", "wx", "wy", "wz"].iter().enumerate() {
         opts.initial_twist[k] = param_or(p, &format!("initial.base.{name}"), 0.0);
     }
@@ -1728,6 +1860,11 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     let mut parameters = vec![
         P::required("model", "handle").integer(0., 9007199254740991.), P::optional("gravity", "1", 1.),
         P::optional("planar", "1", 0.).integer(0., 1.), P::optional("flex", "1", 1.).integer(0., 1.), P::optional("contact", "1", 1.).integer(0., 1.),
+        P::optional("jacobian.hybrid", "1", 0.).integer(0., 1.),
+        P::optional("jacobian.rates", "1", 0.).integer(0., 1.),
+        P::optional("floor.regularized_slip_speed", "m/s", 0.).nonnegative(),
+        P::optional("jacobian.constraint_state_step", "1", 0.),
+        P::optional("loop.structural_identities", "1", 0.).integer(0., 1.),
         P::optional("loop.alpha", "1/s", 100.).nonnegative(), P::optional("loop.cfm.translation", "1/kg", 1e-6).nonnegative(),
         P::optional("loop.cfm.rotation", "1/(kg·m²)", 1e-6).nonnegative(), P::optional("flex.modes", "modes", 4.).integer(1., 1024.),
         P::optional("flex.max_hz", "Hz", 500.).positive(), P::alternative("joint.*", "index").integer(0., 9007199254740991.),
@@ -1760,4 +1897,35 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
         ],
         articulated,
     ).with_parameters(parameters))
+}
+
+#[cfg(test)]
+mod broad_phase_tests {
+    use super::*;
+
+    #[test]
+    fn moving_sample_bounds_preserve_every_point_box_hit_and_order() {
+        let boxes: Vec<_> = (-5..=5).map(|i| {
+            let c = V::new(i as f64, 0.0, 0.0);
+            (c - V::repeat(0.4), c + V::repeat(0.4))
+        }).collect();
+        for step in 0..100 {
+            let a = step as f64 * 0.07;
+            let rot = rot_axis(V::y(), a);
+            let p = V::new(a - 3.0, 0.0, 0.0);
+            let points: Vec<_> = [-2.0, -0.1, 0.0, 0.1, 2.0].iter()
+                .map(|z| p + rot * V::new(0.0, 0.0, *z)).collect();
+            let candidates = contact_candidates(&points, &boxes);
+            assert!(candidates.len() < boxes.len());
+            let hits = |indices: Vec<usize>| points.iter().flat_map(|point| {
+                indices.iter().copied().filter(|&j| (0..3).all(|axis|
+                    point[axis] >= boxes[j].0[axis] && point[axis] <= boxes[j].1[axis]
+                )).collect::<Vec<_>>()
+            }).collect::<Vec<_>>();
+            assert_eq!(hits(candidates), hits((0..boxes.len()).collect()));
+        }
+        assert!(contact_candidates(&[], &boxes).is_empty());
+        // Equality at a boundary is retained, including a single sample.
+        assert_eq!(contact_candidates(&[V::new(0.4, 0.4, 0.4)], &boxes), vec![5]);
+    }
 }

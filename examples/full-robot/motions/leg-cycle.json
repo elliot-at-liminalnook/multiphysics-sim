@@ -1,0 +1,73 @@
+{
+  "name": "+X combined leg cycle",
+  "duration": 8,
+  "loop": true,
+  "tracks": [
+    {
+      "joint": "+X | Hip servo output",
+      "unit": "deg",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          6,
+          -10
+        ],
+        [
+          8,
+          0
+        ]
+      ]
+    },
+    {
+      "joint": "+X | Worm servo output",
+      "unit": "deg",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          75
+        ],
+        [
+          6,
+          -75
+        ],
+        [
+          8,
+          0
+        ]
+      ]
+    },
+    {
+      "joint": "+X | Foot servo output",
+      "unit": "deg",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -145
+        ],
+        [
+          5,
+          -145
+        ],
+        [
+          8,
+          0
+        ]
+      ]
+    }
+  ]
+}

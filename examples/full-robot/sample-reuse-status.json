@@ -1,0 +1,791 @@
+{
+  "milestone": "guarded_controller_sample_jacobian_reuse",
+  "strict_roundoff_gate_passed": false,
+  "browser_parity_passed": true,
+  "promoted_default": false,
+  "task_accepted": false,
+  "scope": "Opt-in numerical matrix reuse across eligible controller samples. Guarded controller-sample reuse experiment; explicit strict numerical gates, task measurements and browser results are recorded separately. Existing controller/model limitations remain. Timings are development measurements, not an isolated repeated benchmark or realtime acceptance.",
+  "recipe": {
+    "scene": "runs/full-robot/learning/point-feedback/scene.json",
+    "config": "runs/full-robot/learning/point-feedback/config.json",
+    "output_directory": "runs/full-robot/learning/sample-reuse",
+    "scope": "Guarded numerical Jacobian reuse after registered servo sampling events. Original whole-matrix closure solver, robot, controller, motor path, tolerances and physical equations remain unchanged. Motor-mode events still invalidate the workspace."
+  },
+  "cases": [
+    {
+      "implicit": {
+        "auxiliary_rate_unknowns": true,
+        "contact_history_tolerance": 1e-11,
+        "newton": {
+          "absolute_tolerance": 1e-10,
+          "guarded_backtracking": false,
+          "max_iterations": 40,
+          "min_line_search": 0.000244140625,
+          "reject_nonfinite_trials": true,
+          "relative_tolerance": 1e-8
+        },
+        "reuse_controller_sample_jacobian": true,
+        "reuse_mechanical_dynamics": true,
+        "reuse_mechanical_endpoint": true,
+        "reuse_step_jacobian": true
+      },
+      "successful_trial_endpoint_evaluations": 474955,
+      "successful_trials_with_reused_jacobian": 10675,
+      "strict_roundoff_gate_passed": true,
+      "step_s": 0.00025,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 116.2373306029997,
+      "lift": {
+        "failed_clearance_samples": 51,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.19999999999999996,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003210609282159993,
+        "qualifying_start_s": 1.23,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "maximum_marker_difference_m": 5.538666045859626e-12,
+      "maximum_contact_impulse_difference_ns": 1.4171869397027443e-9,
+      "maximum_event_time_difference_s": 1.824014050910705e-9,
+      "maximum_sampled_differences": {
+        "current_a": 2.7412939418436366e-9,
+        "gear_speed_rad_s": 1.0868037247924178e-8,
+        "heating_w": 5.943890574178212e-9,
+        "joint_positions": 3.348409050030199e-11,
+        "joint_velocities": 2.931488404453453e-9,
+        "motor_states": 1.0868037247924178e-8,
+        "motor_voltage_v": 6.150426834494738e-9,
+        "power_difference_w": 5.871880759400483e-11,
+        "servo_commands": 5.540979342022467e-10,
+        "servo_states": 2.5674436153477753e-9,
+        "shaft_torque_nm": 3.435798236195442e-9,
+        "supply_current_a": 4.154259367061819e-10
+      },
+      "original_closure_maxima": {
+        "1": {
+          "position": 7.28583859910259e-17,
+          "velocity": 1.1102230246251565e-16,
+          "acceleration": 1.4210854715202004e-14
+        },
+        "m": {
+          "position": 8.394118733434652e-13,
+          "velocity": 1.469961305455847e-15,
+          "acceleration": 1.0658141036401503e-13
+        },
+        "rad": {
+          "position": 5.551115123125783e-17,
+          "velocity": 4.3021142204224816e-16,
+          "acceleration": 5.115907697472721e-13
+        }
+      },
+      "profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 11739,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 114747,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 5117,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 11,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 126857,
+          "name": "residual evaluations",
+          "seconds": 61.404824195
+        },
+        {
+          "calls": 5117,
+          "name": "jacobian assembly",
+          "seconds": 49.133866389000005
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 5117,
+          "name": "factorisation",
+          "seconds": 0.287980556
+        },
+        {
+          "calls": 5117,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.10477008
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 114746,
+          "name": "back-substitution",
+          "seconds": 0.36889539200000004
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 238079,
+          "name": "embedded closure mapping",
+          "seconds": 57.798883596
+        },
+        {
+          "calls": 224079,
+          "name": "embedded contact history",
+          "seconds": 24.312418863
+        },
+        {
+          "calls": 235279,
+          "name": "embedded dynamics preparation",
+          "seconds": 25.842639237
+        },
+        {
+          "calls": 487518,
+          "name": "embedded applied force solve",
+          "seconds": 1.354959425
+        },
+        {
+          "calls": 476318,
+          "name": "embedded component equations",
+          "seconds": 2.7324265380000003
+        },
+        {
+          "calls": 633138,
+          "name": "  closure Jacobian",
+          "seconds": 18.177255041000002
+        },
+        {
+          "calls": 633138,
+          "name": "  closure factorization",
+          "seconds": 19.152149934
+        },
+        {
+          "calls": 633138,
+          "name": "    closure SVD",
+          "seconds": 12.368511088
+        }
+      ]
+    },
+    {
+      "implicit": {
+        "auxiliary_rate_unknowns": true,
+        "contact_history_tolerance": 1e-11,
+        "newton": {
+          "absolute_tolerance": 1e-10,
+          "guarded_backtracking": false,
+          "max_iterations": 40,
+          "min_line_search": 0.000244140625,
+          "reject_nonfinite_trials": true,
+          "relative_tolerance": 1e-8
+        },
+        "reuse_controller_sample_jacobian": true,
+        "reuse_mechanical_dynamics": true,
+        "reuse_mechanical_endpoint": true,
+        "reuse_step_jacobian": true
+      },
+      "successful_trial_endpoint_evaluations": 726040,
+      "successful_trials_with_reused_jacobian": 21056,
+      "strict_roundoff_gate_passed": false,
+      "step_s": 0.000125,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 196.33762740299994,
+      "lift": {
+        "failed_clearance_samples": 50,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.20999999999999996,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003203276436495317,
+        "qualifying_start_s": 1.23,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "maximum_marker_difference_m": 4.356590186762151e-8,
+      "maximum_contact_impulse_difference_ns": 0.00010333383415597405,
+      "maximum_event_time_difference_s": 0.000002544370225621151,
+      "maximum_sampled_differences": {
+        "current_a": 0.040995621447813935,
+        "gear_speed_rad_s": 0.013308255901675045,
+        "heating_w": 0.12647407685716883,
+        "joint_positions": 0.0000062948312560262565,
+        "joint_velocities": 0.0018752982470995102,
+        "motor_states": 0.040995621447813935,
+        "motor_voltage_v": 0.00198014154272963,
+        "power_difference_w": 0.001704606586255042,
+        "servo_commands": 0.00011240609857450512,
+        "servo_states": 0.0005551063530712056,
+        "shaft_torque_nm": 0.0016639412678107757,
+        "supply_current_a": 0.006145458397597295
+      },
+      "original_closure_maxima": {
+        "1": {
+          "position": 5.908901840045999e-17,
+          "velocity": 1.1102230246251565e-16,
+          "acceleration": 1.4210854715202004e-14
+        },
+        "m": {
+          "position": 8.303358001171546e-13,
+          "velocity": 4.027268969697406e-15,
+          "acceleration": 6.001449337489362e-13
+        },
+        "rad": {
+          "position": 1.249000902703301e-16,
+          "velocity": 4.198030811863873e-16,
+          "acceleration": 5.684341886080801e-13
+        }
+      },
+      "profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 22937,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 194752,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 7386,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 4,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 218023,
+          "name": "residual evaluations",
+          "seconds": 111.26909206200001
+        },
+        {
+          "calls": 7386,
+          "name": "jacobian assembly",
+          "seconds": 74.858998865
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 7386,
+          "name": "factorisation",
+          "seconds": 0.439612567
+        },
+        {
+          "calls": 7386,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.160546238
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 194750,
+          "name": "back-substitution",
+          "seconds": 0.665893093
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 383548,
+          "name": "embedded closure mapping",
+          "seconds": 97.251251122
+        },
+        {
+          "calls": 358348,
+          "name": "embedded contact history",
+          "seconds": 41.230829768
+        },
+        {
+          "calls": 380748,
+          "name": "embedded dynamics preparation",
+          "seconds": 44.399307043
+        },
+        {
+          "calls": 750836,
+          "name": "embedded applied force solve",
+          "seconds": 2.2460549970000003
+        },
+        {
+          "calls": 728436,
+          "name": "embedded component equations",
+          "seconds": 4.511358907
+        },
+        {
+          "calls": 996348,
+          "name": "  closure Jacobian",
+          "seconds": 30.72444798
+        },
+        {
+          "calls": 996348,
+          "name": "  closure factorization",
+          "seconds": 31.776160799000003
+        },
+        {
+          "calls": 996348,
+          "name": "    closure SVD",
+          "seconds": 20.491437414
+        }
+      ]
+    }
+  ],
+  "diagnosis": {
+    "scope": "Same sampled duration and physical metadata. First current threshold crossing brackets a diagnostic window; temporal association does not prove causation. Legacy captures omit rejection reasons.",
+    "current_threshold_a": 1e-7,
+    "first": {
+      "frame": 152,
+      "time_s": 1.52,
+      "motor": 0,
+      "dof": "joint.-Y | Hip servo output",
+      "candidate_a": -0.10534114958581182,
+      "reference_a": -0.10534066718920733,
+      "difference_a": 4.823966044953387e-7
+    },
+    "maximum": {
+      "frame": 152,
+      "time_s": 1.52,
+      "motor": 2,
+      "dof": "joint.-Y | Foot servo output",
+      "candidate_a": 0.2252707078763505,
+      "reference_a": 0.2248248078814533,
+      "difference_a": 0.00044589999489721976
+    },
+    "window": {
+      "start_s": 1.51,
+      "end_s": 1.52
+    },
+    "completion": {
+      "candidate": {
+        "completed": false,
+        "error": "simulation horizon ended before motion completed: reference time 1.52s"
+      },
+      "reference": {
+        "completed": false,
+        "error": "simulation horizon ended before motion completed: reference time 1.52s"
+      }
+    },
+    "nominal_steps_with_different_accepted_segment_counts": 1,
+    "rejection_diagnostics_available": true,
+    "window_steps": [
+      {
+        "nominal_step": 12093,
+        "end_s": 1.51175,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 16,
+          "events": [
+            {
+              "guard": 7,
+              "time": 1.5116925686497928
+            }
+          ],
+          "minimum_accepted_step_s": 0.00005743135020708223,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 16,
+          "events": [
+            {
+              "guard": 7,
+              "time": 1.511692568649136
+            }
+          ],
+          "minimum_accepted_step_s": 0.000057431350863890174,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      },
+      {
+        "nominal_step": 12097,
+        "end_s": 1.51225,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 8,
+          "events": [
+            {
+              "guard": 7,
+              "time": 1.5122207014107474
+            }
+          ],
+          "minimum_accepted_step_s": 0.00002929858925249107,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 8,
+          "events": [
+            {
+              "guard": 7,
+              "time": 1.5122207014109785
+            }
+          ],
+          "minimum_accepted_step_s": 0.000029298589021342636,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      },
+      {
+        "nominal_step": 12113,
+        "end_s": 1.51425,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 21,
+              "time": 1.5141504682972287
+            }
+          ],
+          "minimum_accepted_step_s": 0.000025468297228813733,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 21,
+              "time": 1.514150468291394
+            }
+          ],
+          "minimum_accepted_step_s": 0.000025468291393991653,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      },
+      {
+        "nominal_step": 12150,
+        "end_s": 1.518875,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 8,
+          "events": [
+            {
+              "guard": 7,
+              "time": 1.5188592503110834
+            }
+          ],
+          "minimum_accepted_step_s": 0.00001574968891659978,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 8,
+          "events": [
+            {
+              "guard": 7,
+              "time": 1.518859250306941
+            }
+          ],
+          "minimum_accepted_step_s": 0.00001574969305906393,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      },
+      {
+        "nominal_step": 12158,
+        "end_s": 1.519875,
+        "candidate": {
+          "accepted_segments": 3,
+          "continuous_attempts": 9,
+          "events": [
+            {
+              "guard": 6,
+              "time": 1.5198293121371398
+            }
+          ],
+          "minimum_accepted_step_s": 0.000022843931430038822,
+          "rejected_trials": 1,
+          "rejection_details": [
+            {
+              "attempted_step_s": 0.000045687862860077644,
+              "reason": "implicit mechanical solve: Newton did not converge after 40 iterations; residual=3.779790369584646e-11; largest final residual: Some(\"auxiliary row 9: residual=-3.779790369584646e-11, old=5.619458021112097e-1, candidate=-1.0271291429284234e4\"); last rejected endpoint: None",
+              "start_time_s": 1.5198293121371398
+            }
+          ]
+        },
+        "reference": {
+          "accepted_segments": 2,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 6,
+              "time": 1.519829312132284
+            }
+          ],
+          "minimum_accepted_step_s": 0.00004568786771597111,
+          "rejected_trials": 0,
+          "rejection_details": []
+        }
+      }
+    ],
+    "inputs": {
+      "runs/full-robot/learning/sample-reuse/diagnostic.execution.json": "97eae2d92bda0e9064945ac35e37531a63a19aff86c01ff43d0f77ec0edbc6e6",
+      "runs/full-robot/learning/sample-reuse/diagnostic.reference.execution.json": "d6e8c67644c1b5e65e4b256b1b69d852675ca12085f0a6498e4f3a706b5b6c44"
+    }
+  },
+  "diagnosticPrefix": {
+    "scope": "Diagnostic-only build exactly preserves all sampled physical states and original scheduler fields through intentional 1.52 s horizon cutoff.",
+    "cases": [
+      {
+        "diagnostic": "diagnostic.execution.json",
+        "reference": "refined.execution.json",
+        "frames_exact": true,
+        "scheduler_exact": true,
+        "frames": 153,
+        "nominal_steps": 12160,
+        "completion": false,
+        "error": "simulation horizon ended before motion completed: reference time 1.52s",
+        "sha256": [
+          "97eae2d92bda0e9064945ac35e37531a63a19aff86c01ff43d0f77ec0edbc6e6",
+          "6ce26be8100680a04476f4a6fe53ff9aee6d7434497fd23d2b9a7d8847ff99d6"
+        ]
+      },
+      {
+        "diagnostic": "diagnostic.reference.execution.json",
+        "reference": "refined.reference.execution.json",
+        "frames_exact": true,
+        "scheduler_exact": true,
+        "frames": 153,
+        "nominal_steps": 12160,
+        "completion": false,
+        "error": "simulation horizon ended before motion completed: reference time 1.52s",
+        "sha256": [
+          "d6e8c67644c1b5e65e4b256b1b69d852675ca12085f0a6498e4f3a706b5b6c44",
+          "d9d67d3587c8f7ba12c3e32d0c48a145ff33903bae92408c2b853d4ebe18e2df"
+        ]
+      }
+    ]
+  },
+  "paired_reference_wall_s": 159.8643539049997,
+  "refined_reference_wall_s": 223.21358380500018,
+  "observed_paired_speedup": 1.3753271266268576,
+  "browser": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "robot-point-sample-reuse",
+    "compared_frames": 281,
+    "simulated_s": 2.8000000000000003,
+    "maximum_native_wasm_entry_difference": 7.336326407481053e-8,
+    "worst_path": "frame[3].policy.observations.marker.-X-foot-surface.floor_force_world.x",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 2097.839999973774,
+    "simulation_ms": 141095.29999995232,
+    "max_chunk_ms": 2194.960000038147,
+    "main_thread_heartbeats": 27906,
+    "replay_progress_messages": 280,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "robot-forward-solid-sign motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "robot-point-feedback gain, world foot tracking, phase activation and replay",
+      "robot-point-block-factor gain, world foot tracking, phase activation and replay",
+      "robot-point-sample-reuse gain, world foot tracking, phase activation and replay",
+      "body feedback gain, world target/actual diagnostics, support weights and replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "artifacts": {
+    "runs/full-robot/learning/sample-reuse/manifest.json": "4690001ae79d22c79b52a66cedd38a9bfd9b27a6b945b7607c4f8b9d1b6a8b84",
+    "runs/full-robot/learning/sample-reuse/execution.json": "c89b2bb020ffbbb017c2a0cec2fdfa08c2733efe52042249e3bcb813b70130a5",
+    "runs/full-robot/learning/sample-reuse/paired-comparison.json": "583f36261acdfe7a255ffe22ad279b1ba2833cb0e7908b0f8aed4f9c95831a71",
+    "runs/full-robot/learning/sample-reuse/lift.json": "8d1c0f17c5adffc3d73d877ff7f97aa89c92c9ec46cc767dc122b93d9cc2b61b",
+    "runs/full-robot/learning/sample-reuse/refined.execution.json": "6ce26be8100680a04476f4a6fe53ff9aee6d7434497fd23d2b9a7d8847ff99d6",
+    "runs/full-robot/learning/sample-reuse/refined-paired-comparison.json": "cb9a34396142e5cca9e32a5bfc42f5ed14ca09bd996f5ec6cf3618d07c8badf9",
+    "runs/full-robot/learning/sample-reuse/refined.lift.json": "e323bd529718e455845e7e28781412ab95b4147927e1ea728a5a4b18d8038530",
+    "runs/full-robot/learning/sample-reuse/reference.execution.json": "97f852bcbef87d9f21e699050f89f30ca2bf6b33aad26d602053315b73dad571",
+    "runs/full-robot/learning/sample-reuse/refined.reference.execution.json": "d9d67d3587c8f7ba12c3e32d0c48a145ff33903bae92408c2b853d4ebe18e2df",
+    "runs/full-robot/learning/sample-reuse/refined-comparison.json": "d86212330eaa5658ccbe578b3f7ddef06836294990bd566ae868e3759bf8aab0",
+    "runs/full-robot/learning/sample-reuse/refined-divergence.json": "95e7e0a5354fcdcc21e81a924076ae7226cc32108980b72554092f22779b1156",
+    "runs/full-robot/learning/sample-reuse/diagnostic-divergence.json": "e8fa72b6a5927a33fa8f6499501a4df1d8e72f5aca6e775d2caf9f3427a5dc11",
+    "runs/full-robot/learning/sample-reuse/diagnostic-prefix-check.json": "7d0f75c430beb683e53ea883bcf64334a82f314002d56bc50a44b0cd2aae3ab7",
+    "runs/full-robot/learning/sample-reuse/diagnostic.execution.json": "97eae2d92bda0e9064945ac35e37531a63a19aff86c01ff43d0f77ec0edbc6e6",
+    "runs/full-robot/learning/sample-reuse/diagnostic.reference.execution.json": "d6e8c67644c1b5e65e4b256b1b69d852675ca12085f0a6498e4f3a706b5b6c44",
+    "runs/full-robot/learning/point-feedback/refined.execution.json": "4024d6155062e909623672137e7dbee07405c60a290ec53ec3696d2038d9ede2",
+    "runs/interactive/sample-reuse/robot-browser.json": "4d0f61176fb236f14adb471f8523ade0b76d5798315907ec52347872406da911",
+    "runs/interactive/sample-reuse/viewer-report.json": "b903790c919957d0e15d1569ecaae538f8afc407f0eed539e8cefa814372103d",
+    "runs/full-robot/learning/sample-reuse/config.json": "a66d6ca1a07a46ed916148aedbcc8712624fe6f22024df40c1dcc1a67563dade",
+    "runs/full-robot/learning/sample-reuse/viewer.config.json": "eb6d5c696fc0cc434b2100d9b2ef63ee0a1533a903c4d82dd38b3c228a46dacd",
+    "runs/full-robot/learning/sample-reuse/reference.config.json": "3d934de733e46cb3a16abbf7234e30ab1698e9c401d817082ce707ed68c7d0c2",
+    "runs/full-robot/learning/sample-reuse/refined.config.json": "cbd4655ae1dcb0631eaec87e85215e6516c43f5fa5374b6424648846559312ec",
+    "runs/full-robot/learning/sample-reuse/refined.reference.config.json": "395a7704735a91774ab9e73d600e08faa5519156eff4281164f6801dbe2c9fdd",
+    "runs/full-robot/learning/sample-reuse/diagnostic.config.json": "57820d968d4523121fc99fd8229ab904aa08dde1b1c5eba226fb9842ff775174",
+    "runs/full-robot/learning/sample-reuse/diagnostic.reference.config.json": "64c3962ba925eb1da63857a98bcbe97edcf14eefc791fe4c53635acc57143cdb",
+    "runs/full-robot/learning/sample-reuse/refinement.json": "02cfa1e690c1e76f155ecf11449d1182d1ea998f0ffec6429df6e035ed3acc83",
+    "examples/full-robot/sample-reuse-experiment.json": "9d8cf3581a37d46fd0681c636ff1d0e82b40f918f92ec0cb5f580b5da082adce",
+    "examples/full-robot/sample-reuse-validation.md": "6a21d3690eb3bed83e662b7668a4a85a4f5ba9c1467ab7ab155b4d5ea23f7dac",
+    "examples/full-robot/prepare_sample_reuse.mjs": "c7c54140cf50c41d6c3ccc212a5f5f6187231d7a5184939531de21f4d21bc8bf",
+    "examples/full-robot/summarize_sample_reuse.mjs": "974c9b83c015b1933d7eb69f5d1b532f270416b2928aaf1f7bb4a621019eb7a8",
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "20cf9a3df7de64dd3b04e1996e4c12b1abc6a4d1e03844b072d8697e0cfd0a00",
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "1c83887cba83e589abebfbf55832043dafcf4ce48c5c4dcdaef72f9cfa07ef92",
+    "crates/sim-domain-robot/src/articulated/embedding/control.rs": "db05bd4ff6f6da3e8e34c9421ae61ef6ce957052f122860da208c155ed946dd4",
+    "crates/sim-domain-robot/src/articulated/embedding/servos.rs": "739d1f734b9b27c62829b41d96cf3b47e041d890f2aaffb7fc56edb55ca69e7d",
+    "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs": "d3192e4a20d6f6eb67977619500613f824654b86a16e942adcf44f6b5fbad51a",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "d86d88d446e959194ca01d4a73bf0d25eab419a0ef7a6aecec0269f4c3e6c7d0",
+    "crates/sim-dynamics/src/hybrid.rs": "0345ff11dea682fbe479f1ebc6763e256c15a82c4711f2f6241790d866166806",
+    "crates/sim-dynamics/tests/hybrid_stepper.rs": "f20d3015a21b0c8b140aa089890f7e30e7336ffdbb4ba2d828b75800403c1bf7",
+    "examples/interactive/audit_hybrid_divergence.mjs": "0405d700c74c135027d7d592b6eb89779686471c3e63fb9ce1669c9a5a64fc35",
+    "crates/sim-runtime/examples/compare_embedding.rs": "50e80317f472d71975dfede3fdf245fe710e9ecc46f85af11c1fc57331792aae",
+    "runs/interactive/sample-reuse/native-runner": "61155ea04aed2c0929768294a79245976cef605c0f8e2e2a1a07705f9a631e40",
+    "runs/interactive/sample-reuse/diagnostic-native-runner": "759d1f9088ff815d5b891f8a9abceec1372d00bcd23599800b5af933ec97ff9c",
+    "runs/interactive/sample-reuse/source-manifest.json": "fc7a1b5e12e21ef30f41b4ba96b0ffe242235f36cceda8350fd7bd965cdbced5",
+    "runs/interactive/sample-reuse/viewer/build-manifest.json": "396a75e5bd2244c62ba6e5543f00706f772c240a4e7aab5c06eea35adfc04444",
+    "runs/interactive/sample-reuse/viewer/sim_web_bg.wasm": "65d01bf1eb5cb628bd9cf5032bf18a08778ea9cf44aae8ed8981d1f6561c807b"
+  }
+}

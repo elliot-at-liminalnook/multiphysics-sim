@@ -1,0 +1,94 @@
+{
+  "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "independent_coordinates": [
+    "joint.-Y | Hip servo output",
+    "joint.-Y | Worm servo output",
+    "joint.-Y | Foot servo output",
+    "joint.+X | Hip servo output",
+    "joint.+X | Worm servo output",
+    "joint.+X | Foot servo output",
+    "joint.+Y | Hip servo output",
+    "joint.+Y | Worm servo output",
+    "joint.+Y | Foot servo output",
+    "joint.-X | Hip servo output",
+    "joint.-X | Worm servo output",
+    "joint.-X | Foot servo output"
+  ],
+  "bounds": [
+    {
+      "lower": 0.0,
+      "upper": 0.0,
+      "max_step": 0.025
+    },
+    {
+      "lower": -0.4,
+      "upper": 0.4,
+      "max_step": 0.025
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.0,
+      "max_step": 0.025
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.0,
+      "max_step": 0.025
+    },
+    {
+      "lower": -0.4,
+      "upper": 0.4,
+      "max_step": 0.025
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.0,
+      "max_step": 0.025
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.0,
+      "max_step": 0.025
+    },
+    {
+      "lower": -0.4,
+      "upper": 0.4,
+      "max_step": 0.025
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.0,
+      "max_step": 0.025
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.0,
+      "max_step": 0.025
+    },
+    {
+      "lower": -0.4,
+      "upper": 0.4,
+      "max_step": 0.025
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.0,
+      "max_step": 0.025
+    }
+  ],
+  "support_links": [
+    "-Y | Sliding foot crosshead",
+    "+X | Sliding foot crosshead",
+    "+Y | Sliding foot crosshead",
+    "-X | Sliding foot crosshead"
+  ],
+  "target_height_m": -0.4329981228863441,
+  "embedding": {
+    "dependent_solve": "pivoted_qr"
+  },
+  "placement": {
+    "tolerance_m": 1e-07,
+    "damping_m": 1e-06,
+    "max_iterations": 40
+  }
+}

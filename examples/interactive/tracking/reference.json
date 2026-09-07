@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "experiment_id": "synthetic-marker-demo",
+  "coordinate_frame": "bench-origin-Z-up-m",
+  "source": {"kind": "synthetic", "description": "Arithmetic reference: straight-line marker motion; not hardware calibration."},
+  "completed": true,
+  "samples": [
+    {"time_s": 0.0, "points": {"foot": {"position_m": [0.0, 0.0, 0.0], "uncertainty_m": 0.002}}},
+    {"time_s": 0.05, "points": {"foot": {"position_m": [0.01, 0.0, 0.0], "uncertainty_m": 0.002}}},
+    {"time_s": 0.1, "points": {"foot": {"position_m": [0.02, 0.0, 0.0], "uncertainty_m": 0.002}}}
+  ]
+}

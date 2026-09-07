@@ -1,0 +1,794 @@
+{
+  "scope": "Observation and single-parameter sensitivity experiment, not a physical-model or controller promotion.",
+  "training_model_accepted": false,
+  "realtime_accepted": false,
+  "physical_provenance": {
+    "joint": "-Y | Hip servo output",
+    "physics_source": "inferred",
+    "clearance_m": 0.00014999999999999996,
+    "lever_m": 0.005255864001571153,
+    "inferred_backlash_rad": 0.028539551243175237,
+    "source_formula": "clearance / max(COM lever length, 0.005 m)",
+    "runtime_interpretation": "full output-side rotational gap added to motor gearbox backlash"
+  },
+  "override": {
+    "path": "robot.joints[-Y | Hip servo output].physics.backlash",
+    "unit": "rad",
+    "before": 0.028539551243175237,
+    "after": 0,
+    "reason": "Test sensitivity to converting radial bearing clearance / COM lever into motor torsional backlash.",
+    "provenance": "experimental, uncalibrated",
+    "promotion": "Requires an explicit CAD definition distinguishing radial bearing play from measured or estimated drivetrain lost rotation; do not overwrite the baseline from this screen."
+  },
+  "original": {
+    "scope": "0.7–1.65 s window, sampled every 1 ms. Pairwise differences are not errors against hardware or a converged solution. Mode changes are bracketed between observations, not exact event times. Policy telemetry has a separate timestamp. Window success does not imply full-motion success.",
+    "exact_observer_checks": [
+      {
+        "case": "250us",
+        "identical_full_frames": 96
+      },
+      {
+        "case": "125us",
+        "identical_full_frames": 96
+      }
+    ],
+    "comparisons": [
+      {
+        "cases": [
+          "250us",
+          "125us"
+        ],
+        "markers": [
+          {
+            "id": "-Y-foot-surface",
+            "maximum_difference_m": 0.002570065406177575,
+            "rms_difference_m": 0.0009050598150863028,
+            "worst_time_s": 1.449,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.03728354625164637,
+                "velocity_rad_s": 0.24705548186515391,
+                "target_rad": 0.0472106339475323,
+                "reference_rad": 0.04299269500423706,
+                "current_a": 0.19583915142479813,
+                "torque_nm": 0.09928374579764764,
+                "voltage_v": 0.7602443454399241,
+                "gear_angle_rad": 0.05395966671854864,
+                "backlash_mode": 1,
+                "command": 0.06937263991091568,
+                "policy_time_s": 1.448,
+                "plus_y_support_n": 1.5829599597466741
+              },
+              {
+                "angle_rad": 0.04731545477998614,
+                "velocity_rad_s": 0.1338282063915306,
+                "target_rad": 0.03938061726543426,
+                "reference_rad": 0.04299269500423706,
+                "current_a": -0.16016998614750688,
+                "torque_nm": -0.0025621103205724317,
+                "voltage_v": -1.351654672374651,
+                "gear_angle_rad": 0.04976277815210421,
+                "backlash_mode": 0,
+                "command": -0.12249217762901138,
+                "policy_time_s": 1.448,
+                "plus_y_support_n": 2.130020710041379
+              }
+            ]
+          },
+          {
+            "id": "+X-foot-surface",
+            "maximum_difference_m": 0.00004884787256159704,
+            "rms_difference_m": 0.000017142847806761707,
+            "worst_time_s": 1.6500000000000001,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04385848533300287,
+                "velocity_rad_s": 0.000448561062362298,
+                "target_rad": 0.04257217795587551,
+                "reference_rad": 0.042992695004161745,
+                "current_a": -0.054968705240976266,
+                "torque_nm": -0.00009740142154585093,
+                "voltage_v": -0.24183304951468632,
+                "gear_angle_rad": 0.049843033376484394,
+                "backlash_mode": 0,
+                "command": -0.022034367997904068,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 12.082159022766975
+              },
+              {
+                "angle_rad": 0.04498780497599378,
+                "velocity_rad_s": -0.0007156476720815471,
+                "target_rad": 0.042061329444940815,
+                "reference_rad": 0.042992695004161745,
+                "current_a": -0.08298722978389939,
+                "torque_nm": -0.0874249075294483,
+                "voltage_v": -0.3025594797466535,
+                "gear_angle_rad": 0.028964017280933348,
+                "backlash_mode": -1,
+                "command": -0.02763142713836473,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 11.802906497928962
+              }
+            ]
+          },
+          {
+            "id": "+Y-foot-surface",
+            "maximum_difference_m": 0.0014201999104608018,
+            "rms_difference_m": 0.0004197643962940517,
+            "worst_time_s": 1.421,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.03741359256521031,
+                "velocity_rad_s": -0.0809331349762505,
+                "target_rad": 0.0468355587909236,
+                "reference_rad": 0.042992695004195204,
+                "current_a": 0.16005236434133363,
+                "torque_nm": 0.0023280666838448303,
+                "voltage_v": 1.3962000089344198,
+                "gear_angle_rad": 0.04513298085167956,
+                "backlash_mode": 0,
+                "command": 0.1265047411848186,
+                "policy_time_s": 1.42,
+                "plus_y_support_n": 1.533886793247795
+              },
+              {
+                "angle_rad": 0.04326713941752511,
+                "velocity_rad_s": 0.15062344579426978,
+                "target_rad": 0.04256210362873048,
+                "reference_rad": 0.042992695004195204,
+                "current_a": -0.08886076114442437,
+                "torque_nm": -0.0009193822935605554,
+                "voltage_v": -0.3980665123467899,
+                "gear_angle_rad": 0.05428893790354242,
+                "backlash_mode": 0,
+                "command": -0.03626212165801902,
+                "policy_time_s": 1.42,
+                "plus_y_support_n": 1.5425712049394111
+              }
+            ]
+          },
+          {
+            "id": "-X-foot-surface",
+            "maximum_difference_m": 0.000030896736138026645,
+            "rms_difference_m": 0.000017026157950300272,
+            "worst_time_s": 1.6500000000000001,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04385848533300287,
+                "velocity_rad_s": 0.000448561062362298,
+                "target_rad": 0.04257217795587551,
+                "reference_rad": 0.042992695004161745,
+                "current_a": -0.054968705240976266,
+                "torque_nm": -0.00009740142154585093,
+                "voltage_v": -0.24183304951468632,
+                "gear_angle_rad": 0.049843033376484394,
+                "backlash_mode": 0,
+                "command": -0.022034367997904068,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 12.082159022766975
+              },
+              {
+                "angle_rad": 0.04498780497599378,
+                "velocity_rad_s": -0.0007156476720815471,
+                "target_rad": 0.042061329444940815,
+                "reference_rad": 0.042992695004161745,
+                "current_a": -0.08298722978389939,
+                "torque_nm": -0.0874249075294483,
+                "voltage_v": -0.3025594797466535,
+                "gear_angle_rad": 0.028964017280933348,
+                "backlash_mode": -1,
+                "command": -0.02763142713836473,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 11.802906497928962
+              }
+            ]
+          }
+        ],
+        "hip_mode_disagreement_samples": 305
+      },
+      {
+        "cases": [
+          "125us",
+          "62p5us"
+        ],
+        "markers": [
+          {
+            "id": "-Y-foot-surface",
+            "maximum_difference_m": 0.001406103121812924,
+            "rms_difference_m": 0.000534111060495534,
+            "worst_time_s": 1.5070000000000001,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04696053809002616,
+                "velocity_rad_s": -0.1439954885744828,
+                "target_rad": 0.03863474237304014,
+                "reference_rad": 0.04299269500425678,
+                "current_a": -0.18961446436409646,
+                "torque_nm": -0.06994374774202952,
+                "voltage_v": -0.7975748818256359,
+                "gear_angle_rad": 0.031108847122045393,
+                "backlash_mode": -1,
+                "command": -0.07270771216611177,
+                "policy_time_s": 1.506,
+                "plus_y_support_n": 3.8589987612705356
+              },
+              {
+                "angle_rad": 0.044358881554899365,
+                "velocity_rad_s": -0.055489203954982344,
+                "target_rad": 0.04149607375505734,
+                "reference_rad": 0.04299269500425678,
+                "current_a": -0.009084044930684798,
+                "torque_nm": 0.00478752777164723,
+                "voltage_v": -0.10991080957904376,
+                "gear_angle_rad": 0.030083153397984917,
+                "backlash_mode": -1,
+                "command": -0.00994279385816018,
+                "policy_time_s": 1.506,
+                "plus_y_support_n": 1.530884438307755
+              }
+            ]
+          },
+          {
+            "id": "+X-foot-surface",
+            "maximum_difference_m": 0.000025990768517205752,
+            "rms_difference_m": 0.000005359468202049716,
+            "worst_time_s": 1.6500000000000001,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04498780497599378,
+                "velocity_rad_s": -0.0007156476720815471,
+                "target_rad": 0.042061329444940815,
+                "reference_rad": 0.042992695004161745,
+                "current_a": -0.08298722978389939,
+                "torque_nm": -0.0874249075294483,
+                "voltage_v": -0.3025594797466535,
+                "gear_angle_rad": 0.028964017280933348,
+                "backlash_mode": -1,
+                "command": -0.02763142713836473,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 11.802906497928962
+              },
+              {
+                "angle_rad": 0.04320487651626357,
+                "velocity_rad_s": -0.008371304250962526,
+                "target_rad": 0.04290874133336216,
+                "reference_rad": 0.042992695004161745,
+                "current_a": 0.004062037135347849,
+                "torque_nm": 0.00004850141999407125,
+                "voltage_v": 0.017810634303612655,
+                "gear_angle_rad": 0.029110995827899028,
+                "backlash_mode": 0,
+                "command": 0.001622859113547752,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 12.126932739474038
+              }
+            ]
+          },
+          {
+            "id": "+Y-foot-surface",
+            "maximum_difference_m": 0.00039012790238617494,
+            "rms_difference_m": 0.00013391635623938452,
+            "worst_time_s": 1.526,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04518815594813351,
+                "velocity_rad_s": 0.063860686106559,
+                "target_rad": 0.04027645524840419,
+                "reference_rad": 0.042992695004230363,
+                "current_a": -0.12632942764964775,
+                "torque_nm": -0.034002508727946905,
+                "voltage_v": -0.6018518751759293,
+                "gear_angle_rad": 0.030436365376797097,
+                "backlash_mode": -1,
+                "command": -0.05478994113138844,
+                "policy_time_s": 1.524,
+                "plus_y_support_n": 3.552110885187894
+              },
+              {
+                "angle_rad": 0.04479549382731989,
+                "velocity_rad_s": 0.007742931995086405,
+                "target_rad": 0.041565177878944155,
+                "reference_rad": 0.042992695004230363,
+                "current_a": -0.10191561163859565,
+                "torque_nm": -0.04650489232223867,
+                "voltage_v": -0.40588563469338795,
+                "gear_angle_rad": 0.029648883740350226,
+                "backlash_mode": -1,
+                "command": -0.0370253527275061,
+                "policy_time_s": 1.524,
+                "plus_y_support_n": 4.111450294460905
+              }
+            ]
+          },
+          {
+            "id": "-X-foot-surface",
+            "maximum_difference_m": 0.00001306587339955211,
+            "rms_difference_m": 0.000004561710091200671,
+            "worst_time_s": 1.6500000000000001,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04498780497599378,
+                "velocity_rad_s": -0.0007156476720815471,
+                "target_rad": 0.042061329444940815,
+                "reference_rad": 0.042992695004161745,
+                "current_a": -0.08298722978389939,
+                "torque_nm": -0.0874249075294483,
+                "voltage_v": -0.3025594797466535,
+                "gear_angle_rad": 0.028964017280933348,
+                "backlash_mode": -1,
+                "command": -0.02763142713836473,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 11.802906497928962
+              },
+              {
+                "angle_rad": 0.04320487651626357,
+                "velocity_rad_s": -0.008371304250962526,
+                "target_rad": 0.04290874133336216,
+                "reference_rad": 0.042992695004161745,
+                "current_a": 0.004062037135347849,
+                "torque_nm": 0.00004850141999407125,
+                "voltage_v": 0.017810634303612655,
+                "gear_angle_rad": 0.029110995827899028,
+                "backlash_mode": 0,
+                "command": 0.001622859113547752,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 12.126932739474038
+              }
+            ]
+          }
+        ],
+        "hip_mode_disagreement_samples": 72
+      }
+    ],
+    "inputs": {
+      "runs/full-robot/learning/hip-timestep/manifest.json": "2ac9a2261398e16ade6b61d183a4aea8842a1b7c947019cef187b4feff52f8fd",
+      "examples/full-robot/foot-markers.json": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c",
+      "runs/full-robot/learning/hip-timestep/250us.window.json": "8e2e61eff2b269f17f5f08c6f633507c0fc42a608f695f72977a25e5b6027b2b",
+      "runs/full-robot/learning/hip-timestep/62p5us.window.json": "2c70db8e8c7eb8bc75ca72386b5c209869c34c3ac622db97ae4e55eca9a981e5",
+      "runs/full-robot/learning/hip-timestep/125us.window.json": "fd32ccbd71f29b1aaf9466c3b3c40877f7fdf9560b344b78f280ca39b2bf77a9",
+      "runs/full-robot/learning/hip-timestep/250us.config.json": "de9d3d29f1e5a78ac365f9ecbbc88756e806711e12459fa543c62d7a40b0d024",
+      "runs/full-robot/learning/analytic-positions/base.execution.json": "4cb713c2026078bc218ebe219977e88cc41641d77caf6f4abd39336978c26536",
+      "runs/full-robot/learning/hip-timestep/125us.config.json": "0be268a66ad6d8a3ea210552d3de20205c01c71fcf29636b70b394eb2889324b",
+      "runs/full-robot/learning/analytic-positions/refined.execution.json": "c35513c9214a3427118eea4f8c079ffd3d5d70878aa51ff03f9b2e0412f97b01",
+      "runs/full-robot/learning/hip-timestep/62p5us.config.json": "e48f78f7c16cec6f646262f1e2d5251e571212f9044121a6a3fb810c91ca42ff"
+    }
+  },
+  "screen": {
+    "scope": "0.7–1.65 s window, sampled every 1 ms. Pairwise differences are not errors against hardware or a converged solution. Mode changes are bracketed between observations, not exact event times. Policy telemetry has a separate timestamp. Window success does not imply full-motion success.",
+    "exact_observer_checks": [],
+    "comparisons": [
+      {
+        "cases": [
+          "250us",
+          "125us"
+        ],
+        "markers": [
+          {
+            "id": "-Y-foot-surface",
+            "maximum_difference_m": 0.0001836158997226225,
+            "rms_difference_m": 0.00010174467956519023,
+            "worst_time_s": 1.21,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04153280178415654,
+                "velocity_rad_s": 0.021865421861935068,
+                "target_rad": 0.044191435867313646,
+                "reference_rad": 0.04299269500563772,
+                "current_a": 0.06374974374675224,
+                "torque_nm": -0.008099605924385972,
+                "voltage_v": 0.2873482379368195,
+                "gear_angle_rad": 0.04136268253317169,
+                "backlash_mode": null,
+                "command": 0.02617438965082497,
+                "policy_time_s": 1.208,
+                "plus_y_support_n": 1.5026436235025586
+              },
+              {
+                "angle_rad": 0.041485399129439396,
+                "velocity_rad_s": 0.023532408731614295,
+                "target_rad": 0.044373336337632525,
+                "reference_rad": 0.04299269500563772,
+                "current_a": 0.06998163497559268,
+                "torque_nm": -0.002359479266329175,
+                "voltage_v": 0.3089918064249906,
+                "gear_angle_rad": 0.04143309210450581,
+                "backlash_mode": null,
+                "command": 0.028152332267907226,
+                "policy_time_s": 1.208,
+                "plus_y_support_n": 1.46481983496896
+              }
+            ]
+          },
+          {
+            "id": "+X-foot-surface",
+            "maximum_difference_m": 0.000011805375023594313,
+            "rms_difference_m": 0.00001068785469859755,
+            "worst_time_s": 1.096,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.03402577356594724,
+                "velocity_rad_s": 0.04041634682182157,
+                "target_rad": 0.041982066145732945,
+                "reference_rad": 0.03934922183323819,
+                "current_a": 0.14456020636341776,
+                "torque_nm": -0.007964085535370924,
+                "voltage_v": 0.9143924958177968,
+                "gear_angle_rad": 0.033628300722582535,
+                "backlash_mode": null,
+                "command": 0.08302887442666376,
+                "policy_time_s": 1.094,
+                "plus_y_support_n": 0.7797821926832763
+              },
+              {
+                "angle_rad": 0.033855481884413695,
+                "velocity_rad_s": 0.01623540396184919,
+                "target_rad": 0.042035234339409214,
+                "reference_rad": 0.03934922183323819,
+                "current_a": 0.16253369341936508,
+                "torque_nm": 0.009118131587321634,
+                "voltage_v": 1.0087346153289851,
+                "gear_angle_rad": 0.03371959880278614,
+                "backlash_mode": null,
+                "command": 0.09160912612612193,
+                "policy_time_s": 1.094,
+                "plus_y_support_n": 0.6189750664748382
+              }
+            ]
+          },
+          {
+            "id": "+Y-foot-surface",
+            "maximum_difference_m": 0.0000638283419793526,
+            "rms_difference_m": 0.00004458878439281509,
+            "worst_time_s": 1.348,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.042612930322346955,
+                "velocity_rad_s": 0.0020134403073220927,
+                "target_rad": 0.04343168763493647,
+                "reference_rad": 0.042992695004084806,
+                "current_a": 0.013848650424974743,
+                "torque_nm": 0.00650969977469807,
+                "voltage_v": 0.05563888571873212,
+                "gear_angle_rad": 0.04274237235343292,
+                "backlash_mode": null,
+                "command": 0.005074893535133411,
+                "policy_time_s": 1.346,
+                "plus_y_support_n": 1.5047905953828837
+              },
+              {
+                "angle_rad": 0.042695836695717165,
+                "velocity_rad_s": 0.005304424838206752,
+                "target_rad": 0.04354766934968933,
+                "reference_rad": 0.042992695004084806,
+                "current_a": 0.015267166436913466,
+                "torque_nm": 0.005903282515906088,
+                "voltage_v": 0.061601479134238586,
+                "gear_angle_rad": 0.04281837940611699,
+                "backlash_mode": null,
+                "command": 0.005618453824872456,
+                "policy_time_s": 1.346,
+                "plus_y_support_n": 1.4964593784814038
+              }
+            ]
+          },
+          {
+            "id": "-X-foot-surface",
+            "maximum_difference_m": 0.000014810484074581886,
+            "rms_difference_m": 0.000012867930534619513,
+            "worst_time_s": 1.6500000000000001,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04236628423021359,
+                "velocity_rad_s": -0.0005072509702162907,
+                "target_rad": 0.04329792078353816,
+                "reference_rad": 0.042992695004161745,
+                "current_a": 0.01316304321520127,
+                "torque_nm": 0.019030905055339047,
+                "voltage_v": 0.04462358823356941,
+                "gear_angle_rad": 0.04275002466220169,
+                "backlash_mode": null,
+                "command": 0.004079436071561214,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 11.906272712978238
+              },
+              {
+                "angle_rad": 0.04179052006763779,
+                "velocity_rad_s": -0.00022899846415152652,
+                "target_rad": 0.04358601526902176,
+                "reference_rad": 0.042992695004161745,
+                "current_a": 0.07365818460644875,
+                "torque_nm": 0.07190112664499317,
+                "voltage_v": 0.2727545496732787,
+                "gear_angle_rad": 0.04322785980836599,
+                "backlash_mode": null,
+                "command": 0.024904275576901006,
+                "policy_time_s": 1.6480000000000001,
+                "plus_y_support_n": 11.891475737210017
+              }
+            ]
+          }
+        ],
+        "hip_mode_disagreement_samples": 0
+      },
+      {
+        "cases": [
+          "125us",
+          "62p5us"
+        ],
+        "markers": [
+          {
+            "id": "-Y-foot-surface",
+            "maximum_difference_m": 0.000030240021594480776,
+            "rms_difference_m": 0.000014891311408749644,
+            "worst_time_s": 1.214,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.04157421010191845,
+                "velocity_rad_s": 0.020998154007184907,
+                "target_rad": 0.04430773792855643,
+                "reference_rad": 0.04299269500438452,
+                "current_a": 0.06978000433913263,
+                "torque_nm": -0.0014429200925811115,
+                "voltage_v": 0.3075393592105924,
+                "gear_angle_rad": 0.04153613604384761,
+                "backlash_mode": null,
+                "command": 0.028020572921400814,
+                "policy_time_s": 1.212,
+                "plus_y_support_n": 1.445270926533763
+              },
+              {
+                "angle_rad": 0.041549718371244784,
+                "velocity_rad_s": 0.021235424962513204,
+                "target_rad": 0.0443467766892451,
+                "reference_rad": 0.04299269500438452,
+                "current_a": 0.07117008932707924,
+                "torque_nm": -0.00013487227682662528,
+                "voltage_v": 0.31241652039362044,
+                "gear_angle_rad": 0.041538231987273716,
+                "backlash_mode": null,
+                "command": 0.02846621845585355,
+                "policy_time_s": 1.212,
+                "plus_y_support_n": 1.4436594153210387
+              }
+            ]
+          },
+          {
+            "id": "+X-foot-surface",
+            "maximum_difference_m": 7.597471627528574e-7,
+            "rms_difference_m": 6.086631129666626e-7,
+            "worst_time_s": 1.617,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.041814238110726515,
+                "velocity_rad_s": -0.006271748544259307,
+                "target_rad": 0.043601309204097334,
+                "reference_rad": 0.04299269500403499,
+                "current_a": 0.07795581015324468,
+                "torque_nm": 0.07075842748086775,
+                "voltage_v": 0.29147067406888116,
+                "gear_angle_rad": 0.043213018700536246,
+                "backlash_mode": null,
+                "command": 0.02660977158347238,
+                "policy_time_s": 1.616,
+                "plus_y_support_n": 10.950308525915853
+              },
+              {
+                "angle_rad": 0.041801378548615126,
+                "velocity_rad_s": -0.006211195363388269,
+                "target_rad": 0.04360951147510399,
+                "reference_rad": 0.04299269500403499,
+                "current_a": 0.07826645641193844,
+                "torque_nm": 0.07215937056628609,
+                "voltage_v": 0.2921309243678318,
+                "gear_angle_rad": 0.043229040341191766,
+                "backlash_mode": null,
+                "command": 0.02667065289985844,
+                "policy_time_s": 1.616,
+                "plus_y_support_n": 10.944707277330421
+              }
+            ]
+          },
+          {
+            "id": "+Y-foot-surface",
+            "maximum_difference_m": 0.000010791506469173745,
+            "rms_difference_m": 0.000007735771180496233,
+            "worst_time_s": 1.345,
+            "hip_at_worst": [
+              {
+                "angle_rad": 0.042679977342554645,
+                "velocity_rad_s": 0.005267786214185324,
+                "target_rad": 0.04355555530389049,
+                "reference_rad": 0.04299269500408145,
+                "current_a": 0.015523120288971065,
+                "torque_nm": 0.006239782913252938,
+                "voltage_v": 0.06351700984827242,
+                "gear_angle_rad": 0.042809234732811445,
+                "backlash_mode": null,
+                "command": 0.005792177104749638,
+                "policy_time_s": 1.344,
+                "plus_y_support_n": 1.5020545056232788
+              },
+              {
+                "angle_rad": 0.042691605699328165,
+                "velocity_rad_s": 0.005923367513855114,
+                "target_rad": 0.04357178856329009,
+                "reference_rad": 0.04299269500408145,
+                "current_a": 0.015620780830381983,
+                "torque_nm": 0.006022270900280966,
+                "voltage_v": 0.06405892279764212,
+                "gear_angle_rad": 0.04281761164480141,
+                "backlash_mode": null,
+                "command": 0.005841438003528039,
+                "policy_time_s": 1.344,
+                "plus_y_support_n": 1.4981874840759646
+              }
+            ]
+          },
+          {
+            "id": "-X-foot-surface",
+            "maximum_difference_m": 0.0000019885000437829095,
+            "rms_difference_m": 0.0000015413899019675525,
+            "worst_time_s": 0.717,
+            "hip_at_worst": [
+              {
+                "angle_rad": -0.0006204685345323365,
+                "velocity_rad_s": -0.0012520855855935,
+                "target_rad": 0.00034944515835772476,
+                "reference_rad": 1.320908475016161e-14,
+                "current_a": 0.013026100890438255,
+                "torque_nm": 0.016249239419534097,
+                "voltage_v": 0.046391561461472594,
+                "gear_angle_rad": -0.0002956407923468023,
+                "backlash_mode": null,
+                "command": 0.004238096081621127,
+                "policy_time_s": 0.716,
+                "plus_y_support_n": 12.903681778865396
+              },
+              {
+                "angle_rad": -0.0006310953419755011,
+                "velocity_rad_s": -0.0012312094844923488,
+                "target_rad": 0.00035640557964641123,
+                "reference_rad": 1.320908475016161e-14,
+                "current_a": 0.013305745961954931,
+                "torque_nm": 0.016793298449031883,
+                "voltage_v": 0.047225139898572965,
+                "gear_angle_rad": -0.0002951623468916496,
+                "backlash_mode": null,
+                "command": 0.004314452900600965,
+                "policy_time_s": 0.716,
+                "plus_y_support_n": 12.89981381659229
+              }
+            ]
+          }
+        ],
+        "hip_mode_disagreement_samples": 0
+      }
+    ],
+    "inputs": {
+      "runs/full-robot/learning/hip-backlash-screen/manifest.json": "cf199c3c4dc833d3073ec4947e15a95bb74f8abfd2c823ed93bba2f0e81d3679",
+      "examples/full-robot/foot-markers.json": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c",
+      "runs/full-robot/learning/hip-backlash-screen/250us.window.json": "47f5cb19f13a2f55a658222b7a698bbc767ac1fe119c188c7a7f45ba09d0b49d",
+      "runs/full-robot/learning/hip-backlash-screen/62p5us.window.json": "05b7c28cb2e382356cb7bb61bb0aef8d97749f0496efd9f5bcf54307a3481b04",
+      "runs/full-robot/learning/hip-backlash-screen/125us.window.json": "321ddaae6351a5ab511806fb827e64cb6316a96fdb956a9f73af842b724bdb3f",
+      "runs/full-robot/learning/hip-backlash-screen/250us.config.json": "de9d3d29f1e5a78ac365f9ecbbc88756e806711e12459fa543c62d7a40b0d024",
+      "runs/full-robot/learning/hip-backlash-screen/125us.config.json": "0be268a66ad6d8a3ea210552d3de20205c01c71fcf29636b70b394eb2889324b",
+      "runs/full-robot/learning/hip-backlash-screen/62p5us.config.json": "e48f78f7c16cec6f646262f1e2d5251e571212f9044121a6a3fb810c91ca42ff"
+    }
+  },
+  "validation": {
+    "tests": {
+      "session_tests": {
+        "command": "cargo test --locked -p sim-runtime --test embedded_session --example capture_embedded_window",
+        "session_passed": 9,
+        "capture_unit_passed": 1,
+        "failed": 0
+      },
+      "cli": {
+        "command": "node examples/interactive/check_capture_window.mjs target/release/examples/capture_embedded_window target/release/examples/integrate_embedding",
+        "passed": true,
+        "identical_frames": 4,
+        "invalid_requests_rejected": 5,
+        "partial_window_labeled": true
+      },
+      "scope": "Recorded outcomes of the executed checks in this investigation; CI definitions retain the executable checks."
+    },
+    "browser_fixture": {
+      "passed": true,
+      "task_observation_probe": null,
+      "preset": "pendulum-embedded",
+      "compared_frames": 11,
+      "simulated_s": 0.02,
+      "maximum_native_wasm_entry_difference": 0,
+      "worst_path": "",
+      "differences": [],
+      "replay_exact": true,
+      "reset_exact": true,
+      "invalid_request_preserved": true,
+      "changed_replay_rejected_without_mutation": true,
+      "load_ms": 142.19499999284744,
+      "simulation_ms": 24.42500001192093,
+      "max_chunk_ms": 10.935000002384186,
+      "main_thread_heartbeats": 13,
+      "replay_progress_messages": 10,
+      "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+    },
+    "viewer": {
+      "passed": true,
+      "checks": [
+        "recorded robot selection, fit, scrubbing, playback and contact toggle",
+        "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+        "robot-landing-checkpoint motion checkpoint status and replay",
+        "robot-forward-10mm motion checkpoint status and replay",
+        "robot-forward-slow motion checkpoint status and replay",
+        "robot-forward-solid-sign motion checkpoint status and replay",
+        "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+        "robot-point-feedback gain, world foot tracking, phase activation and replay",
+        "robot-point-block-factor gain, world foot tracking, phase activation and replay",
+        "robot-point-sample-reuse gain, world foot tracking, phase activation and replay",
+        "robot-point-final-refresh gain, world foot tracking, phase activation and replay",
+        "robot-point-analytic-positions gain, world foot tracking, phase activation and replay",
+        "body feedback gain, world target/actual diagnostics, support weights and replay",
+        "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+        "live Rust/Rhai input, movement, recording and input replay",
+        "load error display and reset recovery",
+        "cancel pending load and restart without stale results",
+        "pendulum-embedded: incremental servo preset execution, target readings and recipe replay",
+        "pendulum-condensed: incremental servo preset execution, target readings and recipe replay",
+        "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+        "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+        "narrow layout without horizontal overflow; controller input remains available"
+      ],
+      "recorded_robot_tested": true,
+      "live_fixture_tested": true,
+      "page_errors": [],
+      "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+    }
+  },
+  "artifacts": {
+    "runs/full-robot/learning/hip-timestep/manifest.json": "2ac9a2261398e16ade6b61d183a4aea8842a1b7c947019cef187b4feff52f8fd",
+    "runs/full-robot/learning/hip-timestep/analysis.json": "2bd060de82388a2d93130c3b7defc4128db175196ed38a895eff2ce4f315123a",
+    "runs/full-robot/learning/analytic-positions/manifest.json": "cc21a0d8817625b6631efbc2ced8f2fe573392126d42496a3722783844d422b5",
+    "runs/full-robot/learning/analytic-positions/base.config.json": "de9d3d29f1e5a78ac365f9ecbbc88756e806711e12459fa543c62d7a40b0d024",
+    "runs/full-robot/learning/point-feedback/scene.json": "ef3027a8228d8aa2e051b8d02a8742f1e988a82564496c08b51e41b487dea3fd",
+    "/Users/elliot/physics-simulator/examples/full-robot/prepare_hip_timestep_trace.mjs": "0383615204ad0393c92834ff195ad765c8515ef77e9ba8841769c2424c9b916e",
+    "runs/full-robot/learning/hip-timestep/250us.config.json": "de9d3d29f1e5a78ac365f9ecbbc88756e806711e12459fa543c62d7a40b0d024",
+    "runs/full-robot/learning/hip-timestep/125us.config.json": "0be268a66ad6d8a3ea210552d3de20205c01c71fcf29636b70b394eb2889324b",
+    "runs/full-robot/learning/hip-timestep/62p5us.config.json": "e48f78f7c16cec6f646262f1e2d5251e571212f9044121a6a3fb810c91ca42ff",
+    "examples/full-robot/foot-markers.json": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c",
+    "runs/full-robot/learning/hip-timestep/250us.window.json": "8e2e61eff2b269f17f5f08c6f633507c0fc42a608f695f72977a25e5b6027b2b",
+    "runs/full-robot/learning/hip-timestep/62p5us.window.json": "2c70db8e8c7eb8bc75ca72386b5c209869c34c3ac622db97ae4e55eca9a981e5",
+    "runs/full-robot/learning/hip-timestep/125us.window.json": "fd32ccbd71f29b1aaf9466c3b3c40877f7fdf9560b344b78f280ca39b2bf77a9",
+    "runs/full-robot/learning/analytic-positions/base.execution.json": "4cb713c2026078bc218ebe219977e88cc41641d77caf6f4abd39336978c26536",
+    "runs/full-robot/learning/analytic-positions/refined.execution.json": "c35513c9214a3427118eea4f8c079ffd3d5d70878aa51ff03f9b2e0412f97b01",
+    "runs/full-robot/learning/hip-timestep/hip-series.json": "d6fdf212978afe27ddbf89656e492e1163371bdfbd810511bdac4cd2fba369ac",
+    "runs/full-robot/learning/hip-backlash-screen/manifest.json": "cf199c3c4dc833d3073ec4947e15a95bb74f8abfd2c823ed93bba2f0e81d3679",
+    "runs/full-robot/learning/hip-backlash-screen/analysis.json": "0a236576ce3c1109b65708571efa1de3c30f0b0134dd13ed2614c501bcb0fc5d",
+    "runs/full-robot/learning/hip-backlash-screen/scene.json": "fdf6a5461477c0d15e98819cf44253b2d178ccaf057547402d60eac3ea5e89e1",
+    "runs/full-robot/learning/hip-backlash-screen/250us.config.json": "de9d3d29f1e5a78ac365f9ecbbc88756e806711e12459fa543c62d7a40b0d024",
+    "runs/full-robot/learning/hip-backlash-screen/125us.config.json": "0be268a66ad6d8a3ea210552d3de20205c01c71fcf29636b70b394eb2889324b",
+    "runs/full-robot/learning/hip-backlash-screen/62p5us.config.json": "e48f78f7c16cec6f646262f1e2d5251e571212f9044121a6a3fb810c91ca42ff",
+    "runs/full-robot/learning/hip-backlash-screen/250us.window.json": "47f5cb19f13a2f55a658222b7a698bbc767ac1fe119c188c7a7f45ba09d0b49d",
+    "runs/full-robot/learning/hip-backlash-screen/62p5us.window.json": "05b7c28cb2e382356cb7bb61bb0aef8d97749f0496efd9f5bcf54307a3481b04",
+    "runs/full-robot/learning/hip-backlash-screen/125us.window.json": "321ddaae6351a5ab511806fb827e64cb6316a96fdb956a9f73af842b724bdb3f",
+    "runs/full-robot/learning/hip-backlash-screen/hip-series.json": "314c6ee6e2c9711152f9605d85f684c553503e58e8fff29dc180aa2ba527e2db",
+    "runs/interactive/hip-timestep/viewer-report.json": "94a2dadf750530eb43718bf2b5cd11cc810257bfe48c898b0f74710da1b9aba6",
+    "runs/interactive/hip-timestep/fixture-browser.json": "6ee9996548856c6a9ccf7a28bd71cbce1a57c516cf107f3c4ea08ecf1d160daf",
+    "runs/interactive/hip-timestep/test-results.json": "15aae1c739b9e02a25b5a3d82a1bc33d7757042dc61c279a6aa900c042921251",
+    "cad/robocad/physical.py": "3b1123fb4354ad7c6a1271722072097925301eea0b617e2a555c479c1a54025d",
+    "cad/PHYSICAL_MODEL.md": "9f6fe509add73e699d6a2a26a3bd19e562a3365c411d2d116e087667aa139c0a",
+    "crates/sim-domain-robot/src/motor.rs": "eab0d5c8d975f2c67c5df9464b17122c6db4c59d481c96752c69ea1fe46861b5",
+    "crates/sim-runtime/src/embedded.rs": "fcaca427ed625bf53f4a96d1a7a785a2c5291673106f8e909d80b8da4b8dc2bf",
+    "crates/sim-runtime/tests/embedded_session.rs": "0dfbfe4748f4ae65d1387e0f5fc4739dd188c9ba7a121c7174623a4b86e8a425",
+    "crates/sim-runtime/examples/capture_embedded_window.rs": "eca2186bb899c5d4d0c898e2082f8fe0fdde723f6866c358c31eb7972f445fc9",
+    ".github/workflows/browser.yml": "2a8c0c0b91faa3df2b33c04ba909eae6d2196711913ef8ce8c0d488d7364a1d0",
+    "examples/full-robot/prepare_hip_timestep_trace.mjs": "0383615204ad0393c92834ff195ad765c8515ef77e9ba8841769c2424c9b916e",
+    "examples/full-robot/analyze_hip_timestep_trace.mjs": "907e61e44cbadf56ec44a26eaa063da484da09d97e2a4569cc97b00541c13fa0",
+    "examples/full-robot/prepare_hip_backlash_screen.mjs": "2ff07fd6f94752879a752f64fa610a637a23aa325ff91a08815dfd88131f6b9d",
+    "examples/interactive/check_capture_window.mjs": "4f20db9dcb670ca9e739ce4051086c48d1ba72c255304f19ec6aa3d51c4e0e2e",
+    "examples/full-robot/hip-timestep-validation.md": "cf47c4b1889ca4c0c9e83b482b7c3af13e0f179fadb25eecd8983b3bf31d60fa",
+    "/Users/elliot/physics-simulator/examples/full-robot/summarize_hip_timestep.mjs": "a70a5870f90e6087a01101541b4811c1074aab1f2890aad2e26e3adf0c524a7c",
+    "target/release/examples/capture_embedded_window": "bad40784eda06af4ec4fcaf2b10a1d9dc152f8f8b596d5cc11d3f6bd2e2ab910",
+    "runs/interactive/hip-timestep/viewer/build-manifest.json": "0ff5a245b889fc4e860fba6cd9fe3832a743519978b7c4517cef52ac5a3869d2",
+    "runs/interactive/hip-timestep/viewer/sim_web_bg.wasm": "64f8c225d4e0b82011bd985d6bc5187351260a77ef654d609c8763fa135ce87e"
+  }
+}

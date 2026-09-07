@@ -27,6 +27,31 @@ pub const POINT_TERRAIN_COMPLIANT: &str = "contact.point_terrain_compliant";
 type Params = BTreeMap<String, f64>;
 type Made = Result<Box<dyn Behavior>, sim_core::EquationError>;
 
+/// The scalar regularized Coulomb law shared by compliant point contacts.
+/// `capacity` is mu * normal load; `speed_scale` is positive, in slip units/s.
+pub fn regularized_coulomb_scalar(slip: f64, capacity: f64, speed_scale: f64) -> f64 {
+    -capacity * (slip / speed_scale).tanh()
+}
+
+/// Isotropic extension to scaled slip coordinates with equal units. The force
+/// opposes slip, has norm <= capacity, and does nonpositive instantaneous work.
+/// For a planar patch use [vx, vy, radius * wz], then convert the third returned
+/// component to moment by multiplying by radius. This gives a combined
+/// force/twist capacity, not separate full capacities for sliding and twisting.
+/// Capacity must be finite and nonnegative and speed_scale positive/finite;
+/// invalid trials return NaNs so numerical callers can reject them.
+pub fn regularized_coulomb<const N: usize>(slip: [f64; N], capacity: f64, speed_scale: f64) -> [f64; N] {
+    if !capacity.is_finite() || capacity < 0.0 || !speed_scale.is_finite()
+        || speed_scale <= 0.0 || slip.iter().any(|v| !v.is_finite()) {
+        return [f64::NAN; N];
+    }
+    let speed = slip.iter().fold(0.0_f64, |s, v| s.hypot(*v));
+    if !speed.is_finite() { return [f64::NAN; N]; }
+    if speed == 0.0 || capacity == 0.0 { return [0.0; N]; }
+    let magnitude = regularized_coulomb_scalar(speed, capacity, speed_scale);
+    slip.map(|v| (v / speed) * magnitude)
+}
+
 /// Planar rigid body owning a `PlanarFrame`: states x, y, θ, vx, vy, ω.
 pub struct PlanarRigidBody {
     pub mass: f64,
@@ -197,7 +222,7 @@ impl Behavior for PointPlaneCompliant {
             return;
         }
         let n = (-self.stiffness * gap - self.damping * vn).max(0.0);
-        let t = -self.friction * n * (vt / self.regularisation).tanh();
+        let t = regularized_coulomb_scalar(vt, self.friction * n, self.regularisation);
         ctx.add_through_lane(0, 0, -t);
         ctx.add_through_lane(0, 1, -n);
         ctx.add_through_lane(0, 2, -(ox * n - oy * t));

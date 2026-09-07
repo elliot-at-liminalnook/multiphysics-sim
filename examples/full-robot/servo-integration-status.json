@@ -1,0 +1,468 @@
+{
+  "version": 1,
+  "scope": "Experimental CAD-derived registered servo/driver/motor mechanism integration. Short diagnostic, not calibrated loaded tracking, realtime, walking or learning readiness.",
+  "source": {
+    "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "scene": {
+      "path": "runs/full-robot/solver-performance/bracket-option-off.scene.json",
+      "sha256": "f54321e4d94266c8cc184e4ecc9d6436ce08b1cd48bf230949f65e37e6f875ac"
+    },
+    "snapshot": {
+      "path": "runs/full-robot/learning/servo-source-manifest.json",
+      "sha256": "52af2f03166bad92501c8cbf9b1b5abf27cd6a1f8c72059f3ba6026dbbfa2daa"
+    }
+  },
+  "cases": [
+    {
+      "name": "hold",
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-servo-hold.json",
+        "sha256": "d8f56f928d5a15bc4f173f2ecbbe5984e4e28a09dd0b9997040c292b09005a35"
+      },
+      "configuration": {
+        "path": "examples/full-robot/mechanical-servo-hold.json",
+        "sha256": "4aea85878199ee20ca613d2b5cdc6377cfa2d06cf69b3681facd677019797ae0"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "stepping_wall_s": 74.67519374900003,
+      "accepted_segments": 452,
+      "control_guard_offset": 36,
+      "servo_ticks": [
+        {
+          "motor": "joint.-Y | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-Y | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-Y | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        }
+      ],
+      "maximum_sampled_closure_by_row_unit": {
+        "1": {
+          "maximum_position": 1.0408340855860843e-17,
+          "maximum_velocity": 2.220446049250313e-16,
+          "maximum_acceleration": 1.1368683772161603e-13
+        },
+        "m": {
+          "maximum_position": 9.457712391025552e-13,
+          "maximum_velocity": 8.982398158607907e-15,
+          "maximum_acceleration": 3.430561390516118e-12
+        },
+        "rad": {
+          "maximum_position": 5.377642775528102e-17,
+          "maximum_velocity": 1.7763568394002505e-15,
+          "maximum_acceleration": 1.8189894035458565e-12
+        }
+      }
+    },
+    {
+      "name": "hold-refined",
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-servo-hold-refined.json",
+        "sha256": "da50336a0f334d55eadd8d00a23a9683057522b62bc034210618c9caacd4a8d6"
+      },
+      "configuration": {
+        "path": "examples/full-robot/mechanical-servo-hold-refined.json",
+        "sha256": "5aa05adf23d3157bae22a45cdb7b8a0f8cc15cf3577486c12d0c2f9a2df01016"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.000125,
+      "stepping_wall_s": 89.30847096199992,
+      "accepted_segments": 862,
+      "control_guard_offset": 36,
+      "servo_ticks": [
+        {
+          "motor": "joint.-Y | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-Y | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-Y | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        }
+      ],
+      "maximum_sampled_closure_by_row_unit": {
+        "1": {
+          "maximum_position": 6.938893903907228e-18,
+          "maximum_velocity": 4.440892098500626e-16,
+          "maximum_acceleration": 2.2737367544323206e-13
+        },
+        "m": {
+          "maximum_position": 9.296174940942592e-13,
+          "maximum_velocity": 1.8006429680639258e-15,
+          "maximum_acceleration": 3.496758438359393e-12
+        },
+        "rad": {
+          "maximum_position": 6.938893903907228e-18,
+          "maximum_velocity": 1.7763568394002505e-15,
+          "maximum_acceleration": 1.8189894035458565e-12
+        }
+      }
+    },
+    {
+      "name": "worm-target",
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-servo-worm-target.json",
+        "sha256": "da492a03e78865a05802a3c5d13eb9581ffbbff6dd3adb31fa1d8166b8cdcdd7"
+      },
+      "configuration": {
+        "path": "examples/full-robot/mechanical-servo-worm-target.json",
+        "sha256": "093e1141e4ddc0312a82932792ad193406ef3c38bc392543f81ee7947bfe6d38"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "stepping_wall_s": 68.55286903900007,
+      "accepted_segments": 449,
+      "control_guard_offset": 36,
+      "servo_ticks": [
+        {
+          "motor": "joint.-Y | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-Y | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-Y | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+X | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.+Y | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Hip servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Worm servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        },
+        {
+          "motor": "joint.-X | Foot servo output",
+          "count": 100,
+          "maximum_clock_error_s": 1.3877787807814457e-17
+        }
+      ],
+      "maximum_sampled_closure_by_row_unit": {
+        "1": {
+          "maximum_position": 8.673617379884035e-18,
+          "maximum_velocity": 2.220446049250313e-16,
+          "maximum_acceleration": 1.1368683772161603e-13
+        },
+        "m": {
+          "maximum_position": 7.001899060554706e-13,
+          "maximum_velocity": 4.625553412518357e-14,
+          "maximum_acceleration": 1.4279466498123838e-11
+        },
+        "rad": {
+          "maximum_position": 7.979727989493313e-17,
+          "maximum_velocity": 1.7763568394002505e-15,
+          "maximum_acceleration": 9.094947017729282e-13
+        }
+      }
+    }
+  ],
+  "refinement": {
+    "artifact": {
+      "path": "runs/full-robot/learning/servo-hold-refinement.json",
+      "sha256": "4ef99aa1725f2f011f40117ae0de2212806e619d54885ebbe8b03bfad3f58495"
+    },
+    "markers": [
+      {
+        "id": "+X-foot-surface",
+        "maximum_error_m": 0.0008673229615688618,
+        "rms_error_m": 0.0004785669505324001,
+        "worst_time_s": 0.094
+      },
+      {
+        "id": "+Y-foot-surface",
+        "maximum_error_m": 0.0004861114565818939,
+        "rms_error_m": 0.000195762089371872,
+        "worst_time_s": 0.058
+      },
+      {
+        "id": "-X-foot-surface",
+        "maximum_error_m": 0.0011458094912946291,
+        "rms_error_m": 0.0006750180941039961,
+        "worst_time_s": 0.1
+      },
+      {
+        "id": "-Y-foot-surface",
+        "maximum_error_m": 0.0004959621328940612,
+        "rms_error_m": 0.000195045007492818,
+        "worst_time_s": 0.058
+      }
+    ],
+    "maximum_sampled_differences": {
+      "current_a": 0.708023305104145,
+      "gear_speed_rad_s": 1.6248790432464766,
+      "heating_w": 5.973844732554397,
+      "joint_positions": 0.009624543234479614,
+      "joint_velocities": 5.457256039872236,
+      "motor_states": 1.6248790432464766,
+      "motor_voltage_v": 10.524037693545981,
+      "power_difference_w": 0.040094324778403134,
+      "servo_commands": 0.9490044862732159,
+      "servo_states": 2.9928299491537453,
+      "shaft_torque_nm": 0.5493722040444451,
+      "supply_current_a": 0.6567465017012031
+    },
+    "worst_servo_command": {
+      "motor": "joint.-X | Worm servo output",
+      "time_s": 0.048,
+      "difference": 0.9490044862732159,
+      "coarse_duty": -0.05099551372678418,
+      "refined_duty": -1
+    },
+    "contact_pair_mismatch_samples": 32,
+    "total_impulses": [
+      {
+        "candidate_ns": [
+          -0.0001440924673892602,
+          0.0028608462134694446,
+          0.00029407102434788555
+        ],
+        "difference_norm_ns": 0.0007127715093091953,
+        "link": 9,
+        "other": 8,
+        "reference_ns": [
+          0.00009692673047637843,
+          0.0021933508394913655,
+          0.00022771669923658168
+        ]
+      },
+      {
+        "candidate_ns": [
+          -0.19412437818866435,
+          0.0013791373824453444,
+          2.0106370070794948
+        ],
+        "difference_norm_ns": 0.029477719317558736,
+        "link": 11,
+        "other": null,
+        "reference_ns": [
+          -0.17651251403336593,
+          0.002258138337159636,
+          1.9870152896469773
+        ]
+      },
+      {
+        "candidate_ns": [
+          0,
+          0,
+          0
+        ],
+        "difference_norm_ns": 0.006794908595238078,
+        "link": 15,
+        "other": 28,
+        "reference_ns": [
+          0.0064360173685334456,
+          -0.0018253629829043975,
+          0.0011901736134776692
+        ]
+      },
+      {
+        "candidate_ns": [
+          0.1921051602253653,
+          0.0008780849363614435,
+          1.8882354103170595
+        ],
+        "difference_norm_ns": 0.019873428963677175,
+        "link": 25,
+        "other": null,
+        "reference_ns": [
+          0.196725283757603,
+          0.0006748669440484155,
+          1.9075632746524895
+        ]
+      }
+    ],
+    "worst_floor_impulse_window": {
+      "candidate_ns": [
+        -0.00007463555753417809,
+        -0.00007478791041165909,
+        0.03102079693352911
+      ],
+      "difference_norm_ns": 0.16957871495678414,
+      "link": 25,
+      "other": null,
+      "reference_ns": [
+        0.03839001628724724,
+        0.00027167003922031846,
+        0.19617917877272956
+      ],
+      "start_s": 0.048,
+      "end_s": 0.05
+    },
+    "servo_clocks_identical": true
+  },
+  "changed_target_response": {
+    "scope": "Changed command, not matched-input equivalence or a settled tracking result.",
+    "motor": "joint.+X | Worm servo output",
+    "target_rad": 0.02,
+    "final_joint_rad": -0.009873334558819497,
+    "hold_final_joint_rad": -0.02249743574983515,
+    "final_tracking_error_rad": 0.0298733345588195,
+    "maximum_sampled_joint_path_change_rad": 0.01643123580494487
+  },
+  "limitations": [
+    "CAD firmware gains/latency and motor constants remain uncalibrated; existing registered models and parameter floors are retained.",
+    "Supply 11.1 V and temperature 293.15 K imposed; no battery sag or winding thermal evolution.",
+    "Internal joint measurements do not establish a deployable external sensor/observation contract.",
+    "Coarse/refined actuator commands and contact impulses disagree materially; no task gate or convergence promotion.",
+    "Single native diagnostic timings exclude build, snapshots and serialization; not a performance claim against differently configured detailed runs.",
+    "Ignored captures/source are local evidence, not versioned golden results."
+  ],
+  "tests": {
+    "native_motor": 9,
+    "no_default_motor": 9,
+    "runtime_session": 18,
+    "shared_hybrid_root_schedule": 10,
+    "comparator": 3,
+    "wasm_runtime_compile": "passed; existing unused rotor_speed warning",
+    "integrator_example_check": "passed"
+  }
+}

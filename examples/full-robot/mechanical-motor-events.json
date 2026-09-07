@@ -1,0 +1,103 @@
+{
+  "step_s": 0.0005,
+  "steps": 200,
+  "report_every": 4,
+  "applied_generalized_loads": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "implicit": {},
+  "embedding": {
+    "dependent_solve": "pivoted_qr"
+  },
+  "motors": {
+    "boundaries": [
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "voltage_v": 0.0,
+        "winding_temperature_k": 293.15
+      }
+    ],
+    "residual_scales": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "events": {}
+  }
+}

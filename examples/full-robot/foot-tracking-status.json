@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "date": "2026-09-06",
+  "status": "provisional numerical diagnostic failed; hardware accuracy unverified",
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "candidate_physics_step_s": 0.0005,
+  "reference_physics_step_s": 0.00025,
+  "report": {
+    "passed": false,
+    "candidate_source": "simulation",
+    "reference_source": "simulation",
+    "requirements": {
+      "version": 1,
+      "experiment_id": "full-robot-hold-100ms-r1357",
+      "coordinate_frame": "r1357-export-world-Z-up-m",
+      "start_s": 0.0,
+      "end_s": 0.1,
+      "max_sample_gap_s": 0.002,
+      "points": [
+        {
+          "id": "-Y-foot-surface",
+          "placement_margin_m": 0.001,
+          "other_error_reserve_m": 0.0
+        },
+        {
+          "id": "+X-foot-surface",
+          "placement_margin_m": 0.001,
+          "other_error_reserve_m": 0.0
+        },
+        {
+          "id": "+Y-foot-surface",
+          "placement_margin_m": 0.001,
+          "other_error_reserve_m": 0.0
+        },
+        {
+          "id": "-X-foot-surface",
+          "placement_margin_m": 0.001,
+          "other_error_reserve_m": 0.0
+        }
+      ]
+    },
+    "points": [
+      {
+        "id": "-Y-foot-surface",
+        "samples": 51,
+        "violations": 0,
+        "rms_error_m": 0.0002729688550016171,
+        "max_error_m": 0.0005413667278055449,
+        "worst_margin_time_s": 0.04000000000000003,
+        "minimum_remaining_margin_m": 0.0004586332721944551
+      },
+      {
+        "id": "+X-foot-surface",
+        "samples": 51,
+        "violations": 0,
+        "rms_error_m": 0.0006953725519669048,
+        "max_error_m": 0.0009525030419213281,
+        "worst_margin_time_s": 0.05000000000000004,
+        "minimum_remaining_margin_m": 4.7496958078671906e-05
+      },
+      {
+        "id": "+Y-foot-surface",
+        "samples": 51,
+        "violations": 0,
+        "rms_error_m": 0.0002626819568401986,
+        "max_error_m": 0.0005569792862330494,
+        "worst_margin_time_s": 0.04000000000000003,
+        "minimum_remaining_margin_m": 0.0004430207137669506
+      },
+      {
+        "id": "-X-foot-surface",
+        "samples": 51,
+        "violations": 2,
+        "rms_error_m": 0.0006445094827221848,
+        "max_error_m": 0.0014117466439696206,
+        "worst_margin_time_s": 0.04400000000000003,
+        "minimum_remaining_margin_m": -0.00041174664396962063
+      }
+    ],
+    "scope": "Sampled point tracking only. A pass does not establish between-sample clearance, loaded actuator capability, contact accuracy, balance, walking success, or hardware readiness. Source labels and uncertainty bounds are supplied evidence, not independently certified measurements."
+  },
+  "raw_evidence_manifest": "runs/full-robot/learning/manifest.json",
+  "limitations": [
+    "Raw evidence is local and ignored; this summary is not a golden trajectory or sufficient by itself to reproduce the captured export.",
+    "Both runs are 100 ms hold recordings, not walking episodes.",
+    "One timestep refinement does not establish numerical convergence.",
+    "No hardware measurements or validated task margins."
+  ]
+}

@@ -1,0 +1,443 @@
+{
+  "version": 1,
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "physical_parameters_changed": false,
+  "training_ready": false,
+  "realtime": false,
+  "reference": {
+    "description": "Four foot crank coordinates 0 to -0.2 rad and back, quintic rest-to-rest: settle to 0.2s, retract by 0.4s, hold to 0.6s, return by 0.8s, settle to 1s. All other initial servo targets held.",
+    "sweep_samples": 201,
+    "minimum_scaled_singular_value": 0.9224955294762703,
+    "maximum_scaled_position_error": 9.597600492128322e-12,
+    "maximum_scaled_closure_jacobian_error": 1.3877787807814457e-15,
+    "internal_contact_samples": 0,
+    "scope": "One prescribed sampled path; not a swept collision certificate, complete coupled operating envelope or hardware travel limit."
+  },
+  "rejected_candidates": [
+    {
+      "candidate": "knee-motion-positive-candidate-sweep.json",
+      "finding": "At 0.335s, +X foot output 0.080231291 rad exceeds authored upper limit 0.078539816 rad (+4.5 deg). No dynamic run was performed. Final CLI also rejects out-of-range independent target keyframes before stepping."
+    },
+    {
+      "candidate": "knee-motion-contact-candidate-sweep.json",
+      "finding": "At -0.273024 rad, the imported collision model first reports -Y crosshead/sector-gear contact. At -0.4 rad maximum reported penetration is 0.000677138 m. Physical interference versus conservative proxy geometry remains unresolved; this is not a certified hardware stop."
+    }
+  ],
+  "missing_authored_limits": [
+    "-Y Foot servo output",
+    "+Y Foot servo output",
+    "-X Foot servo output"
+  ],
+  "runs": {
+    "coarse": {
+      "completed": true,
+      "simulated_s": 1.0,
+      "step_s": 0.00025,
+      "stepping_wall_s": 41.761820045000086,
+      "accepted_segments": 4010,
+      "internal_contact_samples": 0,
+      "servo_tick_counts": {
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "tracking": {
+        "coordinate_frame": "reference link local metres",
+        "duration_s": 1.0,
+        "markers": [
+          {
+            "id": "+X-foot-surface",
+            "maximum_error_m": 0.0017447695546454797,
+            "rms_error_m": 0.0009439151063761805,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "+Y-foot-surface",
+            "maximum_error_m": 0.0017655783953700133,
+            "rms_error_m": 0.0009734558643609245,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "-X-foot-surface",
+            "maximum_error_m": 0.0016899729763235043,
+            "rms_error_m": 0.000867587627793662,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "-Y-foot-surface",
+            "maximum_error_m": 0.0017648239963011017,
+            "rms_error_m": 0.0009689435931228205,
+            "worst_time_s": 0.6900000000000001
+          }
+        ],
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "reference_link": "Robot | Chassis and hip mounts",
+        "samples": 101,
+        "scope": "Sampled mechanism tracking relative to the moving reference link. Includes actual actuator lag, compliance and loading. Not world foothold tracking, balance, continuous clearance or calibrated hardware accuracy."
+      },
+      "posture": {
+        "final_body_displacement_m": [
+          -1.0775039553792077e-05,
+          -1.4764655177917083e-05,
+          -0.000327731670769781
+        ],
+        "final_marker_displacement_m": {
+          "+X-foot-surface": [
+            0.0007839056525811294,
+            1.4487467905680104e-06,
+            -6.859423378435814e-05
+          ],
+          "+Y-foot-surface": [
+            8.817512713629998e-05,
+            0.0009051388986445752,
+            -3.204670408757382e-05
+          ],
+          "-X-foot-surface": [
+            -0.0008318148453861363,
+            7.227299565726329e-07,
+            -2.1981798499381977e-05
+          ],
+          "-Y-foot-surface": [
+            9.171426141539422e-05,
+            -0.0009345090297444014,
+            -3.203354462250063e-05
+          ]
+        },
+        "maximum_body_height_change_m": 0.0031474224019919107,
+        "maximum_body_horizontal_displacement_m": 6.272708874200659e-05,
+        "maximum_body_tilt_rad": 0.0004021949724068792,
+        "maximum_marker_displacement_m": {
+          "+X-foot-surface": 0.0007869023700081051,
+          "+Y-foot-surface": 0.0009099880604315057,
+          "-X-foot-surface": 0.0008321055574917279,
+          "-Y-foot-surface": 0.0009395449858319055
+        },
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "samples": 101,
+        "scope": "Sampled motion relative to the first frame, with declared local/world up directions. No static-equilibrium, between-sample clearance, actuator-load, walking, or hardware-accuracy gate is established."
+      },
+      "sampled_crank_min_rad": -0.20893810557396944,
+      "sampled_crank_max_rad": 0.00014491962162975418,
+      "sampled_maximum_duty_magnitude": 0.5257286450445422,
+      "sampled_maximum_current_a": 0.4319404632955665,
+      "maximum_sampled_original_closure": {
+        "position": 3.499145417862337e-13,
+        "velocity": 2.536599402747086e-15,
+        "acceleration": 4.580225088091083e-13
+      },
+      "comparison_to_125us": {
+        "maximum_world_marker_difference_m": 0.00022752312479654995,
+        "maximum_sampled_differences": {
+          "current_a": 0.07454784577715116,
+          "gear_speed_rad_s": 0.14906444753505033,
+          "heating_w": 0.1583027633011428,
+          "joint_positions": 0.0037434710809858243,
+          "joint_velocities": 0.23931014381722931,
+          "motor_states": 1.0,
+          "motor_voltage_v": 1.0063552285408264,
+          "power_difference_w": 0.0008842308378849972,
+          "servo_commands": 0.09099843430898052,
+          "servo_states": 0.17724483939668695,
+          "shaft_torque_nm": 0.07913958700087602,
+          "supply_current_a": 0.018996973649554494
+        },
+        "same_event_counts": true,
+        "maximum_window_impulse_difference_ns": 0.03451980511907758
+      }
+    },
+    "refined": {
+      "completed": true,
+      "simulated_s": 1.0,
+      "step_s": 0.000125,
+      "stepping_wall_s": 58.881421376999945,
+      "accepted_segments": 8010,
+      "internal_contact_samples": 0,
+      "servo_tick_counts": {
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "tracking": {
+        "coordinate_frame": "reference link local metres",
+        "duration_s": 1.0,
+        "markers": [
+          {
+            "id": "+X-foot-surface",
+            "maximum_error_m": 0.0017619952792179317,
+            "rms_error_m": 0.0009729289185354025,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "+Y-foot-surface",
+            "maximum_error_m": 0.0018046445134608474,
+            "rms_error_m": 0.0010334880535933083,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "-X-foot-surface",
+            "maximum_error_m": 0.0017269248641138225,
+            "rms_error_m": 0.0009116631239770956,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "-Y-foot-surface",
+            "maximum_error_m": 0.0018042506200901605,
+            "rms_error_m": 0.0010334135755117899,
+            "worst_time_s": 0.6900000000000001
+          }
+        ],
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "reference_link": "Robot | Chassis and hip mounts",
+        "samples": 101,
+        "scope": "Sampled mechanism tracking relative to the moving reference link. Includes actual actuator lag, compliance and loading. Not world foothold tracking, balance, continuous clearance or calibrated hardware accuracy."
+      },
+      "posture": {
+        "final_body_displacement_m": [
+          -5.515312873698966e-05,
+          -7.043282746804682e-07,
+          -0.00033669535656191576
+        ],
+        "final_marker_displacement_m": {
+          "+X-foot-surface": [
+            0.0007518848219882912,
+            1.696865295597815e-06,
+            -6.876398730198963e-05
+          ],
+          "+Y-foot-surface": [
+            0.00016009276338356613,
+            0.0009482656165036296,
+            -3.211304598582654e-05
+          ],
+          "-X-foot-surface": [
+            -0.0009174500120447404,
+            -3.2068358555652214e-06,
+            -2.157497491100946e-05
+          ],
+          "-Y-foot-surface": [
+            0.00016352521467601338,
+            -0.000952045368839749,
+            -3.2098193716023626e-05
+          ]
+        },
+        "maximum_body_height_change_m": 0.00315977662722278,
+        "maximum_body_horizontal_displacement_m": 5.8192353234084e-05,
+        "maximum_body_tilt_rad": 0.00035223349536024466,
+        "maximum_marker_displacement_m": {
+          "+X-foot-surface": 0.0007550246028030238,
+          "+Y-foot-surface": 0.0009622206711837379,
+          "-X-foot-surface": 0.0009177092611167818,
+          "-Y-foot-surface": 0.0009665201364709797
+        },
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "samples": 101,
+        "scope": "Sampled motion relative to the first frame, with declared local/world up directions. No static-equilibrium, between-sample clearance, actuator-load, walking, or hardware-accuracy gate is established."
+      },
+      "sampled_crank_min_rad": -0.2089248915743634,
+      "sampled_crank_max_rad": 0.0006195251341408913,
+      "sampled_maximum_duty_magnitude": 0.5261949665582455,
+      "sampled_maximum_current_a": 0.4322835529689937,
+      "maximum_sampled_original_closure": {
+        "position": 9.813538870417915e-13,
+        "velocity": 6.6769506590347305e-15,
+        "acceleration": 7.688072400924284e-12
+      }
+    },
+    "1ms": {
+      "completed": true,
+      "simulated_s": 1.0,
+      "step_s": 0.001,
+      "stepping_wall_s": 20.454959820000017,
+      "accepted_segments": 1010,
+      "internal_contact_samples": 0,
+      "servo_tick_counts": {
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "tracking": {
+        "coordinate_frame": "reference link local metres",
+        "duration_s": 1.0,
+        "markers": [
+          {
+            "id": "+X-foot-surface",
+            "maximum_error_m": 0.0016874223473817066,
+            "rms_error_m": 0.0008661015401227818,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "+Y-foot-surface",
+            "maximum_error_m": 0.0017066462213701542,
+            "rms_error_m": 0.0008904673445094163,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "-X-foot-surface",
+            "maximum_error_m": 0.0016524372024416545,
+            "rms_error_m": 0.0008197659834630134,
+            "worst_time_s": 0.6900000000000001
+          },
+          {
+            "id": "-Y-foot-surface",
+            "maximum_error_m": 0.0017062741693660889,
+            "rms_error_m": 0.0008897368099104083,
+            "worst_time_s": 0.6900000000000001
+          }
+        ],
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "reference_link": "Robot | Chassis and hip mounts",
+        "samples": 101,
+        "scope": "Sampled mechanism tracking relative to the moving reference link. Includes actual actuator lag, compliance and loading. Not world foothold tracking, balance, continuous clearance or calibrated hardware accuracy."
+      },
+      "posture": {
+        "final_body_displacement_m": [
+          -5.0044972768947165e-05,
+          -1.965291885314672e-05,
+          -0.00031206064016555996
+        ],
+        "final_marker_displacement_m": {
+          "+X-foot-surface": [
+            0.0006822514582076611,
+            7.592622962388096e-07,
+            -6.866953431472478e-05
+          ],
+          "+Y-foot-surface": [
+            8.19509332014752e-06,
+            0.0008500741831616865,
+            -3.22208476163377e-05
+          ],
+          "-X-foot-surface": [
+            -0.0008437147031287728,
+            1.1942012191422778e-06,
+            -2.2291221986880938e-05
+          ],
+          "-Y-foot-surface": [
+            8.256321365560787e-06,
+            -0.0008887007080791154,
+            -3.2209659582282946e-05
+          ]
+        },
+        "maximum_body_height_change_m": 0.0031246938521080356,
+        "maximum_body_horizontal_displacement_m": 0.00019891312071046454,
+        "maximum_body_tilt_rad": 0.0005148606281465838,
+        "maximum_marker_displacement_m": {
+          "+X-foot-surface": 0.0006856990109725371,
+          "+Y-foot-surface": 0.0008507240795073627,
+          "-X-foot-surface": 0.0008440099673403706,
+          "-Y-foot-surface": 0.0008893225385388694
+        },
+        "maximum_sample_gap_s": 0.010000000000000009,
+        "samples": 101,
+        "scope": "Sampled motion relative to the first frame, with declared local/world up directions. No static-equilibrium, between-sample clearance, actuator-load, walking, or hardware-accuracy gate is established."
+      },
+      "sampled_crank_min_rad": -0.2089729592385333,
+      "sampled_crank_max_rad": 2.7021480500010787e-05,
+      "sampled_maximum_duty_magnitude": 0.5287137170322591,
+      "sampled_maximum_current_a": 0.43328044613312994,
+      "maximum_sampled_original_closure": {
+        "position": 8.356648706353553e-13,
+        "velocity": 2.0105445086571194e-15,
+        "acceleration": 3.7247982476174e-13
+      },
+      "comparison_to_125us": {
+        "maximum_world_marker_difference_m": 0.0004972570919895829,
+        "maximum_sampled_differences": {
+          "current_a": 0.16638394092779052,
+          "gear_speed_rad_s": 0.1790448179250973,
+          "heating_w": 0.33302683073471734,
+          "joint_positions": 0.009168682755201841,
+          "joint_velocities": 0.45050423352982466,
+          "motor_states": 1.0,
+          "motor_voltage_v": 1.7314355094452145,
+          "power_difference_w": 0.00212449857009496,
+          "servo_commands": 0.1566939374580494,
+          "servo_states": 0.35079879235944555,
+          "shaft_torque_nm": 0.14007392302693328,
+          "supply_current_a": 0.02655068536897577
+        },
+        "same_event_counts": true,
+        "maximum_window_impulse_difference_ns": 0.032910530496571624
+      }
+    }
+  },
+  "interpretation": "The motor-driven motion completes, but mechanism tracking error reaches about 1.8 mm on a roughly 2.6 mm retraction. Lag and loaded offsets persist at the finer timestep. This is a control/plant behavior to measure and account for; solving the equations more accurately does not force the plant to follow a reference.",
+  "validation": {
+    "trajectory_tests": 4,
+    "native_embedded_motor_tests": 10,
+    "no_default_embedded_motor_tests": 10,
+    "runtime_session_tests": 19,
+    "runtime_tracking_tests": 5,
+    "runtime_posture_tests": 3,
+    "wasm_runtime_compile": true,
+    "fixed_target_100ms_capture_preserved_exactly": true,
+    "valid_named_bounded_input_accepted": true,
+    "out_of_bounds_input_rejected_before_stepping": true
+  },
+  "source_note": "target-motion-source is the exact integration/audit executable and source snapshot used for loaded runs. target-motion-final-source adds reference-bound input validation and shared relative-marker reporting without changes to simulated equations. Current input validation has separate accepted/rejected CLI checks.",
+  "timing_scope": "Single native diagnostic runs on the development CPU; may overlap diagnostic builds. Not controlled timing or matched-error speedup claims.",
+  "next": [
+    "Separate dynamic lag from load-dependent offsets using slower/unloaded reference tests; keep hardware calibration gaps explicit.",
+    "Resolve reported crosshead/sector-gear collision geometry before enlarging the motion envelope.",
+    "Connect task-feasible references to the shared environment/observation contract, then planner, teacher/student learning, bounded robustness evaluation and viewable policies."
+  ],
+  "artifacts_sha256": {
+    "runs/full-robot/learning/knee-motion-coarse.json": "e3568d7fde93d13d39ea461dcde3ae58ba9ee9f1a4f118ccbdb1fcdafa8d3bf5",
+    "runs/full-robot/learning/knee-motion-1ms-tracking.json": "bedd3c8013d69109f8ec54007e9defabcd7268c385cb713024d5a851d29f44b1",
+    "runs/full-robot/learning/knee-motion-1ms.json": "a59ad7771b50b04e64df0dcecf182226894a04e30305a4ab41b2877c65905ae0",
+    "runs/full-robot/learning/knee-motion-1ms-posture.json": "40aa42ae93f607a1f282ab50613f312da2e2c94545a3e7d68fb7159fe6e3695b",
+    "runs/full-robot/learning/knee-motion-coarse-execution.json": "5b2483f8ce29213c27d26d1900fe4b91c55cec513cd240a766dfd6a2d8496ab5",
+    "runs/full-robot/learning/knee-motion-refined-posture.json": "78173739decc700a296691278662da705c0f1749a6f47bc59d35125f4bdcb956",
+    "runs/full-robot/learning/knee-motion-contact-candidate-sweep.json": "d0018fd8d95427d730690fd585b26e1eaec125d4a6da18010d687509b71917d5",
+    "runs/full-robot/learning/knee-motion-coarse-comparison.json": "b8e6f3f894bb96c55d5091b16fb4f48cdbdbf14ae02754f660aec95ec7080bd6",
+    "runs/full-robot/learning/knee-motion-1ms-comparison.json": "be42855703e674f8fe1dd3cc8cb1758d5e31d377b7fcffdd7ad8c055ab8bc57a",
+    "runs/full-robot/learning/knee-motion-coarse-posture.json": "d15b32d1403789b3028013d40a4320b96d83d6e9aff85d49e8e38a3600fba7ff",
+    "runs/full-robot/learning/knee-motion-1ms-execution.json": "af2059bed6a16a7aff3a08524eb4fd6943b2719b20ecbfd7360b16ae09988850",
+    "runs/full-robot/learning/knee-motion-sweep.json": "88f108cf90195522b1c37651f40dfa2062a64c65ae52f02d967ffa93b8f893cc",
+    "runs/full-robot/learning/knee-motion-coarse-tracking.json": "bd05230289b1991808413d7ff594b3b89fa8ab6705f50649364fa2cb92223516",
+    "runs/full-robot/learning/knee-motion-refined.json": "c64bac322ed9c4dcda706b01fb96435d31cf3508e7892f8d239527d2596a2983",
+    "runs/full-robot/learning/knee-motion-refined-execution.json": "e691d358533d92582be06c8323cce4677b1de7b7d00b0f79a4c394114fa7da6b",
+    "runs/full-robot/learning/knee-motion-refined-tracking.json": "659b334d6faa53edfd0bb928a3086cd25eccc41b9fc02f61e835017e1c993bd7",
+    "runs/full-robot/learning/knee-motion-small-sweep.json": "b1655a9f7d9d142017ed2283077d60b8f91409fc6b8872a87aaf63acdf6dd7c7",
+    "runs/full-robot/learning/target-motion-final-source-manifest.json": "293feccd3b8cd8093c2f38c91c156ac6253d5abede76154528ec49cb53c9eab1",
+    "runs/full-robot/learning/target-motion-out-of-bounds-validation.json": "8bfe075130365e855fbe66e4895da787f9d3eab4be22e7ed8d993bf5a2d92e7e",
+    "runs/full-robot/learning/target-motion-valid-validation.json": "783380c3c0353650b67bf61ba12cbb730dec4d0560df3d73eb83d37cfe13cf7a",
+    "runs/full-robot/learning/target-motion-hold-regression.json": "b589495618cf831a788b6e7086d7374fc46d392182c71b9a956ba5056676a087",
+    "runs/full-robot/learning/target-motion-valid-input.json": "8c45d1db949a99f911e808aa3170b9ae7ce421a13761b5bbc5983d849c34ed67",
+    "runs/full-robot/learning/target-motion-out-of-bounds-input.json": "e4b0020e46fd5d361a60f378937c67a5d2b3f2086cf5061933a7eb7217b27d97",
+    "runs/full-robot/learning/target-motion-source-manifest.json": "5143803c2acbeebff6c56bd18a47b3f2ab6d2d80545935105da2f0cf69bac509",
+    "examples/full-robot/knee-motion-contact-candidate-sweep.json": "58f16b94fa2276dcbac4df2033fd6ce539ccb7ff3961477d1fcdb508a58a4414",
+    "examples/full-robot/knee-motion-positive-candidate-sweep.json": "7b19c4cb97188c5b1415be9623e432b7511a30300c1280841a43459f4a866488",
+    "examples/full-robot/knee-motion-sweep.json": "8fd103582af420a0f9c3aff710b8db50c12ed124eeb2871bbed52e10a9224bc2",
+    "examples/full-robot/mechanical-servo-knee-motion-refined.json": "c6caf8a7e7ad0000e6914d8f324f3fb96b9e9c96124bcb750e4e88d9096a8476",
+    "examples/full-robot/mechanical-servo-knee-motion-coarse.json": "3b062cc49ffd45249f4d01c0b4c46a4389bc3e0db6e452f75757d3e959183199",
+    "examples/full-robot/knee-motion-small-sweep.json": "3ff99333875780917e403fc0ff34b55ab0b6e048f4c953476305e7f50c4fea35",
+    "examples/full-robot/mechanical-servo-knee-motion-1ms.json": "7e6f35a216f2b4f6d45ae629c57eaa469eef23e6d264048ad8bbf16801007bd8",
+    "runs/full-robot/learning/servo-regularized-floor.scene.json": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2"
+  }
+}

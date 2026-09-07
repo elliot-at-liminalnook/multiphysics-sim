@@ -1,0 +1,132 @@
+{
+  "step_s": 0.000125,
+  "steps": 160,
+  "report_every": 16,
+  "applied_generalized_loads": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "implicit": {
+    "reuse_mechanical_endpoint": true
+  },
+  "embedding": {
+    "dependent_solve": "pivoted_qr"
+  },
+  "motors": {
+    "residual_scales": [
+      1,
+      1,
+      1
+    ],
+    "events": {},
+    "servos": [
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.3105172078634608,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": -7.028698363457993e-05,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.3105172077881925,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.31052521490431034,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      }
+    ]
+  },
+  "audit_contact_steps": true,
+  "initial_coordinates": [
+    0.0,
+    0.3105172078634608,
+    0.0,
+    0.0,
+    -7.028698363457993e-05,
+    0.0,
+    0.0,
+    0.3105172077881925,
+    0.0,
+    0.0,
+    0.31052521490431034,
+    0.0
+  ]
+}

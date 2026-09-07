@@ -1,0 +1,712 @@
+{
+  "scope": "Endpoint-coordinate correction experiment. All original residual/closure checks retained; correction acceptance changes explicitly. Full training-model and controller task acceptance remain open.",
+  "promoted_default": false,
+  "training_model_accepted": false,
+  "cases": [
+    {
+      "name": "base",
+      "step_s": 0.00025,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 95.68720399500002,
+      "wall_time_scope": "Development run overlapped other assistant jobs; not an isolated speedup measurement.",
+      "original_closure_maxima": {
+        "1": {
+          "position": 7.849623728795052e-17,
+          "velocity": 1.6653345369377348e-16,
+          "acceleration": 1.4210854715202004e-14
+        },
+        "m": {
+          "position": 9.642842080381797e-13,
+          "velocity": 1.1335333713335949e-15,
+          "acceleration": 1.1957101975212936e-13
+        },
+        "rad": {
+          "position": 5.551115123125783e-17,
+          "velocity": 4.3021142204224816e-16,
+          "acceleration": 5.115907697472721e-13
+        }
+      },
+      "maximum_auxiliary_residual": 5.924705170912148e-13,
+      "successful_trial_work": {
+        "successful_trial_auxiliary_evaluations": 1861298,
+        "successful_trial_auxiliary_newton_iterations": 957917,
+        "successful_trial_auxiliary_solves": 144536,
+        "successful_trial_colored_auxiliary_solves": 144536,
+        "successful_trial_dynamics_cache_hits": 11737,
+        "successful_trial_dynamics_preparations": 132799,
+        "successful_trial_endpoint_evaluations": 144536,
+        "successful_trial_mechanical_cache_hits": 11737,
+        "successful_trial_mechanical_preparations": 132799,
+        "successful_trial_newton_iterations": 73142,
+        "successful_trials": 11737,
+        "successful_trials_with_reused_jacobian": 9538
+      },
+      "solver_profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 156273,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1031113,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 154848,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 47,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 1192971,
+          "name": "residual evaluations",
+          "seconds": 63.862456714000004
+        },
+        {
+          "calls": 154848,
+          "name": "jacobian assembly",
+          "seconds": 36.306698947
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 154848,
+          "name": "factorisation",
+          "seconds": 2.757874402
+        },
+        {
+          "calls": 154848,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.447220897
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1031106,
+          "name": "back-substitution",
+          "seconds": 1.5782787500000002
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 146799,
+          "name": "embedded closure mapping",
+          "seconds": 39.322797853000004
+        },
+        {
+          "calls": 132799,
+          "name": "embedded contact history",
+          "seconds": 16.244012861
+        },
+        {
+          "calls": 143999,
+          "name": "embedded dynamics preparation",
+          "seconds": 18.361561688000002
+        },
+        {
+          "calls": 155736,
+          "name": "embedded applied force solve",
+          "seconds": 0.604036466
+        },
+        {
+          "calls": 1861298,
+          "name": "embedded component equations",
+          "seconds": 10.755023761
+        },
+        {
+          "calls": 379736,
+          "name": "  closure Jacobian",
+          "seconds": 11.956912559000001
+        },
+        {
+          "calls": 379736,
+          "name": "  closure factorization",
+          "seconds": 13.068752432
+        },
+        {
+          "calls": 379736,
+          "name": "    closure SVD",
+          "seconds": 8.425495393
+        }
+      ],
+      "parent_rejected_trials": 2,
+      "rejected_trials": 0,
+      "rejection_details": [],
+      "versus_parent": {
+        "maximum_sampled_differences": {
+          "current_a": 1.8397817755366752e-8,
+          "gear_speed_rad_s": 9.696482272669726e-8,
+          "heating_w": 2.945462296288781e-8,
+          "joint_positions": 4.921145574376951e-10,
+          "joint_velocities": 8.849920440923142e-8,
+          "motor_states": 9.696482272669726e-8,
+          "motor_voltage_v": 7.137785074107228e-8,
+          "power_difference_w": 3.9800041040649603e-10,
+          "servo_commands": 6.5133100579650716e-9,
+          "servo_states": 2.8777080419983836e-8,
+          "shaft_torque_nm": 6.216431647221299e-8,
+          "supply_current_a": 2.5386708776831135e-9
+        },
+        "maximum_marker_difference_m": 8.75323609732828e-11,
+        "maximum_contact_impulse_difference_ns": 1.971845623549194e-8,
+        "maximum_ordered_event_difference_s": 3.0194399869287736e-8,
+        "event_counts_match": true,
+        "sampled_contact_pair_mismatches": 0
+      },
+      "versus_simultaneous_reference": {
+        "maximum_sampled_differences": {
+          "current_a": 0.1637796815196745,
+          "gear_speed_rad_s": 0.2893613700424028,
+          "heating_w": 0.3834097848888165,
+          "joint_positions": 0.0028218991158128204,
+          "joint_velocities": 0.4437978607644161,
+          "motor_states": 1,
+          "motor_voltage_v": 1.1767941211501802,
+          "power_difference_w": 0.005181115736623054,
+          "servo_commands": 0.1062876301333292,
+          "servo_states": 0.25953789793078874,
+          "shaft_torque_nm": 0.166134951691693,
+          "supply_current_a": 0.03587272603100186
+        },
+        "maximum_marker_difference_m": 0.00040582948070917155,
+        "maximum_contact_impulse_difference_ns": 0.1626697238540943,
+        "maximum_ordered_event_difference_s": 0.13629108639276621,
+        "event_counts_match": false,
+        "sampled_contact_pair_mismatches": 1
+      },
+      "lift": {
+        "failed_clearance_samples": 51,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 40,
+        "longest_qualifying_span_s": 0.19999999999999996,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032111541252789477,
+        "qualifying_start_s": 1.23,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      }
+    },
+    {
+      "name": "refined",
+      "step_s": 0.000125,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 152.09024697999888,
+      "wall_time_scope": "Development run overlapped other assistant jobs; not an isolated speedup measurement.",
+      "original_closure_maxima": {
+        "1": {
+          "position": 8.082727195879436e-17,
+          "velocity": 1.1102230246251565e-16,
+          "acceleration": 1.4210854715202004e-14
+        },
+        "m": {
+          "position": 8.303358001171546e-13,
+          "velocity": 4.02401636317995e-15,
+          "acceleration": 5.997286001147017e-13
+        },
+        "rad": {
+          "position": 1.249000902703301e-16,
+          "velocity": 2.3662712414496134e-16,
+          "acceleration": 2.1088686352754848e-13
+        }
+      },
+      "maximum_auxiliary_residual": 4.803102360284583e-13,
+      "successful_trial_work": {
+        "successful_trial_auxiliary_evaluations": 2740573,
+        "successful_trial_auxiliary_newton_iterations": 1297849,
+        "successful_trial_auxiliary_solves": 235280,
+        "successful_trial_colored_auxiliary_solves": 235280,
+        "successful_trial_dynamics_cache_hits": 22925,
+        "successful_trial_dynamics_preparations": 212355,
+        "successful_trial_endpoint_evaluations": 235280,
+        "successful_trial_mechanical_cache_hits": 22925,
+        "successful_trial_mechanical_preparations": 212355,
+        "successful_trial_newton_iterations": 119247,
+        "successful_trials": 22925,
+        "successful_trials_with_reused_jacobian": 19246
+      },
+      "solver_profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 258602,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1432154,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 252016,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 188,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 1696694,
+          "name": "residual evaluations",
+          "seconds": 103.52739745400001
+        },
+        {
+          "calls": 252016,
+          "name": "jacobian assembly",
+          "seconds": 53.556164236
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 252015,
+          "name": "factorisation",
+          "seconds": 4.559148963
+        },
+        {
+          "calls": 252015,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.7297101180000001
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1432080,
+          "name": "back-substitution",
+          "seconds": 2.251986699
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 237950,
+          "name": "embedded closure mapping",
+          "seconds": 62.236190364
+        },
+        {
+          "calls": 212750,
+          "name": "embedded contact history",
+          "seconds": 26.523527539000003
+        },
+        {
+          "calls": 235084,
+          "name": "embedded dynamics preparation",
+          "seconds": 30.376822607
+        },
+        {
+          "calls": 258009,
+          "name": "embedded applied force solve",
+          "seconds": 0.9984161330000001
+        },
+        {
+          "calls": 2782387,
+          "name": "embedded component equations",
+          "seconds": 16.058932544
+        },
+        {
+          "calls": 599086,
+          "name": "  closure Jacobian",
+          "seconds": 18.746699826
+        },
+        {
+          "calls": 599086,
+          "name": "  closure factorization",
+          "seconds": 20.684513427000002
+        },
+        {
+          "calls": 599086,
+          "name": "    closure SVD",
+          "seconds": 13.336099477000001
+        }
+      ],
+      "parent_rejected_trials": 3,
+      "rejected_trials": 2,
+      "rejection_details": [
+        {
+          "attempted_step_s": 0.0001250000000000001,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 10: residual=-6.090350630732461e-3, candidate=-8.071036547481965e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 40 iterations; residual=7.743805596760467e-15; component error: None; trial reduced velocity [-0.0018358182275514633, 0.00018897768088921334, 0.017244481836187882, 0.0012645221675824333, 0.021624450233573463, -0.00027609629822391955, 0.06292270323223581, -0.8711481821370608, 0.8492960146264316, -0.0007554968193250723, -0.8071036547481965, 0.9437513801190985, -0.06209559076107131, -0.8077639975352856, 0.8276065696898582, 0.001658947346002999, -0.5976051765420167, 0.8479580059083867]\")",
+          "start_time_s": 0.022
+        },
+        {
+          "attempted_step_s": 0.00004568785433445299,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 8: residual=3.973538551916877e-3, candidate=-3.633412010225319e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 40 iterations; residual=4.996003610813204e-16; component error: None; trial reduced velocity [-0.0012376970374848894, -0.0030422828957220394, -0.0011369652652987935, 0.03220369890768276, -0.007258688823363011, -0.01892172113916113, -0.08691579498787379, -0.10683647238980218, -0.36334214580144913, -0.018381268187401777, 0.011310510357871017, -0.005354182349489374, 0.03272068155194638, 0.19351458371714841, 0.06175130118400426, 0.07647591444733376, -0.03520506415644396, -0.0628832510652037]\")",
+          "start_time_s": 1.5198293121456654
+        }
+      ],
+      "versus_parent": {
+        "maximum_sampled_differences": {
+          "current_a": 7.25946301433078e-7,
+          "gear_speed_rad_s": 0.000004826132108781689,
+          "heating_w": 0.0000019204051246723974,
+          "joint_positions": 5.067739408670668e-9,
+          "joint_velocities": 7.442757768427732e-7,
+          "motor_states": 0.000004826132108781689,
+          "motor_voltage_v": 0.000003284269079140145,
+          "power_difference_w": 1.720037778873973e-8,
+          "servo_commands": 2.9915012561554377e-7,
+          "servo_states": 7.561852605753039e-7,
+          "shaft_torque_nm": 6.159212778272805e-7,
+          "supply_current_a": 1.9023672016837967e-7
+        },
+        "maximum_marker_difference_m": 7.464155142649313e-10,
+        "maximum_contact_impulse_difference_ns": 2.840511610360806e-7,
+        "maximum_ordered_event_difference_s": 3.690887675489307e-7,
+        "event_counts_match": true,
+        "sampled_contact_pair_mismatches": 0
+      },
+      "versus_simultaneous_reference": {
+        "maximum_sampled_differences": {
+          "current_a": 0.04099562144731317,
+          "gear_speed_rad_s": 0.013308255901533185,
+          "heating_w": 0.12647407685562762,
+          "joint_positions": 0.000006294830867892287,
+          "joint_velocities": 0.001875298246879879,
+          "motor_states": 0.04099562144731317,
+          "motor_voltage_v": 0.0019801415440459103,
+          "power_difference_w": 0.0017046065862343918,
+          "servo_commands": 0.00011240609655244205,
+          "servo_states": 0.0005551063533544389,
+          "shaft_torque_nm": 0.0016639412679461674,
+          "supply_current_a": 0.006145458397463777
+        },
+        "maximum_marker_difference_m": 4.356600880661301e-8,
+        "maximum_contact_impulse_difference_ns": 0.0001033339448760353,
+        "maximum_ordered_event_difference_s": 0.0000025446040603505082,
+        "event_counts_match": true,
+        "sampled_contact_pair_mismatches": 0
+      },
+      "lift": {
+        "failed_clearance_samples": 50,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.20999999999999996,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003203276436470448,
+        "qualifying_start_s": 1.23,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      }
+    }
+  ],
+  "prefixes": [
+    {
+      "mode": "ordinary",
+      "rejections": [
+        {
+          "attempted_step_s": 5.31511519515776e-7,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 17: residual=NaN, candidate=7.342975635719722e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 24 iterations; residual=1.5178830414797062e-16; component error: None; inner audit [iteration=22,fresh=true,decision=partial_step_refresh,scaled_residual=5.3249979634993435e-11,endpoint_correction(index,delta,bound,ratio)=Some((29, -2.5564712709467646e-16, 1.328061679090124e-16, 1.9249642627277999))]; inner audit [iteration=23,fresh=true,decision=line_search_failure,scaled_residual=5.32522822372541e-11,endpoint_correction(index,delta,bound,ratio)=Some((29, 2.5564717780736105e-16, 1.3280616788344772e-16, 1.9249646449532383))]; trial reduced velocity [-0.002294175521646865, 0.00021263415882930955, 0.011401616759174112, 0.0011037707910502054, 0.033470008672471324, -0.000246892448186477, 0.0740436969201193, -0.8451253789109818, 0.7061741734121135, -0.0006159428543821631, -0.9452303736674865, 0.7619054871535391, -0.0732740145647418, -0.7847235283429529, 0.6853896136252451, 0.0014188707787654196, -0.4948446417273207, 0.7342975635719722]\"); Newton tail [iteration, fresh, scaled residual, decision, largest normalized correction (index, delta, bound, ratio)]: [0, true, 2.31530e-4, correction, Some((11, 0.00023152799297077863, 1.7616739591604548e-8, 13142.499596299638))] [1, false, 4.04189e-13, correction_accept, Some((8, -4.0417539875777866e-13, 1.7061741734125177e-8, 2.3688988208594657e-5))]",
+          "start_time_s": 0.021499468488480486
+        },
+        {
+          "attempted_step_s": 0.0001250000000000001,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 10: residual=-6.496364315287169e-3, candidate=-8.074985705758858e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 40 iterations; residual=2.082535532910157e-10; component error: None; inner audit [iteration=39,fresh=true,decision=correction,scaled_residual=5.6527712553448e-4,endpoint_correction(index,delta,bound,ratio)=Some((21, 5.424458086946339e-6, 2.4266398911554226e-11, 223537.82721191205))]; inner audit [iteration=40,fresh=false,decision=iteration_limit,scaled_residual=3.3320556822246065e-8,endpoint_correction(index,delta,bound,ratio)=None]; trial reduced velocity [-0.0018371269212636657, 0.00018903222807087957, 0.01723269942171581, 0.0012642416409526713, 0.021653050516219515, -0.0002760150422709073, 0.06295261176913025, -0.8710972227636795, 0.8490042489165222, -0.0007551989413532681, -0.8074985705758858, 0.9435504936404675, -0.062125762131100846, -0.8077178011385041, 0.8273139531574413, 0.0016584452003075988, -0.5973640000840698, 0.8477357879188188]\"); Newton tail [iteration, fresh, scaled residual, decision, largest normalized correction (index, delta, bound, ratio)]: [0, true, 3.90852e-2, partial_step_refresh, Some((10, 0.03865136030485878, 1.839810011540103e-8, 2100834.328676349))] [1, true, 1.95433e-2, partial_step_refresh, Some((10, 0.019327410733317084, 1.8204843313876734e-8, 1061663.1189890367))] [2, true, 9.77180e-3, partial_step_refresh, Some((10, 0.009664138191522067, 1.8108206260210148e-8, 533688.3207895332))] [3, true, 7.32886e-3, partial_step_refresh, Some((10, 0.007248167177988633, 1.8084045914731344e-8, 400804.5109023))]",
+          "start_time_s": 0.022
+        }
+      ]
+    },
+    {
+      "mode": "endpoint",
+      "rejections": [
+        {
+          "attempted_step_s": 0.0001250000000000001,
+          "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 10: residual=-6.090350630732461e-3, candidate=-8.071036547481965e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 40 iterations; residual=7.743805596760467e-15; component error: None; inner audit [iteration=39,fresh=true,decision=correction,scaled_residual=3.9915586682113303e-7,endpoint_correction(index,delta,bound,ratio)=Some((21, 3.833671535314954e-9, 1.0828938427691974e-10, 35.40209930007002))]; inner audit [iteration=40,fresh=false,decision=iteration_limit,scaled_residual=1.2390089734201351e-12,endpoint_correction(index,delta,bound,ratio)=None]; trial reduced velocity [-0.0018358182275514633, 0.00018897768088921334, 0.017244481836187882, 0.0012645221675824333, 0.021624450233573463, -0.00027609629822391955, 0.06292270323223581, -0.8711481821370608, 0.8492960146264316, -0.0007554968193250723, -0.8071036547481965, 0.9437513801190985, -0.06209559076107131, -0.8077639975352856, 0.8276065696898582, 0.001658947346002999, -0.5976051765420167, 0.8479580059083867]\"); Newton tail [iteration, fresh, scaled residual, decision, largest normalized correction (index, delta, bound, ratio)]: [1, true, 1.95433e-2, partial_step_refresh, Some((10, 0.019327439068933302, 1.8204858206485305e-8, 1061663.8069747826))] [2, true, 9.77181e-3, partial_step_refresh, Some((10, 0.009664152936637381, 1.8108221011140637e-8, 533688.7003252141))] [3, true, 7.32887e-3, partial_step_refresh, Some((10, 0.007248177566975344, 1.8084060628799045e-8, 400804.75927140773))] [4, true, 6.87082e-3, partial_step_refresh, Some((10, 0.006795176270176486, 1.8079530517819685e-8, 375849.15512485086))]",
+          "start_time_s": 0.022
+        }
+      ]
+    }
+  ],
+  "prefix_divergence": {
+    "scope": "Same sampled duration and physical metadata. First current threshold crossing brackets a diagnostic window; temporal association does not prove causation. Legacy captures omit rejection reasons.",
+    "current_threshold_a": 1e-7,
+    "first": {
+      "frame": 172,
+      "time_s": 0.021500000000000002,
+      "motor": 4,
+      "dof": "joint.+X | Worm servo output",
+      "candidate_a": 0.17949028079077758,
+      "reference_a": 0.17942147847442347,
+      "difference_a": 0.00006880231635411627
+    },
+    "maximum": {
+      "frame": 172,
+      "time_s": 0.021500000000000002,
+      "motor": 4,
+      "dof": "joint.+X | Worm servo output",
+      "candidate_a": 0.17949028079077758,
+      "reference_a": 0.17942147847442347,
+      "difference_a": 0.00006880231635411627
+    },
+    "window": {
+      "start_s": 0.021375,
+      "end_s": 0.021500000000000002
+    },
+    "completion": {
+      "candidate": {
+        "completed": false,
+        "error": "simulation horizon ended before motion completed: reference time 0.03s"
+      },
+      "reference": {
+        "completed": false,
+        "error": "simulation horizon ended before motion completed: reference time 0.03s"
+      }
+    },
+    "nominal_steps_with_different_accepted_segment_counts": 1,
+    "rejection_diagnostics_available": true,
+    "window_steps": [
+      {
+        "nominal_step": 171,
+        "end_s": 0.021500000000000002,
+        "candidate": {
+          "accepted_segments": 2,
+          "continuous_attempts": 5,
+          "events": [
+            {
+              "guard": 12,
+              "time": 0.021499468488481097
+            }
+          ],
+          "minimum_accepted_step_s": 5.315115189051534e-7,
+          "rejected_trials": 0,
+          "rejection_details": []
+        },
+        "reference": {
+          "accepted_segments": 3,
+          "continuous_attempts": 7,
+          "events": [
+            {
+              "guard": 12,
+              "time": 0.021499468488480486
+            }
+          ],
+          "minimum_accepted_step_s": 2.657557597561533e-7,
+          "rejected_trials": 1,
+          "rejection_details": [
+            {
+              "attempted_step_s": 5.31511519515776e-7,
+              "reason": "implicit mechanical solve: residual contains a non-finite value; largest final residual: Some(\"mechanical velocity row 17: residual=NaN, candidate=7.342975635719722e-1\"); last rejected endpoint: Some(\"local auxiliary solve: Newton did not converge after 24 iterations; residual=1.5178830414797062e-16; component error: None; inner audit [iteration=22,fresh=true,decision=partial_step_refresh,scaled_residual=5.3249979634993435e-11,endpoint_correction(index,delta,bound,ratio)=Some((29, -2.5564712709467646e-16, 1.328061679090124e-16, 1.9249642627277999))]; inner audit [iteration=23,fresh=true,decision=line_search_failure,scaled_residual=5.32522822372541e-11,endpoint_correction(index,delta,bound,ratio)=Some((29, 2.5564717780736105e-16, 1.3280616788344772e-16, 1.9249646449532383))]; trial reduced velocity [-0.002294175521646865, 0.00021263415882930955, 0.011401616759174112, 0.0011037707910502054, 0.033470008672471324, -0.000246892448186477, 0.0740436969201193, -0.8451253789109818, 0.7061741734121135, -0.0006159428543821631, -0.9452303736674865, 0.7619054871535391, -0.0732740145647418, -0.7847235283429529, 0.6853896136252451, 0.0014188707787654196, -0.4948446417273207, 0.7342975635719722]\"); Newton tail [iteration, fresh, scaled residual, decision, largest normalized correction (index, delta, bound, ratio)]: [0, true, 2.31530e-4, correction, Some((11, 0.00023152799297077863, 1.7616739591604548e-8, 13142.499596299638))] [1, false, 4.04189e-13, correction_accept, Some((8, -4.0417539875777866e-13, 1.7061741734125177e-8, 2.3688988208594657e-5))]",
+              "start_time_s": 0.021499468488480486
+            }
+          ]
+        }
+      }
+    ],
+    "inputs": {
+      "runs/full-robot/learning/endpoint-correction/prefix.endpoint.execution.json": "65969861a3fc76573556b5a26556febd0d383efc440822819e2a229e3b90fd7b",
+      "runs/full-robot/learning/endpoint-correction/prefix.ordinary.execution.json": "b3b98c37f443929e21849a8dddb93791e7fc3aeb27057408fa90f0142f1556ea"
+    }
+  },
+  "browser_fixture": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "pendulum-condensed",
+    "compared_frames": 11,
+    "simulated_s": 0.02,
+    "maximum_native_wasm_entry_difference": 1.734723475976807e-18,
+    "worst_path": "frame[5].joint_velocities.0",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 152.05000001192093,
+    "simulation_ms": 29.969999969005585,
+    "max_chunk_ms": 11.875,
+    "main_thread_heartbeats": 16,
+    "replay_progress_messages": 10,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "viewer": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "robot-forward-solid-sign motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "robot-point-feedback gain, world foot tracking, phase activation and replay",
+      "robot-point-block-factor gain, world foot tracking, phase activation and replay",
+      "robot-point-sample-reuse gain, world foot tracking, phase activation and replay",
+      "robot-point-final-refresh gain, world foot tracking, phase activation and replay",
+      "body feedback gain, world target/actual diagnostics, support weights and replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-embedded: incremental servo preset execution, target readings and recipe replay",
+      "pendulum-condensed: incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "artifacts": {
+    "runs/full-robot/learning/endpoint-correction/manifest.json": "b177b3d25e21187b4e03c7489e73cd5dee4804dbe0722d9168e5a63e656ac71a",
+    "runs/full-robot/learning/endpoint-correction/base.execution.json": "e134c3700fb30c0d030cad0edbfd0086e25ad22d32bf9bc8be6264341c1a23ec",
+    "runs/full-robot/learning/auxiliary-coloring/base.execution.json": "2e9d097eacf1066493bf1a71ad6d934aae9a0691efd3b79f6995cb06c88c1682",
+    "runs/full-robot/learning/endpoint-correction/base.config.json": "f0e23e6243f122bcca79d0cfa4e4bc168c50477bffdf5d5561e303818198fc77",
+    "runs/full-robot/learning/endpoint-correction/base.comparison.json": "71e19f7daa9896b8e6feb5ed4685eff67107ef025e2e66232887e0f71672de9b",
+    "runs/full-robot/learning/endpoint-correction/base.reference-comparison.json": "fe6e5b2d0721b877ba412a199bfea4f468b8aa7e9daa8b0b554a518531b45d7d",
+    "runs/full-robot/learning/endpoint-correction/base.lift.json": "e43e40bf585308fa2f6e3a7089044f9fc18df2459d437ce085fb7cd933f2635b",
+    "runs/full-robot/learning/endpoint-correction/refined.execution.json": "b8b1fc96b8aee30b773225a280b3480aedd2bae8f6abdb41487d0488fefd7d1f",
+    "runs/full-robot/learning/auxiliary-coloring/refined.execution.json": "fbd02491d5d405671132ceae765cab0df31aca0634b1c9c23c0a533a869628e6",
+    "runs/full-robot/learning/endpoint-correction/refined.config.json": "2d8f1361b7fdc4148c7b62829cbbe7a97ce9837cbcde142dde4b152242aae392",
+    "runs/full-robot/learning/endpoint-correction/refined.comparison.json": "4bd1411d0bf4f76acedaa5ae81fab71c3d53ec34e08827b8aa1a4758197dbfe2",
+    "runs/full-robot/learning/endpoint-correction/refined.reference-comparison.json": "cff0f30d188fa1d66ee51372ecd0e72886e0ac0bd59e7d282c04282c5ced3338",
+    "runs/full-robot/learning/endpoint-correction/refined.lift.json": "02e33985b796e1e7903f0c93b32502af67ac3c104c3a8e8757cbea42b6189939",
+    "runs/full-robot/learning/endpoint-correction/prefix.ordinary.execution.json": "b3b98c37f443929e21849a8dddb93791e7fc3aeb27057408fa90f0142f1556ea",
+    "runs/full-robot/learning/endpoint-correction/prefix.ordinary.config.json": "a3fe2c6a1e688c6b01ec16f20de0007d105a6759c57dc4f79468e8d325c0eaad",
+    "runs/full-robot/learning/endpoint-correction/prefix.endpoint.execution.json": "65969861a3fc76573556b5a26556febd0d383efc440822819e2a229e3b90fd7b",
+    "runs/full-robot/learning/endpoint-correction/prefix.endpoint.config.json": "70aa192e3da64bfa233b083a1517696399e44e7d447b43e3aee13dc26a120549",
+    "runs/interactive/endpoint-correction/pendulum-browser.json": "3f67f81876bff99c1e3c015c657e2ca9147dc8439289fadd237fcd504ae77906",
+    "runs/interactive/endpoint-correction/viewer-report.json": "82fc6e9f18095779209de4517c011827745d6f953dbb2aae2d48b9c3036111b1",
+    "runs/full-robot/learning/point-feedback/scene.json": "ef3027a8228d8aa2e051b8d02a8742f1e988a82564496c08b51e41b487dea3fd",
+    "runs/interactive/endpoint-correction/native-runner": "9e325753647d0a6de4fb7632a2c75eed1c318eba205189057c399ba39db7d031",
+    "runs/interactive/endpoint-correction/source-manifest.json": "b0e3d1a02e3f8793be739fd56b3e4e60489bfcf0b9431bc254d465d13bbdf176",
+    "runs/interactive/endpoint-correction/pendulum.execution.json": "903cb971f8c2e8cda0c5e979e7557e2a594123b31b533e960cc4a56dd7b32086",
+    "runs/interactive/endpoint-correction/viewer/build-manifest.json": "06af22e28be63b84e984e6020f8dcea1a899d799b80d95a6df4191f96f62c455",
+    "runs/interactive/endpoint-correction/viewer/sim_web_bg.wasm": "8b279b3035ff22c44e864a53efced632404841ae8dde8c24739002deb5e29cad",
+    "crates/sim-solve/src/lib.rs": "347ea6f00b2fe646a2b126b96a2ad53dd51ea5c87160b19765864ce1255c1eea",
+    "crates/sim-solve/src/coloring.rs": "7a94cacbefaf1a6fcd188870ef9155bbcecd51c05a2d22227b71ab9149ed1cfa",
+    "crates/sim-solve/tests/coloring.rs": "ffe68ac4b9a2d7b9c0805518eb0ef4eb7b83d104333dfc818bf5502c00ae7ab4",
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "4b7b79b2559faacfce583b607c65de56c9129593710760fd6776abb5de20abfa",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "0de7f402b4cfd37a168df46aee6d54cb48bc527a37df00f91116882569a1582e",
+    "crates/sim-runtime/tests/embedded_session.rs": "0a754f83f0d6ca89d4aa9ccf368400bb968d8b92faedfd260a231acc0e9ed42e",
+    "examples/interactive/pendulum.condensed.json": "258ef456d21583ea46173e7dcd5eec771f54f2fe1c7a2e33ca84b61d667744f1",
+    "web/tests/viewer.mjs": "423737a1d507ed8f7bdc103c9692968985925be8b04c7c46332ea18b564fc0eb",
+    "web/viewer/presets.json": "ece4f56fafc0191d81d3eb7d318a462b1add5544a834ba0cd9d4c8ceb986f993",
+    "/Users/elliot/physics-simulator/examples/full-robot/summarize_endpoint_correction.mjs": "0b701eea6ee81f4fb785f0ef37ad0c81a5d5bb1fbf32939dfe3b3247274b1632",
+    "examples/full-robot/prepare_endpoint_correction.mjs": "8cd659d053a61c3a03baf9fd25c8494d57cf72ca466934a70c4618129e22aa69",
+    "examples/full-robot/endpoint-correction-validation.md": "337b462ac7d49f8203ae66004f6c08c809bf6ccb9c3bcd5dab51c132b4d4fb69",
+    "runs/interactive/robot-lab-endpoint-correction-2026-09-07.zip": "1b08fd7deee820240f86cf2d284408cf374287629e8b011fbb224c87ed4b047c",
+    "runs/full-robot/learning/endpoint-correction/prefix.divergence.json": "2b5fe7781950948d659de24c0dca6bfd1d6171b4bcdee47fe2288d899081eb2b"
+  }
+}

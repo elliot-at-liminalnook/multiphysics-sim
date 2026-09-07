@@ -1,0 +1,234 @@
+{
+  "version": 1,
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "geometric_placement_verified": true,
+  "loaded_tracking_validated": false,
+  "realtime": false,
+  "learning_ready": false,
+  "placement": {
+    "coordinates": [
+      0.0,
+      -8.346418847292681e-05,
+      0.0,
+      0.0,
+      -0.27612813350949833,
+      0.0,
+      0.0,
+      -8.346425388696227e-05,
+      0.0,
+      0.0,
+      -7.650604473797781e-05,
+      0.0
+    ],
+    "initial_base_translation_m": [
+      0,
+      0,
+      -0.008
+    ],
+    "fits": [
+      {
+        "iterations": 12,
+        "maximum_plane_error_m": 1.0964459673523663e-08,
+        "maximum_scaled_closure_error": 1.1102230246251565e-15,
+        "minimum_scaled_singular_value": 0.9999999999999999
+      }
+    ],
+    "support_clearances_m": [
+      1.999999997537305e-05,
+      1.9999999975484073e-05,
+      1.9999999977371452e-05,
+      2.0010964459693525e-05
+    ],
+    "initial_runtime_internal_contacts": [],
+    "bounds_status": "Local experiment intervals only; not validated hardware limits or swept collision clearance"
+  },
+  "rejected_alternative": {
+    "reason": "Geometrically level pose has reported internal interference",
+    "contacts": [
+      {
+        "force_n": [
+          -3.860863941416442e-06,
+          0.0002805264815432644,
+          2.7209218902694067e-05
+        ],
+        "link": "+X | Worm and input spindle 3a48",
+        "other": "+X | Hip output shaft and pulley b6c0",
+        "penetration_m": 1.4093469650046462e-09
+      },
+      {
+        "force_n": [
+          -113.96468750273,
+          58.18730494163649,
+          5.075186413955314
+        ],
+        "link": "+Y | Worm and input spindle b816",
+        "other": "+Y | Hip output shaft and pulley",
+        "penetration_m": 0.0006403020765838241
+      }
+    ],
+    "collision_geometry_vs_hardware_unresolved": true
+  },
+  "runs_100ms": [
+    {
+      "name": "coarse",
+      "step_s": 0.00025,
+      "simulated_s": 0.1,
+      "wall_s": 19.904806087000033,
+      "accepted_segments": 406,
+      "servo_ticks": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "internal_contacts_in_accepted_trace": 0,
+      "initial_motor_alignment_verified": true,
+      "final_floor_normal_force_n": 39.002058719808105,
+      "sampled_original_closure_maxima": {
+        "position": 1.9215184998699897e-13,
+        "velocity": 2.5352983601401036e-15,
+        "acceleration": 4.581335311115708e-13
+      }
+    },
+    {
+      "name": "refined",
+      "step_s": 0.000125,
+      "simulated_s": 0.1,
+      "wall_s": 34.773355881,
+      "accepted_segments": 807,
+      "servo_ticks": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "internal_contacts_in_accepted_trace": 0,
+      "initial_motor_alignment_verified": true,
+      "final_floor_normal_force_n": 39.03768167931835,
+      "sampled_original_closure_maxima": {
+        "position": 9.814371537686384e-13,
+        "velocity": 1.2395466597592275e-14,
+        "acceleration": 7.689737735461222e-12
+      }
+    }
+  ],
+  "comparison_100ms": {
+    "markers": [
+      {
+        "id": "+X-foot-surface",
+        "maximum_error_m": 7.95308138778176e-05,
+        "rms_error_m": 4.333893001511188e-05,
+        "worst_time_s": 0.028
+      },
+      {
+        "id": "+Y-foot-surface",
+        "maximum_error_m": 0.00015581805595999936,
+        "rms_error_m": 0.0001154956673459263,
+        "worst_time_s": 0.038
+      },
+      {
+        "id": "-X-foot-surface",
+        "maximum_error_m": 0.00023515319785012806,
+        "rms_error_m": 0.00015962290061486803,
+        "worst_time_s": 0.044
+      },
+      {
+        "id": "-Y-foot-surface",
+        "maximum_error_m": 0.0001439543809391018,
+        "rms_error_m": 0.00010036661376460116,
+        "worst_time_s": 0.032
+      }
+    ],
+    "maximum_sampled_differences": {
+      "current_a": 0.09896083870283028,
+      "gear_speed_rad_s": 0.20056903128895798,
+      "heating_w": 0.20252073579305763,
+      "joint_positions": 0.0038492205555402522,
+      "joint_velocities": 0.3019583808372369,
+      "motor_states": 1.0,
+      "motor_voltage_v": 1.0063552290578075,
+      "power_difference_w": 0.0014113424457241897,
+      "servo_commands": 0.0909984343555938,
+      "servo_states": 0.21960786161582052,
+      "shaft_torque_nm": 0.08153222429204583,
+      "supply_current_a": 0.019175131720313862
+    },
+    "contact_pair_mismatch_samples": 3,
+    "worst_floor_impulse_window": {
+      "start_s": 0.016,
+      "end_s": 0.018000000000000002,
+      "difference": {
+        "candidate_ns": [
+          0.005216791144627016,
+          -4.3266650220148356e-05,
+          0.020867931382085595
+        ],
+        "difference_norm_ns": 0.018254417749561824,
+        "link": 25,
+        "other": null,
+        "reference_ns": [
+          0.0007895745576884019,
+          -9.677989227000728e-06,
+          0.003158544253511491
+        ]
+      }
+    }
+  },
+  "validation": {
+    "embedding_native_tests": 11,
+    "embedding_no_default_tests": 11,
+    "comparator_tests": 3,
+    "runtime_examples_compile": true,
+    "wasm_runtime_compile": true,
+    "all_source_cad_preserved": true
+  },
+  "limitations": [
+    "Common-height release with zero motor preload, not settled force equilibrium or sustained standing.",
+    "Provisional material/mass/actuator/friction data; +X foot asymmetry needs hardware confirmation.",
+    "Regularized kinetic friction permits creep; detailed bristle model remains default.",
+    "No calibrated travel envelope, hardware validation, planner, teacher/student training or walking policy yet.",
+    "Different initial conditions make earlier wall times diagnostic context, not a solver speedup benchmark."
+  ],
+  "artifacts_sha256": {
+    "runs/full-robot/learning/support-placement-narrow.json": "3b029783a9853d6ff7264967af064177ef1703379fa2fe2dc65a14a7e52f194c",
+    "runs/full-robot/learning/support-placement-audited.json": "65c5e31d5e1814292378146eb2ea12ac6fcfbb9e92ab4ca592b65faad8c83c4a",
+    "runs/full-robot/learning/support-placement-retracted.json": "9a692f59a57c5184e0e79fb728f744b2eb681ef7578726518f1bdbde34a265d4",
+    "runs/full-robot/learning/support-placement-retracted-clearance.json": "d082ee2ea9dd464d0ca9f1f51d38a2edb46ca25442b5b30a62e38e9103f5e11b",
+    "runs/full-robot/learning/servo-level-coarse.json": "1355d10efa4409e1ab732cc856d5f80739068d7095cc1aa7e14394cf8a5e507c",
+    "runs/full-robot/learning/servo-level-refined.json": "ad131edeca76586bba89ec46dfa5217ff26ed6d172aabc433a7803fa1ad9443d",
+    "runs/full-robot/learning/servo-level-comparison.json": "b9fe0b327e4e0b47f8c4a04db020774cc8b0ad306df46fce121948cb5f8c2771",
+    "runs/full-robot/learning/servo-retracted-coarse.json": "a846f92aac629e23c2c72ee23347148e88db14a3f148264bc766686ad16a3c41",
+    "runs/full-robot/learning/servo-retracted-refined.json": "965db5d18bfd34d6185de586ec26dc4b3a02cc102eb8b81fa55f19bc3ca411e2",
+    "runs/full-robot/learning/servo-retracted-comparison.json": "378358fd01ef4b5bc8b2eaa26c7d052941a99dba71757bf9ba6cd4cad46876af",
+    "runs/full-robot/learning/servo-retracted-100ms-coarse.json": "9078f61a8d1a288a09cdc6cc6abea28de4b4b4834c769e5f424ae0c731c71f04",
+    "runs/full-robot/learning/servo-retracted-100ms-refined.json": "117bbab37f4409e78f4a60228cca852749920a28535dcb252ccb59fbeae2d341",
+    "runs/full-robot/learning/servo-retracted-100ms-comparison.json": "30198ea6a244ec356ab56cfc90d8928c933c4aeea32719765ba0a3d2b652b7c5",
+    "runs/full-robot/learning/support-placement-source-manifest.json": "a0a2e4fc675093cec717517db6b2357ff8e79e4b8d98716e4c11cbe1285150ef",
+    "examples/full-robot/support-placement-narrow.json": "8103b7f05dbe2ddc904fe93505dbba06d4205d94feaa3a07b8e36962ff4476e5",
+    "examples/full-robot/support-placement.json": "143f1f811017bdce06f6dbc36ccac3231577a0546a90117fbe2bdfec630743a4",
+    "examples/full-robot/support-placement-retracted.json": "66bcb289dbe22cd62b8924c0435bc830ef1cb30d1e0a368c2738f6dcf97da792",
+    "examples/full-robot/mechanical-servo-level-coarse.json": "a1c3f0d2a319502e528e9b6f33051cce855e0718be5297cb0cca01602f667f0b",
+    "examples/full-robot/mechanical-servo-level-refined.json": "155e0847da032399581f8a1afbbed8d0d6e4bef0bce66c8deb9e0449772db55b",
+    "examples/full-robot/mechanical-servo-retracted-coarse.json": "33d35378dceb4cea33d329c1374f6ed76120184c23ecdfe353f544792f003b92",
+    "examples/full-robot/mechanical-servo-retracted-refined.json": "44da8edd0c019ebb9964b2f347c5f49d38edc12d87cbd9858a1c93eb89bdf51a",
+    "examples/full-robot/mechanical-servo-retracted-100ms-coarse.json": "352bf5f567d7c458509cf8c54fafc9a8310e5773058517ab4f79ed12d9e78f96",
+    "examples/full-robot/mechanical-servo-retracted-100ms-refined.json": "fd9decc00cb356587bbde6eff83ad6f7c0db3ba950c77dfbf30707988f9322b2",
+    "runs/full-robot/learning/servo-regularized-floor.scene.json": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2"
+  }
+}

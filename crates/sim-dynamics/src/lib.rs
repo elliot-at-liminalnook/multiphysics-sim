@@ -27,15 +27,19 @@
 //! assert!((sim.energy().unwrap() - 0.5).abs() < 1.0e-9);
 //! ```
 
+pub mod event_root;
+pub mod hybrid;
 pub mod analysis;
 pub mod jacobian;
 pub mod linear;
 pub mod report;
+pub mod jacobian_check;
+pub mod attempt_check;
 
 use jacobian::Sparsity;
 use nalgebra::{DMatrix, DVector};
 use serde::{Deserialize, Serialize};
-use sim_solve::{JacobianCache, NewtonConfig, SolveError, profile, solve_newton_cached};
+use sim_solve::{JacobianCache, NewtonConfig, SolveError, profile, solve_newton_cached_audited};
 pub use sim_solve::SparseJacobian;
 use thiserror::Error;
 
@@ -60,9 +64,14 @@ pub trait System {
     }
 
     /// Guard functions for hybrid behavior. An event fires on the step in
-    /// which a guard goes from positive to non-positive; the step is then
+    /// which a guard goes from nonnegative to negative; the step is then
     /// bisected to locate the crossing before [`System::jump`] is applied.
     fn guards(&self, _t: f64, _x: &[f64], _guards: &mut Vec<f64>) {}
+
+    /// Known clock deadlines `(guard index, absolute time)`, constant during
+    /// continuous advancement until a jump updates/removes them. Endpoint
+    /// ticks fire before a step returns; these guards bypass root finding.
+    fn scheduled_events(&self, _t: f64, _x: &[f64], _events: &mut Vec<(usize, f64)>) {}
 
     /// State reset and mode switch for the guard at `index`.
     fn jump(&mut self, _index: usize, _t: f64, _x: &mut [f64]) {}
@@ -99,6 +108,7 @@ pub trait System {
     fn jacobian(&self, _t: f64, _x: &[f64], _rate: &[f64], _out: &mut JacobianParts) -> bool {
         false
     }
+
 }
 
 /// `∂r/∂x` and `∂r/∂ẋ` as summed triplets `(row, column, value)`.
@@ -144,6 +154,7 @@ pub trait Ode {
         None
     }
     fn guards(&self, _t: f64, _x: &[f64], _guards: &mut Vec<f64>) {}
+    fn scheduled_events(&self, _t: f64, _x: &[f64], _events: &mut Vec<(usize, f64)>) {}
     fn jump(&mut self, _index: usize, _t: f64, _x: &mut [f64]) {}
 }
 
@@ -166,6 +177,9 @@ impl<T: Ode> System for T {
     }
     fn guards(&self, t: f64, x: &[f64], guards: &mut Vec<f64>) {
         Ode::guards(self, t, x, guards)
+    }
+    fn scheduled_events(&self, t: f64, x: &[f64], events: &mut Vec<(usize, f64)>) {
+        Ode::scheduled_events(self, t, x, events)
     }
     fn jump(&mut self, index: usize, t: f64, x: &mut [f64]) {
         Ode::jump(self, index, t, x)
@@ -200,6 +214,10 @@ pub enum DynamicsError {
     Dimension { expected: usize, actual: usize },
     #[error("step size must be positive and finite, got {0}")]
     InvalidStep(f64),
+    #[error("integration breakpoints must be finite, nonnegative and strictly increasing")]
+    InvalidBreakpoints,
+    #[error("invalid scheduled event at t={time}: {reason}")]
+    Schedule { time: f64, reason: &'static str },
     #[error("state became non-finite at t={0}")]
     NonFinite(f64),
     #[error("at t={time}: {source}")]
@@ -299,6 +317,41 @@ pub struct RunStats {
     pub branch_restarts: u64,
 }
 
+/// An attempted nonlinear solve, including rejected/root-search trials. A
+/// successful solve is not proof its enclosing timestep was finally committed.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImplicitAttempt {
+    pub start_time: f64,
+    pub step: f64,
+    pub theta: f64,
+    pub stage_time: f64,
+    pub subdivision_depth: u32,
+    pub branch: bool,
+    pub solve_succeeded: bool,
+    /// Whether this solve's substep survived a local Simulation commit.
+    /// False includes successful discarded candidates/event-search probes.
+    /// None means unknown in legacy captures. This does not certify a later
+    /// outer coupled-runtime transaction or physical accuracy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub committed: Option<bool>,
+    pub error: Option<String>,
+    pub initial_state: Vec<f64>,
+    pub stage_state: Vec<f64>,
+    pub stage_rate: Vec<f64>,
+    pub residual: Vec<f64>,
+    pub newton: sim_solve::NewtonAudit,
+    /// Last fresh matrix build in this trial; absent when only a cached matrix
+    /// was used, and in legacy records. Captured only with the attempt audit.
+    #[serde(default)]
+    pub last_linearization: Option<ImplicitLinearization>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ImplicitLinearization {
+    pub increment: Vec<f64>,
+    pub residual: Vec<f64>,
+}
+
 pub struct Simulation<S: System> {
     pub system: S,
     pub time: f64,
@@ -322,9 +375,27 @@ pub struct Simulation<S: System> {
     /// The last step's factorised Jacobian with the `(h, θ)` it was built
     /// for; reused by the next step while Newton keeps contracting.
     newton_cache: Option<(f64, f64, JacobianCache)>,
+    /// Experimental modified Newton across nearby event-location trials.
+    /// A reused matrix is treated as stale and may be refreshed by Newton.
+    pub event_jacobian_reuse: bool,
+    locating_event: bool,
+    /// Absolute requested step boundaries; retained across state restoration.
+    step_breakpoints: Vec<f64>,
+    use_provided_jacobian: bool,
+    attempt_limit: usize,
+    pub implicit_attempts: Vec<ImplicitAttempt>,
 }
 
 impl<S: System> Simulation<S> {
+    /// Enable bounded solve-point capture. Zero disables capture; changing the
+    /// limit clears existing records. Diagnostic re-evaluations are opt-in.
+    pub fn set_attempt_audit_limit(&mut self, limit: usize) {
+        self.attempt_limit = limit;
+        self.implicit_attempts.clear();
+    }
+
+    pub fn attempt_audit_limit(&self) -> usize { self.attempt_limit }
+
     pub fn new(system: S, integrator: Integrator, initial: Vec<f64>) -> Self {
         let mut trace = Trace::default();
         let energy = system.energy(0.0, &initial);
@@ -349,11 +420,43 @@ impl<S: System> Simulation<S> {
             guards_before: Vec::new(),
             guards_after: Vec::new(),
         newton_cache: None,
+        event_jacobian_reuse: false,
+        locating_event: false,
+        step_breakpoints: Vec::new(),
+        use_provided_jacobian: true,
+        attempt_limit: 0,
+        implicit_attempts: Vec::new(),
         }
     }
 
     pub fn energy(&self) -> Option<f64> {
         self.system.energy(self.time, &self.state)
+    }
+
+    /// Request additional integration boundaries without adding events or
+    /// resetting held controller states. Useful for comparing derivative paths
+    /// on the same time grid. Boundaries do not disable convergence subdivision.
+    /// Past boundaries are ignored; retaining the full list makes snapshot
+    /// restoration and rejected adaptive trials replay the same configuration.
+    pub fn set_step_breakpoints(&mut self, points: Vec<f64>) -> Result<(), DynamicsError> {
+        if points.iter().any(|t| !t.is_finite() || *t < 0.0)
+            || points.windows(2).any(|p| p[0] >= p[1]) {
+            return Err(DynamicsError::InvalidBreakpoints);
+        }
+        self.step_breakpoints = points;
+        Ok(())
+    }
+
+    /// Independently difference the complete stage residual, bypassing both
+    /// provided partial derivatives and their sparsity pattern. Intended for
+    /// validation/replay comparisons; it is usually slower. Switching clears
+    /// cached factorizations so no provided derivative leaks into the reference.
+    pub fn set_numerical_jacobian(&mut self, enabled: bool) {
+        self.use_provided_jacobian = !enabled;
+        let n = self.state.len();
+        self.sparsity = if enabled { None } else { self.system.sparsity() }
+            .unwrap_or_else(|| Sparsity::new((0..n).map(|_| (0..n).collect()).collect()));
+        self.newton_cache = None;
     }
 
     /// Rate of the last accepted step (zero before the first).
@@ -446,6 +549,13 @@ impl<S: System> Simulation<S> {
     pub fn restore(&mut self, snapshot: &Snapshot) -> Result<(), DynamicsError> {
         if snapshot.state.len() != self.state.len() {
             return Err(DynamicsError::Dimension { expected: self.state.len(), actual: snapshot.state.len() });
+        }
+        // Retain the attempted work, but superseded future substeps no longer
+        // belong to the restored trajectory (including outer runtime retries).
+        for attempt in &mut self.implicit_attempts {
+            if attempt.committed == Some(true) && attempt.start_time + attempt.step > snapshot.time {
+                attempt.committed = Some(false);
+            }
         }
         self.time = snapshot.time;
         self.state.copy_from_slice(&snapshot.state);
@@ -657,39 +767,95 @@ impl<S: System> Simulation<S> {
                 actual: self.state.len(),
             });
         }
-        let mut remaining = h;
+        let end = self.time + h;
         let mut depth = 0;
-        while remaining > 0.0 {
+        let mut due_jumps = 0;
+        loop {
+            let mut scheduled = Vec::new();
+            self.system.scheduled_events(self.time, &self.state, &mut scheduled);
+            if scheduled.iter().any(|(_, deadline)| !deadline.is_finite()) {
+                return Err(DynamicsError::Schedule { time: self.time, reason: "non-finite deadline" });
+            }
+            scheduled.sort_by(|a, b| a.1.total_cmp(&b.1).then(a.0.cmp(&b.0)));
+            let roundoff = |deadline: f64| 64.0 * f64::EPSILON
+                * self.time.abs().max(deadline.abs()).max(h);
+            if let Some(&(guard, deadline)) = scheduled.first().filter(|(_, deadline)| *deadline <= self.time + roundoff(*deadline)) {
+                if due_jumps >= 1024 {
+                    return Err(DynamicsError::Schedule { time: self.time, reason: "clock did not advance" });
+                }
+                profile::JUMP.time(|| self.system.jump(guard, self.time, &mut self.state));
+                self.previous_rate.fill(0.0);
+                self.newton_cache = None;
+                self.events.push(Event { time: self.time, guard });
+                self.stats.events += 1;
+                due_jumps += 1;
+                let mut after = Vec::new();
+                self.system.scheduled_events(self.time, &self.state, &mut after);
+                if after.iter().any(|(i, next)| *i == guard && *next <= deadline) {
+                    return Err(DynamicsError::Schedule { time: self.time, reason: "jump must advance or remove its deadline" });
+                }
+                if self.halt_at_event { return Ok(()); }
+                continue;
+            }
+            let mut remaining = (end - self.time).max(0.0);
+            if remaining == 0.0 { break; }
+            if let Some(&(_, deadline)) = scheduled.first() {
+                // A clock at the requested endpoint within floating-point
+                // roundoff fires there. Splitting off its ulp-sized remainder
+                // would create an artificial, often singular implicit step.
+                if deadline < end - roundoff(end) {
+                    remaining = remaining.min(deadline - self.time);
+                }
+            }
+            let next = self.step_breakpoints.partition_point(|t| *t <= self.time + roundoff(*t));
+            if let Some(&boundary) = self.step_breakpoints.get(next) {
+                if boundary < end - roundoff(end) {
+                    remaining = remaining.min(boundary - self.time);
+                }
+            }
+            due_jumps = 0;
             self.guards_before.clear();
             profile::GUARDS.time(|| self.system.guards(self.time, &self.state, &mut self.guards_before));
             let mut candidate = self.state.clone();
+            let trial_audit_start = self.implicit_attempts.len();
             self.advance(self.time, remaining, &mut candidate)?;
             self.guards_after.clear();
             profile::GUARDS.time(|| self.system.guards(self.time + remaining, &candidate, &mut self.guards_after));
-            let crossing = self
+            let crossings: Vec<_> = self
                 .guards_before
                 .iter()
                 .zip(&self.guards_after)
-                .position(|(before, after)| *before >= 0.0 && *after < 0.0);
-            match crossing {
+                .enumerate()
+                .filter_map(|(i, (before, after))| (*before >= 0.0 && *after < 0.0 && !scheduled.iter().any(|(guard, _)| *guard == i)).then_some(i)).collect();
+            match crossings.first().copied() {
                 None => {
-                    self.commit(self.time + remaining, candidate)?;
-                    remaining = 0.0;
+                    self.commit_trial(self.time + remaining, candidate, trial_audit_start)?;
                 }
-                Some(guard) => {
+                Some(mut guard) => {
                     if trace_enabled() {
                         eprintln!("event guard {guard} at t={} h={remaining}: before {:?} after {:?} state {:?} candidate {:?}", self.time, self.guards_before, self.guards_after, &self.state[..self.state.len().min(9)], &candidate[..candidate.len().min(9)]);
                     }
                     // The trial steps of the search would each evict the
                     // step's factorisation for their own; keep it aside.
                     let kept = self.newton_cache.take();
-                    let dt = self.locate_event(guard, remaining);
+                    // Declaration order is not event order. Locate all guards
+                    // that crossed in this trial, then commit the earliest;
+                    // its jump may invalidate later crossings altogether.
+                    let dt = (|| {
+                        let mut first = self.locate_event(guard, remaining)?;
+                        for &other in &crossings[1..] {
+                            let candidate = self.locate_event(other, remaining)?;
+                            if candidate < first { first=candidate; guard=other; }
+                        }
+                        Ok::<f64,DynamicsError>(first)
+                    })();
                     self.newton_cache = kept;
                     let mut dt = dt?;
                     if dt > 0.0 {
                         let mut at_event = self.state.clone();
+                        let event_audit_start = self.implicit_attempts.len();
                         match self.advance(self.time, dt, &mut at_event) {
-                            Ok(()) => self.commit(self.time + dt, at_event)?,
+                            Ok(()) => self.commit_trial(self.time + dt, at_event, event_audit_start)?,
                             // A tolerance-sized step that will not converge
                             // (a rigid contact at a sample instant is too
                             // stiff for it): the event fires at the state
@@ -713,7 +879,7 @@ impl<S: System> Simulation<S> {
                     loop {
                         let mut now = Vec::new();
                         self.system.guards(time, &self.state, &mut now);
-                        let next = self.guards_before.iter().zip(&now).enumerate().position(|(k, (before, after))| *before >= 0.0 && *after < 0.0 && !fired.contains(&k));
+                        let next = self.guards_before.iter().zip(&now).enumerate().position(|(k, (before, after))| *before >= 0.0 && *after < 0.0 && !fired.contains(&k) && !scheduled.iter().any(|(guard, _)| *guard == k));
                         let Some(k) = next else { break };
                         if trace_enabled() {
                             eprintln!("simultaneous event guard {k} at t={time}");
@@ -731,12 +897,24 @@ impl<S: System> Simulation<S> {
                     if depth > 64 {
                         // Zeno accumulation: finish the step without further events.
                         let mut candidate = self.state.clone();
+                        let trial_audit_start = self.implicit_attempts.len();
                         self.advance(self.time, remaining, &mut candidate)?;
-                        self.commit(self.time + remaining, candidate)?;
-                        remaining = 0.0;
+                        self.commit_trial(self.time + remaining, candidate, trial_audit_start)?;
                     }
                 }
             }
+        }
+        Ok(())
+    }
+
+    fn commit_trial(&mut self, time: f64, state: Vec<f64>, audit_start: usize) -> Result<(), DynamicsError> {
+        self.commit(time, state)?;
+        // Only the successful leaves of THIS advance belong to its committed
+        // candidate. Earlier full-step/event-search trials stay uncommitted.
+        // If recursive subdivision fails after a successful prefix, no commit
+        // occurs and that prefix correctly remains uncommitted too.
+        for attempt in &mut self.implicit_attempts[audit_start..] {
+            if attempt.solve_succeeded { attempt.committed = Some(true); }
         }
         Ok(())
     }
@@ -766,74 +944,31 @@ impl<S: System> Simulation<S> {
     /// guard untouched (an escapement kick, a leg swap) then cannot re-fire
     /// on the same crossing.
     fn locate_event(&mut self, guard: usize, h: f64) -> Result<f64, DynamicsError> {
-        profile::LOCATE.time(|| self.locate_event_inner(guard, h))
+        let previous = self.locating_event;
+        self.locating_event = true;
+        let result = profile::LOCATE.time(|| self.locate_event_inner(guard, h));
+        self.locating_event = previous;
+        result
     }
 
     fn locate_event_inner(&mut self, guard: usize, h: f64) -> Result<f64, DynamicsError> {
-        let tolerance = self.event_tolerance;
-        // The shortest event step: the power-of-two fraction of the step
-        // just under the tolerance, as a bisection to that tolerance ends on.
-        let epsilon = h * 0.5_f64.powi((1.0 / tolerance).log2().ceil() as i32);
-        let (mut low, mut high) = (0.0, h);
-        let (mut f_low, mut f_high) = (self.guards_before[guard], self.guards_after[guard]);
-        // The step that ends at the event is kept short — a tolerance of
-        // the step when the guard is already on its crossing — because a
-        // committed rate lane holds the step's average rate, and a jump
-        // that samples a rate (a tachometer, a step-average sensor) must
-        // see the instant, not the mean of a whole step.
-        if f_low == 0.0 {
-            return Ok(epsilon);
-        }
-        // A guard is located either in time, to `tolerance` of the step,
-        // or in value, when it has shrunk to `tolerance` of its swing over
-        // the step: a clock guard is linear in time and the first secant
-        // lands on it exactly, where bisection would take twenty trials.
-        let band = tolerance * f_low.abs().max(f_high.abs());
+        let bracket = event_root::CrossingBracket {
+            duration: h, relative_tolerance: self.event_tolerance,
+            before: self.guards_before[guard], after: self.guards_after[guard],
+        };
         let mut scratch = vec![0.0; self.state.len()];
         let mut values = Vec::new();
-        // Regula falsi with the Illinois correction, falling back to the
-        // midpoint whenever the secant hugs an end of the bracket.
-        let mut side = 0i8;
-        let mut slow = 0u8;
-
-        while high - low > tolerance * h {
-            let width = high - low;
-            let secant = if f_low > 0.0 && f_high < 0.0 { low + width * f_low / (f_low - f_high) } else { low + 0.5 * width };
-            // The secant, held a tolerance inside the bracket so a crossing
-            // at the step's very start or end is settled by one trial; the
-            // midpoint whenever the secant has stopped shrinking the bracket.
-            let (inner_low, inner_high) = (low + epsilon, high - epsilon);
-            let mid = if slow >= 2 || inner_low >= inner_high { low + 0.5 * width } else { secant.clamp(inner_low, inner_high) };
+        event_root::locate_crossing(bracket, |dt| {
             scratch.copy_from_slice(&self.state);
-            self.advance(self.time, mid, &mut scratch)?;
+            self.advance(self.time, dt, &mut scratch)?;
             values.clear();
-            self.system.guards(self.time + mid, &scratch, &mut values);
-            let f = values[guard];
-            if f.abs() <= band || (f < 0.0 && mid - low <= tolerance * h) {
-                // On the crossing to within the band: commit just past it.
-                return Ok(if f < 0.0 { mid } else { (mid + epsilon).min(h) });
-            }
-            if f >= 0.0 && high - mid <= tolerance * h {
-                return Ok(high);
-            }
-            slow = if (if f >= 0.0 { high - mid } else { mid - low }) > 0.5 * width { slow + 1 } else { 0 };
-            if f >= 0.0 {
-                low = mid;
-                f_low = f;
-                if side == 1 {
-                    f_high *= 0.5;
-                }
-                side = 1;
-            } else {
-                high = mid;
-                f_high = f;
-                if side == -1 {
-                    f_low *= 0.5;
-                }
-                side = -1;
-            }
-        }
-        Ok(high)
+            self.system.guards(self.time + dt, &scratch, &mut values);
+            values.get(guard).copied().ok_or(DynamicsError::Schedule { time:self.time, reason:"guard layout changed during event location" })
+        }).map_err(|e| match e {
+            event_root::RootError::Evaluation(e) => e,
+            event_root::RootError::NonFiniteGuard => DynamicsError::NonFinite(self.time),
+            event_root::RootError::InvalidBracket => DynamicsError::Schedule { time:self.time, reason:"invalid event crossing bracket" },
+        })
     }
 
     fn advance(&mut self, t: f64, h: f64, x: &mut [f64]) -> Result<(), DynamicsError> {
@@ -853,14 +988,20 @@ impl<S: System> Simulation<S> {
                 // but L-stable, which is what a stiff constitutive kink needs.
                 let theta = if depth == 0 && matches!(self.integrator, Integrator::ImplicitMidpoint(_)) { 0.5 } else { 1.0 };
                 self.system.begin_step(h);
-                // The cached factorisation is only meaningful for the same
-                // rule and (to a part in ten thousand, which Newton's
-                // contraction test absorbs) the same step; otherwise fresh.
+                // Normally require the same rule and nearly identical step.
+                // The event-search experiment permits a nearby step, but the
+                // matrix remains stale: contraction/refresh checks still apply.
+                let step_tolerance = if self.locating_event && self.event_jacobian_reuse {0.1} else {1.0e-4};
+                let mut matrix_step = h;
                 let mut cache = match self.newton_cache.take() {
-                    Some((ch, ctheta, c)) if (ch - h).abs() <= 1.0e-4 * h && ctheta == theta => Some(c),
+                    Some((ch, ctheta, c)) if (ch - h).abs() <= step_tolerance * h && ctheta == theta => {
+                        matrix_step=ch;
+                        Some(c)
+                    },
                     _ => None,
                 };
-                let mut result = profile::IMPLICIT.time(|| implicit_step(&self.system, t, h, x, config, &self.previous_rate, theta, &self.sparsity, &self.algebraic, None, &mut cache));
+                let mut result = profile::IMPLICIT.time(|| implicit_step(&self.system, t, h, x, config, &self.previous_rate, theta, &self.sparsity, &self.algebraic, self.use_provided_jacobian, None, &mut cache, depth,
+                    (self.implicit_attempts.len() < self.attempt_limit).then_some(&mut self.implicit_attempts)));
                 if trace_enabled() {
                     if let Err(e) = &result { eprintln!("smooth attempt failed: {e}"); }
                 }
@@ -877,7 +1018,8 @@ impl<S: System> Simulation<S> {
                         x.copy_from_slice(&attempt);
                         // A branch is a different mode: no reuse across it.
                         cache = None;
-                        result = profile::IMPLICIT.time(|| implicit_step(&self.system, t, h, x, config, &self.previous_rate, 1.0, &self.sparsity, &self.algebraic, Some(&branch), &mut None));
+                        result = profile::IMPLICIT.time(|| implicit_step(&self.system, t, h, x, config, &self.previous_rate, 1.0, &self.sparsity, &self.algebraic, self.use_provided_jacobian, Some(&branch), &mut None, depth,
+                            (self.implicit_attempts.len() < self.attempt_limit).then_some(&mut self.implicit_attempts)));
                         if result.is_ok() {
                             self.stats.branch_restarts += 1;
                             break;
@@ -885,10 +1027,13 @@ impl<S: System> Simulation<S> {
                     }
                 }
                 match result {
-                    Ok(iterations) => {
+                    Ok((iterations, rebuilt)) => {
                         self.stats.max_newton_iterations = self.stats.max_newton_iterations.max(iterations);
                         if let Some(c) = cache {
-                            self.newton_cache = Some((h, theta, c));
+                            // Keep the step at which the matrix was actually
+                            // built, so successive small changes cannot drift
+                            // beyond the reuse bound without a refresh.
+                            self.newton_cache = Some((if rebuilt {h} else {matrix_step}, theta, c));
                         }
                         Ok(())
                     }
@@ -951,9 +1096,12 @@ fn implicit_step<S: System>(
     theta: f64,
     sparsity: &Sparsity,
     algebraic: &[bool],
+    use_provided_jacobian: bool,
     start: Option<&[f64]>,
     cache: &mut Option<JacobianCache>,
-) -> Result<usize, DynamicsError> {
+    subdivision_depth: u32,
+    audit: Option<&mut Vec<ImplicitAttempt>>,
+) -> Result<(usize, bool), DynamicsError> {
     let n = x.len();
     let old = x.to_vec();
     if trace_enabled() {
@@ -1005,12 +1153,20 @@ fn implicit_step<S: System>(
         let absolute = 1.0e-4 * (1.0 + (old[i] + value).abs());
         if algebraic[i] { (1.0 + (old[i] + value).abs()).max(absolute) } else { (h + value.abs()).max(absolute) }
     };
-    let diagnostics = solve_newton_cached(&mut u, config, residual, |next, base, jacobian| {
+    let mut newton_audit = audit.as_ref().map(|_| sim_solve::NewtonAudit::default());
+    let capture_linearization = audit.is_some();
+    let mut last_linearization = None;
+    let mut rebuilt = false;
+    let diagnostics = solve_newton_cached_audited(&mut u, config, residual, |next, base, jacobian| {
+        rebuilt = true;
+        if capture_linearization {
+            last_linearization = Some(ImplicitLinearization { increment:next.to_vec(), residual:base.to_vec() });
+        }
         let mut mid = vec![0.0; n];
         let mut rate = vec![0.0; n];
         stage(next, &mut mid, &mut rate);
         parts.clear();
-        if system.jacobian(t + theta * h, &mid, &rate, &mut parts) {
+        if use_provided_jacobian && system.jacobian(t + theta * h, &mid, &rate, &mut parts) {
             // `d(mid)/du` is θ for differential unknowns and 1 for algebraic
             // ones; `d(rate)/du` is 1/h.
             for (r, c, v) in &parts.d_dx {
@@ -1029,12 +1185,23 @@ fn implicit_step<S: System>(
                 system.residual(t + theta * h, &mid, &rate, out);
             });
         }
-    }, &step_scale, cache)
-    .map_err(|source| DynamicsError::Solve { time: t, source })?;
+    }, &step_scale, cache, newton_audit.as_mut());
+    if let Some(audit) = audit {
+        let mut stage_state = vec![0.0; n];
+        let mut stage_rate = vec![0.0; n];
+        stage(&u, &mut stage_state, &mut stage_rate);
+        let mut residual = vec![0.0; n];
+        system.residual(t + theta * h, &stage_state, &stage_rate, &mut residual);
+        audit.push(ImplicitAttempt { start_time:t, step:h, theta, stage_time:t + theta*h,
+            subdivision_depth, branch:start.is_some(), solve_succeeded:diagnostics.is_ok(), committed:Some(false),
+            error:diagnostics.as_ref().err().map(ToString::to_string), initial_state:old.clone(),
+            stage_state, stage_rate, residual, newton:newton_audit.unwrap(), last_linearization });
+    }
+    let diagnostics = diagnostics.map_err(|source| DynamicsError::Solve { time: t, source })?;
     for i in 0..n {
         x[i] = old[i] + u[i];
     }
-    Ok(diagnostics.iterations)
+    Ok((diagnostics.iterations,rebuilt))
 }
 
 #[cfg(test)]

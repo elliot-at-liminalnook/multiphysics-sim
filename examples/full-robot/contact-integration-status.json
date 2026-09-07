@@ -1,0 +1,617 @@
+{
+  "version": 1,
+  "scope": "Accepted-contact-stage diagnostics for the experimental reduced motor path. No force law, timestep tolerance, motor command or physical model was changed. Full learning goal remains active.",
+  "source": {
+    "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "scene_path": "runs/full-robot/solver-performance/bracket-option-off.scene.json",
+    "scene_sha256": "f54321e4d94266c8cc184e4ecc9d6436ce08b1cd48bf230949f65e37e6f875ac"
+  },
+  "boundaries": "Twelve CAD MotorUnit components, prescribed 0 V short-circuit braking and 293.15 K; original contact/joint friction and experimental ideal geometric closure. No driver/firmware/controller/sampled sensors/thermal evolution.",
+  "cases": [
+    {
+      "name": "coarse",
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-contact-audit-coarse.json",
+        "sha256": "daf917614a159e3d098330bdb6b569c7b116b9aaa07659dff345731a4aade389"
+      },
+      "configuration": {
+        "path": "examples/full-robot/mechanical-contact-audit-coarse.json",
+        "sha256": "9429b9e32cd283409877654f55f235321be0fba1eaf8c316a5c93869c1e4805b"
+      },
+      "completed": true,
+      "simulated_s": 0.1,
+      "step_s": 0.0005,
+      "accepted_segments": 248,
+      "recorded_segments": 248,
+      "contact_impulses": {
+        "committed_steps": 248,
+        "contacts": [
+          {
+            "active_step_duration_s": 0.006000000000000002,
+            "impulse_ns": [
+              0.00025174869369319993,
+              0.0009107815758165069,
+              0.00009408927554038822
+            ],
+            "link": 9,
+            "other": 8,
+            "peak_stage_force_n": 0.26206417033720397
+          },
+          {
+            "active_step_duration_s": 0.07280493235305116,
+            "impulse_ns": [
+              -0.3389877725628433,
+              0.0016449306393998978,
+              2.0182294440759554
+            ],
+            "link": 11,
+            "other": null,
+            "peak_stage_force_n": 199.77605255217324
+          },
+          {
+            "active_step_duration_s": 0.04400000000000004,
+            "impulse_ns": [
+              0.32449330338354637,
+              0.0010549254504877005,
+              1.8815630907660588
+            ],
+            "link": 25,
+            "other": null,
+            "peak_stage_force_n": 259.2559936181434
+          }
+        ],
+        "end_time_s": 0.1,
+        "notes": [
+          "Linear impulse in world axes: sum of stage contact force times committed substep duration.",
+          "Backward Euler uses endpoint force; implicit midpoint uses midpoint force. This is method-consistent quadrature, not an exact continuous impulse.",
+          "Rejected candidates, event-search probes and superseded local commits are excluded. Unknown or incomplete coverage is rejected.",
+          "No torsional contact moment or work/energy integral is included. Contact-event duration is not located continuously."
+        ],
+        "start_time_s": 0
+      },
+      "contact_names": [
+        {
+          "link": 9,
+          "name": "+X | Worm and input spindle 3a48",
+          "other": 8,
+          "other_name": "+X | Hip output shaft and pulley b6c0"
+        },
+        {
+          "link": 11,
+          "name": "+X | Sliding foot crosshead",
+          "other": null,
+          "other_name": "floor"
+        },
+        {
+          "link": 25,
+          "name": "-X | Sliding foot crosshead",
+          "other": null,
+          "other_name": "floor"
+        }
+      ],
+      "parity": {
+        "path": "runs/full-robot/learning/contact-audit-coarse-parity.json",
+        "sha256": "2622f3718ef20260dc4e961073d010b9f3dd269a62bcc4635cf1ad2627a1ec6a",
+        "exact_frames": true,
+        "exact_terminal_frame": true,
+        "exact_event_schedule": true
+      },
+      "plus_x_accepted_contact_spans_before_30ms": [
+        [
+          0.0015,
+          0.018500000000000003
+        ],
+        [
+          0.02,
+          0.028
+        ]
+      ]
+    },
+    {
+      "name": "refined",
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-contact-audit-refined.json",
+        "sha256": "8c51f9e8c2cb560f5750b3c1578dccf1b7399eff77cc0dbd9401b5de21bfbc67"
+      },
+      "configuration": {
+        "path": "examples/full-robot/mechanical-contact-audit-refined.json",
+        "sha256": "39212bb7d8109ad312707e4379ddd800c88dc8ae161113c1e00fbf299d45e209"
+      },
+      "completed": true,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "accepted_segments": 465,
+      "recorded_segments": 465,
+      "contact_impulses": {
+        "committed_steps": 465,
+        "contacts": [
+          {
+            "active_step_duration_s": 0.007250000000000008,
+            "impulse_ns": [
+              0.00019368309192476237,
+              0.001337076912032152,
+              0.00013831884425110602
+            ],
+            "link": 9,
+            "other": 8,
+            "peak_stage_force_n": 0.2631540863354368
+          },
+          {
+            "active_step_duration_s": 0.06200686602229171,
+            "impulse_ns": [
+              -0.3410209771950394,
+              0.001881638008913107,
+              2.065162593795701
+            ],
+            "link": 11,
+            "other": null,
+            "peak_stage_force_n": 209.54307002815182
+          },
+          {
+            "active_step_duration_s": 0.004500000000000004,
+            "impulse_ns": [
+              0.0001961972454886709,
+              -0.00006558861385498291,
+              0.0000355144013004035
+            ],
+            "link": 15,
+            "other": 28,
+            "peak_stage_force_n": 0.06742528093346188
+          },
+          {
+            "active_step_duration_s": 0.03114647581041298,
+            "impulse_ns": [
+              0.24947135052938513,
+              0.0011280593994060938,
+              1.8137364147543522
+            ],
+            "link": 25,
+            "other": null,
+            "peak_stage_force_n": 285.5718443420444
+          }
+        ],
+        "end_time_s": 0.1,
+        "notes": [
+          "Linear impulse in world axes: sum of stage contact force times committed substep duration.",
+          "Backward Euler uses endpoint force; implicit midpoint uses midpoint force. This is method-consistent quadrature, not an exact continuous impulse.",
+          "Rejected candidates, event-search probes and superseded local commits are excluded. Unknown or incomplete coverage is rejected.",
+          "No torsional contact moment or work/energy integral is included. Contact-event duration is not located continuously."
+        ],
+        "start_time_s": 0
+      },
+      "contact_names": [
+        {
+          "link": 9,
+          "name": "+X | Worm and input spindle 3a48",
+          "other": 8,
+          "other_name": "+X | Hip output shaft and pulley b6c0"
+        },
+        {
+          "link": 11,
+          "name": "+X | Sliding foot crosshead",
+          "other": null,
+          "other_name": "floor"
+        },
+        {
+          "link": 15,
+          "name": "+Y | Hip motor pulley and shaft 125c",
+          "other": 28,
+          "other_name": "Robot | Chassis and hip mounts"
+        },
+        {
+          "link": 25,
+          "name": "-X | Sliding foot crosshead",
+          "other": null,
+          "other_name": "floor"
+        }
+      ],
+      "parity": {
+        "path": "runs/full-robot/learning/contact-audit-refined-parity.json",
+        "sha256": "b7b7296d54d2728941ba12f65f7156eed85db90df20632e85808c88b9cd39796",
+        "exact_frames": true,
+        "exact_terminal_frame": true,
+        "exact_event_schedule": true
+      },
+      "plus_x_accepted_contact_spans_before_30ms": [
+        [
+          0.00175,
+          0.0175
+        ],
+        [
+          0.0225,
+          0.02925
+        ]
+      ]
+    },
+    {
+      "name": "quarter",
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-contact-audit-quarter.json",
+        "sha256": "69184c94dbb50da1b73de066640d2f0fe44214c3b80e80489a7b4528fafb7453"
+      },
+      "configuration": {
+        "path": "examples/full-robot/mechanical-contact-audit-quarter.json",
+        "sha256": "a47bb0c0e68eb331b54da54116622a329653ce67aa6d5624aeda27eb60bc307e"
+      },
+      "completed": true,
+      "simulated_s": 0.1,
+      "step_s": 0.000125,
+      "accepted_segments": 870,
+      "recorded_segments": 870,
+      "contact_impulses": {
+        "committed_steps": 870,
+        "contacts": [
+          {
+            "active_step_duration_s": 0.006249999999999998,
+            "impulse_ns": [
+              0.00013036524331236173,
+              0.0005850754117409898,
+              0.00006112102409142735
+            ],
+            "link": 9,
+            "other": 8,
+            "peak_stage_force_n": 0.26282864749235385
+          },
+          {
+            "active_step_duration_s": 0.05756250000000005,
+            "impulse_ns": [
+              -0.3264679188998757,
+              0.0018976998939026699,
+              2.0485212570665188
+            ],
+            "link": 11,
+            "other": null,
+            "peak_stage_force_n": 212.3119691015962
+          },
+          {
+            "active_step_duration_s": 0.010875000000000018,
+            "impulse_ns": [
+              0.001807486873214765,
+              -0.0007529945588677826,
+              0.0003181798830175697
+            ],
+            "link": 15,
+            "other": 28,
+            "peak_stage_force_n": 0.4721231472366612
+          },
+          {
+            "active_step_duration_s": 0.018875000000000017,
+            "impulse_ns": [
+              0.19627718653200774,
+              0.0012337729334377997,
+              1.816773647212017
+            ],
+            "link": 25,
+            "other": null,
+            "peak_stage_force_n": 306.25021525553313
+          }
+        ],
+        "end_time_s": 0.1,
+        "notes": [
+          "Linear impulse in world axes: sum of stage contact force times committed substep duration.",
+          "Backward Euler uses endpoint force; implicit midpoint uses midpoint force. This is method-consistent quadrature, not an exact continuous impulse.",
+          "Rejected candidates, event-search probes and superseded local commits are excluded. Unknown or incomplete coverage is rejected.",
+          "No torsional contact moment or work/energy integral is included. Contact-event duration is not located continuously."
+        ],
+        "start_time_s": 0
+      },
+      "contact_names": [
+        {
+          "link": 9,
+          "name": "+X | Worm and input spindle 3a48",
+          "other": 8,
+          "other_name": "+X | Hip output shaft and pulley b6c0"
+        },
+        {
+          "link": 11,
+          "name": "+X | Sliding foot crosshead",
+          "other": null,
+          "other_name": "floor"
+        },
+        {
+          "link": 15,
+          "name": "+Y | Hip motor pulley and shaft 125c",
+          "other": 28,
+          "other_name": "Robot | Chassis and hip mounts"
+        },
+        {
+          "link": 25,
+          "name": "-X | Sliding foot crosshead",
+          "other": null,
+          "other_name": "floor"
+        }
+      ],
+      "parity": {
+        "path": "runs/full-robot/learning/contact-audit-quarter-parity.json",
+        "sha256": "58e122f42d6e1535cdb54d861ddbd4ac18a7125c23bd5837cb9c23322914b031",
+        "exact_frames": true,
+        "exact_terminal_frame": true,
+        "exact_event_schedule": true
+      },
+      "plus_x_accepted_contact_spans_before_30ms": [
+        [
+          0.00175,
+          0.01725
+        ],
+        [
+          0.023875,
+          0.0305
+        ]
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "path": "runs/full-robot/learning/contact-audit-refinement-comparison.json",
+      "sha256": "201d7b54e4e05f87c8e39807ddf128602c02cb54638cd30234cd39295f027e39",
+      "total": [
+        {
+          "candidate_ns": [
+            0.00025174869369319993,
+            0.0009107815758165069,
+            0.00009408927554038822
+          ],
+          "difference_norm_ns": 0.00043249922836494954,
+          "link": 9,
+          "other": 8,
+          "reference_ns": [
+            0.00019368309192476237,
+            0.001337076912032152,
+            0.00013831884425110602
+          ]
+        },
+        {
+          "candidate_ns": [
+            -0.3389877725628433,
+            0.0016449306393998978,
+            2.0182294440759554
+          ],
+          "difference_norm_ns": 0.046977765954451495,
+          "link": 11,
+          "other": null,
+          "reference_ns": [
+            -0.3410209771950394,
+            0.001881638008913107,
+            2.065162593795701
+          ]
+        },
+        {
+          "candidate_ns": [
+            0,
+            0,
+            0
+          ],
+          "difference_norm_ns": 0.00020989639850289463,
+          "link": 15,
+          "other": 28,
+          "reference_ns": [
+            0.0001961972454886709,
+            -0.00006558861385498291,
+            0.0000355144013004035
+          ]
+        },
+        {
+          "candidate_ns": [
+            0.32449330338354637,
+            0.0010549254504877005,
+            1.8815630907660588
+          ],
+          "difference_norm_ns": 0.10113731624590147,
+          "link": 25,
+          "other": null,
+          "reference_ns": [
+            0.24947135052938513,
+            0.0011280593994060938,
+            1.8137364147543522
+          ]
+        }
+      ],
+      "first_window_above_localization_threshold_0_01_ns": {
+        "differences": [
+          {
+            "candidate_ns": [
+              -0.006392927469783609,
+              -0.0000167336202093615,
+              0.008251298786317729
+            ],
+            "difference_norm_ns": 0.0104380905010949,
+            "link": 11,
+            "other": null,
+            "reference_ns": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "end_s": 0.022,
+        "start_s": 0.02,
+        "max_floor_difference_ns": 0.0104380905010949
+      },
+      "maximum_floor_window_difference": {
+        "differences": [
+          {
+            "candidate_ns": [
+              -0.013224418458469727,
+              0.0003194747224734044,
+              0.05370578571097431
+            ],
+            "difference_norm_ns": 0.10015138642957264,
+            "link": 11,
+            "other": null,
+            "reference_ns": [
+              -0.03982881415987888,
+              0.00026640035144249774,
+              0.15025889812191406
+            ]
+          },
+          {
+            "candidate_ns": [
+              -0.013614214439878449,
+              -0.000024232114015094737,
+              0.01501167996988449
+            ],
+            "difference_norm_ns": 0.21245640160206783,
+            "link": 25,
+            "other": null,
+            "reference_ns": [
+              0.050640955478057866,
+              0.00014448801944565265,
+              0.21751838912795862
+            ]
+          }
+        ],
+        "end_s": 0.066,
+        "start_s": 0.064,
+        "max_floor_difference_ns": 0.21245640160206783
+      },
+      "note": "The 0.01 N s cutoff localizes changes; it is not a task acceptance threshold."
+    },
+    {
+      "path": "runs/full-robot/learning/contact-audit-quarter-comparison.json",
+      "sha256": "442f90eb705ed5a84e5135a94b65310adb63e6f531dc2cbbd3efd3eb625a5fb6",
+      "total": [
+        {
+          "candidate_ns": [
+            0.00019368309192476237,
+            0.001337076912032152,
+            0.00013831884425110602
+          ],
+          "difference_norm_ns": 0.000758600626041442,
+          "link": 9,
+          "other": 8,
+          "reference_ns": [
+            0.00013036524331236173,
+            0.0005850754117409898,
+            0.00006112102409142735
+          ]
+        },
+        {
+          "candidate_ns": [
+            -0.3410209771950394,
+            0.001881638008913107,
+            2.065162593795701
+          ],
+          "difference_norm_ns": 0.022107144814756403,
+          "link": 11,
+          "other": null,
+          "reference_ns": [
+            -0.3264679188998757,
+            0.0018976998939026699,
+            2.0485212570665188
+          ]
+        },
+        {
+          "candidate_ns": [
+            0.0001961972454886709,
+            -0.00006558861385498291,
+            0.0000355144013004035
+          ],
+          "difference_norm_ns": 0.0017744523020388663,
+          "link": 15,
+          "other": 28,
+          "reference_ns": [
+            0.001807486873214765,
+            -0.0007529945588677826,
+            0.0003181798830175697
+          ]
+        },
+        {
+          "candidate_ns": [
+            0.24947135052938513,
+            0.0011280593994060938,
+            1.8137364147543522
+          ],
+          "difference_norm_ns": 0.053280906896683466,
+          "link": 25,
+          "other": null,
+          "reference_ns": [
+            0.19627718653200774,
+            0.0012337729334377997,
+            1.816773647212017
+          ]
+        }
+      ],
+      "first_window_above_localization_threshold_0_01_ns": {
+        "differences": [
+          {
+            "candidate_ns": [
+              -0.008836105373930557,
+              -0.000019348270240376638,
+              0.009481802324849029
+            ],
+            "difference_norm_ns": 0.012969863160275033,
+            "link": 11,
+            "other": null,
+            "reference_ns": [
+              0.00002343010798330627,
+              1.3919424736820458e-7,
+              0.000009442445721938606
+            ]
+          }
+        ],
+        "end_s": 0.024,
+        "start_s": 0.022,
+        "max_floor_difference_ns": 0.012969863160275033
+      },
+      "maximum_floor_window_difference": {
+        "differences": [
+          {
+            "candidate_ns": [
+              0,
+              0,
+              0
+            ],
+            "difference_norm_ns": 0.006303657417700269,
+            "link": 11,
+            "other": null,
+            "reference_ns": [
+              0.005714109165934599,
+              -0.00003217669601262523,
+              0.002661581849153534
+            ]
+          },
+          {
+            "candidate_ns": [
+              0,
+              0,
+              0
+            ],
+            "difference_norm_ns": 0.2622346956941552,
+            "link": 25,
+            "other": null,
+            "reference_ns": [
+              0.056671359750704364,
+              0.00006696701183405613,
+              0.2560378646318387
+            ]
+          }
+        ],
+        "end_s": 0.07200000000000001,
+        "start_s": 0.07,
+        "max_floor_difference_ns": 0.2622346956941552
+      },
+      "note": "The 0.01 N s cutoff localizes changes; it is not a task acceptance threshold."
+    }
+  ],
+  "verification": {
+    "embedded_motor_native": 5,
+    "embedded_motor_no_default": 5,
+    "contact_audit_unit": 3,
+    "runtime_session": 18,
+    "comparison_example": 2,
+    "wasm": "cargo check --locked -p sim-web --target wasm32-unknown-unknown passes; existing unused rotor_speed warning"
+  },
+  "source_snapshot": {
+    "path": "runs/full-robot/learning/contact-source-manifest.json",
+    "sha256": "69501da56c9aa1c59cf595798011a312353a1d6ed8d4d54a0eab628b223903d5"
+  },
+  "limits": [
+    "Impulse uses accepted backward-Euler endpoint force times duration; it is not exact continuous quadrature.",
+    "Contact durations and spans use stage presence; no continuous ground-contact event timing is inferred.",
+    "Original contact points expose force but no separate torsional couple. Force moment, angular impulse and work/energy are not integrated.",
+    "Similar whole-run upward impulse does not establish correct traction, force timing, foot-placement, balance, stepping or physical accuracy.",
+    "Timings with instrumentation are diagnostic, not a performance promotion. Raw runs and capture binary are ignored local artifacts."
+  ],
+  "next": "Inspect recontact and coupled motor/contact states in the 22–24 ms window and later -X contacts; complete shared actuator/control/sensor coupling for controlled task tests. Planner, teacher RL, distillation, robust training and viewable walking remain outstanding."
+}

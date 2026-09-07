@@ -1,0 +1,22 @@
+{
+  "scene": "runs/full-robot/learning/corrected-thigh-hip-grids.scene.json",
+  "config": "examples/full-robot/mechanical-servo-load-16mm-lift-5mm.json",
+  "bounds_from": "examples/full-robot/single-foot-marker-motion-load-16mm-lift-5mm.json",
+  "controller_source": "examples/interactive/controllers/joint-reference-feedback.rhai",
+  "policy_period_s": 0.002,
+  "gains": [
+    0.0,
+    0.5
+  ],
+  "input": {
+    "name": "command.tracking_gain",
+    "kind": "Dimensionless",
+    "lower": 0.0,
+    "upper": 0.5
+  },
+  "observation_source": "ideal_joint_state_diagnostics",
+  "scope": "Uncalibrated outer joint tracking correction. Software command bounds reuse the explicitly provisional planner search envelope, intersected by the runtime with CAD joint limits. They are not measured travel stops. This experiment does not implement balance, landing control, hardware sensor bindings or learned walking.",
+  "refine_gains": [
+    0.5
+  ]
+}

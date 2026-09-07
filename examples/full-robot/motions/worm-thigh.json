@@ -1,0 +1,29 @@
+{
+  "name": "+X worm drives thigh",
+  "duration": 8,
+  "loop": true,
+  "tracks": [
+    {
+      "joint": "+X | Worm servo output",
+      "unit": "deg",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          150
+        ],
+        [
+          6,
+          -150
+        ],
+        [
+          8,
+          0
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,495 @@
+{
+  "version": 1,
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "option": "embedding.direct_closure_jacobian",
+  "default_enabled": false,
+  "physical_equations_changed": false,
+  "all_original_rows_and_rank_checks_retained": true,
+  "training_ready": false,
+  "realtime": false,
+  "sweep": {
+    "samples": 41,
+    "amplitude_rad": 0.05,
+    "initial_coordinates": [
+      0.0,
+      -8.346418847292681e-05,
+      0.0,
+      0.0,
+      -0.27612813350949833,
+      0.0,
+      0.0,
+      -8.346425388696227e-05,
+      0.0,
+      0.0,
+      -7.650604473797781e-05,
+      0.0
+    ],
+    "maximum_scaled_derivative_difference": 1.6653345369377348e-15,
+    "scope": "Original velocity-basis reference on 41 prescribed CAD-derived states; not a swept collision or hardware limit certificate"
+  },
+  "trajectory_comparisons": [
+    {
+      "case": "coarse",
+      "completed": true,
+      "simulated_s": 0.1,
+      "wall_s": 7.675916826999997,
+      "accepted_segments": 406,
+      "maximum_marker_difference_m": 3.393006007042754e-16,
+      "sampled_differences": {
+        "current_a": 2.1910251390977464e-13,
+        "gear_speed_rad_s": 2.542688282147765e-13,
+        "heating_w": 3.105293799876563e-13,
+        "joint_positions": 2.8448855142297613e-15,
+        "joint_velocities": 1.327164940445602e-12,
+        "motor_states": 2.542688282147765e-13,
+        "motor_voltage_v": 1.9832469000391484e-12,
+        "power_difference_w": 1.8596235662471372e-15,
+        "servo_commands": 1.7965490206606205e-13,
+        "servo_states": 7.902567489281864e-13,
+        "shaft_torque_nm": 1.1877825112360796e-13,
+        "supply_current_a": 3.431976924872515e-14
+      },
+      "same_contacting_parts_in_all_accepted_stages": true,
+      "maximum_accepted_contact_force_difference_n": 4.585072419585553e-11,
+      "maximum_accepted_stage_time_difference_s": 3.712980443937308e-14,
+      "same_event_counts": true,
+      "maximum_ordered_event_time_difference_s": 3.712308238590367e-14,
+      "maximum_floor_impulse_window_difference_ns": 1.2033992472771102e-13,
+      "maximum_sampled_original_closure": {
+        "position": 1.9212409441138334e-13,
+        "velocity": 2.5335636366641268e-15,
+        "acceleration": 4.575784195992583e-13
+      }
+    },
+    {
+      "case": "refined",
+      "completed": true,
+      "simulated_s": 0.1,
+      "wall_s": 14.070618739999999,
+      "accepted_segments": 807,
+      "maximum_marker_difference_m": 5.018952332261882e-14,
+      "sampled_differences": {
+        "current_a": 9.98456872736142e-11,
+        "gear_speed_rad_s": 2.873501991906835e-10,
+        "heating_w": 3.365815404166028e-10,
+        "joint_positions": 1.444067955491679e-12,
+        "joint_velocities": 3.458084374408088e-10,
+        "motor_states": 2.873501991906835e-10,
+        "motor_voltage_v": 6.671077024122951e-10,
+        "power_difference_w": 2.2058466164764923e-12,
+        "servo_commands": 6.039774236299422e-11,
+        "servo_states": 3.046715657539778e-10,
+        "shaft_torque_nm": 1.0729653623919866e-10,
+        "supply_current_a": 2.63849012083206e-11
+      },
+      "same_contacting_parts_in_all_accepted_stages": true,
+      "maximum_accepted_contact_force_difference_n": 1.3009742371322081e-08,
+      "maximum_accepted_stage_time_difference_s": 3.263531805908215e-11,
+      "same_event_counts": true,
+      "maximum_ordered_event_time_difference_s": 3.263531805908215e-11,
+      "maximum_floor_impulse_window_difference_ns": 8.175254039730538e-12,
+      "maximum_sampled_original_closure": {
+        "position": 9.814371537686384e-13,
+        "velocity": 1.2400670768020206e-14,
+        "acceleration": 7.69007080236861e-12
+      }
+    }
+  ],
+  "unprofiled_benchmark": {
+    "cpu": "Intel Core i9-9980HK @ 2.40GHz, 8 physical / 16 logical cores",
+    "compiler": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "simulated_s": 0.1,
+    "pairs": [
+      {
+        "repeat": 1,
+        "order": [
+          "off",
+          "on"
+        ],
+        "off_wall_s": 19.62756227700001,
+        "on_wall_s": 7.410387480999998,
+        "paired_speedup": 2.648655327042542
+      },
+      {
+        "repeat": 2,
+        "order": [
+          "on",
+          "off"
+        ],
+        "off_wall_s": 20.061991635000005,
+        "on_wall_s": 7.578550315000001,
+        "paired_speedup": 2.647207025239629
+      },
+      {
+        "repeat": 3,
+        "order": [
+          "off",
+          "on"
+        ],
+        "off_wall_s": 19.98317962199999,
+        "on_wall_s": 7.433479362000004,
+        "paired_speedup": 2.688267317207355
+      }
+    ],
+    "median_paired_speedup": 2.648655327042542,
+    "repeat_trajectories_identical_per_method": true,
+    "note": "Sequential same-executable runs with timers disabled; desktop/thermal conditions are not controlled."
+  },
+  "profiles": {
+    "off": {
+      "wall_s": 19.84763544500001,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0.0
+        },
+        {
+          "calls": 434,
+          "name": "newton calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "newton iterations",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "fresh jacobians",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "stale full-step refreshes",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3614,
+          "name": "residual evaluations",
+          "seconds": 5.373650122
+        },
+        {
+          "calls": 495,
+          "name": "jacobian assembly",
+          "seconds": 14.109355955000002
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "factorisation",
+          "seconds": 0.021868888000000003
+        },
+        {
+          "calls": 495,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.002292922
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "back-substitution",
+          "seconds": 0.013027578000000001
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 13419,
+          "name": "embedded closure mapping",
+          "seconds": 15.689189464000002
+        },
+        {
+          "calls": 13019,
+          "name": "embedded contact history",
+          "seconds": 1.794945766
+        },
+        {
+          "calls": 13419,
+          "name": "embedded dynamics preparation",
+          "seconds": 1.773806046
+        },
+        {
+          "calls": 37118,
+          "name": "embedded applied force solve",
+          "seconds": 0.117363593
+        },
+        {
+          "calls": 36718,
+          "name": "embedded component equations",
+          "seconds": 0.26562815100000003
+        },
+        {
+          "calls": 30720,
+          "name": "  closure Jacobian",
+          "seconds": 13.318384931
+        },
+        {
+          "calls": 30720,
+          "name": "  closure factorization",
+          "seconds": 1.1020131050000002
+        },
+        {
+          "calls": 30720,
+          "name": "    closure SVD",
+          "seconds": 0.712846387
+        }
+      ],
+      "timer_transparency_verified": true
+    },
+    "on": {
+      "wall_s": 7.502218306,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0.0
+        },
+        {
+          "calls": 434,
+          "name": "newton calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "newton iterations",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "fresh jacobians",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "stale full-step refreshes",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3614,
+          "name": "residual evaluations",
+          "seconds": 1.981016155
+        },
+        {
+          "calls": 495,
+          "name": "jacobian assembly",
+          "seconds": 5.314325481
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "factorisation",
+          "seconds": 0.021779047000000003
+        },
+        {
+          "calls": 495,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.0023074550000000004
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "back-substitution",
+          "seconds": 0.012594691000000002
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 13419,
+          "name": "embedded closure mapping",
+          "seconds": 3.432794255
+        },
+        {
+          "calls": 13019,
+          "name": "embedded contact history",
+          "seconds": 1.7282340230000002
+        },
+        {
+          "calls": 13419,
+          "name": "embedded dynamics preparation",
+          "seconds": 1.752232486
+        },
+        {
+          "calls": 37118,
+          "name": "embedded applied force solve",
+          "seconds": 0.118651926
+        },
+        {
+          "calls": 36718,
+          "name": "embedded component equations",
+          "seconds": 0.26573382100000004
+        },
+        {
+          "calls": 30720,
+          "name": "  closure Jacobian",
+          "seconds": 1.045999657
+        },
+        {
+          "calls": 30720,
+          "name": "  closure factorization",
+          "seconds": 1.113919888
+        },
+        {
+          "calls": 30720,
+          "name": "    closure SVD",
+          "seconds": 0.7204982980000001
+        }
+      ],
+      "timer_transparency_verified": true
+    }
+  },
+  "refinement_remaining": {
+    "maximum_marker_difference_m": 0.00023515319784248698,
+    "maximum_servo_duty_difference": 0.09099843431592637,
+    "interpretation": "The implementation change preserves the pre-existing timestep sensitivity; this is not calibration or improved physical accuracy."
+  },
+  "validation": {
+    "native_robot_tests": 37,
+    "no_default_robot_tests": 37,
+    "comparator_tests": 3,
+    "wasm_runtime_compile": true,
+    "ci_includes_no_default_constraint_audit": true
+  },
+  "remaining_work": [
+    "Reduce repeated complete residual/Jacobian work and share contact preparation where dependencies are unchanged.",
+    "Establish loaded tracking, operating range and task acceptance against calibrated evidence.",
+    "Complete planner, observation contract, teacher/student learning, bounded robustness training and viewable walking."
+  ],
+  "artifacts_sha256": {
+    "runs/full-robot/learning/direct-closure-sweep.json": "e99a2b1b2728953a09e4fd8c206d4d81528dd3bef4af9c9a44733d04d790a1e9",
+    "runs/full-robot/learning/direct-closure-coarse.json": "e44bdefd66a53bede6080b5af704400766ad349a08054d7f94057055c6ec0a4c",
+    "runs/full-robot/learning/direct-closure-refined.json": "c7effb8efece9e14c601fce237dbdc3425925e912d7c12233b5d0c8674270c41",
+    "runs/full-robot/learning/direct-closure-coarse-comparison.json": "8d03303e79c079df707ea1a2a57e5f2169529fc90e49fed78188685ba6db8eec",
+    "runs/full-robot/learning/direct-closure-refined-comparison.json": "3f4bfbcccc7c8625d96d5fc178453594c822e3f412eb177fb0ebfc2c885ca6eb",
+    "runs/full-robot/learning/direct-closure-refinement.json": "9dfd78b472b4bac3a0d94240ace804ccbccc5338c836072cec87c49851200776",
+    "runs/full-robot/learning/closure-profile-off.json": "cbd59a51833b7d1bdf86d06c3e4546f5e6a6415d4f493b4033a250425c4f229c",
+    "runs/full-robot/learning/closure-profile-on.json": "f8a709ee5435d2b5f174fa587d409c3419fe2c8f51dec4221befb3efdbf3af41",
+    "runs/full-robot/learning/closure-profile-comparison.json": "39b27c5b1912036c8af9d23f57669c7f08580b6826955cfe6b32e8e188c2b113",
+    "runs/full-robot/learning/direct-closure-source-manifest.json": "256586fd712600a6e8a3ed69a5fed923bca8847bad5c927cbbcd75b5c52fab62",
+    "runs/full-robot/learning/servo-regularized-floor.scene.json": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2",
+    "runs/full-robot/learning/closure-benchmark-1-off.json": "8c1e01b1b3aec57e8c071bd8b86f5f5689261dfd2434bcd08533cfeeb297cbe2",
+    "runs/full-robot/learning/closure-benchmark-1-on.json": "2171c5836cc581f3dcd7fb2b63d075abd314d3c8646a47ee57a8341f7bc820e4",
+    "runs/full-robot/learning/closure-benchmark-2-off.json": "602cc6094b0156206bcfb96178e27476b05cf443b1d3e7b7bfa3c3ee090d5c0b",
+    "runs/full-robot/learning/closure-benchmark-2-on.json": "2987072883581d5ce588f6f9b0c26cff4c7201b28cb9fb43a06293908c809c4e",
+    "runs/full-robot/learning/closure-benchmark-3-off.json": "d2972efc273e423e45aa6033166ab85cae08aff9c0f43f3df859cce9b7f73f33",
+    "runs/full-robot/learning/closure-benchmark-3-on.json": "4701adc6886ccb1a36fae0ba405c64679749482f8cd9ab296ae0334e58aad518",
+    "examples/full-robot/direct-closure-sweep.json": "73ffeb24be23e2fe6d6c3a5cab8017ed2f48e1cd281f35835609e15bedd79854",
+    "examples/full-robot/mechanical-servo-direct-closure-coarse.json": "a8707a512c5c651f8a2f5a78612b7a3fd2744e59f270817ecaa56594433bd25e",
+    "examples/full-robot/mechanical-servo-direct-closure-refined.json": "d2fddbf0161a4ea447a6b6269bf8d3a96b473df0335fbe46cb8034db4c352bf3",
+    "examples/full-robot/mechanical-servo-closure-profile-off.json": "a137a3a7f3030c070cf3503c4720ef7a504f348b7df9708b8c8f22ee78745d04",
+    "examples/full-robot/mechanical-servo-closure-profile-on.json": "e726e3818373b97dbeabbf388a057ea5b835f764ec5affd6a61971c6f4ad2b63",
+    "examples/full-robot/mechanical-servo-prepared-coarse.json": "3e122784601ca03776a2a4434f150cb7e4a35844b7f206d0ab1fb062a77533d7",
+    "examples/full-robot/mechanical-servo-prepared-refined.json": "55a9f7c661e21e6df4d12819a6007ddada1a3e5406d58942e22c293c7b42c7a0"
+  }
+}

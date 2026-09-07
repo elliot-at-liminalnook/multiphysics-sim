@@ -1,0 +1,276 @@
+{
+  "version": 1,
+  "scope": "Contact-coupled servo sensitivity diagnosis; not a calibrated friction model, realtime claim or a walking result.",
+  "source": {
+    "scene": {
+      "path": "runs/full-robot/solver-performance/bracket-option-off.scene.json",
+      "sha256": "f54321e4d94266c8cc184e4ecc9d6436ce08b1cd48bf230949f65e37e6f875ac"
+    },
+    "contact_disabled_scene": {
+      "path": "runs/full-robot/learning/servo-no-contact.scene.json",
+      "sha256": "34224b3bb0d89b5030f39f4cc57b76640b7da2ff604981e2d3c01168f99a06a2"
+    },
+    "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "integrator_source": {
+      "path": "runs/full-robot/learning/servo-source-manifest.json",
+      "sha256": "52af2f03166bad92501c8cbf9b1b5abf27cd6a1f8c72059f3ba6026dbbfa2daa"
+    },
+    "configuration": {
+      "path": "examples/full-robot/mechanical-servo-worm-target.json",
+      "sha256": "093e1141e4ddc0312a82932792ad193406ef3c38bc392543f81ee7947bfe6d38"
+    },
+    "refined_configuration": {
+      "path": "examples/full-robot/mechanical-servo-worm-target-refined.json",
+      "sha256": "fdb2e1030401ea7e78c7c640fd1c900f998a6e8da20f0753671436b02ca0a006"
+    }
+  },
+  "cases": [
+    {
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-servo-worm-target.json",
+        "sha256": "da492a03e78865a05802a3c5d13eb9581ffbbff6dd3adb31fa1d8166b8cdcdd7"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "contact": true,
+      "stepping_wall_s": 68.55286903900007
+    },
+    {
+      "artifact": {
+        "path": "runs/full-robot/learning/mechanical-servo-worm-target-refined.json",
+        "sha256": "4f53fda3aa14b79c8b230c128f8cdd066b539375d707140722ae3f122024f9da"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.000125,
+      "contact": true,
+      "stepping_wall_s": 82.4587201969998
+    },
+    {
+      "artifact": {
+        "path": "runs/full-robot/learning/servo-no-contact-coarse.json",
+        "sha256": "e8f4b01075009ce4e5840fe2bdfe87904851b41b50b4c420b392fb05f2630493"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "contact": false,
+      "stepping_wall_s": 11.266855398000002
+    },
+    {
+      "artifact": {
+        "path": "runs/full-robot/learning/servo-no-contact-refined.json",
+        "sha256": "66cb4fb4176b66f3277cb3a5a80d29486656fe76fca18605b8523d67e4048a8c"
+      },
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.000125,
+      "contact": false,
+      "stepping_wall_s": 21.060080491000004
+    }
+  ],
+  "matched_target_ablation": {
+    "only_scene_change": "options.contact true -> false",
+    "motor_experiment_identical": true,
+    "contact_on": {
+      "comparison": {
+        "path": "runs/full-robot/learning/servo-contact-on-command-comparison.json",
+        "sha256": "deb660e98c494b923f5188e266672bd94455437f94c769710e8a30eae2a89c15"
+      },
+      "markers": [
+        {
+          "id": "+X-foot-surface",
+          "maximum_error_m": 0.0005161486810419632,
+          "rms_error_m": 0.00031123796979059187,
+          "worst_time_s": 0.088
+        },
+        {
+          "id": "+Y-foot-surface",
+          "maximum_error_m": 0.00038887450610355294,
+          "rms_error_m": 0.00014978231006888785,
+          "worst_time_s": 0.056
+        },
+        {
+          "id": "-X-foot-surface",
+          "maximum_error_m": 0.0007970424963855264,
+          "rms_error_m": 0.00040040495613337374,
+          "worst_time_s": 0.044
+        },
+        {
+          "id": "-Y-foot-surface",
+          "maximum_error_m": 0.0003925027656783122,
+          "rms_error_m": 0.00015075634584095382,
+          "worst_time_s": 0.056
+        }
+      ],
+      "maximum_sampled_differences": {
+        "current_a": 0.574168907435946,
+        "gear_speed_rad_s": 3.7175687819211114,
+        "heating_w": 4.890170286807907,
+        "joint_positions": 0.009411043207294238,
+        "joint_velocities": 6.378812429128148,
+        "motor_states": 3.7175687819211114,
+        "motor_voltage_v": 6.0583087774745135,
+        "power_difference_w": 0.03315901043094449,
+        "servo_commands": 0.547611676529185,
+        "servo_states": 3.954062344097302,
+        "shaft_torque_nm": 0.46523334711546604,
+        "supply_current_a": 0.5315646405895049
+      }
+    },
+    "contact_off": {
+      "comparison": {
+        "path": "runs/full-robot/learning/servo-contact-off-command-comparison.json",
+        "sha256": "c92a7b803104267efff4ea6b1a6000d0888914406adaba524e80b9d130115832"
+      },
+      "markers": [
+        {
+          "id": "+X-foot-surface",
+          "maximum_error_m": 0.00006145439616621488,
+          "rms_error_m": 0.00003570046964312764,
+          "worst_time_s": 0.1
+        },
+        {
+          "id": "+Y-foot-surface",
+          "maximum_error_m": 0.00006172635983793049,
+          "rms_error_m": 0.00003577139026811941,
+          "worst_time_s": 0.1
+        },
+        {
+          "id": "-X-foot-surface",
+          "maximum_error_m": 0.00005803884012291126,
+          "rms_error_m": 0.00003377586574212057,
+          "worst_time_s": 0.1
+        },
+        {
+          "id": "-Y-foot-surface",
+          "maximum_error_m": 0.00006178407099527932,
+          "rms_error_m": 0.00003580542547724794,
+          "worst_time_s": 0.1
+        }
+      ],
+      "maximum_sampled_differences": {
+        "current_a": 0.022691872334872062,
+        "gear_speed_rad_s": 0.03144769165251334,
+        "heating_w": 0.04074178736388759,
+        "joint_positions": 0.0002315767324072189,
+        "joint_velocities": 0.005475622511301681,
+        "motor_states": 0.03144769165251334,
+        "motor_voltage_v": 0.20231195891628062,
+        "power_difference_w": 0.00023256251505104908,
+        "servo_commands": 0.0182296980222732,
+        "servo_states": 0.018513152967611538,
+        "shaft_torque_nm": 0.0010770069623514088,
+        "supply_current_a": 0.0021328407706159985
+      }
+    },
+    "interpretation": "Contact-coupled response is substantially more timestep-sensitive in these short runs. Removing contact changes loads, modes and computational work; it does not isolate friction from normal impact or establish a usable walking model."
+  },
+  "hold_floor_force_ratios": {
+    "comparison": {
+      "path": "runs/full-robot/learning/servo-contact-diagnosis-comparison.json",
+      "sha256": "0cfa6151c13e7c1b2a54d3a41d730f9af00009c264d7be9804b232dfbf43c453"
+    },
+    "candidate": [
+      {
+        "endpoint_time_s": 0.05075,
+        "link": 11,
+        "maximum_ratio": 11.48182343159707,
+        "normal_force_n": 2.64416061767202,
+        "qualifying_steps": 346,
+        "step_s": 0.0002500000000000002,
+        "tangential_force_n": 30.35978533689278
+      },
+      {
+        "endpoint_time_s": 0.0495,
+        "link": 25,
+        "maximum_ratio": 24.908637218092526,
+        "normal_force_n": 0.3455732414440189,
+        "qualifying_steps": 232,
+        "step_s": 0.0002500000000000002,
+        "tangential_force_n": 8.607758503409364
+      }
+    ],
+    "minimum_normal_force_n": 0.1,
+    "reference": [
+      {
+        "endpoint_time_s": 0.073375,
+        "link": 11,
+        "maximum_ratio": 20.88074575182461,
+        "normal_force_n": 0.10034078787737655,
+        "qualifying_steps": 587,
+        "step_s": 0.0001250000000000001,
+        "tangential_force_n": 2.0951904802052645
+      },
+      {
+        "endpoint_time_s": 0.0375,
+        "link": 25,
+        "maximum_ratio": 57.05856670173675,
+        "normal_force_n": 0.9897786175468513,
+        "qualifying_steps": 344,
+        "step_s": 0.0001250000000000001,
+        "tangential_force_n": 56.475349269249804
+      }
+    ],
+    "scope": "Patch resultant |F_xy|/F_z for current world-Z floor law, excluding internal contacts and loads below the stated reporting cutoff. Not a calibrated coefficient, torsional capacity or an acceptance gate.",
+    "material_limits": [
+      {
+        "link": 11,
+        "name": "+X | Sliding foot crosshead",
+        "material": "nylon",
+        "declared_world_friction": {
+          "static": 0.3,
+          "kinetic": 0.25
+        }
+      },
+      {
+        "link": 25,
+        "name": "-X | Sliding foot crosshead",
+        "material": "nylon",
+        "declared_world_friction": {
+          "static": 0.3,
+          "kinetic": 0.25
+        }
+      }
+    ],
+    "interpretation": "Large transient patch force ratios exceed the nominal 0.3 static/0.25 kinetic parameters. Current bristle damping/history dynamics, unloading and normal-force evolution require targeted physical validation; this does not prove a single cause for all trajectory disagreement."
+  },
+  "factor_reuse": {
+    "source": {
+      "path": "runs/full-robot/learning/factor-reuse-source-manifest.json",
+      "sha256": "0dd23a3fe984d2548eba3d0585b1b2c74c6655e50b908788a1f1637bdcdc65e0"
+    },
+    "artifact": {
+      "path": "runs/full-robot/learning/servo-factor-reuse-hold.json",
+      "sha256": "04abe652b09110b83f725e88a1042eb84d90df060ac98eb6aafd7eda21b8778e"
+    },
+    "comparison": {
+      "path": "runs/full-robot/learning/servo-factor-reuse-comparison.json",
+      "sha256": "8f1d2df231d8b0d5f7440585cb6e2889bb84f4a43efc4118a8a1561203687921"
+    },
+    "exact_frames": true,
+    "exact_terminal_frame": true,
+    "exact_event_schedule": true,
+    "new_wall_s": 73.52681148100001,
+    "old_wall_s": 74.67519374900003,
+    "scope": "One unchanged closure Jacobian factorization shared by velocity and acceleration solves. SVD rank checks remain; no cross-pose reuse. Single timing difference is small and not a robust speedup claim."
+  },
+  "penetration_reporting_fix": {
+    "regression": "At fixed 0.0001 m overlap and -0.5 m/s vertical speed, old output was 0.00011 m. Test fails before fix and passes after.",
+    "scope": "Reports geometric depth instead of damping-dependent force/stiffness. Force law unchanged; earlier raw captures retain legacy penetration telemetry."
+  },
+  "tests": {
+    "native_embedding_step_motor": 24,
+    "no_default_embedding_step_motor": 24,
+    "articulated": 9,
+    "contact_audit": 4,
+    "comparison": 3,
+    "wasm_compile": "passed; existing unused rotor_speed warning",
+    "ci": "Browser/native workflow runs all articulated tests including geometric floor penetration regression."
+  }
+}

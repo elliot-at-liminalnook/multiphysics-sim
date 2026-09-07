@@ -1,0 +1,1920 @@
+{
+  "scope": "Numerical robustness and diagnostic actuator tracking; no realtime, hardware accuracy, walking or learning acceptance claim.",
+  "clock_fix": "Registered ServoFirmware deadlines anchored to phase and integer tick recovered from transactional state.",
+  "rate_option": {
+    "name": "implicit.auxiliary_rate_unknowns",
+    "default": false,
+    "description": "Original component residuals evaluated with rate unknowns and endpoint state old+h*rate. Scales and residual tolerances unchanged."
+  },
+  "source_manifests": [
+    "runs/full-robot/learning/servo-clock-source-manifest.json",
+    "runs/full-robot/learning/auxiliary-rates-source-manifest.json"
+  ],
+  "loading_override": {
+    "base": "runs/full-robot/learning/servo-regularized-floor.scene.json",
+    "derived": "runs/full-robot/learning/knee-motion-zero-gravity-no-contact.scene.json",
+    "changes": {
+      "robot.gravity": [
+        0,
+        0,
+        0
+      ],
+      "options.contact": false
+    }
+  },
+  "runs": {
+    "clock-slow": {
+      "completed": true,
+      "completed_steps": 5600,
+      "requested_steps": 5600,
+      "simulated_s": 1.4000000000000001,
+      "error": null,
+      "step_s": 0.00025,
+      "stepping_wall_s": 63.813262692999814,
+      "capture": "runs/full-robot/learning/knee-motion-clock-slow.json",
+      "event_counts": {
+        "2": 1,
+        "3": 1,
+        "5": 1,
+        "6": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "16": 2,
+        "17": 1,
+        "20": 1,
+        "21": 1,
+        "23": 1,
+        "24": 1,
+        "26": 1,
+        "29": 1,
+        "30": 1,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1400,
+        "37": 1400,
+        "38": 1400,
+        "39": 1400,
+        "40": 1400,
+        "41": 1400,
+        "42": 1400,
+        "43": 1400,
+        "44": 1400,
+        "45": 1400,
+        "46": 1400,
+        "47": 1400
+      },
+      "servo_guard_offset": 36,
+      "accepted_segments": 5610,
+      "minimum_accepted_step_s": 1.4060043010716905e-05,
+      "maximum_auxiliary_residual_in_successful_trials": 5.737378627745926e-11,
+      "accepted_internal_contact_samples": 0,
+      "minus_y_return_sample": {
+        "time_s": 0.98,
+        "target_deg": -6.79673333065671,
+        "actual_deg": -9.688635324174953,
+        "target_minus_actual_deg": 2.8919019935182426,
+        "phase": "45% through commanded return"
+      },
+      "maximum_body_relative_marker_tracking_m": 0.0015591491950916693,
+      "tracking_report": "runs/full-robot/learning/knee-motion-clock-slow-tracking.json",
+      "process": {
+        "exit_code": 0,
+        "elapsed_s": 65.872082884,
+        "args": [
+          "runs/full-robot/learning/servo-clock-source/bin/integrate_embedding",
+          "runs/full-robot/learning/servo-regularized-floor.scene.json",
+          "examples/full-robot/mechanical-servo-knee-motion-slow.json"
+        ]
+      }
+    },
+    "clock-coarse": {
+      "completed": true,
+      "completed_steps": 4000,
+      "requested_steps": 4000,
+      "simulated_s": 1.0,
+      "error": null,
+      "step_s": 0.00025,
+      "stepping_wall_s": 51.507583352999966,
+      "capture": "runs/full-robot/learning/knee-motion-clock-coarse.json",
+      "event_counts": {
+        "2": 1,
+        "3": 1,
+        "5": 1,
+        "6": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "16": 2,
+        "17": 1,
+        "20": 1,
+        "21": 1,
+        "23": 1,
+        "24": 1,
+        "26": 1,
+        "29": 1,
+        "30": 1,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "servo_guard_offset": 36,
+      "accepted_segments": 4010,
+      "minimum_accepted_step_s": 2.492856820413003e-06,
+      "maximum_auxiliary_residual_in_successful_trials": 5.737378627745926e-11,
+      "accepted_internal_contact_samples": 0,
+      "minus_y_return_sample": {
+        "time_s": 0.6900000000000001,
+        "target_deg": -6.796733330656704,
+        "actual_deg": -10.500200839987997,
+        "target_minus_actual_deg": 3.703467509331293,
+        "phase": "45% through commanded return"
+      },
+      "process": {
+        "exit_code": 0,
+        "elapsed_s": 53.088092651,
+        "args": [
+          "runs/full-robot/learning/servo-clock-source/bin/integrate_embedding",
+          "runs/full-robot/learning/servo-regularized-floor.scene.json",
+          "examples/full-robot/mechanical-servo-knee-motion-coarse.json"
+        ]
+      }
+    },
+    "clock-zero-gravity-no-contact": {
+      "completed": false,
+      "completed_steps": 961,
+      "requested_steps": 4000,
+      "simulated_s": 0.24025,
+      "error": "step 961: hybrid advancement at 0.24044929004289003 with step 0.000000792343079843074: hybrid guard 34 location: Evaluation(\"implicit mechanical solve: Newton did not converge after 11 iterations; residual=4.919453297348264e-10; last rejected endpoint: None\")",
+      "step_s": 0.00025,
+      "stepping_wall_s": 3.277734725999999,
+      "capture": "runs/full-robot/learning/knee-motion-clock-zero-gravity-no-contact.json",
+      "event_counts": {
+        "2": 1,
+        "5": 1,
+        "7": 1,
+        "8": 1,
+        "11": 1,
+        "14": 1,
+        "17": 1,
+        "20": 1,
+        "23": 1,
+        "26": 1,
+        "29": 1,
+        "32": 1,
+        "35": 1,
+        "36": 240,
+        "37": 240,
+        "38": 240,
+        "39": 240,
+        "40": 240,
+        "41": 240,
+        "42": 240,
+        "43": 240,
+        "44": 240,
+        "45": 240,
+        "46": 240,
+        "47": 240
+      },
+      "servo_guard_offset": 36,
+      "accepted_segments": 962,
+      "minimum_accepted_step_s": 9.663798014274991e-05,
+      "maximum_auxiliary_residual_in_successful_trials": 2.3107099567099e-11,
+      "accepted_internal_contact_samples": 0,
+      "process": {
+        "exit_code": 1,
+        "elapsed_s": 4.033247993999993,
+        "args": [
+          "runs/full-robot/learning/servo-clock-source/bin/integrate_embedding",
+          "runs/full-robot/learning/knee-motion-zero-gravity-no-contact.scene.json",
+          "examples/full-robot/mechanical-servo-knee-motion-coarse.json"
+        ]
+      }
+    },
+    "rates-zero-coarse": {
+      "completed": true,
+      "completed_steps": 4000,
+      "requested_steps": 4000,
+      "simulated_s": 1.0,
+      "error": null,
+      "step_s": 0.00025,
+      "stepping_wall_s": 39.26832191400005,
+      "capture": "runs/full-robot/learning/knee-motion-rates-zero-coarse.json",
+      "event_counts": {
+        "2": 1,
+        "5": 1,
+        "6": 15,
+        "7": 2,
+        "8": 1,
+        "11": 1,
+        "14": 1,
+        "15": 1,
+        "16": 2,
+        "17": 1,
+        "20": 1,
+        "23": 1,
+        "24": 13,
+        "25": 2,
+        "26": 1,
+        "29": 1,
+        "32": 1,
+        "33": 13,
+        "34": 2,
+        "35": 1,
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "servo_guard_offset": 36,
+      "accepted_segments": 4050,
+      "minimum_accepted_step_s": 5.5565183136139923e-08,
+      "maximum_auxiliary_residual_in_successful_trials": 2.117750419472486e-13,
+      "accepted_internal_contact_samples": 0,
+      "minus_y_return_sample": {
+        "time_s": 0.6900000000000001,
+        "target_deg": -6.796733330656704,
+        "actual_deg": -9.676991136670456,
+        "target_minus_actual_deg": 2.8802578060137516,
+        "phase": "45% through commanded return"
+      },
+      "maximum_body_relative_marker_tracking_m": 0.0012110366800325279,
+      "tracking_report": "runs/full-robot/learning/knee-motion-rates-zero-coarse-tracking.json",
+      "process": {
+        "exit_code": 0,
+        "elapsed_s": 40.926065127,
+        "args": [
+          "runs/full-robot/learning/auxiliary-rates-source/bin/integrate_embedding",
+          "runs/full-robot/learning/knee-motion-zero-gravity-no-contact.scene.json",
+          "examples/full-robot/mechanical-servo-knee-motion-rates-coarse.json"
+        ]
+      }
+    },
+    "rates-zero-refined": {
+      "completed": true,
+      "completed_steps": 8000,
+      "requested_steps": 8000,
+      "simulated_s": 1.0,
+      "error": null,
+      "step_s": 0.000125,
+      "stepping_wall_s": 39.63713459699999,
+      "capture": "runs/full-robot/learning/knee-motion-rates-zero-refined.json",
+      "event_counts": {
+        "2": 1,
+        "5": 1,
+        "6": 15,
+        "7": 2,
+        "8": 1,
+        "11": 1,
+        "14": 1,
+        "15": 3,
+        "16": 2,
+        "17": 1,
+        "20": 1,
+        "23": 1,
+        "24": 15,
+        "25": 2,
+        "26": 1,
+        "29": 1,
+        "32": 1,
+        "33": 15,
+        "34": 2,
+        "35": 1,
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "servo_guard_offset": 36,
+      "accepted_segments": 8056,
+      "minimum_accepted_step_s": 5.4934002904713014e-08,
+      "maximum_auxiliary_residual_in_successful_trials": 4.631850458736153e-13,
+      "accepted_internal_contact_samples": 0,
+      "minus_y_return_sample": {
+        "time_s": 0.6900000000000001,
+        "target_deg": -6.796733330656704,
+        "actual_deg": -9.678123408371908,
+        "target_minus_actual_deg": 2.881390077715204,
+        "phase": "45% through commanded return"
+      },
+      "maximum_body_relative_marker_tracking_m": 0.0012110411081856965,
+      "tracking_report": "runs/full-robot/learning/knee-motion-rates-zero-refined-tracking.json",
+      "process": {
+        "exit_code": 0,
+        "elapsed_s": 40.576217477000014,
+        "args": [
+          "runs/full-robot/learning/auxiliary-rates-source/bin/integrate_embedding",
+          "runs/full-robot/learning/knee-motion-zero-gravity-no-contact.scene.json",
+          "examples/full-robot/mechanical-servo-knee-motion-rates-refined.json"
+        ]
+      }
+    },
+    "rates-loaded-coarse": {
+      "completed": true,
+      "completed_steps": 4000,
+      "requested_steps": 4000,
+      "simulated_s": 1.0,
+      "error": null,
+      "step_s": 0.00025,
+      "stepping_wall_s": 65.2024451709999,
+      "capture": "runs/full-robot/learning/knee-motion-rates-loaded-coarse.json",
+      "event_counts": {
+        "2": 1,
+        "3": 1,
+        "5": 1,
+        "6": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "16": 2,
+        "17": 1,
+        "20": 1,
+        "21": 1,
+        "23": 1,
+        "24": 1,
+        "26": 1,
+        "29": 1,
+        "30": 1,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "servo_guard_offset": 36,
+      "accepted_segments": 4011,
+      "minimum_accepted_step_s": 3.7363506877018116e-06,
+      "maximum_auxiliary_residual_in_successful_trials": 2.9579116933575733e-13,
+      "accepted_internal_contact_samples": 0,
+      "minus_y_return_sample": {
+        "time_s": 0.6900000000000001,
+        "target_deg": -6.796733330656704,
+        "actual_deg": -10.50010502510992,
+        "target_minus_actual_deg": 3.7033716944532173,
+        "phase": "45% through commanded return"
+      },
+      "maximum_body_relative_marker_tracking_m": 0.0017657488592399575,
+      "tracking_report": "runs/full-robot/learning/knee-motion-rates-loaded-coarse-tracking.json",
+      "process": {
+        "exit_code": 0,
+        "elapsed_s": 66.95271244,
+        "args": [
+          "runs/full-robot/learning/auxiliary-rates-source/bin/integrate_embedding",
+          "runs/full-robot/learning/servo-regularized-floor.scene.json",
+          "examples/full-robot/mechanical-servo-knee-motion-rates-coarse.json"
+        ]
+      }
+    },
+    "rates-loaded-refined": {
+      "completed": true,
+      "completed_steps": 8000,
+      "requested_steps": 8000,
+      "simulated_s": 1.0,
+      "error": null,
+      "step_s": 0.000125,
+      "stepping_wall_s": 71.08938124100008,
+      "capture": "runs/full-robot/learning/knee-motion-rates-loaded-refined.json",
+      "event_counts": {
+        "2": 1,
+        "3": 1,
+        "5": 1,
+        "6": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "16": 2,
+        "17": 1,
+        "20": 1,
+        "21": 1,
+        "23": 1,
+        "24": 1,
+        "26": 1,
+        "29": 1,
+        "30": 1,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1000,
+        "37": 1000,
+        "38": 1000,
+        "39": 1000,
+        "40": 1000,
+        "41": 1000,
+        "42": 1000,
+        "43": 1000,
+        "44": 1000,
+        "45": 1000,
+        "46": 1000,
+        "47": 1000
+      },
+      "servo_guard_offset": 36,
+      "accepted_segments": 8010,
+      "minimum_accepted_step_s": 2.6910113646409772e-06,
+      "maximum_auxiliary_residual_in_successful_trials": 4.228561945041065e-13,
+      "accepted_internal_contact_samples": 0,
+      "minus_y_return_sample": {
+        "time_s": 0.6900000000000001,
+        "target_deg": -6.796733330656704,
+        "actual_deg": -10.50327933223476,
+        "target_minus_actual_deg": 3.7065460015780554,
+        "phase": "45% through commanded return"
+      },
+      "maximum_body_relative_marker_tracking_m": 0.0018046445134731093,
+      "tracking_report": "runs/full-robot/learning/knee-motion-rates-loaded-refined-tracking.json",
+      "process": {
+        "exit_code": 0,
+        "elapsed_s": 72.59837290000002,
+        "args": [
+          "runs/full-robot/learning/auxiliary-rates-source/bin/integrate_embedding",
+          "runs/full-robot/learning/servo-regularized-floor.scene.json",
+          "examples/full-robot/mechanical-servo-knee-motion-rates-refined.json"
+        ]
+      }
+    },
+    "rates-loaded-slow": {
+      "completed": true,
+      "completed_steps": 5600,
+      "requested_steps": 5600,
+      "simulated_s": 1.4000000000000001,
+      "error": null,
+      "step_s": 0.00025,
+      "stepping_wall_s": 70.57261910199988,
+      "capture": "runs/full-robot/learning/knee-motion-rates-loaded-slow.json",
+      "event_counts": {
+        "2": 1,
+        "3": 1,
+        "5": 1,
+        "6": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "14": 1,
+        "15": 1,
+        "16": 2,
+        "17": 1,
+        "20": 1,
+        "21": 1,
+        "23": 1,
+        "24": 1,
+        "26": 1,
+        "29": 1,
+        "30": 1,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1400,
+        "37": 1400,
+        "38": 1400,
+        "39": 1400,
+        "40": 1400,
+        "41": 1400,
+        "42": 1400,
+        "43": 1400,
+        "44": 1400,
+        "45": 1400,
+        "46": 1400,
+        "47": 1400
+      },
+      "servo_guard_offset": 36,
+      "accepted_segments": 5611,
+      "minimum_accepted_step_s": 3.7363506877018116e-06,
+      "maximum_auxiliary_residual_in_successful_trials": 2.9579116933575733e-13,
+      "accepted_internal_contact_samples": 0,
+      "minus_y_return_sample": {
+        "time_s": 0.98,
+        "target_deg": -6.79673333065671,
+        "actual_deg": -9.688325039650111,
+        "target_minus_actual_deg": 2.8915917089934022,
+        "phase": "45% through commanded return"
+      },
+      "maximum_body_relative_marker_tracking_m": 0.001559153095988462,
+      "tracking_report": "runs/full-robot/learning/knee-motion-rates-loaded-slow-tracking.json",
+      "process": {
+        "exit_code": 0,
+        "elapsed_s": 71.81491251999998,
+        "args": [
+          "runs/full-robot/learning/auxiliary-rates-source/bin/integrate_embedding",
+          "runs/full-robot/learning/servo-regularized-floor.scene.json",
+          "examples/full-robot/mechanical-servo-knee-motion-rates-slow.json"
+        ]
+      }
+    }
+  },
+  "comparisons": {
+    "clock": {
+      "report": "runs/full-robot/learning/knee-motion-clock-comparison.json",
+      "maximum_world_marker_difference_m": 4.577566819509541e-16,
+      "maximum_sampled_differences": {
+        "current_a": 3.602629305987648e-11,
+        "gear_speed_rad_s": 1.0703277153467639e-09,
+        "heating_w": 2.423173606214135e-10,
+        "joint_positions": 6.521259227065812e-13,
+        "joint_velocities": 2.6737582148328443e-09,
+        "motor_states": 1.0703277153467639e-09,
+        "motor_voltage_v": 4.771525397018195e-10,
+        "power_difference_w": 5.585532036889163e-13,
+        "servo_commands": 4.314901214108602e-11,
+        "servo_states": 6.697968291113909e-10,
+        "shaft_torque_nm": 1.4452534221470748e-11,
+        "supply_current_a": 1.394964699308332e-11
+      },
+      "contact_pair_mismatch_samples": 0,
+      "event_counts": [
+        {
+          "candidate_count": 1,
+          "guard": 2,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 3,
+          "maximum_ordered_time_difference_s": 1.5584755708175635e-14,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 5,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 6,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 8,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 11,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 12,
+          "maximum_ordered_time_difference_s": 3.0878077872387166e-16,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 14,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 15,
+          "maximum_ordered_time_difference_s": 6.143308084460841e-12,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 2,
+          "guard": 16,
+          "maximum_ordered_time_difference_s": 4.996003610813204e-16,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 17,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 20,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 21,
+          "maximum_ordered_time_difference_s": 4.2049697057677804e-15,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 23,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 24,
+          "maximum_ordered_time_difference_s": 1.502270530195915e-15,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 26,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 29,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 30,
+          "maximum_ordered_time_difference_s": 2.858824288409778e-15,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 32,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 33,
+          "maximum_ordered_time_difference_s": 8.81239525796218e-16,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 35,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 36,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 37,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 38,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 39,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 40,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 41,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 42,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 43,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 44,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 45,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 46,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 47,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        }
+      ]
+    },
+    "rates-loaded-coarse-vs-state": {
+      "report": "runs/full-robot/learning/knee-motion-rates-loaded-coarse-vs-state-comparison.json",
+      "maximum_world_marker_difference_m": 1.6048529475419848e-06,
+      "maximum_sampled_differences": {
+        "current_a": 0.023092032914729454,
+        "gear_speed_rad_s": 0.013993808595956357,
+        "heating_w": 0.029626137244940537,
+        "joint_positions": 3.0088320399777185e-05,
+        "joint_velocities": 0.006246505548398021,
+        "motor_states": 0.023092032914729454,
+        "motor_voltage_v": 0.19522793589483023,
+        "power_difference_w": 0.00021093928152182695,
+        "servo_commands": 0.017588214667320412,
+        "servo_states": 0.01761225901922127,
+        "shaft_torque_nm": 0.0014758234618257593,
+        "supply_current_a": 0.002278143995489923
+      },
+      "contact_pair_mismatch_samples": 0,
+      "event_counts": [
+        {
+          "candidate_count": 1,
+          "guard": 2,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 3,
+          "maximum_ordered_time_difference_s": 0.0002037092786035255,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 5,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 6,
+          "maximum_ordered_time_difference_s": 3.995634975124257e-06,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 8,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 11,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 12,
+          "maximum_ordered_time_difference_s": 4.574569859808891e-05,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 14,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 15,
+          "maximum_ordered_time_difference_s": 2.8361846670654778e-06,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 2,
+          "guard": 16,
+          "maximum_ordered_time_difference_s": 2.05606590681362e-05,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 17,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 20,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 21,
+          "maximum_ordered_time_difference_s": 0.0003584090498204989,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 23,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 24,
+          "maximum_ordered_time_difference_s": 3.121880263120061e-05,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 26,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 29,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 30,
+          "maximum_ordered_time_difference_s": 0.0002552702428714887,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 32,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 33,
+          "maximum_ordered_time_difference_s": 0.00013516755868928435,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 35,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 36,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 37,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 38,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 39,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 40,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 41,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 42,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 43,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 44,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 45,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 46,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 47,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        }
+      ]
+    },
+    "rates-loaded-refined-vs-state": {
+      "report": "runs/full-robot/learning/knee-motion-rates-loaded-refined-vs-state-comparison.json",
+      "maximum_world_marker_difference_m": 4.112942341567362e-14,
+      "maximum_sampled_differences": {
+        "current_a": 3.058508273034999e-10,
+        "gear_speed_rad_s": 1.6620027576408347e-10,
+        "heating_w": 3.918126934010502e-11,
+        "joint_positions": 2.3051929939552074e-11,
+        "joint_velocities": 2.4212224031261442e-09,
+        "motor_states": 3.058508273034999e-10,
+        "motor_voltage_v": 2.84527805483048e-09,
+        "power_difference_w": 2.1652910584327167e-13,
+        "servo_commands": 2.577090615560329e-10,
+        "servo_states": 1.2540118214665608e-09,
+        "shaft_torque_nm": 3.173123222510732e-11,
+        "supply_current_a": 4.668133934959684e-12
+      },
+      "contact_pair_mismatch_samples": 0,
+      "event_counts": [
+        {
+          "candidate_count": 1,
+          "guard": 2,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 3,
+          "maximum_ordered_time_difference_s": 3.800577907941971e-12,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 5,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 6,
+          "maximum_ordered_time_difference_s": 5.300621053194732e-14,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 8,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 11,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 12,
+          "maximum_ordered_time_difference_s": 4.925157504054312e-13,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 14,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 15,
+          "maximum_ordered_time_difference_s": 6.307177002895514e-13,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 2,
+          "guard": 16,
+          "maximum_ordered_time_difference_s": 4.121147867408581e-10,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 17,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 20,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 21,
+          "maximum_ordered_time_difference_s": 3.300804074513053e-12,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 23,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 24,
+          "maximum_ordered_time_difference_s": 1.015111258939605e-11,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 26,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 29,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 30,
+          "maximum_ordered_time_difference_s": 1.1090191265328286e-11,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 32,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 33,
+          "maximum_ordered_time_difference_s": 1.2011350247753683e-11,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 35,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 36,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 37,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 38,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 39,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 40,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 41,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 42,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 43,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 44,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 45,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 46,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 47,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1000
+        }
+      ]
+    },
+    "rates-loaded-slow-vs-state": {
+      "report": "runs/full-robot/learning/knee-motion-rates-loaded-slow-vs-state-comparison.json",
+      "maximum_world_marker_difference_m": 1.6048529475419848e-06,
+      "maximum_sampled_differences": {
+        "current_a": 0.023190784943734083,
+        "gear_speed_rad_s": 0.08337384724905361,
+        "heating_w": 0.058152451743343436,
+        "joint_positions": 7.234982071607776e-05,
+        "joint_velocities": 0.12265662926374588,
+        "motor_states": 0.08337384724905361,
+        "motor_voltage_v": 0.20948870870153313,
+        "power_difference_w": 0.0003824205867859476,
+        "servo_commands": 0.018873720983849512,
+        "servo_states": 0.0350034454454351,
+        "shaft_torque_nm": 0.004923042235807196,
+        "supply_current_a": 0.005607933424452927
+      },
+      "contact_pair_mismatch_samples": 0,
+      "event_counts": [
+        {
+          "candidate_count": 1,
+          "guard": 2,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 3,
+          "maximum_ordered_time_difference_s": 0.0002037092786035255,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 5,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 6,
+          "maximum_ordered_time_difference_s": 3.995634975124257e-06,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 8,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 11,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 12,
+          "maximum_ordered_time_difference_s": 4.574569859808891e-05,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 14,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 15,
+          "maximum_ordered_time_difference_s": 4.327671979220682e-06,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 2,
+          "guard": 16,
+          "maximum_ordered_time_difference_s": 4.805270303198661e-05,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 17,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 20,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 21,
+          "maximum_ordered_time_difference_s": 0.0003584090498204989,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 23,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 24,
+          "maximum_ordered_time_difference_s": 3.121880263120061e-05,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 26,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 29,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 30,
+          "maximum_ordered_time_difference_s": 0.0002552702428714887,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 32,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 33,
+          "maximum_ordered_time_difference_s": 0.00013516755868928435,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 35,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 36,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 37,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 38,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 39,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 40,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 41,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 42,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 43,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 44,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 45,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 46,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        },
+        {
+          "candidate_count": 1400,
+          "guard": 47,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1400
+        }
+      ]
+    },
+    "rates-loaded-refinement": {
+      "report": "runs/full-robot/learning/knee-motion-rates-loaded-refinement-comparison.json",
+      "maximum_world_marker_difference_m": 0.00022608005591421388,
+      "maximum_sampled_differences": {
+        "current_a": 0.07410522581331437,
+        "gear_speed_rad_s": 0.14886466304010285,
+        "heating_w": 0.15772604693103318,
+        "joint_positions": 0.0037197232556096644,
+        "joint_velocities": 0.23522058736714124,
+        "motor_states": 1.0,
+        "motor_voltage_v": 1.0024954734978369,
+        "power_difference_w": 0.0008806208332745175,
+        "servo_commands": 0.09064871484581105,
+        "servo_states": 0.17664029103665618,
+        "shaft_torque_nm": 0.0791365217829332,
+        "supply_current_a": 0.018939805090084708
+      },
+      "contact_pair_mismatch_samples": 1,
+      "event_counts": [
+        {
+          "candidate_count": 1,
+          "guard": 2,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 3,
+          "maximum_ordered_time_difference_s": 0.029035992948848344,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 5,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 6,
+          "maximum_ordered_time_difference_s": 0.0005916962753300531,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 8,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 11,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 12,
+          "maximum_ordered_time_difference_s": 0.0026760660878792607,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 14,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 15,
+          "maximum_ordered_time_difference_s": 9.457270661761275e-06,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 2,
+          "guard": 16,
+          "maximum_ordered_time_difference_s": 0.046682034209069745,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 17,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 20,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 21,
+          "maximum_ordered_time_difference_s": 0.036167313523812826,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 23,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 24,
+          "maximum_ordered_time_difference_s": 0.002983958267402217,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 26,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 29,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 30,
+          "maximum_ordered_time_difference_s": 0.04603123743506005,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 32,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 33,
+          "maximum_ordered_time_difference_s": 0.00020926784999849082,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 35,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 36,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 37,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 38,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 39,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 40,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 41,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 42,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 43,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 44,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 45,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 46,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 47,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        }
+      ]
+    },
+    "rates-zero-refinement": {
+      "report": "runs/full-robot/learning/knee-motion-rates-zero-refinement-comparison.json",
+      "maximum_world_marker_difference_m": 2.0277834755453814e-06,
+      "maximum_sampled_differences": {
+        "current_a": 0.0043126735442899355,
+        "gear_speed_rad_s": 0.08590334620810247,
+        "heating_w": 0.02493884222628706,
+        "joint_positions": 0.00011794024675718107,
+        "joint_velocities": 0.12773438351936628,
+        "motor_states": 0.08590334620810247,
+        "motor_voltage_v": 0.19511817669688136,
+        "power_difference_w": 8.095314280587296e-05,
+        "servo_commands": 0.017578214817590226,
+        "servo_states": 0.0363600637396837,
+        "shaft_torque_nm": 0.0026817664881924105,
+        "supply_current_a": 0.0031932508450892433
+      },
+      "contact_pair_mismatch_samples": 0,
+      "event_counts": [
+        {
+          "candidate_count": 1,
+          "guard": 2,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 5,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 15,
+          "guard": 6,
+          "maximum_ordered_time_difference_s": 0.00030321598919613724,
+          "reference_count": 15
+        },
+        {
+          "candidate_count": 2,
+          "guard": 7,
+          "maximum_ordered_time_difference_s": 3.657045689431371e-05,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 8,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 11,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 14,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 15,
+          "maximum_ordered_time_difference_s": null,
+          "reference_count": 3
+        },
+        {
+          "candidate_count": 2,
+          "guard": 16,
+          "maximum_ordered_time_difference_s": 9.860532355743246e-05,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 17,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 20,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 23,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 13,
+          "guard": 24,
+          "maximum_ordered_time_difference_s": null,
+          "reference_count": 15
+        },
+        {
+          "candidate_count": 2,
+          "guard": 25,
+          "maximum_ordered_time_difference_s": 3.513338536109689e-05,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 26,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 29,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1,
+          "guard": 32,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 13,
+          "guard": 33,
+          "maximum_ordered_time_difference_s": null,
+          "reference_count": 15
+        },
+        {
+          "candidate_count": 2,
+          "guard": 34,
+          "maximum_ordered_time_difference_s": 3.453671882769349e-05,
+          "reference_count": 2
+        },
+        {
+          "candidate_count": 1,
+          "guard": 35,
+          "maximum_ordered_time_difference_s": 0.0,
+          "reference_count": 1
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 36,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 37,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 38,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 39,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 40,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 41,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 42,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 43,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 44,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 45,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 46,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        },
+        {
+          "candidate_count": 1000,
+          "guard": 47,
+          "maximum_ordered_time_difference_s": 1.1102230246251565e-16,
+          "reference_count": 1000
+        }
+      ]
+    }
+  },
+  "validation": {
+    "native_tests": {
+      "embedded_motor": 11,
+      "embedded_step": 8,
+      "servo_clock": 1
+    },
+    "no_default_features_tests": {
+      "embedded_motor": 11,
+      "embedded_step": 8,
+      "servo_clock": 1
+    },
+    "wasm": "cargo check --locked --target wasm32-unknown-unknown -p sim-web passed",
+    "runtime_examples": "cargo check --locked -p sim-runtime --examples passed",
+    "ci": "Existing embedded suites exercise rate coordinates; servo_clock added to browser workflow."
+  },
+  "limitations": [
+    "Single-run wall times overlap some builds; no speedup claim.",
+    "Loaded timestep differences remain about 0.226 mm in world-foot position and 0.091 duty.",
+    "Unloaded refinement changes some backlash event counts despite close marker/lag agreement; transitions need classification.",
+    "Hardware actuator properties, collision proxies, task margins and missing CAD limits remain unvalidated.",
+    "Full planner, learned teacher/student, calibrated stepping, robustness evaluation and interactive policy delivery remain unfinished."
+  ],
+  "sha256": {
+    "examples/full-robot/mechanical-servo-knee-motion-rates-coarse.json": "8732d90bbbc12aae1bf2c7e9a254260bb6b400348a420750d0fe389ca0329357",
+    "examples/full-robot/mechanical-servo-knee-motion-rates-refined.json": "e1f90f22871f27de7728d1727f012d1bcce53c2fff12445549225ded5d7e0570",
+    "examples/full-robot/mechanical-servo-knee-motion-rates-slow.json": "01d6b890ba59021dbba2b23f829daa975029371e6252e1f0ce582e86152fb98f",
+    "runs/full-robot/learning/auxiliary-rates-source-manifest.json": "a50553fc00696ba922a9546347137c4c2ec20c8f7df6bc3a107511e619399feb",
+    "runs/full-robot/learning/knee-motion-clock-coarse-process.json": "f7a57de3077bf2d998de28ac42de745470a62f2caa454c207ea6daa079293357",
+    "runs/full-robot/learning/knee-motion-clock-coarse.json": "8653090efb1072f622505c636903d34ff3210d8e88244c36726cf6ea428ed54f",
+    "runs/full-robot/learning/knee-motion-clock-comparison.json": "8d2f6d2687abeef407b38061aece05bce00fff1d34553ee7897b3930d74d52bd",
+    "runs/full-robot/learning/knee-motion-clock-slow-process.json": "f498a289b7e03c944a1abf638f4634a865d60a5496b2895805c12f8f0d38f5f9",
+    "runs/full-robot/learning/knee-motion-clock-slow-tracking.json": "a7da2a59c7c9e333c43f847d340a9b028fde27e2ffb9577a04e29c33f9fc0c7b",
+    "runs/full-robot/learning/knee-motion-clock-slow.json": "3152e5b6c13b3733430432b27f6e60edd5e1ad7a50b00c634fde9f71aad651ad",
+    "runs/full-robot/learning/knee-motion-clock-zero-diagnostic.json": "4cf107ac52c9ba096301bc7d683f9e19c96994d84d5c748f44e48f9e06ced787",
+    "runs/full-robot/learning/knee-motion-clock-zero-gravity-no-contact-process.json": "2af6d5e28ef2186a4acd07fa8af1a6f2a1d6760f7bb68b49e71808fcf17f029c",
+    "runs/full-robot/learning/knee-motion-clock-zero-gravity-no-contact.json": "9fd115e210eeacdfc4e6523c4b0e19832ee19db8f3034cf0733d96539deb2770",
+    "runs/full-robot/learning/knee-motion-rates-loaded-coarse-process.json": "db8c6dd4d8c1405de083fd1f0c393294e1d022d0aa59891867097d4346792bfd",
+    "runs/full-robot/learning/knee-motion-rates-loaded-coarse-tracking.json": "e30d040322409b80828393cc8c28c37e9107853641bf6fb4541b74b92caf26fb",
+    "runs/full-robot/learning/knee-motion-rates-loaded-coarse-vs-state-comparison.json": "64e19dfc47f13aa498651adede0407f6b209f2dcbdddafb1f4a0e92319c7f29d",
+    "runs/full-robot/learning/knee-motion-rates-loaded-coarse.json": "1ad40cc95258b576bdc8e9ed43759578e0e5a8d01cb5f445fb4c085264869597",
+    "runs/full-robot/learning/knee-motion-rates-loaded-refined-process.json": "9d9c401a5d17dffdc24a22cbbce5aea9de0bf05181c57ca1622119b5f1aa66b5",
+    "runs/full-robot/learning/knee-motion-rates-loaded-refined-tracking.json": "6179946df6e2c5f4297560702d6e9cf222e75a0340de1578e4f7bdddefdfe225",
+    "runs/full-robot/learning/knee-motion-rates-loaded-refined-vs-state-comparison.json": "19ac49e3cb66382f13da730c622b2d91ffdd2f699ead376388c0fef473a9c7c1",
+    "runs/full-robot/learning/knee-motion-rates-loaded-refined.json": "9d50a4e5e19aef398a12a3d11cf1579ff3cfda9e0baa37af3319d80cfc7ff96a",
+    "runs/full-robot/learning/knee-motion-rates-loaded-refinement-comparison.json": "4457e9f7a67b4b2da02276a591e9256595b2d2c13508f8f9c0157a1d036ded81",
+    "runs/full-robot/learning/knee-motion-rates-loaded-slow-process.json": "05cf6ca53ea040f21c81fed2678f8bae87eae9c624ccca20dae96a08e7a9b613",
+    "runs/full-robot/learning/knee-motion-rates-loaded-slow-tracking.json": "77e491e7feb725423db94c368359e480175552106d59702a0fcfdc30c2007381",
+    "runs/full-robot/learning/knee-motion-rates-loaded-slow-vs-state-comparison.json": "8bdca16af25622b03ae5824e56419a4c31da6e6705cd96ea47349d79b6effc7f",
+    "runs/full-robot/learning/knee-motion-rates-loaded-slow.json": "a2d7177e7bd9d2e1baddf78eff17af9817ac1b10bee6ce6d28a1b24647b77b75",
+    "runs/full-robot/learning/knee-motion-rates-zero-coarse-process.json": "3b24f0d9f6a859a1549547207dc9453c5b050861fe31bb600a9ffcbce5068ae9",
+    "runs/full-robot/learning/knee-motion-rates-zero-coarse-tracking.json": "a71f692641123bd06c05f08864802fc2ac770e070c76febb4c673d9c609a17d1",
+    "runs/full-robot/learning/knee-motion-rates-zero-coarse.json": "cfa6ebaf27ca98431a2b32c07359ef23c26c6acfc3b00c7b982c2c7b158d73d1",
+    "runs/full-robot/learning/knee-motion-rates-zero-refined-process.json": "b35c65aac5b45a64207a297623c733d3d2306b74db0f624584dedf457bd0aaba",
+    "runs/full-robot/learning/knee-motion-rates-zero-refined-tracking.json": "27dd625a05c1019eaffefff6e51ca2e2a9137d25654f945fff0a5e0e7731da25",
+    "runs/full-robot/learning/knee-motion-rates-zero-refined.json": "8643e9a61e7eb1c14faea10fc2ea53ceb59f07b0626f4e1e611a5c17154ce55a",
+    "runs/full-robot/learning/knee-motion-rates-zero-refinement-comparison.json": "1964385cd816c04c033fd973ad3dadb0561c88c3b608d6d107f791ca2412f032",
+    "runs/full-robot/learning/knee-motion-zero-gravity-no-contact.scene.json": "c334d812ef7cd1cd97e1a991e71e1a9a59243d647c7d136cd089b21d57e56935",
+    "runs/full-robot/learning/servo-clock-source-manifest.json": "7a2f96d550209634f955066ec12d507f74f9bb945ff0cfdf2133a6bc395e1731",
+    "runs/full-robot/learning/servo-regularized-floor.scene.json": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2"
+  }
+}

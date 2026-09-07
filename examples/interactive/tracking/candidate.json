@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "experiment_id": "synthetic-marker-demo",
+  "coordinate_frame": "bench-origin-Z-up-m",
+  "source": {"kind": "synthetic", "description": "Arithmetic fixture: line motion with 3 mm X and 4 mm Y error; not robot measurements."},
+  "completed": true,
+  "samples": [
+    {"time_s": 0.0, "points": {"foot": {"position_m": [0.003, 0.004, 0.0], "uncertainty_m": 0.001}}},
+    {"time_s": 0.05, "points": {"foot": {"position_m": [0.013, 0.004, 0.0], "uncertainty_m": 0.001}}},
+    {"time_s": 0.1, "points": {"foot": {"position_m": [0.023, 0.004, 0.0], "uncertainty_m": 0.001}}}
+  ]
+}

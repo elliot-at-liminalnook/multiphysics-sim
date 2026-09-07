@@ -1,0 +1,144 @@
+{
+  "kind": "explicit experimental CAD-property correction",
+  "source_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "base_scene": "runs/full-robot/learning/servo-regularized-floor.scene.json",
+  "base_scene_sha256": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2",
+  "output_scene": "runs/full-robot/learning/catalog-stall-consistent.scene.json",
+  "output_scene_sha256": "932306374b8db9ddcdfce1ea05d21dad551c7c6e3395a3bde5c969db74fe80f4",
+  "reason": "Correct missing-resistance catalog derivation to V / declared stall current; retain original estimated L/R=0.4 ms. Existing CAD artifact unchanged; this is not measured calibration.",
+  "changes": [
+    {
+      "motor": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "-Y \u00b7 Worm drive \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "-Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "+X \u00b7 Worm drive \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "+X \u00b7 Foot slide \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "+Y \u00b7 Worm drive \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "+Y \u00b7 Foot slide \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "-X \u00b7 Worm drive \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    },
+    {
+      "motor": "-X \u00b7 Foot slide \u00b7 HX-30HM",
+      "resistance_ohm": {
+        "before": 7.598519988552585,
+        "after": 3.6999999999999997
+      },
+      "inductance_h": {
+        "before": 0.0030394079954210343,
+        "after": 0.00148
+      }
+    }
+  ],
+  "promotion": "Review measured stall/no-load/loaded response and model consistency, then explicitly persist accepted parameters into a new CAD revision. Do not overwrite baseline revision."
+}

@@ -1,0 +1,791 @@
+{
+  "milestone": "support_qualified_body_return",
+  "scope": "Completed support checkpoint with shared Rust control and usable WASM preset; not landing, balance, walking, learning or hardware acceptance.",
+  "hardware": {
+    "cpu": "Intel Core i9-9980HK @ 2.40 GHz",
+    "logical_cpus": 16,
+    "timing_scope": "Development runs, some concurrent browser checks; not isolated benchmarks."
+  },
+  "native": {
+    "passed": true,
+    "capture_sha256": "8ab33b6c2aabe3e10bea72da920ed2fd402f8c59bb381b9fe92667e4f1e59619",
+    "simulated_s": 2,
+    "wall_s": 117.97925356100005,
+    "step_s": 0.00025,
+    "reference_completed_at_s": 1.61,
+    "waiting_sample_count": 5,
+    "waiting_s": 0.01,
+    "first_wait_s": 1.1,
+    "qualifications": [
+      {
+        "resume_s": 1.11,
+        "qualified_from_s": 1.01,
+        "minimum_foot_force_n": 1.4793656076287354
+      }
+    ],
+    "maximum_sampled_original_closure": {
+      "1": {
+        "maximum_position": 6.524186572931523e-17,
+        "maximum_velocity": 1.6653345369377348e-16,
+        "maximum_acceleration": 5.329070518200751e-15
+      },
+      "m": {
+        "maximum_position": 8.252287742038789e-13,
+        "maximum_velocity": 4.3836462237933915e-15,
+        "maximum_acceleration": 8.970602038971265e-14
+      },
+      "rad": {
+        "maximum_position": 1.0061396160665481e-16,
+        "maximum_velocity": 4.2327252813834093e-16,
+        "maximum_acceleration": 5.115907697472721e-13
+      }
+    },
+    "accepted_internal_contact_samples": 0,
+    "maximum_accepted_penetration_m": 0.00013139170966930402,
+    "scope": "Support checkpoint execution and original-closure diagnostics. Sampled forces qualify dwell; not continuous-force proof, landing placement, balance, calibrated contact or walking acceptance."
+  },
+  "refined": {
+    "passed": true,
+    "capture_sha256": "ceec78fd4a0fff97847cc2ac8edd757843c7075b894a001f588bcd4815727c4e",
+    "simulated_s": 2,
+    "wall_s": 164.0959374439993,
+    "step_s": 0.000125,
+    "reference_completed_at_s": 1.61,
+    "waiting_sample_count": 5,
+    "waiting_s": 0.01,
+    "first_wait_s": 1.1,
+    "qualifications": [
+      {
+        "resume_s": 1.11,
+        "qualified_from_s": 1.01,
+        "minimum_foot_force_n": 1.4563571326894924
+      }
+    ],
+    "maximum_sampled_original_closure": {
+      "1": {
+        "maximum_position": 6.600080725005508e-17,
+        "maximum_velocity": 1.1102230246251565e-16,
+        "maximum_acceleration": 3.552713678800501e-15
+      },
+      "m": {
+        "maximum_position": 7.956135750220028e-13,
+        "maximum_velocity": 2.0018708912772354e-15,
+        "maximum_acceleration": 2.97983859809392e-13
+      },
+      "rad": {
+        "maximum_position": 5.551115123125783e-17,
+        "maximum_velocity": 4.198030811863873e-16,
+        "maximum_acceleration": 5.542233338928781e-13
+      }
+    },
+    "accepted_internal_contact_samples": 0,
+    "maximum_accepted_penetration_m": 0.0001416194121502956,
+    "scope": "Support checkpoint execution and original-closure diagnostics. Sampled forces qualify dwell; not continuous-force proof, landing placement, balance, calibrated contact or walking acceptance."
+  },
+  "refinement": {
+    "samples": 201,
+    "markers": [
+      {
+        "id": "+X-foot-surface",
+        "maximum_error_m": 0.000037898675821312536,
+        "rms_error_m": 0.000026000365839622802,
+        "worst_time_s": 2
+      },
+      {
+        "id": "+Y-foot-surface",
+        "maximum_error_m": 0.00010556607352340805,
+        "rms_error_m": 0.00005967132817597268,
+        "worst_time_s": 1.26
+      },
+      {
+        "id": "-X-foot-surface",
+        "maximum_error_m": 0.0000739124565469061,
+        "rms_error_m": 0.00003995238127566473,
+        "worst_time_s": 2
+      },
+      {
+        "id": "-Y-foot-surface",
+        "maximum_error_m": 0.00034418643022751606,
+        "rms_error_m": 0.00013828364736459976,
+        "worst_time_s": 1
+      }
+    ],
+    "contact_pair_mismatch_samples": 0,
+    "maximum_sampled_differences": {
+      "current_a": 0.0849533536489387,
+      "gear_speed_rad_s": 0.18684297713142706,
+      "heating_w": 0.24301357401608303,
+      "joint_positions": 0.001305724488030147,
+      "joint_velocities": 0.17936797703679208,
+      "motor_states": 1,
+      "motor_voltage_v": 0.3737380949126579,
+      "power_difference_w": 0.0032846377752617784,
+      "servo_commands": 0.03399798318083171,
+      "servo_states": 0.09691708225581425,
+      "shaft_torque_nm": 0.12620637776526683,
+      "supply_current_a": 0.039599715788082135
+    },
+    "events": [
+      {
+        "candidate_count": 2,
+        "guard": 0,
+        "maximum_ordered_time_difference_s": 0.0018227176799406886,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 3,
+        "guard": 1,
+        "maximum_ordered_time_difference_s": 0.0462707736535064,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 1,
+        "guard": 2,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 3,
+        "maximum_ordered_time_difference_s": 0.0010069484226842285,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 2,
+        "guard": 4,
+        "maximum_ordered_time_difference_s": null,
+        "reference_count": 4
+      },
+      {
+        "candidate_count": 1,
+        "guard": 5,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 6,
+        "maximum_ordered_time_difference_s": 0.00010070565654330711,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 2,
+        "guard": 7,
+        "maximum_ordered_time_difference_s": 0.00006647192738651331,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 8,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 6,
+        "guard": 9,
+        "maximum_ordered_time_difference_s": 0.22471321758371032,
+        "reference_count": 6
+      },
+      {
+        "candidate_count": 1,
+        "guard": 10,
+        "maximum_ordered_time_difference_s": 0.08645274007039361,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 11,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 12,
+        "maximum_ordered_time_difference_s": 0.00035381776052957614,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 14,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 15,
+        "maximum_ordered_time_difference_s": 0.00012123733568252665,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 17,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 18,
+        "maximum_ordered_time_difference_s": 0.060627750772815237,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 1,
+        "guard": 20,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 5,
+        "guard": 21,
+        "maximum_ordered_time_difference_s": null,
+        "reference_count": 9
+      },
+      {
+        "candidate_count": 2,
+        "guard": 22,
+        "maximum_ordered_time_difference_s": 0.00024235590297050358,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 23,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 24,
+        "maximum_ordered_time_difference_s": 0.00028576205453700876,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 2,
+        "guard": 25,
+        "maximum_ordered_time_difference_s": 0.0015328350535455115,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 26,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 27,
+        "maximum_ordered_time_difference_s": 0.07086129880939507,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 4,
+        "guard": 28,
+        "maximum_ordered_time_difference_s": 0.004823061723681521,
+        "reference_count": 4
+      },
+      {
+        "candidate_count": 1,
+        "guard": 29,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 30,
+        "maximum_ordered_time_difference_s": 0.0008897308157260787,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 32,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 33,
+        "maximum_ordered_time_difference_s": 0.0000816624453631766,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 35,
+        "maximum_ordered_time_difference_s": 0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 36,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 37,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 38,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 39,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 40,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 41,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 42,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 43,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 44,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 45,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 46,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      },
+      {
+        "candidate_count": 2000,
+        "guard": 47,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 2000
+      }
+    ],
+    "contact_impulses": [
+      {
+        "candidate_ns": [
+          0.3279704366953113,
+          -0.17178884558215723,
+          15.768329141373114
+        ],
+        "difference_norm_ns": 0.10217900004225118,
+        "link": 6,
+        "other": null,
+        "reference_ns": [
+          0.4163632734611244,
+          -0.22292914181710444,
+          15.764875945877847
+        ]
+      },
+      {
+        "candidate_ns": [
+          -0.6272601243553099,
+          0.21581542407177462,
+          23.54183377235915
+        ],
+        "difference_norm_ns": 0.053112516234897204,
+        "link": 11,
+        "other": null,
+        "reference_ns": [
+          -0.677611710884135,
+          0.2320831997314766,
+          23.546418157805213
+        ]
+      },
+      {
+        "candidate_ns": [
+          0.024310462061850526,
+          -0.5851251155302281,
+          16.929863024372615
+        ],
+        "difference_norm_ns": 0.07878909025350475,
+        "link": 18,
+        "other": null,
+        "reference_ns": [
+          0.01623052089702692,
+          -0.6632452216030692,
+          16.923563475109695
+        ]
+      },
+      {
+        "candidate_ns": [
+          0.27512249843158115,
+          0.5400293270048112,
+          21.773816812472553
+        ],
+        "difference_norm_ns": 0.11728077498736506,
+        "link": 25,
+        "other": null,
+        "reference_ns": [
+          0.24516486464716092,
+          0.6533013435308537,
+          21.778990846855844
+        ]
+      }
+    ]
+  },
+  "browser": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "robot-landing-checkpoint",
+    "compared_frames": 201,
+    "simulated_s": 2,
+    "maximum_native_wasm_entry_difference": 4.56465443221532e-9,
+    "worst_path": "frame[3].policy.observations.marker.-X-foot-surface.floor_force_world.z",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 1879.3149999976158,
+    "simulation_ms": 123190.58500000834,
+    "max_chunk_ms": 2388.485000014305,
+    "main_thread_heartbeats": 25796,
+    "replay_progress_messages": 200,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "full robot motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "checks": {
+    "session_tests": 7,
+    "motion_clock_tests": 4,
+    "zip_integrity": true,
+    "remote_ci_run": false
+  },
+  "source_snapshot": {
+    "directory": "runs/interactive/landing-checkpoint/source",
+    "files": {
+      "Cargo.toml": "ac9ab0b4a69abf9d340f7ee670b7ced698bad9cc4c138bc41ee652a4be6f1281",
+      "Cargo.lock": "a89876fcd9a9edecad75c27abe8b5b729c0ae48a606379c1e7b8b87a4215f241",
+      "AGENTS.md": "aab8bfecf3f3ab455b4796abe634f43e0322e5b078976b495049a004d6a0f96a",
+      "crates/sim-domain-hydraulic/Cargo.toml": "09309b4abc9b243381e0975b432abced5216de395d85da3b972f44fe22399133",
+      "crates/sim-domain-hydraulic/src/lib.rs": "533aa750386f7573dd600ee5280d2d3039718c91a74e7df1c6bac988557d47c6",
+      "crates/sim-domain-rotational/Cargo.toml": "25d3506c3963a21120df9ab00cc979a9414ab30f8328ba2f9f90aa9dcb6074ff",
+      "crates/sim-domain-rotational/src/elements.rs": "e3cad433ad480a8ec2864f96cb70b7fda85f5a9f56df8b7bd3b7f3a4c6fcb4ef",
+      "crates/sim-domain-rotational/src/lib.rs": "f305e87c64a12e97175f5f703b2ead6e6e600da4ee920138221d8a280faf80c9",
+      "crates/sim-geometry/Cargo.toml": "702ad2f8d2175874fedadc397d5ca988c9138f3953a6a48b84f692a58e709426",
+      "crates/sim-geometry/src/lib.rs": "a3b097fec0d8671d9390a51dd64874ad6671758d8db1c916dfae296ec6bcfa56",
+      "crates/sim-domain-control/Cargo.toml": "3611e0184cc05ea910ce0908c1661d39cc8bd4f31c4c7da4645765e3abdf5a72",
+      "crates/sim-domain-control/tests/trajectory.rs": "22dfe87a5feefacdd7684bcf130f298c4cce00ec1a6f000ca8a409bbf854cd09",
+      "crates/sim-domain-control/tests/motion_clock.rs": "b313af13a34fc5bb352a3c0a43a492dd10f6027dfd94b7c2f3774604fd1c3fed",
+      "crates/sim-domain-control/src/trajectory.rs": "29d2a2d71fd9110bf998a936e65fc859dfc126f1dd9cdc4d15599e50e9fb1b00",
+      "crates/sim-domain-control/src/elements.rs": "74fbe31a1d11ae010f9442c587a8ee4d34d944b2174e20a981a03790b65debc9",
+      "crates/sim-domain-control/src/lib.rs": "2d16b3d38292c5e98e52dfddbf993efbb93bd72c2017bfe1c63f7ece86db8ebe",
+      "crates/sim-domain-control/src/external.rs": "19845e5c122278baa251a6d4f121a3b1caeaa8e211767209757afc9baa1086a9",
+      "crates/sim-domain-control/src/motion_clock.rs": "12c095ac14116f98e25c240cd4425a5ef6c5fae4c34aedfc37279a37da7e6c7a",
+      "crates/sim-domain-sensing/Cargo.toml": "fbc64afbc05fd44cf6081d6def4e9755caf64de8f5589518c18192bf23db9f90",
+      "crates/sim-domain-sensing/tests/sensing.rs": "47531d585fe439382943b3a49a5eb0ee4a2d58e5cc116c23172a6c0d9ad13503",
+      "crates/sim-domain-sensing/src/chain.rs": "b0143c46422adbacee35f6c58984185573ea11f06c1088daff6af603138df5c0",
+      "crates/sim-domain-sensing/src/lib.rs": "11ced075966c3b4befcb1a099bac7f2122e7476fa9f037d29cc40d453d7091e3",
+      "crates/sim-couple/Cargo.toml": "f92d2302a7570275ad04579cda52359b186fcc0af1db2425e1b8f880435e4fb5",
+      "crates/sim-couple/src/native.rs": "1e439045c065ac7a23889dbc6a539e0e1edae507de91846c726f976c507ed315",
+      "crates/sim-couple/src/lib.rs": "2ff6578359670ef79a6a271f0dc2bb446dfe0f7419ced12255702ea6c78a8217",
+      "crates/sim-couple/src/environment.rs": "51c4a4dfe2f45f5754e8bca8c565e1c8d93a2d81429a8310e92f3fa78958e383",
+      "crates/sim-core/Cargo.toml": "9fea56a3b5c7c4d342e9b7f5067b30d26be1ab8f0953be47183794b9ee31c5ba",
+      "crates/sim-core/src/lib.rs": "80138b2da8e581b2ef88af2e111fa1f54aa85e33681938a846bc3e04034d7b9b",
+      "crates/sim-core/src/couple.rs": "8dd7a7c89e9225c7621d4b512e5bac312f92f1daf6a407618aa711884c56ce98",
+      "crates/sim-core/src/equations.rs": "c64cc33da9260ec6e837a4f21139a66ca29ced49045876293fe62a0af0bbbd8e",
+      "crates/sim-core/src/parameters.rs": "ba64714b44bcda34800acf0d26082c7a1e0f8d223200a4e5a73f3c16206490d3",
+      "crates/sim-domain-electrical/Cargo.toml": "6c6446dcfa82b0d5607c7d00a0f546027172f09a8a7c0049a2cc9b6536f06b4d",
+      "crates/sim-domain-electrical/src/elements.rs": "23f0c899604fe3e5f0c164c75b4eacabec93f1de10d5492fab74007aa30667f2",
+      "crates/sim-domain-electrical/src/lib.rs": "5cf1f4b44595739411fcc1f6c64ad0c5de9d7443707c2ec8d8d350e58bfbdccc",
+      "crates/sim-runtime/Cargo.toml": "fcb99b5ccd03c40f6c72dac9f0a2aa7d471eaec61f194c069bc71a7d83bda958",
+      "crates/sim-runtime/tests/embedded_session.rs": "96c2a5d15469392afad0051938ccb41a3afb2b185b1d1227324caa87900317de",
+      "crates/sim-runtime/tests/session.rs": "6c0500f2b842bf0831683bccc371b15c7226528b7cdf5465ca409c06eb060aea",
+      "crates/sim-runtime/tests/lift.rs": "d72499754bbf1d7f232e28b8dd2f90ce1872067f51e276374c71baf82066a641",
+      "crates/sim-runtime/tests/posture.rs": "e4c1f7300989fe7003a2d3db85cd29afccc7b73129cdbd5c1fa3dbecefce0762",
+      "crates/sim-runtime/tests/tracking.rs": "66a2d141a8569b77bccac71b3a47fdc0394c5841b1a298e1a8a9d844424e123a",
+      "crates/sim-runtime/tests/task_observation.rs": "5fd61bfbef1c119244df5c580a1af9aff45f3481a3981eca7e47f495bff00226",
+      "crates/sim-runtime/tests/planning.rs": "ad144702cb42b2a98eae040e0612a5575bc7fb8b0855fc7467b58417d2e52c83",
+      "crates/sim-runtime/examples/integrate_embedding.rs": "5dd2343fb260b67147f93dba58c8dc665a36249ca9e606327ab1f7b8b4798d1b",
+      "crates/sim-runtime/examples/resolve_captured_step.rs": "9d306b8f135ba4595971f8a8320bd2880dac50c22881cb030260b535d9b7fcfa",
+      "crates/sim-runtime/examples/compare_transmission_block.rs": "c4b33237c7ec29e02487d4905d8889b0e60cd193fe20aef22ca78bcf1baa56f8",
+      "crates/sim-runtime/examples/summarize_hold.rs": "f8242fc3f893ee57f72273b7b92fca0b418946de41900f2dd071b856bf7b72d5",
+      "crates/sim-runtime/examples/place_supports.rs": "5be7be0e3cba2971bdd42f7c5ac90869528b464be1417b33a1a3601a2032c5c5",
+      "crates/sim-runtime/examples/compare_matrices.rs": "fc631ef3103809aaa9a7af516cc152f4eebdca0ee40eafc693660ec0f7262a26",
+      "crates/sim-runtime/examples/capture_contact_impulses.rs": "e8f2ffd3d3f584409d70c192a597e628a3f73da60a2f97713a330175daff501b",
+      "crates/sim-runtime/examples/compare_motion.rs": "0305cb09ddda051d37f821a027f289e360280399945f4f63cc51829eecbb87ca",
+      "crates/sim-runtime/examples/check_captured_stage.rs": "9d352657d7f04f2ea65190188071f8f73d2ddbe8257d575b62d989854ea39a23",
+      "crates/sim-runtime/examples/evaluate_lift.rs": "e8355a54e34257134539cae97b08d658372121d378ee80c8e0e610e540023031",
+      "crates/sim-runtime/examples/summarize_marker_clearance.rs": "02de62d3347006ff8b5b3881e48c013f20712a74e2840f3a4e72d72218f79dd1",
+      "crates/sim-runtime/examples/audit_embedding.rs": "c814f338a5ce0a18bbe326c920a35a084dbf72610cafc416b43ec8ea388219f3",
+      "crates/sim-runtime/examples/audit_actuators.rs": "3c97737058038d7ddbc303719934ae3df99a046f0679cd787fbadb9a324b4279",
+      "crates/sim-runtime/examples/compare_embedding.rs": "2078692971e0f8cfbbbf151002d02bbb1b147a0f836ae256c70b786c39594826",
+      "crates/sim-runtime/examples/compare_constraint_rows.rs": "df49061cf459f58e13b2544fb2a9d1e15936ff9e1809f13ca5c8998d62418332",
+      "crates/sim-runtime/examples/plan_marker_motion.rs": "11cffa6f9b35f1a8b5e6cc2b81d57ce01ea01b13ef04a40ff58ba8ed445b2eea",
+      "crates/sim-runtime/examples/capture_trajectory.rs": "9d8afe0daee9feaa0a567b956965821b810613e50d497f70a865e16dd8e1982e",
+      "crates/sim-runtime/src/session.rs": "0e9a60050b36b0c4c8c29b8b0b168a1874e220110c56cfa7038bbf621476dbe3",
+      "crates/sim-runtime/src/embedded_policy.rs": "56c0edf9818645fbc1b4d471575129684b7daa760a8f50a66a64d40971052b2e",
+      "crates/sim-runtime/src/support.rs": "f2b29f7aef3514d6562d9b2681212b0179ba16b3a13a29b2eb0c0d264b03dd7b",
+      "crates/sim-runtime/src/lib.rs": "f3658fa3f90569d2a172ce0c7187ed6ed0e081decb4de3ae38a446eb6c41aabf",
+      "crates/sim-runtime/src/lift.rs": "b9ce06aec848ed2e23ed94bdf53bb20ba35402c1151cedeab86d8e7b2ea7a0fe",
+      "crates/sim-runtime/src/embedded.rs": "8c75d210d4870eb43bc6170d13a2556df3eea2ba93ecc2c95a8fe859f1d1d753",
+      "crates/sim-runtime/src/physical.rs": "8e89e9f23fd9568422a0448b2c982a7f91880dd77b76559566b07500c168dba9",
+      "crates/sim-runtime/src/validation.rs": "39d22a96465848a2f6f14058d22ff702aafd562d314f2b0861e1b8b00b3ce3ce",
+      "crates/sim-runtime/src/posture.rs": "4cc3bf0790a0bc7c58a00bc0a92fa22b1f1f01b8f16e6c1f28aad6b7aa05e4d4",
+      "crates/sim-runtime/src/tracking.rs": "6e7d2bbd2c5a3114be3f0e544f73c8481d7a89f9dc52370cc5b711bf1c45d8c7",
+      "crates/sim-runtime/src/task_observation.rs": "d35a51904c08a3f4693924bbdbf756ae3cf18b499ed54283d31610916e537fe9",
+      "crates/sim-runtime/src/contact_audit.rs": "2241b6cbb5c961b2fb351381c85f025ed2f4ff33d0ca2bfb0d89046dc5aebb4e",
+      "crates/sim-runtime/src/planning.rs": "50d4a9187c61446bb17704d6dc107b3ed5754096ec6f3e0627c7e6d3a97ee228",
+      "crates/sim-runtime/src/bin/sim-validate.rs": "3ee10701eac659f780d23ebd205f08e3053b9be2c2da9c275b34e6a783d52e28",
+      "crates/sim-runtime/src/bin/sim-profile.rs": "63264d23e0dfc5a6dd9b060aa6104b8850522917f1612d283cd326ecfa86ad04",
+      "crates/sim-runtime/src/bin/sim-session.rs": "06e328f24bf57272b1b616bab5cb57d99872e7cf3c1daabb529c7d323ac4a666",
+      "crates/sim-runtime/src/bin/sim-track.rs": "5d3578b222293e54317aa7a7d97ce707118f31914060c5466064096f6173e4e4",
+      "crates/sim-domain-chemical/Cargo.toml": "41cb517b08e6928349ecd04fe2b7d70897561c03b6f189e2e938508baeba1a38",
+      "crates/sim-domain-chemical/src/lib.rs": "03c3982030a07b0572d335109c9c4c51b13236ad82c5b17e2887a37c34980308",
+      "crates/sim-domain-line/Cargo.toml": "0e34454d06c5111806bfdec826c61dc9ec617a126b16e4441bbac639f541ac79",
+      "crates/sim-domain-line/src/lib.rs": "028d3be622d7b3864f74143a59a4f2e3adcffb7ed084aea2670da7c0da5ffcfa",
+      "crates/sim-domain-granular/Cargo.toml": "b61c8d26f6a96cee606febb1e442f035ef033c305f61944aaa80b3dee959c6de",
+      "crates/sim-domain-granular/src/lib.rs": "bfbb5ed2cb6f22f014fa4d233f26c3b8fe50ce2245995342684ea38a3ab1b720",
+      "crates/sim-domain-bridges/Cargo.toml": "1bd49e24fca0da7b4486e40af73f13549a180ff6fc0690b9feffb5954d009245",
+      "crates/sim-domain-bridges/src/elements.rs": "85e2f861d11988a26f533072a99e5403e52ded0284ea54921009d16992c36236",
+      "crates/sim-domain-bridges/src/lib.rs": "5b2eb89294ed2236146e5d6fddd11f95f6153fd6dc3cd9fcb9b5d730780c3f30",
+      "crates/sim-solve/Cargo.toml": "8e1328c71a5c6e61defde3928811c8b2d8c259d2d05bc6f5f8163c922e46b258",
+      "crates/sim-solve/tests/convergence.rs": "85c6feea0560ffa7f1d7f9d39ff16e7be271bced0fce13f065b10001635e430b",
+      "crates/sim-solve/src/profile.rs": "7adc04a8e95914a4fc3c6b9608b03a45da4ffe5f708bd9b32ad867fb4e7937e0",
+      "crates/sim-solve/src/lib.rs": "1978566224a6f29ae8b226edaadb9b191dcc114b4dfecbac2d65d4ef4b794dde",
+      "crates/sim-domain-thermal/Cargo.toml": "0366c0c6ad9ff0a343ee8651c107cebd2e30eec17b38e00ffb366874d3596be3",
+      "crates/sim-domain-thermal/src/lib.rs": "390fd455e2216219a4d15beca88002509f749d677f1e1b06d9ec8ad1af496ec7",
+      "crates/sim-domain-magnetic/Cargo.toml": "027c6a983d00be3c876290bf0be695272291f9adf0eeeaf759fda83f88aa83c5",
+      "crates/sim-domain-magnetic/src/lib.rs": "dfa7c457bb1192e0a5fd75ce9c15c5b1391deca29cb1fedc8821b8e6f8930c08",
+      "crates/sim-compile/Cargo.toml": "addfca0ffb7a26929340aaa1c531031a28438f75304e582d5cf4cb04271fa272",
+      "crates/sim-compile/tests/parallel_jacobian.rs": "88b0d8387ccd1510c8b75879c6ab98c90f2c05f3b1ae8aeb8fc2bfca0971f01e",
+      "crates/sim-compile/tests/state_row_jacobian.rs": "4e9916da06698304b80baedc37c7055805c9305a0dc4d20ba2f7f38b766e62be",
+      "crates/sim-compile/tests/island.rs": "0c55d233fcdf1d9efc221e9da1e31f201c3ab07659f5ef951c81ba2509595356",
+      "crates/sim-compile/tests/rate_jacobian.rs": "516a1c4d081406f11473038d5858108308626febdab8dfcec20edb480c1bbd19",
+      "crates/sim-compile/src/runtime.rs": "23d6e41c8253a5ce4671552edbe559889239def43efaae33cf7b5ebdfd0eb896",
+      "crates/sim-compile/src/lib.rs": "c623f4c9a547e6e67b02deb6cd979467aa8565b3ac145b08d8721b8376362dd7",
+      "crates/sim-compile/src/island.rs": "d1c95103d6d9127a8665d310a7d97fe93f11454a2e99e28e7d704128e55b7203",
+      "crates/sim-domain-acoustic/Cargo.toml": "e9d24a09ee5505c7c11ced731fa38b2cb10f1a12fe8735ff68c3de96c26403c3",
+      "crates/sim-domain-acoustic/src/lib.rs": "cc9e893bf934c368720c385192aa2016a691bd6d6f2b8c50fd81e311593916b5",
+      "crates/sim-web/Cargo.toml": "867202739fccd54f8d3d6270417fed4392155ae96236be6ea584d7e2ed54c959",
+      "crates/sim-web/src/lib.rs": "bf765a526d2ff828f72c3d1f9a218c4cc082b4e303085d30cf347d817f711f28",
+      "crates/sim-phenomena/Cargo.toml": "083d34082af0b7ea952d3ba85c10e794ca87318bdd8d4ba92633767ce992528d",
+      "crates/sim-phenomena/tests/chain.rs": "73e2175c808df41847f15522a6d28720492529a2fa82f7afdf519f4077207f65",
+      "crates/sim-phenomena/tests/acceptance.rs": "818b2d319d4ca521b6425e42d9655aefdcda49e8348e3d0552c61aac2e87e72a",
+      "crates/sim-phenomena/tests/seam.rs": "a44970db2af89ef6cee4fa43c7ecf870aa5591598275df645de155b42cbc25b3",
+      "crates/sim-phenomena/tests/jacobian.rs": "752e9401584db56e2a273e1501d4fffb71eded2b74fa69b9f9852690186e33e9",
+      "crates/sim-phenomena/tests/wheel.rs": "880d8e0dff3e9d8bbc5265c0b15b528b6ea386b5fbbd531a69450d5982164504",
+      "crates/sim-phenomena/tests/exhibits.rs": "3f6465596d0687c1ae0aabb0b49f67089218481e758b190ba452af26c5323ea2",
+      "crates/sim-phenomena/tests/dylib_gait.rs": "3cc017943eb881e8bf6e922bf2c58b875af60125213eff9b179b3b952fb10424",
+      "crates/sim-phenomena/tests/adaptive.rs": "40f0bb350414745ba0be5425ea7356be120614bcb603d0d2d87465534573f83f",
+      "crates/sim-phenomena/examples/quadruped_profile.rs": "1e1620234fe46f752289db4751e1ef873cda7779f32c0f8f5c668a7a1d1369fe",
+      "crates/sim-phenomena/examples/plank_debug.rs": "1437542cb7c04ebcb009865ac5ef6accac3242210b275194e254fefd130d22b9",
+      "crates/sim-phenomena/src/lib.rs": "928fb450241f9a8a0a32cb9fc1fce81af66ee7f9c7944a61dc168a7bf7fb5754",
+      "crates/sim-phenomena/src/world.rs": "708ca55e176016799904d1ea5e584b67cddc78ee1a382b2f8a003f6209d92ce0",
+      "crates/sim-phenomena/src/exhibits.rs": "bc5f28879f51755c65b7b60cf64e4644d671da1c90e6db1522481202c186aac7",
+      "crates/sim-phenomena/src/main.rs": "4a6eccf63a974e5d4e6b78f5e5dce7c8718d7ba469a30f3d44e5ab154ccc7c7e",
+      "crates/sim-phenomena/src/exhibit.rs": "f12ad06347e9fbaf45112c46cd7fe7f33fb2db9587d68b9ed6cbf5fde3ba1f0b",
+      "crates/sim-phenomena/src/experiment.rs": "622c457825ccb0d47897a1b99ca5254a1353a425492c8f4fa1fa35936f4dbae3",
+      "crates/sim-phenomena/src/bin/sim_experiment.rs": "3d9e7d80e07f23edb474674297ae2734531195a642bedd817420b6250acefb19",
+      "crates/sim-phenomena/src/bin/sim_gym.rs": "d8e25c6747949d232a8671c1f242b99f57eeb5d2d3a6c0e32f3db95d1435dde8",
+      "crates/sim-phenomena/src/bin/sim_cad.rs": "b5d2b3e1fef97ed75dcf98e37683b5714a4180a85647026843e8e579dfc5ea2d",
+      "crates/sim-phenomena/src/scenarios/spring_pendulum.rs": "af36fc7bdf669f30d0fb291babfbc13760a63f7edb9dd2afedb11603cb8f5414",
+      "crates/sim-phenomena/src/scenarios/viv_lock_in.rs": "86d9e8df73dae01699d1f372bdaae1ba2b88b0f36863052bf76158017280850a",
+      "crates/sim-phenomena/src/scenarios/huygens_clocks.rs": "bb2dd7687a83d74d41566a10f169ef805f9c39000d4f14feffeffd965ded0e2b",
+      "crates/sim-phenomena/src/scenarios/euler_buckling.rs": "a6a23489ff43fd3c1422725c1d45eeced0dc04a5a790abe8e1cafc5e339ea544",
+      "crates/sim-phenomena/src/scenarios/dzhanibekov.rs": "b1bc194f344caa5d100aac4f9857efe0c81ded4053f5ec13a1fda822c508fdf7",
+      "crates/sim-phenomena/src/scenarios/water_hammer.rs": "c525afafa887221c217ca93e6a01aaea369bb1242e4371cc4c20ae232ae85138",
+      "crates/sim-phenomena/src/scenarios/backlash_hunting.rs": "f00e2f331ef2262137c42f4374ce96c1644969e41b571315751380731973f241",
+      "crates/sim-phenomena/src/scenarios/walk_the_plank.rs": "28e728668902eed532f6889e281447777879a97566175736c1d6329f0dc1b24f",
+      "crates/sim-phenomena/src/scenarios/stick_slip.rs": "da6ccd69df0100f637829c4e7c8b1d6c3bf33d679f889752a47f37608ec750d3",
+      "crates/sim-phenomena/src/scenarios/quadruped_gait.rs": "d14675b40fa16134c1e338ef6095f454aeb22bb7c1625d17c18bc61d220a6cbd",
+      "crates/sim-phenomena/src/scenarios/language_independence.rs": "42474fc254d39a11c9005596319dd9b44548b57f308d5a5451357a2de67d3af6",
+      "crates/sim-phenomena/src/scenarios/cad_robot.rs": "992551a7dd1bf20fcf2da13bb52b655d0b905718b38878dcb8c5dadd7d8cc018",
+      "crates/sim-phenomena/src/scenarios/levitron.rs": "60f1c6a4a490a37ba38028153cec2ea876ed39f50c74d1ee990bea31b83e4794",
+      "crates/sim-phenomena/src/scenarios/stochastic_resonance.rs": "1ddf0cacda426755bf453e66ddd61f74fe0a4cac8d08bb419c152766a298021b",
+      "crates/sim-phenomena/src/scenarios/flutter.rs": "0ef36b9a9e771af5aacf9a650a049f2ca5dc8bc04d31ecfaed8da7c6d253a440",
+      "crates/sim-phenomena/src/scenarios/sky_cooling.rs": "b6ddb795972656987851fcbd9a90f509f8117e709d1eb38017ce1db8f5be4f5b",
+      "crates/sim-phenomena/src/scenarios/chua_circuit.rs": "d91033b88f62a114a340b05afeb03020bb0f81bfb63ecad08d822762a3d87d5f",
+      "crates/sim-phenomena/src/scenarios/current_hogging.rs": "aa301a5ee44dd0989f4a92d7b9061f8bcf004aba54bd29e5b9edb4d0e68287ed",
+      "crates/sim-phenomena/src/scenarios/geyser.rs": "4337333b23e9bc099c3eb4ba6643a9a5ebdc0aa779caff69f2d69cddbe4e0712",
+      "crates/sim-phenomena/src/scenarios/semenov_ignition.rs": "a6b68c89a645e78bfe2d2479e801ed149b78aed1d97a365638d47617dd5c868c",
+      "crates/sim-phenomena/src/scenarios/leg_seam.rs": "b06e99bb1930c5ce3544b4f24723c769dc57f2453b608559094b9e9424048ea5",
+      "crates/sim-phenomena/src/scenarios/cad_physical.rs": "10d9dad74d9e458c740124772026ca5cf966cd466c4bed98ab8402f16f177181",
+      "crates/sim-phenomena/src/scenarios/kapitza_pendulum.rs": "395604e23236328c56f70140341fc33480cfff905065c13224a41d73c38b5355",
+      "crates/sim-phenomena/src/scenarios/rijke_tube.rs": "c362af55cce6d64efa3fc36cfd6670f6009c5a2e51d65b3c38e5137658d4456c",
+      "crates/sim-phenomena/src/scenarios/tippe_top.rs": "4d45a9e22871f2324d5ee36050c4a72d7b37e88ba5d51e798ffde02bb557dcaf",
+      "crates/sim-phenomena/src/scenarios/mod.rs": "8fdeccee1a9d18739dc4ebe19864c258c48e7fbcbb4d380ee34afdad0098be95",
+      "crates/sim-phenomena/src/scenarios/double_pendulum.rs": "5438452c35bb356ce7ca31d5d126a74826ab185478b0a445afbdb2f785f24a00",
+      "crates/sim-phenomena/src/scenarios/latency_instability.rs": "5b4a8eaa859eec96cbb3401e20cef2138bfd1db12b5ff60fb5b00ba324b67825",
+      "crates/sim-phenomena/src/scenarios/scaling_ladder.rs": "51b3775b74f3e306a6386231f7ee308ad7eb2e4688d834261aefce14490a97d1",
+      "crates/sim-phenomena/src/scenarios/missed_deadlines.rs": "afad09a61b116282c530855184e94c52ec2ddb9af9e139e9468713748781baad",
+      "crates/sim-phenomena/src/scenarios/cruise_control.rs": "e7510df6cbd326c6f7ff8c9e9e82cec59d87d15e6a36f92453930a902f16fcd8",
+      "crates/sim-phenomena/src/scenarios/passive_walker.rs": "63725da139eacb25e53e703ede7b7c981de0a9c3c6f1d9e5408843b0aaac3f03",
+      "crates/sim-phenomena/src/scenarios/motor_hogging.rs": "76d02402a76385bd38b0d0a9c4583d791568bdba04e8caccc2790ebb15916bbe",
+      "crates/sim-phenomena/src/scenarios/quantisation_hunt.rs": "262aefe31b34898c6ad81811fc0839b5cac43cce9a9aab84b30398414adb2651",
+      "crates/sim-phenomena/src/scenarios/painleve_rod.rs": "70b162218ac62bd98820dd48837e94036959442ec6d9844718706f616d2e7e65",
+      "crates/sim-phenomena/src/scenarios/sample_rate_instability.rs": "66db55346cf82053c51f8f813d50a6d2ab3065563f6d06663779ec9c24c8764a",
+      "crates/sim-phenomena/src/scenarios/janssen_silo.rs": "e682060b6c677dfa786adfb1cfe6b455bc0faa4c7c3fd06fca5208b33ccb4bd0",
+      "crates/sim-phenomena/src/scenarios/thermoelastic_damping.rs": "cead8dd627b3cb225c34022f96f7df59aa8b5c66deb6051d2073c876a7cf8495",
+      "crates/sim-dynamics/Cargo.toml": "393b3c63089e7a0a3e765c491dda8e533233508b8e2b6f9dc4450db3fddd5f6c",
+      "crates/sim-dynamics/tests/step_breakpoints.rs": "a6bcc4b10fa998bc43930045796cd08622d04da4eab87bac8f58788af8c072a3",
+      "crates/sim-dynamics/tests/root_order.rs": "75d3df62062fa39c05e54690d7e56702650e68eb253ed33342f4ccc28f764669",
+      "crates/sim-dynamics/tests/scheduled_events.rs": "c64a1a285f30b08bd300d45e1810879e6cf589eb930714eb139acbd3a87b62c6",
+      "crates/sim-dynamics/tests/implicit_audit.rs": "eea17ebab1527c03230acec287fd75d2f84acb3820eaae85b19b932ec9b95271",
+      "crates/sim-dynamics/tests/hybrid_stepper.rs": "d6db8eb7d869de701e4681ad81e1df0200129084f74d72df52020efc3f171214",
+      "crates/sim-dynamics/tests/jacobian_check.rs": "9c227b88c06d87432c574d10c771cddd83d7295ba4bbc33521e568f36240d509",
+      "crates/sim-dynamics/src/linear.rs": "f5f04d5eae389361f514c960f55eff57283bcc2ad5091d63635c47b1d78789c5",
+      "crates/sim-dynamics/src/hybrid.rs": "fe7cccff3043d4f09dec881f4020f5fd7c805a914572700fc9fa1ad73bfe8771",
+      "crates/sim-dynamics/src/analysis.rs": "bf6b8b8257d1980e2579da1ace404eb6dbd4b0c2e422b4124bbc08efd67a1fb6",
+      "crates/sim-dynamics/src/attempt_check.rs": "37500206637074ef813ecd59db4def7f0cb78ce9ab8f6031fb118fa273ddd932",
+      "crates/sim-dynamics/src/lib.rs": "1e6a9be9ebf41513f4634f813c99ff9bed0152083bf14db5e71c26386a73b535",
+      "crates/sim-dynamics/src/jacobian.rs": "9b4b416a3048988f5d5c3f02d19c6ea0907e30b35bbe07c038b9b1220ee3fda3",
+      "crates/sim-dynamics/src/report.rs": "1712a4cb16940363ce890d541867dab1b2ededd928bf244c1d66e0361401a723",
+      "crates/sim-dynamics/src/event_root.rs": "d756a1334e7442dbefa2471e832247fa2b4916ee8c2cc023173752f0ea670561",
+      "crates/sim-dynamics/src/jacobian_check.rs": "3880b4ce39f46ede5fc0c9c7097a0f9b69a1f425e88fdb812f1296c79480ba80",
+      "crates/sim-domain-radiative/Cargo.toml": "f839666503e731ff5b62292493f0b237b0d0e746a77874d3dc8a52a48c9198d9",
+      "crates/sim-domain-radiative/src/lib.rs": "b31bc276be6722150b50da58bb0683bb8046d71090284f9725ad32e4af37e230",
+      "crates/sim-domain-robot/Cargo.toml": "dce5b9a7aaeae0fdc22a70580da6a25dcf477aa4e9ea8b71d2d1bae90ff52277",
+      "crates/sim-domain-robot/tests/embedded_step.rs": "136b4d6417cf82bde22f39a828640b290845ae051bf752f86aed96c33b9fb59a",
+      "crates/sim-domain-robot/tests/transmissions.rs": "d52a3bae492aa4707031b135e777efc2b241793134d56da9ace604b3e0ea7a15",
+      "crates/sim-domain-robot/tests/rigid_inertia.rs": "c4c63831e215e8bb388f15737fbccfce183dd015b90f714cf03ecb28cf11df17",
+      "crates/sim-domain-robot/tests/servo_clock.rs": "6e340da348a22aa2d2b309645cdbb0377aedf078e8c94c7f5bee1853e1773356",
+      "crates/sim-domain-robot/tests/embedding.rs": "e96e0cd67590ccc9bb7928131508098fd3e589e81a28e9baca0bf3327477aa2f",
+      "crates/sim-domain-robot/tests/motor.rs": "45ed4343de572d2538c56c9cb881d21768bc8bfc08e370f137c9111f97e8e509",
+      "crates/sim-domain-robot/tests/articulated.rs": "5e75ac1add8a9caa0cdfbc1268f2806217e43dc76fd889be1badf8be1f808b1b",
+      "crates/sim-domain-robot/tests/jacobian.rs": "5acc0be73ac95dbac110254c0c674da58ae29f57aad75a40e3ecbf70db1f1c33",
+      "crates/sim-domain-robot/tests/regularized_friction.rs": "d2ce587e1303fd74838c75f41d5c475f16f0b59c93f582153bd0b39d3e169d3f",
+      "crates/sim-domain-robot/tests/embedded_motor.rs": "74f5c1f01543f17013825a05a02af6bf8b468cbae8b022576b3dc913d66a5c3f",
+      "crates/sim-domain-robot/tests/constraint_audit.rs": "638bb34b6fe7aeffde681d7ef49282142d2f2fcb113f91b3b4da201052c3fca9",
+      "crates/sim-domain-robot/tests/sensor_seed.rs": "2905e13a7f3fb0767660ff322211988c5d76da710b6c141b65f8cc1a119a07db",
+      "crates/sim-domain-robot/tests/motor_jacobian.rs": "bba261550436290519290e693439f2b11ebfdf1b23d700b46b7e9ac5a61d0d92",
+      "crates/sim-domain-robot/tests/transmission_coordinates.rs": "0d2e90e593e4c2cd006d6a12c8fa1a9edfb42d0064c72741ae722ca15d907cd8",
+      "crates/sim-domain-robot/tests/backlash_events.rs": "e0e7bc3d1330c09e968894d4a0f4a49336e55680b69a91932ba1f2f0e33ea0c7",
+      "crates/sim-domain-robot/tests/common/mod.rs": "9a871705868ada90cfd24bfdabf8822c512d7126df5cab71b6fb1e63f39af5e6",
+      "crates/sim-domain-robot/src/lib.rs": "edbd9923434067722046e13e3812e7e0c6989b1ad369ab8d9984873585f25d7e",
+      "crates/sim-domain-robot/src/motor.rs": "1232b3b1d7fd873c8f2577bb0abf3387976ec94195d5c48fdf9d4cbfab5f27d5",
+      "crates/sim-domain-robot/src/articulated.rs": "11c46d182557d4754fd010785bcfb637f95cf40b3c9bcc338a25982ac16f353c",
+      "crates/sim-domain-robot/src/math.rs": "217b49d74240f296e98d1539ff820d317a1277cd4ed3f2d2ff8ee4d002cea299",
+      "crates/sim-domain-robot/src/model.rs": "8a872c7bce14a522532f0f2a265ac49e8e06ae682e860f76ed555bd463e9656c",
+      "crates/sim-domain-robot/src/sdf.rs": "fe5b9197b8d7e99ad799d98f06beda3755718a4fcdbd90cc5855749702896a4e",
+      "crates/sim-domain-robot/src/actuator_audit.rs": "2a40ba3163bf5342f10f987a8494eb9ad7d988da0a7bef4a18c1ea4ba9132f52",
+      "crates/sim-domain-robot/src/articulated/prepared.rs": "fcdb6c792d1e6f78d3cdd9a8a52af24f2497538e048fe33358c0e23c44ba1e88",
+      "crates/sim-domain-robot/src/articulated/inertia.rs": "f1ecd12632f585713c9da65f1f0a1fa50681bda87c225f6b8b0d921e5e54d6be",
+      "crates/sim-domain-robot/src/articulated/embedding.rs": "3733b610190f17e909998e2f4b88e92376afe3f99dd469491fa87544245d20a0",
+      "crates/sim-domain-robot/src/articulated/friction.rs": "8dd8298b2b447de4e4bb871f347ecb0f9acc3dec305510322711a83f5fcf080d",
+      "crates/sim-domain-robot/src/articulated/jacobian.rs": "71ba1af238022813761a056314b9b4e26895a857fba336886a562f96495b791c",
+      "crates/sim-domain-robot/src/articulated/closure.rs": "bd86d09685704cd59d1bc2d7bed0fc0cd2198c11fa07ebdbce406ab33a9bc2c1",
+      "crates/sim-domain-robot/src/articulated/constraints.rs": "ae188006a20d0e5ba0793671ac75bea56b5a5be2a4db902d6db44bc97e720133",
+      "crates/sim-domain-robot/src/articulated/transmission_coordinates.rs": "474152cd44021f8ba3de6014d5bd2473bc5bf35eb31bc26901e87b1e88d471aa",
+      "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs": "c4c0baa7551e1b3d47fe29f3bed7607b2583fc5e7705ed41ed8d6159fb6264db",
+      "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "5c85a08901d683ebb39b22379b7848efcc250f09f21b16a069a7e523a90572a9",
+      "crates/sim-domain-robot/src/articulated/embedding/control.rs": "5c2b30e7f74a0af72c4f09b7eb7b72022ec518389cc9836592740e09d7da88d9",
+      "crates/sim-domain-robot/src/articulated/embedding/drivers.rs": "0964fe95d881e28acf03701e37c840ccc11021dcca773138257f04d4a9ca9f91",
+      "crates/sim-domain-robot/src/articulated/embedding/motors.rs": "9fca29e4214770ef23923a69e9c2f82c40027514bd66e712bdab4268fe24d543",
+      "crates/sim-domain-robot/src/articulated/embedding/servos.rs": "c4cab5bf469fe54332470a59279241c5f02cd6a9a826382332ef8f8d9f2cdfa2",
+      "crates/sim-domain-robot/src/articulated/embedding/dynamics.rs": "0368ad7cca6f0a68ddd7e00f54065d4a31483af2b8544b4c911ee4bfecefbd70",
+      "crates/sim-domain-robot/src/articulated/embedding/placement.rs": "55b183af2db75c153e42f47c9f01016f4ee208f0e8aebeb84e5d45c492cafed0",
+      "crates/sim-domain-robot/src/articulated/embedding/step.rs": "783da8a905177600c69f3605b7c09d7b0bdff1174b64ec946f04254c3de6cd93",
+      "crates/sim-domain-fluid/Cargo.toml": "dacfeb73aff5b414b6df976a0825c3720f32970618d61bd2205b55e78fc7682f",
+      "crates/sim-domain-fluid/src/lib.rs": "37a764675339db8b549a812b99e36a22b903a4c3853e91806805d1255309b591",
+      "crates/sim-domain-fluid/src/twophase.rs": "5ec1c88f4e9a601c4b20023be26e10a03cc33b60d39e05112a6f8a969be930e0",
+      "crates/sim-script/Cargo.toml": "dd352495836908596d72c1ffd97f928a2c1676572fcbaac24c707e4d2597bbd9",
+      "crates/sim-script/tests/multiphysics_discovery.rs": "e7918f876a87f22ea66a0ea68e39b0c32b28f3f9e8d668a5bae5fba74d83fb88",
+      "crates/sim-script/tests/authoring.rs": "6944414d92e3ac511b1c5a34cd4f6817fa916e848971cf31bf6c551ee5b97f95",
+      "crates/sim-script/src/lib.rs": "6b5b3a5ff7e6ac815f7162c58d6b8e2c56c95668b9fc7523b10f6fd5b3a0e4d9",
+      "crates/sim-app/Cargo.toml": "6cc5855241b0ac1e3f5b681ab6dd522c2e56f4bebb80939dc2c5af19dfd85d87",
+      "crates/sim-app/src/phenomena_app.rs": "c40cedea205a17e4c5c584cec0e1163fca230c50884181db9d265d510720d234",
+      "crates/sim-app/src/main.rs": "3f0ac2ffbc29b7cfae40d8c234a998dc61f92a392a8a4e57b16d397abebbad3e",
+      "crates/sim-app/src/cad_app.rs": "0df1dfb6cc2cae07c549542d21318db827f6964810d49c78857e3f197cd8efbb",
+      "crates/sim-domain-translational/Cargo.toml": "ace841090b11f148406c456e5de7381934a1af7f43b47fd5a53a51dc3c3ac8e3",
+      "crates/sim-domain-translational/src/elements.rs": "49dc89712c7d39e83c7adf68da1f5eb7d9298731c3cf688d475e71b6ab5cabb4",
+      "crates/sim-domain-translational/src/lib.rs": "cabf3c77bd1b48a0d046f7cd354ec4db06f05d6a7af84984a4104f1c6de0b4b5",
+      "crates/sim-domain-multibody/Cargo.toml": "b2dc731771409bc7c93c7d0f7c851f345ee52c3f566779d2d10492a676d95356",
+      "crates/sim-domain-multibody/tests/regularized_friction.rs": "74fc83939c3efbf2458d3a0575f2e00f46305742e6cee290ca1842f9210e0e02",
+      "crates/sim-domain-multibody/src/planar.rs": "d2dc804d200f53cd9ab7bbfda5fd56264730b6decf1f4ac36eee1cd57c107c4e",
+      "crates/sim-domain-multibody/src/elements.rs": "199fda86e90ee5019656edd62734995630d1578871ae1bc4c12041d6ff5549d7",
+      "crates/sim-domain-multibody/src/chain.rs": "a03feb7835d213a148c8fdd6cf251acf67915e3cad984fe264c98319480338ff",
+      "crates/sim-domain-multibody/src/lib.rs": "74add1e1fc9385e96b9ce3ad00b4094dcb5d9526829f6dab9f33f25d6689882d",
+      "crates/sim-domain-multibody/src/contact.rs": "26b18c6f1a3bc043a841eb621d70fc7ba0e37437f7ee27f2c5eb933aef9621b1",
+      "web/worker.js": "69192360824be9173e8467efe9760b66264da84e3bca1fac91c5c747bc9e20d7",
+      "web/viewer/viewer.js": "48cff79abe81387e32240f20d3b3e7e741a645711e7981f75ceec52e15a8600b",
+      "web/viewer/index.html": "5075feac6932419c07f325e6948f241fe47719400e0453fa7fe2846f1eefa058",
+      "web/viewer/viewer.css": "715960a2e30cf3c9f828f0f074b674389e46a714a6121c7c9e562a774d240255",
+      "web/viewer/presets.json": "73cacf44713bddd2eb2d73c16cd6d5af20d0ab34e9dab05020cfb9c51d95b41a",
+      "web/build-viewer.mjs": "30da9680b726d000127dce79227fea4138b30ae2a485e02f782db8f2bf18b13e",
+      "web/tests/embedded.mjs": "1b4018dc057dab2b347bb6eeac3985792d147eb7e2e23a883b427b2324a51bf0",
+      "web/tests/viewer.mjs": "c249ed8403ffd9e3013c0833feab5991d755a7aadc90182edb4370cf8887ee00",
+      "examples/full-robot/task-observations.json": "b7e322f953df191fc35c36999dcab39235ce8ac6142ccf831a39fd3ecfef9cb7",
+      "examples/full-robot/prepare_task_observations.mjs": "5f01af62bb3ba8f0a597b34f425852364ad058131ac97ead2b6fbda112cbfaee",
+      ".github/workflows/browser.yml": "cb055049c8fc6f96c1d90d5bec197dd140c963d182d3e615f0596f2395e44050",
+      "examples/full-robot/landing-checkpoint.json": "8bc2f50f48bb4652be07f3daedc2979ae6d69479c9a3a10a8aff988f3ebe4dd6",
+      "examples/full-robot/prepare_landing_checkpoint.mjs": "d07f72666ab16396d5367ee7a73096acab045424f21f28384095a5daeb9b9c65",
+      "examples/full-robot/audit_landing_checkpoint.mjs": "42722d1a2cbb50e9055bb51f21c0eeea8b256a6af3cbf969906fae51ae393484",
+      "examples/full-robot/landing-checkpoint-validation.md": "4eb06d9e618ff9b3926bc2716476563a09843fac9eef54b7d0ab55029962d2ec",
+      "examples/interactive/embedded-session.md": "390f911e4a808048de638d0e2f15a33dbde44b2a9aa65101ae5b83937656de85",
+      "web/README.md": "fc79c5a65be3daf372657c1cd3f7cb7ebada755d54b7004e03f90715e07de683"
+    }
+  },
+  "artifacts": {
+    "runs/full-robot/learning/landing-checkpoint/scene.json": "0e8d7f6d6427821987223336d6df4eb5730913947465d1cf0454fcf82f55fb43",
+    "runs/full-robot/learning/landing-checkpoint/config.json": "169ec2ac65452df1b672d521183254ad1d02015b543c108e51d452f42cf721e5",
+    "runs/full-robot/learning/landing-checkpoint/refined.config.json": "bd580e6d8e4762036fc84ac1dee99d2d174fb73835074d86122931001e62cc64",
+    "runs/full-robot/learning/landing-checkpoint/manifest.json": "a1c841f94af38b95594313dbbabbb8c66c2f028de7c90a6f930ff2522455aba1",
+    "runs/full-robot/learning/landing-checkpoint/execution.json": "8ab33b6c2aabe3e10bea72da920ed2fd402f8c59bb381b9fe92667e4f1e59619",
+    "runs/full-robot/learning/landing-checkpoint/refined.execution.json": "ceec78fd4a0fff97847cc2ac8edd757843c7075b894a001f588bcd4815727c4e",
+    "runs/full-robot/learning/landing-checkpoint/audit.json": "566dd0a73a96575560e6811593678d8d4e7510be50445fe4e1a08e5fe21ea998",
+    "runs/full-robot/learning/landing-checkpoint/refined.audit.json": "7d813cd953256e4af8331a4360926b05177805124a5ce3c6604c51f5fcb3720f",
+    "runs/full-robot/learning/landing-checkpoint/refinement.json": "c778fe3962087a40240272ad7a574801a419a7b1d336f72fe21c9ef4ff2179b7",
+    "runs/interactive/landing-checkpoint/source-manifest.json": "a4420318d452beb85259fa4a798957549b22faf6636389f415ab3ac5bbfacb43",
+    "runs/interactive/landing-checkpoint/native-runner": "a39e00964e2b1db33da6507fcea537484000f6f2d11fb326a3c685f74514f8d5",
+    "runs/interactive/landing-checkpoint/robot-browser.json": "32c0d09dfa911d00a43875f240274f850b855fdd15ac202ccf0f5c5cecb3980f",
+    "runs/interactive/landing-checkpoint/robot-browser.json.frames.json": "54af583fb5b516d2a55b32c9364c14dabce9952c7b266f379a58308bb55513e3",
+    "runs/interactive/landing-checkpoint/viewer-report.json": "363eaa28e2f0b3ea466f66bdec5f32f23b91e3299da4500bb380f215846fb952",
+    "runs/interactive/landing-checkpoint/viewer-report.desktop.png": "528be237216beffb25244d9e870b2d3a1c09c908ebf635e6fd6711f162b89431",
+    "runs/interactive/landing-checkpoint/viewer-report.mobile.png": "8a7612f85eda02c73ff5870cfe2f01604009c7a95935cf85ef9c02095c016017",
+    "runs/interactive/landing-checkpoint/viewer/build-manifest.json": "9aa96214233e223909f8b9ba3d1a25d07bfc3760cb3cd3e7ef101e92b2e3646f",
+    "runs/interactive/landing-checkpoint/viewer/sim_web_bg.wasm": "88ba3ef44a3114f7841d7229d924a6209d1307638b277567c69278419cb93bd8",
+    "runs/interactive/robot-lab-landing-checkpoint-2026-09-07.zip": "b1883b6f094b329c3a1b2673834450d1b35ca8e3e6528c2ba2fe2d428a15b996",
+    "examples/full-robot/baseline/robot.rcad": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+  },
+  "live_viewer": {
+    "url": "http://127.0.0.1:4173/",
+    "preset": "robot-landing-checkpoint",
+    "state": "paused at 0 s; preparing motion",
+    "ui_verified": true
+  }
+}

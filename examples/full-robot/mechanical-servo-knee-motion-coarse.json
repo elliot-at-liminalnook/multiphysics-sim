@@ -1,0 +1,262 @@
+{
+  "step_s": 0.00025,
+  "steps": 4000,
+  "report_every": 40,
+  "applied_generalized_loads": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "implicit": {
+    "reuse_mechanical_endpoint": true,
+    "reuse_mechanical_dynamics": true,
+    "reuse_step_jacobian": true
+  },
+  "embedding": {
+    "dependent_solve": "pivoted_qr",
+    "direct_closure_jacobian": true
+  },
+  "motors": {
+    "residual_scales": [
+      1,
+      1,
+      1
+    ],
+    "events": {},
+    "servos": [
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": -8.346418847292681e-05,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": -0.27612813350949833,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": -8.346425388696227e-05,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": -7.650604473797781e-05,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      },
+      {
+        "target_rad": 0.0,
+        "supply_voltage_v": 11.1,
+        "winding_temperature_k": 293.15
+      }
+    ],
+    "target_trajectory": {
+      "interpolation": "quintic_rest_to_rest",
+      "keyframes": [
+        {
+          "time_s": 0,
+          "values": [
+            0.0,
+            -8.346418847292681e-05,
+            0.0,
+            0.0,
+            -0.27612813350949833,
+            0.0,
+            0.0,
+            -8.346425388696227e-05,
+            0.0,
+            0.0,
+            -7.650604473797781e-05,
+            0.0
+          ]
+        },
+        {
+          "time_s": 0.2,
+          "values": [
+            0.0,
+            -8.346418847292681e-05,
+            0.0,
+            0.0,
+            -0.27612813350949833,
+            0.0,
+            0.0,
+            -8.346425388696227e-05,
+            0.0,
+            0.0,
+            -7.650604473797781e-05,
+            0.0
+          ]
+        },
+        {
+          "time_s": 0.4,
+          "values": [
+            0.0,
+            -8.346418847292681e-05,
+            -0.2,
+            0.0,
+            -0.27612813350949833,
+            -0.2,
+            0.0,
+            -8.346425388696227e-05,
+            -0.2,
+            0.0,
+            -7.650604473797781e-05,
+            -0.2
+          ]
+        },
+        {
+          "time_s": 0.6,
+          "values": [
+            0.0,
+            -8.346418847292681e-05,
+            -0.2,
+            0.0,
+            -0.27612813350949833,
+            -0.2,
+            0.0,
+            -8.346425388696227e-05,
+            -0.2,
+            0.0,
+            -7.650604473797781e-05,
+            -0.2
+          ]
+        },
+        {
+          "time_s": 0.8,
+          "values": [
+            0.0,
+            -8.346418847292681e-05,
+            0.0,
+            0.0,
+            -0.27612813350949833,
+            0.0,
+            0.0,
+            -8.346425388696227e-05,
+            0.0,
+            0.0,
+            -7.650604473797781e-05,
+            0.0
+          ]
+        },
+        {
+          "time_s": 1,
+          "values": [
+            0.0,
+            -8.346418847292681e-05,
+            0.0,
+            0.0,
+            -0.27612813350949833,
+            0.0,
+            0.0,
+            -8.346425388696227e-05,
+            0.0,
+            0.0,
+            -7.650604473797781e-05,
+            0.0
+          ]
+        }
+      ]
+    },
+    "target_coordinates": [
+      "joint.-Y | Hip servo output",
+      "joint.-Y | Worm servo output",
+      "joint.-Y | Foot servo output",
+      "joint.+X | Hip servo output",
+      "joint.+X | Worm servo output",
+      "joint.+X | Foot servo output",
+      "joint.+Y | Hip servo output",
+      "joint.+Y | Worm servo output",
+      "joint.+Y | Foot servo output",
+      "joint.-X | Hip servo output",
+      "joint.-X | Worm servo output",
+      "joint.-X | Foot servo output"
+    ],
+    "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+  },
+  "audit_contact_steps": true,
+  "initial_coordinates": [
+    0.0,
+    -8.346418847292681e-05,
+    0.0,
+    0.0,
+    -0.27612813350949833,
+    0.0,
+    0.0,
+    -8.346425388696227e-05,
+    0.0,
+    0.0,
+    -7.650604473797781e-05,
+    0.0
+  ],
+  "initial_base_translation_m": [
+    0.0,
+    0.0,
+    -0.008
+  ]
+}

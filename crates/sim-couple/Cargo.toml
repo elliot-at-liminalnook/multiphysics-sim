@@ -5,7 +5,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-libloading = "0.8"
 serde.workspace = true
 serde_json.workspace = true
 sim-core = { path = "../sim-core" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+libloading = "0.8"

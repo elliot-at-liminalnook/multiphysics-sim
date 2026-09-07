@@ -1,0 +1,519 @@
+{
+  "milestone": "slower_forward_placement_experiment",
+  "task_accepted": false,
+  "scope": "Sampled supported lift improves; false grid contact at inspected points and timestep sensitivity prevent placement/collision promotion. No walking or hardware accuracy acceptance.",
+  "recipe": {
+    "time_scale": 1.5,
+    "coarse_physics_step_s": 0.001,
+    "source_directory": "runs/full-robot/learning/forward-10mm",
+    "planner_source": "examples/full-robot/single-foot-marker-motion-forward-10mm.json",
+    "lift_requirements_source": "examples/full-robot/single-foot-lift-requirements.json",
+    "output_directory": "runs/full-robot/learning/forward-slow",
+    "scope": "Rate-only experiment: stretch the geometric reference and its phase windows; preserve physics timestep, controller clocks, gains, physical parameters, force/clearance/dwell thresholds and post-reference horizon allowance."
+  },
+  "maximum_motor_knot_difference_rad": 4.718447854656915e-15,
+  "native": [
+    {
+      "variant": "baseline",
+      "simulated_s": 2.8000000000000003,
+      "step_s": 0.00025,
+      "wall_s": 158.7955726750003,
+      "lift": {
+        "failed_clearance_samples": 54,
+        "failed_support_samples": 8,
+        "failed_unloading_samples": 43,
+        "longest_qualifying_span_s": 0.27,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.002666734953254868,
+        "qualifying_start_s": 1.08,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "terminal_world_foot": {
+        "actual_m": [
+          0.004055131591047449,
+          -0.3171576125774491,
+          -0.4410298590438854
+        ],
+        "distance_m": 0.0013976879770103072,
+        "error_m": [
+          -0.0011818684482138402,
+          -0.0006008822646171863,
+          -0.0004423337611626499
+        ],
+        "reference_m": [
+          0.005237000039261289,
+          -0.31655673031283194,
+          -0.44058752528272277
+        ],
+        "xy_distance_m": 0.001325847851306804
+      },
+      "support_wait_s": 0,
+      "body_error_at_peak": {
+        "coordinate_frame": "r1357-export-world-Z-up-m",
+        "rotation_angle_rad": 0.004026754605647518,
+        "translation_m": [
+          -0.000030907882208928896,
+          -0.0018184104469436309,
+          -0.001314865119284702
+        ]
+      },
+      "internal_contacts": {
+        "samples": 37,
+        "first_endpoint_s": 1.3507500000000001,
+        "last_endpoint_s": 1.35925,
+        "maximum_penetration_m": 9.570778015649387e-7,
+        "maximum_force_n": 0.19141962762220593
+      }
+    },
+    {
+      "variant": "refined",
+      "simulated_s": 2.8000000000000003,
+      "step_s": 0.000125,
+      "wall_s": 217.290274531999,
+      "lift": {
+        "failed_clearance_samples": 54,
+        "failed_support_samples": 8,
+        "failed_unloading_samples": 43,
+        "longest_qualifying_span_s": 0.17999999999999994,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0027073986711391163,
+        "qualifying_start_s": 1.06,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "terminal_world_foot": {
+        "actual_m": [
+          0.004164853237832601,
+          -0.31721677885508953,
+          -0.441029897619172
+        ],
+        "distance_m": 0.001334487214628035,
+        "error_m": [
+          -0.0010721468014286877,
+          -0.0006600485422575963,
+          -0.000442372336449226
+        ],
+        "reference_m": [
+          0.005237000039261289,
+          -0.31655673031283194,
+          -0.44058752528272277
+        ],
+        "xy_distance_m": 0.0012590325023406441
+      },
+      "support_wait_s": 0,
+      "body_error_at_peak": {
+        "coordinate_frame": "r1357-export-world-Z-up-m",
+        "rotation_angle_rad": 0.004483853495019724,
+        "translation_m": [
+          -0.0000252759552343666,
+          -0.001744986406273491,
+          -0.0013152874407555727
+        ]
+      },
+      "internal_contacts": {
+        "samples": 110,
+        "first_endpoint_s": 1.32825,
+        "last_endpoint_s": 1.3415,
+        "maximum_penetration_m": 0.000002849344394512826,
+        "maximum_force_n": 0.5699090125800008
+      }
+    },
+    {
+      "variant": "coarse",
+      "simulated_s": 2.8000000000000003,
+      "step_s": 0.001,
+      "wall_s": 64.20956533500006,
+      "lift": {
+        "failed_clearance_samples": 55,
+        "failed_support_samples": 7,
+        "failed_unloading_samples": 43,
+        "longest_qualifying_span_s": 0.32999999999999985,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0026919610125656357,
+        "qualifying_start_s": 1.08,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "terminal_world_foot": {
+        "actual_m": [
+          0.006447221057932724,
+          -0.3173872076753811,
+          -0.44103021304422807
+        ],
+        "distance_m": 0.0015330688236107662,
+        "error_m": [
+          0.001210221018671435,
+          -0.0008304773625491535,
+          -0.0004426877615053004
+        ],
+        "reference_m": [
+          0.005237000039261289,
+          -0.31655673031283194,
+          -0.44058752528272277
+        ],
+        "xy_distance_m": 0.0014677627750221507
+      },
+      "support_wait_s": 0,
+      "body_error_at_peak": {
+        "coordinate_frame": "r1357-export-world-Z-up-m",
+        "rotation_angle_rad": 0.003420016243731954,
+        "translation_m": [
+          -0.000043413518594167784,
+          -0.0018376968188432274,
+          -0.0013137360192861953
+        ]
+      },
+      "internal_contacts": {
+        "samples": 0,
+        "first_endpoint_s": null,
+        "last_endpoint_s": null,
+        "maximum_penetration_m": 0,
+        "maximum_force_n": 0
+      }
+    }
+  ],
+  "comparisons": {
+    "refinement": {
+      "markers": [
+        {
+          "id": "+X-foot-surface",
+          "maximum_error_m": 0.00018740250416763094,
+          "rms_error_m": 0.00007765896337775021,
+          "worst_time_s": 2.8000000000000003
+        },
+        {
+          "id": "+Y-foot-surface",
+          "maximum_error_m": 0.0015051029486646019,
+          "rms_error_m": 0.0005487043111405555,
+          "worst_time_s": 1.47
+        },
+        {
+          "id": "-X-foot-surface",
+          "maximum_error_m": 0.0001511555866126047,
+          "rms_error_m": 0.00006900657441116633,
+          "worst_time_s": 2.8000000000000003
+        },
+        {
+          "id": "-Y-foot-surface",
+          "maximum_error_m": 0.0017260114678912778,
+          "rms_error_m": 0.0003000542094024638,
+          "worst_time_s": 1.41
+        }
+      ],
+      "contact_pair_mismatch_samples": 3,
+      "maximum_sampled_differences": {
+        "current_a": 0.5390740129769735,
+        "gear_speed_rad_s": 0.876997198713459,
+        "heating_w": 0.7444985343217487,
+        "joint_positions": 0.01101318463144072,
+        "joint_velocities": 0.9147231036072707,
+        "motor_states": 2,
+        "motor_voltage_v": 3.2410989972747855,
+        "power_difference_w": 0.009216313191938053,
+        "servo_commands": 0.29343901745148027,
+        "servo_states": 0.93860642848056,
+        "shaft_torque_nm": 0.28426437988635356,
+        "supply_current_a": 0.09766517654714926
+      },
+      "scope": "Aligned sampled diagnostic only; motor_states and joint arrays contain mixed units. Event occurrence matching is diagnostic, not proof of identical modes. Optional accepted-stage impulse comparison is diagnostic. No energy, hardware or learning gate is established."
+    },
+    "coarse-comparison": {
+      "markers": [
+        {
+          "id": "+X-foot-surface",
+          "maximum_error_m": 0.0004595857741381773,
+          "rms_error_m": 0.0002062792373734676,
+          "worst_time_s": 2.8000000000000003
+        },
+        {
+          "id": "+Y-foot-surface",
+          "maximum_error_m": 0.0009470135397944203,
+          "rms_error_m": 0.0005925066064793494,
+          "worst_time_s": 1.5
+        },
+        {
+          "id": "-X-foot-surface",
+          "maximum_error_m": 0.0007251197085956385,
+          "rms_error_m": 0.00033038439234350217,
+          "worst_time_s": 2.8000000000000003
+        },
+        {
+          "id": "-Y-foot-surface",
+          "maximum_error_m": 0.004034337425450019,
+          "rms_error_m": 0.0020330227378336204,
+          "worst_time_s": 1.45
+        }
+      ],
+      "contact_pair_mismatch_samples": 0,
+      "maximum_sampled_differences": {
+        "current_a": 0.5404549532568967,
+        "gear_speed_rad_s": 0.9317347604699554,
+        "heating_w": 0.7849318013260048,
+        "joint_positions": 0.015734175274660187,
+        "joint_velocities": 0.6842617929159651,
+        "motor_states": 2,
+        "motor_voltage_v": 3.5092282352017765,
+        "power_difference_w": 0.009642249587775712,
+        "servo_commands": 0.3185811696274434,
+        "servo_states": 0.509150475461427,
+        "shaft_torque_nm": 0.42808531065472527,
+        "supply_current_a": 0.10174501393461963
+      },
+      "scope": "Aligned sampled diagnostic only; motor_states and joint arrays contain mixed units. Event occurrence matching is diagnostic, not proof of identical modes. Optional accepted-stage impulse comparison is diagnostic. No energy, hardware or learning gate is established."
+    }
+  },
+  "contact_probes": [
+    {
+      "time_s": 1.33,
+      "reported_penetration_m": 9.935057473997653e-7,
+      "nearest_cad_surface_mm": 0.19991079459183128,
+      "any_cad_solid_inside": false,
+      "grid_nodes": [
+        {
+          "index": [
+            22,
+            35,
+            21
+          ],
+          "stored_distance_m": -0.000815,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            22,
+            35,
+            22
+          ],
+          "stored_distance_m": 0.000533,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            22,
+            36,
+            21
+          ],
+          "stored_distance_m": -0.002765,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            22,
+            36,
+            22
+          ],
+          "stored_distance_m": 0.000533,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            23,
+            35,
+            21
+          ],
+          "stored_distance_m": 0.001718,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            23,
+            35,
+            22
+          ],
+          "stored_distance_m": 0.000533,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            23,
+            36,
+            21
+          ],
+          "stored_distance_m": 0.001552,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            23,
+            36,
+            22
+          ],
+          "stored_distance_m": -0.000006,
+          "any_cad_solid_inside": true
+        }
+      ]
+    },
+    {
+      "time_s": 1.34,
+      "reported_penetration_m": 0.0000012406581908569686,
+      "nearest_cad_surface_mm": 0.1999107949221062,
+      "any_cad_solid_inside": false,
+      "grid_nodes": [
+        {
+          "index": [
+            22,
+            35,
+            21
+          ],
+          "stored_distance_m": -0.000815,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            22,
+            35,
+            22
+          ],
+          "stored_distance_m": 0.000533,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            22,
+            36,
+            21
+          ],
+          "stored_distance_m": -0.002765,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            22,
+            36,
+            22
+          ],
+          "stored_distance_m": 0.000533,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            23,
+            35,
+            21
+          ],
+          "stored_distance_m": 0.001718,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            23,
+            35,
+            22
+          ],
+          "stored_distance_m": 0.000533,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            23,
+            36,
+            21
+          ],
+          "stored_distance_m": 0.001552,
+          "any_cad_solid_inside": false
+        },
+        {
+          "index": [
+            23,
+            36,
+            22
+          ],
+          "stored_distance_m": -0.000006,
+          "any_cad_solid_inside": true
+        }
+      ]
+    }
+  ],
+  "geometry_scope": "Read-only exact B-rep distance and solid classification at captured rigid poses. CAD/world millimetres; runtime inputs metres. Nonnegative shape distance alone cannot distinguish touching from overlap. Point classification uses 1e-6 mm tolerance. No continuous clearance or hardware certification.",
+  "portability": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "robot-forward-slow",
+    "compared_frames": 281,
+    "simulated_s": 2.8000000000000003,
+    "maximum_native_wasm_entry_difference": 5.696213833950026e-9,
+    "worst_path": "frame[102].contacts.1.force_n.2",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 2075.315000027418,
+    "simulation_ms": 183938.21500000358,
+    "max_chunk_ms": 2611.175000011921,
+    "main_thread_heartbeats": 36176,
+    "replay_progress_messages": 280,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "artifacts": {
+    "examples/full-robot/forward-rate-experiment.json": "4fe63ff1bdff8901b5d2a3cab0b1fbfa314d3bd3c6a5a7eda82f3cbf753fb396",
+    "runs/full-robot/learning/forward-slow/manifest.json": "fa028fa3e1811cdbe53046401b8b6ed980e96b440c84246dd043d66cf49d9234",
+    "runs/full-robot/learning/forward-slow/execution.json": "8695eb61b4e575a3873dff669a7a78d357ace6a0d712e25f4bcdd88d47e4d54b",
+    "runs/full-robot/learning/forward-slow/tracking.json": "0fb70480dcd9e1831b03f17e7f3ee421fc4d718ac922901ceaec105dc44f97cc",
+    "runs/full-robot/learning/forward-slow/lift.json": "4b782d28dfda2ff09f4972d804356911ac661a5bbcba8421db610ae26ae4716b",
+    "runs/full-robot/learning/forward-slow/config.json": "dd60a75c12865f8717226f6700c5c764b48f4a75b4284c228bb42cea875012ec",
+    "runs/full-robot/learning/forward-slow/refined.execution.json": "767f20c84e3129a5d816870316d5076c483a98fc26ed3ca1e3b85118b33fd650",
+    "runs/full-robot/learning/forward-slow/refined.tracking.json": "fb2bbcffb5f7644b05c1ee3cea089288900df7ff2238c771087b076ab5894a19",
+    "runs/full-robot/learning/forward-slow/refined.lift.json": "07cd04ff965f7f91fafcd78f930c2ddfb0d54815c645d690c53834434663bbd7",
+    "runs/full-robot/learning/forward-slow/refined.config.json": "c10432908c9862856a4e8db7c5f63f4ae42024ad17de46ba011f1a92549650ac",
+    "runs/full-robot/learning/forward-slow/coarse.execution.json": "f20f426582afa5080cd5560575f186ba4f796ba0a91bf26a7ac8f2e2d39e1091",
+    "runs/full-robot/learning/forward-slow/coarse.tracking.json": "00cce4abb6bb772e2de3b56b0284a42b4a29de42eefc15710c5aceb76d85b2d2",
+    "runs/full-robot/learning/forward-slow/coarse.lift.json": "6c5f78d0e52462489dba46d2dbcc86523693d40efb6fda7c1e123ffe6e1ed645",
+    "runs/full-robot/learning/forward-slow/coarse.config.json": "c54a40979500d4d47a771992f159022c365efa376aeaa8a4ff547a9947607bca",
+    "runs/full-robot/learning/forward-slow/refinement.json": "146de8c90e169843470d2328e3d22af79bd752fcb67741b1a4180ac736a3499c",
+    "runs/full-robot/learning/forward-slow/coarse-comparison.json": "28591d545ecadd25004ef45595e0f2203fa94175f0644b8afb0530f375c2def9",
+    "runs/full-robot/learning/forward-slow/hip-contact-cells.json": "80adda8d2b432f0e28ff1cef0935283ffa1a87935c780f2a0f1a018fcf020f09",
+    "runs/interactive/forward-slow/robot-browser.json": "5b68feb3c3cd9b45da34683562ae339a2dc39a4631e4e6868ef91478820ac3e9",
+    "runs/interactive/forward-slow/viewer-report.json": "3bb12be47bc868a676b50c75ba24b4fac03d2c3321da325c27527a797537099e",
+    "runs/interactive/forward-slow/viewer/build-manifest.json": "2463701ad4a4828070708dad64f893707e0ad9658fb4fba82a3e81659b75f0d3",
+    "runs/full-robot/learning/forward-slow/plan.json": "e04820cb1c363f5b61e9ad7d90f33bcb284fb47b2442845cf4478e44aee44465",
+    "runs/full-robot/learning/forward-slow/planner.json": "e39717d176c2465e8fc28cc543874c8306b67bd197d5fae8f1a19cf857e02106",
+    "runs/full-robot/learning/forward-slow/lift-requirements.json": "8e1e9df6fb519e4f65cceca0c01383fd05b60cc8c5f6fb74a13d392c7568d4f5",
+    "runs/full-robot/learning/forward-slow/inspection-times.json": "da527af9089828256fff854648751d6a1ca80ec929b21e19e56dad9f16983b6b",
+    "runs/full-robot/learning/forward-slow/scene.json": "0e8d7f6d6427821987223336d6df4eb5730913947465d1cf0454fcf82f55fb43",
+    "examples/full-robot/prepare_forward_rate.mjs": "0f1926aff811ec6645707784d8ab434df825978c6c065f6a53f186d3c7a8b4a7",
+    "examples/full-robot/summarize_forward_rate.mjs": "27a0223b8490c31394de5a009077ea1f9a130a2571cac9c1806a634e5fb1b400",
+    "cad/robocad/capture_geometry.py": "1bb936c45fa1033d5481781c24588a106cc2350f0ae4526c625390417eade140",
+    "cad/tests/test_capture_geometry.py": "5908fe812ee246646c381d9c86eddcb736465401fb4f690f9b444194962e0360",
+    "examples/full-robot/audit_captured_geometry.py": "267eb98cc14e52e92e15eefc56bb48d5af3f83cf8d840bf6667cced240027c2f",
+    "crates/sim-runtime/src/motion_tracking.rs": "838ac87d9116173ceb9d14d59772c920fc5b9ddde2ec358dea95ff0feb439693",
+    "crates/sim-runtime/tests/motion_tracking.rs": "faec663aab009946c2dbe3ecf5458ea234b2e298be8884a159794a8242884c49",
+    "cad/robocad/physical.py": "3b1123fb4354ad7c6a1271722072097925301eea0b617e2a555c479c1a54025d",
+    "cad/robocad/kernel/base.py": "3f9c15aa11e1ad136cdf401886b76ef414d93f75ad8c36a2876f4795a683010f",
+    "cad/robocad/kernel/occt.py": "8927cd5cba186c7f420715b145f8afdb0f384b75666d0a65d1b7ff4658841c1d",
+    "cad/tests/test_physical.py": "b1f0b4766f91fcd853aa17f5982d52ab6ea408147d6fd738fcabb18bcea5e13e",
+    "examples/full-robot/forward-rate-validation.md": "dc899bf39b86f12f1800023201809e996934cbd8e495ff61379a6af89c9376b2",
+    "examples/full-robot/chassis-sign-correction-experiment.json": "9599c45f788305cf842a5635743206f7779d3f9013f4092b5e9c311647c48e5b",
+    "runs/interactive/forward-slow/source-manifest.json": "f3b67a195ceebf68393b22c8b5e364e3f169da7e0166e8b2356c75f962fddcae",
+    "runs/interactive/robot-lab-slower-placement-2026-09-07.zip": "085e46ada8180727e805a7aa50ab4e943a495bb6bff6865b2b7787a742cf2dc7",
+    "runs/interactive/landing-checkpoint/native-runner": "a39e00964e2b1db33da6507fcea537484000f6f2d11fb326a3c685f74514f8d5",
+    "runs/interactive/landing-checkpoint/source-manifest.json": "a4420318d452beb85259fa4a798957549b22faf6636389f415ab3ac5bbfacb43"
+  }
+}

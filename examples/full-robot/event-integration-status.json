@@ -1,0 +1,345 @@
+{
+  "version": 1,
+  "scope": "Experimental shared hybrid motor integration and exact mechanical endpoint reuse. Full learning goal remains incomplete; no physics-accuracy or realtime promotion.",
+  "hardware": "Intel Core i9-9980HK development Mac, 8 physical/16 logical cores; implicit reduced solver serial",
+  "boundaries": "Twelve original CAD MotorUnit components at prescribed 0 V and 293.15 K. Zero voltage means short-circuit braking. Original contact and joint friction retained; ideal geometric closure replaces detailed stabilized closure.",
+  "cases": [
+    {
+      "name": "mechanical-motor-events",
+      "path": "runs/full-robot/learning/mechanical-motor-events.json",
+      "sha256": "6d2ab57dc0daba3970f429b1afabca8274062110b8af510200b5aa707d4a2fdd",
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.0005,
+      "stepping_wall_s": 129.0261256690001,
+      "events_including_startup": 58,
+      "continuous_attempts": 658,
+      "minimum_accepted_step_s": 0.0000019469384667932937,
+      "successful_trial_work": {
+        "successful_trial_endpoint_evaluations": 83330,
+        "successful_trial_newton_iterations": 7654,
+        "successful_trials": 656
+      }
+    },
+    {
+      "name": "mechanical-motor-events-refined",
+      "path": "runs/full-robot/learning/mechanical-motor-events-refined.json",
+      "sha256": "2a896ea1fe1cc8f45dc04a76a4be2cc77e810cf11b892435b6398fa88af56e14",
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "stepping_wall_s": 168.02425923000007,
+      "events_including_startup": 76,
+      "continuous_attempts": 986,
+      "minimum_accepted_step_s": 0.000001989018254884567,
+      "successful_trial_work": {
+        "successful_trial_endpoint_evaluations": 105284,
+        "successful_trial_newton_iterations": 9855,
+        "successful_trials": 984
+      }
+    },
+    {
+      "name": "mechanical-motor-events-reuse",
+      "path": "runs/full-robot/learning/mechanical-motor-events-reuse.json",
+      "sha256": "eb911980a826ca4dc8be7d6fc2f850f30ff617c8eb2731ae7eb79c4193a03c98",
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.0005,
+      "stepping_wall_s": 53.065120856999975,
+      "events_including_startup": 58,
+      "continuous_attempts": 658,
+      "minimum_accepted_step_s": 0.0000019469384667932937,
+      "successful_trial_work": {
+        "successful_trial_endpoint_evaluations": 83330,
+        "successful_trial_mechanical_cache_hits": 53296,
+        "successful_trial_mechanical_preparations": 30034,
+        "successful_trial_newton_iterations": 7654,
+        "successful_trials": 656
+      }
+    },
+    {
+      "name": "mechanical-motor-events-reuse-refined",
+      "path": "runs/full-robot/learning/mechanical-motor-events-reuse-refined.json",
+      "sha256": "e646e6143794b37edb4b2c91a56bc3e9243dc4c7327a02efb1fd98c16091d4ed",
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.00025,
+      "stepping_wall_s": 70.13738061699999,
+      "events_including_startup": 76,
+      "continuous_attempts": 986,
+      "minimum_accepted_step_s": 0.000001989018254884567,
+      "successful_trial_work": {
+        "successful_trial_endpoint_evaluations": 105284,
+        "successful_trial_mechanical_cache_hits": 67160,
+        "successful_trial_mechanical_preparations": 38124,
+        "successful_trial_newton_iterations": 9855,
+        "successful_trials": 984
+      }
+    },
+    {
+      "name": "mechanical-motor-events-reuse-quarter",
+      "path": "runs/full-robot/learning/mechanical-motor-events-reuse-quarter.json",
+      "sha256": "c55e86b5a5ffb07fe477b264545dffb762fc9b602f6e1196b537a3ac856d2a53",
+      "completed": true,
+      "error": null,
+      "simulated_s": 0.1,
+      "step_s": 0.000125,
+      "stepping_wall_s": 73.51772378399988,
+      "events_including_startup": 81,
+      "continuous_attempts": 1334,
+      "minimum_accepted_step_s": 6.050355274334353e-7,
+      "successful_trial_work": {
+        "successful_trial_endpoint_evaluations": 116873,
+        "successful_trial_mechanical_cache_hits": 74888,
+        "successful_trial_mechanical_preparations": 41985,
+        "successful_trial_newton_iterations": 10772,
+        "successful_trials": 1333
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "name": "mechanical-motor-events-refinement-comparison",
+      "path": "runs/full-robot/learning/mechanical-motor-events-refinement-comparison.json",
+      "sha256": "670e515c551fc6ea6d21a4f59a92c2a5b67b5fec782531e90362111dcc7f13ef",
+      "exact_frames": false,
+      "exact_terminal_frame": false,
+      "exact_event_schedule": false,
+      "markers": [
+        {
+          "id": "+X-foot-surface",
+          "maximum_error_m": 0.0005755679567451933,
+          "rms_error_m": 0.00023349809647037458,
+          "worst_time_s": 0.038
+        },
+        {
+          "id": "+Y-foot-surface",
+          "maximum_error_m": 0.0004871683195269511,
+          "rms_error_m": 0.0002266144249535122,
+          "worst_time_s": 0.088
+        },
+        {
+          "id": "-X-foot-surface",
+          "maximum_error_m": 0.0017931789629663305,
+          "rms_error_m": 0.0008096484476148219,
+          "worst_time_s": 0.1
+        },
+        {
+          "id": "-Y-foot-surface",
+          "maximum_error_m": 0.00047449898132707663,
+          "rms_error_m": 0.00022285535938277188,
+          "worst_time_s": 0.088
+        }
+      ],
+      "contact_pair_mismatch_samples": 18,
+      "event_count_mismatch_guards": [
+        7,
+        13,
+        16,
+        30,
+        33
+      ],
+      "first_sampled_contact_pair_difference": {
+        "candidate_contact_pairs": [
+          "11:null"
+        ],
+        "marker_errors_m": {
+          "+X-foot-surface": 0.00002717969153181287,
+          "+Y-foot-surface": 0.000017956184860870998,
+          "-X-foot-surface": 0.000023401977152455425,
+          "-Y-foot-surface": 0.000018027305244515216
+        },
+        "reference_contact_pairs": [],
+        "time_s": 0.018000000000000002
+      }
+    },
+    {
+      "name": "mechanical-motor-events-reuse-comparison",
+      "path": "runs/full-robot/learning/mechanical-motor-events-reuse-comparison.json",
+      "sha256": "34b7a39d45cce4c3adec8c5579711bc1111bae5588136541042421bff3902812",
+      "exact_frames": true,
+      "exact_terminal_frame": true,
+      "exact_event_schedule": true,
+      "markers": [
+        {
+          "id": "+X-foot-surface",
+          "maximum_error_m": 0,
+          "rms_error_m": 0,
+          "worst_time_s": 0
+        },
+        {
+          "id": "+Y-foot-surface",
+          "maximum_error_m": 0,
+          "rms_error_m": 0,
+          "worst_time_s": 0
+        },
+        {
+          "id": "-X-foot-surface",
+          "maximum_error_m": 0,
+          "rms_error_m": 0,
+          "worst_time_s": 0
+        },
+        {
+          "id": "-Y-foot-surface",
+          "maximum_error_m": 0,
+          "rms_error_m": 0,
+          "worst_time_s": 0
+        }
+      ],
+      "contact_pair_mismatch_samples": 0,
+      "event_count_mismatch_guards": [],
+      "first_sampled_contact_pair_difference": null
+    },
+    {
+      "name": "mechanical-motor-events-reuse-refined-comparison",
+      "path": "runs/full-robot/learning/mechanical-motor-events-reuse-refined-comparison.json",
+      "sha256": "7ae5a040e781c5fcc1e8494d1289f13577547dff2c67ae5c398c711f4ec290fc",
+      "exact_frames": true,
+      "exact_terminal_frame": true,
+      "exact_event_schedule": true,
+      "markers": [
+        {
+          "id": "+X-foot-surface",
+          "maximum_error_m": 0,
+          "rms_error_m": 0,
+          "worst_time_s": 0
+        },
+        {
+          "id": "+Y-foot-surface",
+          "maximum_error_m": 0,
+          "rms_error_m": 0,
+          "worst_time_s": 0
+        },
+        {
+          "id": "-X-foot-surface",
+          "maximum_error_m": 0,
+          "rms_error_m": 0,
+          "worst_time_s": 0
+        },
+        {
+          "id": "-Y-foot-surface",
+          "maximum_error_m": 0,
+          "rms_error_m": 0,
+          "worst_time_s": 0
+        }
+      ],
+      "contact_pair_mismatch_samples": 0,
+      "event_count_mismatch_guards": [],
+      "first_sampled_contact_pair_difference": null
+    },
+    {
+      "name": "mechanical-motor-events-quarter-comparison",
+      "path": "runs/full-robot/learning/mechanical-motor-events-quarter-comparison.json",
+      "sha256": "743a8f94e6cbc5eaca938ea981a69280ac53f1a894041ec5f8baf622d49229ec",
+      "exact_frames": false,
+      "exact_terminal_frame": false,
+      "exact_event_schedule": false,
+      "markers": [
+        {
+          "id": "+X-foot-surface",
+          "maximum_error_m": 0.0008688418173141718,
+          "rms_error_m": 0.0004298666930285519,
+          "worst_time_s": 0.06
+        },
+        {
+          "id": "+Y-foot-surface",
+          "maximum_error_m": 0.00048102617550435835,
+          "rms_error_m": 0.00023989888182295426,
+          "worst_time_s": 0.066
+        },
+        {
+          "id": "-X-foot-surface",
+          "maximum_error_m": 0.0016979391081152775,
+          "rms_error_m": 0.0006683943961261765,
+          "worst_time_s": 0.08
+        },
+        {
+          "id": "-Y-foot-surface",
+          "maximum_error_m": 0.0004758944681301619,
+          "rms_error_m": 0.00023858586978533946,
+          "worst_time_s": 0.078
+        }
+      ],
+      "contact_pair_mismatch_samples": 19,
+      "event_count_mismatch_guards": [
+        6,
+        7,
+        12,
+        15,
+        16,
+        33,
+        34
+      ],
+      "first_sampled_contact_pair_difference": {
+        "candidate_contact_pairs": [],
+        "marker_errors_m": {
+          "+X-foot-surface": 0.000170943552413416,
+          "+Y-foot-surface": 0.00003316328392162887,
+          "-X-foot-surface": 0.00004919561761716071,
+          "-Y-foot-surface": 0.00003471638092480569
+        },
+        "reference_contact_pairs": [
+          "11:null"
+        ],
+        "time_s": 0.03
+      }
+    }
+  ],
+  "tests": {
+    "embedding_step_motor_native_and_no_default": 19,
+    "shared_dynamics_lib_root_schedule_hybrid": 21,
+    "runtime_session": 18,
+    "comparison_example": 1,
+    "wasm": "cargo check --locked -p sim-web --target wasm32-unknown-unknown passed; existing unused rotor_speed warning; no new browser runtime/performance measurement"
+  },
+  "source_snapshot": {
+    "path": "runs/full-robot/learning/event-source-manifest.json",
+    "sha256": "27d473165fb9f1822c94b59c08b83b37c847b4ee18de1d5af08df860c144472b",
+    "scope": "Local ignored dirty-source snapshot; earlier uncached binaries were not preserved. Current reuse-on code matches retained uncached results at two timestep resolutions."
+  },
+  "limitations": [
+    "All timings are single diagnostic runs, not repeat-run benchmarks; raw captures are ignored local evidence, not versioned golden tests.",
+    "Exact equality covers saved frames, terminal frame, and located motor event schedule; contact impulses between 2 ms samples are not audited.",
+    "Timestep differences do not consistently contract across 0.5/0.25/0.125 ms. Early foot errors shrink approximately as expected, but later contact and transmission histories diverge.",
+    "Full robot calibration, current limiting/driver/battery, firmware and thermal coupling, deployed sensors, conservative operating envelope, planner, teacher/student learning and policy viewer remain incomplete."
+  ],
+  "next": "Record accepted-step contact impulses and localize lift-off/recontact and backlash differences, retaining all original equations and residual checks; complete actuator/observation integration before task gates and learning.",
+  "inputs": [
+    {
+      "path": "runs/full-robot/solver-performance/bracket-option-off.scene.json",
+      "sha256": "f54321e4d94266c8cc184e4ecc9d6436ce08b1cd48bf230949f65e37e6f875ac"
+    },
+    {
+      "path": "examples/full-robot/baseline/robot.rcad",
+      "sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+    },
+    {
+      "path": "examples/full-robot/foot-markers.json",
+      "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+    },
+    {
+      "path": "examples/full-robot/mechanical-motor-events.json",
+      "sha256": "bfd1e3c77dd9e165ee896b9e68861150a9ecc8730eef5eb956ad1989df7d84af"
+    },
+    {
+      "path": "runs/full-robot/learning/mechanical-motor-events-refined.config.json",
+      "sha256": "a0cb39e4a98cf1376fb96c45ca26cde8fa339814f8648dc7bb6d92d4b8606e70"
+    },
+    {
+      "path": "examples/full-robot/mechanical-motor-events-reuse.json",
+      "sha256": "6080196dba88ea3368a11f2777417b03946ec88878ab4f455df46e00a2cc4b4e"
+    },
+    {
+      "path": "examples/full-robot/mechanical-motor-events-reuse-refined.json",
+      "sha256": "96432ddb224c00f5ea7963588486d55f368c3ef9c0af51a80991cde1117dd29e"
+    },
+    {
+      "path": "examples/full-robot/mechanical-motor-events-reuse-quarter.json",
+      "sha256": "6264fa44101276b4c8911f82afcc2934f88c5a6ca603c975a3567b8c2e109236"
+    }
+  ]
+}

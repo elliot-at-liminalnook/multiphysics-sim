@@ -132,6 +132,9 @@ impl Behavior for External {
     fn guards(&self, view: &View, out: &mut Vec<f64>) {
         out.push(view.state(self.clock()) - view.time);
     }
+    fn scheduled_events(&self, view: &View, out: &mut Vec<(usize, f64)>) {
+        out.push((0, view.state(self.clock())));
+    }
     fn jump(&mut self, _index: usize, view: &View, states: &mut [f64]) {
         if self.failure.is_none() {
             if let Err(message) = self.sample(view, states) {

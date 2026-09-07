@@ -1,0 +1,519 @@
+{
+  "milestone": "bounded_swing_point_feedback",
+  "task_accepted": false,
+  "scope": "Teacher-state experiment; native/refined task and browser evidence recorded. Not walking, hardware calibration or realtime acceptance.",
+  "recipe": {
+    "scene": "runs/full-robot/learning/body-feedback/scene.json",
+    "config": "runs/full-robot/learning/body-feedback/config.json",
+    "plan": "runs/full-robot/learning/forward-slow/chassis-solid-sign.plan.json",
+    "controller": "examples/interactive/controllers/point-position-feedback.rhai",
+    "output_directory": "runs/full-robot/learning/point-feedback",
+    "marker_ids": [
+      "-Y-foot-surface"
+    ],
+    "point_gain": 0.25,
+    "damping_m_per_rad": 0.002,
+    "maximum_correction_rad": 0.04,
+    "activation": {
+      "interpolation": "quintic_rest_to_rest",
+      "keyframes": [
+        {
+          "time_s": 0,
+          "values": [
+            0
+          ]
+        },
+        {
+          "time_s": 0.75,
+          "values": [
+            0
+          ]
+        },
+        {
+          "time_s": 0.9,
+          "values": [
+            1
+          ]
+        },
+        {
+          "time_s": 1.5,
+          "values": [
+            1
+          ]
+        },
+        {
+          "time_s": 1.65,
+          "values": [
+            0
+          ]
+        }
+      ]
+    },
+    "scope": "Ideal world foot-position feedback during the planned swing, with gradual activation. Same body/joint gains, robot, world and motor path. Provisional policy parameters, not calibrated hardware."
+  },
+  "native": [
+    {
+      "inactive_prefix_maximum_foot_difference_m": 0,
+      "previous_maximum_world_foot_path_error_m": 0.004155824443485315,
+      "step_s": 0.00025,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 200.86404272100032,
+      "lift": {
+        "failed_clearance_samples": 51,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.19999999999999996,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003210609282164656,
+        "qualifying_start_s": 1.23,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "peak_body_error": {
+        "coordinate_frame": "r1357-export-world-Z-up-m",
+        "rotation_angle_rad": 0.007712072253091983,
+        "translation_m": [
+          -0.00007472180848987122,
+          -0.0015371271120289912,
+          -0.0011282243183283382
+        ]
+      },
+      "terminal_world_foot": {
+        "actual_m": [
+          0.006151433650002654,
+          -0.31702496182586254,
+          -0.4410301313525547
+        ],
+        "distance_m": 0.0011186284956590752,
+        "error_m": [
+          0.0009144336107413647,
+          -0.0004682315130306036,
+          -0.00044260606983193007
+        ],
+        "reference_m": [
+          0.005237000039261289,
+          -0.31655673031283194,
+          -0.44058752528272277
+        ],
+        "xy_distance_m": 0.0010273410233454215
+      },
+      "maximum_world_foot_path_error_m": 0.003764320579982285,
+      "internal_contact_samples": 0,
+      "maximum_sampled_point_suggestion_rad": 0.04000000000000001
+    },
+    {
+      "inactive_prefix_maximum_foot_difference_m": 0,
+      "previous_maximum_world_foot_path_error_m": 0.004141961943984247,
+      "step_s": 0.000125,
+      "simulated_s": 2.8000000000000003,
+      "wall_s": 270.7113692679983,
+      "lift": {
+        "failed_clearance_samples": 50,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.20999999999999996,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032032764365013122,
+        "qualifying_start_s": 1.23,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "peak_body_error": {
+        "coordinate_frame": "r1357-export-world-Z-up-m",
+        "rotation_angle_rad": 0.007540092372788155,
+        "translation_m": [
+          -0.00007080942501233546,
+          -0.0015275062323997207,
+          -0.0011291739847972184
+        ]
+      },
+      "terminal_world_foot": {
+        "actual_m": [
+          0.006410336612213468,
+          -0.3169874325166577,
+          -0.44103024503440563
+        ],
+        "distance_m": 0.0013259803468896698,
+        "error_m": [
+          0.0011733365729521793,
+          -0.0004307022038257391,
+          -0.00044271975168286293
+        ],
+        "reference_m": [
+          0.005237000039261289,
+          -0.31655673031283194,
+          -0.44058752528272277
+        ],
+        "xy_distance_m": 0.0012498892358155235
+      },
+      "maximum_world_foot_path_error_m": 0.0037540811922014664,
+      "internal_contact_samples": 0,
+      "maximum_sampled_point_suggestion_rad": 0.04
+    }
+  ],
+  "refinement": {
+    "markers": [
+      {
+        "id": "+X-foot-surface",
+        "maximum_error_m": 0.00020278509431955675,
+        "rms_error_m": 0.0000941951442908202,
+        "worst_time_s": 2.8000000000000003
+      },
+      {
+        "id": "+Y-foot-surface",
+        "maximum_error_m": 0.0014446097958924894,
+        "rms_error_m": 0.0003193672083522583,
+        "worst_time_s": 1.42
+      },
+      {
+        "id": "-X-foot-surface",
+        "maximum_error_m": 0.0001917121874615121,
+        "rms_error_m": 0.00009815528381907294,
+        "worst_time_s": 2.8000000000000003
+      },
+      {
+        "id": "-Y-foot-surface",
+        "maximum_error_m": 0.002177405722666986,
+        "rms_error_m": 0.0005219019248182661,
+        "worst_time_s": 1.44
+      }
+    ],
+    "contact_pair_mismatch_samples": 0,
+    "maximum_sampled_differences": {
+      "current_a": 0.4707097826984558,
+      "gear_speed_rad_s": 0.6563180230009056,
+      "heating_w": 0.8423379392859556,
+      "joint_positions": 0.008678430503934194,
+      "joint_velocities": 1.1227697444135771,
+      "motor_states": 1,
+      "motor_voltage_v": 2.396714418961588,
+      "power_difference_w": 0.01087373682858006,
+      "servo_commands": 0.21804053226094694,
+      "servo_states": 0.47048853554171743,
+      "shaft_torque_nm": 0.29386670830735745,
+      "supply_current_a": 0.09493680007175424
+    }
+  },
+  "portability": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "robot-point-feedback",
+    "compared_frames": 281,
+    "simulated_s": 2.8000000000000003,
+    "maximum_native_wasm_entry_difference": 3.21624426535827e-8,
+    "worst_path": "frame[3].policy.observations.marker.-X-foot-surface.floor_force_world.x",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 2025.5849999785423,
+    "simulation_ms": 182665.95999997854,
+    "max_chunk_ms": 2290.5,
+    "main_thread_heartbeats": 37489,
+    "replay_progress_messages": 280,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "ui": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "robot-forward-solid-sign motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "point feedback gain, world foot tracking, phase activation and replay",
+      "body feedback gain, world target/actual diagnostics, support weights and replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "profile": {
+    "hardware": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "os_release": "25.6.0"
+    },
+    "simulated_s": 2.8000000000000003,
+    "stepping_wall_s": 173.61351193600024,
+    "simulation_per_wall": 0.01612777697298223,
+    "profiling_preserves_all_sampled_frames": true,
+    "counts": {
+      "nominal_steps": 11200,
+      "accepted_segments": 11280,
+      "continuous_attempts": 11753,
+      "minimum_accepted_step_s": 7.343264932793378e-7,
+      "successful_trial_endpoint_evaluations": 785939,
+      "successful_trial_newton_iterations": 106757,
+      "successful_trials_with_reused_jacobian": 5520
+    },
+    "timing": [
+      {
+        "calls": 0,
+        "name": "step (total)",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "implicit solve",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 11753,
+        "name": "newton calls",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": 0
+      },
+      {
+        "calls": 106809,
+        "name": "newton iterations",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": 0
+      },
+      {
+        "calls": 9948,
+        "name": "fresh jacobians",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": 0
+      },
+      {
+        "calls": 11,
+        "name": "stale full-step refreshes",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": 0
+      },
+      {
+        "calls": 118981,
+        "name": "residual evaluations",
+        "seconds": 63.317676410000004,
+        "percentage_of_stepping_wall": 36.47047727099779,
+        "mean_microseconds_per_call": 532.1662820954607
+      },
+      {
+        "calls": 9948,
+        "name": "jacobian assembly",
+        "seconds": 103.52409765300001,
+        "percentage_of_stepping_wall": 59.62905565274347,
+        "mean_microseconds_per_call": 10406.523688480098
+      },
+      {
+        "calls": 0,
+        "name": "  slots supplied",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "  slots with supplied rate partials",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "  slots finite-difference",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "  component FD residual calls",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 9948,
+        "name": "factorisation",
+        "seconds": 0.6431334550000001,
+        "percentage_of_stepping_wall": 0.37043974736083946,
+        "mean_microseconds_per_call": 64.64952301970246
+      },
+      {
+        "calls": 9948,
+        "name": "  factor entries sum/sort",
+        "seconds": 0.23023731,
+        "percentage_of_stepping_wall": 0.13261485666212042,
+        "mean_microseconds_per_call": 23.144080217129073
+      },
+      {
+        "calls": 0,
+        "name": "  sparse matrix construction",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "  symbolic cache lookup/build",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "    symbolic cache misses",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "  sparse numeric factorisation",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 106808,
+        "name": "back-substitution",
+        "seconds": 0.413288737,
+        "percentage_of_stepping_wall": 0.23805102056362532,
+        "mean_microseconds_per_call": 3.869454881656805
+      },
+      {
+        "calls": 0,
+        "name": "guards",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "event location",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 0,
+        "name": "jumps (incl. coupler)",
+        "seconds": 0,
+        "percentage_of_stepping_wall": 0,
+        "mean_microseconds_per_call": null
+      },
+      {
+        "calls": 321990,
+        "name": "embedded closure mapping",
+        "seconds": 85.38632953000001,
+        "percentage_of_stepping_wall": 49.18184568576452,
+        "mean_microseconds_per_call": 265.1831719308054
+      },
+      {
+        "calls": 307990,
+        "name": "embedded contact history",
+        "seconds": 36.162185902000004,
+        "percentage_of_stepping_wall": 20.829131038677797,
+        "mean_microseconds_per_call": 117.41350661385111
+      },
+      {
+        "calls": 319190,
+        "name": "embedded dynamics preparation",
+        "seconds": 38.641423247000006,
+        "percentage_of_stepping_wall": 22.25715200165096,
+        "mean_microseconds_per_call": 121.06088300698646
+      },
+      {
+        "calls": 798502,
+        "name": "embedded applied force solve",
+        "seconds": 2.489537481,
+        "percentage_of_stepping_wall": 1.4339537592659994,
+        "mean_microseconds_per_call": 3.117759856581449
+      },
+      {
+        "calls": 787302,
+        "name": "embedded component equations",
+        "seconds": 4.94224787,
+        "percentage_of_stepping_wall": 2.846695406877017,
+        "mean_microseconds_per_call": 6.277448641055148
+      },
+      {
+        "calls": 854149,
+        "name": "  closure Jacobian",
+        "seconds": 26.915477997,
+        "percentage_of_stepping_wall": 15.5031009377438,
+        "mean_microseconds_per_call": 31.511455257806308
+      },
+      {
+        "calls": 854149,
+        "name": "  closure factorization",
+        "seconds": 27.892782702,
+        "percentage_of_stepping_wall": 16.06602066334688,
+        "mean_microseconds_per_call": 32.65564052876021
+      },
+      {
+        "calls": 854149,
+        "name": "    closure SVD",
+        "seconds": 18.025423692,
+        "percentage_of_stepping_wall": 10.382500469574497,
+        "mean_microseconds_per_call": 21.103371533538063
+      }
+    ],
+    "scope": "Complete native development profile, including profiler overhead. Other development/browser processes may be running. Buckets overlap and nest; do not sum percentages. Successful-trial counters omit failed solver internals; continuous_attempts includes rejected hybrid work. A very small accepted segment can arise at an event boundary and does not itself prove convergence failure. No isolated performance or hardware-accuracy acceptance.",
+    "inputs": {
+      "runs/full-robot/learning/point-feedback/profile.execution.json": "6c1481af87ecbe83929eb2bd2c5d25d7eb1d7a6024f121a4cfbe1df76c3251b5",
+      "runs/full-robot/learning/point-feedback/execution.json": "f47b1601e2b4fd37225f0e46e50f333fa076f39012b8c0cb74f196a3349bb738"
+    }
+  },
+  "artifacts": {
+    "runs/full-robot/learning/point-feedback/manifest.json": "9cebb06b93ac2d6677405c94aff2bffc8a8a61e1b4013e77330fc16ba4a6f5a4",
+    "runs/full-robot/learning/point-feedback/execution.json": "f47b1601e2b4fd37225f0e46e50f333fa076f39012b8c0cb74f196a3349bb738",
+    "runs/full-robot/learning/point-feedback/lift.json": "d517126e60c563fc1ac3b5784b76943201660c2a9887b9b1ba725e054f1093ef",
+    "runs/full-robot/learning/point-feedback/tracking.json": "3b532b9cf1273beb13ffd22d83596334e226cacfceb353e75d1948460db96be2",
+    "runs/full-robot/learning/body-feedback/tracking.json": "0795ff0aa361e77bba729ea77e148983763e363466b011722b39359e56105d99",
+    "runs/full-robot/learning/point-feedback/refined.execution.json": "4024d6155062e909623672137e7dbee07405c60a290ec53ec3696d2038d9ede2",
+    "runs/full-robot/learning/point-feedback/refined.lift.json": "65a9e4a3544f2f31d20b3b780f619bef661e82d06465609df86eab30bd02bdbc",
+    "runs/full-robot/learning/point-feedback/refined.tracking.json": "f4183261fbc49a67872992e97aa6b42279c4189045db9847723267f64bf906c6",
+    "runs/full-robot/learning/body-feedback/refined.tracking.json": "967877fbe223370c5af153deecb5690398234099ce052c09bae2add53a9f59f9",
+    "runs/full-robot/learning/point-feedback/refinement.json": "f6807b47212f35c766d1894328166434762bf863c04493c210606de15e1844b5",
+    "runs/full-robot/learning/point-feedback/profile.json": "8d26ca394bcd55b240102413e99160f5ae70436691634473a23f794153209e08",
+    "runs/full-robot/learning/point-feedback/profile.config.json": "3d934de733e46cb3a16abbf7234e30ab1698e9c401d817082ce707ed68c7d0c2",
+    "runs/full-robot/learning/point-feedback/profile.execution.json": "6c1481af87ecbe83929eb2bd2c5d25d7eb1d7a6024f121a4cfbe1df76c3251b5",
+    "runs/interactive/point-feedback/robot-browser.json": "58fe4371ecbb86bab035c9e598f4d89750b38a369daa11225b992959874b3211",
+    "runs/interactive/point-feedback/viewer-report.json": "6113f012f6339c61a8b1e858f96b937c36e37d2b2eb0d6f0eb08a1af05a52f50",
+    "runs/full-robot/learning/point-feedback/scene.json": "ef3027a8228d8aa2e051b8d02a8742f1e988a82564496c08b51e41b487dea3fd",
+    "runs/full-robot/learning/point-feedback/config.json": "9d157a7033edd0c038d3f9bbf20d99fb2555f15635bce245e78929ee0fe7226a",
+    "runs/full-robot/learning/point-feedback/refined.config.json": "9a9b852d821579366207b4951b8b16b41cf3d4a7e43521818afbfdf2bdd2ea0c",
+    "examples/full-robot/point-feedback-experiment.json": "2f5586999c5a6874e8111da7afcda58672ed9333d42d4271ce308adce862434e",
+    "examples/full-robot/prepare_point_feedback.mjs": "c0d7f6c3ec9a4433623811a4ed78238199d373913839ff0ce33debe992b1324f",
+    "examples/full-robot/summarize_point_feedback.mjs": "81530c41057286a65aa88e318c6b797b0976d5a5943ae93e131e6332163b788c",
+    "examples/full-robot/point-feedback-validation.md": "21c7dd63aff92d96083afae9945951c798391f038fc56ec7564acafa8267fdc3",
+    "examples/interactive/summarize_embedded_profile.mjs": "81a120ceff03dda1de89eedc7223ee760f38e6a21cb4739d2a2f3e770ae5cc67",
+    "examples/interactive/controllers/point-position-feedback.rhai": "9994e7b14abcb8208f54d7c789c56fa173213db0754b2b692b0edfe785076254",
+    "crates/sim-runtime/src/point_feedback.rs": "0f8bf38c6d960c89e80be293fa527a30d8c43185988a085c6d3b13c5a14b4606",
+    "crates/sim-runtime/src/body_feedback.rs": "645db9d7bf47af5232cc96d56cae472e60da6af84f6058a18e484af004b0b3c3",
+    "crates/sim-runtime/src/embedded_policy.rs": "f9e02e152c19a1165e0644c1abcc7c5ff561aea03c49b2d63e6a4a9defa32a15",
+    "crates/sim-runtime/src/embedded.rs": "18000f0430dd8c9db3f491aa6b022c1af70aec8fcc7d4aa40ec7ab8151c9fba8",
+    "crates/sim-runtime/tests/point_feedback.rs": "b42992ead9441e652b318143a586859a6043816808199db33cdc89ba9818d06a",
+    "runs/interactive/point-feedback/native-runner": "d03d922fdae6641f966b17c3824a0911d4c63cae28335895c20bdbc8377ebd32",
+    "runs/interactive/point-feedback/source-manifest.json": "594bad3bab127ee3d360a56012ca602a04ca64f320d1c0165d85d75481763e9c",
+    "runs/interactive/point-feedback/viewer/build-manifest.json": "8873acf9408ceb0948258e1d43487a1046f6499d63ec284c13856b0e6be596e3",
+    "runs/interactive/point-feedback/viewer/sim_web_bg.wasm": "224f6f64dead008ca7f461668d87d23b2e5ac3d82b6fa74712bea332c709e2b4",
+    "runs/interactive/robot-lab-point-feedback-2026-09-07.zip": "53caad8cdd09affbfe45dd7009282f641214d5b10180bebd79eda6626381a4e2"
+  }
+}

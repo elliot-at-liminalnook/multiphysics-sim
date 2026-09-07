@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "experiment_id": "synthetic-marker-demo",
+  "coordinate_frame": "bench-origin-Z-up-m",
+  "start_s": 0.0,
+  "end_s": 0.1,
+  "max_sample_gap_s": 0.05,
+  "points": [
+    {"id": "foot", "placement_margin_m": 0.02, "other_error_reserve_m": 0.008}
+  ]
+}

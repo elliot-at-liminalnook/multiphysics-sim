@@ -5,7 +5,7 @@ pub mod equations;
 pub mod parameters;
 pub use parameters::ParameterDeclaration;
 pub use couple::{Channel, Contract, Coupler, CouplerError, FnCoupler};
-pub use equations::{Behavior, Branch, Context, EquationError, Equations, Input, Lane, LocalJacobian, Output, Provision, StateDeclaration, View, param, param_or};
+pub use equations::{linearization_batch_columns, Behavior, Branch, Context, EquationError, Equations, Input, Lane, LocalJacobian, Output, PreparedResidual, Provision, StateDeclaration, View, param, param_or};
 
 use serde::{Deserialize, Serialize};
 use slotmap::{SecondaryMap, SlotMap, new_key_type};

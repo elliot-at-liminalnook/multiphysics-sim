@@ -69,6 +69,26 @@ def win(qapp, monkeypatch):
     QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
 
 
+def test_joint_drive_backlash_editor_distinguishes_unknown_and_estimate(win):
+    import math
+    from PySide6.QtWidgets import QLineEdit
+    a = win.ops.box((0, 0, 0), (10, 10, 10))
+    b = win.ops.box((0, 0, 10), (10, 10, 20))
+    joint = win.ops.add_joint('revolute', a, b, (5, 5, 10), (0, 0, 1))
+    win.viewport.selection.set_nodes([joint])
+    win.properties.refresh()
+    editor = win.properties.findChild(QLineEdit, 'drive-backlash')
+    assert editor.text() == '' and editor.placeholderText() == 'Unmeasured'
+    editor.setText('1.5'); editor.editingFinished.emit()
+    value = win.doc.nodes[joint].robot['physics']['drive_backlash']
+    assert value['width_rad'] == pytest.approx(math.radians(1.5))
+    assert value['provenance'] == 'estimated'
+    win.properties.refresh()
+    editor = win.properties.findChild(QLineEdit, 'drive-backlash')
+    editor.clear(); editor.editingFinished.emit()
+    assert win.doc.nodes[joint].robot['physics']['drive_backlash']['width_rad'] is None
+
+
 def test_commands_and_keymap(win):
     assert len(win.commands) > 120
     assert "Ctrl+Z" in win.commands["edit.undo"]["keys"]
@@ -665,3 +685,61 @@ def test_large_assembly_joint_selection_defers_geometry(win,monkeypatch):
  monkeypatch.setattr(physical,'inspect_joint_physics',forbid)
  result=win.properties._joint_physics(win.doc.nodes[j])
  assert 'deferred' in result['source']
+
+
+def test_motion_playback_api_scrub_and_large_mesh_reuses_buffers(win):
+    import numpy as np
+    from dataclasses import replace
+    from robocad.api import Service
+    b=win.ops.box((10,0,0),(10,2,2))
+    jid=win.ops.add_joint('revolute',None,b,(0,0,0),lower=-2,upper=2)
+    win.viewport.sync();original=win.viewport.items[b]
+    # A large display mesh must retain its vertex buffers throughout playback.
+    large=replace(original,indices=np.tile(original.indices,(5000,1)))
+    win.viewport.items[b]=large
+    p={'name':'Inspect drive','duration':4.,'loop':True,'tracks':[{'joint':jid,'unit':'deg','keys':[[0,0],[2,90],[4,0]]}]}
+    service=Service(win.doc,win.ops,win);revision=win.doc.revision
+    state=service.motion_request('POST',['motion','seek'],{'program':p,'time':2.})
+    assert state['positions'][jid]==pytest.approx(np.pi/2)
+    assert win.viewport._pose_gpu
+    assert win.viewport.items[b].vertices is large.vertices
+    assert win.viewport.items[b].bbox[0][0]==pytest.approx(-2,abs=1e-5)
+    assert win.doc.revision==revision
+    service.motion_request('POST',['motion','play'],{'program':p,'time':1.})
+    assert win.pose_panel.timer.isActive()
+    service.motion_request('POST',['motion','pause'],{})
+    assert not win.pose_panel.timer.isActive()
+    service.motion_request('POST',['motion','stop'],{})
+    assert win.viewport.items[b] is large
+    assert not win.viewport._pose_gpu and win.properties.isEnabled()
+
+
+def test_video_export_fixed_frames_restore_pose_and_cancel_preserves_file(win,tmp_path,monkeypatch):
+    import time
+    import numpy as np
+    from PySide6.QtGui import QImage,QColor
+    from PySide6.QtWidgets import QApplication
+    from imageio_ffmpeg import read_frames
+    b=win.ops.box((10,0,0),(10,2,2));jid=win.ops.add_joint('revolute',None,b,(0,0,0),lower=-2,upper=2)
+    p={'name':'Video test','duration':1.,'loop':True,'tracks':[{'joint':jid,'unit':'deg','keys':[[0,0],[.5,45],[1,0]]}]}
+    panel=win.pose_panel;panel.prepare(p);panel.seek(.5)
+    revision=win.doc.revision
+    def framebuffer():
+        img=QImage(64,64,QImage.Format_RGB888)
+        img.fill(QColor(round(panel.playhead*200),80,120));return img
+    monkeypatch.setattr(win.viewport,'grabFramebuffer',framebuffer)
+    def finish():
+        until=time.monotonic()+15
+        while panel.video.running and time.monotonic()<until:
+            QApplication.processEvents();time.sleep(.005)
+        assert not panel.video.running
+    path=tmp_path/'motion.mp4';panel.video.start(str(path),fps=4,width=64,height=64);finish()
+    assert panel.video.status=='complete' and path.exists()
+    frames=read_frames(str(path),pix_fmt='rgb24');meta=next(frames);pixels=list(frames)
+    assert meta['fps']==4 and len(pixels)==4 and meta['size']==(64,64)
+    assert pixels[0]!=pixels[2]
+    assert panel.playhead==.5 and panel.positions[jid]==pytest.approx(np.pi/4)
+    assert win.doc.revision==revision and win.viewport.isEnabled()
+    original=path.read_bytes();panel.video.start(str(path),fps=4,width=64,height=64);panel.video.cancel();finish()
+    assert panel.video.status=='cancelled' and path.read_bytes()==original
+    assert not list(tmp_path.glob('.motion-*.mp4'))

@@ -1,0 +1,157 @@
+{
+  "kind": "support-gated reference execution diagnostic",
+  "result": "Both physics resolutions reproducibly time out; retained as failed task episodes. No stepping, hardware-transfer or realtime gate passed.",
+  "source_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "motion_gate": {
+    "clock": {
+      "duration_s": 1.6,
+      "guard_end_s": 1.1,
+      "guard_start_s": 0.5,
+      "maximum_pause_s": 0.3,
+      "period_s": 0.01,
+      "qualification_s": 0.05
+    },
+    "minimum_upward_force_n": 1.0,
+    "observation_source": "ideal_runtime_floor_force",
+    "support_links": [
+      "+X | Sliding foot crosshead",
+      "+Y | Sliding foot crosshead",
+      "-X | Sliding foot crosshead"
+    ]
+  },
+  "runs": {
+    "coarse": {
+      "completed": false,
+      "error": "motion gate timed out at physics time 0.99s, reference time 0.6900000000000001s",
+      "physics_elapsed_s": 0.99,
+      "reference_elapsed_s": 0.6900000000000001,
+      "step_s": 0.00025,
+      "stepping_wall_s": 79.6040519099999,
+      "first_pause": {
+        "clock": {
+          "advancing": false,
+          "paused_intervals": 0,
+          "qualified_samples": 0,
+          "reference_tick": 69,
+          "samples": 70,
+          "timed_out": false
+        },
+        "ready": false,
+        "time_s": 0.6900000000000001,
+        "upward_forces_n": [
+          19.471321386346965,
+          0.8783542880450597,
+          18.853677267799277
+        ]
+      },
+      "terminal_policy_sample": {
+        "clock": {
+          "advancing": false,
+          "paused_intervals": 30,
+          "qualified_samples": 0,
+          "reference_tick": 69,
+          "samples": 100,
+          "timed_out": true
+        },
+        "ready": false,
+        "time_s": 0.99,
+        "upward_forces_n": [
+          19.447483998163726,
+          0.40518217514602334,
+          19.16201514930717
+        ]
+      },
+      "accepted_internal_contact_samples": 0,
+      "maximum_reported_original_position_closure_by_unit": {
+        "1": 1.3660947373317356e-17,
+        "m": 8.184286581780498e-13,
+        "rad": 5.551115123125783e-17
+      },
+      "policy_sample_count": 100
+    },
+    "refined": {
+      "completed": false,
+      "error": "motion gate timed out at physics time 0.99s, reference time 0.6900000000000001s",
+      "physics_elapsed_s": 0.99,
+      "reference_elapsed_s": 0.6900000000000001,
+      "step_s": 0.000125,
+      "stepping_wall_s": 95.36485605300052,
+      "first_pause": {
+        "clock": {
+          "advancing": false,
+          "paused_intervals": 0,
+          "qualified_samples": 0,
+          "reference_tick": 69,
+          "samples": 70,
+          "timed_out": false
+        },
+        "ready": false,
+        "time_s": 0.6900000000000001,
+        "upward_forces_n": [
+          19.467646656437473,
+          0.8996753712365415,
+          18.875757741737235
+        ]
+      },
+      "terminal_policy_sample": {
+        "clock": {
+          "advancing": false,
+          "paused_intervals": 30,
+          "qualified_samples": 0,
+          "reference_tick": 69,
+          "samples": 100,
+          "timed_out": true
+        },
+        "ready": false,
+        "time_s": 0.99,
+        "upward_forces_n": [
+          19.447868663922392,
+          0.40593190565233706,
+          19.15172657715419
+        ]
+      },
+      "accepted_internal_contact_samples": 0,
+      "maximum_reported_original_position_closure_by_unit": {
+        "1": 1.8431436932253575e-17,
+        "m": 8.998357614586894e-13,
+        "rad": 5.551115123125783e-17
+      },
+      "policy_sample_count": 100
+    }
+  },
+  "exact_policy_clock_and_ready_trace_under_refinement": true,
+  "tests": {
+    "sim_domain_control": "7 passed (3 clock, 4 trajectory)",
+    "support": "3 passed including analytic 2 N load",
+    "compare_embedding": "3 passed after optional metadata compatibility correction",
+    "WASM_runtime_library": "check passed; existing unused rotor_speed warning"
+  },
+  "limits": [
+    "Ideal simulated floor-force observation is privileged and not a deployed sensor contract.",
+    "One-newton per-support threshold is diagnostic, not a calibrated balance acceptance condition.",
+    "This reference-time governor does not actively redistribute load or limit reference acceleration/jerk at pauses.",
+    "No full failed-trajectory equivalence is claimed; comparison tools retain failed-capture rejection.",
+    "Stepping times include some concurrent checks and are not controlled throughput benchmarks."
+  ],
+  "next": "Add bounded active stance and weight-transfer correction using shared Rust components, then establish loaded stepping and observation/action gates before teacher/student learning.",
+  "sha256": {
+    "runs/full-robot/learning/support-gate-source-manifest.json": "3854163168edace377b6c168915d7015a634c9cde773176c1937277e2d442a3b",
+    "runs/full-robot/learning/support-gated-motion-execution.json": "2df6348958211abe5e315c66a88ae9b64e57c4803cba834cee12ae6fd3d22226",
+    "runs/full-robot/learning/support-gated-motion-process.json": "8955065c5165116ff6cd1cd54548d0c7a9529166e62c467bf4384d41989d8762",
+    "runs/full-robot/learning/support-gated-motion-refined-execution.json": "7762713630c05f482f61cf76acb2cadf608230d79e123a8717761fcaf74974fe",
+    "runs/full-robot/learning/support-gated-motion-refined-process.json": "a0bbd38b50f92a7dad0153bf4a213569ab372212f3d9f259c15cc30339fc52ed",
+    "runs/full-robot/learning/catalog-stall-consistent.scene.json": "932306374b8db9ddcdfce1ea05d21dad551c7c6e3395a3bde5c969db74fe80f4",
+    "runs/full-robot/learning/moving-joint-band-coarse-execution.json": "0958d968c062de2cdea6286dc46ba4001f504932fecc829264567c9374316b1a",
+    "examples/full-robot/baseline/robot.rcad": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "examples/full-robot/catalog-stall-correction-experiment.json": "b5d189ab15bb96e9fbbb1a0d59179f0e6b519de139424ef4a3e721854e679fd2",
+    "examples/full-robot/mechanical-servo-support-gated-motion.json": "a99da024ee0374337f975f71afb7a82b376b747e375267d21fd9c04c32b55447",
+    "examples/full-robot/mechanical-servo-support-gated-motion-refined.json": "be7133fac236431d3ba10d0de94ca72aa2a0abf7daf847927c1f1cd2784e3471",
+    "crates/sim-domain-control/src/motion_clock.rs": "4f96cb546e7c404c31c896485f9b78a6084a863b94a7e787940f6a309eaecf17",
+    "crates/sim-domain-control/src/elements.rs": "74fbe31a1d11ae010f9442c587a8ee4d34d944b2174e20a981a03790b65debc9",
+    "crates/sim-domain-control/tests/motion_clock.rs": "62afea84a759f8abdcf322111a9d07485c193e89e0c021975b69bf08ebbe66fd",
+    "crates/sim-runtime/src/support.rs": "323183edc7a616e16f3fbfd8a1a1950892fe6f9b753af0b822108335cc01ff37",
+    "crates/sim-runtime/examples/integrate_embedding.rs": "6c99ead5d7f15f76eec8ed7eccff81a51b70a7de85f6149c3b7008d0ac593f36",
+    "crates/sim-runtime/examples/compare_embedding.rs": "1a1ab88cf0fcc19fb109225958fc9e916a5ad990cf6c0ded63a77e12ee97a578",
+    "crates/sim-runtime/examples/compare_motion.rs": "0305cb09ddda051d37f821a027f289e360280399945f4f63cc51829eecbb87ca"
+  }
+}

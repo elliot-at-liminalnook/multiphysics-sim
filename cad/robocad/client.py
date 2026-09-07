@@ -125,6 +125,10 @@ class RoboClient:
     def set_uncertainty(self, **sigmas) -> dict:
         return self.put("/uncertainty", sigmas)
 
+    def set_joint_physics(self, joint_id: str, **overrides) -> dict:
+        """Use the CAD command's validation and undo, including drive provenance."""
+        return self.op('set_joint_physics', joint_id, **overrides)
+
     def threads(self, node_id=None, status=None):
         from urllib.parse import urlencode
         q = urlencode({k: v for k, v in {"node_id": node_id, "status": status}.items() if v is not None})

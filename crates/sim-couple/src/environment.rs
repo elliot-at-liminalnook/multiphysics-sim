@@ -163,6 +163,9 @@ pub fn serve(mut envs: Vec<Box<dyn Environment>>, reader: impl BufRead, writer: 
 
 /// Run `f` on every environment on its own thread; the first error wins.
 fn parallel(envs: &mut [Box<dyn Environment>], frames: &mut [Frame], f: impl Fn(usize, &mut Box<dyn Environment>, &mut Frame) -> Result<(), String> + Sync) -> Result<(), String> {
+    #[cfg(target_arch = "wasm32")]
+    return envs.iter_mut().zip(frames.iter_mut()).enumerate().try_for_each(|(k, (env, frame))| f(k, env, frame));
+    #[cfg(not(target_arch = "wasm32"))]
     let results: Vec<Result<(), String>> = std::thread::scope(|scope| {
         let handles: Vec<_> = envs.iter_mut().zip(frames.iter_mut()).enumerate().map(|(k, (env, frame))| {
             let f = &f;
@@ -170,6 +173,7 @@ fn parallel(envs: &mut [Box<dyn Environment>], frames: &mut [Frame], f: impl Fn(
         }).collect();
         handles.into_iter().map(|h| h.join().unwrap_or_else(|_| Err("environment thread panicked".into()))).collect()
     });
+    #[cfg(not(target_arch = "wasm32"))]
     results.into_iter().collect()
 }
 

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "embedding": {
+    "absolute_rank_tolerance": 1e-12,
+    "angle_scale_rad": 1.0,
+    "length_scale_m": 0.1,
+    "max_iterations": 30,
+    "max_scaled_correction": 0.25,
+    "relative_rank_tolerance": 1e-10,
+    "scaled_closure_tolerance": 1e-08
+  },
+  "full_velocity_dimension": 34,
+  "reduced_velocity_dimension": 18,
+  "independent_coordinates": [
+    "joint.-Y | Hip servo output",
+    "joint.-Y | Worm servo output",
+    "joint.-Y | Foot servo output",
+    "joint.+X | Hip servo output",
+    "joint.+X | Worm servo output",
+    "joint.+X | Foot servo output",
+    "joint.+Y | Hip servo output",
+    "joint.+Y | Worm servo output",
+    "joint.+Y | Foot servo output",
+    "joint.-X | Hip servo output",
+    "joint.-X | Worm servo output",
+    "joint.-X | Foot servo output"
+  ],
+  "samples": 41,
+  "kinematic_mapping_s": 0.05567777,
+  "inertia_projection_s": 0.00134772,
+  "instantaneous_dynamics_s": 0.005058023000000002,
+  "maximum_original_projected_force_error": 2.1288526497187377e-14,
+  "scope": "Local ideal rigid coordinate map and instantaneous dynamics only; not a complete training model or simulation benchmark.",
+  "tests": {
+    "native_embedding": 5,
+    "no_default_embedding": 5,
+    "wasm_runtime_compile": "passed; existing rotor_speed dead-code warning"
+  },
+  "files": [
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding.rs",
+      "sha256": "f2efd1864fedd4cf6bc3655986f4a541cc336e660fb455d1857736fba48a12a8"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedding.rs",
+      "sha256": "1f5b41ea38a3797de875cf6a382dfb4afe020b60d5ead9f82737a47e7821dd3d"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_embedding.rs",
+      "sha256": "78d21d49ef065d368a95b67f391579590a2d27ee85d7e0cdec211141954f7d7a"
+    },
+    {
+      "path": "runs/full-robot/learning/embedding-dynamics-audit.json",
+      "sha256": "8f926d10d8de33ef82c0a04c596bab6bc746fd728341f3c8ac011c397f32871d"
+    }
+  ],
+  "raw_evidence": "runs/full-robot/learning/embedding-manifest.json (local ignored evidence)"
+}

@@ -1,0 +1,502 @@
+{
+  "version": 1,
+  "option": "implicit.reuse_step_jacobian",
+  "default_enabled": false,
+  "physical_equations_changed": false,
+  "training_ready": false,
+  "realtime": false,
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "trajectory_comparisons": {
+    "coarse": {
+      "maximum_marker_difference_m": 1.1189588480321608e-14,
+      "sampled_differences": {
+        "current_a": 6.303486378700374e-12,
+        "gear_speed_rad_s": 1.6733843477556576e-11,
+        "heating_w": 6.7863770158993475e-12,
+        "joint_positions": 1.3397117616664733e-13,
+        "joint_velocities": 3.83850503465899e-11,
+        "motor_states": 1.6733843477556576e-11,
+        "motor_voltage_v": 9.475606410624948e-11,
+        "power_difference_w": 4.41591208044656e-14,
+        "servo_commands": 8.525652406277118e-12,
+        "servo_states": 1.899142301753365e-11,
+        "shaft_torque_nm": 2.9122884659393833e-12,
+        "supply_current_a": 6.281537789920577e-13
+      },
+      "same_event_counts": true,
+      "maximum_ordered_event_time_difference_s": 9.802159084415507e-13,
+      "same_accepted_contact_identities": true,
+      "accepted_segments": 406,
+      "maximum_accepted_contact_force_difference_n": 1.2923050198170806e-09,
+      "maximum_window_impulse_difference_ns": 1.1799659778085708e-12,
+      "maximum_sampled_original_closure": {
+        "position": 1.9215184998699897e-13,
+        "velocity": 2.536599402747086e-15,
+        "acceleration": 4.580225088091083e-13
+      },
+      "stepping_wall_s": 6.056347562999998,
+      "work": {
+        "successful_trial_dynamics_cache_hits": 15756,
+        "successful_trial_dynamics_preparations": 10148,
+        "successful_trial_endpoint_evaluations": 25904,
+        "successful_trial_mechanical_cache_hits": 15756,
+        "successful_trial_mechanical_preparations": 10148,
+        "successful_trial_newton_iterations": 3483,
+        "successful_trials": 434,
+        "successful_trials_with_reused_jacobian": 187
+      }
+    },
+    "refined": {
+      "maximum_marker_difference_m": 2.8350592508079107e-14,
+      "sampled_differences": {
+        "current_a": 1.3124741571335363e-10,
+        "gear_speed_rad_s": 4.434545699399939e-11,
+        "heating_w": 5.362804644803987e-11,
+        "joint_positions": 8.809645721252757e-13,
+        "joint_velocities": 1.7207413688380413e-09,
+        "motor_states": 1.3124741571335363e-10,
+        "motor_voltage_v": 3.4974571849755165e-10,
+        "power_difference_w": 3.2987501619174964e-13,
+        "servo_commands": 3.2099828871368086e-11,
+        "servo_states": 4.767903016844599e-10,
+        "shaft_torque_nm": 1.1867208778160165e-10,
+        "supply_current_a": 4.347949084104741e-12
+      },
+      "same_event_counts": true,
+      "maximum_ordered_event_time_difference_s": 1.1833280882944663e-11,
+      "same_accepted_contact_identities": true,
+      "accepted_segments": 807,
+      "maximum_accepted_contact_force_difference_n": 1.3017635747976549e-08,
+      "maximum_window_impulse_difference_ns": 5.470404284855703e-12,
+      "maximum_sampled_original_closure": {
+        "position": 9.813538870417915e-13,
+        "velocity": 1.2405007576710148e-14,
+        "acceleration": 7.688072400924284e-12
+      },
+      "stepping_wall_s": 8.673393916,
+      "work": {
+        "successful_trial_dynamics_cache_hits": 18710,
+        "successful_trial_dynamics_preparations": 14675,
+        "successful_trial_endpoint_evaluations": 33385,
+        "successful_trial_mechanical_cache_hits": 18710,
+        "successful_trial_mechanical_preparations": 14675,
+        "successful_trial_newton_iterations": 6569,
+        "successful_trials": 850,
+        "successful_trials_with_reused_jacobian": 569
+      }
+    }
+  },
+  "off_coarse_work": {
+    "successful_trial_dynamics_cache_hits": 23699,
+    "successful_trial_dynamics_preparations": 13019,
+    "successful_trial_endpoint_evaluations": 36718,
+    "successful_trial_mechanical_cache_hits": 23699,
+    "successful_trial_mechanical_preparations": 13019,
+    "successful_trial_newton_iterations": 3144,
+    "successful_trials": 434,
+    "successful_trials_with_reused_jacobian": 0
+  },
+  "fresh_path_regression": {
+    "exact_frames": true,
+    "exact_terminal_frame": true,
+    "exact_event_schedule": true
+  },
+  "unprofiled_benchmark": {
+    "cpu": "Intel Core i9-9980HK @ 2.40GHz, 8 physical / 16 logical cores",
+    "compiler": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "simulated_s": 0.1,
+    "pairs": [
+      {
+        "repeat": 1,
+        "order": [
+          "off",
+          "on"
+        ],
+        "off_wall_s": 8.568862348999996,
+        "on_wall_s": 6.9035787880000035,
+        "paired_speedup": 1.2412203310976382
+      },
+      {
+        "repeat": 2,
+        "order": [
+          "on",
+          "off"
+        ],
+        "off_wall_s": 9.034177599000005,
+        "on_wall_s": 6.386288049000001,
+        "paired_speedup": 1.414621064644058
+      },
+      {
+        "repeat": 3,
+        "order": [
+          "off",
+          "on"
+        ],
+        "off_wall_s": 8.941400723000003,
+        "on_wall_s": 8.124947114999998,
+        "paired_speedup": 1.1004872519714863
+      }
+    ],
+    "median_paired_speedup": 1.2412203310976382,
+    "repeat_trajectories_identical_per_method": true,
+    "note": "Sequential alternating same-executable runs. Desktop/thermal conditions are not controlled; observed benefit varies, not realtime."
+  },
+  "profiles": {
+    "off": {
+      "wall_s": 8.422597857000005,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0.0
+        },
+        {
+          "calls": 434,
+          "name": "newton calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "newton iterations",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "fresh jacobians",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "stale full-step refreshes",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3614,
+          "name": "residual evaluations",
+          "seconds": 2.192627709
+        },
+        {
+          "calls": 495,
+          "name": "jacobian assembly",
+          "seconds": 6.003057195
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 495,
+          "name": "factorisation",
+          "seconds": 0.032882058
+        },
+        {
+          "calls": 495,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.012184718
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3144,
+          "name": "back-substitution",
+          "seconds": 0.014170852000000001
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 13419,
+          "name": "embedded closure mapping",
+          "seconds": 3.8756222800000004
+        },
+        {
+          "calls": 13019,
+          "name": "embedded contact history",
+          "seconds": 1.8998567590000002
+        },
+        {
+          "calls": 13419,
+          "name": "embedded dynamics preparation",
+          "seconds": 1.9945331060000002
+        },
+        {
+          "calls": 37118,
+          "name": "embedded applied force solve",
+          "seconds": 0.145074996
+        },
+        {
+          "calls": 36718,
+          "name": "embedded component equations",
+          "seconds": 0.28446749600000004
+        },
+        {
+          "calls": 30720,
+          "name": "  closure Jacobian",
+          "seconds": 1.107181572
+        },
+        {
+          "calls": 30720,
+          "name": "  closure factorization",
+          "seconds": 1.299713668
+        },
+        {
+          "calls": 30720,
+          "name": "    closure SVD",
+          "seconds": 0.8719664720000001
+        }
+      ],
+      "timers_preserve_trajectory": true
+    },
+    "on": {
+      "wall_s": 5.668888303000001,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0.0
+        },
+        {
+          "calls": 434,
+          "name": "newton calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3484,
+          "name": "newton iterations",
+          "seconds": 0.0
+        },
+        {
+          "calls": 326,
+          "name": "fresh jacobians",
+          "seconds": 0.0
+        },
+        {
+          "calls": 1,
+          "name": "stale full-step refreshes",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3954,
+          "name": "residual evaluations",
+          "seconds": 2.0723241590000003
+        },
+        {
+          "calls": 326,
+          "name": "jacobian assembly",
+          "seconds": 3.404498531
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0.0
+        },
+        {
+          "calls": 326,
+          "name": "factorisation",
+          "seconds": 0.019241143000000002
+        },
+        {
+          "calls": 326,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.007084967
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0.0
+        },
+        {
+          "calls": 3484,
+          "name": "back-substitution",
+          "seconds": 0.013131621000000001
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0.0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0.0
+        },
+        {
+          "calls": 10548,
+          "name": "embedded closure mapping",
+          "seconds": 2.624440533
+        },
+        {
+          "calls": 10148,
+          "name": "embedded contact history",
+          "seconds": 1.2828186270000002
+        },
+        {
+          "calls": 10548,
+          "name": "embedded dynamics preparation",
+          "seconds": 1.342898474
+        },
+        {
+          "calls": 26304,
+          "name": "embedded applied force solve",
+          "seconds": 0.08399938400000001
+        },
+        {
+          "calls": 25904,
+          "name": "embedded component equations",
+          "seconds": 0.176647604
+        },
+        {
+          "calls": 24550,
+          "name": "  closure Jacobian",
+          "seconds": 0.7921439140000001
+        },
+        {
+          "calls": 24550,
+          "name": "  closure factorization",
+          "seconds": 0.847370912
+        },
+        {
+          "calls": 24550,
+          "name": "    closure SVD",
+          "seconds": 0.544290807
+        }
+      ],
+      "timers_preserve_trajectory": true
+    }
+  },
+  "refinement_remaining": {
+    "maximum_marker_difference_m": 0.0002351531978148897,
+    "maximum_servo_duty_difference": 0.09099843430898052,
+    "interpretation": "Reuse preserves the existing timestep sensitivity; no hardware/task calibration is established."
+  },
+  "validation": {
+    "native_robot_tests": 38,
+    "no_default_robot_tests": 38,
+    "solver_library_tests": 2,
+    "solver_convergence_tests": 11,
+    "forced_sparse_cache_test": true,
+    "wasm_runtime_compile": true,
+    "ci_includes_cache_tests": true
+  },
+  "remaining_work": [
+    "Longer loaded holding and stepping trajectory gates, operating envelope and hardware calibration.",
+    "Reduce remaining complete residual/Jacobian work and repeated contact preparation.",
+    "Shared deployable observation/action contract, quadruped planner, teacher/student learning, robustness evaluation and viewable walking."
+  ],
+  "artifacts_sha256": {
+    "runs/full-robot/learning/jacobian-benchmark-1-off.json": "2bf5d5210c8f9b56bd51a6af118d8d13ef1912a05d54edfb6d1612ad4c5013b2",
+    "runs/full-robot/learning/jacobian-benchmark-1-on.json": "a453b9022dfb8744a8e17caec8d72f95056c3fa3be08d120f3a5a78629850891",
+    "runs/full-robot/learning/jacobian-reuse-on-refined.json": "dcd7abcf840534f6eef7d96e413ea3784ae3d1ddb152ac07547a8e58766bc196",
+    "runs/full-robot/learning/jacobian-profile-on.json": "28e71050eaeabf7222bd917e594732e471ac482a2a81dc1ea656f575e66fb831",
+    "runs/full-robot/learning/jacobian-reuse-coarse-comparison.json": "17aea495d04210ad7ace1c6a413724a019d5a353c9e4263e36076734f4a35a52",
+    "runs/full-robot/learning/jacobian-reuse-refinement.json": "63c490cfbe7b85f6430cba8f897205da6692e509ab59c051b248b66bf2db12c6",
+    "runs/full-robot/learning/jacobian-reuse-off-coarse.json": "598710419f4a5bc3c08e6d10fb9dd174f3804d6562ec89a3b60cb37659de17ec",
+    "runs/full-robot/learning/jacobian-benchmark-2-on.json": "271f663a3647454f99f9ce6970df4fdac704f50c71a3e603c38e4dc72b02f429",
+    "runs/full-robot/learning/jacobian-benchmark-3-on.json": "7cf5625c15a1bab30d6a0f027da1c9a296509af75b3c8ba8e432083c8d79454a",
+    "runs/full-robot/learning/jacobian-reuse-source-manifest.json": "67a0ef360885701b0f288fa08725ca562f375a29bae32e57f073fba68fb56d42",
+    "runs/full-robot/learning/jacobian-reuse-coarse-audit.json": "3072079ead00c8f54ea68cc08df83ec36feacfde5225190cef876b2706098017",
+    "runs/full-robot/learning/jacobian-reuse-refined-comparison.json": "7b34bd696d58f86665071ed83ace5f56086d03a7de08038efbc2bda24acb283b",
+    "runs/full-robot/learning/jacobian-benchmark-2-off.json": "3ac03624bdac0843b8570ed0b9085a98919825d922a229205f74356aa6e2b51c",
+    "runs/full-robot/learning/jacobian-benchmark-3-off.json": "cb44293527da4faca29d5675c8d8b1169839e6a7593848e4f38c1068d327193a",
+    "runs/full-robot/learning/jacobian-reuse-refined-audit.json": "2ac00c2ae47316f597ec68612eb0e9eb44726046b69fbd6ec6e3823958ee6ed5",
+    "runs/full-robot/learning/jacobian-reuse-off-regression.json": "8d7f53bef53d257ff8b0898d71f20709249e04bc350ba27a2b9f1bd954ec2eb1",
+    "runs/full-robot/learning/jacobian-profile-off.json": "00118e7f31b4c258f8bd836f4ffbc55e04ed8b30da882efa53205b70680ea2c5",
+    "runs/full-robot/learning/jacobian-reuse-on-coarse.json": "fba78d9877a88e102ffdaec6ac6d598a157540616aefcc8430ff5e05d685e2bd",
+    "examples/full-robot/mechanical-servo-jacobian-profile-on.json": "fd12e96605b163149b600eb8018b62819f9ad2f6d195ed5571e84dfb9118a670",
+    "examples/full-robot/mechanical-servo-jacobian-reuse-coarse.json": "8769183fa6a2f6b59dfab76b3bdb926dfa33913acbc90b077edfb6e6af1b2463",
+    "examples/full-robot/mechanical-servo-jacobian-profile-off.json": "93572b3dcbbaf62f13287771e32a9a5c6887a0ce4adc935fc14d7dccc279b5d5",
+    "examples/full-robot/mechanical-servo-jacobian-reuse-refined.json": "e176163ed5d06dc494a7d946ca244c879f4a56ca49247751c9ff52f152ddea74",
+    "runs/full-robot/learning/servo-regularized-floor.scene.json": "d99c5f808837f897b73bcceedb16d669f39a932a3d3ff75a236919c3f45954d2"
+  }
+}

@@ -19,6 +19,8 @@ use std::f64::consts::TAU;
 
 pub const ENCODER: &str = "sensor.encoder";
 pub const TACHOMETER: &str = "sensor.tachometer";
+pub const LINEAR_ENCODER: &str = "sensor.linear_encoder";
+pub const LINEAR_VELOCITY: &str = "sensor.linear_velocity";
 pub const IMU: &str = "sensor.imu";
 pub const CURRENT_SENSOR: &str = "sensor.current";
 pub const VOLTAGE_SENSOR: &str = "sensor.voltage";
@@ -48,6 +50,9 @@ macro_rules! lane_sensor {
             }
             fn guards(&self, view: &View, out: &mut Vec<f64>) {
                 self.chain.guards(view, out)
+            }
+            fn scheduled_events(&self, view: &View, out: &mut Vec<(usize, f64)>) {
+                self.chain.scheduled_events(view, 0, out)
             }
             fn jump(&mut self, index: usize, view: &View, states: &mut [f64]) {
                 self.chain.jump(index, view, states)
@@ -85,6 +90,21 @@ lane_sensor!(
 );
 fn tachometer(p: &Params) -> Made {
     Ok(Box::new(Tachometer { chain: Chain::new(p)? }))
+}
+
+lane_sensor!(
+    /// Linear position with the shared bandwidth, sampling, noise and fault chain.
+    LinearEncoder, QuantityKind::Length, |ctx| ctx.across(0), [(Input::Across(0, 0), 1.0)]
+);
+fn linear_encoder(p: &Params) -> Made {
+    Ok(Box::new(LinearEncoder { chain: Chain::new(p)? }))
+}
+lane_sensor!(
+    /// Linear velocity, read from the exact translational rate lane.
+    LinearVelocity, QuantityKind::LinearVelocity, |ctx| ctx.across_rate(0), [(Input::AcrossRate(0, 0), 1.0)]
+);
+fn linear_velocity(p: &Params) -> Made {
+    Ok(Box::new(LinearVelocity { chain: Chain::new(p)? }))
 }
 
 lane_sensor!(
@@ -130,6 +150,9 @@ impl Behavior for ThroughSensor {
     fn guards(&self, view: &View, out: &mut Vec<f64>) {
         self.chain.guards(view, out)
     }
+    fn scheduled_events(&self, view: &View, out: &mut Vec<(usize, f64)>) {
+        self.chain.scheduled_events(view, 0, out)
+    }
     fn jump(&mut self, index: usize, view: &View, states: &mut [f64]) {
         self.chain.jump(index, view, states)
     }
@@ -167,6 +190,13 @@ impl Behavior for Imu {
     }
     fn guards(&self, view: &View, out: &mut Vec<f64>) {
         self.chains.iter().for_each(|chain| chain.guards(view, out));
+    }
+    fn scheduled_events(&self, view: &View, out: &mut Vec<(usize, f64)>) {
+        let mut guard_offset = 0;
+        for chain in &self.chains {
+            chain.scheduled_events(view, guard_offset, out);
+            guard_offset += chain.guard_count();
+        }
     }
     fn jump(&mut self, index: usize, view: &View, states: &mut [f64]) {
         let per = self.chains[0].guard_count();
@@ -284,6 +314,8 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     for descriptor in [
         BehaviorDescriptor::new(ENCODER, "Shaft encoder", vec![acausal("shaft", R), signal_out("angle", Q::Angle)], encoder).with_parameters(encoder_parameters),
         BehaviorDescriptor::new(TACHOMETER, "Tachometer", vec![acausal("shaft", R), signal_out("speed", Q::AngularVelocity)], tachometer).with_parameters(chain::parameters(Some("rad/s"))),
+        BehaviorDescriptor::new(LINEAR_ENCODER, "Linear encoder", vec![acausal("axis", T), signal_out("position", Q::Length)], linear_encoder).with_parameters(chain::parameters(Some("m"))),
+        BehaviorDescriptor::new(LINEAR_VELOCITY, "Linear velocity sensor", vec![acausal("axis", T), signal_out("velocity", Q::LinearVelocity)], linear_velocity).with_parameters(chain::parameters(Some("m/s"))),
         BehaviorDescriptor::new(IMU, "Planar inertial unit", vec![acausal("frame", F), signal_out("ax", Q::LinearAcceleration), signal_out("ay", Q::LinearAcceleration), signal_out("gyro", Q::AngularVelocity)], imu).with_parameters(imu_parameters),
         BehaviorDescriptor::new(CURRENT_SENSOR, "Current sensor", vec![acausal("p", E), acausal("n", E), signal_out("current", Q::Current)], current_sensor).with_parameters(chain::parameters(Some("A"))),
         BehaviorDescriptor::new(VOLTAGE_SENSOR, "Voltage sensor", vec![acausal("p", E), acausal("n", E), signal_out("voltage", Q::Voltage)], voltage_sensor).with_parameters(chain::parameters(Some("V"))),

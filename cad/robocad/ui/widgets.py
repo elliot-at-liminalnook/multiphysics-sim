@@ -511,11 +511,22 @@ class PropertiesPanel(QWidget):
         if n.kind == "joint" and n.joint is not None:
             phys = self._joint_physics(n)
             over = (n.robot or {}).get("physics", {})
-            for key, label, scale in (("clearance", "Clearance (mm)", 1e3), ("backlash", "Backlash (°)", 180 / math.pi), ("wobble", "Wobble (°)", 180 / math.pi)):
+            for key, label, scale in (("clearance", "Radial clearance (mm)", 1e3), ("wobble", "Wobble (°)", 180 / math.pi)):
                 v = over.get(key, phys.get(key, 0.0))
                 edit = QLineEdit(f"{v * scale:.4g}")
                 edit.editingFinished.connect(lambda e=edit, k=key, sc=scale, jid=n.id: self._joint_override(jid, {k: float(evaluate(e.text())) / sc}))
                 self.dims.addRow(label + (" *" if key in over else ""), edit)
+            drive = over.get('drive_backlash', phys.get('drive_backlash', {}))
+            width = drive.get('width_rad', over.get('backlash'))
+            edit = QLineEdit('' if width is None else f'{math.degrees(width):.5g}')
+            edit.setObjectName('drive-backlash')
+            edit.setPlaceholderText('Unmeasured')
+            edit.setToolTip('Full rotational lost-motion width at the drive connection, additional to motor gearbox backlash. '
+                            'Editing declares an estimate; clearing marks it unmeasured. Radial bearing clearance is separate.\n'
+                            + drive.get('reference', 'No drive-backlash provenance supplied'))
+            edit.editingFinished.connect(lambda e=edit, jid=n.id: self._joint_drive_backlash_override(jid, e.text()))
+            provenance = drive.get('provenance', 'estimated' if width is not None else 'unmeasured')
+            self.dims.addRow(f'Drive backlash (°; {provenance})', edit)
             for key, label in (("coulomb", "Coulomb friction (mN·m)"), ("viscous", "Viscous (mN·m·s)")):
                 v = over.get("friction", {}).get(key, phys.get("friction", {}).get(key, 0.0))
                 edit = QLineEdit(f"{v * 1e3:.4g}")
@@ -648,6 +659,15 @@ class PropertiesPanel(QWidget):
     def _joint_override(self, jid, fields):
         try:
             self.app.ops.set_joint_physics(jid, **fields)
+        except Exception as e:
+            self.app.error(str(e))
+
+    def _joint_drive_backlash_override(self, jid, text):
+        try:
+            value = math.radians(float(evaluate(text))) if text.strip() else None
+            self._joint_override(jid, {'drive_backlash': {'width_rad': value,
+                'provenance': 'unmeasured' if value is None else 'estimated',
+                'reference': 'Not measured' if value is None else 'Estimate authored in the CAD joint inspector'}})
         except Exception as e:
             self.app.error(str(e))
 

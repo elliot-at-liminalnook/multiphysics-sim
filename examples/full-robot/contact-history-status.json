@@ -1,0 +1,786 @@
+{
+  "scope": "Dependency-exact contact-history query optimization in the shared library. Detailed physical laws and all numerical acceptance rules are unchanged. Parent model discrepancies and walking/learning gates remain open.",
+  "native_equivalence_passed": true,
+  "training_model_accepted": false,
+  "realtime_accepted": false,
+  "cases": [
+    {
+      "name": "base",
+      "step_s": 0.00025,
+      "simulated_s": 2.8000000000000003,
+      "exact": {
+        "frames": true,
+        "terminal_frame": true,
+        "hybrid_steps": true,
+        "hybrid_solves": true,
+        "contact_steps": true,
+        "contact_impulses": true
+      },
+      "wall_s": 78.53150031200025,
+      "wall_time_scope": "Development runs overlap other jobs; use the separate ABBA benchmark for performance.",
+      "profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 156273,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1031113,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 154848,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 47,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 1192971,
+          "name": "residual evaluations",
+          "seconds": 52.619285955
+        },
+        {
+          "calls": 154848,
+          "name": "jacobian assembly",
+          "seconds": 30.269476267
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 154848,
+          "name": "factorisation",
+          "seconds": 2.7518971580000002
+        },
+        {
+          "calls": 154848,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.413691077
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1031106,
+          "name": "back-substitution",
+          "seconds": 1.545519871
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 146799,
+          "name": "embedded closure mapping",
+          "seconds": 38.365948364000005
+        },
+        {
+          "calls": 132799,
+          "name": "embedded contact history",
+          "seconds": 0.387742185
+        },
+        {
+          "calls": 143999,
+          "name": "embedded dynamics preparation",
+          "seconds": 18.556090476
+        },
+        {
+          "calls": 155736,
+          "name": "embedded applied force solve",
+          "seconds": 0.569990772
+        },
+        {
+          "calls": 1861298,
+          "name": "embedded component equations",
+          "seconds": 10.451005588000001
+        },
+        {
+          "calls": 379736,
+          "name": "  closure Jacobian",
+          "seconds": 11.674287663000001
+        },
+        {
+          "calls": 379736,
+          "name": "  closure factorization",
+          "seconds": 12.876154576000001
+        },
+        {
+          "calls": 379736,
+          "name": "    closure SVD",
+          "seconds": 8.263273372
+        }
+      ],
+      "parent_profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 156273,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1031113,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 154848,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 47,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 1192971,
+          "name": "residual evaluations",
+          "seconds": 63.862456714000004
+        },
+        {
+          "calls": 154848,
+          "name": "jacobian assembly",
+          "seconds": 36.306698947
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 154848,
+          "name": "factorisation",
+          "seconds": 2.757874402
+        },
+        {
+          "calls": 154848,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.447220897
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1031106,
+          "name": "back-substitution",
+          "seconds": 1.5782787500000002
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 146799,
+          "name": "embedded closure mapping",
+          "seconds": 39.322797853000004
+        },
+        {
+          "calls": 132799,
+          "name": "embedded contact history",
+          "seconds": 16.244012861
+        },
+        {
+          "calls": 143999,
+          "name": "embedded dynamics preparation",
+          "seconds": 18.361561688000002
+        },
+        {
+          "calls": 155736,
+          "name": "embedded applied force solve",
+          "seconds": 0.604036466
+        },
+        {
+          "calls": 1861298,
+          "name": "embedded component equations",
+          "seconds": 10.755023761
+        },
+        {
+          "calls": 379736,
+          "name": "  closure Jacobian",
+          "seconds": 11.956912559000001
+        },
+        {
+          "calls": 379736,
+          "name": "  closure factorization",
+          "seconds": 13.068752432
+        },
+        {
+          "calls": 379736,
+          "name": "    closure SVD",
+          "seconds": 8.425495393
+        }
+      ]
+    },
+    {
+      "name": "refined",
+      "step_s": 0.000125,
+      "simulated_s": 2.8000000000000003,
+      "exact": {
+        "frames": true,
+        "terminal_frame": true,
+        "hybrid_steps": true,
+        "hybrid_solves": true,
+        "contact_steps": true,
+        "contact_impulses": true
+      },
+      "wall_s": 127.98739786300041,
+      "wall_time_scope": "Development runs overlap other jobs; use the separate ABBA benchmark for performance.",
+      "profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 258602,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1432154,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 252016,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 188,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 1696694,
+          "name": "residual evaluations",
+          "seconds": 87.47665008300001
+        },
+        {
+          "calls": 252016,
+          "name": "jacobian assembly",
+          "seconds": 45.515458027
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 252015,
+          "name": "factorisation",
+          "seconds": 4.614843757
+        },
+        {
+          "calls": 252015,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.69321421
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1432080,
+          "name": "back-substitution",
+          "seconds": 2.2502814090000003
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 237950,
+          "name": "embedded closure mapping",
+          "seconds": 62.813029330000006
+        },
+        {
+          "calls": 212750,
+          "name": "embedded contact history",
+          "seconds": 0.6658756520000001
+        },
+        {
+          "calls": 235084,
+          "name": "embedded dynamics preparation",
+          "seconds": 31.505721273000002
+        },
+        {
+          "calls": 258009,
+          "name": "embedded applied force solve",
+          "seconds": 0.997404327
+        },
+        {
+          "calls": 2782387,
+          "name": "embedded component equations",
+          "seconds": 16.121740571
+        },
+        {
+          "calls": 599086,
+          "name": "  closure Jacobian",
+          "seconds": 19.066569342
+        },
+        {
+          "calls": 599086,
+          "name": "  closure factorization",
+          "seconds": 20.950144604000002
+        },
+        {
+          "calls": 599086,
+          "name": "    closure SVD",
+          "seconds": 13.397972985000001
+        }
+      ],
+      "parent_profile": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 258602,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1432154,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 252016,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 188,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 1696694,
+          "name": "residual evaluations",
+          "seconds": 103.52739745400001
+        },
+        {
+          "calls": 252016,
+          "name": "jacobian assembly",
+          "seconds": 53.556164236
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 252015,
+          "name": "factorisation",
+          "seconds": 4.559148963
+        },
+        {
+          "calls": 252015,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.7297101180000001
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1432080,
+          "name": "back-substitution",
+          "seconds": 2.251986699
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 237950,
+          "name": "embedded closure mapping",
+          "seconds": 62.236190364
+        },
+        {
+          "calls": 212750,
+          "name": "embedded contact history",
+          "seconds": 26.523527539000003
+        },
+        {
+          "calls": 235084,
+          "name": "embedded dynamics preparation",
+          "seconds": 30.376822607
+        },
+        {
+          "calls": 258009,
+          "name": "embedded applied force solve",
+          "seconds": 0.9984161330000001
+        },
+        {
+          "calls": 2782387,
+          "name": "embedded component equations",
+          "seconds": 16.058932544
+        },
+        {
+          "calls": 599086,
+          "name": "  closure Jacobian",
+          "seconds": 18.746699826
+        },
+        {
+          "calls": 599086,
+          "name": "  closure factorization",
+          "seconds": 20.684513427000002
+        },
+        {
+          "calls": 599086,
+          "name": "    closure SVD",
+          "seconds": 13.336099477000001
+        }
+      ]
+    }
+  ],
+  "benchmark": {
+    "scope": "Sequential ABBA on identical inputs with frozen before/after binaries. No other assistant-launched heavy jobs should overlap. Host background activity is not controlled.",
+    "hardware": {
+      "platform": "darwin",
+      "arch": "x64",
+      "release": "25.6.0",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16
+    },
+    "inputs": {
+      "runs/full-robot/learning/point-feedback/scene.json": "ef3027a8228d8aa2e051b8d02a8742f1e988a82564496c08b51e41b487dea3fd",
+      "runs/full-robot/learning/contact-history/base.config.json": "f0e23e6243f122bcca79d0cfa4e4bc168c50477bffdf5d5561e303818198fc77",
+      "runs/full-robot/learning/endpoint-correction/base.execution.json": "e134c3700fb30c0d030cad0edbfd0086e25ad22d32bf9bc8be6264341c1a23ec",
+      "runs/interactive/endpoint-correction/native-runner": "9e325753647d0a6de4fb7632a2c75eed1c318eba205189057c399ba39db7d031",
+      "runs/interactive/contact-history/native-runner": "578e764af0680f75df0b65c45a979428c92cbec9dea5fade356b0c11d04cc959",
+      "/Users/elliot/physics-simulator/examples/full-robot/benchmark_contact_history.mjs": "7522a65bbefdd5a9442cff9cac392fa2f4520d80c50f842680aa71442d2d7b4f"
+    },
+    "runs": [
+      {
+        "order": 0,
+        "mode": "previous",
+        "output": "runs/full-robot/learning/contact-history/benchmark/0-previous.execution.json",
+        "sha256": "c14f8436afc00a26e4c12946978520668bf27712730e734afff3bedc5c0aa877",
+        "wall_s": 84.55942411099998,
+        "simulated_s": 2.8000000000000003
+      },
+      {
+        "order": 1,
+        "mode": "optimized",
+        "output": "runs/full-robot/learning/contact-history/benchmark/1-optimized.execution.json",
+        "sha256": "6d5ad8625486c79b7f1352295283440a8b0afb39e6559e7f30b17c0d1df0be35",
+        "wall_s": 71.51113603100026,
+        "simulated_s": 2.8000000000000003
+      },
+      {
+        "order": 2,
+        "mode": "optimized",
+        "output": "runs/full-robot/learning/contact-history/benchmark/2-optimized.execution.json",
+        "sha256": "307abb62bb07413958d085c091e0ac4121290f0fa8ac3e746b8b0e69a660c913",
+        "wall_s": 70.95321947200007,
+        "simulated_s": 2.8000000000000003
+      },
+      {
+        "order": 3,
+        "mode": "previous",
+        "output": "runs/full-robot/learning/contact-history/benchmark/3-previous.execution.json",
+        "sha256": "cb8ad7465ce2c8fcea8e00dbba987e50bc3b38af749a6d28b6b75103264a78d5",
+        "wall_s": 84.52352138600054,
+        "simulated_s": 2.8000000000000003
+      }
+    ],
+    "result": {
+      "previous_mean_s": 84.54147274850027,
+      "optimized_mean_s": 71.23217775150016,
+      "speedup": 1.1868438592939103,
+      "simulated_seconds_per_wall_second": 0.03930807801171054
+    }
+  },
+  "browser": {
+    "passed": true,
+    "task_observation_probe": null,
+    "preset": "robot-point-final-refresh",
+    "compared_frames": 281,
+    "simulated_s": 2.8000000000000003,
+    "maximum_native_wasm_entry_difference": 7.336326407481053e-8,
+    "worst_path": "frame[3].policy.observations.marker.-X-foot-surface.floor_force_world.x",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 2157.4200000166893,
+    "simulation_ms": 119383.62999999523,
+    "max_chunk_ms": 1920.7199999690056,
+    "main_thread_heartbeats": 23890,
+    "replay_progress_messages": 280,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "viewer": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "robot-forward-solid-sign motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "robot-point-feedback gain, world foot tracking, phase activation and replay",
+      "robot-point-block-factor gain, world foot tracking, phase activation and replay",
+      "robot-point-sample-reuse gain, world foot tracking, phase activation and replay",
+      "robot-point-final-refresh gain, world foot tracking, phase activation and replay",
+      "body feedback gain, world target/actual diagnostics, support weights and replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-embedded: incremental servo preset execution, target readings and recipe replay",
+      "pendulum-condensed: incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "artifacts": {
+    "runs/full-robot/learning/contact-history/manifest.json": "6a4d6c91f8e380ce83f8b7b1daf20291b957869c09e0fe5302d0f707467f9933",
+    "runs/full-robot/learning/contact-history/base.execution.json": "7a79323949584b7a0cbdc515b3de062b02756655c9a8b85238213471f5e08350",
+    "runs/full-robot/learning/endpoint-correction/base.execution.json": "e134c3700fb30c0d030cad0edbfd0086e25ad22d32bf9bc8be6264341c1a23ec",
+    "runs/full-robot/learning/contact-history/base.config.json": "f0e23e6243f122bcca79d0cfa4e4bc168c50477bffdf5d5561e303818198fc77",
+    "runs/full-robot/learning/contact-history/refined.execution.json": "95cf634202bfaff82cb762fa03bfa651ba26a7f99d11ee40b7954d1854a18d50",
+    "runs/full-robot/learning/endpoint-correction/refined.execution.json": "b8b1fc96b8aee30b773225a280b3480aedd2bae8f6abdb41487d0488fefd7d1f",
+    "runs/full-robot/learning/contact-history/refined.config.json": "2d8f1361b7fdc4148c7b62829cbbe7a97ce9837cbcde142dde4b152242aae392",
+    "runs/full-robot/learning/contact-history/benchmark/manifest.json": "8211190fc59aafb20b23189b8a6b2a621305f8c26a3c8febe1b7dd3bd2a1d577",
+    "runs/full-robot/learning/contact-history/benchmark/0-previous.execution.json": "c14f8436afc00a26e4c12946978520668bf27712730e734afff3bedc5c0aa877",
+    "runs/full-robot/learning/contact-history/benchmark/1-optimized.execution.json": "6d5ad8625486c79b7f1352295283440a8b0afb39e6559e7f30b17c0d1df0be35",
+    "runs/full-robot/learning/contact-history/benchmark/2-optimized.execution.json": "307abb62bb07413958d085c091e0ac4121290f0fa8ac3e746b8b0e69a660c913",
+    "runs/full-robot/learning/contact-history/benchmark/3-previous.execution.json": "cb8ad7465ce2c8fcea8e00dbba987e50bc3b38af749a6d28b6b75103264a78d5",
+    "runs/interactive/contact-history/robot-browser.json": "e5074c0ae517038c4ec95145d79027608339feb74fe52e8e42260842e6f267bf",
+    "runs/interactive/contact-history/viewer-report.json": "82fc6e9f18095779209de4517c011827745d6f953dbb2aae2d48b9c3036111b1",
+    "runs/full-robot/learning/point-feedback/scene.json": "ef3027a8228d8aa2e051b8d02a8742f1e988a82564496c08b51e41b487dea3fd",
+    "runs/interactive/endpoint-correction/native-runner": "9e325753647d0a6de4fb7632a2c75eed1c318eba205189057c399ba39db7d031",
+    "runs/interactive/contact-history/native-runner": "578e764af0680f75df0b65c45a979428c92cbec9dea5fade356b0c11d04cc959",
+    "runs/interactive/contact-history/source-manifest.json": "ebec0673bd2a9edf9654fb158794632c4dfbed9605b54292f03a5c301ab258a6",
+    "runs/interactive/contact-history/viewer/build-manifest.json": "840e6059b53b52d278966e8c350342d2a087a66b6e6b2c3b5a70665e2b6b403d",
+    "runs/interactive/contact-history/viewer/sim_web_bg.wasm": "82505e082f3b37ba071606a80dda822bd5e04c394e5e76e687ab960ee59a4f3b",
+    "crates/sim-domain-robot/src/articulated.rs": "85f6a6e4ced5fb22275f703b29548e3a130a453bca4ab54983527f2af15842d2",
+    "crates/sim-domain-robot/src/articulated/prepared.rs": "967a454c3f04590537027a9f51ac89480287f02d459b75b8c768cd4fcfcb6955",
+    "crates/sim-domain-robot/src/articulated/friction.rs": "9ce79e0bb6783acf5a16164ade2e2af05df431398e788c0e8a4d5f4a5c99d523",
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "941f0810c8dbdee7defebcf9b77dd29b1fc9798d502b1f3c23aa85f7fbf79671",
+    "crates/sim-domain-robot/tests/jacobian.rs": "7a98d06c21978b655a465afe20df2bb98266d2a33a9982cec8a261680e37774b",
+    "examples/full-robot/prepare_contact_history.mjs": "7878004a6f614fb9aee4dcc01b3909e348c28e6cd6c1e1eb0e3f979afe90e29a",
+    "examples/full-robot/benchmark_contact_history.mjs": "7522a65bbefdd5a9442cff9cac392fa2f4520d80c50f842680aa71442d2d7b4f",
+    "/Users/elliot/physics-simulator/examples/full-robot/summarize_contact_history.mjs": "005a8a5144c77b663bcf270f9ec8702150a396fd34f44c0c98c7e50297509f1f",
+    "examples/full-robot/contact-history-validation.md": "4c1a3843595f3ab7873ac268ef24eb69731ef1fb0a351554b3bf6ab96b60319f",
+    "runs/interactive/robot-lab-contact-history-2026-09-07.zip": "96c238e43bb79e018cb956afd3cc181b42f25c2d9b39b1fc610c19f48a438d59"
+  }
+}

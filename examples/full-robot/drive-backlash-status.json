@@ -1,0 +1,541 @@
+{
+  "scope": "Explicit v4 drive definition and provisional 1 ms robot experiment. All drive-connection gaps are estimated as zero; motor gearbox calibration, electrical transient accuracy, hardware transfer, walking and learning remain unaccepted.",
+  "training_model_accepted": false,
+  "realtime_accepted": false,
+  "legacy_migration_exact": true,
+  "cases": [
+    {
+      "name": "2000us",
+      "step_s": 0.002,
+      "simulated_s": 2.8000000000000003,
+      "development_wall_s": 15.296752722999972,
+      "lift": {
+        "failed_clearance_samples": 49,
+        "failed_support_samples": 6,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.3599999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031738940789410863,
+        "qualifying_start_s": 1.07,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "closure": {
+        "1": {
+          "position": 6.133873790836741e-17,
+          "velocity": 1.1102230246251565e-16,
+          "acceleration": 2.8033131371785203e-15
+        },
+        "m": {
+          "position": 1.6653345369377348e-16,
+          "velocity": 1.1275702593849246e-16,
+          "acceleration": 1.2789769243681803e-13
+        },
+        "rad": {
+          "position": 2.7755575615628914e-17,
+          "velocity": 3.191891195797325e-16,
+          "acceleration": 2.8421709430404007e-13
+        }
+      },
+      "accepted_segments": 2800,
+      "rejected_trials": 0
+    },
+    {
+      "name": "1000us",
+      "step_s": 0.001,
+      "simulated_s": 2.8000000000000003,
+      "development_wall_s": 15.600877109000013,
+      "lift": {
+        "failed_clearance_samples": 49,
+        "failed_support_samples": 6,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.3599999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031738940789409753,
+        "qualifying_start_s": 1.07,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "closure": {
+        "1": {
+          "position": 5.811323644522304e-17,
+          "velocity": 1.6653345369377348e-16,
+          "acceleration": 3.4833247397614286e-15
+        },
+        "m": {
+          "position": 1.6653345369377348e-16,
+          "velocity": 1.1622647289044608e-16,
+          "acceleration": 1.1368683772161603e-13
+        },
+        "rad": {
+          "position": 2.7755575615628914e-17,
+          "velocity": 3.122502256758253e-16,
+          "acceleration": 2.8421709430404007e-13
+        }
+      },
+      "accepted_segments": 2800,
+      "rejected_trials": 0
+    },
+    {
+      "name": "500us",
+      "step_s": 0.0005,
+      "simulated_s": 2.8000000000000003,
+      "development_wall_s": 24.334160305999927,
+      "lift": {
+        "failed_clearance_samples": 49,
+        "failed_support_samples": 6,
+        "failed_unloading_samples": 39,
+        "longest_qualifying_span_s": 0.3599999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003173434898686045,
+        "qualifying_start_s": 1.07,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "closure": {
+        "1": {
+          "position": 6.391371806802049e-17,
+          "velocity": 1.1102230246251565e-16,
+          "acceleration": 2.6645352591003757e-15
+        },
+        "m": {
+          "position": 1.6653345369377348e-16,
+          "velocity": 1.545801247421208e-16,
+          "acceleration": 1.6212031717088848e-13
+        },
+        "rad": {
+          "position": 2.7755575615628914e-17,
+          "velocity": 2.220446049250313e-16,
+          "acceleration": 1.7209150771080317e-13
+        }
+      },
+      "accepted_segments": 5601,
+      "rejected_trials": 1
+    },
+    {
+      "name": "250us",
+      "step_s": 0.00025,
+      "simulated_s": 2.8000000000000003,
+      "development_wall_s": 38.88419619400002,
+      "lift": {
+        "failed_clearance_samples": 49,
+        "failed_support_samples": 6,
+        "failed_unloading_samples": 38,
+        "longest_qualifying_span_s": 0.3599999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003172800606231818,
+        "qualifying_start_s": 1.07,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "closure": {
+        "1": {
+          "position": 6.261267546103788e-17,
+          "velocity": 1.1102230246251565e-16,
+          "acceleration": 3.552713678800501e-15
+        },
+        "m": {
+          "position": 1.6653345369377348e-16,
+          "velocity": 1.5368565794982025e-16,
+          "acceleration": 1.8474111129762605e-13
+        },
+        "rad": {
+          "position": 2.7755575615628914e-17,
+          "velocity": 2.220446049250313e-16,
+          "acceleration": 1.8006429680639258e-13
+        }
+      },
+      "accepted_segments": 11200,
+      "rejected_trials": 0
+    },
+    {
+      "name": "125us",
+      "step_s": 0.000125,
+      "simulated_s": 2.8000000000000003,
+      "development_wall_s": 63.052556674000044,
+      "lift": {
+        "failed_clearance_samples": 49,
+        "failed_support_samples": 7,
+        "failed_unloading_samples": 38,
+        "longest_qualifying_span_s": 0.3599999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031716586068523123,
+        "qualifying_start_s": 1.07,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "closure": {
+        "1": {
+          "position": 6.526897078362737e-17,
+          "velocity": 1.1102230246251565e-16,
+          "acceleration": 1.7763568394002505e-15
+        },
+        "m": {
+          "position": 1.6653345369377348e-16,
+          "velocity": 1.7024684613453633e-16,
+          "acceleration": 3.9895864389905e-13
+        },
+        "rad": {
+          "position": 2.7755575615628914e-17,
+          "velocity": 2.220446049250313e-16,
+          "acceleration": 1.8340884366807586e-13
+        }
+      },
+      "accepted_segments": 22400,
+      "rejected_trials": 0
+    },
+    {
+      "name": "62p5us",
+      "step_s": 0.0000625,
+      "simulated_s": 2.8000000000000003,
+      "development_wall_s": 108.20346967299957,
+      "lift": {
+        "failed_clearance_samples": 49,
+        "failed_support_samples": 7,
+        "failed_unloading_samples": 38,
+        "longest_qualifying_span_s": 0.3599999999999999,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031710801788122356,
+        "qualifying_start_s": 1.07,
+        "samples": 91,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      "closure": {
+        "1": {
+          "position": 7.036472099430924e-17,
+          "velocity": 1.6653345369377348e-16,
+          "acceleration": 3.552713678800501e-15
+        },
+        "m": {
+          "position": 1.6653345369377348e-16,
+          "velocity": 7.632783294297951e-17,
+          "acceleration": 8.526512829121202e-14
+        },
+        "rad": {
+          "position": 2.7755575615628914e-17,
+          "velocity": 4.2327252813834093e-16,
+          "acceleration": 7.531752999057062e-13
+        }
+      },
+      "accepted_segments": 44800,
+      "rejected_trials": 0
+    }
+  ],
+  "provisional_screen": {
+    "limits": {
+      "maximum_foot_difference_m": 0.0005,
+      "rms_foot_difference_m": 0.0002,
+      "maximum_motor_angle_difference_rad": 0.005,
+      "maximum_relative_per_foot_impulse_difference": 0.01,
+      "absolute_impulse_floor_ns": 0.001,
+      "sampled_supported_lift_required": true,
+      "scope": "Provisional simulation-only screening limits, chosen before the robot run. Current spikes, electrical energy/heat, contact-event timing and timestep sensitivity must additionally be evaluated before any promotion."
+    },
+    "checks": {
+      "foot": true,
+      "rms": true,
+      "motor_angle": true,
+      "impulses": true,
+      "supported_lift": true
+    },
+    "reference_step_s": 0.0000625,
+    "maximum_foot_difference_m": 0.00013094927515123217,
+    "rms_foot_difference_m": 0.000072144370831013,
+    "maximum_motor_angle_difference_rad": 0.0019798204585183,
+    "impulses": [
+      {
+        "candidate_ns": [
+          -0.041561562049547425,
+          1.3648821888232214,
+          21.895854886905187
+        ],
+        "difference_norm_ns": 0.07808281753264244,
+        "link": 6,
+        "other": null,
+        "reference_ns": [
+          -0.06905914726418914,
+          1.4256403205573727,
+          21.85524382154887
+        ],
+        "limit_ns": 0.21901801341185842
+      },
+      {
+        "candidate_ns": [
+          -1.3691769427000788,
+          0.0916203633799606,
+          32.952029797903954
+        ],
+        "difference_norm_ns": 0.04869221136770526,
+        "link": 11,
+        "other": null,
+        "reference_ns": [
+          -1.393005983821818,
+          0.09648635475030456,
+          32.994213092880514
+        ],
+        "limit_ns": 0.33023747105772605
+      },
+      {
+        "candidate_ns": [
+          -0.019486481096795648,
+          -1.5579440033034813,
+          23.663780396251163
+        ],
+        "difference_norm_ns": 0.09547424472767438,
+        "link": 18,
+        "other": null,
+        "reference_ns": [
+          -0.055368728140796956,
+          -1.6352867212680176,
+          23.62081646101181
+        ],
+        "limit_ns": 0.23677419594238258
+      },
+      {
+        "candidate_ns": [
+          1.4303769827694568,
+          0.10039163086337623,
+          30.707659543741727
+        ],
+        "difference_norm_ns": 0.09709887664698218,
+        "link": 25,
+        "other": null,
+        "reference_ns": [
+          1.5171807524943062,
+          0.11401310237008645,
+          30.748984511033342
+        ],
+        "limit_ns": 0.3078660236016666
+      }
+    ],
+    "maximum_sampled_differences": {
+      "current_a": 0.1730288758620962,
+      "gear_speed_rad_s": 0.19450588908303038,
+      "heating_w": 1.0215585076048699,
+      "joint_positions": 0.0034222777739721932,
+      "joint_velocities": 1.0878247135078265,
+      "motor_states": 0.19450588908303038,
+      "motor_voltage_v": 1.2039445699557538,
+      "power_difference_w": 0.013669269554624996,
+      "servo_commands": 0.10846347477078863,
+      "servo_states": 0.3878039388149576,
+      "shaft_torque_nm": 0.12958651650517994,
+      "supply_current_a": 0.1591733007099425
+    },
+    "contact_pair_mismatch_samples": 0
+  },
+  "benchmark": {
+    "scope": "Frozen binaries, sequential ABBA, exact repeatability against each declared reference. Optional after-config/reference permits explicit algorithm experiments; cross-method physical equivalence requires a separate trajectory comparison. No other assistant-launched heavy jobs should overlap; host background activity is not controlled. Stepping time excludes process setup and capture serialization.",
+    "hardware": {
+      "platform": "darwin",
+      "arch": "x64",
+      "release": "25.6.0",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16
+    },
+    "inputs": {
+      "runs/interactive/drive-backlash-definition/native-runner": "017479db292adb2044b9fbadb1e58a6272289bffbb1dd165e2b08d481903af60",
+      "runs/full-robot/learning/drive-backlash-definition/scene.json": "09e3e8c6c79fea5e141ed9629fb7b17b55042c141aa81b5e55c2f506f1c3c90a",
+      "runs/full-robot/learning/drive-backlash-definition/benchmark-250.config.json": "2fb8df997f68e7e2d53123d92ddcc92c66ed7403dec031cccab1ed0a4ba52544",
+      "runs/full-robot/learning/drive-backlash-definition/250us.execution.json": "13a75e0ea3625632453cb38ea821ca1eb196bdecf948853a83c9c09be9c34c55",
+      "runs/full-robot/learning/drive-backlash-definition/viewer.config.json": "723bf2ba848dc1d8ad9211037f74602dfcab68eb6b3436f29be5d15346b8b622",
+      "runs/full-robot/learning/drive-backlash-definition/1000us.execution.json": "6206c4bdf4fa9220eb6a49a3622cd899a8a8b6485590093ae28d28b1fb61ac7a",
+      "/Users/elliot/physics-simulator/examples/interactive/benchmark_exact_runtime.mjs": "eef3ffbc59d7d8db3527a82a9c8a7389b2d0181597711dd755ec524f2a23c9f9"
+    },
+    "runs": [
+      {
+        "order": 0,
+        "mode": "before",
+        "config": "runs/full-robot/learning/drive-backlash-definition/benchmark-250.config.json",
+        "reference": "runs/full-robot/learning/drive-backlash-definition/250us.execution.json",
+        "output": "runs/full-robot/learning/drive-backlash-definition/benchmark/0-before.execution.json",
+        "sha256": "3bfa1c7507794581b78864d4699444032704456eca9f91855e8519d168ebfd97",
+        "wall_s": 35.72792198799997,
+        "simulated_s": 2.8000000000000003
+      },
+      {
+        "order": 1,
+        "mode": "after",
+        "config": "runs/full-robot/learning/drive-backlash-definition/viewer.config.json",
+        "reference": "runs/full-robot/learning/drive-backlash-definition/1000us.execution.json",
+        "output": "runs/full-robot/learning/drive-backlash-definition/benchmark/1-after.execution.json",
+        "sha256": "afbfe74a1999458bf76b19b076dfddec1f1ced4f7377a170d5b9e6fa4a9a178b",
+        "wall_s": 14.357190132999976,
+        "simulated_s": 2.8000000000000003
+      },
+      {
+        "order": 2,
+        "mode": "after",
+        "config": "runs/full-robot/learning/drive-backlash-definition/viewer.config.json",
+        "reference": "runs/full-robot/learning/drive-backlash-definition/1000us.execution.json",
+        "output": "runs/full-robot/learning/drive-backlash-definition/benchmark/2-after.execution.json",
+        "sha256": "085cc5a0d6b0ca67a43f93ba8d0caafaa0b2392af45d3dbc190a6d44c7092363",
+        "wall_s": 14.777895637999997,
+        "simulated_s": 2.8000000000000003
+      },
+      {
+        "order": 3,
+        "mode": "before",
+        "config": "runs/full-robot/learning/drive-backlash-definition/benchmark-250.config.json",
+        "reference": "runs/full-robot/learning/drive-backlash-definition/250us.execution.json",
+        "output": "runs/full-robot/learning/drive-backlash-definition/benchmark/3-before.execution.json",
+        "sha256": "741d2678fc8e0744e2d91d7eb3ceda5d78e751a10a6ffef9fdd1674a981fa567",
+        "wall_s": 36.17372268800006,
+        "simulated_s": 2.8000000000000003
+      }
+    ],
+    "result": {
+      "before_mean_s": 35.950822338000016,
+      "after_mean_s": 14.567542885499986,
+      "speedup": 2.4678713919410655,
+      "simulated_seconds_per_wall_second": 0.1922081178691446
+    }
+  },
+  "robot_browser": {
+    "passed": true,
+    "unknown_drive_rejected_without_mutation": true,
+    "task_observation_probe": null,
+    "preset": "robot-drive-definition",
+    "compared_frames": 281,
+    "simulated_s": 2.8000000000000003,
+    "maximum_native_wasm_entry_difference": 3.3045687020116787e-10,
+    "worst_path": "frame[80].policy.observations.marker.-Y-foot-surface.floor_force_world.x",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 2429.0449999570847,
+    "simulation_ms": 17630.790000021458,
+    "max_chunk_ms": 279.78500002622604,
+    "main_thread_heartbeats": 4098,
+    "replay_progress_messages": 280,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "fixture_browser": {
+    "passed": true,
+    "unknown_drive_rejected_without_mutation": true,
+    "task_observation_probe": null,
+    "preset": "pendulum-drive-backlash",
+    "compared_frames": 11,
+    "simulated_s": 0.02,
+    "maximum_native_wasm_entry_difference": 0,
+    "worst_path": "",
+    "differences": [],
+    "replay_exact": true,
+    "reset_exact": true,
+    "invalid_request_preserved": true,
+    "changed_replay_rejected_without_mutation": true,
+    "load_ms": 149.36000001430511,
+    "simulation_ms": 25.235000014305115,
+    "max_chunk_ms": 10.76500004529953,
+    "main_thread_heartbeats": 16,
+    "replay_progress_messages": 10,
+    "scope": "Strict 1e-7 absolute entry portability diagnostic over all native sampled frame fields; not hardware accuracy or realtime acceptance. Replay equality excludes measured wall time."
+  },
+  "viewer": {
+    "passed": true,
+    "checks": [
+      "recorded robot selection, fit, scrubbing, playback and contact toggle",
+      "live quadruped worker advance, camera fit, pause, recipe replay and reset",
+      "robot-landing-checkpoint motion checkpoint status and replay",
+      "robot-forward-10mm motion checkpoint status and replay",
+      "robot-forward-slow motion checkpoint status and replay",
+      "robot-forward-solid-sign motion checkpoint status and replay",
+      "full robot ideal body/foot observations, sample timestamp, force readout and identical replay",
+      "robot-point-feedback gain, world foot tracking, phase activation and replay",
+      "robot-point-block-factor gain, world foot tracking, phase activation and replay",
+      "robot-point-sample-reuse gain, world foot tracking, phase activation and replay",
+      "robot-point-final-refresh gain, world foot tracking, phase activation and replay",
+      "robot-point-analytic-positions gain, world foot tracking, phase activation and replay",
+      "robot-drive-definition gain, world foot tracking, phase activation and replay",
+      "body feedback gain, world target/actual diagnostics, support weights and replay",
+      "full robot Rhai gain control, responsive camera, plan/target/actual distinction and recorded-command replay",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-embedded: incremental servo preset execution, target readings and recipe replay",
+      "pendulum-condensed: incremental servo preset execution, target readings and recipe replay",
+      "pendulum-drive-backlash: incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": true,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "artifacts": {
+    "runs/full-robot/learning/drive-backlash-definition/manifest.json": "eb4fd62af9f7ff9f21a0b7a8c6852d40029ef38d019efaa58a33788105290de3",
+    "runs/full-robot/learning/analytic-positions/manifest.json": "cc21a0d8817625b6631efbc2ced8f2fe573392126d42496a3722783844d422b5",
+    "runs/full-robot/learning/point-feedback/scene.json": "ef3027a8228d8aa2e051b8d02a8742f1e988a82564496c08b51e41b487dea3fd",
+    "runs/full-robot/learning/analytic-positions/base.config.json": "de9d3d29f1e5a78ac365f9ecbbc88756e806711e12459fa543c62d7a40b0d024",
+    "/Users/elliot/physics-simulator/examples/full-robot/prepare_drive_backlash_model.mjs": "e04170e770ceb364507fcc6bb9b1da6a7c3013a7ffb2986f56370c475976b65a",
+    "runs/full-robot/learning/drive-backlash-definition/scene.json": "09e3e8c6c79fea5e141ed9629fb7b17b55042c141aa81b5e55c2f506f1c3c90a",
+    "runs/full-robot/learning/drive-backlash-definition/2000us.config.json": "fa3715375449a12a531381ee812140f3e1d443a2f229a7a1f9daa7b87041a8aa",
+    "runs/full-robot/learning/drive-backlash-definition/1000us.config.json": "ae1ad616724b8df78f4a3f526ed756508e95854bf8c533c8fd60fe90bdd3642e",
+    "runs/full-robot/learning/drive-backlash-definition/500us.config.json": "737c7ed9dedb8c4b028a9a82770551ff7062e8f073106872ba47cf984886ebb3",
+    "runs/full-robot/learning/drive-backlash-definition/250us.config.json": "de9d3d29f1e5a78ac365f9ecbbc88756e806711e12459fa543c62d7a40b0d024",
+    "runs/full-robot/learning/drive-backlash-definition/125us.config.json": "0be268a66ad6d8a3ea210552d3de20205c01c71fcf29636b70b394eb2889324b",
+    "runs/full-robot/learning/drive-backlash-definition/62p5us.config.json": "e48f78f7c16cec6f646262f1e2d5251e571212f9044121a6a3fb810c91ca42ff",
+    "runs/full-robot/learning/drive-backlash-definition/compatibility.scene.json": "73d74249482d5e2f3e5cf52ea33a319f8f31bec52d5df75ce1fc49166560e6aa",
+    "runs/full-robot/learning/analytic-positions/base.execution.json": "4cb713c2026078bc218ebe219977e88cc41641d77caf6f4abd39336978c26536",
+    "runs/full-robot/learning/drive-backlash-definition/compatibility.execution.json": "f1188feb23619629ac77584df72aeede3ebbab42f01127e84ddc16680fef4ef1",
+    "runs/full-robot/learning/drive-backlash-definition/2000us.execution.json": "fb24318b7b2cd7553df0de4b27430078f3dae81468a14206f32fdded3889e0d0",
+    "runs/full-robot/learning/drive-backlash-definition/2000us.lift.json": "ce90547b589653aee6d58c435a04451fb838cf85429e2edba9d5fe9ef64921a4",
+    "runs/full-robot/learning/drive-backlash-definition/1000us.execution.json": "6206c4bdf4fa9220eb6a49a3622cd899a8a8b6485590093ae28d28b1fb61ac7a",
+    "runs/full-robot/learning/drive-backlash-definition/1000us.lift.json": "9cd8b076715118a489c902b28a997e856b01d6bf9d81bfa033bf89484a48b27a",
+    "runs/full-robot/learning/drive-backlash-definition/500us.execution.json": "5739b1d386dab0191df37214bbe0c562bebd60a29042aa1ae1479b4bf0ecb3c1",
+    "runs/full-robot/learning/drive-backlash-definition/500us.lift.json": "13eaad090d4e040e660ffc147ba4a08b790d3f0f83f77f4c4c22a4ff078cc4c2",
+    "runs/full-robot/learning/drive-backlash-definition/250us.execution.json": "13a75e0ea3625632453cb38ea821ca1eb196bdecf948853a83c9c09be9c34c55",
+    "runs/full-robot/learning/drive-backlash-definition/250us.lift.json": "cc23aeb092de59a13b601e1cbcf008f880784e8332c1eb4bc23899f292fb070d",
+    "runs/full-robot/learning/drive-backlash-definition/125us.execution.json": "d1dd4381f9f176d04bac8f90ef063285ebb6b779eb9ca444468eb5de098ded22",
+    "runs/full-robot/learning/drive-backlash-definition/125us.lift.json": "9c893434c9b9f4c26aa4c220b64345f363af4ea87d692ec142a695a5c71e95a4",
+    "runs/full-robot/learning/drive-backlash-definition/62p5us.execution.json": "f0887fadc4292812572d83a3ef5773350a98d8bb6966072eee0ff07f6d7bc165",
+    "runs/full-robot/learning/drive-backlash-definition/62p5us.lift.json": "e0bfec5019d380e7ab5a992f9846d934932ce45476b0db1fd95585f6a30674f4",
+    "runs/full-robot/learning/fast-motor/manifest.json": "241ba823e5bb15bdd70591407b374e5d7c11782b4c520da55d2e956241e84214",
+    "runs/full-robot/learning/drive-backlash-definition/1000us-fine.comparison.json": "7c0b72662772438c1188f02b41cc41356fe27d870eb77e45fc81c914215f0f1d",
+    "runs/full-robot/learning/drive-backlash-definition/benchmark/manifest.json": "5e4a045590ab4f499c9a90e0b327da7e036a4e57b5328218b7397fe7007c0655",
+    "runs/interactive/drive-backlash-definition/native-runner": "017479db292adb2044b9fbadb1e58a6272289bffbb1dd165e2b08d481903af60",
+    "runs/full-robot/learning/drive-backlash-definition/benchmark-250.config.json": "2fb8df997f68e7e2d53123d92ddcc92c66ed7403dec031cccab1ed0a4ba52544",
+    "runs/full-robot/learning/drive-backlash-definition/viewer.config.json": "723bf2ba848dc1d8ad9211037f74602dfcab68eb6b3436f29be5d15346b8b622",
+    "/Users/elliot/physics-simulator/examples/interactive/benchmark_exact_runtime.mjs": "eef3ffbc59d7d8db3527a82a9c8a7389b2d0181597711dd755ec524f2a23c9f9",
+    "runs/full-robot/learning/drive-backlash-definition/benchmark/0-before.execution.json": "3bfa1c7507794581b78864d4699444032704456eca9f91855e8519d168ebfd97",
+    "runs/full-robot/learning/drive-backlash-definition/benchmark/1-after.execution.json": "afbfe74a1999458bf76b19b076dfddec1f1ced4f7377a170d5b9e6fa4a9a178b",
+    "runs/full-robot/learning/drive-backlash-definition/benchmark/2-after.execution.json": "085cc5a0d6b0ca67a43f93ba8d0caafaa0b2392af45d3dbc190a6d44c7092363",
+    "runs/full-robot/learning/drive-backlash-definition/benchmark/3-before.execution.json": "741d2678fc8e0744e2d91d7eb3ceda5d78e751a10a6ffef9fdd1674a981fa567",
+    "runs/interactive/drive-backlash-definition/robot-browser.json": "c7fe7cf1cb82c2201b6a105dc843330937a231afa97544fb79a8f7a781172f6d",
+    "runs/interactive/drive-backlash-definition/fixture-browser.json": "9d2528aa6e65382eda2040f539842e561168382a71aa6970a61a7ba6dcd2d7e7",
+    "runs/interactive/drive-backlash-definition/viewer-report.json": "f6a083237d4ed2da7817b592d40c4053a3cc8c8d472b3d1cd908f90142edc4fd",
+    "cad/robocad/physical.py": "0d7a9dfdf81558b6b323f5588ee9c64421ed9329912d334c45ab7effbd99d0c7",
+    "cad/robocad/commands.py": "05c3b1fcc3489722b5695a0187021047b0b9794c43334dd86db65103e18f9830",
+    "cad/robocad/client.py": "abe863a80e140a6574d8bf8b97ca55556b0580059eea588bee68af4d57ceb219",
+    "cad/robocad/ui/widgets.py": "e7c4520b2e2e6f2972fd333b623106cf54979f4fcf72468102259acac61c7651",
+    "cad/tests/test_drive_backlash.py": "afe023819ecf58fb5ae5051bbdf7d66bf65f44d161be5cab11234d00a405c3a9",
+    "cad/tests/test_physical.py": "dbb6018db7a631e5b3cae281fadb5c2d846e5910f3f9bc61a6ef13591231ce6b",
+    "cad/tests/test_ui.py": "66793a1a4e5c082bc2fac48f96158235f229b0f8b3671e3bfaa8363356d7d08c",
+    "cad/PHYSICAL_MODEL.md": "2b578d808d8deaa300dec16eb9a3f9af0781f04dbe7d6784a16602141e065a8a",
+    "cad/USER_GUIDE.md": "67dec046ef9027636f5baa93d40b7e38776abec93e46aae5ecbb2b8a94d5b8d5",
+    "crates/sim-domain-robot/src/model.rs": "f823acbb74029c329613579ef2c2780dc34b92ecb6811e5fe93c7ee3cfbe76fd",
+    "crates/sim-domain-robot/src/motor.rs": "b021661ccff07bcb96c9e8b485fb8477f0affcf993ff31e5cee6a95483544231",
+    "crates/sim-runtime/src/physical.rs": "719f8af2d579b78800d2b3f66dca2081fbc99e99ac934325bedb0f91faf68186",
+    "crates/sim-runtime/src/embedded.rs": "2213a83bc0dbbfdb4bd5fe8d255ccb715c10c4eac9413722c831905b0f04b9c6",
+    "crates/sim-runtime/tests/drive_backlash.rs": "753b350a742d8e9b517379464fb3caa7e540fcc09189a028f0527e0957f9eee8",
+    "examples/interactive/pendulum.drive-backlash.scene.json": "db66da40009ef50579449a55d74e4a1778233026e9c68abaea0726170a60f6e7",
+    "web/tests/embedded.mjs": "2abd5f8a95189ad90fdf33813c78ad3cc3b0f8d624692a3f96e05d0f6e81f0a1",
+    "web/tests/viewer.mjs": "8feeedecf7a119447267af050b4926677abc5fbc9e16eca9bcba8cf5f067eaa3",
+    "web/viewer/presets.json": "691a0f23cf40c3acf914a446d94dfa57b0788af80cc75b04df799adbef6e6694",
+    ".github/workflows/browser.yml": "d18525f5d7dd21a12517cbf30545852f3b56e0fe29077ea3e40649e77be49f5c",
+    "runs/interactive/drive-backlash-definition/viewer/build-manifest.json": "53ee0923bd2d2c9b0a4116c45b90b38d654c6f674f7660e5deacc19a7b4c77df",
+    "runs/interactive/drive-backlash-definition/viewer/sim_web_bg.wasm": "75f3c8ad51b9eebe4a0ff8c5a1a83c9812e587ad1e5e3b8f0e9767a933de309c",
+    "examples/full-robot/drive-backlash-validation.md": "23599c25a67108cc8c5a9e86c64e7364dd14d52a701fdc0c8755d901da484981",
+    "/Users/elliot/physics-simulator/examples/full-robot/summarize_drive_backlash_model.mjs": "5db35cd0b6e47e7474a7b01bd1e1132b1f41f7bc66b87eb34013e0d967f4393b"
+  }
+}

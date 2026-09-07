@@ -1,0 +1,935 @@
+{
+  "beam_regression": {
+    "known_distance_m": -0.001,
+    "new_test": "test_distance_grid_keeps_long_faces_with_distant_centroids",
+    "old_observed_distance_m": -0.0045
+  },
+  "experiments": {
+    "-refined": {
+      "accepted_step_internal_contact_observations": 0,
+      "completed": true,
+      "maximum_body_relative_marker_error_m": 0.0044654012252533706,
+      "maximum_position_closure_m": 9.48324752059193e-13,
+      "peak_time_s": 0.81,
+      "process": {
+        "argv": [
+          "runs/full-robot/learning/support-load-grid-source/bin/integrate_embedding",
+          "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+          "examples/full-robot/mechanical-servo-load-16mm-refined.json"
+        ],
+        "exit_code": 0,
+        "wall_s": 128.84313080500002
+      },
+      "simulated_s": 1.6,
+      "step_s": 0.000125,
+      "stepping_wall_s": 127.44802307400029,
+      "swing_minimum_upward_force_n": 0.22969674553532543,
+      "swing_peak_clearance_m": -1.1484935540373442e-06
+    },
+    "coarse": {
+      "accepted_step_internal_contact_observations": 0,
+      "completed": true,
+      "maximum_body_relative_marker_error_m": 0.004463675029088586,
+      "maximum_position_closure_m": 9.581502258271257e-13,
+      "peak_time_s": 0.81,
+      "process": {
+        "argv": [
+          "runs/full-robot/learning/support-load-grid-source/bin/integrate_embedding",
+          "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+          "examples/full-robot/mechanical-servo-load-16mm.json"
+        ],
+        "exit_code": 0,
+        "wall_s": 90.024939676
+      },
+      "simulated_s": 1.6,
+      "step_s": 0.00025,
+      "stepping_wall_s": 88.30088632600012,
+      "swing_minimum_upward_force_n": 0.22652879391016562,
+      "swing_peak_clearance_m": -1.1326548781109835e-06
+    }
+  },
+  "false_contact_probe": {
+    "brep_members": [
+      {
+        "distance_mm": 165.97349656888284,
+        "member": "c5eef180ec65",
+        "name": "-Y | Thigh sector gear",
+        "nearest_world_mm": [
+          -0.45264645062272546,
+          -195.73450834972402,
+          -56.85503206829154
+        ],
+        "solid_states": [
+          "outside"
+        ],
+        "surface_distance_mm": 165.97349656888284
+      },
+      {
+        "distance_mm": 205.23821205059025,
+        "member": "dedc28bf86c2",
+        "name": "-Y | Thigh cross-shaft",
+        "nearest_world_mm": [
+          13.925546276022438,
+          -179.99739139780579,
+          -19.999983351639735
+        ],
+        "solid_states": [
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside"
+        ],
+        "surface_distance_mm": 205.23821205059025
+      },
+      {
+        "distance_mm": 155.08982157109298,
+        "member": "43fe179a673f",
+        "name": "-Y | Fixed knee frame",
+        "nearest_world_mm": [
+          5.374000045471836,
+          -294.53605166687487,
+          -34.99807137849311
+        ],
+        "solid_states": [
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside"
+        ],
+        "surface_distance_mm": 155.08982157109298
+      },
+      {
+        "distance_mm": 184.93129273507407,
+        "member": "dc9bbf72a4ee",
+        "name": "-Y | Thigh root yoke",
+        "nearest_world_mm": [
+          1.32160948851379e-12,
+          -191.50044428680886,
+          -36.615311449236
+        ],
+        "solid_states": [
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside"
+        ],
+        "surface_distance_mm": 184.93129273507407
+      },
+      {
+        "distance_mm": 1.5579334887902232,
+        "member": "62baca453ced",
+        "name": "-Y | Carbon-fiber knee guide tube",
+        "nearest_world_mm": [
+          4.266245571081578,
+          -295.63410245850264,
+          -190.0878746416104
+        ],
+        "solid_states": [
+          "outside"
+        ],
+        "surface_distance_mm": 1.5579334887902232
+      },
+      {
+        "distance_mm": 7.910178428906486,
+        "member": "7c9dce75693f",
+        "name": "-Y | Fixed lower foot guide",
+        "nearest_world_mm": [
+          5.374000045471836,
+          -294.53877259941896,
+          -197.99807135578254
+        ],
+        "solid_states": [
+          "outside",
+          "outside",
+          "outside"
+        ],
+        "surface_distance_mm": 7.910178428906486
+      },
+      {
+        "distance_mm": 169.25954629884905,
+        "member": "d207267a00a1",
+        "name": "-Y | Foot servo internal geometry",
+        "nearest_world_mm": [
+          -15.849713390635344,
+          -294.5364616539707,
+          -22.164255531313184
+        ],
+        "solid_states": [
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside",
+          "outside"
+        ],
+        "surface_distance_mm": 169.25954629884905
+      },
+      {
+        "distance_mm": 172.48553595469815,
+        "member": "074a9c071bf6",
+        "name": "-Y \u00b7 Foot slide \u00b7 HX-30HM",
+        "nearest_world_mm": [
+          -34.849740092193144,
+          -294.53624492318403,
+          -22.358018316512435
+        ],
+        "solid_states": [],
+        "surface_distance_mm": 172.48553595469815
+      }
+    ],
+    "point_world_m": [
+      0.005374000045471836,
+      -0.2945386405560943,
+      -0.19008789292797815
+    ],
+    "runtime_contact": {
+      "force_n": [
+        47.78677788700332,
+        62.43253904394038,
+        -3.4816580653910827
+      ],
+      "link": 6,
+      "other": 2,
+      "penetration_m": 0.00039349460019100745,
+      "point_m": [
+        0.005374000045471836,
+        -0.2945386405560943,
+        -0.19008789292797815
+      ]
+    },
+    "seed_frame_s": null,
+    "target": "-Y | Thigh sector gear"
+  },
+  "grid_derivation": {
+    "links": [
+      {
+        "cell_m": 0.006689119472405026,
+        "dims": [
+          15,
+          36,
+          48
+        ],
+        "link": "-Y | Thigh sector gear",
+        "maximum_node_change_m": 0.030234999999999998,
+        "wall_s": 46.729556434
+      },
+      {
+        "cell_m": 0.006689119472405026,
+        "dims": [
+          36,
+          16,
+          48
+        ],
+        "link": "+X | Thigh sector gear",
+        "maximum_node_change_m": 0.029995,
+        "wall_s": 52.09294892300001
+      },
+      {
+        "cell_m": 0.006689119472405026,
+        "dims": [
+          15,
+          36,
+          48
+        ],
+        "link": "+Y | Thigh sector gear",
+        "maximum_node_change_m": 0.030251,
+        "wall_s": 45.532928712000015
+      },
+      {
+        "cell_m": 0.006689119472405026,
+        "dims": [
+          36,
+          15,
+          48
+        ],
+        "link": "-X | Thigh sector gear",
+        "maximum_node_change_m": 0.030251,
+        "wall_s": 47.151579045999995
+      }
+    ],
+    "output_sha256": "936fe278b487d74f863605f6bf87e09a43701923843ec7596136874e3c71908d"
+  },
+  "grid_nodes": [
+    {
+      "index": [
+        10,
+        7,
+        10
+      ],
+      "point_world_m": [
+        0.004563215687005153,
+        -0.2971036922629813,
+        -0.19448507276026628
+      ],
+      "signed_cad_member_surface_distance_mm": -0.3274823425954902,
+      "stored_distance_m": -0.003595,
+      "weight": 0.18564192683263522
+    },
+    {
+      "index": [
+        10,
+        7,
+        11
+      ],
+      "point_world_m": [
+        0.004563215687005153,
+        -0.29710358060259556,
+        -0.18779595328879323
+      ],
+      "signed_cad_member_surface_distance_mm": -0.32748234259551956,
+      "stored_distance_m": -0.01023,
+      "weight": 0.3561717426796142
+    },
+    {
+      "index": [
+        10,
+        8,
+        10
+      ],
+      "point_world_m": [
+        0.004563215687005153,
+        -0.2904145727915082,
+        -0.19448518442065194
+      ],
+      "signed_cad_member_surface_distance_mm": 4.110183916988205,
+      "stored_distance_m": 0.004122,
+      "weight": 0.11545858774760304
+    },
+    {
+      "index": [
+        10,
+        8,
+        11
+      ],
+      "point_world_m": [
+        0.004563215687005153,
+        -0.2904144611311225,
+        -0.1877960649491789
+      ],
+      "signed_cad_member_surface_distance_mm": 4.483718239126064,
+      "stored_distance_m": 0.010428,
+      "weight": 0.2215183127379694
+    },
+    {
+      "index": [
+        11,
+        7,
+        10
+      ],
+      "point_world_m": [
+        0.011252335159410178,
+        -0.2971036922629813,
+        -0.19448507276026628
+      ],
+      "signed_cad_member_surface_distance_mm": 4.774459213534975,
+      "stored_distance_m": 0.004789,
+      "weight": 0.02560513608600233
+    },
+    {
+      "index": [
+        11,
+        7,
+        11
+      ],
+      "point_world_m": [
+        0.011252335159410178,
+        -0.29710358060259556,
+        -0.18779595328879323
+      ],
+      "signed_cad_member_surface_distance_mm": 5.583357770616173,
+      "stored_distance_m": 0.010709,
+      "weight": 0.04912589573325249
+    },
+    {
+      "index": [
+        11,
+        8,
+        10
+      ],
+      "point_world_m": [
+        0.011252335159410178,
+        -0.2904145727915082,
+        -0.19448518442065194
+      ],
+      "signed_cad_member_surface_distance_mm": 7.245356185298942,
+      "stored_distance_m": 0.007262,
+      "weight": 0.015924920097604288
+    },
+    {
+      "index": [
+        11,
+        8,
+        11
+      ],
+      "point_world_m": [
+        0.011252335159410178,
+        -0.2904144611311225,
+        -0.1877960649491789
+      ],
+      "signed_cad_member_surface_distance_mm": 8.686744269878595,
+      "stored_distance_m": 0.01202,
+      "weight": 0.030553478085319094
+    }
+  ],
+  "hashes": {
+    "cad/robocad/capture_geometry.py": "a673d1b34d209c8a102729704f9a209c6c06ec17aeddae041ebb079820c1469d",
+    "cad/robocad/physical.py": "1f68bbff3b5b03bee95e49cc6dcc32a30a5f0fee2fc3c70641d7253f520efc21",
+    "cad/tests/test_capture_geometry.py": "e2cea588040e98ee8b783e91b09a96b38fd92bf724922629ccb47a733a1f2de0",
+    "cad/tests/test_physical.py": "9a1511f7915897390e8b129048f1eb033a2ef00c257ade01f1a94e0601a29030",
+    "crates/sim-runtime/examples/audit_embedding.rs": "c814f338a5ce0a18bbe326c920a35a084dbf72610cafc416b43ec8ea388219f3",
+    "crates/sim-runtime/examples/summarize_marker_clearance.rs": "02de62d3347006ff8b5b3881e48c013f20712a74e2840f3a4e72d72218f79dd1",
+    "crates/sim-runtime/src/planning.rs": "50d4a9187c61446bb17704d6dc107b3ed5754096ec6f3e0627c7e6d3a97ee228",
+    "crates/sim-runtime/src/support.rs": "f2b29f7aef3514d6562d9b2681212b0179ba16b3a13a29b2eb0c0d264b03dd7b",
+    "crates/sim-runtime/tests/planning.rs": "ad144702cb42b2a98eae040e0612a5575bc7fb8b0855fc7467b58417d2e52c83",
+    "examples/full-robot/audit_captured_geometry.py": "a5109aab6f66f9f43a5c6865f6655b1427f50e681532767283e6d50cdd0e7cd8",
+    "examples/full-robot/collision-grid-correction-experiment.json": "b34357eb7c43e6e72e1e9a3c8412c8a4208b2155aee66e32ad42aa1196c20893",
+    "examples/full-robot/load-stance-retraction-sweep.json": "c3ddbecc67b9eb2ac369e4bd120309261fe113e5cf87a2a9b760ee9d74ee9c5a",
+    "examples/full-robot/mechanical-servo-load-16mm-lift-5mm.json": "d5c209f6fcad6a451e59c8b37164ce7ed222b8eb33e9401977516912a32d269c",
+    "examples/full-robot/mechanical-servo-load-16mm-refined.json": "45b0517ef5705fe39576ef2aeddce67368e440baaa7915ec3214da6349836a5b",
+    "examples/full-robot/mechanical-servo-load-16mm.json": "4d19e8a040453ef0c7fcb8bfaeea48ee7b3f1a1234b4eb9c08187c064a9f336f",
+    "examples/full-robot/rederive_collision_grids.py": "2c52351edd02de794d54c13bb2e7ed09a4b97cd2d320bdf2a7756b24955a1c89",
+    "examples/full-robot/single-foot-marker-motion-load-15mm-expanded.json": "f36a4cd10507042bfbc95937cf0566b7bae9c2e73940e30d1deab81f51f77add",
+    "examples/full-robot/single-foot-marker-motion-load-15mm-retracted.json": "657ce3dc5b3946cec6de1929e9b3af08ac266a80747649a742cf9560dcf06aa0",
+    "examples/full-robot/single-foot-marker-motion-load-15mm.json": "4aa340cb3570c0e1aa50f037530f3dfe79755cb41820f69348ee940d88a116e5",
+    "examples/full-robot/single-foot-marker-motion-load-15p25mm-retracted.json": "21fabbf031875eb1095ed1761d8b8b55811831e9f917963ff196bbdcfa7a4f3e",
+    "examples/full-robot/single-foot-marker-motion-load-16mm-lift-5mm.json": "d3016e2f5ef2ed2dca435ed97667571f488b77b2911c5a0007651ff4853d35f0",
+    "examples/full-robot/single-foot-marker-motion-load-16mm-low-start.json": "ee68df8d60e00a8ff8b36159a8d8515ee80b544967864d716488da825d20beec",
+    "examples/full-robot/single-foot-marker-motion-load-16mm-retracted.json": "ac09916da1e5caa40a9bca78dfc51a0370fa98a94d964f9154b13c7a2bfd640c",
+    "examples/full-robot/single-foot-marker-motion-load-20mm-expanded.json": "5e39f6af6e955018a38f0b5bcf969d5ca80c1126f7dfb1d06762aac1c3d38536",
+    "examples/full-robot/single-foot-marker-motion-load-20mm-retracted.json": "1f095ed9db194572b998c304b096b9f2d6eb7ddf48210130b5fad14cd95c15f9",
+    "examples/full-robot/single-foot-marker-motion-load-20mm.json": "98cb10a9c64e2158f2297ab6273ab5117ecfed9ac528baad99bc96dfc94c6d31",
+    "examples/full-robot/single-foot-marker-motion-load-5mm.json": "f263b72c210c0a76a20c6f48282dd581d97797e5d2a3b225357b56732a0a998b",
+    "runs/full-robot/learning/collision-grid-tests.txt": "0f003145a7eb85d8f70b3e6eeba04a679437aeb7716470bf61a5f3a00a8bf0ac",
+    "runs/full-robot/learning/corrected-grid-plan-15mm-process.json": "1ad568900c93e9605d86e10fdf581fe98a5f63c9849592e6e1446594917e7c0b",
+    "runs/full-robot/learning/corrected-grid-plan-15mm.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/full-robot/learning/corrected-grid-plan-15mm.stderr": "fc19ac64c152cd1a39f911ae747fef897d65bcc34db59a317a29b341aeef2e0d",
+    "runs/full-robot/learning/corrected-grid-plan-15p25mm-process.json": "3083b3386db667a3d7b5614947fd3ea90565b22cbb668eeeb27da3d510e978b1",
+    "runs/full-robot/learning/corrected-grid-plan-15p25mm.json": "d93d164fefe7111139b089050d863d16f2e470ef877cff7ae5e8591f176ff599",
+    "runs/full-robot/learning/corrected-grid-plan-15p25mm.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/full-robot/learning/corrected-grid-plan-16mm-lift-5mm-process.json": "7a43378a305dc0ff35ab29b2d022025f55f75ee254eb60a9476f9d435dc476bf",
+    "runs/full-robot/learning/corrected-grid-plan-16mm-lift-5mm.json": "f1efd3516ad6b992962abc59c512548bb6b22f3d39197dceb9b4fc6379a59564",
+    "runs/full-robot/learning/corrected-grid-plan-16mm-lift-5mm.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/full-robot/learning/corrected-grid-plan-16mm-low-start-process.json": "462713f5c643e7391b867dd5b28c949ddc7ac37e816efff8758114719197c8c2",
+    "runs/full-robot/learning/corrected-grid-plan-16mm-low-start.json": "eb108cc8593cfffd7119eae113b1b32c0e24ead8b89e774921560e9affcbdaaa",
+    "runs/full-robot/learning/corrected-grid-plan-16mm-low-start.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/full-robot/learning/corrected-grid-plan-16mm-process.json": "6308b8ac78ecc5209787d0412470e81c6773f5c1523ac300f1d737706f0a9423",
+    "runs/full-robot/learning/corrected-grid-plan-16mm.json": "0e2b4a42113a6cef19ca1d9124b2eb9ff4b862c8ae203732cd9f3cef82c68d21",
+    "runs/full-robot/learning/corrected-grid-plan-16mm.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/full-robot/learning/corrected-grid-plan-20mm-process.json": "fdd430d1e7ecfbeced65685d6c200e0a8251ff10a86642e7c296d4b60478d490",
+    "runs/full-robot/learning/corrected-grid-plan-20mm.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/full-robot/learning/corrected-grid-plan-20mm.stderr": "b1b519f88043bfb2faf67703051999e069373f942bc93f9f517b6443afc55ba5",
+    "runs/full-robot/learning/corrected-grid-retraction-audit-process.json": "70104d6cd5905d7a31dc2bbf4e5f0db1c01ebf13a70392815489e4be60990ef5",
+    "runs/full-robot/learning/corrected-grid-retraction-audit.json": "56fa80ea884387cc421aeb4cbef645acd7c384d50aacf14601c460b83a98c631",
+    "runs/full-robot/learning/corrected-grid-retraction-audit.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/full-robot/learning/corrected-thigh-grids.scene.derivation.json": "55db495ae0fffb27520a423a6559a68bc7ae2183c2e00776f908a61199ce3510",
+    "runs/full-robot/learning/corrected-thigh-grids.scene.json": "936fe278b487d74f863605f6bf87e09a43701923843ec7596136874e3c71908d",
+    "runs/full-robot/learning/load-16mm-clearance.json": "7d235e1a4c73dc4eaf3d7b8fb9d7ae1bd68f5629c1fadb2b4e0087909f67e8e2",
+    "runs/full-robot/learning/load-16mm-execution-process.json": "e31b7e4827dc9e4e5de6dcfb2822721f9516562e771377458795f2a866f74b7b",
+    "runs/full-robot/learning/load-16mm-execution.json": "d640b68fd4f74ceb055e15120f3152dc93bb0a948ea66d07adb1821bb485cf90",
+    "runs/full-robot/learning/load-16mm-refined-clearance.json": "4827a95c3741d5b2dfb3bae045855045763dd265478f66a298cc275a0b8ebfa0",
+    "runs/full-robot/learning/load-16mm-refined-execution-process.json": "5c15acb49186fc9c9f3a6e05f682b079a3cf4aa051a9f8b76f3143a43a9e314d",
+    "runs/full-robot/learning/load-16mm-refined-execution.json": "c7e038c85d5789e4a23ad1001c4a6a0b8bb9448d3508a265aaf4f2b47761a54d",
+    "runs/full-robot/learning/load-16mm-refined-tracking.json": "36006b8a924b72f08c91d988af82bb242c48b53c189809b69477bfa3475818cf",
+    "runs/full-robot/learning/load-16mm-refinement.json": "5bfc6403ff2edbf700e476a7fa3a83df1a10cbca9bc23983c3f5a2d21c4e4620",
+    "runs/full-robot/learning/load-16mm-tracking.json": "26351cd7ab4ceb1765d686113f359a892e8b035e51b2ae2968b41b2655c1fe73",
+    "runs/full-robot/learning/load-planned-15mm-expanded-process.json": "65d6431e792a54b339bb476f79a000ae8a591573faa83231f4a2ea15bb9ec627",
+    "runs/full-robot/learning/load-planned-15mm-expanded.stderr": "25ecb099813d676087789b3b2b287ae764d57187d6a290f69337171238170772",
+    "runs/full-robot/learning/load-planned-15mm-process.json": "714562d8db39f7c067872dcfb26a1fcc92c6a111203f4181a188e91eca4faff1",
+    "runs/full-robot/learning/load-planned-15mm-retracted-process.json": "470dfacef06ac89b03d052fdfd640f0afd2c9d642048e7a011f9ae900ea17c2b",
+    "runs/full-robot/learning/load-planned-15mm-retracted.stderr": "91438e9d2795eab3d55465dbbf147c6df5b69eaef561c3dba5bccbc8da2e4e78",
+    "runs/full-robot/learning/load-planned-15mm.stderr": "92148a03100f360cac632eb69e5f7ee6fa5744bfc30c1148d5bcd87e273db8f1",
+    "runs/full-robot/learning/load-planned-20mm-expanded-process.json": "ba3cad40149f5cd980bebe48f4fcc69d79682e623846034c2ea56fc2d2aa51a7",
+    "runs/full-robot/learning/load-planned-20mm-expanded.stderr": "cac8b76e64ecba84610d0e3d7cee425fc7fee5ed42affaa2cad3d3e363695280",
+    "runs/full-robot/learning/load-planned-20mm-process.json": "8136e914976fd0e96a5e9a5320a7ffb4c4a4842049c5d4685cfa2fa8d169f418",
+    "runs/full-robot/learning/load-planned-20mm-retracted-process.json": "1bb7029d74421ba6994a0c4e34bf244e1687f7dfe17262e9515cc3e2bb67a7b3",
+    "runs/full-robot/learning/load-planned-20mm-retracted.stderr": "91438e9d2795eab3d55465dbbf147c6df5b69eaef561c3dba5bccbc8da2e4e78",
+    "runs/full-robot/learning/load-planned-20mm.stderr": "b422dba9146187013ed54d751aeda0654e0f6b2c4111b4711e03d6d68d3f3406",
+    "runs/full-robot/learning/load-planned-5mm-process.json": "f7e448603598c76124958847eeaebdc7f60fc3803d8d62e6597f70736e10a5a5",
+    "runs/full-robot/learning/load-planned-5mm.stderr": "6023b6a0b2cdeed188d1ac3655666f0e3cb46e5b3bb76ea5f77edde387adec7b",
+    "runs/full-robot/learning/load-stance-retraction-grid-brep.json": "7bcaee933058787e91a2481cfce9273c828fcdb8000deb13bc9f0fce22d7ff09",
+    "runs/full-robot/learning/minimum-load-com-shifts.json": "6ba9b5b186955b9d99193df8ca8ff2892f9aec60ac832f47f629b3b03cd9f23b",
+    "runs/full-robot/learning/support-load-grid-source-manifest.json": "456a1225ebd6a1f1f5e4f02daed442b40538f7bfe345942af9460d25dc499830"
+  },
+  "kind": "support load feasibility and CAD distance-grid correction",
+  "next": {
+    "recipe": "examples/full-robot/mechanical-servo-load-16mm-lift-5mm.json",
+    "remaining": [
+      "active stance/weight-transfer feedback",
+      "loaded tracking and accepted stepping",
+      "other collision grids and exact clearance validation",
+      "hardware calibration and deployed sensing",
+      "teacher/student learning and interactive policies",
+      "throughput targets"
+    ],
+    "state": "Geometric/static checks pass; motor-driven execution has not run."
+  },
+  "plans": {
+    "corrected-grid-plan-15mm": {
+      "argv": [
+        "target/release/examples/plan_marker_motion",
+        "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+        "examples/full-robot/foot-markers.json",
+        "examples/full-robot/single-foot-marker-motion-load-15mm-retracted.json"
+      ],
+      "error": "static vertical support minimum failed at 0.5s: markers [\"+X-foot-surface\", \"+Y-foot-surface\", \"-X-foot-surface\"], predicted [19.153865383379745, 1.4836664336622694, 18.369373582889015] N, required [1.5, 1.5, 1.5] N",
+      "exit_code": 1,
+      "wall_s": 1.2706448339999998
+    },
+    "corrected-grid-plan-15p25mm": {
+      "argv": [
+        "target/release/examples/plan_marker_motion",
+        "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+        "examples/full-robot/foot-markers.json",
+        "examples/full-robot/single-foot-marker-motion-load-15p25mm-retracted.json"
+      ],
+      "error": "",
+      "exit_code": 0,
+      "maximum_marker_error_m": 1.2232589356031355e-05,
+      "minimum_predicted_support_n": 1.5064924284285626,
+      "wall_s": 1.124388431
+    },
+    "corrected-grid-plan-16mm": {
+      "argv": [
+        "target/release/examples/plan_marker_motion",
+        "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+        "examples/full-robot/foot-markers.json",
+        "examples/full-robot/single-foot-marker-motion-load-16mm-retracted.json"
+      ],
+      "error": "",
+      "exit_code": 0,
+      "maximum_marker_error_m": 1.2835328429512363e-05,
+      "minimum_predicted_support_n": 1.5801132329785876,
+      "wall_s": 1.130573917
+    },
+    "corrected-grid-plan-16mm-lift-5mm": {
+      "argv": [
+        "runs/full-robot/learning/support-load-grid-source/bin/plan_marker_motion",
+        "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+        "examples/full-robot/foot-markers.json",
+        "examples/full-robot/single-foot-marker-motion-load-16mm-lift-5mm.json"
+      ],
+      "error": "",
+      "exit_code": 0,
+      "maximum_marker_error_m": 1.2835328429512363e-05,
+      "minimum_predicted_support_n": 1.579376716918838,
+      "wall_s": 1.5892746009999998
+    },
+    "corrected-grid-plan-16mm-low-start": {
+      "argv": [
+        "target/release/examples/plan_marker_motion",
+        "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+        "examples/full-robot/foot-markers.json",
+        "examples/full-robot/single-foot-marker-motion-load-16mm-low-start.json"
+      ],
+      "error": "",
+      "exit_code": 0,
+      "maximum_marker_error_m": 1.2835328429512363e-05,
+      "minimum_predicted_support_n": 1.5801132329785885,
+      "wall_s": 1.1269734720000002
+    },
+    "corrected-grid-plan-20mm": {
+      "argv": [
+        "target/release/examples/plan_marker_motion",
+        "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+        "examples/full-robot/foot-markers.json",
+        "examples/full-robot/single-foot-marker-motion-load-20mm-retracted.json"
+      ],
+      "error": "internal contact at 0.41000000000000003s: +Y | Worm and input spindle b816 / +Y | Hip output shaft and pulley, penetration 0.00003372520674452956 m",
+      "exit_code": 1,
+      "wall_s": 0.8744238810000002
+    }
+  },
+  "refinement": {
+    "candidate_stepping_wall_s": 88.30088632600012,
+    "contact_impulse_totals": [
+      {
+        "candidate_ns": [
+          0.17615208634431068,
+          0.41972279067124063,
+          12.98678423059887
+        ],
+        "difference_norm_ns": 0.010490643158546727,
+        "link": 6,
+        "other": null,
+        "reference_ns": [
+          0.1767378903516509,
+          0.4092490102395368,
+          12.98668249066863
+        ]
+      },
+      {
+        "candidate_ns": [
+          -0.6654773580212426,
+          -0.06041298521429831,
+          18.34870876293997
+        ],
+        "difference_norm_ns": 0.0354232859832996,
+        "link": 11,
+        "other": null,
+        "reference_ns": [
+          -0.630062263546306,
+          -0.06117002621667427,
+          18.348624133709414
+        ]
+      },
+      {
+        "candidate_ns": [
+          0.07268428105596773,
+          -0.40766678725970545,
+          14.132690490555737
+        ],
+        "difference_norm_ns": 0.011635904627748647,
+        "link": 18,
+        "other": null,
+        "reference_ns": [
+          0.07290579798458664,
+          -0.39603300475707764,
+          14.132672842951122
+        ]
+      },
+      {
+        "candidate_ns": [
+          0.4172934445573913,
+          0.044254565029314415,
+          16.942654612302142
+        ],
+        "difference_norm_ns": 0.036186858740331444,
+        "link": 25,
+        "other": null,
+        "reference_ns": [
+          0.38110947444123366,
+          0.043852663881138516,
+          16.94287262054237
+        ]
+      }
+    ],
+    "contact_pair_mismatch_samples": 0,
+    "direct_closure_jacobian": {
+      "candidate": true,
+      "reference": true
+    },
+    "duration_s": 1.6,
+    "events": [
+      {
+        "candidate_count": 2,
+        "guard": 0,
+        "maximum_ordered_time_difference_s": 0.00022427681989034554,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 1,
+        "maximum_ordered_time_difference_s": 3.1217670358962835e-05,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 2,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 3,
+        "maximum_ordered_time_difference_s": 0.00048329622874620365,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 2,
+        "guard": 4,
+        "maximum_ordered_time_difference_s": 0.00026517595597452814,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 5,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 5,
+        "guard": 6,
+        "maximum_ordered_time_difference_s": 0.00017911585473939784,
+        "reference_count": 5
+      },
+      {
+        "candidate_count": 6,
+        "guard": 7,
+        "maximum_ordered_time_difference_s": 0.00044816703403838254,
+        "reference_count": 6
+      },
+      {
+        "candidate_count": 1,
+        "guard": 8,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 4,
+        "guard": 9,
+        "maximum_ordered_time_difference_s": 0.0017568203020478235,
+        "reference_count": 4
+      },
+      {
+        "candidate_count": 2,
+        "guard": 10,
+        "maximum_ordered_time_difference_s": 0.0002091386593006117,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 11,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 12,
+        "maximum_ordered_time_difference_s": 0.00032475242080379566,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 14,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 15,
+        "maximum_ordered_time_difference_s": 0.00012123732585333016,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 17,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 18,
+        "maximum_ordered_time_difference_s": 0.0010463869989882912,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 20,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 3,
+        "guard": 21,
+        "maximum_ordered_time_difference_s": 0.0005621670580232413,
+        "reference_count": 3
+      },
+      {
+        "candidate_count": 1,
+        "guard": 23,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 24,
+        "maximum_ordered_time_difference_s": 8.150761314332233e-05,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 26,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 27,
+        "maximum_ordered_time_difference_s": 0.0003601995191264695,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 2,
+        "guard": 28,
+        "maximum_ordered_time_difference_s": 0.0020273340786494676,
+        "reference_count": 2
+      },
+      {
+        "candidate_count": 1,
+        "guard": 29,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 30,
+        "maximum_ordered_time_difference_s": 0.0008375317807434099,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 32,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 33,
+        "maximum_ordered_time_difference_s": 8.1662410286178e-05,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1,
+        "guard": 35,
+        "maximum_ordered_time_difference_s": 0.0,
+        "reference_count": 1
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 36,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 37,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 38,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 39,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 40,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 41,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 42,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 43,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 44,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 45,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 46,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      },
+      {
+        "candidate_count": 1600,
+        "guard": 47,
+        "maximum_ordered_time_difference_s": 2.220446049250313e-16,
+        "reference_count": 1600
+      }
+    ],
+    "exact_event_schedule": false,
+    "exact_frames": false,
+    "exact_terminal_frame": false,
+    "markers": [
+      {
+        "id": "+X-foot-surface",
+        "maximum_error_m": 2.037270967647303e-05,
+        "rms_error_m": 8.136646880231413e-06,
+        "worst_time_s": 0.03
+      },
+      {
+        "id": "+Y-foot-surface",
+        "maximum_error_m": 2.673401988695403e-05,
+        "rms_error_m": 5.4602026411721395e-06,
+        "worst_time_s": 0.02
+      },
+      {
+        "id": "-X-foot-surface",
+        "maximum_error_m": 3.1119049509862855e-05,
+        "rms_error_m": 6.707685072354795e-06,
+        "worst_time_s": 0.02
+      },
+      {
+        "id": "-Y-foot-surface",
+        "maximum_error_m": 2.35208429874765e-05,
+        "rms_error_m": 4.664874550707949e-06,
+        "worst_time_s": 0.02
+      }
+    ],
+    "max_sample_gap_s": 0.010000000000000009,
+    "maximum_sampled_differences": {
+      "current_a": 0.049501336585620004,
+      "gear_speed_rad_s": 0.24668967521872065,
+      "heating_w": 0.17712636614852872,
+      "joint_positions": 0.00040189295985929604,
+      "joint_velocities": 0.1793679252765451,
+      "motor_states": 1.0,
+      "motor_voltage_v": 0.31037007280590134,
+      "power_difference_w": 0.0023925198735343933,
+      "servo_commands": 0.027986783369967183,
+      "servo_states": 0.0889735944105905,
+      "shaft_torque_nm": 0.023433936167185032,
+      "supply_current_a": 0.03384559972482626
+    },
+    "reference_stepping_wall_s": 127.44802307400029,
+    "samples": 161,
+    "scope": "Aligned sampled diagnostic only; motor_states and joint arrays contain mixed units. Event occurrence matching is diagnostic, not proof of identical modes. Optional accepted-stage impulse comparison is diagnostic. No energy, hardware or learning gate is established."
+  },
+  "result": "Shared exporter bug corrected and sampled reference found; both 3 mm lift motor runs complete but foot remains in contact. No stepping, learning or realtime gate promoted.",
+  "source_snapshot_manifest": "runs/full-robot/learning/support-load-grid-source-manifest.json",
+  "tests": {
+    "cad_focused": 5,
+    "rust_planning": 8,
+    "rust_support": 4,
+    "wasm_check": "passed; existing unused rotor_speed warning"
+  }
+}

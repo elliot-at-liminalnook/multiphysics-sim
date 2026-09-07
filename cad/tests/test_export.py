@@ -123,3 +123,22 @@ def test_wall_thickness(doc):
     assert regions and all(r.thickness < 1.2 for r in regions)
     thick = ops.box((200, 0, 0), (20, 20, 5))
     assert not wall_thickness(doc.kernel, doc.nodes[thick].body, 1.2)
+
+
+def test_local_wall_thickness_matches_global_samples_with_fewer_rays(doc, monkeypatch):
+    body = doc.nodes[Ops(doc).box((100, 0, 0), (20, 20, 0.8))].body
+    original = doc.kernel.ray_hits
+    calls = []
+    def ray(*args):
+        calls.append(args)
+        return original(*args)
+    monkeypatch.setattr(doc.kernel, 'ray_hits', ray)
+    all_regions = wall_thickness(doc.kernel, body, 1.2)
+    global_calls = len(calls)
+    center, radius = all_regions[0].point, 2.0
+    calls.clear()
+    local = wall_thickness(doc.kernel, body, 1.2, near=(center, radius))
+    expected = [r for r in all_regions
+                if sum((a-b)**2 for a, b in zip(r.point, center)) < radius**2]
+    assert local == expected and local
+    assert 0 < len(calls) < global_calls

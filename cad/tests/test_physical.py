@@ -1,4 +1,4 @@
-"""The physical assembly description (simrobot v3): schema completeness,
+"""The physical assembly description (simrobot v4): schema completeness,
 inertia, signed distance grids, joint inference, fastened flanges, the
 flexible-link reduction against beam theory, results/identification round
 trips and the API routes."""
@@ -45,7 +45,7 @@ def _leg():
 def _check_schema(model):
     for key in ("version", "source", "gravity", "world", "materials", "links", "joints", "motors", "battery", "sensors", "cables", "control", "uncertainty", "identification", "planar"):
         assert key in model, key
-    assert model["version"] == 3
+    assert model["version"] == 4
     for l in model["links"]:
         for key in ("name", "id", "members", "material", "ground", "mass", "com", "inertia", "bbox", "collision", "flex", "print"):
             assert key in l, key
@@ -147,6 +147,58 @@ def test_signed_distance_grid():
     assert len(block["vertices"]) >= 8 and len(block["hull"]) == 8
 
 
+def test_distance_grid_keeps_long_faces_with_distant_centroids():
+    import trimesh
+    from robocad.physical import signed_distance_grid
+
+    beam = trimesh.creation.box([.2, .002, .002])
+    meshes = [(beam.vertices, beam.faces)]
+    # These small boxes have closer centroids than the beam's nearby side.
+    # Restricting distance queries to eight centroids misses that side.
+    for i in range(8):
+        box = trimesh.creation.box([.001, .001, .001])
+        box.apply_translation([.08 + (i % 2)*.002, .005 + (i // 2)*.002, 0])
+        meshes.append((box.vertices, box.faces))
+    sdf = signed_distance_grid(meshes, .001)
+    values = np.asarray(sdf["values"]).reshape(sdf["dims"])
+    for point, expected in [([.08, 0, 0], -.001), ([.08, -.002, 0], .001)]:
+        index = np.round((np.asarray(point) - sdf["origin"]) / sdf["cell"]).astype(int)
+        assert values[tuple(index)] == pytest.approx(expected, abs=1e-6)
+
+
+def test_compound_collision_sign_is_union_of_individual_cad_solids():
+    from OCP.BRep import BRep_Builder
+    from OCP.TopoDS import TopoDS_Compound
+    from robocad.kernel import Body
+
+    doc = Document()
+    compound = TopoDS_Compound()
+    builder = BRep_Builder()
+    builder.MakeCompound(compound)
+    for x in (0, 5):
+        builder.Add(compound, doc.kernel.box((x, 0, 0), (10, 10, 10)).shape)
+    node = doc.add_body(Body(compound), 'overlapping solids')
+    original = doc.kernel.inertial_properties(node.body)
+    com = np.array([.004, .003, .002])
+    block, _ = collision_block(doc, [node], com)
+    sdf = block['sdf']
+    values = np.asarray(sdf['values']).reshape(sdf['dims'])
+    # A parity test over both boxes incorrectly empties their overlap. Each
+    # individual solid supplies a volume and those volumes must be unioned.
+    for point, inside in [([.002, .005, .005], True), ([.007, .005, .005], True),
+                          ([.013, .005, .005], True), ([.016, .005, .005], False)]:
+        index = np.round((np.asarray(point) - com - sdf['origin']) / sdf['cell']).astype(int)
+        assert (values[tuple(index)] < 0) == inside
+    assert block['sign_derivation']['solid_count'] == 2
+    # Meshing may populate OCCT's triangulation cache; solid geometry and mass
+    # properties must remain unchanged.
+    after = doc.kernel.inertial_properties(node.body)
+    assert after.volume == original.volume and after.inertia == original.inertia
+    assert after.centroid == original.centroid
+    assert after.bbox_min == pytest.approx(original.bbox_min, abs=1e-12)
+    assert after.bbox_max == pytest.approx(original.bbox_max, abs=1e-12)
+
+
 def test_joint_inference_from_pin_and_hole(monkeypatch):
     doc = Document()
     ops = Ops(doc)
@@ -168,8 +220,11 @@ def test_joint_inference_from_pin_and_hole(monkeypatch):
     assert p["pin_radius"] == pytest.approx(0.0019, abs=1e-6) and p["hole_radius"] == pytest.approx(0.002, abs=1e-6)
     assert p["clearance"] == pytest.approx(0.0001, abs=1e-6)
     assert p["contact_length"] == pytest.approx(0.010, abs=2e-4)
-    # Backlash = clearance / lever (arm COM 30 mm above the pivot at z=5 → 35 mm).
+    # Retain the geometric angle as a diagnostic, not drivetrain lost rotation.
     assert p["backlash"] == pytest.approx(0.0001 / p["lever"], rel=1e-6) and 0.02 < p["lever"] < 0.05
+    assert p['bearing_clearance_angle_rad'] == p['backlash']
+    assert p['drive_backlash']['width_rad'] is None
+    assert p['drive_backlash']['provenance'] == 'unmeasured'
     assert p["wobble"] == pytest.approx(math.atan2(2e-4, p["contact_length"]), rel=1e-6)
     # Coulomb torque = µ_k · m g · r with the PLA/PETG pair.
     mass = next(l for l in model["links"] if l["name"] == "arm")["mass"]
@@ -288,7 +343,7 @@ def test_api_physical_routes(tmp_path):
     try:
         c = RoboClient(server.url)
         model = c.physical(flex=False)
-        assert model["version"] == 3 and len(model["links"]) == 3
+        assert model["version"] == 4 and len(model["links"]) == 3
         res = {"version": 1, "links": {"thigh": {"peak_stress_pa": 5e6, "yield_margin": 8.0}}, "joints": {}, "motors": {}}
         p = str(tmp_path / "r.simresult.json")
         with open(p, "w") as f:

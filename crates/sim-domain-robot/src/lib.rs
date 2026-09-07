@@ -5,6 +5,7 @@
 //! drivers, a battery, inertial sensors and cables.
 
 pub mod articulated;
+pub mod actuator_audit;
 pub mod math;
 pub mod model;
 pub mod motor;

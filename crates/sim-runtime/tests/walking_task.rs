@@ -27,6 +27,7 @@ fn fixture() -> (Articulated, WalkingTaskConfig) {
         body_position_cost_cap: 1.0,
         qualified_step_reward: 0.1,
         failed_step_penalty: 1.,
+        heading: None,
     };
     (art, c)
 }
@@ -36,6 +37,67 @@ fn frame(time: f64, phase: &str, support: f64) -> serde_json::Value {
         "contacts":[{"link":2,"other":null,"force_n":[0,0,support]}],
         "policy":{"step_reference":{"reference":{"sample":(time*10.)as u64,"step":1,"foot":0,"phase":phase,"body_world_m":[0,0,0]}}}})
 }
+#[test]
+fn heading_cost_wraps_angles_uses_declared_offset_and_is_bounded() {
+    use sim_runtime::walking_task::HeadingTaskConfig;
+    let (art, mut c) = fixture();
+    c.heading = Some(HeadingTaskConfig {
+        scale_rad: 0.1,
+        weight_per_s: 0.5,
+        cost_cap: 1.0,
+        reference_offset_rad: 0.2,
+    });
+    let mut monitor = WalkingMonitor::new(
+        c.clone(),
+        0.1,
+        "body".into(),
+        vec!["a".into(), "b".into()],
+        &art,
+    )
+    .unwrap();
+    let mut f = frame(0.1, "hold", 2.0);
+    assert!(
+        monitor
+            .observe(&art, &f, 0.1, false)
+            .unwrap_err()
+            .contains("missing held yaw reference")
+    );
+    let mut missing_offset = serde_json::to_value(&c).unwrap();
+    missing_offset["heading"]
+        .as_object_mut()
+        .unwrap()
+        .remove("reference_offset_rad");
+    assert!(serde_json::from_value::<WalkingTaskConfig>(missing_offset).is_err());
+    let actual = -std::f64::consts::PI + 0.01;
+    f["poses"][0]["rotation"] = json!([
+        [actual.cos(), -actual.sin(), 0.],
+        [actual.sin(), actual.cos(), 0.],
+        [0., 0., 1.]
+    ]);
+    f["policy"]["step_reference"]["reference"]["yaw_rad"] =
+        json!(std::f64::consts::PI - 0.01 - 0.2);
+    let r = monitor.observe(&art, &f, 0.1, false).unwrap();
+    let h = r.heading.unwrap();
+    assert!((h.error_rad - 0.02).abs() < 1e-12);
+    assert!((h.reward + 0.002).abs() < 1e-12);
+    f["policy"]["step_reference"]["reference"]["yaw_rad"] = json!(0.);
+    assert_eq!(
+        monitor
+            .observe(&art, &f, 0.1, false)
+            .unwrap()
+            .heading
+            .unwrap()
+            .reward,
+        -0.05
+    );
+    f["poses"][0]["rotation"] = json!([[0., 0., 1.], [0., 1., 0.], [-1., 0., 0.]]);
+    assert!(monitor.observe(&art, &f, 0.1, false).is_err());
+    c.heading.as_mut().unwrap().scale_rad = 0.;
+    assert!(
+        WalkingMonitor::new(c, 0.1, "body".into(), vec!["a".into(), "b".into()], &art).is_err()
+    );
+}
+
 #[test]
 fn objective_checks_simultaneous_support_and_awards_each_completed_step_once() {
     let (art, c) = fixture();

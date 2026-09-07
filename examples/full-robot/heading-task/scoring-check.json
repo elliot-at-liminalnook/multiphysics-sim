@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "frames": 1201,
+  "physical_frame_hash": "3a6e043304bbe4befef5c6d53475c8245e45b40f78379d6ff4b32dcb7acb29e4",
+  "heading_reward": -0.5450844547490409,
+  "total_reward_change": -0.5450844547490414,
+  "final_heading": {
+    "actual_rad": -0.0012759141302072724,
+    "error_rad": -0.0012759141302072724,
+    "reward": -0.0006511827470650323,
+    "target_rad": 0
+  },
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/mechanical-reuse/restart-short.native.json",
+      "sha256": "b60e086008938b3d273265cab9e6a23ea740987f9fc0de3a664b30facccf1c84"
+    },
+    {
+      "path": "runs/full-robot/learning/heading-task/baseline-short.native.json",
+      "sha256": "d1d6652d31f8e8ba73688849876c356dc02e95cae590cdf384872586634b1e9f"
+    }
+  ],
+  "scope": "Exact physical frames and actor telemetry after removing host wall timing. Only the declared heading reward and task telemetry change."
+}

@@ -1,0 +1,412 @@
+{
+  "version": 1,
+  "initial_score": 0.8019694303354573,
+  "best_score": 0.8674073849933698,
+  "improved": true,
+  "evaluations": [
+    {
+      "evaluation": 0,
+      "score": 0.8019694303354573,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.49475512332419,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.0012759141302072724,
+          "final_body_error_m": 0.0006184740066568074,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "87cba4c972e6e26deb7030ed4d18aa852e3e88d1c9c1229162a055a6e00c3a16"
+        },
+        {
+          "name": "sustained",
+          "score": 49.5719092634472,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.00498115544559162,
+          "final_body_error_m": 0.0005176769346581218,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "eb493a4933dbe6c7f905a0d2b9b19e14e2e2f6f7d857328c46f413333468d52e"
+        },
+        {
+          "name": "refined-minute",
+          "score": 48.11816582012744,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.005314374428482307,
+          "final_body_error_m": 0.0005540252327679174,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "2e04731ec9e1e8c20d9b5a7a4a4650d0b47ea016bb48d13a2ee08f413de463a7"
+        }
+      ]
+    },
+    {
+      "evaluation": 1,
+      "score": 0.7812898871376514,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.22748065893368,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.0016771629841784838,
+          "final_body_error_m": 0.0006304073832221964,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "bc3f89f544f067da59475ace6c6ae3ec156d604390ddfe05638c084de3f9dad1"
+        },
+        {
+          "name": "sustained",
+          "score": 48.19926240401567,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.005541369826415817,
+          "final_body_error_m": 0.000436136661765256,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "819cd09c4965b908fab426b4bbfe4aec6ac8fb23d1affc5874e673a39427b9a4"
+        },
+        {
+          "name": "refined-minute",
+          "score": 46.87739322825908,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.005897151180292832,
+          "final_body_error_m": 0.0006102951026948243,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "ff080cef026affc5b5b9bac609c342f478b6530a71d6fb792090feeabcb99617"
+        }
+      ]
+    },
+    {
+      "evaluation": 2,
+      "score": 0.8014254760240177,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.604885355987623,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.0009483923544737888,
+          "final_body_error_m": 0.0006644445696852795,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "e89bdfe7956223bc90a799db3b35fac5852cf338d7c4cd323cebd48eda40cc3f"
+        },
+        {
+          "name": "sustained",
+          "score": 50.486835401720185,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.004541659908102827,
+          "final_body_error_m": 0.0006884238124330233,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "462436283ab1a57e94a9cea26e08a482db15a258d961a1bd1993070bd85bb09f"
+        },
+        {
+          "name": "refined-minute",
+          "score": 48.08552856144106,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.005113318674346862,
+          "final_body_error_m": 0.0005865488652562496,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "bf431d9e46cbba73b55ed8c414d1dc11508c089abc947d22ff15ff009a812166"
+        }
+      ]
+    },
+    {
+      "evaluation": 3,
+      "score": 0.7971771284817631,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.55418604143242,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.001120471856214787,
+          "final_body_error_m": 0.0006470528829252164,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "308ecf667ad18fb6f3bd09de28859831868357821c6abe527edb66ed4f8e7291"
+        },
+        {
+          "name": "sustained",
+          "score": 50.2581694344395,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.004789730715802638,
+          "final_body_error_m": 0.0005267176593105747,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "dffd19ed71b9fa0d7519fb5ef3e88a0c8f20306e9598e25e8f76be144552bef7"
+        },
+        {
+          "name": "refined-minute",
+          "score": 47.83062770890579,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.005363394045215023,
+          "final_body_error_m": 0.0005954630251314892,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "4b62fff07da9b87e2f82c1b73527a7ba4447d4837ae5240c1cc637844c9da0bc"
+        }
+      ]
+    },
+    {
+      "evaluation": 4,
+      "score": 0.7902771907229019,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.41679293341908,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.0014212306459064925,
+          "final_body_error_m": 0.0005977097412434876,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "740da776506622fcf7e7b640846941302fb2bdf526eaf95e93b105db9f44d894"
+        },
+        {
+          "name": "sustained",
+          "score": 48.73496702485234,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.005229212076267154,
+          "final_body_error_m": 0.0005407656714988976,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "3baaa00e620eaa8685409d7606cf2716d11231f002ae22e61b366224c9d23559"
+        },
+        {
+          "name": "refined-minute",
+          "score": 47.416631443374115,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.005543006081625624,
+          "final_body_error_m": 0.0006128031197635784,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "fe2639fe0ccec8d14e4aa4718ebb5ab6620a2fcd0d503bfdc55745b5de8eb6b6"
+        }
+      ]
+    },
+    {
+      "evaluation": 5,
+      "score": 0.791561700675404,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.446611201497042,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.0014227709069805567,
+          "final_body_error_m": 0.0006341135429148095,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "2ef21471e2fdb388c4aa2e754391d238ac038273752521d2c28971cf260404c3"
+        },
+        {
+          "name": "sustained",
+          "score": 50.13618539897477,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.0049888811872753165,
+          "final_body_error_m": 0.0005341263098050493,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "7b8d019b9e7f6bbce95bbea1367f03df171aafa8954eac80af1ec506fea47da9"
+        },
+        {
+          "name": "refined-minute",
+          "score": 47.49370204052424,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.0056745995745935635,
+          "final_body_error_m": 0.0005368241279806543,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "269c062fb498472fadec0d7d05c97b1bff39f55ea006660453c026da7f3d501b"
+        }
+      ]
+    },
+    {
+      "evaluation": 6,
+      "score": 0.8019670624061448,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.516722495272166,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.001163238238452095,
+          "final_body_error_m": 0.0006262959618121428,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "335c632240450cc779658425b79e34b0fbc8a1938fecbec670cb2d44657eeb05"
+        },
+        {
+          "name": "sustained",
+          "score": 49.67066690650496,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.004808776625696999,
+          "final_body_error_m": 0.0006163242202259781,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "cba95673fd8619c8a9fc97e27ac9c7c7508e04f7f2e724de0b91e0d1e46a0a0d"
+        },
+        {
+          "name": "refined-minute",
+          "score": 48.118023744368685,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.0051374262360084876,
+          "final_body_error_m": 0.0006009969198566478,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "943777970705c08d663053933db27770b64bd6e5f62eb710b7a08981a6af5bc6"
+        }
+      ]
+    },
+    {
+      "evaluation": 7,
+      "score": 0.7482124824910236,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.132636419619338,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.0016864195371457823,
+          "final_body_error_m": 0.000631749698194511,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "68d67492294bdbc27de3455a66affa8336186f03ca229962c612f13c12eaaf5d"
+        },
+        {
+          "name": "sustained",
+          "score": 45.12820522548341,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.006472220622508333,
+          "final_body_error_m": 0.0004834097801171325,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "e094085b87d8c55e82b174c365fc9505de58fd9c799a72a23057eb819fc2c387"
+        },
+        {
+          "name": "refined-minute",
+          "score": 44.892748949461414,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.006451194193186016,
+          "final_body_error_m": 0.0005327491684002898,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "57713f2d14a09adc9348bfce317fadaf1234a2248a708ece257bac8fa3a09dd6"
+        }
+      ]
+    },
+    {
+      "evaluation": 8,
+      "score": 0.8674073849933698,
+      "error": null,
+      "cases": [
+        {
+          "name": "short",
+          "score": 23.71784472529169,
+          "error": null,
+          "completed_actions": 1200,
+          "final_heading_rad": -0.0008721880630999521,
+          "final_body_error_m": 0.0006194820980867289,
+          "qualified_steps": 8,
+          "failed_steps": 0,
+          "report_sha256": "811739c320cf2fec06d53ec60fbb93707e50c9dd28c02eea99de0cc1e174de9b"
+        },
+        {
+          "name": "sustained",
+          "score": 54.39805255274128,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.003536156747954897,
+          "final_body_error_m": 0.0005562066784986508,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "9d89cdee0af2f786a3a52534959fc00f789dafdd86883161a4a614f908c2e2e3"
+        },
+        {
+          "name": "refined-minute",
+          "score": 52.044443099602184,
+          "error": null,
+          "completed_actions": 3000,
+          "final_heading_rad": -0.004108862297544383,
+          "final_body_error_m": 0.0005947038773965855,
+          "qualified_steps": 26,
+          "failed_steps": 0,
+          "report_sha256": "4cf8fb74b9464fedfa1c4a07beda37103080553b4c8f36e7b30dbf1c69ec9778"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/student-distillation/scene.json",
+      "sha256": "1fd3c6103413010dbe5dee8a09084544af9a305f4eac5acb3c3965caa71a0c7b"
+    },
+    {
+      "path": "examples/full-robot/mechanical-reuse/restart-short.config.json",
+      "sha256": "13f45eb0cbfdec67caba4826790b4d8abdccbbf4881df55ce9bae8414caeaf4f"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/train.actions.json",
+      "sha256": "bf57e5ce3a89ef61ca89d0edc13a79ea1c5669bd1a3db8a64f84e3d35780130e"
+    },
+    {
+      "path": "examples/full-robot/mechanical-reuse/restart-sustained.config.json",
+      "sha256": "02ec717df608a028111a4d52d6f683bd1949c001f55a3b7a4d3bf2a823b75836"
+    },
+    {
+      "path": "examples/full-robot/browser-residual-policy/sustained.actions.json",
+      "sha256": "0946f6606761688c0876ce3b540a611a68d2e6966b522228b3caee137b4fd7da"
+    },
+    {
+      "path": "examples/full-robot/mechanical-reuse/refined-minute.config.json",
+      "sha256": "118fb99fb2ccbea2991fdb325e7ebd16b93abd2a29e19722c8cd471888b8eea4"
+    },
+    {
+      "path": "examples/full-robot/heading-task/validation-plan.json",
+      "sha256": "cd3e91a2ec59c90d984c4627ae5dc3fd2494d01828502a7d973e52e5f378c861"
+    },
+    {
+      "path": "examples/full-robot/heading-task/reserved-positive-yaw.config.json",
+      "sha256": "a43db5f02ad14df5691a8e4fa14a1a696a8db775c6943a6e01d6cca72dbd497a"
+    },
+    {
+      "path": "examples/full-robot/heading-task/reserved-negative-yaw.config.json",
+      "sha256": "c4fe2eec79f59536fff7a139f9ded53a0fd8acb1f709e7396e33d116255920e1"
+    }
+  ],
+  "resolved_sha256": "33bb10f4a2d4483c6ee42e32707d5deb2ccc6d1f3b48851f2e8b8db21c93501c",
+  "scope": "Development reward search only. Reserved disturbance acceptance, trajectory validation and browser delivery are separate requirements."
+}

@@ -252,6 +252,13 @@ jobs:
         run: |
           cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.drive-backlash.scene.json examples/interactive/pendulum.embedded.json > runs/interactive/drive-backlash-native.json
           node web/tests/embedded.mjs runs/interactive/viewer pendulum-drive-backlash runs/interactive/drive-backlash-native.json runs/interactive/drive-backlash-browser.json
+      - name: Heading task isolation, student walking and browser parity
+        run: |
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/mechanical-reuse/restart-short.config.json examples/full-robot/heading-task/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/heading-baseline.json
+          node examples/full-robot/heading-task/check_scoring.mjs runs/interactive/reused-student-short.json runs/interactive/heading-baseline.json runs/interactive/heading-scoring-check.json
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/heading-task/short.config.json examples/full-robot/heading-task/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/heading-student-short.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/heading-student-short.json runs/interactive/heading-student-short-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-heading-student runs/interactive/heading-student-short.json runs/interactive/heading-student-browser.json examples/full-robot/heading-task/short.config.json
       - name: Condensed detailed motor native and WASM parity
         run: |
           cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.condensed.json > runs/interactive/pendulum-condensed-native.json

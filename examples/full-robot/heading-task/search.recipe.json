@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "scene": "examples/full-robot/student-distillation/scene.json",
+  "cases": [
+    {
+      "name": "short",
+      "config": "examples/full-robot/mechanical-reuse/restart-short.config.json",
+      "actions": "examples/full-robot/neural-teacher/train.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0
+    },
+    {
+      "name": "sustained",
+      "config": "examples/full-robot/mechanical-reuse/restart-sustained.config.json",
+      "actions": "examples/full-robot/browser-residual-policy/sustained.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0
+    },
+    {
+      "name": "refined-minute",
+      "config": "examples/full-robot/mechanical-reuse/refined-minute.config.json",
+      "actions": "examples/full-robot/browser-residual-policy/sustained.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0
+    }
+  ],
+  "search": {
+    "seed": 90723,
+    "iterations": 4,
+    "perturbation": 0.001
+  }
+}

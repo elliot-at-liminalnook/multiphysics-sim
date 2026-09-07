@@ -25,6 +25,28 @@ pub struct WalkingTaskConfig {
     pub body_position_cost_cap: f64,
     pub qualified_step_reward: f64,
     pub failed_step_penalty: f64,
+    /// Optional task-only heading score. Does not expose world heading to the
+    /// motor policy or change its observation contract.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heading: Option<HeadingTaskConfig>,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HeadingTaskConfig {
+    pub scale_rad: f64,
+    pub weight_per_s: f64,
+    pub cost_cap: f64,
+    /// Add to the planner yaw to obtain the target world-Z bearing of the
+    /// reference body's +X axis. Explicitly declare even a zero frame offset.
+    pub reference_offset_rad: f64,
+}
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct HeadingObservation {
+    pub target_rad: f64,
+    pub actual_rad: f64,
+    /// Actual minus target, wrapped to [-pi, pi].
+    pub error_rad: f64,
+    pub reward: f64,
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct StepOutcome {
@@ -44,6 +66,8 @@ pub struct WalkingObservation {
     pub qualified_steps: usize,
     pub failed_steps: usize,
     pub outcome: Option<StepOutcome>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heading: Option<HeadingObservation>,
 }
 struct ActiveSwing {
     step: u64,
@@ -91,6 +115,17 @@ impl WalkingMonitor {
                 .any(|n| !art.links.iter().any(|l| &l.name == n))
         {
             return Err("walking task requires v1, finite physical scales, nonnegative weights and distinct named feet".into());
+        }
+        if config.heading.as_ref().is_some_and(|h| {
+            !h.scale_rad.is_finite()
+                || h.scale_rad <= 0.
+                || !h.weight_per_s.is_finite()
+                || h.weight_per_s < 0.
+                || !h.cost_cap.is_finite()
+                || h.cost_cap <= 0.
+                || !h.reference_offset_rad.is_finite()
+        }) {
+            return Err("heading task requires finite positive angle scale/cost cap, nonnegative weight and explicit reference offset".into());
         }
         Ok(Self {
             config,
@@ -189,6 +224,40 @@ impl WalkingMonitor {
         if !body_reward.is_finite() {
             return Err("nonfinite walking body reward".into());
         }
+        let heading = self
+            .config
+            .heading
+            .as_ref()
+            .map(|h| {
+                let yaw = reference["yaw_rad"]
+                    .as_f64()
+                    .ok_or("missing held yaw reference")?;
+                let x = body.rotation[0][0];
+                let y = body.rotation[1][0];
+                let target_rad = yaw + h.reference_offset_rad;
+                if !target_rad.is_finite() || !x.is_finite() || !y.is_finite() || x.hypot(y) < 1e-12
+                {
+                    return Err("nonfinite or undefined world-Z body heading".to_string());
+                }
+                let actual_rad = y.atan2(x);
+                let delta = actual_rad - target_rad;
+                let error_rad = delta.sin().atan2(delta.cos());
+                if !error_rad.is_finite() {
+                    return Err("nonfinite heading error".to_string());
+                }
+                let reward =
+                    -(error_rad / h.scale_rad).powi(2).min(h.cost_cap) * h.weight_per_s * elapsed_s;
+                if !reward.is_finite() {
+                    return Err("nonfinite heading reward".to_string());
+                }
+                Ok(HeadingObservation {
+                    target_rad,
+                    actual_rad,
+                    error_rad,
+                    reward,
+                })
+            })
+            .transpose()?;
         let phase = reference["phase"].as_str().ok_or("missing step phase")?;
         let step = reference["step"].as_u64().ok_or("missing step id")?;
         let swinging = matches!(phase, "raise" | "lower");
@@ -262,6 +331,7 @@ impl WalkingMonitor {
             qualified_steps: self.qualified,
             failed_steps: self.failed,
             outcome,
+            heading,
         })
     }
 }

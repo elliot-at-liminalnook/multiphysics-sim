@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "scope": "Declared before inspecting heading-reward search outcomes. Two reserved 0.003 Nm yaw pulses, superimposed on existing lateral-push episodes, are excluded from weight updates and checkpoint selection. Hypothetical bounded probes, not hardware-calibrated disturbances. Existing stepping, geometry, stopping and 0.005 rad heading gates are unchanged.",
+  "cases": [
+    {
+      "name": "reserved-positive-yaw",
+      "config": "examples/full-robot/heading-task/reserved-positive-yaw.config.json",
+      "actions": "examples/full-robot/neural-teacher/train.actions.json"
+    },
+    {
+      "name": "reserved-negative-yaw",
+      "config": "examples/full-robot/heading-task/reserved-negative-yaw.config.json",
+      "actions": "examples/full-robot/neural-teacher/heldout.actions.json"
+    }
+  ]
+}

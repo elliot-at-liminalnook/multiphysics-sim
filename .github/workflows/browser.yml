@@ -120,6 +120,10 @@ jobs:
           node web/build-viewer.mjs runs/interactive/teacher-viewer --environment-only
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/teacher-baseline/scene.json examples/full-robot/teacher-baseline/config.json examples/full-robot/teacher-environment.json > runs/interactive/robot-environment-native.json
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-teacher-environment runs/interactive/robot-environment-native.json runs/interactive/robot-environment-browser.json
+      - name: Effective-servo browser profile and replay
+        run: |
+          cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/browser-effective-servo/scene.json examples/full-robot/browser-effective-servo/config.json examples/full-robot/browser-effective-servo/task.json > runs/interactive/effective-servo-native.json
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-effective-servo runs/interactive/effective-servo-native.json runs/interactive/effective-servo-browser.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

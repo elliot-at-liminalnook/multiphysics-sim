@@ -16,7 +16,20 @@ Do not wait for detailed-model realtime or completed RL before delivering browse
 walking. `teacher-environment.md` provides the shared sampled task interface,
 versioned robot recipe and native/WASM replay path for this next stage.
 
-Latest delivery: `drive-backlash-validation.md` introduces v4 explicit
+Latest browser experiment: `effective-servo.md` introduces a registered bounded
+position servo with explicit CAD-derived gains and torque/speed limits. The
+20 ms browser profile preserves the mechanism/contact model and runs the short
+2.8 s reference at 1.71× realtime in headless Chrome, with p95 transition latency
+22.3 ms. Native/WASM comparison, exact reset and replay pass. Sampled foot/body
+differences versus a 1 ms effective-actuator reference are 0.63/0.41 mm.
+This is a short single-foot experiment, not sustained walking or performance
+acceptance: the 20 ms latency target, full gait, WASD, rendering latency and
+hardware calibration remain outstanding. Continue toward a controllable gait
+using this browser profile while preserving detailed-model validation. Existing
+CI thermoelastic convergence and detailed pendulum portability failures still
+need diagnosis; do not report the whole CI suite as green.
+
+Previous delivery: `drive-backlash-validation.md` introduces v4 explicit
 drive-connection backlash with provenance, CAD/UI/REST validation and undo,
 and shared Rust resolution. Older scenes preserve their exact trajectories.
 The robot's twelve additional connection gaps are explicitly estimated as zero;

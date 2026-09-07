@@ -4,6 +4,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {spawn} from 'node:child_process';
 import {resolve,dirname} from 'node:path';
 import {chromium} from 'playwright';
+import {cpus,platform,arch} from 'node:os';
 const [directory,presetId,nativePath,reportPath]=process.argv.slice(2);
 assert(directory&&presetId&&nativePath&&reportPath,'usage: environment.mjs bundle preset native-capture report');
 await mkdir(dirname(reportPath),{recursive:true});
@@ -32,12 +33,14 @@ try {
    const loaded=await rpc({type:'load',...data,seed:0});
    let invalid=false;try {await rpc({type:'step',action:[]});}catch {invalid=true;}
    const preserved=invalid&&stable(await rpc({type:'frame'}))===stable(loaded.frame);
-   const frames=[loaded.frame];
+   const frames=[loaded.frame],transitionWall=[];
    let held=loaded.inputs.map(c=>c.initial),eventIndex=0;
    const stride=Math.round(data.task.period_s/data.config.step_s);
    for(let at=0;at<data.config.steps;at+=stride){
     if(events[eventIndex]?.at_step===at)held=events[eventIndex++].values;
+    const started=performance.now();
     frames.push(await rpc({type:'step',action:held}));
+    transitionWall.push((performance.now()-started)/1000);
     if(frames.length%20===0)await window.reportProgress({phase:'environment',time_s:frames.at(-1).time_s});
    }
    const record=await rpc({type:'recording'});const changed=structuredClone(record);changed.task.rewards[0].scale*=2;
@@ -45,7 +48,7 @@ try {
    const recipePreserved=rejected&&stable(await rpc({type:'frame'}))===stable(frames.at(-1));
    const replay=await rpc({type:'replay',recording:record});
    const reset=await rpc({type:'reset',seed:0});
-   return {frames,record,preserved,recipePreserved,replayExact:stable(replay)===stable(frames.at(-1)),resetExact:stable(reset)===stable(loaded.frame),contract:loaded.metadata.environment_contract,progress,ticks};
+   return {frames,record,preserved,recipePreserved,replayExact:stable(replay)===stable(frames.at(-1)),resetExact:stable(reset)===stable(loaded.frame),contract:loaded.metadata.environment_contract,progress,ticks,transitionWall};
   }finally{clearInterval(pulse);worker.terminate();}
  },{data,events:native.recording.input_events??[]});
  const differences=[];let maximum=0,worst='';
@@ -58,7 +61,14 @@ try {
  for(let i=0;i<result.frames.length;i++){compare(native.frames[i],result.frames[i],`physics[${i}]`);compare(native.transitions[i],result.frames[i].learning,`transition[${i}]`);}
  compare(native.contract,result.contract,'contract');
  compare(native.recording,result.record.runtime,'recording');
+ const timed=[...result.transitionWall].sort((a,b)=>a-b),wall=timed.reduce((a,b)=>a+b,0);
+ const performance={simulated_s:result.frames.at(-1).time_s,transition_wall_s:wall,
+  simulation_per_wall_second:result.frames.at(-1).time_s/wall,
+  transition_p95_s:timed[Math.ceil(timed.length*.95)-1],
+  scope:'Headless browser worker round trips including serialization; excludes loading, replay and rendering. Short episode, not sustained walking or visible responsiveness acceptance.'};
  const passed=!differences.length&&result.preserved&&result.recipePreserved&&result.replayExact&&result.resetExact&&result.progress>0&&result.ticks>0;
  const report={passed,preset:presetId,transitions:result.frames.length-1,maximum_native_wasm_difference:maximum,worst,differences:differences.slice(0,20),invalid_action_preserved:result.preserved,changed_task_replay_preserved:result.recipePreserved,replay_exact:result.replayExact,reset_exact:result.resetExact,main_thread_heartbeats:result.ticks,replay_progress_messages:result.progress,scope:'Same task and physical frames through production Rust environment, 1e-7 absolute numeric portability tolerance; not physical accuracy or learned control.'};
+ report.performance=performance;
+ report.host={platform:platform(),architecture:arch(),cpu:cpus()[0]?.model,logical_cpus:cpus().length,browser:await browser.version()};
  await writeFile(reportPath,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));assert(passed);
 }finally {await browser?.close();server.kill();}

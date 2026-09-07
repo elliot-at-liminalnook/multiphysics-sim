@@ -190,7 +190,7 @@ async function loadPreset(id) {
       worker = workerClient(); const result = await worker.request('load', { scene: data.scene || data, config: data.config, task: data.task, seed: 0 }); if (token !== epoch) return;
       if (result.metadata) Object.assign(current.data, result.metadata);
       makeInputs(result.inputs); showFrame(result.frame); $('timeline').max = result.metadata ? result.metadata.steps * result.metadata.step_s : data.duration_s;
-      $('input-help').textContent = result.metadata?.environment_contract ? 'Each command is held for 20 ms of simulation time. Rhai and motor firmware continue at their own sampling rates. The score measures endpoint joint tracking; it is not yet a walking objective. Saving and replay preserve the task and command sequence.' : result.metadata?.policy_contract ? 'Rhai reads ideal simulated joint state and sends motor targets at its declared sampling rate. Adjust the commands above; save and replay preserve when they changed. Hardware sensor bindings and walking commands are not yet available.' : preset.mode === 'embedded' ? 'The Rust servo controller executes this experiment live. Pause and reset are available; this preset does not yet declare WASD walking commands.' : 'Use the position slider while running. This fixture has no walking command; WASD locomotion is unavailable.';
+      $('input-help').textContent = result.metadata?.environment_contract ? `Each command is held for ${result.metadata.environment_contract.period_s*1000} ms of simulation time. The selected controller and actuator profile determine the motor response. The score measures endpoint joint tracking; it is not yet a walking objective. Saving and replay preserve the task and command sequence.` : result.metadata?.policy_contract ? 'Rhai reads ideal simulated joint state and sends motor targets at its declared sampling rate. Adjust the commands above; save and replay preserve when they changed. Hardware sensor bindings and walking commands are not yet available.' : preset.mode === 'embedded' ? 'The Rust servo controller executes this experiment live. Pause and reset are available; this preset does not yet declare WASD walking commands.' : 'Use the position slider while running. This fixture has no walking command; WASD locomotion is unavailable.';
       $('performance').textContent = 'Waiting for physics'; $('speed').disabled = true;
     } else {
       playback = data.frames; showFrame(playback[0]); $('timeline').max = playback.at(-1).time_s; $('timeline').disabled = false; $('speed').disabled = false;
@@ -248,5 +248,9 @@ renderer.domElement.addEventListener('pointerup', e => { if (!dragStart || Math.
 window.addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.key.toLowerCase()==='f') fit(selectedName ? meshes.get(selectedName) : model); if (e.code==='Space') {e.preventDefault(); if (!$('play').disabled) $('play').click();} });
 let catalog;
 try { catalog = await fetchData('catalog.json'); for (const p of catalog.presets) { const option = document.createElement('option'); option.value = p.id; option.textContent = p.label; $('preset').append(option); }
-  $('preset').disabled = false; $('preset').onchange = () => loadPreset($('preset').value); await loadPreset(catalog.presets[0].id);
+  $('preset').disabled = false; $('preset').onchange = () => loadPreset($('preset').value);
+  const requested=new URL(location.href).searchParams.get('preset');
+  const initial=catalog.presets.find(p=>p.id===requested)?.id||catalog.presets[0].id;
+  $('preset').value=initial;
+  await loadPreset(initial);
 } catch(e) {status(e.message, true);}

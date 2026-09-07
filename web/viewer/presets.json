@@ -225,6 +225,17 @@
       "evidence": "Drive connection and motor gearbox gaps are combined explicitly. Unknown drive values are rejected."
     },
     {
+      "id": "robot-effective-servo",
+      "label": "Quadruped · effective servo experiment",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-effective-servo/scene.json",
+      "config": "examples/full-robot/browser-effective-servo/config.json",
+      "task": "examples/full-robot/browser-effective-servo/task.json",
+      "description": "Live Rust physics with bounded effective servos, a 20 ms mechanical step, and 50 Hz controller updates. Explore the same short single-foot reference using simpler actuator physics.",
+      "readiness": "Experimental browser fidelity · uncalibrated · single-foot motion, not walking.",
+      "evidence": "Retains CAD mechanism bodies, inertia, gravity and contact. Omits motor electrical/thermal states, internal rotor dynamics, firmware delay and quantization, and gearbox compliance/backlash. Effective gains are estimated from CAD voltage gains. Current telemetry is unavailable. Realtime walking and hardware transfer are unverified."
+    },
+    {
       "id": "robot-teacher-environment",
       "label": "Quadruped \u00b7 teacher environment",
       "mode": "embedded",

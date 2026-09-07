@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "kind": "development disturbance evaluation",
+  "training_performed": false,
+  "robot": {
+    "path": "examples/full-robot/student-distillation/scene.json",
+    "sha256": "1fd3c6103413010dbe5dee8a09084544af9a305f4eac5acb3c3965caa71a0c7b"
+  },
+  "policy": {
+    "path": "examples/full-robot/student-distillation/policy.json",
+    "sha256": "0b73031cb35acec612535f872f921ab3ead4c3f6efe5d5866d7b57f72973db7d"
+  },
+  "actions": {
+    "path": "examples/full-robot/neural-teacher/train.actions.json",
+    "sha256": "bf57e5ce3a89ef61ca89d0edc13a79ea1c5669bd1a3db8a64f84e3d35780130e"
+  },
+  "total_declared_mass_kg": 3.976239082561776,
+  "scope": "Predeclared finite challenge set for the current fixed student. No weight fitting or checkpoint selection. These observed development cases must not be reused as an independent final robustness test after training against them. Forces are hypothetical engineering probes; no empirical disturbance calibration.",
+  "cases": [
+    {
+      "name": "lateral",
+      "force": [
+        0,
+        0.1,
+        0
+      ],
+      "time": 7,
+      "duration_s": 0.2,
+      "impulse_world_ns": [
+        0,
+        0.020000000000000004,
+        0
+      ],
+      "config": {
+        "path": "examples/full-robot/student-disturbances/lateral.config.json",
+        "sha256": "0b67d777f6dd786bd52be4be4f609d4d3a9510188482291bfbd22ef227811a5c"
+      }
+    },
+    {
+      "name": "reverse-lateral",
+      "force": [
+        0,
+        -0.1,
+        0
+      ],
+      "time": 7,
+      "duration_s": 0.2,
+      "impulse_world_ns": [
+        0,
+        -0.020000000000000004,
+        0
+      ],
+      "config": {
+        "path": "examples/full-robot/student-disturbances/reverse-lateral.config.json",
+        "sha256": "5ee8c583b61dfee88188a4cd624748be61667ac59c83c1876e3e7e11fe3f6d60"
+      }
+    },
+    {
+      "name": "stronger-lateral",
+      "force": [
+        0,
+        0.5,
+        0
+      ],
+      "time": 7,
+      "duration_s": 0.2,
+      "impulse_world_ns": [
+        0,
+        0.1,
+        0
+      ],
+      "config": {
+        "path": "examples/full-robot/student-disturbances/stronger-lateral.config.json",
+        "sha256": "1a5291acdc002e4060881a6a00807a6f4ffa17c3ce507d0e97d70e8793a54555"
+      }
+    },
+    {
+      "name": "forward",
+      "force": [
+        0.5,
+        0,
+        0
+      ],
+      "time": 13,
+      "duration_s": 0.2,
+      "impulse_world_ns": [
+        0.1,
+        0,
+        0
+      ],
+      "config": {
+        "path": "examples/full-robot/student-disturbances/forward.config.json",
+        "sha256": "8e906790056b80c1eda30e8d22e97e177c08c8226af6c783b276ae7a43cd00cf"
+      }
+    }
+  ]
+}

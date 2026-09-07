@@ -201,6 +201,14 @@ jobs:
           node examples/full-robot/check_unused_feedback.mjs runs/interactive/student-full-native.json runs/interactive/student-heldout-native.json runs/interactive/student-unused-feedback.json
           target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/student-distillation/config.json examples/full-robot/student-distillation/task.json examples/full-robot/browser-residual-policy/sustained.actions.json > runs/interactive/student-sustained-native.json
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-distilled-student runs/interactive/student-sustained-native.json runs/interactive/student-browser.json
+      - name: Scheduled physical disturbances and WASM replay
+        run: |
+          cargo test --locked -p sim-domain-robot --test world_load
+          cargo test --locked -p sim-domain-robot --test embedded_step world_load_pulse
+          cargo test --locked -p sim-runtime --test world_load
+          target/release/examples/run_environment examples/full-robot/student-distillation/scene.json examples/full-robot/student-disturbances/lateral.config.json examples/full-robot/student-distillation/task.json examples/full-robot/neural-teacher/train.actions.json > runs/interactive/student-push-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/student-push-native.json runs/interactive/student-push-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-student-push runs/interactive/student-push-native.json runs/interactive/student-push-browser.json
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

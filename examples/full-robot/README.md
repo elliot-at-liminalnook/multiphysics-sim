@@ -1,5 +1,12 @@
 # Four-leg robot commissioning
 
+The [student push test](student-disturbances.md) adds reproducible bounded world
+forces to native and WASM simulation, with visible timing and exact replay.
+Small challenges pass; stronger pushes and finer timesteps expose task failures.
+The reward audit also finds that a failed stopping run can score higher than a
+successful run. Improving task-relevant learning objectives is the next priority.
+
+
 The [distilled student](student-distillation.md) learns the teacher's larger
 body/foot motor feedback using proposed encoder/IMU-style observations. It passes
 the short walking cases and qualifies 28 swings over a minute, but its 1.127 mm

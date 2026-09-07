@@ -45,6 +45,25 @@ fn body(slider: bool, contact: bool) -> (Articulated, Generalized) {
 }
 
 #[test]
+fn world_load_pulse_matches_linear_and_angular_impulse() {
+    use sim_domain_robot::world_load::{WorldLoadPulse, WorldLoadSchedule};
+    let (art, mut g)=body(false,false);
+    let map=RigidEmbedding::new(&art,&[],Default::default()).unwrap();
+    let loads=WorldLoadSchedule {version:1,base_link:"body".into(),provenance:"free cube impulse test".into(),
+        maximum_force_n:2.0,maximum_moment_nm:0.1,
+        pulses:vec![WorldLoadPulse {name:"push and twist".into(),start_s:0.02,duration_s:0.04,
+            force_world_n:[2.0,0.0,0.0],moment_world_nm:[0.0,0.0,0.1]}],
+    }.bind(&["body".into()],0.01,10).unwrap();
+    for i in 0..10 {
+        let w=loads.wrench(i);
+        g=map.step_midpoint(&g,i as f64*0.01,0.01,|_,_|Ok(w.to_vec())).unwrap().endpoint.generalized;
+    }
+    let s=art.bases[0].state;
+    assert!((2.0*g.states[s+7]-2.0*0.04).abs()<1e-12);
+    assert!((art.links[0].inertia[(2,2)]*g.states[s+12]-0.1*0.04).abs()<1e-12);
+}
+
+#[test]
 fn condensed_cross_coupled_states_match_independent_linear_system() {
     use sim_domain_robot::articulated::embedding::{CoupledForces, ImplicitStepConfig};
     use nalgebra::{Matrix3, Vector3};

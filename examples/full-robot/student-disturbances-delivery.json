@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "kind": "wasm_student_physical_push_bundle",
+  "path": "/Users/elliot/robot-student-push-2026-09-07.zip",
+  "bytes": 20670343,
+  "sha256": "4d1b5bd18553ef6a1f233e143c4e842ff42c9a86d70cf081b2d5b656e3d92be5",
+  "build_manifest_sha256": "fed0d3d1b191336cb9708572a1e8c501d7fef03857beb91ef0b30d2287b8e7ae",
+  "local_url": "http://127.0.0.1:4184/?preset=robot-student-push",
+  "scope": "Shared Rust/WASM physical body-force scheduling with visible onset/release and exact replay. Small 24-second push case passes; 5/15 N stress cases and refined timesteps expose task failures. Current reward misranks a failed stopping run. Active rendered speed 1.003x, p95 22.75 ms misses 20 ms. No robustness-training, hardware-transfer or sustained disturbed-walking claim."
+}

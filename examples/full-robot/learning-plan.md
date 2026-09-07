@@ -1,5 +1,15 @@
 # CAD-derived walking and learning delivery
 
+See [physical disturbances](student-disturbances.md): bounded world-force
+schedules now execute through the shared Rust runtime and the WASM viewer.
+Four small pushes pass the short gate; 5/15 N pushes and timestep refinement
+expose failed steps. No robustness training has been performed. The existing
+reward gives a higher score to a 41 mm stopping failure than to a successful
+small-push run. Fix task-relevant observations/rewards and step margin before
+promoting disturbance-trained controllers. Earlier sections retain historical
+checkpoints; these measured failures are current.
+
+
 The active goal is the complete workflow: quadruped-appropriate PLANC-inspired
 footstep guidance → teacher-policy RL → student distillation → further training
 with bounded environmental perturbations. Deliver a fast training model and a

@@ -165,6 +165,11 @@ function showMotionProgress(next) {
 }
 function showFrame(next) {
   frame = next; tick = next.time_s; applyPoses(next.poses); showTaskObservations(next); showMotionProgress(next);
+  const load=$('world-load-readout');
+  if(load&&next.environment_load){
+    const w=next.environment_load,active=[...w.force_world_n,...w.moment_world_nm].some(v=>v!==0);
+    load.textContent=`${active?'Push active':'Push inactive'} · world force [${w.force_world_n.map(v=>v.toFixed(3)).join(', ')}] N · moment [${w.moment_world_nm.map(v=>v.toFixed(3)).join(', ')}] N·m about the body's center of mass.`;
+  }
   const neural=$('neural-residuals');
   if(neural?.open)for(const row of neural.querySelectorAll('[data-target]')){
     row.textContent=`${row.dataset.target.replace(/\.target$/,'')}: ${(next.policy?.neural_residual?.[row.dataset.target]??0).toFixed(6)} rad`;
@@ -228,6 +233,14 @@ function makeInputs(channels) {
     else $('inputs').append(label);
   });
   const network=current?.data?.config?.policy?.neural_residual;
+  const loads=current?.data?.config?.world_loads;
+  if(loads){
+    const panel=document.createElement('section');panel.id='world-load-panel';
+    const title=document.createElement('strong');title.textContent='Scheduled body pushes';panel.append(title);
+    const scope=document.createElement('p');scope.textContent=`${loads.base_link} · experimental disturbance. Maximum combined force ${loads.maximum_force_n} N; moment ${loads.maximum_moment_nm} N·m.`;panel.append(scope);
+    for(const p of loads.pulses){const item=document.createElement('p');item.textContent=`${p.name}: ${p.start_s.toFixed(2)}–${(p.start_s+p.duration_s).toFixed(2)} s of simulation time.`;panel.append(item);}
+    const value=document.createElement('p');value.id='world-load-readout';value.textContent='Push inactive';panel.append(value);$('inputs').append(panel);
+  }
   if(network&&channels.length){
     const details=document.createElement('details');details.id='neural-residuals';
     const title=document.createElement('summary');title.textContent='Learned motor corrections';details.append(title);

@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "source": {
+    "path": "runs/full-robot/learning/speed-envelope/1.5x-stop-feedback-1.native.json",
+    "sha256": "87e11310298c08dd5841836e01e92de254bcf66629360683a93f08352829d2fd"
+  },
+  "fine_feedback_source": {
+    "path": "runs/full-robot/learning/speed-envelope/1.5x-refined-5ms.native.json",
+    "sha256": "189fb5feecc74ceecf5da2a718bba58b3f60b48f8e711b6aa7026b3fac24619f"
+  },
+  "generator": {
+    "path": "examples/full-robot/prepare_response_diagnosis.mjs",
+    "sha256": "7f2199ccabf3a4f354c0dea4500a306d2329ae5f2c3a339594f657eae8cb4d52"
+  },
+  "frozen_20ms": {
+    "path": "runs/full-robot/learning/response-diagnosis/frozen-20ms.native.json",
+    "sha256": "c9432c6e938e257371d464d2bda31602c3510e0593eb898576ca67a7648ea91c"
+  },
+  "frozen_5ms": {
+    "path": "runs/full-robot/learning/response-diagnosis/frozen-5ms.native.json",
+    "sha256": "49bfa7f4721a34a504a45d1673832a956d726edfb47208953c159d7829680fb3",
+    "completed": false,
+    "error": "step 2284: implicit mechanical solve: Newton did not converge after 80 iterations; residual=4.221382588787504e-2; largest final residual: Some(\"mechanical velocity row 7: residual=4.221382588787504e-2, candidate=1.196590542012399e-3\"); last rejected endpoint: None"
+  },
+  "default_compatibility": {
+    "path": "runs/full-robot/learning/response-diagnosis/default-20ms.native.json",
+    "sha256": "d9324e714e4e8b10c3cb12319ce0192b0e6b34acac39348a6beaf69901ab2f6c",
+    "exact_physical_and_policy_frames": 1201
+  },
+  "frozen_target_exact_frames": 1201,
+  "windows": [
+    {
+      "requested_through_s": 1,
+      "frozen_targets": {
+        "frames": 51,
+        "through_s": 1,
+        "maximum_foot_difference_m": 0.0011952526311762178,
+        "maximum_at_s": 0.76,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.32,
+          "0.0005": 0.7000000000000001,
+          "0.001": 0.74
+        }
+      },
+      "feedback_enabled": {
+        "frames": 51,
+        "through_s": 1,
+        "maximum_foot_difference_m": 0.000871394760762148,
+        "maximum_at_s": 0.74,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.34,
+          "0.0005": 0.72
+        }
+      }
+    },
+    {
+      "requested_through_s": 2,
+      "frozen_targets": {
+        "frames": 101,
+        "through_s": 2,
+        "maximum_foot_difference_m": 0.0013100723876330023,
+        "maximum_at_s": 1.3800000000000001,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.32,
+          "0.0005": 0.7000000000000001,
+          "0.001": 0.74
+        }
+      },
+      "feedback_enabled": {
+        "frames": 101,
+        "through_s": 2,
+        "maximum_foot_difference_m": 0.0010253280957384008,
+        "maximum_at_s": 1.3800000000000001,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.34,
+          "0.0005": 0.72,
+          "0.001": 1.3800000000000001
+        }
+      }
+    },
+    {
+      "requested_through_s": 5,
+      "frozen_targets": {
+        "frames": 251,
+        "through_s": 5,
+        "maximum_foot_difference_m": 0.0017871724605674974,
+        "maximum_at_s": 4.0600000000000005,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.32,
+          "0.0005": 0.7000000000000001,
+          "0.001": 0.74
+        }
+      },
+      "feedback_enabled": {
+        "frames": 251,
+        "through_s": 5,
+        "maximum_foot_difference_m": 0.001404770796776252,
+        "maximum_at_s": 4.0600000000000005,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.34,
+          "0.0005": 0.72,
+          "0.001": 1.3800000000000001
+        }
+      }
+    },
+    {
+      "requested_through_s": 10,
+      "frozen_targets": {
+        "frames": 501,
+        "through_s": 10,
+        "maximum_foot_difference_m": 0.0028950821629758427,
+        "maximum_at_s": 9.540000000000001,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.32,
+          "0.0005": 0.7000000000000001,
+          "0.001": 0.74,
+          "0.002": 6.1000000000000005
+        }
+      },
+      "feedback_enabled": {
+        "frames": 501,
+        "through_s": 10,
+        "maximum_foot_difference_m": 0.001917011371102501,
+        "maximum_at_s": 9.540000000000001,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.34,
+          "0.0005": 0.72,
+          "0.001": 1.3800000000000001
+        }
+      }
+    },
+    {
+      "requested_through_s": 11.42,
+      "frozen_targets": {
+        "frames": 572,
+        "through_s": 11.42,
+        "maximum_foot_difference_m": 0.0029911869689274216,
+        "maximum_at_s": 10.76,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.32,
+          "0.0005": 0.7000000000000001,
+          "0.001": 0.74,
+          "0.002": 6.1000000000000005
+        }
+      },
+      "feedback_enabled": {
+        "frames": 572,
+        "through_s": 11.42,
+        "maximum_foot_difference_m": 0.0019702715496168915,
+        "maximum_at_s": 10.1,
+        "first_threshold_crossing_s_by_m": {
+          "0.0001": 0.34,
+          "0.0005": 0.72,
+          "0.001": 1.3800000000000001
+        }
+      }
+    }
+  ],
+  "full_feedback_comparison": {
+    "frames": 1201,
+    "through_s": 24,
+    "maximum_foot_difference_m": 0.003149901633317255,
+    "maximum_at_s": 17.46,
+    "first_threshold_crossing_s_by_m": {
+      "0.0001": 0.34,
+      "0.0005": 0.72,
+      "0.001": 1.3800000000000001,
+      "0.002": 11.44
+    }
+  },
+  "results": [
+    {
+      "name": "dissipation-100-20ms",
+      "path": "runs/full-robot/learning/response-diagnosis/dissipation-100-20ms.native.json",
+      "sha256": "7fe5bcf4170d8ee75d1edbdec49aebe7b10a4e51714e20eea03ffb7d38c09ebb",
+      "completed": true,
+      "through_s": 24,
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/response-diagnosis/dissipation-100-20ms-acceptance/summary.json",
+        "sha256": "f6ae1d9e1a1e05d784519e6c77b4385d8bfd3108a1e306aa5b28eaa3a049f79b",
+        "passed": true,
+        "swings": 13,
+        "passing_swings": 13,
+        "final_body_error_m": 0.0009006531686981891,
+        "sampled_internal_contacts": 0
+      }
+    },
+    {
+      "name": "dissipation-100-10ms",
+      "path": "runs/full-robot/learning/response-diagnosis/dissipation-100-10ms.native.json",
+      "sha256": "fe767d04f6e7e603fd5063512a50f85ec6543ebe883436c016b0facd804d6b1a",
+      "completed": true,
+      "through_s": 24,
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/response-diagnosis/dissipation-100-10ms-acceptance/summary.json",
+        "sha256": "4c9dbac3f29f79abed2f203e18d35de8363fcfe3894504e08ee8633d3cb079cc",
+        "passed": false,
+        "swings": 13,
+        "passing_swings": 12,
+        "final_body_error_m": 0.001669771536526157,
+        "sampled_internal_contacts": 0
+      }
+    },
+    {
+      "name": "dissipation-100-5ms",
+      "path": "runs/full-robot/learning/response-diagnosis/dissipation-100-5ms.native.json",
+      "sha256": "a6f75d72d360f41384f45bec17e0d65a62a880f7646fc7b08b9ab26579d64fbf",
+      "completed": false,
+      "through_s": 16.9,
+      "error": "step 3382: implicit mechanical solve: Newton did not converge after 80 iterations; residual=3.997115578472073e-3; largest final residual: Some(\"mechanical velocity row 12: residual=3.997115578472073e-3, candidate=7.043149389976931e-4\"); last rejected endpoint: None"
+    },
+    {
+      "name": "dissipation-audit",
+      "path": "runs/full-robot/learning/response-diagnosis/dissipation-audit.native.json",
+      "sha256": "6cc8c35ea507a23364c6ace72457dd1fab2bd45a6e7ac38b6acccc1ab8354b2e",
+      "completed": false,
+      "through_s": 16.9,
+      "error": "step 3382: implicit mechanical solve: Newton did not converge after 80 iterations; residual=3.997115578472073e-3; largest final residual: Some(\"mechanical velocity row 12: residual=3.997115578472073e-3, candidate=7.043149389976931e-4\"); last rejected endpoint: None; Newton tail [iteration, fresh, scaled residual, decision, largest normalized correction (index, delta, bound, ratio)]: [77, false, 3.44934e-4, poor_contraction_refresh, Some((12, 0.0034958612456829604, 1.0008885536835119e-8, 349275.77429248695))] [78, true, 3.44934e-4, correction, Some((12, -0.003495861183267917, 1.0026073075621712e-8, 348677.01012154657))] [79, true, 3.45025e-4, correction, Some((12, 0.0015928685600945236, 1.0008885536210968e-8, 159145.44674646473))] [80, false, 6.92592e-5, iteration_limit, None]"
+    },
+    {
+      "name": "compliant-20ms",
+      "path": "runs/full-robot/learning/response-diagnosis/compliant-20ms.native.json",
+      "sha256": "6f9174302e1bd678a96fcf22082460b1780773ed71de951f55c156f23f32b6dc",
+      "completed": true,
+      "through_s": 24,
+      "error": null,
+      "acceptance": {
+        "path": "runs/full-robot/learning/response-diagnosis/compliant-20ms-acceptance/summary.json",
+        "sha256": "f6e3794cd21f99d02e0755cbc81ace8cc70182d335d67aed599be4cf4df28ec0",
+        "passed": false,
+        "swings": 13,
+        "passing_swings": 4,
+        "final_body_error_m": 0.0009995593926978902,
+        "sampled_internal_contacts": 0
+      }
+    },
+    {
+      "name": "compliant-5ms",
+      "path": "runs/full-robot/learning/response-diagnosis/compliant-5ms.native.json",
+      "sha256": "2324a28ca8e76c1b61f8c365ef47161aa96c881dc5b845fabf4c4472ce80f821",
+      "completed": false,
+      "through_s": 5.04,
+      "error": "step 1009: implicit mechanical solve: Newton did not converge after 80 iterations; residual=2.3662652134494047e-2; largest final residual: Some(\"mechanical velocity row 16: residual=-2.3662652134494047e-2, candidate=-1.3523788171245204e-4\"); last rejected endpoint: None"
+    }
+  ],
+  "normal_contact_formula": "Fn = max(0, k * depth * (1 - alpha * separation_speed)); no force at nonpositive depth. At zero speed the local damping slope is alpha * k * depth (N*s/m).",
+  "historical_alpha_s_m": 0.2,
+  "trial_alpha_s_m": 100,
+  "scope": "Unpromoted controller/contact sensitivity experiments, not calibration or realtime acceptance. Frozen 5 ms and other failed runs cover only their committed prefixes. All comparisons retain actual Rust dynamics; no prescribed physical poses. Wall timings omitted because some independent validation jobs overlapped."
+}

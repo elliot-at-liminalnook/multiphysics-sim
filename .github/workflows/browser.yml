@@ -86,6 +86,8 @@ jobs:
       - run: cargo test --locked -p sim-domain-robot --test articulated
       - run: cargo test --locked -p sim-domain-multibody --test regularized_friction
       - run: cargo test --locked -p sim-domain-robot --test regularized_friction
+      - run: cargo test --locked -p sim-domain-robot --test floor_dissipation
+      - run: cargo test --locked -p sim-runtime --test session floor_dissipation
       - run: cargo test --locked -p sim-domain-robot --no-default-features --test regularized_friction
       - run: cargo test --locked -p sim-domain-robot --no-default-features --test jacobian
       - run: cargo test --locked -p sim-compile --test parallel_jacobian

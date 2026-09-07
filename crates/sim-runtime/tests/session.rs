@@ -16,7 +16,27 @@ fn experimental_solver_changes_require_explicit_scene_options() {
     assert!(!options.event_jacobian_reuse);
     assert!(!options.guarded_backtracking);
     assert!(options.floor_friction.is_bristle());
+    assert!(options.floor_dissipation_s_m.is_none());
+    assert!(serde_json::to_value(&options).unwrap().get("floor_dissipation_s_m").is_none());
     assert!(serde_json::to_value(&options).unwrap().get("floor_friction").is_none());
+}
+
+#[test]
+fn floor_dissipation_override_is_recorded_and_replayed() {
+    let mut spec = scene();
+    spec.options.contact = true;
+    spec.options.step = 0.000125;
+    spec.robot.world.floor_z += 1e-6;
+    spec.options.floor_dissipation_s_m = Some(100.0);
+    let mut session = Session::new(spec.clone(), 0).unwrap();
+    assert_eq!(session.robot.art.floor_dissipation_s_m, 100.0);
+    for _ in 0..4 { session.step(&[0.2]).unwrap(); }
+    let recording = session.recording();
+    assert_eq!(recording.scene.options.floor_dissipation_s_m, Some(100.0));
+    let replay = Session::replay(recording).unwrap();
+    assert_eq!(serde_json::to_value(session.frame()).unwrap(), serde_json::to_value(replay.frame()).unwrap());
+    spec.options.floor_dissipation_s_m = Some(-1.0);
+    assert!(Session::new(spec, 0).is_err());
 }
 
 #[test]

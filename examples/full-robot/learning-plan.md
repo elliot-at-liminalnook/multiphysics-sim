@@ -9,6 +9,14 @@ faster solver kernel does not complete this goal.
 
 ## Current evidence and sequence
 
+The [response investigation](response-diagnosis.md) reproduces all source targets
+exactly, then shows that timestep sensitivity persists with motor decisions held
+fixed. Explicit floor dissipation is now available through the shared registry
+and recorded scene options; damping and softer-contact trials still fail wider
+checks. Preserve the accepted slow browser baseline. Progress initial learning
+within that tested envelope while investigating the faster coupled response;
+do not wait for arbitrary higher-speed commands to become validated.
+
 The [walking-speed experiments](speed-envelope.md) now distinguish geometry,
 command-bound, support-duration and numerical failures. A 1.5× candidate passes
 13 swings and native/WASM parity over 24 s, but fails the sustained run at

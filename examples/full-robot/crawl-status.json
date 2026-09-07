@@ -1,0 +1,544 @@
+{
+  "version": 1,
+  "task": {
+    "version": 1,
+    "passed": true,
+    "capture": {
+      "path": "runs/full-robot/learning/crawl-two/native.json",
+      "sha256": "e4a4aba771621fa1d2a5626c501f4c468d65c51dce84a1b648a168677295e298"
+    },
+    "source_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "simulated_s": 16.6,
+    "lifts": [
+      {
+        "leg": 0,
+        "cycle": 0,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.30000000000000004,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003180419132465029,
+        "qualifying_start_s": 1,
+        "samples": 41,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "leg": 2,
+        "cycle": 0,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.28000000000000025,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031995406696432305,
+        "qualifying_start_s": 3.02,
+        "samples": 41,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "leg": 1,
+        "cycle": 0,
+        "failed_clearance_samples": 23,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.2999999999999998,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0030853783810794733,
+        "qualifying_start_s": 5,
+        "samples": 41,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "leg": 3,
+        "cycle": 0,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 6,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.2599999999999998,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003280283183547783,
+        "qualifying_start_s": 7.04,
+        "samples": 41,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "leg": 0,
+        "cycle": 1,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.3000000000000007,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031783870268420333,
+        "qualifying_start_s": 9,
+        "samples": 41,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "leg": 2,
+        "cycle": 1,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.28000000000000114,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003196620387756699,
+        "qualifying_start_s": 11.02,
+        "samples": 41,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "leg": 1,
+        "cycle": 1,
+        "failed_clearance_samples": 23,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.3000000000000007,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0030893350006427345,
+        "qualifying_start_s": 13,
+        "samples": 41,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "leg": 3,
+        "cycle": 1,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 6,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.2599999999999998,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0032803848067278762,
+        "qualifying_start_s": 15.040000000000001,
+        "samples": 41,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      }
+    ],
+    "landings": [
+      {
+        "leg": 0,
+        "cycle": 0,
+        "time_s": 2.2,
+        "feet": [
+          {
+            "marker": "-Y-foot-surface",
+            "error_m": 0.0006182160086154395,
+            "upward_force_n": 9.591830432035355
+          },
+          {
+            "marker": "+X-foot-surface",
+            "error_m": 0.0005323063350666262,
+            "upward_force_n": 10.285540460295834
+          },
+          {
+            "marker": "+Y-foot-surface",
+            "error_m": 0.0004803510528286925,
+            "upward_force_n": 9.56670413234912
+          },
+          {
+            "marker": "-X-foot-surface",
+            "error_m": 0.0005516545247103838,
+            "upward_force_n": 9.562948705066358
+          }
+        ]
+      },
+      {
+        "leg": 2,
+        "cycle": 0,
+        "time_s": 4.2,
+        "feet": [
+          {
+            "marker": "-Y-foot-surface",
+            "error_m": 0.0004972580210594182,
+            "upward_force_n": 9.362020615475037
+          },
+          {
+            "marker": "+X-foot-surface",
+            "error_m": 0.0005165418127708515,
+            "upward_force_n": 10.393296312981402
+          },
+          {
+            "marker": "+Y-foot-surface",
+            "error_m": 0.0007039080758608,
+            "upward_force_n": 9.379469221957518
+          },
+          {
+            "marker": "-X-foot-surface",
+            "error_m": 0.000536623146912699,
+            "upward_force_n": 9.872267078147543
+          }
+        ]
+      },
+      {
+        "leg": 1,
+        "cycle": 0,
+        "time_s": 6.2,
+        "feet": [
+          {
+            "marker": "-Y-foot-surface",
+            "error_m": 0.0004913166839688271,
+            "upward_force_n": 8.462493789549853
+          },
+          {
+            "marker": "+X-foot-surface",
+            "error_m": 0.0005964690900006459,
+            "upward_force_n": 11.292493188684624
+          },
+          {
+            "marker": "+Y-foot-surface",
+            "error_m": 0.0005826290491214058,
+            "upward_force_n": 8.469217338663144
+          },
+          {
+            "marker": "-X-foot-surface",
+            "error_m": 0.0005194333928503688,
+            "upward_force_n": 10.783057738427232
+          }
+        ]
+      },
+      {
+        "leg": 3,
+        "cycle": 0,
+        "time_s": 8.2,
+        "feet": [
+          {
+            "marker": "-Y-foot-surface",
+            "error_m": 0.0005282439322772405,
+            "upward_force_n": 9.517170863804113
+          },
+          {
+            "marker": "+X-foot-surface",
+            "error_m": 0.000493273005470988,
+            "upward_force_n": 10.269388717022435
+          },
+          {
+            "marker": "+Y-foot-surface",
+            "error_m": 0.0006589673683035394,
+            "upward_force_n": 9.524679667026142
+          },
+          {
+            "marker": "-X-foot-surface",
+            "error_m": 0.0006817923862775568,
+            "upward_force_n": 9.695495445893847
+          }
+        ]
+      },
+      {
+        "leg": 0,
+        "cycle": 1,
+        "time_s": 10.200000000000001,
+        "feet": [
+          {
+            "marker": "-Y-foot-surface",
+            "error_m": 0.000540042918142778,
+            "upward_force_n": 9.594272244629375
+          },
+          {
+            "marker": "+X-foot-surface",
+            "error_m": 0.0004884146346799757,
+            "upward_force_n": 10.180549923748586
+          },
+          {
+            "marker": "+Y-foot-surface",
+            "error_m": 0.0005196302434714401,
+            "upward_force_n": 9.564764893223655
+          },
+          {
+            "marker": "-X-foot-surface",
+            "error_m": 0.0007553976982613615,
+            "upward_force_n": 9.667445612676499
+          }
+        ]
+      },
+      {
+        "leg": 2,
+        "cycle": 1,
+        "time_s": 12.200000000000001,
+        "feet": [
+          {
+            "marker": "-Y-foot-surface",
+            "error_m": 0.0006640255669371674,
+            "upward_force_n": 9.362160169065463
+          },
+          {
+            "marker": "+X-foot-surface",
+            "error_m": 0.0004841420971201494,
+            "upward_force_n": 10.393173893935325
+          },
+          {
+            "marker": "+Y-foot-surface",
+            "error_m": 0.0008197577052158336,
+            "upward_force_n": 9.379484106173923
+          },
+          {
+            "marker": "-X-foot-surface",
+            "error_m": 0.0006816475030142236,
+            "upward_force_n": 9.872235821732657
+          }
+        ]
+      },
+      {
+        "leg": 1,
+        "cycle": 1,
+        "time_s": 14.200000000000001,
+        "feet": [
+          {
+            "marker": "-Y-foot-surface",
+            "error_m": 0.0006481163301001077,
+            "upward_force_n": 8.462452134190881
+          },
+          {
+            "marker": "+X-foot-surface",
+            "error_m": 0.0005447442806409618,
+            "upward_force_n": 11.292467847446922
+          },
+          {
+            "marker": "+Y-foot-surface",
+            "error_m": 0.0006837378866428208,
+            "upward_force_n": 8.469323147280287
+          },
+          {
+            "marker": "-X-foot-surface",
+            "error_m": 0.0007833449184482867,
+            "upward_force_n": 10.783018876396271
+          }
+        ]
+      },
+      {
+        "leg": 3,
+        "cycle": 1,
+        "time_s": 16.2,
+        "feet": [
+          {
+            "marker": "-Y-foot-surface",
+            "error_m": 0.0006563028563191183,
+            "upward_force_n": 9.517065897960968
+          },
+          {
+            "marker": "+X-foot-surface",
+            "error_m": 0.0004752811451023639,
+            "upward_force_n": 10.26944087697513
+          },
+          {
+            "marker": "+Y-foot-surface",
+            "error_m": 0.00076546806021918,
+            "upward_force_n": 9.524696585758473
+          },
+          {
+            "marker": "-X-foot-surface",
+            "error_m": 0.00089963751524366,
+            "upward_force_n": 9.695531510790715
+          }
+        ]
+      }
+    ],
+    "body_advance_m": 0.019784506662578964,
+    "requested_body_advance_m": 0.02,
+    "maximum_body_tilt_rad": 0.00354255738685192,
+    "sampled_internal_contacts": 0,
+    "budgets": {
+      "maximum_body_advance_error_m": 0.001,
+      "maximum_body_tilt_rad": 0.01,
+      "maximum_sampled_internal_contacts": 0,
+      "maximum_settled_foot_error_m": 0.001,
+      "minimum_settled_foot_force_n": 1
+    },
+    "scope": "Fixed reference on one flat floor, ideal feedback, effective servos. Samples must show simultaneous swing clearance/unloading and three loaded supporting feet. No between-sample guarantee, live steering, disturbance robustness or hardware validation."
+  },
+  "refinement": {
+    "version": 1,
+    "reference": {
+      "path": "runs/full-robot/learning/crawl-two/refined.native.json",
+      "sha256": "0e8475c4c0baa935cba568c6ac96a59cedd08facc3e8254e0b63d953cfa5b2ba"
+    },
+    "candidate": {
+      "path": "runs/full-robot/learning/crawl-two/native.json",
+      "sha256": "e4a4aba771621fa1d2a5626c501f4c468d65c51dce84a1b648a168677295e298"
+    },
+    "completed": true,
+    "simulated_s": 16.6,
+    "wall_s": 8.425407114,
+    "simulation_per_wall_second": 1.9702312037143894,
+    "transition_p95_s": 0.01968157,
+    "maximum_foot_difference_m": {
+      "-Y-foot-surface": 0.0004786827723711724,
+      "+X-foot-surface": 0.0001723106208942758,
+      "+Y-foot-surface": 0.0004700203415862186,
+      "-X-foot-surface": 0.00012911246345734086
+    },
+    "maximum_body_position_difference_m": 0.00021777746666640005,
+    "maximum_motor_angle_difference_rad": 0.0032066234214483402,
+    "maximum_penetration_m": 0.00009862336320098919,
+    "maximum_effective_torque_nm": 0.9596244899067115,
+    "scope": "Single native capture comparison over one short stepping reference. Endpoint samples at 50 Hz; does not bound between-sample peaks, validate impact impulses, establish sustained gait or hardware accuracy."
+  },
+  "browser": {
+    "passed": true,
+    "preset": "robot-crawl-startup",
+    "transitions": 830,
+    "maximum_native_wasm_difference": 8.884271096576413e-11,
+    "worst": "physics[445].policy.observations.marker.-X-foot-surface.floor_force_world.z",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 3324,
+    "replay_progress_messages": 830,
+    "numeric_tolerance": {
+      "absolute": 1e-7,
+      "relative": 1e-8,
+      "maximum_fraction": 0.0005086901011282325
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+    "performance": {
+      "simulated_s": 16.6,
+      "transition_wall_s": 10.28602500021457,
+      "simulation_per_wall_second": 1.6138401374344045,
+      "transition_p95_s": 0.02302499997615814,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. Short episode, not sustained walking or visible responsiveness acceptance."
+    },
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "rendered_before": {
+    "completed": true,
+    "preset": "robot-crawl-startup",
+    "performance": {
+      "simulation_per_wall_second": 0.8165907630788017,
+      "transition_p95_s": 0.03072000002861023,
+      "render_interval_p95_s": 0.016670000000000074,
+      "render_frames": 1203,
+      "transitions": 830,
+      "wall_s": 20.32842000001669,
+      "simulated_s": 16.6
+    },
+    "meets_speed_target": false,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One fixed-reference episode through the actual viewer with WebGL drawing enabled. rAF intervals measure frame scheduling, not display presentation. No steering response or sustained terrain/turning acceptance; report failures rather than dropping frames or loosening physics."
+  },
+  "rendered_after": {
+    "completed": true,
+    "preset": "robot-crawl-startup",
+    "performance": {
+      "simulation_per_wall_second": 1.0005123105204472,
+      "transition_p95_s": 0.02769499999284744,
+      "render_interval_p95_s": 0.016670000000000074,
+      "render_frames": 984,
+      "transitions": 830,
+      "wall_s": 16.5915,
+      "simulated_s": 16.6
+    },
+    "meets_speed_target": true,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One fixed-reference episode through the actual viewer with WebGL drawing enabled. rAF intervals measure frame scheduling, not display presentation. No steering response or sustained terrain/turning acceptance; report failures rather than dropping frames or loosening physics."
+  },
+  "readiness": "Two fixed crawl cycles. Realtime average on one rendered run; transition latency, live steering, sustained walking, learning and hardware transfer remain open.",
+  "refinement_5ms": {
+    "version": 1,
+    "reference": {
+      "path": "runs/full-robot/learning/crawl-two/5ms.native.json",
+      "sha256": "ec33a57234798d794582a5fb0aa1e162169be59c3a15943735016e3afd174d9c"
+    },
+    "candidate": {
+      "path": "runs/full-robot/learning/crawl-two/native.json",
+      "sha256": "e4a4aba771621fa1d2a5626c501f4c468d65c51dce84a1b648a168677295e298"
+    },
+    "completed": true,
+    "simulated_s": 16.6,
+    "wall_s": 8.425407114,
+    "simulation_per_wall_second": 1.9702312037143894,
+    "transition_p95_s": 0.01968157,
+    "maximum_foot_difference_m": {
+      "-Y-foot-surface": 0.000761764840220943,
+      "+X-foot-surface": 0.000289391042581781,
+      "+Y-foot-surface": 0.0007481084756589357,
+      "-X-foot-surface": 0.00019793215368082498
+    },
+    "maximum_body_position_difference_m": 0.0003063350444262656,
+    "maximum_motor_angle_difference_rad": 0.0049754693830385,
+    "maximum_penetration_m": 0.00009862336320098919,
+    "maximum_effective_torque_nm": 0.9596244899067115,
+    "scope": "Single native capture comparison over one short stepping reference. Endpoint samples at 50 Hz; does not bound between-sample peaks, validate impact impulses, establish sustained gait or hardware accuracy."
+  },
+  "refinement_5ms_to_10ms": {
+    "version": 1,
+    "reference": {
+      "path": "runs/full-robot/learning/crawl-two/5ms.native.json",
+      "sha256": "ec33a57234798d794582a5fb0aa1e162169be59c3a15943735016e3afd174d9c"
+    },
+    "candidate": {
+      "path": "runs/full-robot/learning/crawl-two/refined.native.json",
+      "sha256": "0e8475c4c0baa935cba568c6ac96a59cedd08facc3e8254e0b63d953cfa5b2ba"
+    },
+    "completed": true,
+    "simulated_s": 16.6,
+    "wall_s": 15.87510169,
+    "simulation_per_wall_second": 1.0456625931698207,
+    "transition_p95_s": 0.035503476,
+    "maximum_foot_difference_m": {
+      "-Y-foot-surface": 0.00028966717298943925,
+      "+X-foot-surface": 0.00011733726068377764,
+      "+Y-foot-surface": 0.0002840710767124293,
+      "-X-foot-surface": 0.0001251209151737608
+    },
+    "maximum_body_position_difference_m": 0.00010668592149000613,
+    "maximum_motor_angle_difference_rad": 0.0017688459615901597,
+    "maximum_penetration_m": 0.00009889833427201289,
+    "maximum_effective_torque_nm": 0.9600771208869403,
+    "scope": "Single native capture comparison over one short stepping reference. Endpoint samples at 50 Hz; does not bound between-sample peaks, validate impact impulses, establish sustained gait or hardware accuracy."
+  },
+  "viewer": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  }
+}

@@ -1,9 +1,9 @@
 name: Native and browser runtime
 on:
   push:
-    paths: ['crates/**', 'Cargo.*', 'web/**', 'examples/interactive/**', 'examples/full-robot/teacher-*', 'examples/full-robot/teacher-baseline/**', '.github/workflows/browser.yml']
+    paths: ['crates/**', 'Cargo.*', 'web/**', 'examples/interactive/**', 'examples/full-robot/**', '.github/workflows/browser.yml']
   pull_request:
-    paths: ['crates/**', 'Cargo.*', 'web/**', 'examples/interactive/**', 'examples/full-robot/teacher-*', 'examples/full-robot/teacher-baseline/**', '.github/workflows/browser.yml']
+    paths: ['crates/**', 'Cargo.*', 'web/**', 'examples/interactive/**', 'examples/full-robot/**', '.github/workflows/browser.yml']
 jobs:
   runtime:
     runs-on: ubuntu-latest
@@ -124,6 +124,15 @@ jobs:
         run: |
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/browser-effective-servo/scene.json examples/full-robot/browser-effective-servo/config.json examples/full-robot/browser-effective-servo/task.json > runs/interactive/effective-servo-native.json
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-effective-servo runs/interactive/effective-servo-native.json runs/interactive/effective-servo-browser.json
+      - name: Eight supported crawl swings and native/WASM replay
+        run: |
+          cargo build --locked --release -p sim-runtime --example evaluate_lift
+          target/release/examples/run_environment examples/full-robot/browser-crawl-startup/scene.json examples/full-robot/browser-crawl-startup/config.json examples/full-robot/browser-crawl-startup/task.json > runs/interactive/crawl-native.json
+          node examples/full-robot/check_crawl.mjs examples/full-robot/browser-crawl-startup runs/interactive/crawl-native.json runs/interactive/crawl-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-crawl-startup runs/interactive/crawl-native.json runs/interactive/crawl-browser.json
+          target/release/examples/run_environment examples/full-robot/browser-crawl-startup/scene.json examples/full-robot/browser-crawl-startup/refined.config.json examples/full-robot/browser-crawl-startup/task.json > runs/interactive/crawl-refined-native.json
+          node examples/full-robot/compare_effective_servo.mjs runs/interactive/crawl-refined-native.json runs/interactive/crawl-native.json runs/interactive/crawl-refinement.json
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/crawl-refinement.json")); assert(Object.values(r.maximum_foot_difference_m).every(x=>x<=0.001)); assert(r.maximum_body_position_difference_m<=0.0005);'
       - name: Read-only bounded diagnostic capture
         run: |
           cargo build --locked --release -p sim-runtime --example capture_embedded_window

@@ -667,7 +667,14 @@ def test_cad_rhai_measured_replay_and_validated_cache(builder, tmp_path, two_joi
     assert not cold['cache']['cad_hit'] and not cold['stale']
     assert capture(doc).data == before.data
     assert len(cold['trace']['t']) == 320
-    assert len(cold['controller_frames']) == 160
+    # Event localization can also report the command at exactly t=duration;
+    # it has no following integration interval. Require the complete clock grid
+    # and allow only that terminal sample, not arbitrary extra/missing commands.
+    frames = cold['controller_frames']
+    assert len(frames) in (160, 161)
+    assert all(abs(f['t'] - i * .02) < 1e-9 for i, f in enumerate(frames))
+    if len(frames) == 161:
+        assert abs(frames[-1]['t'] - 3.2) < 1e-9
     assert all(f['commands']['hinge1.target'] <= .2 for f in cold['controller_frames'])
     assert cold['controller_contract']['period'] == .02
     assert {c['unit'] for c in cold['controller_contract']['actuators']} == {'rad'}

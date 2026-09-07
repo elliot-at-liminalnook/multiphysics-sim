@@ -225,6 +225,17 @@
       "evidence": "Drive connection and motor gearbox gaps are combined explicitly. Unknown drive values are rejected."
     },
     {
+      "id": "robot-crawl-startup",
+      "label": "Quadruped · two-cycle crawl",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-crawl-startup/scene.json",
+      "config": "examples/full-robot/browser-crawl-startup/config.json",
+      "task": "examples/full-robot/browser-crawl-startup/task.json",
+      "description": "Live 16.6-second crawl: shift weight, lift and place all four feet twice, and advance the body by 20 mm. Rhai feedback commands bounded effective servos through the shared Rust physics runtime.",
+      "readiness": "Experimental crawl sequence · ideal observations · speed/turn commands and sustained walking are not yet available.",
+      "evidence": "CAD mechanism, inertia and contact remain active. The reference checks 1,621 poses for closure, collision and static tripod support. All eight simulated swings pass sampled clearance and support checks. The side feet move farther forward first to accommodate the asymmetric mass distribution. Browser actuators and 20 ms integration remain uncalibrated approximations."
+    },
+    {
       "id": "robot-effective-servo",
       "label": "Quadruped · effective servo experiment",
       "mode": "embedded",

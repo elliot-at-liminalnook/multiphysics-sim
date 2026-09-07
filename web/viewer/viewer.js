@@ -23,6 +23,7 @@ const arrows = new THREE.Group(); scene.add(arrows);
 let grid, selectionBox, meshes = new Map(), current, frame, playback, worker, epoch = 0;
 let abort, playing = false, busy = false, inputs = [], values = [], tick = 0, replaySaved;
 let lastDraw = performance.now(), simulatedWork = 0, wallWork = 0, selectedName;
+let liveTimer, liveStartWall = 0, liveStartSim = 0;
 const ray = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 new ResizeObserver(() => {
@@ -56,7 +57,17 @@ async function fetchData(path, signal) {
   const response = await fetch(path, { signal }); if (!response.ok) throw new Error(`Could not load ${path} (${response.status})`);
   return response.json();
 }
-function setPlaying(value) { playing = value; $('play').textContent = playing ? 'Pause' : 'Play';
+function scheduleLive() {
+  clearTimeout(liveTimer);
+  if (!playing || playback || busy || !worker) return;
+  // Simulation is paced by elapsed time, independent of display refresh. If a
+  // solve falls behind, run the next held-action transition without skipping it.
+  const delay = Math.max(0, (tick-liveStartSim)*1000-(performance.now()-liveStartWall));
+  liveTimer = setTimeout(() => advanceLive(), delay);
+}
+function setPlaying(value) { playing = value; clearTimeout(liveTimer);
+  if (playing) { liveStartWall = performance.now(); liveStartSim = tick; scheduleLive(); }
+  $('play').textContent = playing ? 'Pause' : 'Play';
   $('execution-state').textContent = playing ? (playback ? 'Playing recorded physics' : 'Running physics in background…') : (busy ? 'Pausing after the current physics chunk…' : 'Paused'); }
 function selectPart(name) {
   selectedName = name;
@@ -204,10 +215,13 @@ async function loadPreset(id) {
 async function advanceLive(single=false) {
   if (busy || (!playing && !single) || !worker) return; busy = true; const token = epoch, before = performance.now(), old = tick;
   try { const next = await worker.request('step', { action: values }); if (token !== epoch) return; showFrame(next);
-    wallWork += (performance.now()-before)/1000; simulatedWork += tick-old; $('performance').textContent = `${(simulatedWork / wallWork).toFixed(2)}× live`;
+    wallWork += (performance.now()-before)/1000; simulatedWork += tick-old;
+    const liveRate = (tick-liveStartSim)/((performance.now()-liveStartWall)/1000);
+    $('performance').textContent = single ? `${(simulatedWork/wallWork).toFixed(2)}× processing` : `${liveRate.toFixed(2)}× live`;
+    $('performance').title = `Worker and scene-update throughput: ${(simulatedWork/wallWork).toFixed(2)}×. Live rate also includes scheduling time.`;
     if (next.done || next.error) { setPlaying(false); showFrame(next); if (next.error) status(next.error, true); }
   } catch (e) { if (token === epoch) { setPlaying(false); status(e.message, true); } }
-  finally { if (token === epoch) busy = false; }
+  finally { if (token === epoch) { busy = false; scheduleLive(); } }
 }
 function replayAt(time) {
   if (!playback) return; let lo = 0, hi = playback.length - 1;
@@ -218,7 +232,6 @@ let replayClock = 0;
 renderer.setAnimationLoop(now => {
   const elapsed = Math.min((now-lastDraw)/1000, .1); lastDraw = now;
   if (playing && playback) { replayClock += elapsed * Number($('speed').value); replayAt(replayClock); if (replayClock >= playback.at(-1).time_s) setPlaying(false); }
-  else if (playing) advanceLive();
   controls.update(); scene.updateMatrixWorld(true); selectionBox?.update(); arrows.visible = $('contacts').checked; renderer.render(scene,camera);
 });
 $('fit').onclick = () => fit(); $('fit-selected').onclick = () => { if (meshes.has(selectedName)) fit(meshes.get(selectedName)); };

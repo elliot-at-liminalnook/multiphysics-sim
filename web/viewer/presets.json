@@ -323,6 +323,17 @@
       "description": "WASD requests the slow baseline crawl. A small trained Rust network adds motor-angle corrections. Expand Learned motor corrections to inspect its live outputs.",
       "readiness": "Initial policy-search experiment · ideal teacher observations · small training-score change · robustness and hardware transfer unverified.",
       "evidence": "The policy was selected from paired parameter perturbations using one 24-second command sequence. Rust executes the same bounded network in native simulation and WASM, before motor-limit validation. This is an experimental learned correction to a hand-authored gait, not an independently learned or deployable walking controller."
+    },
+    {
+      "id": "robot-distilled-student",
+      "label": "Quadruped · Distilled student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/student-distillation/config.json",
+      "task": "examples/full-robot/student-distillation/task.json",
+      "description": "WASD requests the crawl. The distilled network replaces the teacher's body/foot motor feedback. Expand Learned motor corrections to inspect its outputs.",
+      "readiness": "Experimental student · proposed encoder/IMU observations are ideal simulation values · upstream planner remains privileged · sensor hardware and calibration unconfirmed.",
+      "evidence": "Supervised imitation uses a separate reverse-first validation sequence. The student excludes body translation, foot geometry and contact force from its network; it retains joint tracking and the existing planner. Unused teacher motor-feedback calculations are omitted with an exact physical-trajectory check. Closed-loop task and performance results are separate from imitation accuracy."
     }
   ]
 }

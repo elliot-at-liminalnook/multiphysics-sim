@@ -1,0 +1,866 @@
+{
+  "version": 1,
+  "stage": "experimental distilled motor-feedback student",
+  "sources": [
+    {
+      "path": "crates/sim-core/src/couple.rs",
+      "sha256": "f08bfa49c5c041c840e250ac6d3d97555dd3f2691faa3afa5c3fc83eefc77739"
+    },
+    {
+      "path": "crates/sim-domain-control/src/neural.rs",
+      "sha256": "7d2e8f4ffe9e213c9aeba9416ebfeb40d5562b8dc80dc9011c3792df79c6e7bd"
+    },
+    {
+      "path": "crates/sim-domain-control/src/distillation.rs",
+      "sha256": "393dd8cf7f9ebecf02c72c69d1ec3cfb3d439d803ef603c1b7e1198dd7214761"
+    },
+    {
+      "path": "crates/sim-domain-control/tests/neural.rs",
+      "sha256": "2e3904c787459ab4ce182518a8eadf4fb8c4ddddc4dfcb45b6f2322615e7f0e6"
+    },
+    {
+      "path": "crates/sim-runtime/examples/distill_policy.rs",
+      "sha256": "548588b90b2aa8f2b6002f47e8507712cfa739d1a66c9923a8af52e262d8b84d"
+    },
+    {
+      "path": "crates/sim-runtime/src/embedded_policy.rs",
+      "sha256": "11174cef56475dedc9e1c8d13be7371dcc04f407e1f266089d1bac5c61794105"
+    },
+    {
+      "path": "examples/full-robot/prepare_student_distillation.mjs",
+      "sha256": "23876574af019c7e1bbf46990bb4cf27a5ebd0f21bb860fc6802ef44e0ab4fc4"
+    },
+    {
+      "path": "examples/full-robot/materialize_student.mjs",
+      "sha256": "180f7374fe2d300ff272412b0432eaf91b90b4318c5c0280839f7ed173d4ddd7"
+    },
+    {
+      "path": "examples/full-robot/check_unused_feedback.mjs",
+      "sha256": "dc0ac548029481b8cd6b6435d4a51d342cda545eb2e0ff92d23b5c4f982be518"
+    },
+    {
+      "path": "examples/full-robot/summarize_student_distillation.mjs",
+      "sha256": "11f931eb3c8d3e789b995371a20aa2a1b48469c2ef32057a65d4a3957fdaa855"
+    },
+    {
+      "path": "examples/full-robot/student-distillation/scene.json",
+      "sha256": "1fd3c6103413010dbe5dee8a09084544af9a305f4eac5acb3c3965caa71a0c7b"
+    },
+    {
+      "path": "examples/full-robot/student-distillation/task.json",
+      "sha256": "0389e93ecbcfde18f34f160dd75289d5bc30dd2a872dcdcda8fe5ad7742d2d0c"
+    },
+    {
+      "path": "examples/full-robot/student-distillation/config.json",
+      "sha256": "ef6b7cc104226356edbde7fe18968688ff902a6e0a79e39d8291272cbf7283d7"
+    },
+    {
+      "path": "examples/full-robot/student-distillation/short.config.json",
+      "sha256": "0d0856c1d9065d67fbf886363238c260183d6266b13ae78d93aca28a6f817c49"
+    },
+    {
+      "path": "examples/full-robot/student-distillation/policy.json",
+      "sha256": "0b73031cb35acec612535f872f921ab3ead4c3f6efe5d5866d7b57f72973db7d"
+    },
+    {
+      "path": "examples/full-robot/student-distillation/manifest.json",
+      "sha256": "f06ed1c39729bf12c11974eb7eb973365db61022d0cf306b55f99c9298e192ea"
+    },
+    {
+      "path": "examples/full-robot/student-distillation/observation-boundary.json",
+      "sha256": "41767e76bf396f789932681b7ae4b5dc4bf69929c711c2a90684fd66364f60cc"
+    }
+  ],
+  "evidence": {
+    "fit_validation": {
+      "path": "examples/full-robot/student-distillation/validation.json",
+      "sha256": "0b3c6427aa8bee95bf63636c31986c242f969df6c8817bcaa49cbd6bb5026bd7"
+    },
+    "fit": {
+      "path": "examples/full-robot/student-distillation/fit.json",
+      "sha256": "c928b8b39b53bf69d38934804d1315282f6d28c52ae38dbe5cff07a7f09bcb32"
+    },
+    "experiment": {
+      "path": "examples/full-robot/student-distillation/experiment.json",
+      "sha256": "6a014139b25ec4f273eea8ee9e47c8bcb46656616fbe9060b7d9a531ad6c5430"
+    },
+    "first": {
+      "path": "runs/full-robot/learning/student-distillation/first-acceptance/summary.json",
+      "sha256": "f9d8e94d6321c1d3dbb1f3bddf000b4724e13cf963a9634f5565c4012ba6bf66"
+    },
+    "train": {
+      "path": "runs/full-robot/learning/student-distillation/train-acceptance/summary.json",
+      "sha256": "fa5a3649e5521ecb5c6d608607d20403a5418a224b46b88be7a9f39aa9368db0"
+    },
+    "heldout": {
+      "path": "runs/full-robot/learning/student-distillation/heldout-acceptance/summary.json",
+      "sha256": "702831bba38bb3bc69245e0142568516fc9a282e6a1e6197936ec38bea2f5c2b"
+    },
+    "sustained": {
+      "path": "runs/full-robot/learning/student-distillation/sustained-acceptance/summary.json",
+      "sha256": "d38df1d2c664d8c6135b6b4b6132b76dedb927ad50b9f4717f6784c5a313c52e"
+    },
+    "multi-train": {
+      "path": "runs/full-robot/learning/student-distillation/multi-train-acceptance/summary.json",
+      "sha256": "2c1b68fba0ce9e4b97bc57b9f6257fc546509df40cd56be817eefff3f85026b5"
+    },
+    "multi-heldout": {
+      "path": "runs/full-robot/learning/student-distillation/multi-heldout-acceptance/summary.json",
+      "sha256": "77cf8ea0d3f0293d9aefbcce2d9a4807544ea73234f01d60611873cc3d8027f1"
+    },
+    "multi-sustained": {
+      "path": "runs/full-robot/learning/student-distillation/multi-sustained-acceptance/summary.json",
+      "sha256": "8c7c7771c5c16ef27cdc822317f85ab7cb4c735d1bc3a2e6762981737161e299"
+    },
+    "unused_work": {
+      "path": "runs/full-robot/learning/student-distillation/multi-unused-feedback-report.json",
+      "sha256": "e30feecb6410cc07c76b42aded980798601206a5df815a025a93e3b8ce51aded"
+    },
+    "parity": {
+      "path": "runs/interactive/student-distillation/sustained-parity.json",
+      "sha256": "8688ceb8309ba83c56ac1cd50b1ac47454ff0c9c8e47cfd72be55a5181845740"
+    },
+    "viewer": {
+      "path": "runs/interactive/student-distillation/viewer-report.json",
+      "sha256": "dfd23d6e2ef3128fee313000ca759da382f78f3ebf8d3464f2cee6cdb2f5f708"
+    },
+    "timing": {
+      "path": "runs/interactive/student-distillation/live-performance.json",
+      "sha256": "c92ea756263a054743cb8ad38b1ac698207355f061ce8187d65ae8c8487302de"
+    },
+    "bundle": {
+      "path": "runs/interactive/student-distillation/viewer/build-manifest.json",
+      "sha256": "180c6e3d5566a6ea55ca633c6b8fedd71effa8eaade455e6baf3a5abe822d093"
+    },
+    "sustained_capture": {
+      "path": "runs/full-robot/learning/student-distillation/multi-sustained.native.json",
+      "sha256": "ad74457b6be2018acd73e29cb258b8402cb4f5afbaad118508752ec9feac9f7f"
+    },
+    "keyboard_recording": {
+      "path": "runs/interactive/student-distillation/live-performance.recording.json",
+      "sha256": "b3e45fddf061114365ccd7c42a4e2dfd32b33a894faf66400d430694a1078a3b"
+    }
+  },
+  "network": {
+    "features": 45,
+    "hidden": 64,
+    "outputs": 12,
+    "parameters": 3724
+  },
+  "optimizer": {
+    "epochs": 1000,
+    "learning_rate": 0.0005,
+    "batch_size": 64
+  },
+  "validation": {
+    "final_training_loss": 0.00004506238007661021,
+    "final_validation_loss": 0.0002231697409043002,
+    "initial_training_loss": 0.0029670721437237337,
+    "initial_validation_loss": 0.0038526646319698185,
+    "scope": "Checkpoint selected by training loss only. Supervised teacher-action imitation on held-out teacher states; not closed-loop stability, walking acceptance, sensor calibration or hardware transfer.",
+    "selected_epoch": 968,
+    "training_samples": 4200,
+    "validation_physical_errors": [
+      {
+        "maximum": 0.0017771287143420259,
+        "name": "-Y | Hip servo output.target",
+        "rms": 0.0003624967834681848,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.0021573169460397633,
+        "name": "-Y | Worm servo output.target",
+        "rms": 0.0005759382773006688,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.00928407785427251,
+        "name": "-Y | Foot servo output.target",
+        "rms": 0.001123111507950301,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.0006222493920400989,
+        "name": "+X | Hip servo output.target",
+        "rms": 0.00023130987710492967,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.004563034240115426,
+        "name": "+X | Worm servo output.target",
+        "rms": 0.0006707642638741764,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.008152395441081872,
+        "name": "+X | Foot servo output.target",
+        "rms": 0.0009074843533457328,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.001783483203693881,
+        "name": "+Y | Hip servo output.target",
+        "rms": 0.0002858552370589599,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.002008633197355926,
+        "name": "+Y | Worm servo output.target",
+        "rms": 0.0005394796834765741,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.009114260869757768,
+        "name": "+Y | Foot servo output.target",
+        "rms": 0.0009242890252011735,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.0008379520481337033,
+        "name": "-X | Hip servo output.target",
+        "rms": 0.0002729626868258852,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.005153728204203848,
+        "name": "-X | Worm servo output.target",
+        "rms": 0.0007709766407544834,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.013154223929728127,
+        "name": "-X | Foot servo output.target",
+        "rms": 0.0013219953802929328,
+        "unit": "rad"
+      }
+    ],
+    "validation_samples": 1200,
+    "version": 1
+  },
+  "cases": {
+    "first": {
+      "passed": true,
+      "swings": 9,
+      "passed_swings": 9,
+      "final_body_error_m": 0.0009080583462136577,
+      "maximum_body_tilt_rad": 0.003588350303802189,
+      "final_yaw_error_rad": 0.0010200323308663989,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "train": {
+      "passed": true,
+      "swings": 9,
+      "passed_swings": 9,
+      "final_body_error_m": 0.0006941928811017976,
+      "maximum_body_tilt_rad": 0.003562961530039944,
+      "final_yaw_error_rad": 0.0009276075049367028,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "heldout": {
+      "passed": true,
+      "swings": 9,
+      "passed_swings": 9,
+      "final_body_error_m": 0.0008874846116044768,
+      "maximum_body_tilt_rad": 0.003716561304053965,
+      "final_yaw_error_rad": 0.00017046559524988548,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "sustained": {
+      "passed": false,
+      "swings": 28,
+      "passed_swings": 28,
+      "final_body_error_m": 0.0014078195293361108,
+      "maximum_body_tilt_rad": 0.003604757124403566,
+      "final_yaw_error_rad": 0.0031351367853916057,
+      "inter_link_geometry_audit": {
+        "frames": 3001,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "multi-train": {
+      "passed": true,
+      "swings": 9,
+      "passed_swings": 9,
+      "final_body_error_m": 0.0006685363871629759,
+      "maximum_body_tilt_rad": 0.0036468867247888364,
+      "final_yaw_error_rad": 0.0015233815374655062,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "multi-heldout": {
+      "passed": true,
+      "swings": 9,
+      "passed_swings": 9,
+      "final_body_error_m": 0.0007979043279915474,
+      "maximum_body_tilt_rad": 0.003657139498101449,
+      "final_yaw_error_rad": 0.0003230280183371779,
+      "inter_link_geometry_audit": {
+        "frames": 1201,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    "multi-sustained": {
+      "passed": false,
+      "swings": 28,
+      "passed_swings": 28,
+      "final_body_error_m": 0.001127209234037419,
+      "maximum_body_tilt_rad": 0.0036468867247888364,
+      "final_yaw_error_rad": 0.004320412653216258,
+      "inter_link_geometry_audit": {
+        "frames": 3001,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    }
+  },
+  "unused_work": {
+    "version": 1,
+    "passed": true,
+    "full": {
+      "path": "runs/full-robot/learning/student-distillation/multi-full.native.json",
+      "sha256": "d5782efea9845f964c4058697e0cd489cc91ebf7d111c6064ceb32a7eea10b01"
+    },
+    "reduced": {
+      "path": "runs/full-robot/learning/student-distillation/multi-train.native.json",
+      "sha256": "37eb00ea47f052ede0e9079313b64379ab26c85ca900b8eb436294461fe56385"
+    },
+    "exact_physical_frames": 1201,
+    "omitted_observation_samples": 43200,
+    "scope": "Unused body/point feedback calculations and policy-side floor-force observations are omitted. Every physical frame, retained controller value and teacher transition remains exact. Upstream planner and physical contact still use ideal simulated state."
+  },
+  "native_wasm": {
+    "passed": true,
+    "preset": "robot-distilled-student",
+    "transitions": 3000,
+    "maximum_native_wasm_difference": 2.331574933123193e-10,
+    "worst": "transition[2756].observations.68",
+    "differences": [],
+    "invalid_action_preserved": true,
+    "changed_task_replay_preserved": true,
+    "replay_exact": true,
+    "reset_exact": true,
+    "main_thread_heartbeats": 9464,
+    "replay_progress_messages": 3000,
+    "numeric_tolerance": {
+      "absolute": 1e-7,
+      "relative": 1e-8,
+      "maximum_fraction": 0.0008069533181797969
+    },
+    "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+    "performance": {
+      "simulated_s": 60,
+      "transition_wall_s": 31.275649999916528,
+      "simulation_per_wall_second": 1.9184253564725318,
+      "transition_p95_s": 0.019319999992847444,
+      "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance."
+    },
+    "host": {
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "browser": "152.0.7977.76"
+    }
+  },
+  "viewer": {
+    "passed": true,
+    "checks": [
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-teacher-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-effective-servo: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-crawl-startup: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-online-steps: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-reversal-crawl: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-terrain-contact: 50 Hz task score, held-action recording, visible replay and reset",
+      "teacher motor corrections: bounded sliders, readable precision, recorded action replay and clear",
+      "robot-residual-policy: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-neural-teacher: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-neural-teacher: 50 Hz task score, held-action recording, visible replay and reset",
+      "robot-distilled-student: live bounded output readouts, policy artifact recording and exact visible replay",
+      "robot-distilled-student: 50 Hz task score, held-action recording, visible replay and reset",
+      "WASD requests, simultaneous move/turn, key release, focus loss, typing isolation and stop button",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "rendered": {
+    "completed": true,
+    "preset": "robot-distilled-student",
+    "scenario": "sustained-forward",
+    "performance": {
+      "simulation_per_wall_second": 1.0000859240494913,
+      "transition_p95_s": 0.022594999969005585,
+      "render_interval_p95_s": 0.01667000000000189,
+      "render_frames": 3588,
+      "transitions": 3000,
+      "wall_s": 59.994844999969004,
+      "simulated_s": 60,
+      "active_motion": {
+        "transitions": 2800,
+        "simulated_s": 56,
+        "wall_s": 55.93906499999764,
+        "simulation_per_wall_second": 1.0010893103058187,
+        "transition_p95_s": 0.022695000052452088
+      }
+    },
+    "meets_speed_target": true,
+    "meets_transition_target": false,
+    "host": {
+      "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+      "logical_cpus": 16,
+      "platform": "darwin",
+      "architecture": "x64",
+      "browser": "152.0.7977.76",
+      "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+      "headless": true
+    },
+    "errors": [],
+    "status": "Episode time limit reached",
+    "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. No sustained terrain or command-to-visible-response acceptance; report failures rather than dropping frames or loosening physics.",
+    "keyboard_commands_recorded": true
+  },
+  "observation_boundary": {
+    "version": 1,
+    "deployable": false,
+    "cad_declared_sensors": [],
+    "network_features": [
+      {
+        "source": "-Y | Hip servo output.angle",
+        "subtract": "-Y | Hip servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "-Y | Hip servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "-Y | Hip servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "-Y | Worm servo output.angle",
+        "subtract": "-Y | Worm servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "-Y | Worm servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": -0.00008346418847292681,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "-Y | Worm servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "-Y | Foot servo output.angle",
+        "subtract": "-Y | Foot servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "-Y | Foot servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": -0.35,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "-Y | Foot servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "+X | Hip servo output.angle",
+        "subtract": "+X | Hip servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "+X | Hip servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "+X | Hip servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "+X | Worm servo output.angle",
+        "subtract": "+X | Worm servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "+X | Worm servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": -0.27612813350949833,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "+X | Worm servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "+X | Foot servo output.angle",
+        "subtract": "+X | Foot servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "+X | Foot servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": -0.35,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "+X | Foot servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Hip servo output.angle",
+        "subtract": "+Y | Hip servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Hip servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Hip servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Worm servo output.angle",
+        "subtract": "+Y | Worm servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Worm servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": -0.00008346425388696227,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Worm servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Foot servo output.angle",
+        "subtract": "+Y | Foot servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Foot servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": -0.35,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "+Y | Foot servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "-X | Hip servo output.angle",
+        "subtract": "-X | Hip servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "-X | Hip servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "-X | Hip servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "-X | Worm servo output.angle",
+        "subtract": "-X | Worm servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "-X | Worm servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": -0.00007650604473797781,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "-X | Worm servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "-X | Foot servo output.angle",
+        "subtract": "-X | Foot servo output.reference",
+        "kind": "Angle",
+        "center": 0,
+        "scale": 0.02,
+        "clip": 5
+      },
+      {
+        "source": "-X | Foot servo output.reference",
+        "subtract": null,
+        "kind": "Angle",
+        "center": -0.35,
+        "scale": 0.2,
+        "clip": 5
+      },
+      {
+        "source": "-X | Foot servo output.angular_velocity",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "body.gravity_direction.x",
+        "subtract": null,
+        "kind": "Dimensionless",
+        "center": 0,
+        "scale": 0.05,
+        "clip": 5
+      },
+      {
+        "source": "body.angular_velocity.x",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "body.gravity_direction.y",
+        "subtract": null,
+        "kind": "Dimensionless",
+        "center": 0,
+        "scale": 0.05,
+        "clip": 5
+      },
+      {
+        "source": "body.angular_velocity.y",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "body.gravity_direction.z",
+        "subtract": null,
+        "kind": "Dimensionless",
+        "center": -1,
+        "scale": 0.05,
+        "clip": 5
+      },
+      {
+        "source": "body.angular_velocity.z",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.1,
+        "clip": 5
+      },
+      {
+        "source": "command.forward_speed",
+        "subtract": null,
+        "kind": "LinearVelocity",
+        "center": 0,
+        "scale": 0.00125,
+        "clip": 5
+      },
+      {
+        "source": "command.lateral_speed",
+        "subtract": null,
+        "kind": "LinearVelocity",
+        "center": 0,
+        "scale": 0.00125,
+        "clip": 5
+      },
+      {
+        "source": "command.yaw_rate",
+        "subtract": null,
+        "kind": "AngularVelocity",
+        "center": 0,
+        "scale": 0.001,
+        "clip": 5
+      }
+    ],
+    "base_motor_feedback": [
+      "joint references",
+      "ideal joint angle",
+      "declared tracking gain"
+    ],
+    "excluded_from_motor_policy": [
+      "world body position and linear velocity",
+      "foot marker positions/velocities",
+      "contact forces",
+      "body/point correction suggestions"
+    ],
+    "remaining_privileged_dependencies": [
+      "online planner observes ideal body/foot state",
+      "contact forces qualify planner lift/landing and preload",
+      "joint velocity is ideal; causal encoder differentiation is not implemented",
+      "body gravity direction/angular rate are ideal; IMU availability, mounting, calibration and estimator unconfirmed"
+    ],
+    "required_before_hardware": [
+      "declare actual sensors and provenance in CAD",
+      "bind sensor frames, sample clocks, delays and noise",
+      "supply causal state/contact estimates to the planner",
+      "validate the complete policy observation path against hardware"
+    ]
+  },
+  "tests": {
+    "neural": 4,
+    "runtime": 9,
+    "logs": [
+      {
+        "path": "runs/full-robot/learning/student-distillation/neural-tests.log",
+        "sha256": "4602c4d8cabf6bdca4678f09edd9d39675635bd3cda30acbc3e02d5c77cd67d1"
+      },
+      {
+        "path": "runs/full-robot/learning/student-distillation/runtime-tests.log",
+        "sha256": "ae8ed3f4349d10ba522d0a3d7c32b81df2ebffcfeb2d6adc78b690c86bf01d13"
+      }
+    ]
+  },
+  "sustained_task_accepted": false,
+  "remaining": [
+    "sustained stopping error exceeds 1 mm",
+    "bounded perturbation training and held-out robustness",
+    "actual sensor definitions and causal planner state estimation",
+    "timestep sensitivity for student controller",
+    "command-to-visible-response latency",
+    "20 ms rendered p95 transition target"
+  ],
+  "scope": "Teacher-to-student initialization and live native/WASM execution are implemented. Short task acceptance and exact omission of unused calculations pass; full-minute stopping, robustness and hardware deployment remain unproven or failed. The original goal remains active."
+}

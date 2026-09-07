@@ -44,6 +44,14 @@ pub struct BoundNetwork {
     sensor_count: usize,
     actuator_count: usize,
 }
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SupervisedSample {
+    /// Already normalized using this artifact's named feature definitions.
+    pub inputs: Vec<f64>,
+    /// Physical target divided by the corresponding output scale.
+    pub targets: Vec<f64>,
+}
 impl Network {
     pub fn validate(&self) -> Result<(), String> {
         if self.version != 1 || self.features.is_empty() || self.outputs.is_empty()
@@ -99,7 +107,7 @@ impl Network {
     }
 }
 impl BoundNetwork {
-    pub fn sample(&self, sensors: &[f64]) -> Result<Vec<f64>, String> {
+    pub fn normalize(&self, sensors: &[f64]) -> Result<Vec<f64>, String> {
         if sensors.len() != self.sensor_count || sensors.iter().any(|v| !v.is_finite()) {
             return Err("neural observation count/nonfinite mismatch".into());
         }
@@ -109,6 +117,16 @@ impl BoundNetwork {
             if !value.is_finite() { return Err("nonfinite neural normalized feature".into()); }
             values.push(value.clamp(-f.clip, f.clip));
         }
+        Ok(values)
+    }
+    pub fn supervised_sample(&self, sensors: &[f64], targets: &[f64]) -> Result<SupervisedSample, String> {
+        if targets.len()!=self.actuator_count || targets.iter().any(|v| !v.is_finite()) { return Err("invalid supervised target dimensions/values".into()); }
+        let targets=self.network.outputs.iter().zip(&self.outputs).map(|(o,&i)| targets[i]/o.scale).collect::<Vec<_>>();
+        if targets.iter().any(|v| !v.is_finite() || v.abs()>1.0) { return Err("teacher target exceeds declared student output range".into()); }
+        Ok(SupervisedSample {inputs:self.normalize(sensors)?,targets})
+    }
+    pub fn sample(&self, sensors: &[f64]) -> Result<Vec<f64>, String> {
+        let mut values=self.normalize(sensors)?;
         for layer in &self.network.layers {
             let mut next = Vec::with_capacity(layer.biases.len());
             for (row,bias) in layer.weights.iter().zip(&layer.biases) {
@@ -123,4 +141,54 @@ impl BoundNetwork {
         Ok(output)
     }
     pub fn definition(&self) -> &Network { &self.network }
+}
+
+impl Network {
+    /// Mean squared normalized-output error and exact parameter gradient.
+    /// Ordering matches parameters(): output-major weights then biases per layer.
+    pub fn supervised_gradient(&self, samples: &[SupervisedSample]) -> Result<(f64,Vec<f64>),String> {
+        self.validate()?;
+        if samples.is_empty() { return Err("supervised batch must not be empty".into()); }
+        let mut gradient=self.layers.iter().map(|l| Layer {weights:l.weights.iter().map(|r|vec![0.;r.len()]).collect(),biases:vec![0.;l.biases.len()]}).collect::<Vec<_>>();
+        let mut loss=0.0;
+        let denominator=(samples.len()*self.outputs.len()) as f64;
+        for sample in samples {
+            if sample.inputs.len()!=self.features.len() || sample.targets.len()!=self.outputs.len()
+                || sample.inputs.iter().chain(&sample.targets).any(|v|!v.is_finite())
+                || sample.targets.iter().any(|v|v.abs()>1.0) { return Err("invalid supervised sample shape/values".into()); }
+            let mut activations=vec![sample.inputs.clone()];
+            for layer in &self.layers {
+                let previous=activations.last().unwrap();
+                let mut next=Vec::with_capacity(layer.biases.len());
+                for (row,bias) in layer.weights.iter().zip(&layer.biases) {
+                    let z=row.iter().zip(previous).fold(*bias,|s,(w,x)|s+w*x);
+                    if !z.is_finite() { return Err("nonfinite supervised activation".into()); }
+                    next.push(z.tanh());
+                }
+                activations.push(next);
+            }
+            let output=activations.last().unwrap();
+            let mut delta=Vec::with_capacity(output.len());
+            for (&y,&target) in output.iter().zip(&sample.targets) {
+                loss+=(y-target).powi(2)/denominator;
+                delta.push(2.0*(y-target)*(1.0-y*y)/denominator);
+            }
+            for l in (0..self.layers.len()).rev() {
+                for (j,&d) in delta.iter().enumerate() {
+                    gradient[l].biases[j]+=d;
+                    for (k,&x) in activations[l].iter().enumerate() {gradient[l].weights[j][k]+=d*x;}
+                }
+                if l>0 {
+                    let mut previous=vec![0.0;activations[l].len()];
+                    for (k,d) in previous.iter_mut().enumerate() {
+                        *d=delta.iter().enumerate().map(|(j,v)|self.layers[l].weights[j][k]*v).sum::<f64>()*(1.0-activations[l][k].powi(2));
+                    }
+                    delta=previous;
+                }
+            }
+        }
+        let gradient=gradient.iter().flat_map(|l|l.weights.iter().flatten().chain(&l.biases)).copied().collect::<Vec<_>>();
+        if !loss.is_finite() || gradient.iter().any(|v|!v.is_finite()) {return Err("nonfinite supervised loss/gradient".into());}
+        Ok((loss,gradient))
+    }
 }

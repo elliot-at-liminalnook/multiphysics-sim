@@ -32,6 +32,10 @@ pub struct PolicyConfig {
     /// Bounded neural angle corrections applied after baseline Rhai feedback.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub neural_residual: Option<sim_domain_control::neural::Network>,
+    /// Omit optional body/point motor-feedback suggestions when the controller
+    /// does not consume them. Planner definitions remain available separately.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub feedback_observations: Option<bool>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -146,6 +150,7 @@ impl SampledPolicy {
         let body_feedback = config
             .body_feedback
             .clone()
+            .filter(|_| config.feedback_observations != Some(false))
             .map(|c| BodyFeedback::new(art, c))
             .transpose()?;
         if body_feedback.is_some() {
@@ -160,6 +165,7 @@ impl SampledPolicy {
         let point_feedback = config
             .point_feedback
             .clone()
+            .filter(|_| config.feedback_observations != Some(false))
             .map(|c| PointFeedback::new(art, c))
             .transpose()?;
         if point_feedback.is_some() {

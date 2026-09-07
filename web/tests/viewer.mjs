@@ -202,12 +202,12 @@ try {
   assert(!(await page.locator('#motion-progress').isVisible()));
   checks.push('synthetic missing-support timeout is visible, replayable, and recoverable by reset');
  }
- for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact','robot-residual-policy','robot-neural-teacher']) {
+ for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact','robot-residual-policy','robot-neural-teacher','robot-distilled-student']) {
   if(!catalog.presets.some(p=>p.id===id))continue;
   await page.locator('#preset').selectOption(id);await ready();
   assert(await page.locator('#learning-progress').isVisible());
   assert.match(await page.locator('#input-help').textContent(),/20 ms/);
-  if(id==='robot-neural-teacher'){
+  if(['robot-neural-teacher','robot-distilled-student'].includes(id)){
     assert.equal(await page.locator('#inputs input:disabled').count(),16);
     assert(!(await page.locator('#residual-inputs').isVisible()));
     await page.locator('#neural-residuals summary').click();
@@ -225,10 +225,10 @@ try {
   assert.equal(await page.locator('#sim-time').textContent(),'0.020 s');
   assert.match(await page.locator('#learning-progress').textContent(),/Last 20 ms score:/);
   const score=await page.locator('#learning-progress').textContent();
-  const neuralText=id==='robot-neural-teacher'?await page.locator('#neural-residuals').textContent():null;
+  const neuralText=['robot-neural-teacher','robot-distilled-student'].includes(id)?await page.locator('#neural-residuals').textContent():null;
   if(neuralText){
     const outputs=[...neuralText.matchAll(/: (-?\d+\.\d+) rad/g)].map(m=>Number(m[1]));
-    assert.equal(outputs.length,12);assert(outputs.some(v=>v!==0));assert(outputs.every(v=>Math.abs(v)<=.001));
+    assert.equal(outputs.length,12);assert(outputs.some(v=>v!==0));assert(outputs.every(v=>Math.abs(v)<=(id==='robot-distilled-student'?.05:.001)));
   }
   const download=page.waitForEvent('download');await page.locator('#download').click();
   const recipe=JSON.parse(await readFile(await (await download).path()));
@@ -238,7 +238,7 @@ try {
   if(neuralText){
     assert.equal(await page.locator('#neural-residuals').textContent(),neuralText);
     assert.equal(recipe.runtime.config.policy.neural_residual.outputs.length,12);
-    checks.push('neural teacher: live bounded output readouts, policy artifact recording and exact visible replay');
+    checks.push(id+': live bounded output readouts, policy artifact recording and exact visible replay');
   }
   if(id==='robot-residual-policy'){
     assert.equal(recipe.runtime.input_events[0].values[6],.001);

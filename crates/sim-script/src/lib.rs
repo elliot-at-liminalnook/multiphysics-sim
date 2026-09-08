@@ -110,6 +110,14 @@ fn engine(sources: Sources, parameters: Map, seed: u64) -> Engine {
     engine.on_print(|s| eprintln!("{s}"));
     engine.register_fn("parameters", move || parameters.clone());
     engine.register_fn("seed", move || seed as rhai::INT);
+    // Same pure update and validation used by control.angle_integral's registry
+    // adapter. Scripts retain ordinary numeric state, so reset/replay stays local.
+    engine.register_fn("angle_integral_update", |bias: rhai::FLOAT, correction: rhai::FLOAT,
+        enabled: bool, parameters: Map| -> ScriptResult<rhai::FLOAT> {
+        let config = rhai::serde::from_dynamic(&Dynamic::from(parameters))?;
+        sim_domain_control::angle_integral::AngleIntegral::new(config).map_err(error)?
+            .update(bias, correction, enabled).map_err(error)
+    });
     engine
 }
 

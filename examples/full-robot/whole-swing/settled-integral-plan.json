@@ -1,0 +1,176 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "integral-0",
+      "scene": "runs/full-robot/learning/settled-integral/integral-0.scene.json",
+      "config": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "actions": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "seed": 0,
+      "scenario": "heldout-forward-mirrored-turn-forward-reverse-stop",
+      "forward_front_support_x_m": -0.024,
+      "split": "development-after-revealed-holdout-failure",
+      "settled_point_gain_scale": 0,
+      "maximum_settled_body_gain": 1.5,
+      "integral_gain_per_s": 0
+    },
+    {
+      "name": "integral-0.5",
+      "scene": "runs/full-robot/learning/settled-integral/integral-0.5.scene.json",
+      "config": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "actions": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "seed": 0,
+      "scenario": "heldout-forward-mirrored-turn-forward-reverse-stop",
+      "forward_front_support_x_m": -0.024,
+      "split": "development-after-revealed-holdout-failure",
+      "settled_point_gain_scale": 0,
+      "maximum_settled_body_gain": 1.5,
+      "integral_gain_per_s": 0.5
+    },
+    {
+      "name": "integral-1",
+      "scene": "runs/full-robot/learning/settled-integral/integral-1.scene.json",
+      "config": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "actions": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "seed": 0,
+      "scenario": "heldout-forward-mirrored-turn-forward-reverse-stop",
+      "forward_front_support_x_m": -0.024,
+      "split": "development-after-revealed-holdout-failure",
+      "settled_point_gain_scale": 0,
+      "maximum_settled_body_gain": 1.5,
+      "integral_gain_per_s": 1
+    }
+  ],
+  "previous_capture": {
+    "path": "runs/full-robot/learning/settled-stance/point-release.native.json",
+    "sha256": "dfc576a42c7450e28b5c4f249cec8d12133c643d789eb57901dd313f16f3c2f6"
+  },
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/SETTLED-INTEGRAL-PLAN.md",
+      "sha256": "5ea2d649d48287ee4d1219447248c6dca8edcfb45f960c5e21b62713e0397aea"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-stance-plan.json",
+      "sha256": "4fa5eee5e70c67465fb9422bd6bf2a707cb89d7938ec5e09be0f0530388c2492"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-stance-status.json",
+      "sha256": "ab7adc03034876b164f945ef3fea3f0a2a62f04833c09ab2bd4ee0c2170cb7df"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-teacher.rhai",
+      "sha256": "a2b96ea2c292d84f7ae6cc32099f1786c07a8b56d69c6abd9e6ead311cb53c07"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_settled_integral.mjs",
+      "sha256": "3b4a91b97dd11b0258d818fd9d8b99ac357be81d974115f0ffc4f17516b0d1cb"
+    },
+    {
+      "path": "crates/sim-domain-control/src/angle_integral.rs",
+      "sha256": "011989b663d3e92c172c4d5c83b45f53bdc3ab9bf9b14c06241f79df1e3c6834"
+    },
+    {
+      "path": "crates/sim-domain-control/src/elements.rs",
+      "sha256": "b7a1fad71e2d89a90b8d49f7383205e0753ce04f0ba20d2fa088066779f430d7"
+    },
+    {
+      "path": "crates/sim-script/src/lib.rs",
+      "sha256": "3e0c21c97a8c42a8b2561c4eb516dc01492a7c1539f692c06cfe0fbf641ddd7e"
+    },
+    {
+      "path": "crates/sim-script/Cargo.toml",
+      "sha256": "9cb7639913af3c292db5847ff65d6ff4e0695aac33903d2f54c3522326271ac6"
+    },
+    {
+      "path": "crates/sim-domain-control/tests/angle_integral.rs",
+      "sha256": "64f1eb560a860b59d379a0bb78ba218924898d54e6cfd2159bf65a22d78c5233"
+    },
+    {
+      "path": "crates/sim-script/tests/angle_integral.rs",
+      "sha256": "6c52dd566b338fab1558f414c080665182dd5284c0e53f12d5926f243f9e2b44"
+    },
+    {
+      "path": "runs/angle-integral-final-tests.log",
+      "sha256": "9a9c0890f69c5d2ef796eca24e60dea69ab54fd6c573e0a8802d2fe47a88ece0"
+    },
+    {
+      "path": "runs/angle-integral-rhai-tests.log",
+      "sha256": "a7755569be97c34f45ffdeb0d67ea0a482f395694ec277577815dc69ee0b63aa"
+    },
+    {
+      "path": "runs/angle-integral-native-build.log",
+      "sha256": "153839893be917cf8c0eb55aaafa8529f5c43ebe3729f22cb14abe4aaa00ca68"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "cb4d8d2f7df6077765af69c7168eb2087f923d2f6f3a502b99673262624c372a"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "67838f37b4c6ec14ae3ccfcb9489023bf6f8e2d55a477aa9d11cc8b8c8901a34"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral/integral-0.scene.json",
+      "sha256": "0abc884f56a5071bd0dd7ff467d0b2049c641934d019f4e4a42c19007f8d4aa0"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral/integral-0.5.scene.json",
+      "sha256": "758e1e5eebfd03d938607d096e15f3b7da5fa9ce692491611ab8d3eee68a1b65"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral/integral-1.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-stance/point-release.native.json",
+      "sha256": "dfc576a42c7450e28b5c4f249cec8d12133c643d789eb57901dd313f16f3c2f6"
+    }
+  ],
+  "scope": "Predeclared bounded integral gains 0/0.5/1 per second at stable proportional gain. Same revealed 32-second development inputs, fine physics, CAD and task budgets. Require exact gain-zero reference and pre-stop frames. Bias is a rate-limited motor target correction, never a pose or force override. No held-out or browser qualification."
+}

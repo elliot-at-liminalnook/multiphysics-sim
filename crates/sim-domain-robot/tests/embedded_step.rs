@@ -80,12 +80,18 @@ fn sdirk_mechanics_uses_two_stages_and_exact_force_clock() {
         assert!((first.endpoint_reduced_velocity[0]-gamma*0.2).abs()<1e-12);
         assert!((second.seed_reduced_velocity[0]-(1.-gamma)*0.2).abs()<1e-12);
         assert!((second.endpoint_reduced_velocity[0]-0.2).abs()<1e-12);
+        assert_eq!(first.initial_reduced_velocity_guess,first.seed_reduced_velocity);
+        assert_eq!(second.initial_reduced_velocity_guess,first.endpoint_reduced_velocity);
         assert!(!first.newton.iterations.is_empty());
         assert_eq!(second.endpoint_joint_positions,audited.endpoint.generalized.q);
         audited_config.newton_audit_window_s=Some([0.5,0.6]);
         let outside=map.advance_implicit_mechanics(&g,0.3,0.1,&audited_config,&HybridConfig::default(),loads).unwrap();
         assert!(outside.segments[0].diagnostics.endpoint_audit.is_none());
         assert!(outside.segments[0].first_stage_diagnostics.as_ref().unwrap().endpoint_audit.is_none());
+        let mut ordinary=config.clone();ordinary.sdirk2=false;
+        let invalid=vec![f64::NAN;first.seed_reduced_velocity.len()];
+        assert!(map.step_implicit_with_velocity_guess(&g,0.3,0.1,&ordinary,&invalid,loads).unwrap_err().contains("velocity guess"));
+        assert!(map.step_implicit_with_velocity_guess(&g,0.3,0.1,&ordinary,&[],loads).unwrap_err().contains("velocity guess"));
         let before=workspace.clone();let mut after=before.clone();
         assert!(map.advance_implicit_mechanics_cached(&g,0.,0.1,&config,&HybridConfig::default(),&mut after,|_,_|Err("stage failure".into())).is_err());
         assert!(map.step_implicit(&g,0.,0.1,&config,|_,_|Ok(vec![])).unwrap_err().contains("mechanical advancement adapter"));

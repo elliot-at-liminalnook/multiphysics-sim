@@ -542,3 +542,18 @@ already uses the first physical stage as the next Newton guess; the mechanical
 adapter instead uses the affine seed. Testing that difference is the next
 bounded experiment. The current evidence locates the jump but does not yet
 prove another guess finds a bounded solution or qualifies coarse integration.
+
+Starting the second mechanical solve from the first physical stage removes
+both coarse early failures. Both 20 ms controllers now finish 24 seconds with
+zero sampled internal collisions and sampled maximum gear speeds below
+1.8 rad/s. The 41 mechanical/linkage tests pass, including invalid-guess
+rejection and exact analytic audit values. The rebuilt default-off backward
+Euler capture preserves all 1,201 physical frames and task transitions exactly.
+
+This is a stability improvement, not qualification: teacher fails one of
+15 swings and ends at **1.418 mm** body error; student passes all 15 swings
+but ends at **2.917 mm**. Teacher versus the 1.25 ms reference differs by
+**1.766 mm foot / 1.669 mm body**, failing both unchanged trajectory budgets.
+Native compute is **1.029× teacher / 1.946× student**; these are not browser
+rates. `sdirk-physical-guess-summary.json` retains every result. Finer teacher
+steps are the next accuracy/cost screen; no coarse recipe is promoted.

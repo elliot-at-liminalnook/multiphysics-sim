@@ -173,6 +173,7 @@ pub struct ImplicitEndpointAudit {
     pub equation_start_time_s: f64,
     pub equation_step_s: f64,
     pub seed_reduced_velocity: Vec<f64>,
+    pub initial_reduced_velocity_guess: Vec<f64>,
     pub endpoint_reduced_velocity: Vec<f64>,
     pub seed_joint_positions: Vec<f64>,
     pub endpoint_joint_positions: Vec<f64>,
@@ -274,6 +275,29 @@ impl RigidEmbedding<'_> {
         })
     }
 
+    /// Solve the same mechanical backward-Euler equation with an explicit
+    /// finite reduced-velocity Newton guess. The guess never changes the seed,
+    /// residual, tolerances or accepted endpoint checks. It is useful when the
+    /// equation seed is an affine anchor of a multistage method.
+    pub fn step_implicit_with_velocity_guess<F>(
+        &self,
+        seed: &Generalized,
+        time_s: f64,
+        step_s: f64,
+        config: &ImplicitStepConfig,
+        velocity_guess: &[f64],
+        loads: F,
+    ) -> Result<EmbeddedImplicitStep, String>
+    where
+        F: Fn(f64, &Generalized) -> Result<Vec<f64>, String>,
+    {
+        self.step_implicit_coupled_cached_with_guess(seed, &[], time_s, step_s,
+            config, &mut ImplicitSolverWorkspace::default(), Some(velocity_guess), None,
+            |t, _, g, _, _| Ok(CoupledForces {
+                generalized_loads: loads(t, g)?, auxiliary_residuals: vec![],
+            }))
+    }
+
     /// Solve mechanics and additional component equations simultaneously.
     /// `coupling(end_time, step, trial_mechanics, trial_auxiliary)` MUST be pure
     /// and capture the previous component states immutably. It may use existing
@@ -350,6 +374,26 @@ impl RigidEmbedding<'_> {
     where
         F: Fn(f64, f64, &Generalized, &[f64], &[f64]) -> Result<CoupledForces, String>,
     {
+        self.step_implicit_coupled_cached_with_guess(seed, auxiliary_seed, time_s, step_s,
+            config, workspace, None, auxiliary_coloring, coupling)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn step_implicit_coupled_cached_with_guess<F>(
+        &self,
+        seed: &Generalized,
+        auxiliary_seed: &[f64],
+        time_s: f64,
+        step_s: f64,
+        config: &ImplicitStepConfig,
+        workspace: &mut ImplicitSolverWorkspace,
+        mechanical_guess: Option<&[f64]>,
+        auxiliary_coloring: Option<&BlockDiagonalColoring>,
+        coupling: F,
+    ) -> Result<EmbeddedImplicitStep, String>
+    where
+        F: Fn(f64, f64, &Generalized, &[f64], &[f64]) -> Result<CoupledForces, String>,
+    {
         self.validate_seed(seed)?;
         if config.sdirk2 {
             return Err("SDIRK2 requires the pure mechanical advancement adapter".into());
@@ -413,6 +457,9 @@ impl RigidEmbedding<'_> {
         }
         let old_u = self.reduced_velocity(seed);
         let n = old_u.len();
+        if mechanical_guess.is_some_and(|u| u.len() != n || u.iter().any(|v| !v.is_finite())) {
+            return Err("invalid initial mechanical velocity guess".into());
+        }
         let selected: Vec<_> = (0..self.base_columns)
             .chain(self.independent.iter().map(|i| self.base_columns + i))
             .collect();
@@ -726,7 +773,7 @@ impl RigidEmbedding<'_> {
                 r.fill(f64::NAN);
             }
         };
-        let mut u = old_u.clone();
+        let mut u = mechanical_guess.map_or_else(|| old_u.clone(), |guess| guess.to_vec());
         if config.condense_auxiliary {
             // Auxiliary states are solved inside each mechanical trial.
         } else if config.auxiliary_rate_unknowns {
@@ -791,6 +838,7 @@ impl RigidEmbedding<'_> {
             .newton_audit_window_s
             .filter(|[from, until]| time_s >= *from && time_s <= *until)
             .map(|_| NewtonAudit::default());
+        let initial_reduced_velocity_guess = audit.as_ref().map(|_| u[..n].to_vec());
         let mut exact_jacobian_fallback = None;
         let nonlinear = if u.is_empty() {
             SolveDiagnostics {
@@ -910,6 +958,7 @@ impl RigidEmbedding<'_> {
             equation_start_time_s: time_s,
             equation_step_s: step_s,
             seed_reduced_velocity: old_u,
+            initial_reduced_velocity_guess: initial_reduced_velocity_guess.expect("enabled endpoint audit"),
             endpoint_reduced_velocity: self.reduced_velocity(&a.generalized),
             seed_joint_positions: seed.q.clone(),
             endpoint_joint_positions: a.generalized.q.clone(),

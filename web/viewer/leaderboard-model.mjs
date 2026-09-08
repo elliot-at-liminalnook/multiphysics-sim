@@ -1,7 +1,7 @@
 // Shared by packaging, browser display and integrity tests. Missing evidence
 // never satisfies a gate; physical travel and compute throughput are distinct.
 export const requiredGates = ['sustained_walk', 'turn_reverse_stop', 'disturbances',
-  'terrain', 'numerical_accuracy', 'browser_realtime', 'replay_parity'];
+  'terrain', 'contact_motion', 'numerical_accuracy', 'browser_realtime', 'replay_parity'];
 export function eligible(entry) {
   return requiredGates.every(key => entry.gates?.[key]?.status === 'pass') &&
     entry.metrics.task_passed === true &&

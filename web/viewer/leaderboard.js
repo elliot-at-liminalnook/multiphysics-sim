@@ -1,7 +1,7 @@
 import {eligible, rankEntries, requiredGates, validateEntry} from './leaderboard-model.mjs';
 const el = (tag, text, className) => { const node = document.createElement(tag); if (text != null) node.textContent = text; if (className) node.className = className; return node; };
 const value = (v, digits = 2, unit = '') => Number.isFinite(v) ? `${v.toFixed(digits)}${unit}` : 'Not measured';
-const labels = {sustained_walk: 'Sustained walk', turn_reverse_stop: 'Turning, reverse, stop', disturbances: 'Held-out disturbances', terrain: 'Harder terrain', numerical_accuracy: 'Numerical accuracy', browser_realtime: 'Browser realtime', replay_parity: 'Replay and host parity'};
+const labels = {sustained_walk: 'Sustained walk', turn_reverse_stop: 'Turning, reverse, stop', disturbances: 'Held-out disturbances', terrain: 'Harder terrain', contact_motion: 'Loaded contact motion', numerical_accuracy: 'Numerical accuracy', browser_realtime: 'Browser realtime', replay_parity: 'Replay and host parity'};
 export async function installLeaderboard({load, pause}) {
   const response = await fetch('leaderboard.json'); if (!response.ok) throw Error('Controller evaluations could not load');
   const data = await response.json(); if (data.version !== 1) throw Error('Unsupported evaluation catalog');

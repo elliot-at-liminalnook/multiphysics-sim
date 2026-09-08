@@ -59,21 +59,48 @@ const integralBrowserPath = 'examples/full-robot/whole-swing/settled-integral-br
 const integralBrowserIntegrityPath = 'examples/full-robot/whole-swing/settled-integral-browser-integrity.json';
 assert(integralBrowser.complete && read(integralBrowserIntegrityPath).passed);
 const integralContactPath = 'examples/full-robot/whole-swing/settled-integral-minute-contact-motion.json';
+const contactScreenPath = 'examples/full-robot/whole-swing/contact-smoothing-summary.json', contactScreen = read(contactScreenPath);
+const integralContactScreen = contactScreen.cases.find(c => c.name === 'slip-1mm-s-reference');
+assert.equal(integralContactScreen.capture.sha256, integralMinute.sources.find(s => s.path.endsWith('.native.json')).sha256);
+const integralContactGate = {status: integralContactScreen.prospective_anti_sliding_screen_passed ? 'pass' : 'fail',
+  detail: `Frozen controller minute: worst-foot integrated load-weighted contact motion is ${(100 * integralContactScreen.maximum_contact_motion_to_body_advance_ratio).toFixed(1)}% of net body advance; prospective limit ${(100 * contactScreen.maximum_contact_motion_to_body_advance_ratio).toFixed(0)}%. Sampled flat-floor diagnostic, not a slip-free or hardware certificate.`};
+const directPath = 'examples/full-robot/whole-swing/direct-support-status.json', direct = read(directPath);
+const directSummaryPath = 'examples/full-robot/whole-swing/direct-support-summary.json', directSummary = read(directSummaryPath);
+assert(direct.complete);
+const directBrowserPath = 'examples/full-robot/whole-swing/direct-support-browser-status.json', directBrowser = read(directBrowserPath);
+const directBrowserIntegrityPath = 'examples/full-robot/whole-swing/direct-support-browser-integrity.json';
+assert(directBrowser.complete && read(directBrowserIntegrityPath).passed);
+const directMinute = direct.cases.find(c => c.name === 'direct-minute'), directSteering = direct.cases.find(c => c.name === 'direct-steering');
+const directMotion = directSummary.cases.find(c => c.name === 'direct-minute');
+const directContactGate = {status: directMotion.minute_anti_sliding_screen_passed ? 'pass' : 'fail',
+  detail: `Associated minute has ${(100 * directMotion.contact_motion_to_body_advance_ratio).toFixed(1)}% worst-foot loaded contact motion versus a ${(100 * directSummary.maximum_contact_motion_to_body_advance_ratio).toFixed(0)}% limit. This sampled diagnostic and the failed minute heading gate keep the controller experimental.`};
 const definitions = [
+  {id: 'direct-support-minute', name: 'Direct weight transfer teacher', description: 'Moves directly between support postures with the same planned foot landings and CAD robot. Measured travel is 3.70 mm/s with 41 qualified swings. Loaded contact motion improves to 45% of body advance but fails 5%; final heading also fails. Uses privileged feedback.',
+    scene: 'examples/full-robot/whole-swing/settled-integral-candidate.scene.json', config: 'examples/full-robot/whole-swing/direct-support-minute.config.json',
+    capture: directMinute.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(directMinute.acceptance.source.path), evidence: directPath,
+    commands: true, contactMotion: directContactGate, partialParity: true,
+    extraEvidence: [directSummaryPath, 'examples/full-robot/whole-swing/direct-support-integrity.json', directBrowserPath, directBrowserIntegrityPath]},
+  {id: 'direct-support-steering', name: 'Direct weight transfer steering', description: 'All 15 development steering swings pass, with 0.35 mm final position error and heading near its limit. Native/WASM agreement and exact replay pass. Rendered pace is 0.42x with 89.5 ms p95. The associated minute fails heading and loaded-contact-motion requirements.',
+    scene: 'examples/full-robot/whole-swing/settled-integral-candidate.scene.json', config: 'examples/full-robot/whole-swing/direct-support-steering.config.json',
+    capture: directSteering.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(directSteering.acceptance.source.path), evidence: directPath,
+    commands: true, benchmark: 'flat-steering-24s-v1', contactMotion: directContactGate,
+    performance: directBrowser.cases.find(c => c.name === 'direct-turn').measurement,
+    parity: directBrowser.parity.passed && directBrowser.parity.replay_exact && directBrowser.parity.reset_exact,
+    extraEvidence: [directSummaryPath, 'examples/full-robot/whole-swing/direct-support-integrity.json', directBrowserPath, directBrowserIntegrityPath]},
   {id: 'integral-teacher-minute', name: 'Walking teacher with bounded stance correction', description: 'Measures 3.78 mm/s with 41 qualified minute-long swings. Mixed steering, two fresh command cases and timestep agreement pass. Loaded contact motion is substantial: 152–198 mm per foot during 213 mm body advance. Browser pace is 0.42x with 93.5 ms p95; this remains experimental.',
     scene: 'examples/full-robot/whole-swing/settled-integral-candidate.scene.json', config: 'examples/full-robot/whole-swing/settled-integral-minute.config.json',
     capture: integralMinute.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(integralMinute.acceptance.source.path), evidence: integralPath,
-    commands: true, numerical: 'examples/full-robot/whole-swing/settled-integral-regression-refinement.json', partialParity: true,
+    commands: true, numerical: 'examples/full-robot/whole-swing/settled-integral-regression-refinement.json', partialParity: true, contactMotion: integralContactGate,
     performance: integralBrowser.cases.find(c => c.name === 'teacher-minute').measurement,
     disturbance: {status: 'pass', detail: 'Frozen 48-second held-out command sequence passes with -0.75 N lateral and -0.5 N forward-axis pulses; all three stop checkpoints pass. This bounded flat-floor test does not establish a broad disturbance distribution.'},
-    extraEvidence: [integralSummaryPath, 'examples/full-robot/whole-swing/settled-integral-regression-integrity.json', integralBrowserPath, integralBrowserIntegrityPath, integralContactPath]},
+    extraEvidence: [integralSummaryPath, 'examples/full-robot/whole-swing/settled-integral-regression-integrity.json', integralBrowserPath, integralBrowserIntegrityPath, integralContactPath, contactScreenPath]},
   {id: 'integral-teacher-steering', name: 'Steering teacher with bounded stance correction', description: 'All 15 development steering swings pass with 0.34 mm final stop error. Native/WASM agreement and exact replay pass. Rendered pace is 0.40x with 92.7 ms p95. The same teacher shows substantial loaded sliding in its minute test; terrain and deployable sensing remain open.',
     scene: 'examples/full-robot/whole-swing/settled-integral-candidate.scene.json', config: 'examples/full-robot/whole-swing/settled-integral-steering.config.json',
     capture: integralSteering.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(integralSteering.acceptance.source.path), evidence: integralPath,
-    commands: true, benchmark: 'flat-steering-24s-v1',
+    commands: true, benchmark: 'flat-steering-24s-v1', contactMotion: integralContactGate,
     performance: integralBrowser.cases.find(c => c.name === 'teacher-turn').measurement,
     parity: integralBrowser.parity.passed && integralBrowser.parity.replay_exact && integralBrowser.parity.reset_exact,
-    extraEvidence: [integralSummaryPath, 'examples/full-robot/whole-swing/settled-integral-regression-integrity.json', integralBrowserPath, integralBrowserIntegrityPath, integralContactPath]},
+    extraEvidence: [integralSummaryPath, 'examples/full-robot/whole-swing/settled-integral-regression-integrity.json', integralBrowserPath, integralBrowserIntegrityPath, integralContactPath, contactScreenPath]},
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
     capture: browser.minute_walking.capture.path, acceptance: browser.minute_walking, evidence: browserPath,
@@ -196,6 +223,7 @@ for (const d of definitions) {
     turn_reverse_stop: gate(d.heldoutCommandsFailed ? 'fail' : d.commands ? 'pass' : d.commandsFailed ? 'fail' : 'missing', d.heldoutCommandsFailed ? 'Development steering passes, but the predeclared mirrored-turn-to-forward sequence fails planned static support at 14.84 s.' : d.commands ? 'The associated controller has a passing forward/turn/reverse/stop case.' : d.commandsFailed ? 'Live turning loses planned static support before the reverse command is reached; native inputs reproduce the failure.' : 'Full steering coverage at this speed is not associated with this entry.'),
     disturbances: d.disturbance ?? gate('missing', 'Broader held-out disturbance requirements are not yet established.'),
     terrain: gate('missing', 'This entry is a flat-floor experiment; progressively harder terrain is outstanding.'),
+    contact_motion: d.contactMotion ?? gate('missing', 'No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient.'),
     numerical_accuracy: gate(numericalStatus, numerical ? `Sampled foot difference ${(footDifference * 1000).toFixed(3)} mm; required at most 1 mm, plus a 0.5 mm body screen. ${Number.isFinite(bodyDifference) ? `Body difference ${(bodyDifference * 1000).toFixed(3)} mm.` : 'Body screen not recorded.'}` : 'Solver-option agreement does not establish timestep convergence.'),
     browser_realtime: gate(!d.performance ? 'missing' : performance?.active_motion?.simulation_per_wall_second >= 1 && performance?.active_motion?.transition_p95_s <= .020 ? 'pass' : 'fail', 'Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host.'),
     replay_parity: gate(d.parity ? 'pass' : d.parityFailed ? 'fail' : 'missing', d.parity ? 'Associated native/WASM comparison and same-host replay pass.' : d.parityFailed ? 'The associated native/WASM comparison exceeds the declared portability tolerance; see the recorded differences. Exact same-host replay alone does not pass this gate.' : d.partialParity ? 'The 24-second teacher case passes native/WASM comparison and exact replay/reset; full-minute host parity is not yet established.' : 'No browser parity result is associated with this exact controller profile.'),

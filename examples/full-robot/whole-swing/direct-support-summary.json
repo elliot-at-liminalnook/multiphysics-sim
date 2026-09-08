@@ -1,0 +1,304 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "default-steering",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0003383165766945533,
+        "final_yaw_error_rad": 0.00015195622494797514,
+        "maximum_body_tilt_rad": 0.004173164422446213,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027848439336634043,
+          0.00010040695259032253,
+          -0.0001868992412273028
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/direct-support/default-steering-acceptance/summary.json",
+          "sha256": "c3725efa61c5d35687cda7728b7625636b822cb58564e01afbe8b2b22478bdee"
+        }
+      },
+      "default_frames_transitions_recording_exact": true,
+      "verified_forward_landings": 0,
+      "maximum_forward_landing_difference_m": 0,
+      "contact_motion_to_body_advance_ratio": 3.0383466704338606,
+      "minute_anti_sliding_screen_passed": null,
+      "maximum_sampled_reference_speed_m_s": 0.2051942241750069,
+      "maximum_sampled_reference_acceleration_m_s2": 2.5645245750534005,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 8.4,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 220,
+          "measured_sustained_speed_m_s": 0.0036070814215485836,
+          "net_projected_speed_m_s": 0.009679878271099158,
+          "axis_world": [
+            0.9999998145196206,
+            -0.0006090654515667041,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 44.842426795,
+        "simulation_per_wall": 0.5352074300018935,
+        "transition_p95_s": 0.078908223
+      },
+      "positive_mechanical_work_j": 2.46684739820921,
+      "capture": {
+        "path": "runs/full-robot/learning/direct-support/default-steering.native.json",
+        "sha256": "91809e0f1b1c7d0de9a011195711fa49a999c3666d4cf82319da499ca69c797b"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-default-steering-metrics.json",
+          "sha256": "fb0f7f8ecca0d35dc1a968191c1032786910e55c901c6cc4d7df70bb37b5a0e4"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-default-steering-contact.json",
+          "sha256": "36e6943d258a2dbab784e81ebc4fa65304589859b6deb1d6f87d79ebe5577dff"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-default-steering-phases.json",
+          "sha256": "a2b1afb335f715f9ce01d07d6e35317b7e46d64520a4b0ad44d3c1b3e8c203ca"
+        }
+      ]
+    },
+    {
+      "name": "direct-minute",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007529503113993762,
+        "final_yaw_error_rad": 0.013614807720944777,
+        "maximum_body_tilt_rad": 0.00417642363789965,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21148711302864406,
+          -0.00018354095677435928,
+          -0.0002450681604409394
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/direct-support/direct-minute-acceptance/summary.json",
+          "sha256": "a1e2b8c987700c0cd4879ae9036719763d4d2bdb4b25cc23931ebbd4211c8000"
+        }
+      },
+      "default_frames_transitions_recording_exact": null,
+      "verified_forward_landings": 41,
+      "maximum_forward_landing_difference_m": 4.440892098500626e-16,
+      "contact_motion_to_body_advance_ratio": 0.45179176964174855,
+      "minute_anti_sliding_screen_passed": false,
+      "maximum_sampled_reference_speed_m_s": 0.12923790972059124,
+      "maximum_sampled_reference_acceleration_m_s2": 0.6839334072776231,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.003696378951409992,
+          "net_projected_speed_m_s": 0.004141214485567156,
+          "axis_world": [
+            0.9999961758182888,
+            -0.002765564824418445,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 118.386645293,
+        "simulation_per_wall": 0.5068139218870804,
+        "transition_p95_s": 0.078076397
+      },
+      "positive_mechanical_work_j": 6.24374359242557,
+      "capture": {
+        "path": "runs/full-robot/learning/direct-support/direct-minute.native.json",
+        "sha256": "0f4c58fefcdf0077e870f65f50fc0311b07c54efe2ec9d8ce5102376acdc4c19"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-direct-minute-metrics.json",
+          "sha256": "e7fda27f326807283da321c74ad29d2d22830da2ee0fb70668051653aad2e8c5"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-direct-minute-contact.json",
+          "sha256": "93c33700799a14861acef8cd400e85cfc2d23492f15662fec1ee3491f4f2cb88"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-direct-minute-phases.json",
+          "sha256": "7b4ba3c811dc88f996ab27b48856fcbb2fa155ea7673f39bf9d337784e7eca42"
+        }
+      ]
+    },
+    {
+      "name": "direct-steering",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0003486838799393154,
+        "final_yaw_error_rad": 0.004526924641219822,
+        "maximum_body_tilt_rad": 0.004161834108511887,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02735567102480652,
+          0.0000704292900998782,
+          -0.00022592002025400952
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/direct-support/direct-steering-acceptance/summary.json",
+          "sha256": "1780f63a8a36e1be7b5e1852369afff21d7df1e0250c3a009dcb60fbcd705107"
+        }
+      },
+      "default_frames_transitions_recording_exact": null,
+      "verified_forward_landings": 0,
+      "maximum_forward_landing_difference_m": 0,
+      "contact_motion_to_body_advance_ratio": 1.2774845633503378,
+      "minute_anti_sliding_screen_passed": null,
+      "maximum_sampled_reference_speed_m_s": 0.12923790972056814,
+      "maximum_sampled_reference_acceleration_m_s2": 0.6839334072765929,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 8.4,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 220,
+          "measured_sustained_speed_m_s": 0.006718347941524395,
+          "net_projected_speed_m_s": 0.008491471013763059,
+          "axis_world": [
+            0.9999961758182888,
+            -0.002765564824418445,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 44.70296216,
+        "simulation_per_wall": 0.5368771741366859,
+        "transition_p95_s": 0.077825988
+      },
+      "positive_mechanical_work_j": 2.116724356956835,
+      "capture": {
+        "path": "runs/full-robot/learning/direct-support/direct-steering.native.json",
+        "sha256": "c30070d86adb4c1874de1120435fc10eea2323bcb8c1818190e2bcd644f35172"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-direct-steering-metrics.json",
+          "sha256": "f89eb2405db5826dc2191d96eeeb52fcc1a86770f4ad27c21197ac5e45a34458"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-direct-steering-contact.json",
+          "sha256": "36242c03aec232519935a7b5f828583c46d82cfd8dbb068bfcc712fc5aa10b7d"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-direct-steering-phases.json",
+          "sha256": "1500dfefa8ec05fbdd88be879fff1806d84573b8c16f5006f363e3e147da7e78"
+        }
+      ]
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/direct-support-plan.json",
+      "sha256": "ddfb0a88c574510810f14d4997784e90e7e80ffc3a75e98567cb90419d48e626"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/direct-support-status.json",
+      "sha256": "b19a1bbf8e50c9c89fba53092ef1ba614c77d684ed1690e608bc04bb9ce3d7a1"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/direct-support-integrity.json",
+      "sha256": "b2e30b2568b654578d71411080115ac8e1ef1225bbcecb264962df594f87f337"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_direct_support.mjs",
+      "sha256": "8214e653e1099d2497ed1216cc6e21411947b1a511c40dbf165efc5cf4ba9c1a"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "browser_promoted": false,
+  "scope": "Default full identity and explicit direct body-transfer path. Planned forward foot landings stay unchanged; body reference path and phase allocation change. Sampled reference acceleration is not actual body acceleration. Original task and prospective minute contact screen are separate, with failed prefixes retained. No browser, timestep, fresh held-out or terrain qualification."
+}

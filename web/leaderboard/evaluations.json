@@ -2,6 +2,509 @@
   "version": 1,
   "entries": [
     {
+      "id": "direct-support-minute",
+      "name": "Direct weight transfer teacher",
+      "description": "Moves directly between support postures with the same planned foot landings and CAD robot. Measured travel is 3.70 mm/s with 41 qualified swings. Loaded contact motion improves to 45% of body advance but fails 5%; final heading also fails. Uses privileged feedback.",
+      "benchmark_version": "flat-forward-stop-60s-v1",
+      "controller_sha256": "03abb5265f59717e213579a1c0bc85d747d0c6832f2d5d73d590da4bd58c1ecc",
+      "model_sha256": "9b2fb42eb2790a0b19c8a7dab7608a78cd1526e062a894010fcf7af734cdcbfa",
+      "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "environment_sha256": "86a7d53eeeceaec4973b2d671d4042958904cba403697d807d835d53a1e3cf76",
+      "fidelity_sha256": "909158e993243e213ca2f2133747768ec81757f55adf29cc7b27108e26b9d0cf",
+      "fidelity_label": "Effective servo · dynamic floor · 1.25 ms",
+      "environment_label": "Flat floor · declared push",
+      "comparison_group": "8c34e25287722a07dff04368e935548ae3d59f6ef16e234e5cb329b5f3c985dc",
+      "load": {
+        "scene": {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        "config": {
+          "path": "examples/full-robot/whole-swing/direct-support-minute.config.json",
+          "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+        },
+        "task": {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        "seed": 0,
+        "asset_sha256": "ad3fda8d234da304b1807a6144cc6d7c249170bba881d56a72acf6bc646a786c"
+      },
+      "replay": {
+        "completed_steps": 48000,
+        "input_events": [
+          {
+            "at_step": 0,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0.00375,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 44800,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "metrics": {
+        "simulated_s": 60,
+        "sustained_speed_m_s": 0.003696378951409992,
+        "speed_window_s": 51.98,
+        "short_speed_m_s": 0.003696378951409992,
+        "task_passed": false,
+        "qualified_swings": 41,
+        "swings": 41,
+        "final_heading_error_rad": 0.013614807720944777,
+        "final_position_error_m": 0.0007529503113993762,
+        "positive_mechanical_work_j": 6.24374359242557,
+        "native_throughput": 0.5068139218870804,
+        "native_hardware": "Not recorded with this capture; not a reference benchmark.",
+        "browser_active_throughput": null,
+        "browser_active_p95_s": null
+      },
+      "browser_host": null,
+      "browser_runtime": null,
+      "gates": {
+        "sustained_walk": {
+          "status": "fail",
+          "detail": "60-second supported-swing, sampled geometry and endpoint audit."
+        },
+        "turn_reverse_stop": {
+          "status": "pass",
+          "detail": "The associated controller has a passing forward/turn/reverse/stop case."
+        },
+        "disturbances": {
+          "status": "missing",
+          "detail": "Broader held-out disturbance requirements are not yet established."
+        },
+        "terrain": {
+          "status": "missing",
+          "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "fail",
+          "detail": "Associated minute has 45.2% worst-foot loaded contact motion versus a 5% limit. This sampled diagnostic and the failed minute heading gate keep the controller experimental."
+        },
+        "numerical_accuracy": {
+          "status": "missing",
+          "detail": "Solver-option agreement does not establish timestep convergence."
+        },
+        "browser_realtime": {
+          "status": "missing",
+          "detail": "Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host."
+        },
+        "replay_parity": {
+          "status": "missing",
+          "detail": "The 24-second teacher case passes native/WASM comparison and exact replay/reset; full-minute host parity is not yet established."
+        }
+      },
+      "evidence": [
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-status.json",
+          "sha256": "b19a1bbf8e50c9c89fba53092ef1ba614c77d684ed1690e608bc04bb9ce3d7a1"
+        },
+        {
+          "path": "web/leaderboard/unretained-scene-fields.json",
+          "sha256": "d214777edc596d04e7d32fd6e150a03c84f2e8cfa898759787016c65ab00cea6"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-summary.json",
+          "sha256": "4d97553d42da77e53c28dc818f70f05d5c99bfc052c5e7a1a924cdce298ffe51"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-integrity.json",
+          "sha256": "b2e30b2568b654578d71411080115ac8e1ef1225bbcecb264962df594f87f337"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-browser-status.json",
+          "sha256": "dc26bbe9f2cc843cb88794f9b0f723b2f011cbda8b98eb52251f791abe600f1f"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-browser-integrity.json",
+          "sha256": "a8a01aaa654d45c94991f68b3406304803395318f428648d71996e691a0e3393"
+        }
+      ],
+      "capture": {
+        "path": "runs/full-robot/learning/direct-support/direct-minute.native.json",
+        "sha256": "0f4c58fefcdf0077e870f65f50fc0311b07c54efe2ec9d8ce5102376acdc4c19"
+      },
+      "measurement": {
+        "version": 1,
+        "capture": {
+          "path": "runs/full-robot/learning/direct-support/direct-minute.native.json",
+          "sha256": "0f4c58fefcdf0077e870f65f50fc0311b07c54efe2ec9d8ce5102376acdc4c19"
+        },
+        "source": {
+          "path": "examples/interactive/analyze_walking_capture.mjs",
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+        },
+        "simulated_s": 60,
+        "body_displacement_world_m": [
+          0.21148711302864406,
+          -0.00018354095677435928,
+          -0.0002450681604409394
+        ],
+        "horizontal_body_path_m": 1.484304507984772,
+        "net_horizontal_displacement_m": 0.21148719267244834,
+        "sustained_windows": [
+          {
+            "command_start_s": 0.02,
+            "start_s": 4.0200000000000005,
+            "end_s": 56,
+            "command": [
+              0.00375,
+              0,
+              0
+            ],
+            "samples": 2600,
+            "measured_sustained_speed_m_s": 0.003696378951409992,
+            "net_projected_speed_m_s": 0.004141214485567156,
+            "axis_world": [
+              0.9999961758182888,
+              -0.002765564824418445,
+              0
+            ]
+          }
+        ],
+        "positive_mechanical_work_j": 6.24374359242557,
+        "positive_mechanical_work_per_net_horizontal_m": 29.523034059541796,
+        "native_compute": {
+          "wall_s": 118.386645293,
+          "simulation_per_wall": 0.5068139218870804,
+          "transition_p95_s": 0.078076397
+        },
+        "conventions": {
+          "steady_command_warmup_s": 4,
+          "loaded_marker_endpoint_force_n": 1,
+          "work_integration": "Trapezoidal samples of shaft torque times gear speed, positive/negative separated; no electrical efficiency or between-sample peak claim."
+        },
+        "scope": "Measurements from sampled shared Rust physics. Body travel is distinct from path length, commands and native compute throughput. Loaded-marker motion is a slip diagnostic, not a contact-patch certificate. No acceptance, calibration, browser-performance or hardware-energy claim."
+      },
+      "limitations": "Uncalibrated CAD-derived simulation, ideal observations and a privileged planner. Sampled marker motion and positive shaft work do not certify slip-free contact or hardware energy use."
+    },
+    {
+      "id": "direct-support-steering",
+      "name": "Direct weight transfer steering",
+      "description": "All 15 development steering swings pass, with 0.35 mm final position error and heading near its limit. Native/WASM agreement and exact replay pass. Rendered pace is 0.42x with 89.5 ms p95. The associated minute fails heading and loaded-contact-motion requirements.",
+      "benchmark_version": "flat-steering-24s-v1",
+      "controller_sha256": "03abb5265f59717e213579a1c0bc85d747d0c6832f2d5d73d590da4bd58c1ecc",
+      "model_sha256": "9b2fb42eb2790a0b19c8a7dab7608a78cd1526e062a894010fcf7af734cdcbfa",
+      "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "environment_sha256": "86a7d53eeeceaec4973b2d671d4042958904cba403697d807d835d53a1e3cf76",
+      "fidelity_sha256": "909158e993243e213ca2f2133747768ec81757f55adf29cc7b27108e26b9d0cf",
+      "fidelity_label": "Effective servo · dynamic floor · 1.25 ms",
+      "environment_label": "Flat floor · declared push",
+      "comparison_group": "5041cb2110d135fbde86e02b6a032bbbe445282ba4328a1b8cfa1e0e1e22cda6",
+      "load": {
+        "scene": {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        "config": {
+          "path": "examples/full-robot/whole-swing/direct-support-steering.config.json",
+          "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+        },
+        "task": {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        "seed": 0,
+        "asset_sha256": "7663a8e1157fc8a17b9205a3d08ca920fcc1e94a3d3a875038b7aaab22c99f11"
+      },
+      "replay": {
+        "completed_steps": 19200,
+        "input_events": [
+          {
+            "at_step": 0,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0.00375,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 6720,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0,
+              0,
+              0.001,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 13440,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              -0.00125,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 16000,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "metrics": {
+        "simulated_s": 24,
+        "sustained_speed_m_s": null,
+        "speed_window_s": 4.38,
+        "short_speed_m_s": 0.006718347941524395,
+        "task_passed": true,
+        "qualified_swings": 15,
+        "swings": 15,
+        "final_heading_error_rad": 0.004526924641219822,
+        "final_position_error_m": 0.0003486838799393154,
+        "positive_mechanical_work_j": 2.116724356956835,
+        "native_throughput": 0.5368771741366859,
+        "native_hardware": "Not recorded with this capture; not a reference benchmark.",
+        "browser_active_throughput": 0.41537775242608393,
+        "browser_active_p95_s": 0.08951499998569488
+      },
+      "browser_host": {
+        "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+        "logical_cpus": 16,
+        "platform": "darwin",
+        "architecture": "x64",
+        "browser": "152.0.7977.76",
+        "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+        "headless": true
+      },
+      "browser_runtime": {
+        "manifest_sha256": "4c6a83f5ed304072c4e305e23d230db43431a50968b38430df68beedd4ec1c57",
+        "browser_module_sha256": "53f6d055e2f4d2a3d02ddd0037059866625409708c5cbe6d9fa8e8ca5d4f8ad0",
+        "compiler_profile": "simd-lto",
+        "settings": {
+          "rustflags": "-C target-feature=+simd128",
+          "lto": "fat",
+          "codegen_units": "1"
+        }
+      },
+      "gates": {
+        "sustained_walk": {
+          "status": "missing",
+          "detail": "Only a short forward/stop case is associated with this recipe."
+        },
+        "turn_reverse_stop": {
+          "status": "pass",
+          "detail": "The associated controller has a passing forward/turn/reverse/stop case."
+        },
+        "disturbances": {
+          "status": "missing",
+          "detail": "Broader held-out disturbance requirements are not yet established."
+        },
+        "terrain": {
+          "status": "missing",
+          "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "fail",
+          "detail": "Associated minute has 45.2% worst-foot loaded contact motion versus a 5% limit. This sampled diagnostic and the failed minute heading gate keep the controller experimental."
+        },
+        "numerical_accuracy": {
+          "status": "missing",
+          "detail": "Solver-option agreement does not establish timestep convergence."
+        },
+        "browser_realtime": {
+          "status": "fail",
+          "detail": "Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host."
+        },
+        "replay_parity": {
+          "status": "pass",
+          "detail": "Associated native/WASM comparison and same-host replay pass."
+        }
+      },
+      "evidence": [
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-status.json",
+          "sha256": "b19a1bbf8e50c9c89fba53092ef1ba614c77d684ed1690e608bc04bb9ce3d7a1"
+        },
+        {
+          "path": "web/leaderboard/unretained-scene-fields.json",
+          "sha256": "d214777edc596d04e7d32fd6e150a03c84f2e8cfa898759787016c65ab00cea6"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-summary.json",
+          "sha256": "4d97553d42da77e53c28dc818f70f05d5c99bfc052c5e7a1a924cdce298ffe51"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-integrity.json",
+          "sha256": "b2e30b2568b654578d71411080115ac8e1ef1225bbcecb264962df594f87f337"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-browser-status.json",
+          "sha256": "dc26bbe9f2cc843cb88794f9b0f723b2f011cbda8b98eb52251f791abe600f1f"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-browser-integrity.json",
+          "sha256": "a8a01aaa654d45c94991f68b3406304803395318f428648d71996e691a0e3393"
+        }
+      ],
+      "capture": {
+        "path": "runs/full-robot/learning/direct-support/direct-steering.native.json",
+        "sha256": "c30070d86adb4c1874de1120435fc10eea2323bcb8c1818190e2bcd644f35172"
+      },
+      "measurement": {
+        "version": 1,
+        "capture": {
+          "path": "runs/full-robot/learning/direct-support/direct-steering.native.json",
+          "sha256": "c30070d86adb4c1874de1120435fc10eea2323bcb8c1818190e2bcd644f35172"
+        },
+        "source": {
+          "path": "examples/interactive/analyze_walking_capture.mjs",
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+        },
+        "simulated_s": 24,
+        "body_displacement_world_m": [
+          0.02735567102480652,
+          0.0000704292900998782,
+          -0.00022592002025400952
+        ],
+        "horizontal_body_path_m": 0.5256276585473053,
+        "net_horizontal_displacement_m": 0.02735576168748264,
+        "sustained_windows": [
+          {
+            "command_start_s": 0.02,
+            "start_s": 4.0200000000000005,
+            "end_s": 8.4,
+            "command": [
+              0.00375,
+              0,
+              0
+            ],
+            "samples": 220,
+            "measured_sustained_speed_m_s": 0.006718347941524395,
+            "net_projected_speed_m_s": 0.008491471013763059,
+            "axis_world": [
+              0.9999961758182888,
+              -0.002765564824418445,
+              0
+            ]
+          }
+        ],
+        "positive_mechanical_work_j": 2.116724356956835,
+        "positive_mechanical_work_per_net_horizontal_m": 77.3776428212342,
+        "native_compute": {
+          "wall_s": 44.70296216,
+          "simulation_per_wall": 0.5368771741366859,
+          "transition_p95_s": 0.077825988
+        },
+        "conventions": {
+          "steady_command_warmup_s": 4,
+          "loaded_marker_endpoint_force_n": 1,
+          "work_integration": "Trapezoidal samples of shaft torque times gear speed, positive/negative separated; no electrical efficiency or between-sample peak claim."
+        },
+        "scope": "Measurements from sampled shared Rust physics. Body travel is distinct from path length, commands and native compute throughput. Loaded-marker motion is a slip diagnostic, not a contact-patch certificate. No acceptance, calibration, browser-performance or hardware-energy claim."
+      },
+      "limitations": "Uncalibrated CAD-derived simulation, ideal observations and a privileged planner. Sampled marker motion and positive shaft work do not certify slip-free contact or hardware energy use."
+    },
+    {
       "id": "integral-teacher-minute",
       "name": "Walking teacher with bounded stance correction",
       "description": "Measures 3.78 mm/s with 41 qualified minute-long swings. Mixed steering, two fresh command cases and timestep agreement pass. Loaded contact motion is substantial: 152–198 mm per foot during 213 mm body advance. Browser pace is 0.42x with 93.5 ms p95; this remains experimental.",
@@ -133,6 +636,10 @@
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
         },
+        "contact_motion": {
+          "status": "fail",
+          "detail": "Frozen controller minute: worst-foot integrated load-weighted contact motion is 93.1% of net body advance; prospective limit 5%. Sampled flat-floor diagnostic, not a slip-free or hardware certificate."
+        },
         "numerical_accuracy": {
           "status": "pass",
           "detail": "Sampled foot difference 0.495 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 0.327 mm."
@@ -178,6 +685,10 @@
         {
           "path": "examples/full-robot/whole-swing/settled-integral-minute-contact-motion.json",
           "sha256": "36ba6ab40f61629895b1d18d0eea8c19f5939c2c6642a0cde2c1f9d25b7f4937"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/contact-smoothing-summary.json",
+          "sha256": "8975b30689d80fe0ea470f751f1a7f82bdaed14cdf47403c29789aab5eab8fc0"
         }
       ],
       "capture": {
@@ -420,6 +931,10 @@
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
         },
+        "contact_motion": {
+          "status": "fail",
+          "detail": "Frozen controller minute: worst-foot integrated load-weighted contact motion is 93.1% of net body advance; prospective limit 5%. Sampled flat-floor diagnostic, not a slip-free or hardware certificate."
+        },
         "numerical_accuracy": {
           "status": "missing",
           "detail": "Solver-option agreement does not establish timestep convergence."
@@ -461,6 +976,10 @@
         {
           "path": "examples/full-robot/whole-swing/settled-integral-minute-contact-motion.json",
           "sha256": "36ba6ab40f61629895b1d18d0eea8c19f5939c2c6642a0cde2c1f9d25b7f4937"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/contact-smoothing-summary.json",
+          "sha256": "8975b30689d80fe0ea470f751f1a7f82bdaed14cdf47403c29789aab5eab8fc0"
         }
       ],
       "capture": {
@@ -647,6 +1166,10 @@
         "terrain": {
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
         },
         "numerical_accuracy": {
           "status": "missing",
@@ -847,6 +1370,10 @@
         "terrain": {
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
         },
         "numerical_accuracy": {
           "status": "fail",
@@ -1060,6 +1587,10 @@
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
         },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
+        },
         "numerical_accuracy": {
           "status": "fail",
           "detail": "Sampled foot difference 1.167 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 1.004 mm."
@@ -1272,6 +1803,10 @@
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
         },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
+        },
         "numerical_accuracy": {
           "status": "fail",
           "detail": "Sampled foot difference 1.340 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 1.480 mm."
@@ -1483,6 +2018,10 @@
         "terrain": {
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
         },
         "numerical_accuracy": {
           "status": "fail",
@@ -1738,6 +2277,10 @@
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
         },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
+        },
         "numerical_accuracy": {
           "status": "fail",
           "detail": "Sampled foot difference 1.599 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 1.481 mm."
@@ -1941,6 +2484,10 @@
         "terrain": {
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
         },
         "numerical_accuracy": {
           "status": "fail",
@@ -2217,6 +2764,10 @@
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
         },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
+        },
         "numerical_accuracy": {
           "status": "missing",
           "detail": "Solver-option agreement does not establish timestep convergence."
@@ -2424,6 +2975,10 @@
         "terrain": {
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
         },
         "numerical_accuracy": {
           "status": "pass",
@@ -2686,6 +3241,10 @@
         "terrain": {
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
         },
         "numerical_accuracy": {
           "status": "fail",
@@ -2965,6 +3524,10 @@
         "terrain": {
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
         },
         "numerical_accuracy": {
           "status": "fail",
@@ -3257,6 +3820,10 @@
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
         },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
+        },
         "numerical_accuracy": {
           "status": "fail",
           "detail": "Sampled foot difference 1.599 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 1.481 mm."
@@ -3484,6 +4051,10 @@
         "terrain": {
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
         },
         "numerical_accuracy": {
           "status": "fail",
@@ -3760,6 +4331,10 @@
           "status": "missing",
           "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
         },
+        "contact_motion": {
+          "status": "missing",
+          "detail": "No full-minute qualification against the declared loaded-contact-motion screen is associated with this controller profile. Passing swing and stop gates alone is insufficient."
+        },
         "numerical_accuracy": {
           "status": "fail",
           "detail": "Sampled foot difference 2.607 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 2.639 mm."
@@ -3872,7 +4447,7 @@
   ],
   "generator": {
     "path": "web/leaderboard/generate.mjs",
-    "sha256": "dc373cf3bafd257be9b596dcaaad6e15e767aa74c3eb0856c1018b438e579942"
+    "sha256": "44456e7b6dc50911fff358ced07a38ead68a146520721b1192cbc1ef38b1d55b"
   },
   "scope": "Development evidence. No entry currently satisfies the complete declared gate set; speed rankings remain empty."
 }

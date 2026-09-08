@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "default-steering",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0003383165766945533,
+        "final_yaw_error_rad": 0.00015195622494797514,
+        "maximum_body_tilt_rad": 0.004173164422446213,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027848439336634043,
+          0.00010040695259032253,
+          -0.0001868992412273028
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/direct-support/default-steering-acceptance/summary.json",
+          "sha256": "c3725efa61c5d35687cda7728b7625636b822cb58564e01afbe8b2b22478bdee"
+        }
+      },
+      "wall_s": 44.842426795,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/default-steering.config.json",
+          "sha256": "9c7cbcf4161d169b1570d5c977fe8d23065f305e0d13dd8d36312c2280ee1b38"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/default-steering.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/default-steering.native.json",
+          "sha256": "91809e0f1b1c7d0de9a011195711fa49a999c3666d4cf82319da499ca69c797b"
+        }
+      ]
+    },
+    {
+      "name": "direct-minute",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007529503113993762,
+        "final_yaw_error_rad": 0.013614807720944777,
+        "maximum_body_tilt_rad": 0.00417642363789965,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21148711302864406,
+          -0.00018354095677435928,
+          -0.0002450681604409394
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/direct-support/direct-minute-acceptance/summary.json",
+          "sha256": "a1e2b8c987700c0cd4879ae9036719763d4d2bdb4b25cc23931ebbd4211c8000"
+        }
+      },
+      "wall_s": 118.386645293,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/direct-minute.config.json",
+          "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/direct-minute.actions.json",
+          "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/direct-minute.native.json",
+          "sha256": "0f4c58fefcdf0077e870f65f50fc0311b07c54efe2ec9d8ce5102376acdc4c19"
+        }
+      ]
+    },
+    {
+      "name": "direct-steering",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0003486838799393154,
+        "final_yaw_error_rad": 0.004526924641219822,
+        "maximum_body_tilt_rad": 0.004161834108511887,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02735567102480652,
+          0.0000704292900998782,
+          -0.00022592002025400952
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/direct-support/direct-steering-acceptance/summary.json",
+          "sha256": "1780f63a8a36e1be7b5e1852369afff21d7df1e0250c3a009dcb60fbcd705107"
+        }
+      },
+      "wall_s": 44.70296216,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/direct-steering.config.json",
+          "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/direct-steering.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/direct-support/direct-steering.native.json",
+          "sha256": "c30070d86adb4c1874de1120435fc10eea2323bcb8c1818190e2bcd644f35172"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/direct-support/plan.json",
+      "sha256": "ddfb0a88c574510810f14d4997784e90e7e80ffc3a75e98567cb90419d48e626"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "d6208252cd771bdc3076c94b8a6640b2feaac320c77b975f541340386622e486"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "defe7cb184d6d59f79aa5dbfc6991b364ea650aa6e8ff544365e6e5fe55cc26b"
+    }
+  ],
+  "scope": "Default identity and two direct-transfer development cases. Identical physical model and controller gains, explicit new shared sequence path. Original task gates plus the prospective contact-motion screen; no browser, timestep, held-out or terrain qualification."
+}

@@ -93,7 +93,10 @@ try{
     if(schedule[stage][1])key('keydown',schedule[stage][1]);
     recordCommand();
    }
-   if(/complete|Episode time limit reached|error/i.test(document.querySelector('#execution-state').textContent)){
+   const overlay=document.querySelector('#overlay');
+   const simulationError=!overlay.hidden&&overlay.classList.contains('error')?document.querySelector('#status').textContent:null;
+   if(simulationError||/complete|Episode time limit reached|error/i.test(document.querySelector('#execution-state').textContent)){
+   p.simulationError=simulationError;
    p.ended=performance.now();p.running=false;p.observer.disconnect();
   }});p.observer.observe(document.querySelector('#execution-state'),{childList:true,subtree:true});
   document.querySelector('#play').click();
@@ -101,14 +104,14 @@ try{
  await page.waitForFunction(()=>window.liveProbe.ended!=null,null,{timeout:180000});
  const result=await page.evaluate(()=>{
   const p=window.liveProbe,canvas=document.querySelector('canvas'),gl=canvas.getContext('webgl2');const ext=gl?.getExtension('WEBGL_debug_renderer_info');
-  return {wall_s:(p.ended-p.started)/1000,simulated_s:parseFloat(document.querySelector('#sim-time').textContent),status:document.querySelector('#execution-state').textContent,
+  return {wall_s:(p.ended-p.started)/1000,simulated_s:parseFloat(document.querySelector('#sim-time').textContent),status:document.querySelector('#execution-state').textContent,simulation_error:p.simulationError,
    worker_transitions_s:p.steps,transition_samples:p.samples,final_phase:p.finalPhase,render_intervals_s:p.frames,
    actual_drawn_frames:p.readRenderCount?p.readRenderCount()-p.initialDraws:null,
    commands:p.commands,drawn_reference_supported:Boolean(p.readRenderedFrame),phase_messages:p.phase_messages,
    gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null};
  });
  const p95=a=>[...a].sort((a,b)=>a-b)[Math.ceil(a.length*.95)-1];
- const completed=Math.abs(result.simulated_s-duration)<1e-9&&!errors.length
+ const completed=Math.abs(result.simulated_s-duration)<1e-9&&!errors.length&&!result.simulation_error
   &&result.worker_transitions_s.length===Math.round(duration/data.task.period_s);
  const validationErrors=[];
  try { if(steering&&completed&&result.drawn_reference_supported){
@@ -133,7 +136,7 @@ try{
  }));
  performance.breakdown={all:summarize(result.transition_samples),by_phase:Object.fromEntries([...new Set(result.transition_samples.map(s=>s.phase))].map(phase=>[phase,summarize(result.transition_samples.filter(s=>s.phase===phase))])),scope:'WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive.'};
  const report={completed,preset,scenario,config_override:configOverride,performance,meets_speed_target:performance.simulation_per_wall_second>=1&&(!performance.active_motion||performance.active_motion.simulation_per_wall_second>=1),meets_transition_target:performance.transition_p95_s<=.02&&(!performance.active_motion||performance.active_motion.transition_p95_s<=.02),
-  host:{cpu:cpus()[0]?.model,logical_cpus:cpus().length,platform:platform(),architecture:arch(),browser:await browser.version(),gpu:result.gpu,headless:process.env.HEADED!=='1'},errors,status:result.status,phase_messages:result.phase_messages,
+  host:{cpu:cpus()[0]?.model,logical_cpus:cpus().length,platform:platform(),architecture:arch(),browser:await browser.version(),gpu:result.gpu,headless:process.env.HEADED!=='1'},errors,status:result.status,simulation_error:result.simulation_error,phase_messages:result.phase_messages,
   scope:'One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. Command-reference delays are measured separately from physical response; no sustained terrain or physical stopping acceptance.'};
  try { if(steering&&completed){
   if(scenario==='cancel-resume'&&data.config.policy.step_reference.sequence.update_command_before_lift)
@@ -154,6 +157,9 @@ try{
   }
   report.keyboard_commands_recorded=true;
  }} catch(error) { validationErrors.push(`keyboard recording: ${error.message}`); }
+ if(!completed&&!await page.locator('#download').isDisabled()){
+  const download=page.waitForEvent('download');await page.locator('#download').click();await(await download).saveAs(reportPath.replace(/\.json$/,'.recording.json'));
+ }
  report.validation_errors=validationErrors;
  report.validation_passed=validationErrors.length===0;
  await page.screenshot({path:reportPath.replace(/\.json$/,'.png')});

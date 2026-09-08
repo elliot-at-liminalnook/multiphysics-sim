@@ -21,6 +21,7 @@ fn sequence() -> StepSequence {
             update_command_before_lift: false,
             swing_body_advance_fraction: 0.,
             whole_swing_horizontal_motion: false,
+            horizontal_swing_finish_fraction: 1.,
             maximum_speed_m_s: 0.01,
             maximum_yaw_rate_rad_s: 0.1,
         },
@@ -478,5 +479,36 @@ fn horizontal_swing_spans_apex_without_changing_clearance_support_or_endpoints()
         let before = history[55].feet_world_m[0][axis] - history[54].feet_world_m[0][axis];
         let after = history[56].feet_world_m[0][axis] - history[55].feet_world_m[0][axis];
         assert!((before - after).abs() < 1e-14);
+    }
+}
+
+#[test]
+fn early_horizontal_finish_holds_landing_xy_and_retains_vertical_clearance() {
+    let feet = vec![[0., -0.3, -0.4], [0.3, 0., -0.4],
+        [0., 0.3, -0.4], [-0.3, 0., -0.4]];
+    for finish in [0.5, 0.75, 0.85, 1.] {
+        let mut config = sequence().config().clone();
+        config.whole_swing_horizontal_motion = true;
+        config.horizontal_swing_finish_fraction = finish;
+        let mut moving = StepSequence::new(config, [0.; 3], 0., feet.clone()).unwrap();
+        let mut baseline = sequence();
+        let mut previous = None;
+        for i in 0..=100 {
+            let a = baseline.sample(i as f64 * 0.02, [0.005, 0., 0.01], true, true).unwrap();
+            let b = moving.sample(i as f64 * 0.02, [0.005, 0., 0.01], true, true).unwrap();
+            assert_eq!(a.phase, b.phase); assert_eq!(a.body_world_m, b.body_world_m);
+            for foot in 0..4 { assert_eq!(a.feet_world_m[foot][2], b.feet_world_m[foot][2]); }
+            // Fixture starts raising at sample 35 and lands at sample 75.
+            if i >= 35 + (40. * finish).ceil() as usize && i <= 75 {
+                assert_eq!(a.feet_world_m[0], b.feet_world_m[0]);
+                let xy = [b.feet_world_m[0][0], b.feet_world_m[0][1]];
+                if let Some(p) = previous { assert_eq!(xy, p); }
+                previous = Some(xy);
+            }
+        }
+    }
+    for invalid in [0., 0.49, 1.01, f64::NAN] {
+        let mut config = sequence().config().clone(); config.horizontal_swing_finish_fraction = invalid;
+        assert!(StepSequence::new(config, [0.; 3], 0., feet.clone()).is_err());
     }
 }

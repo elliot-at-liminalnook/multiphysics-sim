@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "student-10ms",
+      "duration_s": 24,
+      "step_s": 0.01,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0012783875842743192,
+        "final_yaw_error_rad": 0.0009767883511367973,
+        "maximum_body_tilt_rad": 0.004447033127494202,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.0677030900998914,
+          -0.0009275742724304435,
+          -0.0007685178274619529
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-refinement/student-10ms-acceptance/summary.json",
+          "sha256": "e80968e4d4e2897cee4b7cafbb4b135bc0234df8b0fde67fe1f9f4a5932137e9"
+        }
+      },
+      "wall_s": 14.755599112,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-refinement/student-10ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/student-10ms.config.json",
+          "sha256": "15d1245cd1f6a6c35431ef902c368938e16c172b3f88d9ecb205cc5ba28de4c0"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/student-10ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/student-10ms.native.json",
+          "sha256": "824e4c655c0bf480ba741ce87068f501afe7f5b408dcb875b07f7e7d0cf727ac"
+        }
+      ]
+    },
+    {
+      "name": "teacher-10ms",
+      "duration_s": 24,
+      "step_s": 0.01,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008072736841911722,
+        "final_yaw_error_rad": 0.00040321459090454274,
+        "maximum_body_tilt_rad": 0.004210328574860031,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06742367265964026,
+          -0.00040975000541385297,
+          -0.0006794793407649911
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-10ms-acceptance/summary.json",
+          "sha256": "7848d6b4630a385e411c3373885e7a3ef902a060c732863bee403064fc49958e"
+        }
+      },
+      "wall_s": 14.109803021,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-10ms.scene.json",
+          "sha256": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-10ms.config.json",
+          "sha256": "7ea5b26b92abd7c3e6329d92f05597a0317f43e2a6033fd95ee393780ce3b9b5"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-10ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-10ms.native.json",
+          "sha256": "77db885726918e7b52fc8f620fc21b4c0954b5465254ffbc9f003113f50539b9"
+        }
+      ]
+    },
+    {
+      "name": "teacher-2.5ms",
+      "duration_s": 24,
+      "step_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007712081817622104,
+        "final_yaw_error_rad": 0.0000768450577612761,
+        "maximum_body_tilt_rad": 0.004412465066480768,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06761141834419067,
+          -0.00014052445052791207,
+          -0.0006795863713412835
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-2.5ms-acceptance/summary.json",
+          "sha256": "77aa2263e8982aaeff120acf84636cad85f9e54c170a30369bda1b3282cff3a8"
+        }
+      },
+      "wall_s": 27.849893746,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-2.5ms.scene.json",
+          "sha256": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-2.5ms.config.json",
+          "sha256": "aa68f20c0e9d0f141b05d3f3600992f149dd3dc901a2f7554219977ac72321f7"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-2.5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-refinement/teacher-2.5ms.native.json",
+          "sha256": "2dfafaf2ab3ccf9628a608371c16b72664c95a5e9f9290c31b12ff50599dd5d5"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-refinement/plan.json",
+      "sha256": "263f5204ef1379919b7abd5b288d41c692c57b60bf678c965e6e24b53dc15430"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "978e284647ac7de61be25b3e482b34291b77f92143dbd76ea48a95d609dcca8c"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Three predeclared numerical refinement cases; unchanged physical model, control sampling and acceptance budgets."
+}

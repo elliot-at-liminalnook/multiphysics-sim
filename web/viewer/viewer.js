@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { installLeaderboard } from './leaderboard.js';
+import { installVideoExport } from './video-export.js';
 const $ = id => document.getElementById(id);
 const viewport = $('viewport');
 const scene = new THREE.Scene();
@@ -29,6 +31,7 @@ let grid, selectionBox, meshes = new Map(), current, frame, playback, worker, ep
 let abort, playing = false, busy = false, inputs = [], values = [], tick = 0, replaySaved;
 let lastDraw = performance.now(), simulatedWork = 0, wallWork = 0, selectedName;
 let liveTimer, liveStartWall = 0, liveStartSim = 0;
+const videoCapture = installVideoExport(renderer.domElement, $('video'), () => current?.id || 'robot');
 let drawNeeded = true;
 controls.addEventListener('change', () => { drawNeeded = true; });
 const driveKeys = new Set();
@@ -62,8 +65,14 @@ function workerClient() {
     close() { rejectAll('Operation cancelled'); instance.terminate(); }
   };
 }
-async function fetchData(path, signal) {
+async function fetchData(path, signal, expectedSha) {
   const response = await fetch(path, { signal }); if (!response.ok) throw new Error(`Could not load ${path} (${response.status})`);
+  if (expectedSha) {
+    const bytes = await response.arrayBuffer();
+    const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(b => b.toString(16).padStart(2, '0')).join('');
+    if (digest !== expectedSha) throw new Error('Tested recipe integrity mismatch. Rebuild the viewer from its evaluation artifacts.');
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
   return response.json();
 }
 function scheduleLive() {
@@ -267,18 +276,19 @@ function makeInputs(channels) {
   }
 }
 async function loadPreset(id) {
+  videoCapture.stop();
   const token = ++epoch; abort?.abort(); worker?.close(); worker = null; abort = new AbortController();
   setPlaying(false); busy = false; replaySaved = null; simulatedWork = wallWork = 0; playback = null;
   frame = null; lastRenderedFrame = null;
   for (const id of ['play','step','reset','timeline','download','replay']) $(id).disabled = true;
   $('cancel').hidden = false; status('Loading model and controller…');
   try {
-    const preset = catalog.presets.find(p => p.id === id); const data = await fetchData(preset.path, abort.signal); if (token !== epoch) return;
+    const preset = catalog.presets.find(p => p.id === id); const data = await fetchData(preset.path, abort.signal, preset.asset_sha256); if (token !== epoch) return false;
     current = { ...preset, data }; $('description').textContent = preset.description; $('readiness').textContent = preset.readiness; $('readiness').dataset.state = preset.readiness_state || 'experimental'; $('evidence').textContent = preset.evidence;
     $('mode').textContent = preset.mode !== 'recorded' ? 'LIVE · Rust / WASM' : 'RECORDED PHYSICS'; $('view-title').textContent = preset.label;
     buildModel(data.robot || data.scene.robot); makeInputs([]);
     if (preset.mode !== 'recorded') {
-      worker = workerClient(); const result = await worker.request('load', { scene: data.scene || data, config: data.config, task: data.task, seed: 0 }); if (token !== epoch) return;
+      worker = workerClient(); const result = await worker.request('load', { scene: data.scene || data, config: data.config, task: data.task, seed: data.seed ?? 0 }); if (token !== epoch) return false;
       if (result.metadata) Object.assign(current.data, result.metadata);
       makeInputs(result.inputs); showFrame(result.frame); $('timeline').max = result.metadata ? result.metadata.steps * result.metadata.step_s : data.duration_s;
       $('input-help').textContent = result.metadata?.environment_contract ? `Each command is held for ${result.metadata.environment_contract.period_s*1000} ms of simulation time. The selected controller and actuator profile determine the motor response. ${data.task?.walking ? 'The task scores joint tracking, body position and supported steps'+(data.task.walking.heading?', plus heading':'')+'.' : 'Scores follow the selected task; this preset has no supported-step walking objective.'} Saving and replay preserve the task and command sequence.` : result.metadata?.policy_contract ? 'Rhai reads ideal simulated joint state and sends motor targets at its declared sampling rate. Adjust the commands above; save and replay preserve when they changed. Hardware sensor bindings and walking commands are not yet available.' : preset.mode === 'embedded' ? 'The Rust servo controller executes this experiment live. Pause and reset are available; this preset does not yet declare WASD walking commands.' : 'Use the position slider while running. This fixture has no walking command; WASD locomotion is unavailable.';
@@ -290,7 +300,8 @@ async function loadPreset(id) {
       $('performance').textContent = `${(data.simulated_s/data.stepping_wall_s).toFixed(3)}× recorded`;
     }
     fit(); $('play').disabled = $('reset').disabled = $('download').disabled = false; $('step').disabled=Boolean(playback); status('');
-  } catch (error) { if (token === epoch) { setPlaying(false); status(error.message, true); $('reset').disabled = false; } }
+    return true;
+  } catch (error) { if (token === epoch) { setPlaying(false); status(error.message, true); $('reset').disabled = false; } return false; }
   finally { if (token === epoch) $('cancel').hidden = true; }
 }
 async function advanceLive(single=false) {
@@ -301,7 +312,7 @@ async function advanceLive(single=false) {
     $('performance').textContent = single ? `${(simulatedWork/wallWork).toFixed(2)}× processing` : `${liveRate.toFixed(2)}× live`;
     $('performance').title = `Worker and scene-update throughput: ${(simulatedWork/wallWork).toFixed(2)}×. Live rate also includes scheduling time.`;
     if (next.done || next.error) { setPlaying(false); showFrame(next); if (next.error) status(next.error, true); }
-  } catch (e) { if (token === epoch) { setPlaying(false); status(e.message, true); } }
+  } catch (e) { if (token === epoch) { setPlaying(false); status(e.message, true); $('execution-state').textContent = 'Experiment stopped with an error'; } }
   finally { if (token === epoch) { busy = false; scheduleLive(); } }
 }
 function replayAt(time) {
@@ -359,7 +370,7 @@ function applyDriveKeys() {
   });
   for(const b of $('teleop').querySelectorAll('[data-drive-key]'))b.setAttribute('aria-pressed',String(driveKeys.has(b.dataset.driveKey)));
 }
-window.addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable) return;
+window.addEventListener('keydown', e => { if ($('leaderboard-dialog').open || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable) return;
   const key=e.key.toLowerCase();if('wasd'.includes(key)&&key.length===1&&current?.data?.policy_contract?.step_reference){e.preventDefault();driveKeys.add(key);applyDriveKeys();return;}
   if (key==='f') fit(selectedName ? meshes.get(selectedName) : model); if (e.code==='Space') {e.preventDefault(); if (!$('play').disabled) $('play').click();} });
 window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(driveKeys.delete(key)){e.preventDefault();applyDriveKeys();}});
@@ -368,6 +379,23 @@ $('task-observation-details').addEventListener('toggle',()=>{if(frame)showTaskOb
 let catalog;
 try { catalog = await fetchData('catalog.json'); for (const p of catalog.presets) { const option = document.createElement('option'); option.value = p.id; option.textContent = p.label; $('preset').append(option); }
   $('preset').disabled = false; $('preset').onchange = () => loadPreset($('preset').value);
+  try { await installLeaderboard({
+    pause: () => setPlaying(false),
+    load: async (entry, replay) => {
+      $('preset').value = entry.preset_id;
+      if (!await loadPreset(entry.preset_id)) return;
+      if (replay) {
+        replaySaved = { version: 1, kind: 'sampled_environment_recording', task: current.data.task, error: null,
+          runtime: { version: 3, kind: 'embedded_session', scene: current.data.scene, config: current.data.config,
+            seed: entry.load.seed, completed_steps: entry.replay.completed_steps, input_events: entry.replay.input_events } };
+        $('replay').disabled = false; $('replay').click();
+      } else {
+        const initial = entry.replay.input_events.find(e => e.at_step === 0)?.values;
+        if (initial) restoreInputs(initial);
+        setPlaying(true);
+      }
+    }
+  }); } catch (e) { $('open-leaderboard').disabled = true; $('open-leaderboard').textContent = 'Leaderboard unavailable'; $('open-leaderboard').title = e.message; }
   const requested=new URL(location.href).searchParams.get('preset');
   const initial=catalog.presets.find(p=>p.id===requested)?.id||catalog.presets[0].id;
   $('preset').value=initial;

@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "finish-0.75-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0010021598976363726,
+        "final_yaw_error_rad": 0.0007403936806656608,
+        "maximum_body_tilt_rad": 0.0041590318257325384,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06777415491386268,
+          -0.00023644284843580648,
+          -0.0008362198346253489
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-20ms-acceptance/summary.json",
+          "sha256": "856ab3fd3b231bb9a1efb7e22d9e18116bd9dcb26c025c6d5ff0eab768d53eda"
+        }
+      },
+      "wall_s": 9.143555643,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-20ms.config.json",
+          "sha256": "d83ccb230cf0e639c6ea0f0a16bc6e5334e28bdb71c9ab1f34ea0985c25ffabb"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-20ms.native.json",
+          "sha256": "7eaba075585fefcaefa176309bfc04d4ee16b40b479dd7555c4e54854456d1f8"
+        }
+      ]
+    },
+    {
+      "name": "finish-0.75-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0013895230599632424,
+        "final_yaw_error_rad": 0.000923297518647089,
+        "maximum_body_tilt_rad": 0.004736629695597585,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06808092776647282,
+          -0.0008445287347376936,
+          -0.0007536749867151655
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-5ms-acceptance/summary.json",
+          "sha256": "979c6a8d90f9e4ddd6c29a1f4e11eda6a5f3c24941db35c8b9f3d730e7804b63"
+        }
+      },
+      "wall_s": 22.21432753,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-5ms.config.json",
+          "sha256": "535a3afea58f84fdc01dfe8766f35640c8fc23e1c12a7733c56c309f13e4c659"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.75-5ms.native.json",
+          "sha256": "8e253a381371435b02d672f93fba23c9c0646260bcb2619f5abd9333aeacdaf4"
+        }
+      ]
+    },
+    {
+      "name": "finish-0.85-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008536916512783087,
+        "final_yaw_error_rad": 0.0007375749349827277,
+        "maximum_body_tilt_rad": 0.004145771960106189,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06746312091795015,
+          -0.00022405455316350486,
+          -0.0008019972025503468
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms-acceptance/summary.json",
+          "sha256": "6b51fef2c54c58f99d7bdd99d0299b4f68ece1a18a2599443c1a05f69cbfbc9d"
+        }
+      },
+      "wall_s": 8.622989117,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.config.json",
+          "sha256": "3d9da35f0b6a1bd5f9ab1e74599d0410b244d1b47817df2d92278647501e77f6"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.native.json",
+          "sha256": "e98565847e4cbd3a59e551b935f5c06a70291eaea59dd32ed97248a8d50e17fa"
+        }
+      ]
+    },
+    {
+      "name": "finish-0.85-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0013876123102189966,
+        "final_yaw_error_rad": 0.0012269183496315186,
+        "maximum_body_tilt_rad": 0.004750730143045535,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06805069722693281,
+          -0.0008787372541079132,
+          -0.0007426860533515708
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-5ms-acceptance/summary.json",
+          "sha256": "62ac90343af8727ba5e904ec989023f2e53baf213511cf0d88032ff1b14b7de3"
+        }
+      },
+      "wall_s": 23.075875609,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-5ms.config.json",
+          "sha256": "c793c2d0d31d21ee001e9a0addc51481e8a31f9a5f140c75d83f8aa900436b38"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-finish/finish-0.85-5ms.native.json",
+          "sha256": "05bdce7405e7337dac7adb0b213f90e2f54696580de599a916da019faea96529"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-finish/plan.json",
+      "sha256": "2420e71b4a1ea4a801a9f1533a32828e7769fd2adff603c90bef37bf2218de96"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "978e284647ac7de61be25b3e482b34291b77f92143dbd76ea48a95d609dcca8c"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Four predeclared development cases. Same physics and acceptance budgets; horizontal XY finishes before touchdown."
+}

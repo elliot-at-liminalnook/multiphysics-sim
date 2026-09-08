@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "feedback-teacher-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006836086027820295,
+        "final_yaw_error_rad": 0.00034841362054717257,
+        "maximum_body_tilt_rad": 0.00413442859320166,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06721177624662945,
+          -0.00004163384229547817,
+          -0.0006794042257618465
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-20ms-acceptance/summary.json",
+          "sha256": "ce4b6811dbd9358bbedeb3080258013fa2266efc36bdb30ceb8d5473d7b6792c"
+        }
+      },
+      "wall_s": 8.874105815,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-20ms.scene.json",
+          "sha256": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-20ms.config.json",
+          "sha256": "dc8ff1c91a90ee411461bc588e46fd4ab09f6ae42f39a73fe8a4d50592aa524e"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-20ms.native.json",
+          "sha256": "903cf172119f53c48fd4d2928a98527bd60917ba1ec1dc830dc65ac7d9b26d19"
+        }
+      ]
+    },
+    {
+      "name": "feedback-teacher-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008122956807175122,
+        "final_yaw_error_rad": 0.0003442285729268506,
+        "maximum_body_tilt_rad": 0.004189072638950457,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06758507568290407,
+          -0.0003191784460598853,
+          -0.0006795604927853707
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-5ms-acceptance/summary.json",
+          "sha256": "19ba364990a50a7ff5a20dd3dfec4a23eb15aa79b684e2023ff47772bb173456"
+        }
+      },
+      "wall_s": 20.255002737,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-5ms.scene.json",
+          "sha256": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-5ms.config.json",
+          "sha256": "18055128841a0c020a4861d1a89e8bae4d1ffa989281814b3c1d68c10bee11e7"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-feedback-teacher/feedback-teacher-5ms.native.json",
+          "sha256": "bcbeb0bed81b24d765709f7661c547a852e7f8eeebc1885e9efd3efe581295b3"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-feedback-teacher/plan.json",
+      "sha256": "32cf848139680167090835200ca7726295fc3ee859230a1be5c68829aea5d81b"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "978e284647ac7de61be25b3e482b34291b77f92143dbd76ea48a95d609dcca8c"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Two privileged teacher diagnosis cases with the required force observations enabled; same physical model and gates."
+}

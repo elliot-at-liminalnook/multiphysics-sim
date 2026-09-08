@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "standing-teacher-minute-5ms",
+      "duration_s": 60,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000376 mm at world [0.21406889260187234, -0.11939213833557596, -0.048556690582025004] m, time 56.320000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 60.100423235,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-standing/standing-teacher-minute-5ms.scene.json",
+          "sha256": "45b100e5e1a761c6e2a854bc57ee6cde7c998a0b1049360cf8f38225806eb838"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-standing/standing-teacher-minute-5ms.config.json",
+          "sha256": "a40c6443195d1cdfa327feecde35cb8de26be98380894e95a094a8c9671165a7"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-standing/standing-teacher-minute-5ms.actions.json",
+          "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-standing/standing-teacher-minute-5ms.native.json",
+          "sha256": "8f9ff09e9952b54b0f86bd1f9b147b75198a3e5da0b494e1c883a425113de2ce"
+        }
+      ]
+    },
+    {
+      "name": "standing-teacher-minute-2.5ms",
+      "duration_s": 60,
+      "step_s": 0.0025,
+      "completed": false,
+      "error": "policy output violates software/CAD command bounds at 56.4 s: -Y | Foot servo output.target requested -0.013327517795770938 rad; allowed [-0.6, -0.02] rad",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 78.425685384,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-standing/standing-teacher-minute-2.5ms.scene.json",
+          "sha256": "45b100e5e1a761c6e2a854bc57ee6cde7c998a0b1049360cf8f38225806eb838"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-standing/standing-teacher-minute-2.5ms.config.json",
+          "sha256": "ba2050b05f01625ba72a0a3cdc7c2ae264effd96c73197da60e95f934155c635"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-standing/standing-teacher-minute-2.5ms.actions.json",
+          "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-standing/standing-teacher-minute-2.5ms.native.json",
+          "sha256": "fda52ea17d3b61a50b903ca5ce2ca086e277d148b9341cdb7d5cf1a8669f20cb"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-standing/plan.json",
+      "sha256": "9979910b506f38a0406a6b9d84b2dd78ebf820806397c9ce093da82ac96d9729"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "978e284647ac7de61be25b3e482b34291b77f92143dbd76ea48a95d609dcca8c"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Single paired standing-gain test following minute endpoint failures; unchanged moving controller, physical model and gates."
+}

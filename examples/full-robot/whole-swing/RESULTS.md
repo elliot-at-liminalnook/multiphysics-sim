@@ -47,8 +47,104 @@ and acceptance results. Recipes are reconstructed by the corresponding
 `node examples/full-robot/hybrid-speed/run.mjs OUTPUT STATUS_PATH`.
 The planner source hash in each plan identifies the required revision.
 
-Next hypothesis: horizontal foot velocity near touchdown contributes to
-stopping drift and timestep sensitivity. Test completing horizontal travel
-before touchdown while keeping vertical clearance and the accepted support
-sequence. This hypothesis has not yet been validated. All profiles retain
-uncalibrated physical properties, ideal observations and privileged planning.
+## Earlier horizontal completion
+
+`finish-plan.json` predeclares four follow-up cases. Finishing horizontal
+travel at 85% of the combined swing leaves 114 ms of lowering with fixed XY.
+It reduces the 20 ms stopping error to 0.854 mm and passes all 13 swings and
+the short task. Actual travel regression is 3.489 mm/s over the 12.78-second
+window, and net episode displacement is 67.46 mm. It remains a short case.
+The corresponding 5 ms stopping error is 1.388 mm and fails. Finishing at 75%
+also fails: 1.002 mm at 20 ms and 1.390 mm at 5 ms. No budget was rounded or
+relaxed to accept the near miss.
+
+The 85% pair's maximum foot/body differences fall to 1.340/1.480 mm, still
+above the 1/0.5 mm screens. This supports investigating touchdown timing but
+does not isolate contact drift as the sole cause. `finish-integrity.json`
+checks all four recipes. The browser recipe preserves the 20 ms experimental
+candidate verbatim; `browser-parity.json` checks 1,200 native/WASM transitions
+at the existing mixed numeric portability tolerance, with exact replay/reset.
+Maximum numeric difference is 1.102e-7, distinct from physical accuracy.
+
+## Privileged feedback diagnosis
+
+The existing teacher, with its learned output set to zero and its required
+force/body/point observations enabled, passes both short task checks:
+13/13 swings and stopping errors of 0.684 mm (20 ms) and 0.812 mm (5 ms).
+Heading errors are 0.000348 and 0.000344 rad. This suggests that better feedback
+can recover the endpoint margin. The paired foot/body differences remain
+1.220/1.249 mm, so restoring the teacher does not solve timestep sensitivity.
+
+`teacher-initialization-failure.json` retains the rejected missing-network
+task binding. `teacher-status.json` retains both first-call failures with
+floor-force observations disabled; `feedback-teacher-status.json` and its
+integrity/refinement reports contain the correctly bound teacher results.
+These are controller setup failures, not attempted physical trajectories.
+
+## Finer physics and sustained travel
+
+The 10/5 ms student comparison has 0.650/0.670 mm maximum foot/body differences;
+its stopping check also fails. The 10/5 ms teacher comparison gives
+0.553/0.569 mm, still above the body screen. The 5/2.5 ms teacher short pair
+finally passes both task and numerical screens at 0.481/0.443 mm. This justified
+the unchanged paired minute tests in SUSTAINED-PLAN.md.
+
+Both minute runs complete all 41 qualified swings. The 5 ms teacher measures
+**3.751 mm/s actual sustained travel** over the 4.02–56 s regression window,
+with 212.86 mm net episode displacement and 7.420 J sampled positive shaft
+work. Its final position/yaw errors are 1.092 mm / 0.002263 rad; the 2.5 ms
+case gives 1.080 mm / 0.002967 rad. Both fail the 1 mm stopping gate. Paired
+maximum foot/body differences grow to 0.799/0.837 mm over the minute, failing
+the body screen. A short numerical pass did not extend to sustained accuracy.
+
+One targeted standing-gain pair retains every moving-controller parameter and
+physical bound. Increasing fully supported standing body gain from 0.75 to
+1.5 fails during the final transfer: the 5 ms run detects a thigh gear/pulley
+overlap at 56.32 s; the 2.5 ms run rejects a foot command of -0.01333 rad outside
+the [-0.6,-0.02] rad bounds at 56.4 s. No limit was relaxed. This motivates
+gating stronger standing feedback by completed transfer state, rather than
+zero requested velocity alone. That follow-up has not yet been tested.
+
+## Live browser and leaderboard
+
+The 85% student profile's 24 s live forward/stop run passes all 15 swings with
+0.933 mm final position and 0.000651 rad yaw error. Active throughput is
+0.996× and p95 processing is 37.25 ms: both browser targets fail. Rendering
+scheduling p95 is 16.67 ms. The first drawn stopped reference arrives 1.033 s
+after key release; this includes transfer completion and is not physical
+stopping latency or monitor presentation latency.
+
+Live turning fails at sample 714 (14.28 s), before the scheduled reverse:
+step 10 Raise predicts only 0.0374 N on a required support, against the 0.5 N
+planning threshold. Native re-execution reproduces the failure and recorded
+input events. `browser-status.json` retains both browser outcomes, actual host
+details, native audit and command recordings. The timing probe now preserves
+physics failures instead of waiting for successful completion. Reference host:
+Intel i9-9980HK, macOS x64, Chrome 152.0.7977.76, headless WebGL enabled.
+
+The leaderboard includes the exact experimental student and sustained teacher
+recipes alongside prior milestones. It displays measured physical speed,
+failed/missing gates and browser cost separately; no recipe is ranked. The
+teacher's 5 ms live execution has not been benchmarked for realtime. All
+profiles retain uncalibrated physical properties, ideal observations and
+privileged planning. Faster reliable stopping, complete steering, sustained
+numerical accuracy, browser timing, robustness and hardware transfer remain
+unfinished.
+
+## Separate turning posture
+
+The original posture table ended at zero speed, so its fast-forward support
+shifts also applied to pure turning. An explicit +3.75 mm/s knot preserves the
+forward posture while restoring the original zero-speed posture and declaring
+a slower -1.25 mm/s reverse bound. This improves the planned weakest support
+from 0.0374 to 0.3978 N, still below 0.5 N. The student at 20 ms and teachers at
+5/2.5 ms fail at the identical front-foot lift reference. The forward-only
+preservation case still passes with exactly the same final position error.
+`steering-status.json` and `steering-integrity.json` retain all four cases.
+
+The remaining turning limit is now isolated to the support posture, before
+reverse is reached. A rearward body shift during the front-foot lift is a
+specific next hypothesis: using roughly 39 N total weight and a 0.32 m rear
+support arm, 1 mm of rearward shift redistributes about 0.12 N to that support.
+This estimate must be checked against CAD reach, all other support forces and
+actual tracking; no additional shift has yet been accepted.

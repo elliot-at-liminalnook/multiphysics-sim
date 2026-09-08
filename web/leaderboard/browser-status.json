@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "passed": true,
+  "browser": "152.0.7977.76",
+  "recipes": [
+    {
+      "id": "browser-crawl-minute",
+      "asset_sha256": "771addc1a917aae9bee10d46c5c35f16846331d14f072980c6e6cbe1c4c5ff91"
+    },
+    {
+      "id": "faster-student-minute",
+      "asset_sha256": "2f6681e8e24e1671d7cce649d5ea68f408a8ff23d276cf0ac240b27e31a5b897"
+    },
+    {
+      "id": "overlapping-forward-stop",
+      "asset_sha256": "a39981e81bd9c5e489e3644617e23fa02104a2cc13d6f23417563c3a0dc3fd71"
+    },
+    {
+      "id": "whole-swing-short",
+      "asset_sha256": "8c4415a28db2230c75d3b5354bea6e5425d684b3930a567484af6452e6978da3"
+    },
+    {
+      "id": "faster-teacher-minute",
+      "asset_sha256": "0f0c6583dc26b3fb8f79967e85349d88eaff29cabe9e9fc2edcc99f961c294a6"
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/interactive/whole-swing/viewer/leaderboard.json",
+      "sha256": "b6d183bd1dbf725d29eb5ab00fc487d94a4b686a235899b6a29fa1246cf03e14"
+    },
+    {
+      "path": "runs/interactive/whole-swing/viewer/build-manifest.json",
+      "sha256": "32fd53a26aad24c631a5af4fd8c4a796a0739bcd23a43998d7d800b3ecb6351e"
+    },
+    {
+      "path": "web/tests/leaderboard.mjs",
+      "sha256": "2ccd639631f2588762ac6fd3c4621673c2a0e5d6a886ddf027805562495e3769"
+    }
+  ],
+  "checks": [
+    "failed and missing gates remain unranked; search, status and comparison work",
+    "every Load and run executes its pinned controller, seed and tested initial action through WASM",
+    "tested sparse input sequence re-executes its full duration in Rust",
+    "canvas video downloads real WebM bytes; dialog fits desktop and narrow viewports",
+    "mutated recipe bytes are rejected before physics can run"
+  ],
+  "scope": "Real Chrome UI tests of every pinned recipe, with actual Rust workers, input replay and canvas video. Not a physics-accuracy or realtime benchmark."
+}

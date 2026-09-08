@@ -51,6 +51,10 @@ pub struct StepSequenceConfig {
     /// completes horizontal travel during raise, as in the original crawl.
     #[serde(default, skip_serializing_if = "is_false")]
     pub whole_swing_horizontal_motion: bool,
+    /// Fraction of combined raise/lower time used for horizontal travel when
+    /// whole-swing motion is enabled. The remainder holds the landing XY.
+    #[serde(default = "one", skip_serializing_if = "is_one")]
+    pub horizontal_swing_finish_fraction: f64,
     pub maximum_speed_m_s: f64,
     pub maximum_yaw_rate_rad_s: f64,
 }
@@ -110,6 +114,8 @@ fn is_false(value: &bool) -> bool {
 fn is_zero(value: &f64) -> bool {
     *value == 0.
 }
+fn one() -> f64 { 1. }
+fn is_one(value: &f64) -> bool { *value == 1. }
 fn rotate(yaw: f64, v: [f64; 2]) -> [f64; 2] {
     let (s, c) = yaw.sin_cos();
     [c * v[0] - s * v[1], s * v[0] + c * v[1]]
@@ -158,6 +164,11 @@ impl StepSequence {
             || !(0.0..=1.0).contains(&config.swing_body_advance_fraction)
         {
             return Err("swing body advance fraction must be finite and in [0,1]".into());
+        }
+        if !config.horizontal_swing_finish_fraction.is_finite()
+            || !(0.5..=1.).contains(&config.horizontal_swing_finish_fraction)
+        {
+            return Err("horizontal swing finish fraction must be finite and in [0.5,1]".into());
         }
         if !config.period_s.is_finite()
             || config.period_s <= 0.
@@ -496,7 +507,8 @@ impl StepSequence {
                 };
                 if self.config.whole_swing_horizontal_motion {
                     let elapsed = self.phase_tick + if up { 0 } else { self.ticks[1] };
-                    let fraction = smooth(elapsed as f64 / (self.ticks[1] + self.ticks[2]) as f64);
+                    let fraction = smooth(elapsed as f64 / (self.ticks[1] + self.ticks[2]) as f64
+                        / self.config.horizontal_swing_finish_fraction);
                     for axis in 0..2 {
                         feet[foot][axis] = self.swing_start[axis]
                             + fraction * (self.swing_end[axis] - self.swing_start[axis]);

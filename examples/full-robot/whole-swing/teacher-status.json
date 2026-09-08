@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "teacher-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "residual-crawl.rhai: Function not found: / ((), i64) @ 'residual-crawl.rhai' (line 10, position 46)\nin call to function 'control' (from 'residual-crawl.rhai') (line 1, position 47)",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.000832844,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-teacher-zero/teacher-20ms.scene.json",
+          "sha256": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-teacher-zero/teacher-20ms.config.json",
+          "sha256": "d6203b95b9723c74e510caa65852b8a7b85895927ab72edb29b4f91ad99c4738"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-teacher-zero/teacher-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-teacher-zero/teacher-20ms.native.json",
+          "sha256": "a1a6d4f56e603d62a739b45cd881c32af9fa2763b4ad4770091ea92aad92bb04"
+        }
+      ]
+    },
+    {
+      "name": "teacher-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "residual-crawl.rhai: Function not found: / ((), i64) @ 'residual-crawl.rhai' (line 10, position 46)\nin call to function 'control' (from 'residual-crawl.rhai') (line 1, position 47)",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.000974549,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-teacher-zero/teacher-5ms.scene.json",
+          "sha256": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-teacher-zero/teacher-5ms.config.json",
+          "sha256": "03abd72c767450ec64703a7bfa328d836ffe6ce5b48dbc61ff2d3b04f762e333"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-teacher-zero/teacher-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-teacher-zero/teacher-5ms.native.json",
+          "sha256": "5d2d351e1d96f22e358f483b2dba2b190e501f576b37139e9df4bca6b90c8940"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-teacher-zero/plan.json",
+      "sha256": "38a7c89c9a83259dd1e1a78b8ed899b710059f03cf56016f73b275ac9daf83b3"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "978e284647ac7de61be25b3e482b34291b77f92143dbd76ea48a95d609dcca8c"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Two predeclared privileged teacher diagnosis cases; no student promotion or hardware validity implied."
+}

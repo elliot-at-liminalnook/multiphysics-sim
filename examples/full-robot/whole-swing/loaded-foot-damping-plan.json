@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "position-only",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+      "actions": "runs/full-robot/learning/loaded-foot-damping/position-only.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "velocity_damping_s": null
+    },
+    {
+      "name": "damping-50ms",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/loaded-foot-damping/damping-50ms.config.json",
+      "actions": "runs/full-robot/learning/loaded-foot-damping/damping-50ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "velocity_damping_s": 0.05
+    },
+    {
+      "name": "damping-200ms",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/loaded-foot-damping/damping-200ms.config.json",
+      "actions": "runs/full-robot/learning/loaded-foot-damping/damping-200ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "velocity_damping_s": 0.2
+    },
+    {
+      "name": "damping-500ms",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/loaded-foot-damping/damping-500ms.config.json",
+      "actions": "runs/full-robot/learning/loaded-foot-damping/damping-500ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "velocity_damping_s": 0.5
+    }
+  ],
+  "baseline": {
+    "path": "runs/full-robot/learning/direct-support/direct-minute.native.json",
+    "sha256": "0f4c58fefcdf0077e870f65f50fc0311b07c54efe2ec9d8ce5102376acdc4c19"
+  },
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/LOADED-FOOT-DAMPING-PLAN.md",
+      "sha256": "f32fa246d26f0a4e44b54377899fdd0e29e1140791464710e44672f7a8e00683"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/direct-support-minute.config.json",
+      "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-recipes.json",
+      "sha256": "49b69c3d2feefb27eeb353e7c987cc6c1e2bfe5cf4585bd6529d7004042a3043"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/direct-support-status.json",
+      "sha256": "b19a1bbf8e50c9c89fba53092ef1ba614c77d684ed1690e608bc04bb9ce3d7a1"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+      "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/position-only.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/damping-50ms.config.json",
+      "sha256": "867bec81c820777c9a5758d674581ebbe946b41cccc17d7de7c14045e8e25e1b"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/damping-50ms.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/damping-200ms.config.json",
+      "sha256": "baee8723ebed6053581499494bfc2743a87ce0f628510279c54ebab52d9649f3"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/damping-200ms.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/damping-500ms.config.json",
+      "sha256": "f6db72d56621f9dba3720a769ecd8629d445940ed6b1e404818885dc7b341ec4"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/damping-500ms.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "crates/sim-domain-control/src/load_damping.rs",
+      "sha256": "b6520735d7f1a95bb0bf1161c128f41c03809b4e722713173b0ad9ee403ebb39"
+    },
+    {
+      "path": "crates/sim-runtime/src/point_feedback.rs",
+      "sha256": "17dae5f1133612a421167795f6f9bb9956dfa872d37d61574a3ec978aef742b3"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated.rs",
+      "sha256": "cc9df0e96e0c027de3318d7c309ce8f145f52b2539dcf7b358050a8a370958c0"
+    },
+    {
+      "path": "crates/sim-domain-control/tests/load_damping.rs",
+      "sha256": "5a49a194a0118e0422407a60e31ca8c196d8ca8d04f6e2232ac5115051e1f263"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/contact_velocity.rs",
+      "sha256": "93149893b1ac32c28da10c4b940ab291ba98b096693dab550d696e12c0cfaef5"
+    },
+    {
+      "path": "crates/sim-runtime/tests/point_feedback.rs",
+      "sha256": "184af007407dd84f405a5def67862a0403afda0e4403c84e68eb3cf72a9cac05"
+    },
+    {
+      "path": "crates/sim-script/tests/load_damping.rs",
+      "sha256": "55cc344347981b2a4ed57eba77b3d618ccdcd7054e2e38452ee01edfcb4d854d"
+    },
+    {
+      "path": "examples/interactive/load-weighted-foot-damping.md",
+      "sha256": "0aca772ed1e96c9d1a315a4802625c17e287b0a14977bbaa3390f2c4b494e5c2"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "runs/load-damping-kernel-tests-retry.log",
+      "sha256": "c70ffbd296b1d86b60f9458bad7d0d27bf6ab627243dbee0886e35f8becc21c3"
+    },
+    {
+      "path": "runs/load-damping-runtime-tests.log",
+      "sha256": "2d50e57779b088791f4a69ec0151d579e85206615ae0d667bb1c6dbdc6be38d9"
+    },
+    {
+      "path": "runs/load-damping-contact-tests.log",
+      "sha256": "70c5859eb694c52b52ade3cd35e9c288a9cf6c4868e233124bd38304c8c08d06"
+    },
+    {
+      "path": "runs/load-damping-native-build.log",
+      "sha256": "56a52660b55529fc165bc47a5186df1e898a23b877bf90ef6cc9005ceae64fff"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "0abc13e18219d706bfbf578cfe62162fd87f87007ea2c6da8f18d9bd6b786539"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "762b13d40e0163d4e1512541528a70c9d552d773e18accf15083b9258e7953ce"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_loaded_foot_damping.mjs",
+      "sha256": "16a506a674bcfe73d4ea765c294468c644be3917c751b60e4a8d3ad6b608676d"
+    }
+  ],
+  "scope": "Four frozen native development minutes. Identical robot, physics and direct-transfer controller except optional loaded horizontal contact-velocity damping. Task and contact thresholds unchanged; no held-out, terrain, browser or timestep qualification."
+}

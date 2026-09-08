@@ -26,7 +26,8 @@ for (const c of plan.cases) {
   closeSync(fd); assert(!result.error, result.error?.message); sources.forEach(verify); plan.sources.forEach(verify);
   const measurement = existsSync(report) ? read(report) : null;
   cases.push({...c, exit_code: result.status, signal: result.signal, measurement,
-    sources: [log, report, report.replace('.json', '.recording.json'), report.replace('.json', '.timing.json')].filter(existsSync).map(source)});
+    sources: [log, report, report.replace('.json', '.recording.json'), report.replace('.json', '.timing.json'),
+      report.replace('.json', '.frames.json')].filter(existsSync).map(source)});
   writeFileSync(statusPath, JSON.stringify({version: 1, complete: cases.length === plan.cases.length,
     cases, parity, sources, scope: plan.scope}, null, 2) + '\n');
   console.log({name: c.name, completed: measurement?.completed, active: measurement?.performance.active_motion,

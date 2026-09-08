@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "passed": true,
+  "exact_native_recipe_seed_and_inputs": true,
+  "received_frames": 1200,
+  "distinct_drawn_frames": 1194,
+  "commands": 4,
+  "causal_physical_response_measured": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/causal-response-browser-status.json",
+      "sha256": "d0906016fd39c55927699a0b06898b142abf2aacbac6af661e82f56e85ed404b"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/direct-support-status.json",
+      "sha256": "b19a1bbf8e50c9c89fba53092ef1ba614c77d684ed1690e608bc04bb9ce3d7a1"
+    },
+    {
+      "path": "runs/full-robot/learning/direct-support/direct-steering.native.json",
+      "sha256": "c30070d86adb4c1874de1120435fc10eea2323bcb8c1818190e2bcd644f35172"
+    },
+    {
+      "path": "runs/interactive/causal-response/direct-turn.recording.json",
+      "sha256": "31767e4c086d54315866d24d3cef0186302fab1629b99eb1caae51e5b4b96880"
+    },
+    {
+      "path": "runs/interactive/causal-response/direct-turn.frames.json",
+      "sha256": "7bb2c49183589cc9e4fdea581a3103b314bcf95aa4f85efa1237dba23f3dc81b"
+    },
+    {
+      "path": "runs/interactive/causal-response/direct-turn.timing.json",
+      "sha256": "87aeef0941906de4d711b6771178223118fd21c32082ab7c15529b64547aac6c"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_causal_browser_timeline.mjs",
+      "sha256": "cf50541480d44e9214a37aefced6536133a5a018e97661e96029f156c94f40e2"
+    }
+  ],
+  "scope": "The complete browser recording matches accepted native steering inputs. Dispatch, receipt and draw submission share one page clock, with draw timestamps after receipt of the same physics sample. Paired counterfactual physical trajectories are still required to measure causal response; monitor presentation and hardware latency are not measured."
+}

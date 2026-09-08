@@ -55,7 +55,7 @@ try{
    constructor(...args){super(...args);this.starts=new Map();this.addEventListener('message',({data})=>{
     window.decodeMeasuredWorkerResult(data);
     if(data.progress)return;const start=this.starts.get(data.id);if(start!=null){const p=window.liveProbe,now=performance.now(),wall=(now-start)/1000;
-      p.steps.push(wall);p.samples.push({time_s:data.result?.time_s,wall_s:wall,interval_s:(now-(p.previousResponse??p.started))/1000,phase:data.result?.policy?.step_reference?.reference.phase,...data.timing});p.previousResponse=now;p.finalPhase=data.result?.policy?.step_reference?.reference.phase;
+      p.steps.push(wall);p.samples.push({time_s:data.result?.time_s,received_at_ms:now,wall_s:wall,interval_s:(now-(p.previousResponse??p.started))/1000,phase:data.result?.policy?.step_reference?.reference.phase,...data.timing});p.previousResponse=now;p.finalPhase=data.result?.policy?.step_reference?.reference.phase;
       const reference=data.result?.policy?.step_reference?.reference;
       for(const command of p.commands){
        if(command.superseded||command.reference_response_s!==undefined||!reference)continue;
@@ -79,7 +79,7 @@ try{
   const viewer=await import('./viewer.js');window.liveProbe.readRenderCount=viewer.renderedFrameCount;window.liveProbe.readRenderedFrame=viewer.renderedFrameInfo;
  });
  await page.evaluate(({steering,schedule,commandChannels})=>{
-  const p=window.liveProbe;p.initialDraws=p.readRenderCount?.();p.started=performance.now();p.frames=[];p.previous=p.started;p.running=true;
+  const p=window.liveProbe;p.initialDraws=p.readRenderCount?.();p.started=performance.now();p.frames=[];p.drawnFrames=[];p.previous=p.started;p.running=true;
   let stage=0;const key=(type,key)=>window.dispatchEvent(new KeyboardEvent(type,{key,bubbles:true,cancelable:true}));
   const recordCommand=()=>{
    for(const command of p.commands)if(command.reference_response_s===undefined)command.superseded=true;
@@ -92,6 +92,9 @@ try{
   if(steering){key('keydown',schedule[0][1]);recordCommand();}
   const draw=now=>{if(!p.running)return;p.frames.push((now-p.previous)/1000);p.previous=now;
    const rendered=p.readRenderedFrame?.();
+   if(rendered&&rendered.frame!==p.drawnFrames.at(-1)?.frame){
+    p.drawnFrames.push({frame:rendered.frame,time_s:rendered.time_s,submitted_at_ms:rendered.submitted_at_ms});
+   }
    for(const command of p.commands){
     if(command.superseded||command.drawn_reference_s!==undefined||!rendered?.latched_twist)continue;
     if(rendered.submitted_at_ms>=command.issued_at_ms&&rendered.reference_sample>command.previous_reference_sample
@@ -124,7 +127,7 @@ try{
  const result=await page.evaluate(()=>{
   const p=window.liveProbe,canvas=document.querySelector('canvas'),gl=canvas.getContext('webgl2');const ext=gl?.getExtension('WEBGL_debug_renderer_info');
   return {wall_s:(p.ended-p.started)/1000,simulated_s:parseFloat(document.querySelector('#sim-time').textContent),status:document.querySelector('#execution-state').textContent,simulation_error:p.simulationError,
-   worker_transitions_s:p.steps,transition_samples:p.samples,final_phase:p.finalPhase,render_intervals_s:p.frames,
+   worker_transitions_s:p.steps,transition_samples:p.samples,drawn_frames:p.drawnFrames,final_phase:p.finalPhase,render_intervals_s:p.frames,
    actual_drawn_frames:p.readRenderCount?p.readRenderCount()-p.initialDraws:null,
    commands:p.commands,drawn_reference_supported:Boolean(p.readRenderedFrame),phase_messages:p.phase_messages,
    frame_encoding:p.frame_encoding,gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null};
@@ -133,6 +136,16 @@ try{
  const completed=Math.abs(result.simulated_s-duration)<1e-9&&!errors.length&&!result.simulation_error
   &&result.worker_transitions_s.length===Math.round(duration/data.task.period_s);
  const validationErrors=[];
+ try {
+  const times=new Set(result.transition_samples.map(s=>s.time_s));times.add(0);
+  assert(result.transition_samples.every((s,i,a)=>Number.isFinite(s.received_at_ms)
+   &&(!i||s.received_at_ms>=a[i-1].received_at_ms)));
+  if(result.drawn_reference_supported){
+   assert(result.drawn_frames.length>0);
+   assert(result.drawn_frames.every((f,i,a)=>times.has(f.time_s)&&Number.isFinite(f.submitted_at_ms)
+    &&(!i||(f.frame>a[i-1].frame&&f.time_s>=a[i-1].time_s&&f.submitted_at_ms>=a[i-1].submitted_at_ms))));
+  }
+ } catch(error) { validationErrors.push(`frame clock timeline: ${error.message}`); }
  try { if(steering&&completed&&result.drawn_reference_supported){
   assert.equal(result.commands.length,schedule.length);
   for(const command of result.commands){
@@ -184,5 +197,8 @@ try{
  report.validation_passed=validationErrors.length===0;
  await page.screenshot({path:reportPath.replace(/\.json$/,'.png')});
  await writeFile(reportPath.replace(/\.json$/,'.timing.json'),JSON.stringify(result.transition_samples)+'\n');
+ await writeFile(reportPath.replace(/\.json$/,'.frames.json'),JSON.stringify({version:1,
+  commands:result.commands,received:result.transition_samples.map(s=>({time_s:s.time_s,received_at_ms:s.received_at_ms})),
+  drawn:result.drawn_frames,scope:'Command dispatch, worker receipt and WebGL submission use one page performance.now clock. Submitted frames may skip physics samples; these timestamps do not establish monitor presentation or physical-response causality by themselves.'})+'\n');
  await writeFile(reportPath,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));assert(completed);assert(report.validation_passed);
 }finally{await browser?.close();server.kill();}

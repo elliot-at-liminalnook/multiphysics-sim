@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "tangent-radius-0.000001",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582489803772701,
+        "final_yaw_error_rad": 0.0003280779520178183,
+        "maximum_body_tilt_rad": 0.004145772118213665,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779576623937,
+          -0.00021510501894441016,
+          -0.0007700189555881407
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000001-acceptance/summary.json",
+          "sha256": "b793672b2051c57c50b3c25450545766a820bcc3b66ab6618fdce486d9155faa"
+        }
+      },
+      "wall_s": 7.821504912,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000001.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000001.config.json",
+          "sha256": "fa575a0c6066d62bffa529b302d0c2e3cf7f4e564523b974fada4659779b7679"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000001.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000001.native.json",
+          "sha256": "c6d42a3a503044e39df0e0028cf850d65679a1553620876d73c6e316f5962d1a"
+        }
+      ]
+    },
+    {
+      "name": "tangent-radius-0.000004",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582491396813667,
+        "final_yaw_error_rad": 0.0003280789313836186,
+        "maximum_body_tilt_rad": 0.0041457720929336086,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140780067549092,
+          -0.00021510521620547843,
+          -0.000770018762595151
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000004-acceptance/summary.json",
+          "sha256": "db461b2f2d98ba4ce1be475552c61595ebb901e3ece11a2a6b492c9198618565"
+        }
+      },
+      "wall_s": 7.2152890339999995,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000004.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000004.config.json",
+          "sha256": "87af5c3497240822326cfd6bbe327e3a3688d40239e42c48e9202bf093e084dd"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000004.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000004.native.json",
+          "sha256": "36e091783b4af0093b548c2f3f53f7b91b4d6ba509a94a9297385c71242c5b2d"
+        }
+      ]
+    },
+    {
+      "name": "tangent-radius-0.00001",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582490414785933,
+        "final_yaw_error_rad": 0.0003280784468676339,
+        "maximum_body_tilt_rad": 0.004145772004721206,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779856794775,
+          -0.00021510521103582303,
+          -0.0007700187895747553
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001-acceptance/summary.json",
+          "sha256": "5d8236613c18ce2c4a038e1c43e5b6941f4db9bce284755a299399ed4350612a"
+        }
+      },
+      "wall_s": 6.778465472,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001.config.json",
+          "sha256": "e3f5ab0d21e45bd65aa2c2f48594586da2998025ec4f62bdc79f6250aba5db27"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001.native.json",
+          "sha256": "58b73c5ed62a6b806aeae8a79c9367f9732294fdca7d82670c7a204c8734d4cd"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-tangent-radius/plan.json",
+      "sha256": "3cb39c4fa4d6334df4095454de443e955274077c26abcd38c7dcb1a333aea26d"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "09d97a9b60e74c46157b1b48d1828ff6bf542da74597e59e15edfee01016c2f8"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Three numerical probe radii with identical physical steering task; unchanged host, physical and timestep accuracy gates."
+}

@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "timestep_reference": false,
+  "numerical_precision": false,
+  "block_factorization": false,
+  "guarded_backtracking": false,
+  "broyden_updates": false,
+  "linearized_probes": true,
+  "baseline": {
+    "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-reference.native.json",
+    "sha256": "8d4303eb1e1a444636e48c2bac2305e49187628712de48cd63b408d3585139a0"
+  },
+  "candidate": {
+    "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001.native.json",
+    "sha256": "58b73c5ed62a6b806aeae8a79c9367f9732294fdca7d82670c7a204c8734d4cd"
+  },
+  "markers": {
+    "path": "examples/full-robot/foot-markers.json",
+    "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+  },
+  "frames": 1201,
+  "metrics": {
+    "foot_marker_position_m": {
+      "maximum": 1.8183018081629832e-9,
+      "samples": 4804,
+      "worst": {
+        "time_s": 8,
+        "identity": "+Y-foot-surface"
+      },
+      "rms": 6.099218072303355e-10
+    },
+    "link_position_m": {
+      "maximum": 1.7025744413537718e-9,
+      "samples": 34829,
+      "worst": {
+        "time_s": 14.44,
+        "identity": "-X | Foot servo crank 9a9b"
+      },
+      "rms": 6.158896322821637e-10
+    },
+    "link_velocity_m_s": {
+      "maximum": 7.740498662553735e-8,
+      "samples": 34829,
+      "worst": {
+        "time_s": 8,
+        "identity": "+Y | Sliding foot crosshead"
+      },
+      "rms": 3.3147575376406096e-9
+    },
+    "link_angular_velocity_rad_s": {
+      "maximum": 7.049452904141538e-7,
+      "samples": 34829,
+      "worst": {
+        "time_s": 8,
+        "identity": "+Y | Worm and input spindle b816"
+      },
+      "rms": 2.5966863455576624e-8
+    },
+    "rotation_matrix_entry": {
+      "maximum": 1.4991309749134984e-8,
+      "samples": 34829,
+      "worst": {
+        "time_s": 16.76,
+        "identity": "-X | Foot servo crank 9a9b"
+      },
+      "rms": 1.1494469778199657e-9
+    },
+    "body_position_m": {
+      "maximum": 1.6200139857578153e-9,
+      "samples": 1201,
+      "worst": {
+        "time_s": 14.44,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 6.084572651343304e-10
+    },
+    "body_heading_rad": {
+      "maximum": 3.1440523864945114e-9,
+      "samples": 1201,
+      "worst": {
+        "time_s": 14.120000000000001,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 7.675046654759547e-10
+    },
+    "joint_positions": {
+      "maximum": 2.911620744505683e-8,
+      "samples": 33628,
+      "worst": {
+        "time_s": 16.76,
+        "identity": 26
+      },
+      "rms": 1.5399485055615515e-9
+    },
+    "joint_velocities": {
+      "maximum": 6.974637211942802e-7,
+      "samples": 33628,
+      "worst": {
+        "time_s": 16.740000000000002,
+        "identity": 27
+      },
+      "rms": 3.713693140062645e-8
+    },
+    "servo_targets_rad": {
+      "maximum": 2.265736687157016e-8,
+      "samples": 14412,
+      "worst": {
+        "time_s": 16.740000000000002,
+        "identity": 11
+      },
+      "rms": 1.565547059291612e-9
+    },
+    "contact_pair_force_n": {
+      "maximum": 0.00003236676552769039,
+      "samples": 4482,
+      "worst": {
+        "time_s": 16.86,
+        "identity": "6:null"
+      },
+      "rms": 0.000001635395629582011
+    }
+  },
+  "contact_pair_mismatches": 0,
+  "phase_mismatches": 0,
+  "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization, guarded backtracking bounded Broyden updates or linearized derivative probes. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate."
+}

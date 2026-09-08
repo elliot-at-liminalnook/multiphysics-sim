@@ -24,6 +24,12 @@ const broydenBrowserPath = 'examples/full-robot/whole-swing/broyden-browser-stat
 const refinedTeacherPath = 'examples/full-robot/whole-swing/minute-refinement-status.json', refinedTeacher = read(refinedTeacherPath).cases.find(c => c.name === 'combined-minute-1.25ms');
 const referenceBrowserPath = 'examples/full-robot/whole-swing/reference-browser-status.json', referenceBrowser = read(referenceBrowserPath);
 const tangentPath = 'examples/full-robot/whole-swing/tangent-probes-status.json', tangent = read(tangentPath).cases.find(c => c.name === 'tangent-probes-enabled');
+const tangentInitialBrowserPath = 'examples/full-robot/whole-swing/tangent-probes-initial-browser.json', tangentInitialBrowser = read(tangentInitialBrowserPath);
+const radiusPath = 'examples/full-robot/whole-swing/tangent-radius-status.json';
+const radiusSelectionPath = 'examples/full-robot/whole-swing/tangent-radius-selection.json', radiusSelection = read(radiusSelectionPath);
+const radius = read(radiusPath).cases.find(c => c.name === radiusSelection.selected.name);
+const radiusParityPath = 'examples/full-robot/whole-swing/tangent-radius-browser-parity.json';
+const radiusParity = read(radiusParityPath).cases.find(c => c.name === radius.name).measurement;
 const definitions = [
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
@@ -73,7 +79,14 @@ const definitions = [
     scene: 'examples/full-robot/whole-swing/tangent-turn.scene.json', config: 'examples/full-robot/whole-swing/tangent-turn.config.json',
     capture: tangent.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(tangent.acceptance.source.path), evidence: tangentPath,
     commands: true, benchmark: 'flat-steering-24s-v1', numerical: 'examples/full-robot/whole-swing/tangent-probes-refinement.json',
-    extraEvidence: ['examples/full-robot/whole-swing/tangent-probes-difference.json', 'examples/full-robot/whole-swing/tangent-probes-profile.json']},
+    parityFailed: !tangentInitialBrowser.parity.passed,
+    extraEvidence: ['examples/full-robot/whole-swing/tangent-probes-difference.json', 'examples/full-robot/whole-swing/tangent-probes-profile.json', tangentInitialBrowserPath]},
+  {id: 'portable-tangent-steering', name: 'Steering with portable tangent probes', description: 'The larger derivative probe passes native/WASM agreement and exact replay while retaining exact accepted physics. All 15 steering swings pass; coarse timestep accuracy still fails.',
+    scene: 'examples/full-robot/whole-swing/portable-tangent-turn.scene.json', config: 'examples/full-robot/whole-swing/portable-tangent-turn.config.json',
+    capture: radius.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(radius.acceptance.source.path), evidence: radiusPath,
+    commands: true, benchmark: 'flat-steering-24s-v1', numerical: 'examples/full-robot/whole-swing/tangent-radius-refinement.json',
+    parity: radiusParity.passed && radiusParity.replay_exact && radiusParity.reset_exact,
+    extraEvidence: [radiusSelectionPath, radiusParityPath, radiusSelection.selected.comparison.path]},
 ];
 const taskPath = 'examples/full-robot/heading-task/task.json';
 mkdirSync('runs/leaderboard', {recursive: true});
@@ -122,7 +135,7 @@ for (const d of definitions) {
     terrain: gate('missing', 'This entry is a flat-floor experiment; progressively harder terrain is outstanding.'),
     numerical_accuracy: gate(numericalStatus, numerical ? `Sampled foot difference ${(footDifference * 1000).toFixed(3)} mm; required at most 1 mm, plus a 0.5 mm body screen. ${Number.isFinite(bodyDifference) ? `Body difference ${(bodyDifference * 1000).toFixed(3)} mm.` : 'Body screen not recorded.'}` : 'Solver-option agreement does not establish timestep convergence.'),
     browser_realtime: gate(!d.performance ? 'missing' : performance?.active_motion?.simulation_per_wall_second >= 1 && performance?.active_motion?.transition_p95_s <= .020 ? 'pass' : 'fail', 'Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host.'),
-    replay_parity: gate(d.parity ? 'pass' : 'missing', d.parity ? 'Associated native/WASM comparison and same-host replay pass.' : d.partialParity ? 'The 24-second teacher case passes native/WASM comparison and exact replay/reset; full-minute host parity is not yet established.' : 'No browser parity result is associated with this exact controller profile.'),
+    replay_parity: gate(d.parity ? 'pass' : d.parityFailed ? 'fail' : 'missing', d.parity ? 'Associated native/WASM comparison and same-host replay pass.' : d.parityFailed ? 'The associated native/WASM comparison exceeds the declared portability tolerance; see the recorded differences. Exact same-host replay alone does not pass this gate.' : d.partialParity ? 'The 24-second teacher case passes native/WASM comparison and exact replay/reset; full-minute host parity is not yet established.' : 'No browser parity result is associated with this exact controller profile.'),
   };
   const data = {scene, config, task, seed: capture.recording.seed};
   const entry = {id: d.id, name: d.name, description: d.description, benchmark_version: benchmark,

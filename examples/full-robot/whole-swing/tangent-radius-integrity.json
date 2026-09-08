@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "passed": true,
+  "outcomes": [
+    {
+      "name": "tangent-radius-0.000001",
+      "completed": true,
+      "passed": true,
+      "completed_transitions": 1200,
+      "input_identity_verified": true,
+      "verified_seed": 0
+    },
+    {
+      "name": "tangent-radius-0.000004",
+      "completed": true,
+      "passed": true,
+      "completed_transitions": 1200,
+      "input_identity_verified": true,
+      "verified_seed": 0
+    },
+    {
+      "name": "tangent-radius-0.00001",
+      "completed": true,
+      "passed": true,
+      "completed_transitions": 1200,
+      "input_identity_verified": true,
+      "verified_seed": 0
+    }
+  ],
+  "explicit_seed_default": null,
+  "identical_parsed_robot_and_physics_options": true,
+  "unretained_source_scene_fields": [
+    "scene.robot.format",
+    "scene.robot.joints.*.declared",
+    "scene.robot.joints.*.fastened.points",
+    "scene.robot.joints.*.merged_into",
+    "scene.robot.joints.*.physics.bearing.pressure",
+    "scene.robot.joints.*.physics.flex_patch_radius",
+    "scene.robot.joints.*.physics.flex_patch_source",
+    "scene.robot.joints.*.physics.lever",
+    "scene.robot.joints.*.physics.materials",
+    "scene.robot.joints.*.physics.outboard_mass",
+    "scene.robot.links.*.collision.sign_derivation",
+    "scene.robot.links.*.mass_sources",
+    "scene.robot.links.*.member_names",
+    "scene.robot.materials.carbon_tube_provisional.bearing_pressure",
+    "scene.robot.materials.nylon.bearing_pressure",
+    "scene.robot.materials.rubber.bearing_pressure",
+    "scene.robot.materials.steel.bearing_pressure",
+    "scene.robot.motors.*.electrical.stall_current",
+    "scene.robot.motors.*.kind",
+    "scene.robot.motors.*.mass",
+    "scene.robot.motors.*.no_load_speed",
+    "scene.robot.motors.*.notes",
+    "scene.robot.motors.*.stall_torque",
+    "scene.robot.motors.*.thermal.ambient_c",
+    "scene.robot.world.floor_friction_static"
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/tangent-radius-plan.json",
+      "sha256": "3cb39c4fa4d6334df4095454de443e955274077c26abcd38c7dcb1a333aea26d"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/tangent-radius-status.json",
+      "sha256": "4e26810ba5d7197a0a26062e246839bf07e501c8337d3b167e4d38ff24fd7951"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/audit_walking_suite.mjs",
+      "sha256": "da34f3e6bf4e0881c9f61bdbc6d99484e609bb44a46a5da2e0dde03813f734c2"
+    }
+  ],
+  "scope": "Every declared outcome matched to hashed inputs and captures, authored configuration, all retained scene fields, seed and sampled actions; completed captures require matching independent acceptance. Raw CAD exports retain additional fields absent from the Rust scene schema, listed explicitly. This integrity audit is not a controller acceptance or hardware certificate."
+}

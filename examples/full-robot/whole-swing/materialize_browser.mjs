@@ -38,6 +38,7 @@ for (const [study, name, prefix] of [
   ['broyden', 'student-turn-20ms-broyden', 'broyden-turn'],
   ['minute-refinement', 'combined-minute-1.25ms', 'reference-minute'],
   ['tangent-probes', 'tangent-probes-enabled', 'tangent-turn'],
+  ['tangent-radius', JSON.parse(readFileSync(`${root}/tangent-radius-selection.json`)).selected.name, 'portable-tangent-turn'],
 ]) {
   const plan = JSON.parse(readFileSync(`${root}/${study}-plan.json`));
   const status = JSON.parse(readFileSync(`${root}/${study}-status.json`));

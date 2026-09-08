@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "timestep_reference": true,
+  "numerical_precision": false,
+  "block_factorization": false,
+  "guarded_backtracking": false,
+  "broyden_updates": true,
+  "linearized_probes": true,
+  "baseline": {
+    "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001.native.json",
+    "sha256": "58b73c5ed62a6b806aeae8a79c9367f9732294fdca7d82670c7a204c8734d4cd"
+  },
+  "candidate": {
+    "path": "runs/full-robot/learning/whole-turn-refinement/student-turn-20ms-support-24mm-refined.native.json",
+    "sha256": "59c0063e68f2aedac5d65abc83818bf2e9a1afc47c5f6f40214acaef75098fff"
+  },
+  "markers": {
+    "path": "examples/full-robot/foot-markers.json",
+    "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+  },
+  "frames": 1201,
+  "metrics": {
+    "foot_marker_position_m": {
+      "maximum": 0.001599092765764802,
+      "samples": 4804,
+      "worst": {
+        "time_s": 18.28,
+        "identity": "+Y-foot-surface"
+      },
+      "rms": 0.0005287635718294511
+    },
+    "link_position_m": {
+      "maximum": 0.001645871310481458,
+      "samples": 34829,
+      "worst": {
+        "time_s": 15.48,
+        "identity": "-X | Rigid curved connecting link"
+      },
+      "rms": 0.0005399062334777182
+    },
+    "link_velocity_m_s": {
+      "maximum": 0.03841021458140734,
+      "samples": 34829,
+      "worst": {
+        "time_s": 15.24,
+        "identity": "-X | Sliding foot crosshead"
+      },
+      "rms": 0.006554875626392519
+    },
+    "link_angular_velocity_rad_s": {
+      "maximum": 0.6306146901116133,
+      "samples": 34829,
+      "worst": {
+        "time_s": 15.22,
+        "identity": "-X | Worm and input spindle 5276"
+      },
+      "rms": 0.06996709663525363
+    },
+    "rotation_matrix_entry": {
+      "maximum": 0.01186892559118674,
+      "samples": 34829,
+      "worst": {
+        "time_s": 12.42,
+        "identity": "-Y | Rigid curved connecting link"
+      },
+      "rms": 0.0017619612574468638
+    },
+    "body_position_m": {
+      "maximum": 0.0014808307468676934,
+      "samples": 1201,
+      "worst": {
+        "time_s": 19.580000000000002,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 0.000561423940423553
+    },
+    "body_heading_rad": {
+      "maximum": 0.00195116207682332,
+      "samples": 1201,
+      "worst": {
+        "time_s": 0.9,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 0.0005329869309487815
+    },
+    "joint_positions": {
+      "maximum": 0.023459999274467236,
+      "samples": 33628,
+      "worst": {
+        "time_s": 12.42,
+        "identity": 24
+      },
+      "rms": 0.0024983164959361
+    },
+    "joint_velocities": {
+      "maximum": 0.9679640834172876,
+      "samples": 33628,
+      "worst": {
+        "time_s": 0.44,
+        "identity": 24
+      },
+      "rms": 0.09212642235252702
+    },
+    "servo_targets_rad": {
+      "maximum": 0.012270439841047476,
+      "samples": 14412,
+      "worst": {
+        "time_s": 1.6400000000000001,
+        "identity": 11
+      },
+      "rms": 0.0019223322739010122
+    },
+    "contact_pair_force_n": {
+      "maximum": 8.961457689195457,
+      "samples": 4483,
+      "worst": {
+        "time_s": 18.28,
+        "identity": "6:null"
+      },
+      "rms": 1.5785468531653077
+    }
+  },
+  "contact_pair_mismatches": 10,
+  "phase_mismatches": 0,
+  "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization, guarded backtracking bounded Broyden updates or linearized derivative probes. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate."
+}

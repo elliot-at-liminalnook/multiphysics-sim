@@ -6,6 +6,7 @@ import {resolve,dirname} from 'node:path';
 import {cpus,platform,arch} from 'node:os';
 import {createHash} from 'node:crypto';
 import {chromium} from 'playwright';
+import {decodeWorkerResult} from '../worker-message.mjs';
 const [directory,preset,reportPath,scenario='turn-reverse',configPath]=process.argv.slice(2);assert(directory&&preset&&reportPath);
 await mkdir(dirname(reportPath),{recursive:true});
 const catalog=JSON.parse(await readFile(resolve(directory,'catalog.json')));
@@ -17,6 +18,8 @@ const entry=catalog.presets.find(p=>p.id===preset);assert(entry?.task);
 assert(!configPath||!entry.asset_sha256,'Configuration overrides invalidate pinned leaderboard assets; package the selected recipe as its own tested entry.');
 const displayRate=process.env.DISPLAY_RATE;
 assert(displayRate===undefined||['0','30'].includes(displayRate),'DISPLAY_RATE must be 0 (automatic) or 30');
+const frameEncoding=process.env.FRAME_ENCODING;
+assert(frameEncoding===undefined||['object','json'].includes(frameEncoding),'FRAME_ENCODING must be object or json');
 const data=JSON.parse(await readFile(resolve(directory,entry.path)));
 let configOverride=null;
 if(configPath){
@@ -40,10 +43,14 @@ let browser;
 try{
  browser=await chromium.launch({headless:process.env.HEADED!=='1',...(process.env.CHROME_EXECUTABLE?{executablePath:process.env.CHROME_EXECUTABLE}:{})});
  const page=await browser.newPage({viewport:{width:1440,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.addInitScript(()=>{
+ // Use the production decoder before measuring receipt. Its cached result is
+ // consumed by the viewer handler, so JSON is parsed exactly once per reply.
+ await page.addInitScript({content:`window.decodeMeasuredWorkerResult = ${decodeWorkerResult.toString()};`});
+ await page.addInitScript(({frameEncoding})=>{
   window.liveProbe={steps:[],samples:[],commands:[],phase_messages:[]};const Original=window.Worker;
   window.Worker=class extends Original{
    constructor(...args){super(...args);this.starts=new Map();this.addEventListener('message',({data})=>{
+    window.decodeMeasuredWorkerResult(data);
     if(data.progress)return;const start=this.starts.get(data.id);if(start!=null){const p=window.liveProbe,now=performance.now(),wall=(now-start)/1000;
       p.steps.push(wall);p.samples.push({time_s:data.result?.time_s,wall_s:wall,interval_s:(now-(p.previousResponse??p.started))/1000,phase:data.result?.policy?.step_reference?.reference.phase,...data.timing});p.previousResponse=now;p.finalPhase=data.result?.policy?.step_reference?.reference.phase;
       const reference=data.result?.policy?.step_reference?.reference;
@@ -56,9 +63,9 @@ try{
       }
       this.starts.delete(data.id);}
    });}
-   postMessage(data,...args){if(data.type==='step'){this.starts.set(data.id,performance.now());data={...data,profile_timing:true};}return super.postMessage(data,...args);}
+   postMessage(data,...args){if(data.type==='step'){this.starts.set(data.id,performance.now());data={...data,profile_timing:true,...(frameEncoding?{response_encoding:frameEncoding}:{})};window.liveProbe.frame_encoding=data.response_encoding??'object';}return super.postMessage(data,...args);}
   };
- });
+ },{frameEncoding});
  if(configOverride)await page.route(`**/${entry.path}`,route=>route.fulfill({contentType:'application/json',body:JSON.stringify(data)}));
  await page.goto(`${url}/?preset=${encodeURIComponent(preset)}`);
  await page.locator('#overlay').waitFor({state:'hidden',timeout:30000});
@@ -117,7 +124,7 @@ try{
    worker_transitions_s:p.steps,transition_samples:p.samples,final_phase:p.finalPhase,render_intervals_s:p.frames,
    actual_drawn_frames:p.readRenderCount?p.readRenderCount()-p.initialDraws:null,
    commands:p.commands,drawn_reference_supported:Boolean(p.readRenderedFrame),phase_messages:p.phase_messages,
-   gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null};
+   frame_encoding:p.frame_encoding,gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null};
  });
  const p95=a=>[...a].sort((a,b)=>a-b)[Math.ceil(a.length*.95)-1];
  const completed=Math.abs(result.simulated_s-duration)<1e-9&&!errors.length&&!result.simulation_error
@@ -139,7 +146,7 @@ try{
   transitions:result.worker_transitions_s.length,wall_s:result.wall_s,simulated_s:result.simulated_s};
  const active=result.transition_samples.filter(s=>s.phase&&s.phase!=='hold'&&s.phase!=='idle');
  if(active.length){const wall=active.reduce((n,s)=>n+s.interval_s,0);performance.active_motion={transitions:active.length,simulated_s:active.length*data.task.period_s,wall_s:wall,simulation_per_wall_second:active.length*data.task.period_s/wall,transition_p95_s:p95(active.map(s=>s.wall_s))};}
- const summarize=samples=>Object.fromEntries(['wall_s','worker_s','wasm_call_s','json_parse_s','queue_s','view_update_s','transport_and_dispatch_s'].map(k=>{
+ const summarize=samples=>Object.fromEntries(['wall_s','worker_s','wasm_call_s','json_parse_s','receive_json_parse_s','queue_s','view_update_s','transport_and_dispatch_s'].map(k=>{
   const values=samples.map(s=>k==='transport_and_dispatch_s'?s.wall_s-s.worker_s-s.queue_s:s[k]).filter(Number.isFinite);
   return [k,{samples:values.length,mean:values.reduce((a,b)=>a+b,0)/values.length,p95:p95(values),maximum:Math.max(...values)}];
  }));
@@ -170,6 +177,7 @@ try{
   const download=page.waitForEvent('download');await page.locator('#download').click();await(await download).saveAs(reportPath.replace(/\.json$/,'.recording.json'));
  }
  report.validation_errors=validationErrors;
+ report.frame_encoding=result.frame_encoding;
  report.validation_passed=validationErrors.length===0;
  await page.screenshot({path:reportPath.replace(/\.json$/,'.png')});
  await writeFile(reportPath.replace(/\.json$/,'.timing.json'),JSON.stringify(result.transition_samples)+'\n');

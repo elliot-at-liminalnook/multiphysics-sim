@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "passed": true,
+  "cases": [
+    {
+      "name": "object-turn",
+      "frame_encoding": "object",
+      "active": {
+        "transitions": 1035,
+        "simulated_s": 20.7,
+        "wall_s": 20.697430000007138,
+        "simulation_per_wall_second": 1.0001241700053032,
+        "transition_p95_s": 0.020289999961853027
+      },
+      "overall_rate": 1.0002950870499843,
+      "meets_speed_target": true,
+      "meets_transition_target": false,
+      "sources": [
+        {
+          "path": "runs/interactive/frame-transport/object-turn.recording.json",
+          "sha256": "9be4f29d2f05014540ab3285a9c4c13b78d5ad5133421bab24b8ff18abe11f2a"
+        },
+        {
+          "path": "runs/interactive/portable-tangent/live-turn.recording.json",
+          "sha256": "9be4f29d2f05014540ab3285a9c4c13b78d5ad5133421bab24b8ff18abe11f2a"
+        }
+      ]
+    },
+    {
+      "name": "json-turn",
+      "frame_encoding": "json",
+      "active": {
+        "transitions": 1035,
+        "simulated_s": 20.7,
+        "wall_s": 20.693909999966614,
+        "simulation_per_wall_second": 1.0002942894809823,
+        "transition_p95_s": 0.020189999997615813
+      },
+      "overall_rate": 1.0006395754608886,
+      "meets_speed_target": true,
+      "meets_transition_target": false,
+      "sources": [
+        {
+          "path": "runs/interactive/frame-transport/json-turn.recording.json",
+          "sha256": "9be4f29d2f05014540ab3285a9c4c13b78d5ad5133421bab24b8ff18abe11f2a"
+        },
+        {
+          "path": "runs/interactive/portable-tangent/live-turn.recording.json",
+          "sha256": "9be4f29d2f05014540ab3285a9c4c13b78d5ad5133421bab24b8ff18abe11f2a"
+        }
+      ]
+    },
+    {
+      "name": "json-forward",
+      "frame_encoding": "json",
+      "active": {
+        "transitions": 1035,
+        "simulated_s": 20.7,
+        "wall_s": 20.695334999978552,
+        "simulation_per_wall_second": 1.0002254131195003,
+        "transition_p95_s": 0.02207499998807907
+      },
+      "overall_rate": 1.0003536667006934,
+      "meets_speed_target": true,
+      "meets_transition_target": false,
+      "sources": [
+        {
+          "path": "runs/interactive/frame-transport/json-forward.recording.json",
+          "sha256": "820d2927a1c6e565e82617a0760d2d4231404546909388c4da943d1f65b108f4"
+        },
+        {
+          "path": "runs/interactive/portable-tangent/live-forward.recording.json",
+          "sha256": "820d2927a1c6e565e82617a0760d2d4231404546909388c4da943d1f65b108f4"
+        }
+      ]
+    }
+  ],
+  "ui": {
+    "version": 1,
+    "passed": true,
+    "browser": "152.0.7977.76",
+    "recipes": [
+      {
+        "id": "browser-crawl-minute",
+        "asset_sha256": "771addc1a917aae9bee10d46c5c35f16846331d14f072980c6e6cbe1c4c5ff91"
+      },
+      {
+        "id": "faster-student-minute",
+        "asset_sha256": "2f6681e8e24e1671d7cce649d5ea68f408a8ff23d276cf0ac240b27e31a5b897"
+      },
+      {
+        "id": "overlapping-forward-stop",
+        "asset_sha256": "a39981e81bd9c5e489e3644617e23fa02104a2cc13d6f23417563c3a0dc3fd71"
+      },
+      {
+        "id": "whole-swing-short",
+        "asset_sha256": "8c4415a28db2230c75d3b5354bea6e5425d684b3930a567484af6452e6978da3"
+      },
+      {
+        "id": "faster-teacher-minute",
+        "asset_sha256": "0f0c6583dc26b3fb8f79967e85349d88eaff29cabe9e9fc2edcc99f961c294a6"
+      },
+      {
+        "id": "faster-steering-short",
+        "asset_sha256": "2b30405b6030b7a2ce8d081706a6ae9920a1bd8dd0bf03f6e2054e6d209555f7"
+      },
+      {
+        "id": "settled-teacher-minute",
+        "asset_sha256": "8d290e797e2b4030c992a320620a9046e12443c3c6cd4b2ab066d627da6ff56f"
+      },
+      {
+        "id": "secant-steering-short",
+        "asset_sha256": "a79bac561104eb3b2864024052b6bd7d89cd2403445bf49d6c54668abb1163aa"
+      },
+      {
+        "id": "refined-teacher-minute",
+        "asset_sha256": "db0c253dd6fed9cc43b80d96f0e7b56e14a976c70a20a54a4a614f7312e8c2db"
+      },
+      {
+        "id": "tangent-steering-short",
+        "asset_sha256": "3959d58f786293bf2d20fe48c0c434acb5636daf87176891af6f9b70aba81004"
+      },
+      {
+        "id": "portable-tangent-steering",
+        "asset_sha256": "31d6c5b3a13ab77269759ace1c0205c10d3970d3a511911d4468899198221bf5"
+      }
+    ],
+    "sources": [
+      {
+        "path": "/Users/elliot/physics-simulator/runs/interactive/frame-transport/viewer/leaderboard.json",
+        "sha256": "96de20e7936f93ad8d8e77ed7d252598c7dcc110ff77a75b40ebc4bb64b15c85"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/runs/interactive/frame-transport/viewer/build-manifest.json",
+        "sha256": "361cba5688d933cd4eb7d1753f9f08e94169ef2d10f84eaf4b03a8898c6e9092"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/web/tests/leaderboard.mjs",
+        "sha256": "e2f023a57fea7ca552575e84ad4bbfc3d479c0e0665bfa933c69c8137584e2dd"
+      }
+    ],
+    "checks": [
+      "failed and missing gates remain unranked; search, status and comparison work",
+      "every Load and run executes its pinned controller, seed and tested initial action through WASM",
+      "tested sparse input sequence re-executes its full duration in Rust",
+      "canvas video downloads real WebM bytes; dialog fits desktop and narrow viewports",
+      "optional 30 fps display persists through exact loads, replay and video; control fits the narrow viewport",
+      "mutated recipe bytes are rejected before physics can run"
+    ]
+  },
+  "fixtures": {
+    "passed": true,
+    "checks": [
+      "unchanged paused scenes stop drawing; contact visibility, selection and camera fit redraw",
+      "live Rust/Rhai input, movement, recording and input replay",
+      "load error display and reset recovery",
+      "cancel pending load and restart without stale results",
+      "pendulum-embedded: incremental servo preset execution, target readings and recipe replay",
+      "pendulum-condensed: incremental servo preset execution, target readings and recipe replay",
+      "pendulum-drive-backlash: incremental servo preset execution, target readings and recipe replay",
+      "sampled Rhai motor commands, recorded input events, exact visible replay and restored command slider",
+      "synthetic missing-support timeout is visible, replayable, and recoverable by reset",
+      "pendulum-environment: 50 Hz task score, held-action recording, visible replay and reset",
+      "narrow layout without horizontal overflow; controller input remains available"
+    ],
+    "recorded_robot_tested": false,
+    "live_fixture_tested": true,
+    "page_errors": [],
+    "scope": "Viewer UI checks. Native/WASM numerical parity is a separate runtime gate; Robot presets are checked when present; small fixtures do not establish robot controller accuracy."
+  },
+  "json_realtime_passed": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/frame-transport-status.json",
+      "sha256": "cafb10614c6bf791e21ac134d7364dab039b258077b2af9e956b99a70fbf48e4"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/tangent-browser-status.json",
+      "sha256": "fd6261680b47d1802f5227aa8794530f7e2c2763b4d5e59cc20fbc63c8ad25fd"
+    },
+    {
+      "path": "runs/interactive/frame-transport/leaderboard.json",
+      "sha256": "fa6f519f955064fb2e5a526c0abbfe83859ca488830c301e2dcb6a86c32b120e"
+    },
+    {
+      "path": "runs/interactive/frame-transport/fixtures-ui.json",
+      "sha256": "3aa5ac7997938c25c4c88073f555a8a45faf72df227ba54b4baf8d60142bca8c"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/FRAME-TRANSPORT-PLAN.md",
+      "sha256": "2b4836b35222c3ce1c64de8ca3f05b2624889c3ef31630a0361f52330370d8af"
+    },
+    {
+      "path": "runs/interactive/frame-transport/fixtures/build-manifest.json",
+      "sha256": "953eb9e88cd5f478c7c78101a155ebcc939245506fdf5647d79d64e3b5bfab43"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_frame_transport.mjs",
+      "sha256": "fef217ef3d750f37b63679be0203c1ee235bf5cb0b8d019d7e1914faba2d5488"
+    }
+  ],
+  "scope": "Exact recording/recipe/input and WASM preservation links all cases to prior physically audited captures. Full JSON native/WASM parity, invalid encoding preservation, reset/replay, 11-entry UI, embedded/condensed fixture execution, load cancellation/recovery and error replay pass. Both JSON rendered p95 gates still fail. Encoding is a small measured cost, not a realtime or physical-accuracy qualification."
+}

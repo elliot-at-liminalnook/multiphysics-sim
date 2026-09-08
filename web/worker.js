@@ -10,12 +10,15 @@ self.onmessage = ({ data }) => {
   queue = queue.then(async () => {
     try {
       await ready;
+      const encoding = data.response_encoding ?? 'object';
+      if (!['object','json'].includes(encoding) || (encoding === 'json' && data.type !== 'step'))
+        throw new Error('response encoding must be object, or json for a step reply');
       const started = received === undefined ? undefined : performance.now();
       let wasmCallMs = 0, parseMs = 0;
       const stepResult = call => {
-        if (started === undefined) return JSON.parse(call());
+        if (started === undefined) { const json = call(); return encoding === 'json' ? json : JSON.parse(json); }
         const before = performance.now(), json = call(), parsedAt = performance.now();
-        const value = JSON.parse(json);
+        const value = encoding === 'json' ? json : JSON.parse(json);
         wasmCallMs += parsedAt - before; parseMs += performance.now() - parsedAt;
         return value;
       };
@@ -89,7 +92,7 @@ self.onmessage = ({ data }) => {
         wasm_call_s: wasmCallMs / 1000,
         json_parse_s: parseMs / 1000,
       };
-      self.postMessage({ id: data.id, result, ...(timing ? { timing } : {}) });
+      self.postMessage({ id: data.id, ...(encoding === 'json' ? {result_json:result} : {result}), ...(timing ? { timing } : {}) });
     } catch (error) {
       self.postMessage({ id: data.id, error: String(error) });
     }

@@ -45,6 +45,55 @@ fn body(slider: bool, contact: bool) -> (Articulated, Generalized) {
 }
 
 #[test]
+fn sdirk_mechanics_uses_two_stages_and_exact_force_clock() {
+    use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace,ImplicitStepConfig};
+    use sim_dynamics::hybrid::HybridConfig;
+    use std::cell::RefCell;
+    for slider in [true,false] {
+        let (art,g)=body(slider,false);
+        let map=RigidEmbedding::new(&art,&if slider{vec!["slide.slide".into()]}else{vec![]},Default::default()).unwrap();
+        let mut config=ImplicitStepConfig{sdirk2:true,..Default::default()};
+        config.newton.absolute_tolerance=1e-12;config.newton.relative_tolerance=1e-12;
+        let times=RefCell::new(vec![]);
+        let loads=|t:f64,_:&Generalized|{times.borrow_mut().push(t);let mut f=vec![0.;if slider{1}else{6}];f[0]=4.;Ok(f)};
+        let mut workspace=ImplicitSolverWorkspace::default();
+        let step=map.advance_implicit_mechanics_cached(&g,0.3,0.1,&config,&HybridConfig::default(),&mut workspace,loads).unwrap();
+        assert_eq!(step.segments.len(),1);assert!(step.segments[0].first_stage_diagnostics.is_some());
+        let (x,v)=if slider{(step.endpoint.generalized.q[0],step.endpoint.generalized.qd[0])}else{
+            let b=art.bases.iter().find(|b|!b.grounded).unwrap();
+            (step.endpoint.generalized.states[b.state],step.endpoint.generalized.states[b.state+7])
+        };
+        assert!((x-0.01).abs()<1e-10,"{x}");assert!((v-0.2).abs()<1e-10);
+        for t in times.borrow().iter(){assert!(t.to_bits()==(0.3+sim_dynamics::sdirk::GAMMA*0.1).to_bits()||t.to_bits()==0.4f64.to_bits());}
+        let before=workspace.clone();let mut after=before.clone();
+        assert!(map.advance_implicit_mechanics_cached(&g,0.,0.1,&config,&HybridConfig::default(),&mut after,|_,_|Err("stage failure".into())).is_err());
+        assert!(map.step_implicit(&g,0.,0.1,&config,|_,_|Ok(vec![])).unwrap_err().contains("mechanical advancement adapter"));
+    }
+}
+
+#[test]
+fn sdirk_mechanical_oscillator_converges_and_dissipates() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    use sim_dynamics::hybrid::HybridConfig;
+    let solve=|h:f64|{
+        let (art,mut g)=body(true,false);g.q[0]=0.1;
+        let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+        let mut config=ImplicitStepConfig{sdirk2:true,..Default::default()};
+        config.newton.absolute_tolerance=1e-12;config.newton.relative_tolerance=1e-12;
+        let mut energy=1.;
+        for i in 0..(1./h).round() as usize {
+            let step=map.advance_implicit_mechanics(&g,i as f64*h,h,&config,&HybridConfig::default(),|_,g|Ok(vec![-200.*g.q[0]-4.*g.qd[0]])).unwrap();
+            g=step.endpoint.generalized;let next=100.*g.q[0].powi(2)+g.qd[0].powi(2);
+            assert!(next<=energy+1e-11);energy=next;
+        }
+        g.q[0]
+    };
+    let w=99f64.sqrt();let exact=0.1*(-1f64).exp()*(w.cos()+w.sin()/w);
+    let e1=(solve(0.02)-exact).abs();let e2=(solve(0.01)-exact).abs();
+    assert!(e1/e2>3.5&&e1/e2<4.5,"{e1}/{e2}");
+}
+
+#[test]
 fn failed_cached_mechanics_restarts_fresh_before_subdivision() {
     use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
     use sim_dynamics::hybrid::HybridConfig;
@@ -573,6 +622,16 @@ fn implicit_contact_memory_and_atomic_failure() {
     seed.states[s..s + 3].copy_from_slice(&[0.001, -0.002, 0.003]);
     let map = RigidEmbedding::new(&art, &[], Default::default()).unwrap();
     let h = 0.1; // 20 decay time constants in one step.
+    let second_order=map.advance_implicit_mechanics(&seed,0.,h,
+        &sim_domain_robot::articulated::embedding::ImplicitStepConfig{sdirk2:true,..Default::default()},
+        &sim_dynamics::hybrid::HybridConfig::default(),|_,_|Ok(vec![0.;6])).unwrap();
+    let gamma=sim_dynamics::sdirk::GAMMA;let z=-200.*h;
+    let amplification=(1.+(1.-2.*gamma)*z)/(1.-gamma*z).powi(2);
+    for k in 0..3{
+        let actual=second_order.endpoint.generalized.states[s+k];
+        assert!((actual-seed.states[s+k]*amplification).abs()<1e-14);
+        assert!(actual.abs()<seed.states[s+k].abs());
+    }
     let step = map
         .step_implicit(&seed, 0.0, h, &Default::default(), |_, _| Ok(vec![0.0; 6]))
         .unwrap();
@@ -639,6 +698,28 @@ fn implicit_sliding_contact_matches_independent_scalar_force_balance() {
     // Five bottom fixture vertices, each penetrating by 1 mm. A prismatic
     // guide holds height/orientation; only horizontal velocity is unknown.
     let normal = 5.0 * art.floor_k * 0.001;
+    let gamma=sim_dynamics::sdirk::GAMMA;
+    let scalar_stage=|old_v:f64,old_z:f64|{
+        let residual=|v:f64|{
+            let mu=0.3+0.1*(-(v/0.01).powi(2)).exp();
+            let decay=art.floor_k*v.abs()/(mu*normal+1e-3);
+            let z=(old_z+gamma*h*v)/(1.+gamma*h*decay);
+            let force=-art.floor_k*z-2.*(art.floor_k*2.).sqrt()*(v-decay*z);
+            (v-old_v-gamma*h*force/2.,z)
+        };
+        let(mut lo,mut hi)=(-0.5,0.5);assert!(residual(lo).0<0.&&residual(hi).0>0.);
+        for _ in 0..80{let mid=0.5*(lo+hi);if residual(mid).0<0.{lo=mid;}else{hi=mid;}}
+        let v=0.5*(lo+hi);(v,residual(v).1)
+    };
+    let(v1,z1)=scalar_stage(g.qd[0],g.states[s]);
+    let(v2,z2)=scalar_stage(g.qd[0]+(1.-gamma)/gamma*(v1-g.qd[0]),g.states[s]+(1.-gamma)/gamma*(z1-g.states[s]));
+    let sdirk=map.advance_implicit_mechanics(&g,0.,h,
+        &sim_domain_robot::articulated::embedding::ImplicitStepConfig{sdirk2:true,..Default::default()},
+        &sim_dynamics::hybrid::HybridConfig::default(),|_,_|Ok(vec![0.])).unwrap();
+    assert_eq!(sdirk.segments.len(),1);
+    assert!((sdirk.endpoint.generalized.qd[0]-v2).abs()<1e-9);
+    assert!((sdirk.endpoint.generalized.states[s]-z2).abs()<1e-11);
+    assert!((sdirk.endpoint.generalized.q[0]-h*((1.-gamma)*v1+gamma*v2)).abs()<1e-11);
     let residual = |v: f64| {
         let mu = 0.3 + 0.1 * (-(v / 0.01).powi(2)).exp();
         let decay = art.floor_k * v.abs() / (mu * normal + 1e-3);

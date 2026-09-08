@@ -35,6 +35,7 @@ pub mod linear;
 pub mod report;
 pub mod jacobian_check;
 pub mod attempt_check;
+pub mod sdirk;
 
 use jacobian::Sparsity;
 use nalgebra::{DMatrix, DVector};

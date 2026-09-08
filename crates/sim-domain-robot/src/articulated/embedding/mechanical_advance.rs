@@ -12,6 +12,9 @@ pub struct MechanicalSegment {
     pub start_time_s: f64,
     pub step_s: f64,
     pub diagnostics: ImplicitStepDiagnostics,
+    /// Additional internal solve of an SDIRK2 macrostep, not a physical substep.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub first_stage_diagnostics: Option<ImplicitStepDiagnostics>,
 }
 pub struct EmbeddedMechanicalAdvance {
     pub endpoint: EmbeddedAcceleration,
@@ -37,6 +40,15 @@ where
     type State = State;
     fn advance(&self, t: f64, h: f64, state: &State) -> Result<State, String> {
         let mut workspace = state.workspace.clone();
+        if self.config.sdirk2 {
+            let (endpoint,first,second)=self.map.sdirk_mechanical_step(&state.mechanics,t,h,self.config,&self.loads)?;
+            workspace.clear();
+            let mut segments=state.segments.clone();
+            segments.push(MechanicalSegment{start_time_s:t,step_s:h,diagnostics:second,
+                first_stage_diagnostics:Some(first)});
+            return Ok(State{mechanics:endpoint.generalized.clone(),workspace,
+                endpoint:Some(Rc::new(endpoint)),segments});
+        }
         let solve = |workspace: &mut ImplicitSolverWorkspace, config: &ImplicitStepConfig| {
             self.map.step_implicit_coupled_cached(
                 &state.mechanics,
@@ -78,6 +90,7 @@ where
             start_time_s: t,
             step_s: h,
             diagnostics: step.diagnostics,
+            first_stage_diagnostics: None,
         });
         Ok(State {
             mechanics: step.endpoint.generalized.clone(),
@@ -94,6 +107,26 @@ where
     }
 }
 impl RigidEmbedding<'_> {
+    // One implementation for all adapters; avoid duplicating both large nested
+    // implicit solvers for each caller's load-closure type.
+    #[allow(clippy::type_complexity)]
+    fn sdirk_mechanical_step(&self,seed:&Generalized,t:f64,h:f64,config:&ImplicitStepConfig,
+        loads:&dyn Fn(f64,&Generalized)->Result<Vec<f64>,String>)
+        ->Result<(EmbeddedAcceleration,ImplicitStepDiagnostics,ImplicitStepDiagnostics),String>
+    {
+        let mut config=config.clone();config.sdirk2=false;
+        let gamma=sim_dynamics::sdirk::GAMMA;
+        // Each stage has a fresh workspace. No accepted-state history is
+        // extrapolated across a held-controller boundary.
+        let first=self.step_implicit(seed,t,gamma*h,&config,|_,g|loads(t+gamma*h,g))?;
+        let(trial,q,u)=self.trial_state(seed,(1.-gamma)*h,&first.endpoint.generalized,&first.endpoint)?;
+        // This closed chart point is an affine stage anchor, not a physical
+        // intermediate state. Floating rotations use composed world-frame
+        // exponentials; contact history uses the same RK weights.
+        let anchor=self.solve(&trial,&q,&u)?;
+        let second=self.step_implicit(&anchor.generalized,t+(1.-gamma)*h,gamma*h,&config,|_,g|loads(t+h,g))?;
+        Ok((second.endpoint,first.diagnostics,second.diagnostics))
+    }
     /// Retry failed backward-Euler trials using the shared bounded subdivision
     /// scheduler. Every accepted segment uses unchanged residual/closure checks.
     /// The whole interval is atomic: failure never changes the supplied seed.

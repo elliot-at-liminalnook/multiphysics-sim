@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "velocity-seed-reference",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582490414785933,
+        "final_yaw_error_rad": 0.0003280784468676339,
+        "maximum_body_tilt_rad": 0.004145772004721206,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779856794775,
+          -0.00021510521103582303,
+          -0.0007700187895747553
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference-acceptance/summary.json",
+          "sha256": "f5822d721928c71bc14451f384f8c63762b52b6e738b758507e887bb5c25028d"
+        }
+      },
+      "wall_s": 6.042664047,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.config.json",
+          "sha256": "e3f5ab0d21e45bd65aa2c2f48594586da2998025ec4f62bdc79f6250aba5db27"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.native.json",
+          "sha256": "49c3f53b010408068eb00bce9180505bc917fe506ce8911d8f2bd0f2dbc38d4d"
+        }
+      ]
+    },
+    {
+      "name": "velocity-seed-enabled",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582493967336849,
+        "final_yaw_error_rad": 0.0003280771047134111,
+        "maximum_body_tilt_rad": 0.004145771887104667,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779262342215,
+          -0.0002151043557777126,
+          -0.0007700198509278475
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled-acceptance/summary.json",
+          "sha256": "3627ab93349e90efb183e771ec19e913aec1969dfab7c1ec62a1c62a62cb0f45"
+        }
+      },
+      "wall_s": 6.097468415,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.config.json",
+          "sha256": "d8b3d5550f398b541ee5d34f5c50cc4d3f9e39a4ea210a451eb0a6cbf15c8a11"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.native.json",
+          "sha256": "bd3b5fc5cc72bae0d3e8a4df9768d7f77c07abe19e8c9aadf77c1703a035aa91"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-velocity-seed/plan.json",
+      "sha256": "1afbc3d90757cbfc29226c106fe05e12fd17916e05adf8b7697c1cc148a21af0"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "67a586b88f5ed2b80474fc5df1bd1733def34f38c17eb19b6ab2cccbd46cab26"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "4feaf5b8eddfe43e697f3208bd9fa0a15546498e9161709cd0f0238075c1d468"
+    }
+  ],
+  "scope": "Same 24-second steering task and exact physical model/solver tolerances with guarded temporal velocity seed off/on. Seed selection requires improved exact residuals; failure retries original velocities with fresh exact derivatives."
+}

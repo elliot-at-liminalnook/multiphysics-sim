@@ -328,3 +328,26 @@ mechanics and replayed physical errors. `frame-transport-status.json` and
 `frame-transport-integrity.json` retain measurements and source bindings.
 CI exercises JSON host parity and decoding while existing object clients
 continue to cover the compatible reply path. Remote CI has not been run here.
+
+## Temporal velocity prediction does not save total work
+
+The shared default-off velocity predictor requires a 10% improvement in the
+exact initial residual. Original per-row residual bounds are retained or
+tightened, and a failed predicted solve restarts at the original velocities
+with exact derivatives. Tests cover analytic force/viscous cases, rotating
+closed linkages, invalidation, contact release, rollback and rejected Newton
+trials. All 37 robot integration checks and 27 solver checks pass.
+
+Both 24-second native steering cases pass 15 supported swings and finish at
+0.958 mm position error. Maximum off/on foot and body differences are
+0.697 and 2.535 nanometres. Default-off exactly preserves the previous 1,201
+physical/task frames and recording. Profiling also preserves every frame.
+
+Prediction is used in 742 of 1,200 accepted steps. Newton iterations fall
+10,425→10,125 and fresh Jacobians 1,975→1,884, but closure mappings rise
+23,117→23,736. Unprofiled runtime is **6.043→6.097 seconds**, and native active
+stepping p95 **13.147→13.353 ms**; return-phase p95 also worsens. Profiled
+time rises 6.223→6.644 seconds. The proposal screen costs more than it saves
+on this robot. The option remains off and is not promoted to a WASM timing
+experiment. `velocity-seed-summary.json` links all outcomes, exact preservation,
+profiles and unchanged physical/solver-difference gates.

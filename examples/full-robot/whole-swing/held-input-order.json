@@ -1,0 +1,407 @@
+{
+  "cases": [
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.01968349835925448,
+      "method": "backward_euler",
+      "residual_evaluations": 297,
+      "rms_endpoint_error": 0.005731443282839943,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.004721945226266844,
+      "method": "implicit_midpoint",
+      "residual_evaluations": 292,
+      "rms_endpoint_error": 0.0011799230278321578,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.029617075985801156,
+      "method": "bdf2_cross_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.006571805687644983,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.019683498359254453,
+      "method": "bdf2_restart_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.005731443282839948,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 2,
+      "maximum_endpoint_error": 0.0024010778802017463,
+      "method": "sdirk2",
+      "residual_evaluations": 781,
+      "rms_endpoint_error": 0.0006085853039800639,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.011038210142491123,
+      "method": "backward_euler",
+      "residual_evaluations": 584,
+      "rms_endpoint_error": 0.003042470762346308,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0010894308725081792,
+      "method": "implicit_midpoint",
+      "residual_evaluations": 576,
+      "rms_endpoint_error": 0.00027837175126857184,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.016168974373257733,
+      "method": "bdf2_cross_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.0031610589877288054,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.006930528432750771,
+      "method": "bdf2_restart_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.0018615340860366567,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 2,
+      "maximum_endpoint_error": 0.0005474577931106894,
+      "method": "sdirk2",
+      "residual_evaluations": 1538,
+      "rms_endpoint_error": 0.00014035561407504726,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.005905423211214511,
+      "method": "backward_euler",
+      "residual_evaluations": 1169,
+      "rms_endpoint_error": 0.0015760366289975626,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.00026743785730312664,
+      "method": "implicit_midpoint",
+      "residual_evaluations": 1164,
+      "rms_endpoint_error": 0.00006868371943767746,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0073398881416841255,
+      "method": "bdf2_cross_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.0014006309210766934,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0017157141270368326,
+      "method": "bdf2_restart_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.00044608070303449077,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 2,
+      "maximum_endpoint_error": 0.0001324141589620631,
+      "method": "sdirk2",
+      "residual_evaluations": 3095,
+      "rms_endpoint_error": 0.000034035177536806886,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0030648794995715434,
+      "method": "backward_euler",
+      "residual_evaluations": 2359,
+      "rms_endpoint_error": 0.0008035739782065269,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.00006656204322061376,
+      "method": "implicit_midpoint",
+      "residual_evaluations": 2347,
+      "rms_endpoint_error": 0.00001711579819008657,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.003207816007972958,
+      "method": "bdf2_cross_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.0006230921731107965,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.00037318831074079073,
+      "method": "bdf2_restart_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.00009622338887887304,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 50.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 2,
+      "maximum_endpoint_error": 0.00003264873008640423,
+      "method": "sdirk2",
+      "residual_evaluations": 6162,
+      "rms_endpoint_error": 8.397072979279049e-6,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.010572355478160517,
+      "method": "backward_euler",
+      "residual_evaluations": 298,
+      "rms_endpoint_error": 0.0017918759233438084,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0728677552476025,
+      "method": "implicit_midpoint",
+      "residual_evaluations": 298,
+      "rms_endpoint_error": 0.014415786348027192,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.014487245513285424,
+      "method": "bdf2_cross_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.0022550522664332652,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.010572355478160517,
+      "method": "bdf2_restart_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.0017918759233438077,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 2,
+      "maximum_endpoint_error": 0.02283898018064215,
+      "method": "sdirk2",
+      "residual_evaluations": 790,
+      "rms_endpoint_error": 0.0036233554282860134,
+      "step_s": 0.02
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.003195767884359796,
+      "method": "backward_euler",
+      "residual_evaluations": 595,
+      "rms_endpoint_error": 0.0005293184092743765,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.021727882293336748,
+      "method": "implicit_midpoint",
+      "residual_evaluations": 594,
+      "rms_endpoint_error": 0.0038433759722670824,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0007650559211834218,
+      "method": "bdf2_cross_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.00018018500300992886,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0029385728784124543,
+      "method": "bdf2_restart_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.00047912654933358217,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 2,
+      "maximum_endpoint_error": 0.0035801690400663333,
+      "method": "sdirk2",
+      "residual_evaluations": 1581,
+      "rms_endpoint_error": 0.0005936341331771663,
+      "step_s": 0.01
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0007604319938068205,
+      "method": "backward_euler",
+      "residual_evaluations": 1191,
+      "rms_endpoint_error": 0.00012511976625133222,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.00001228466960301322,
+      "method": "implicit_midpoint",
+      "residual_evaluations": 1191,
+      "rms_endpoint_error": 2.01738525826606e-6,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0017950636252972163,
+      "method": "bdf2_cross_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.00029346806437709883,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.001795063625297244,
+      "method": "bdf2_restart_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.0002934680643771002,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 2,
+      "maximum_endpoint_error": 5.209228019636969e-6,
+      "method": "sdirk2",
+      "residual_evaluations": 3166,
+      "rms_endpoint_error": 8.55419863262155e-7,
+      "step_s": 0.005
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.00016958526026539245,
+      "method": "backward_euler",
+      "residual_evaluations": 2383,
+      "rms_endpoint_error": 0.000027860468032930003,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 4.288218379500108e-6,
+      "method": "implicit_midpoint",
+      "residual_evaluations": 2384,
+      "rms_endpoint_error": 7.041803104680984e-7,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.00014161230836653993,
+      "method": "bdf2_cross_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.00002325632133733607,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "analytic_discrete_equation",
+      "implicit_stages_per_step": 1,
+      "maximum_endpoint_error": 0.0000875243925706759,
+      "method": "bdf2_restart_updates",
+      "residual_evaluations": null,
+      "rms_endpoint_error": 0.000014369575440999891,
+      "step_s": 0.0025
+    },
+    {
+      "decay_rate_per_s": 500.0,
+      "execution": "shared_residual_solver",
+      "implicit_stages_per_step": 2,
+      "maximum_endpoint_error": 2.930320542327003e-6,
+      "method": "sdirk2",
+      "residual_evaluations": 6350,
+      "rms_endpoint_error": 4.811977841717762e-7,
+      "step_s": 0.0025
+    }
+  ],
+  "period_s": 0.02,
+  "scope": "Exact scalar relaxation under deterministic 50 Hz held inputs, including two command jumps. BE/midpoint and SDIRK use shared Rust residual solvers. BDF2 rows are analytic stencil proposals, not an integrated robot implementation. Error units are the scalar state unit; no CAD actuator, robot accuracy or realtime claim.",
+  "version": 1
+}

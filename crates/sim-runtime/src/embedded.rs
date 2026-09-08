@@ -1059,7 +1059,10 @@ impl EmbeddedSession {
                     &g, time, config.step_s, implicit, refinement, workspace,
                     |t, g| coupling(t, 0.0, g, &[]).map(|f| f.generalized_loads),
                 ).map(|step| {
-                    solver_steps.extend(step.segments.into_iter().map(|s| s.diagnostics));
+                    for s in step.segments {
+                        if let Some(first)=s.first_stage_diagnostics {solver_steps.push(first);}
+                        solver_steps.push(s.diagnostics);
+                    }
                     hybrid_steps.push(step.refinement);
                     step.endpoint
                 })

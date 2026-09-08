@@ -19,6 +19,11 @@ use std::rc::Rc;
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct ImplicitStepConfig {
+    /// Experimental two-stage stiff mechanical integration. Only the pure
+    /// mechanical advancement adapter supports this; coupled motor auxiliary
+    /// states must use their existing integration path. Default is backward Euler.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub sdirk2: bool,
     /// Newton residuals are velocity increments divided by the embedding's
     /// declared length/angular scales (and a one-second velocity scale).
     pub newton: NewtonConfig,
@@ -103,6 +108,7 @@ fn is_default_probe_step(value: &f64) -> bool {
 impl Default for ImplicitStepConfig {
     fn default() -> Self {
         Self {
+            sdirk2: false,
             newton: NewtonConfig {
                 max_iterations: 40,
                 min_line_search: 1.0 / 4096.0,
@@ -324,6 +330,9 @@ impl RigidEmbedding<'_> {
         F: Fn(f64, f64, &Generalized, &[f64], &[f64]) -> Result<CoupledForces, String>,
     {
         self.validate_seed(seed)?;
+        if config.sdirk2 {
+            return Err("SDIRK2 requires the pure mechanical advancement adapter".into());
+        }
         if config.auxiliary_endpoint_correction_scale
             && !(config.condense_auxiliary && config.auxiliary_rate_unknowns)
         {

@@ -55,6 +55,7 @@ jobs:
       - run: cargo test --locked -p sim-dynamics --test jacobian_check
       - run: cargo test --locked -p sim-dynamics --test scheduled_events
       - run: cargo test --locked -p sim-dynamics --test implicit_audit
+      - run: cargo test --locked -p sim-dynamics --test sdirk
       - run: cargo test --locked -p sim-dynamics --test hybrid_stepper
       - run: cargo test --locked -p sim-dynamics --test root_order
       - run: cargo test --locked -p sim-dynamics --test step_breakpoints

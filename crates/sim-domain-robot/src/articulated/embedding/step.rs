@@ -21,7 +21,7 @@ impl RigidEmbedding<'_> {
             .chain(self.independent.iter().map(|i| g.qd[*i]))
             .collect()
     }
-    fn trial_state(
+    pub(super) fn trial_state(
         &self,
         original: &Generalized,
         h: f64,

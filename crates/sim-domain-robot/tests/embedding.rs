@@ -251,6 +251,25 @@ fn exact_probe_base_reuse_preserves_every_fixed_and_rotating_linkage_state() {
 }
 
 #[test]
+fn sdirk_stages_preserve_fixed_and_rotating_closed_linkages() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    for floating in [false,true]{
+        let(art,mut seed)=slider_crank(floating);
+        let dofs=art.audit_slider_cranks()[0].candidate.as_ref().unwrap().dof_indices;
+        let map=RigidEmbedding::new(&art,&["joint.motor".into()],EmbeddingConfig{direct_closure_jacobian:true,..Default::default()}).unwrap();
+        let mut u=vec![0.;map.reduced_dimension()];*u.last_mut().unwrap()=0.7;
+        if floating {let s=art.bases[0].state;seed.states[s+3..s+7].copy_from_slice(&[0.9_f64.cos(),0.,0.,0.9_f64.sin()]);u[..6].copy_from_slice(&[0.02,-0.01,0.03,0.1,-0.2,0.3]);}
+        let mut g=map.solve(&seed,&[0.3],&u).unwrap().generalized;
+        let config=ImplicitStepConfig{sdirk2:true,..Default::default()};let nb=usize::from(floating)*6;
+        for i in 0..30{
+            let step=map.advance_implicit_mechanics(&g,i as f64*0.01,0.01,&config,&Default::default(),|_,g|{let mut f=vec![0.;nb+g.q.len()];f[nb+dofs[0]]=0.003-0.02*g.qd[dofs[0]];Ok(f)}).unwrap();
+            assert_eq!(step.segments.len(),1);assert!(step.segments[0].first_stage_diagnostics.is_some());g=step.endpoint.generalized;
+            for r in art.original_closure_values(&g){assert!(r.position.abs()<1e-9&&r.velocity.abs()<1e-9&&r.acceleration.abs()<1e-8);}
+        }
+    }
+}
+
+#[test]
 fn point_jacobians_match_closed_linkage_position_differences_with_rotated_base() {
     use sim_domain_robot::articulated::embedding::EmbeddedPoint;
     let (art, mut seed) = slider_crank(true);

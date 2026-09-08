@@ -669,3 +669,42 @@ all five cases without earlier ignored run inputs; its reconstructed actions
 are checked against their original hashes. Raw captures remain local and are
 identified separately by source hashes. The browser milestone uses a new
 isolated WASM build with the shared integral binding.
+
+## Browser milestone and contact-motion limit
+
+The new isolated WASM passes all **1,200** steering transitions against native
+at a maximum numeric difference of **2.20e-9**, with exact replay and reset.
+Both rendered recordings exactly match the accepted native recipe, seed and
+inputs. Steering/minute active browser pace is **0.405x / 0.421x**, with
+**92.72 / 93.48 ms p95**: both fail the unchanged realtime gates. The render
+interval p95 remains about 16.67 ms. This is a slow fine-model milestone, not
+the required final realtime experience. Reversing also waits for a committed
+transfer: the tested reverse reference first appears 1.36 simulated seconds
+after the command, about 3.70 wall seconds in this slow run. Reference response
+and drawing are distinct from causal physical response or monitor latency.
+
+Every one of **16** leaderboard entries loads its pinned recipe and initial
+action in WASM. The new steering entry replays its full tested sequence;
+WebM export, narrow/desktop layouts and mutated-recipe rejection pass. The
+results remain unranked. `settled-integral-browser-integrity.json` binds the
+recordings, task outcomes and UI checks; minute host parity is not inferred
+from the shorter steering comparison.
+
+A new read-only contact diagnostic computes material velocity at each recorded
+floor contact from COM velocity and angular velocity. Per-foot accumulated
+load-weighted tangential motion is **198 / 167 / 198 / 152 mm** over the minute,
+versus **213 mm** body advance. Pointwise motion including rotation is similar,
+so the large marker paths cannot be explained solely by marker rotation.
+These are integrated sampled speeds with changing contact weights, not paths
+of one persistent material point. Nevertheless they expose substantial loaded
+sliding in this provisional regularized-Coulomb floor model (1 mm/s smoothing
+speed). Passing swing, stopping and timestep tests is insufficient to claim
+slip-free walking or a credible hardware speed envelope.
+
+`settled-integral-minute-contact-motion.json` records the per-foot motion and
+sampled translational shear work. It does not set a retrospectively selected
+acceptance threshold or resolve contact birth/death, between-sample peaks or
+independent torsional dissipation. Contact-model sensitivity and anti-sliding
+qualification must be addressed alongside realtime computation, before this
+candidate can become a validated walking choice. The CI regression is added;
+its remote execution has not been observed in this session.

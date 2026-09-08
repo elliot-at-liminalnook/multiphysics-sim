@@ -2,6 +2,530 @@
   "version": 1,
   "entries": [
     {
+      "id": "integral-teacher-minute",
+      "name": "Walking teacher with bounded stance correction",
+      "description": "Measures 3.78 mm/s with 41 qualified minute-long swings. Mixed steering, two fresh command cases and timestep agreement pass. Loaded contact motion is substantial: 152–198 mm per foot during 213 mm body advance. Browser pace is 0.42x with 93.5 ms p95; this remains experimental.",
+      "benchmark_version": "flat-forward-stop-60s-v1",
+      "controller_sha256": "5fbd0e29be1b13b9278fc2e62c5955f8967e14e89803b11fa23c38bb85a1f1d7",
+      "model_sha256": "9b2fb42eb2790a0b19c8a7dab7608a78cd1526e062a894010fcf7af734cdcbfa",
+      "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "environment_sha256": "86a7d53eeeceaec4973b2d671d4042958904cba403697d807d835d53a1e3cf76",
+      "fidelity_sha256": "909158e993243e213ca2f2133747768ec81757f55adf29cc7b27108e26b9d0cf",
+      "fidelity_label": "Effective servo · dynamic floor · 1.25 ms",
+      "environment_label": "Flat floor · declared push",
+      "comparison_group": "8c34e25287722a07dff04368e935548ae3d59f6ef16e234e5cb329b5f3c985dc",
+      "load": {
+        "scene": {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        "config": {
+          "path": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+          "sha256": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b"
+        },
+        "task": {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        "seed": 0,
+        "asset_sha256": "49a91f69608fd26ef273510d7f4518308df6554ba4924bb0ab7eeda566490718"
+      },
+      "replay": {
+        "completed_steps": 48000,
+        "input_events": [
+          {
+            "at_step": 0,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0.00375,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 44800,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "metrics": {
+        "simulated_s": 60,
+        "sustained_speed_m_s": 0.0037778909088736364,
+        "speed_window_s": 51.98,
+        "short_speed_m_s": 0.0037778909088736364,
+        "task_passed": true,
+        "qualified_swings": 41,
+        "swings": 41,
+        "final_heading_error_rad": 0.003375872552504301,
+        "final_position_error_m": 0.0005286096017170919,
+        "positive_mechanical_work_j": 6.867681858157539,
+        "native_throughput": 0.5330070021699127,
+        "native_hardware": "Not recorded with this capture; not a reference benchmark.",
+        "browser_active_throughput": 0.4207484302524286,
+        "browser_active_p95_s": 0.09348000001907349
+      },
+      "browser_host": {
+        "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+        "logical_cpus": 16,
+        "platform": "darwin",
+        "architecture": "x64",
+        "browser": "152.0.7977.76",
+        "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+        "headless": true
+      },
+      "browser_runtime": {
+        "manifest_sha256": "b309cd96c8e03e0675ad744a1d69d645c66a462ff629f66942050755a3f534cb",
+        "browser_module_sha256": "f95c06d1a72853611f88bfafacb5827f32706151655e10610b97f26c1d896cc9",
+        "compiler_profile": "simd-lto",
+        "settings": {
+          "rustflags": "-C target-feature=+simd128",
+          "lto": "fat",
+          "codegen_units": "1"
+        }
+      },
+      "gates": {
+        "sustained_walk": {
+          "status": "pass",
+          "detail": "60-second supported-swing, sampled geometry and endpoint audit."
+        },
+        "turn_reverse_stop": {
+          "status": "pass",
+          "detail": "The associated controller has a passing forward/turn/reverse/stop case."
+        },
+        "disturbances": {
+          "status": "pass",
+          "detail": "Frozen 48-second held-out command sequence passes with -0.75 N lateral and -0.5 N forward-axis pulses; all three stop checkpoints pass. This bounded flat-floor test does not establish a broad disturbance distribution."
+        },
+        "terrain": {
+          "status": "missing",
+          "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "numerical_accuracy": {
+          "status": "pass",
+          "detail": "Sampled foot difference 0.495 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 0.327 mm."
+        },
+        "browser_realtime": {
+          "status": "fail",
+          "detail": "Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host."
+        },
+        "replay_parity": {
+          "status": "missing",
+          "detail": "The 24-second teacher case passes native/WASM comparison and exact replay/reset; full-minute host parity is not yet established."
+        }
+      },
+      "evidence": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-regression-status.json",
+          "sha256": "dbfd62e3bb21dd73f24e18e0f65d51bd8eff78d35d50f58649484dd750bc9c40"
+        },
+        {
+          "path": "web/leaderboard/unretained-scene-fields.json",
+          "sha256": "d214777edc596d04e7d32fd6e150a03c84f2e8cfa898759787016c65ab00cea6"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-regression-refinement.json",
+          "sha256": "8b71f61da71c621326f25fe59e704353d48bbba148a4abe92e5eeb656c152dc4"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-regression-summary.json",
+          "sha256": "7cf14386a8fd91f2106dd5b325954ee97c1d37781faed5d73dd17ec225ad7470"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-regression-integrity.json",
+          "sha256": "6e1ea6d37ddc120072066c8ad008f7c83a60700277f054d501dd0dc578341ffb"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-browser-status.json",
+          "sha256": "4cd88ddb11d7e8813524b60e6be78395110ab5c6229435ee4003e912d072dd04"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-browser-integrity.json",
+          "sha256": "699905891f7e108e1f46354cf777ac6318c8ed85e6551e78956800c4b00cbbc2"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-minute-contact-motion.json",
+          "sha256": "36ba6ab40f61629895b1d18d0eea8c19f5939c2c6642a0cde2c1f9d25b7f4937"
+        }
+      ],
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.native.json",
+        "sha256": "54ee76fc3a432003bdf7a3583a1a18d58dd3b5914801a758d48100bd0fe0b7db"
+      },
+      "measurement": {
+        "version": 1,
+        "capture": {
+          "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.native.json",
+          "sha256": "54ee76fc3a432003bdf7a3583a1a18d58dd3b5914801a758d48100bd0fe0b7db"
+        },
+        "source": {
+          "path": "examples/interactive/analyze_walking_capture.mjs",
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+        },
+        "simulated_s": 60,
+        "body_displacement_world_m": [
+          0.21266910229300054,
+          0.000024143587130046908,
+          -0.00018630116016761684
+        ],
+        "horizontal_body_path_m": 1.7421806980572325,
+        "net_horizontal_displacement_m": 0.21266910366346947,
+        "sustained_windows": [
+          {
+            "command_start_s": 0.02,
+            "start_s": 4.0200000000000005,
+            "end_s": 56,
+            "command": [
+              0.00375,
+              0,
+              0
+            ],
+            "samples": 2600,
+            "measured_sustained_speed_m_s": 0.0037778909088736364,
+            "net_projected_speed_m_s": 0.0042571047999167754,
+            "axis_world": [
+              0.9999998145196206,
+              -0.0006090654515667041,
+              0
+            ]
+          }
+        ],
+        "positive_mechanical_work_j": 6.867681858157539,
+        "positive_mechanical_work_per_net_horizontal_m": 32.29280483085617,
+        "native_compute": {
+          "wall_s": 112.568877624,
+          "simulation_per_wall": 0.5330070021699127,
+          "transition_p95_s": 0.080409157
+        },
+        "conventions": {
+          "steady_command_warmup_s": 4,
+          "loaded_marker_endpoint_force_n": 1,
+          "work_integration": "Trapezoidal samples of shaft torque times gear speed, positive/negative separated; no electrical efficiency or between-sample peak claim."
+        },
+        "scope": "Measurements from sampled shared Rust physics. Body travel is distinct from path length, commands and native compute throughput. Loaded-marker motion is a slip diagnostic, not a contact-patch certificate. No acceptance, calibration, browser-performance or hardware-energy claim."
+      },
+      "limitations": "Uncalibrated CAD-derived simulation, ideal observations and a privileged planner. Sampled marker motion and positive shaft work do not certify slip-free contact or hardware energy use."
+    },
+    {
+      "id": "integral-teacher-steering",
+      "name": "Steering teacher with bounded stance correction",
+      "description": "All 15 development steering swings pass with 0.34 mm final stop error. Native/WASM agreement and exact replay pass. Rendered pace is 0.40x with 92.7 ms p95. The same teacher shows substantial loaded sliding in its minute test; terrain and deployable sensing remain open.",
+      "benchmark_version": "flat-steering-24s-v1",
+      "controller_sha256": "5fbd0e29be1b13b9278fc2e62c5955f8967e14e89803b11fa23c38bb85a1f1d7",
+      "model_sha256": "9b2fb42eb2790a0b19c8a7dab7608a78cd1526e062a894010fcf7af734cdcbfa",
+      "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "environment_sha256": "86a7d53eeeceaec4973b2d671d4042958904cba403697d807d835d53a1e3cf76",
+      "fidelity_sha256": "909158e993243e213ca2f2133747768ec81757f55adf29cc7b27108e26b9d0cf",
+      "fidelity_label": "Effective servo · dynamic floor · 1.25 ms",
+      "environment_label": "Flat floor · declared push",
+      "comparison_group": "5041cb2110d135fbde86e02b6a032bbbe445282ba4328a1b8cfa1e0e1e22cda6",
+      "load": {
+        "scene": {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        "config": {
+          "path": "examples/full-robot/whole-swing/settled-integral-steering.config.json",
+          "sha256": "9c7cbcf4161d169b1570d5c977fe8d23065f305e0d13dd8d36312c2280ee1b38"
+        },
+        "task": {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        "seed": 0,
+        "asset_sha256": "e102a9fe63e6c1485364f2ec35c05d65f6db0f8e738b5d5123e70881bc74c37d"
+      },
+      "replay": {
+        "completed_steps": 19200,
+        "input_events": [
+          {
+            "at_step": 0,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0.00375,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 6720,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0,
+              0,
+              0.001,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 13440,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              -0.00125,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 16000,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "metrics": {
+        "simulated_s": 24,
+        "sustained_speed_m_s": null,
+        "speed_window_s": 4.38,
+        "short_speed_m_s": 0.0036070814215485836,
+        "task_passed": true,
+        "qualified_swings": 15,
+        "swings": 15,
+        "final_heading_error_rad": 0.00015195622494797514,
+        "final_position_error_m": 0.0003383165766945533,
+        "positive_mechanical_work_j": 2.46684739820921,
+        "native_throughput": 0.533699751159569,
+        "native_hardware": "Not recorded with this capture; not a reference benchmark.",
+        "browser_active_throughput": 0.40451410381418557,
+        "browser_active_p95_s": 0.09272000002861024
+      },
+      "browser_host": {
+        "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+        "logical_cpus": 16,
+        "platform": "darwin",
+        "architecture": "x64",
+        "browser": "152.0.7977.76",
+        "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+        "headless": true
+      },
+      "browser_runtime": {
+        "manifest_sha256": "b309cd96c8e03e0675ad744a1d69d645c66a462ff629f66942050755a3f534cb",
+        "browser_module_sha256": "f95c06d1a72853611f88bfafacb5827f32706151655e10610b97f26c1d896cc9",
+        "compiler_profile": "simd-lto",
+        "settings": {
+          "rustflags": "-C target-feature=+simd128",
+          "lto": "fat",
+          "codegen_units": "1"
+        }
+      },
+      "gates": {
+        "sustained_walk": {
+          "status": "missing",
+          "detail": "Only a short forward/stop case is associated with this recipe."
+        },
+        "turn_reverse_stop": {
+          "status": "pass",
+          "detail": "The associated controller has a passing forward/turn/reverse/stop case."
+        },
+        "disturbances": {
+          "status": "missing",
+          "detail": "Broader held-out disturbance requirements are not yet established."
+        },
+        "terrain": {
+          "status": "missing",
+          "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "numerical_accuracy": {
+          "status": "missing",
+          "detail": "Solver-option agreement does not establish timestep convergence."
+        },
+        "browser_realtime": {
+          "status": "fail",
+          "detail": "Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host."
+        },
+        "replay_parity": {
+          "status": "pass",
+          "detail": "Associated native/WASM comparison and same-host replay pass."
+        }
+      },
+      "evidence": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-regression-status.json",
+          "sha256": "dbfd62e3bb21dd73f24e18e0f65d51bd8eff78d35d50f58649484dd750bc9c40"
+        },
+        {
+          "path": "web/leaderboard/unretained-scene-fields.json",
+          "sha256": "d214777edc596d04e7d32fd6e150a03c84f2e8cfa898759787016c65ab00cea6"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-regression-summary.json",
+          "sha256": "7cf14386a8fd91f2106dd5b325954ee97c1d37781faed5d73dd17ec225ad7470"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-regression-integrity.json",
+          "sha256": "6e1ea6d37ddc120072066c8ad008f7c83a60700277f054d501dd0dc578341ffb"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-browser-status.json",
+          "sha256": "4cd88ddb11d7e8813524b60e6be78395110ab5c6229435ee4003e912d072dd04"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-browser-integrity.json",
+          "sha256": "699905891f7e108e1f46354cf777ac6318c8ed85e6551e78956800c4b00cbbc2"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-minute-contact-motion.json",
+          "sha256": "36ba6ab40f61629895b1d18d0eea8c19f5939c2c6642a0cde2c1f9d25b7f4937"
+        }
+      ],
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.native.json",
+        "sha256": "daa997e689ada136074ffe35060d944cca4b10b5ffbfb9f0b0fc20ba4c496462"
+      },
+      "measurement": {
+        "version": 1,
+        "capture": {
+          "path": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.native.json",
+          "sha256": "daa997e689ada136074ffe35060d944cca4b10b5ffbfb9f0b0fc20ba4c496462"
+        },
+        "source": {
+          "path": "examples/interactive/analyze_walking_capture.mjs",
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+        },
+        "simulated_s": 24,
+        "body_displacement_world_m": [
+          0.027848439336634043,
+          0.00010040695259032253,
+          -0.0001868992412273028
+        ],
+        "horizontal_body_path_m": 0.6611622431334075,
+        "net_horizontal_displacement_m": 0.02784862034360616,
+        "sustained_windows": [
+          {
+            "command_start_s": 0.02,
+            "start_s": 4.0200000000000005,
+            "end_s": 8.4,
+            "command": [
+              0.00375,
+              0,
+              0
+            ],
+            "samples": 220,
+            "measured_sustained_speed_m_s": 0.0036070814215485836,
+            "net_projected_speed_m_s": 0.009679878271099158,
+            "axis_world": [
+              0.9999998145196206,
+              -0.0006090654515667041,
+              0
+            ]
+          }
+        ],
+        "positive_mechanical_work_j": 2.46684739820921,
+        "positive_mechanical_work_per_net_horizontal_m": 88.58059637326272,
+        "native_compute": {
+          "wall_s": 44.969104722,
+          "simulation_per_wall": 0.533699751159569,
+          "transition_p95_s": 0.078339799
+        },
+        "conventions": {
+          "steady_command_warmup_s": 4,
+          "loaded_marker_endpoint_force_n": 1,
+          "work_integration": "Trapezoidal samples of shaft torque times gear speed, positive/negative separated; no electrical efficiency or between-sample peak claim."
+        },
+        "scope": "Measurements from sampled shared Rust physics. Body travel is distinct from path length, commands and native compute throughput. Loaded-marker motion is a slip diagnostic, not a contact-patch certificate. No acceptance, calibration, browser-performance or hardware-energy claim."
+      },
+      "limitations": "Uncalibrated CAD-derived simulation, ideal observations and a privileged planner. Sampled marker motion and positive shaft work do not certify slip-free contact or hardware energy use."
+    },
+    {
       "id": "browser-crawl-minute",
       "name": "Browser crawl",
       "description": "The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.",
@@ -159,7 +683,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 60,
         "body_displacement_world_m": [
@@ -359,7 +887,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 60,
         "body_displacement_world_m": [
@@ -567,7 +1099,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 24,
         "body_displacement_world_m": [
@@ -783,7 +1319,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 24,
         "body_displacement_world_m": [
@@ -987,7 +1527,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 60,
         "body_displacement_world_m": [
@@ -1233,7 +1777,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 24,
         "body_displacement_world_m": [
@@ -1441,7 +1989,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 60,
         "body_displacement_world_m": [
@@ -1708,7 +2260,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 24,
         "body_displacement_world_m": [
@@ -1920,7 +2476,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 60,
         "body_displacement_world_m": [
@@ -2178,7 +2738,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 24,
         "body_displacement_world_m": [
@@ -2465,7 +3029,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 24,
         "body_displacement_world_m": [
@@ -2752,7 +3320,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 24,
         "body_displacement_world_m": [
@@ -2960,7 +3532,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 60,
         "body_displacement_world_m": [
@@ -3243,7 +3819,11 @@
         },
         "source": {
           "path": "examples/interactive/analyze_walking_capture.mjs",
-          "sha256": "48208b52425b82b58e392cbaacdcc4416d060c13fdf0d29330a650c45cbc2719"
+          "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+        },
+        "outcome_source": {
+          "path": "examples/interactive/capture_outcome.mjs",
+          "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
         },
         "simulated_s": 24,
         "body_displacement_world_m": [
@@ -3292,7 +3872,7 @@
   ],
   "generator": {
     "path": "web/leaderboard/generate.mjs",
-    "sha256": "da632c99e9716d156e5e2c04ae92cc8e070aad6e1a07c1bb45b3ac6d2bacd678"
+    "sha256": "dc373cf3bafd257be9b596dcaaad6e15e767aa74c3eb0856c1018b438e579942"
   },
   "scope": "Development evidence. No entry currently satisfies the complete declared gate set; speed rankings remain empty."
 }

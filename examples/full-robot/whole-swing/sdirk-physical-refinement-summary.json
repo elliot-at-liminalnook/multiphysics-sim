@@ -1,0 +1,326 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "teacher-sdirk2-10ms",
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 15,
+        "failed_lifts": 1,
+        "final_body_error_m": 0.0006025575619595617,
+        "final_yaw_error_rad": 0.000034905230074792556,
+        "maximum_body_tilt_rad": 0.004158519814947888,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027486083703951565,
+          0.00029374640467467734,
+          -0.0004930368346044624
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-10ms-acceptance/summary.json",
+          "sha256": "77109d6f1d6bec10df448ab7791aa2330219977e80ce270e214fe5d82227c3d4"
+        }
+      },
+      "native_compute": {
+        "wall_s": 37.773871162,
+        "simulation_per_wall": 0.6353598204714499,
+        "transition_p95_s": 0.065206315
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-teacher-sdirk2-10ms-metrics.json",
+        "sha256": "b46803bd5b6c3e1d0e3b2e16cbfc28a15a6a15e5787ea3e77264562be122005a"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-10ms.native.json",
+        "sha256": "368608ac3202a9a6cfc9bbdb4d8d761e3f2d7ae7d5a080e3e5a683353e8178ce"
+      }
+    },
+    {
+      "name": "teacher-sdirk2-5ms",
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006766187531990885,
+        "final_yaw_error_rad": 0.00043136709475809915,
+        "maximum_body_tilt_rad": 0.004194600784610501,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027896512130647425,
+          0.00032258719689955096,
+          -0.0004932690737025017
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-5ms-acceptance/summary.json",
+          "sha256": "6992c07f2083e28268da75eef6c7655b683f3c577649ff3d6c2b419e09457142"
+        }
+      },
+      "native_compute": {
+        "wall_s": 52.041588386,
+        "simulation_per_wall": 0.4611696288358557,
+        "transition_p95_s": 0.081297233
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-teacher-sdirk2-5ms-metrics.json",
+        "sha256": "85aa7bf32db0598aec38db643981957cf74ef392bfbf4abbbc7e7f7d093e7251"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-5ms.native.json",
+        "sha256": "ad69ac06619b973b94c4ba1f6c425d498ce5e30337272e86e140ba3b601c4414"
+      }
+    },
+    {
+      "name": "teacher-be-0.625ms",
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008429890683587186,
+        "final_yaw_error_rad": 0.0002832833499791902,
+        "maximum_body_tilt_rad": 0.004172137783937091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02811790251026599,
+          0.0004130700556526962,
+          -0.0004932589547132042
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-be-0.625ms-acceptance/summary.json",
+          "sha256": "d811a32821e4351e87916fa872b62d36796e7f855213848677e6fe9949666c20"
+        }
+      },
+      "native_compute": {
+        "wall_s": 62.884342233,
+        "simulation_per_wall": 0.3816530339313218,
+        "transition_p95_s": 0.106194026
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-teacher-be-0.625ms-metrics.json",
+        "sha256": "deb504dab2667ffe1c67e0068f4f0d7e61f86b152060c89f7f11291121fc162a"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-be-0.625ms.native.json",
+        "sha256": "0a53135ba2235d28dab95ae9229c232244eeadada2450fe6397d08ca6cc262d9"
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "name": "be-reference-refinement",
+      "baseline": {
+        "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms.native.json",
+        "sha256": "3a87eff3e37f7e141cc507807fea4b50bdc75ee48f44b26c075aa076f5970d56"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-be-0.625ms.native.json",
+        "sha256": "0a53135ba2235d28dab95ae9229c232244eeadada2450fe6397d08ca6cc262d9"
+      },
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-be-reference-refinement.json",
+        "sha256": "382af8bf9c327377f40a23be87af63f862eed1b8578b4e1a9518f80957cc9bc6"
+      },
+      "maximum_foot_difference_m": 0.00021950767132976768,
+      "maximum_body_difference_m": 0.00015613410740117586,
+      "foot_passed": true,
+      "body_passed": true,
+      "passed": true
+    },
+    {
+      "name": "sdirk-refinement",
+      "baseline": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-10ms.native.json",
+        "sha256": "368608ac3202a9a6cfc9bbdb4d8d761e3f2d7ae7d5a080e3e5a683353e8178ce"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-5ms.native.json",
+        "sha256": "ad69ac06619b973b94c4ba1f6c425d498ce5e30337272e86e140ba3b601c4414"
+      },
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-sdirk-refinement.json",
+        "sha256": "1b433a796b6fd8efae304c5a83e0e29544c7ed066158c6f9460b8a61018ce6ee"
+      },
+      "maximum_foot_difference_m": 0.0009089411246520002,
+      "maximum_body_difference_m": 0.0008827599460390843,
+      "foot_passed": true,
+      "body_passed": false,
+      "passed": false
+    },
+    {
+      "name": "sdirk10-be125",
+      "baseline": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-10ms.native.json",
+        "sha256": "368608ac3202a9a6cfc9bbdb4d8d761e3f2d7ae7d5a080e3e5a683353e8178ce"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms.native.json",
+        "sha256": "3a87eff3e37f7e141cc507807fea4b50bdc75ee48f44b26c075aa076f5970d56"
+      },
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-sdirk10-be125.json",
+        "sha256": "8445ada6ecff512e7982ed87a5e5d5b40b66035029f5cff7be1ff4709cf93dce"
+      },
+      "maximum_foot_difference_m": 0.0013489025228243523,
+      "maximum_body_difference_m": 0.001373306993600606,
+      "foot_passed": false,
+      "body_passed": false,
+      "passed": false
+    },
+    {
+      "name": "sdirk5-be125",
+      "baseline": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-5ms.native.json",
+        "sha256": "ad69ac06619b973b94c4ba1f6c425d498ce5e30337272e86e140ba3b601c4414"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms.native.json",
+        "sha256": "3a87eff3e37f7e141cc507807fea4b50bdc75ee48f44b26c075aa076f5970d56"
+      },
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-sdirk5-be125.json",
+        "sha256": "0f9c6692e94fde58ed1e53eaa14853520ec0ce825815e31142eb98c8574bb5ef"
+      },
+      "maximum_foot_difference_m": 0.0007667020110842253,
+      "maximum_body_difference_m": 0.0005672523900588964,
+      "foot_passed": true,
+      "body_passed": false,
+      "passed": false
+    },
+    {
+      "name": "sdirk10-be0625",
+      "baseline": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-10ms.native.json",
+        "sha256": "368608ac3202a9a6cfc9bbdb4d8d761e3f2d7ae7d5a080e3e5a683353e8178ce"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-be-0.625ms.native.json",
+        "sha256": "0a53135ba2235d28dab95ae9229c232244eeadada2450fe6397d08ca6cc262d9"
+      },
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-sdirk10-be0625.json",
+        "sha256": "2cb7b93aada5563ae8d757f68443c46bdbd9e582ee1c267dfe9507f12de0e842"
+      },
+      "maximum_foot_difference_m": 0.0013677693848269427,
+      "maximum_body_difference_m": 0.0013589516909313204,
+      "foot_passed": false,
+      "body_passed": false,
+      "passed": false
+    },
+    {
+      "name": "sdirk5-be0625",
+      "baseline": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-5ms.native.json",
+        "sha256": "ad69ac06619b973b94c4ba1f6c425d498ce5e30337272e86e140ba3b601c4414"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-be-0.625ms.native.json",
+        "sha256": "0a53135ba2235d28dab95ae9229c232244eeadada2450fe6397d08ca6cc262d9"
+      },
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-sdirk5-be0625.json",
+        "sha256": "21fb643bab27da05492cbd21818c7f77b05f16a7ffdecab3cec8a70f73bb9790"
+      },
+      "maximum_foot_difference_m": 0.0007883853639969905,
+      "maximum_body_difference_m": 0.0005465873845369936,
+      "foot_passed": true,
+      "body_passed": false,
+      "passed": false
+    },
+    {
+      "name": "sdirk20-be0625",
+      "baseline": {
+        "path": "runs/full-robot/learning/sdirk-physical-guess/teacher-sdirk2-20ms.native.json",
+        "sha256": "f76c3f27854eba9d6f7959cdf0b5ce774eca7a9dd23c7743bf9831f5c3158f91"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-be-0.625ms.native.json",
+        "sha256": "0a53135ba2235d28dab95ae9229c232244eeadada2450fe6397d08ca6cc262d9"
+      },
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-sdirk20-be0625.json",
+        "sha256": "5eac1fcad61f83520cf3483d0dd8938332cd56ff30049965cff574cdbfcff21e"
+      },
+      "maximum_foot_difference_m": 0.0017980264868384475,
+      "maximum_body_difference_m": 0.0017129993928155143,
+      "foot_passed": false,
+      "body_passed": false,
+      "passed": false
+    },
+    {
+      "name": "sdirk5-guess-difference",
+      "baseline": {
+        "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.native.json",
+        "sha256": "ac1c8228f7d15a65789da8451cf63fc123244cbf88ac3583753362eabfc090ed"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-sdirk2-5ms.native.json",
+        "sha256": "ad69ac06619b973b94c4ba1f6c425d498ce5e30337272e86e140ba3b601c4414"
+      },
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-sdirk5-guess-difference.json",
+        "sha256": "ea378c2f44ce94c97693ddec9c7d6614f59a68a396b12758d6fbbd9b64adf3a8"
+      },
+      "maximum_foot_difference_m": 0.000011090732691990357,
+      "maximum_body_difference_m": 0.000011569190033346471,
+      "foot_passed": true,
+      "body_passed": true,
+      "passed": true
+    }
+  ],
+  "budgets": {
+    "maximum_foot_difference_m": 0.001,
+    "maximum_body_difference_m": 0.0005
+  },
+  "browser_promoted": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-plan.json",
+      "sha256": "b56be4e92765b22723764edb0a1563d349534acd30b0465e3b11e8b419091ba8"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-status.json",
+      "sha256": "8e7de20a40a966d250dbcf636ba512e5723122c19527b0bfe8272d10e8bb8495"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-integrity.json",
+      "sha256": "6b0ba0f05f5aef5f439996b14101a0a0292deec94de52ca3bc5cfa6599b480b3"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_sdirk_physical_refinement.mjs",
+      "sha256": "8383adc7a4b1018332deea5c0b2f0f5cd472cfa410de20ce28f516ffaccc2680"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    },
+    {
+      "path": "examples/full-robot/compare_mechanical_reuse.mjs",
+      "sha256": "d9293f382c35d444ebea797d71c94bd7de5f57582df1f8c5c9c8c9ea484c86c3"
+    }
+  ],
+  "scope": "All predeclared trajectory comparisons are retained, including both finite backward-Euler references; neither is asserted to be ground truth. Task gates and native compute are separate. These 24-second development cases do not establish sustained-minute, held-out, terrain, browser or hardware qualification."
+}

@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "teacher-sdirk2-10ms",
+      "scene": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.01,
+      "seed": 0,
+      "integration": "sdirk2"
+    },
+    {
+      "name": "teacher-sdirk2-5ms",
+      "scene": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "seed": 0,
+      "integration": "sdirk2"
+    },
+    {
+      "name": "teacher-be-0.625ms",
+      "scene": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.scene.json",
+      "config": "examples/full-robot/whole-swing/sdirk-physical-refinement-teacher-be-0.625ms.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.000625,
+      "seed": 0,
+      "integration": "backward_euler"
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/SDIRK2-PHYSICAL-GUESS-REFINEMENT.md",
+      "sha256": "b2392a66fece4a20749f0a2534ec4a6add79dfbc3cc9cf5883c33a6b65437b0d"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-plan.json",
+      "sha256": "6757187e1772ea36fd76b6d05f1b466742a6cc2b44e03d0a574ba5e2128e4c97"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-guess-summary.json",
+      "sha256": "6e1cb728b005fe8d8e74159b8b7f3832a2f7650973c7219aff7aad36b74583f8"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "1da23de7f6fde610f20d4cf8cc1c6a62e7db8715bb0a262e15ef306b5b4b988e"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "31e2fbd1c3bc7df53c6fac103141bbb332d2b581d9ed49981335f6087adca7e2"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/implicit.rs",
+      "sha256": "9eb9af5b46a0ec8c4559d164ba044ef67af3eceb60c23aaedf0e3ae099a5e129"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/mechanical_advance.rs",
+      "sha256": "e206153bb7abc5b8e2d915a09acb02b81a72fc76b6f2dbef32eaf4467a5f2861"
+    },
+    {
+      "path": "runs/sdirk-physical-guess-tests.log",
+      "sha256": "072a7fc3212cba26de6dd8d6aec461f926a38edf16987fa099c1ff1386e254fe"
+    },
+    {
+      "path": "runs/sdirk-physical-guess-build.log",
+      "sha256": "68448cda1440a4e62799ffcf9bafaf13a71a746d95d134518144ceba0ae605c8"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.config.json",
+      "sha256": "48eae55c586d89ff7a18d620e0265beac4771fbe2a0362619805cfc5afab6f63"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.config.json",
+      "sha256": "a834b29819d1c09ceaa0ba4ad36dae23489dbb1f4fcab46b0d07be5c9b2905a0"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-refinement-teacher-be-0.625ms.config.json",
+      "sha256": "3f52f0ace6baafec23a28dd52d5ee38859e8d5284036233aa6536cd82f32d47e"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    }
+  ],
+  "scope": "Predeclared sequential 24-second teacher refinement at SDIRK2 10/5 ms and backward Euler 0.625 ms. Original task and 1 mm foot / 0.5 mm body budgets; compare both retained and finer references without dropping failed comparisons. No browser or hardware qualification."
+}

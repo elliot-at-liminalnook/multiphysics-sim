@@ -557,3 +557,25 @@ but ends at **2.917 mm**. Teacher versus the 1.25 ms reference differs by
 Native compute is **1.029× teacher / 1.946× student**; these are not browser
 rates. `sdirk-physical-guess-summary.json` retains every result. Finer teacher
 steps are the next accuracy/cost screen; no coarse recipe is promoted.
+
+The completed refinement screen retains that conclusion. At 10 ms, teacher
+stopping passes at **0.603 mm**, but one swing fails. At 5 ms all 15 swings
+and stopping pass (**0.677 mm**). The new 0.625 ms backward-Euler steering
+reference also passes the task; 1.25/0.625 ms differences are **0.220 mm foot /
+0.156 mm body**, passing the unchanged refinement budgets on these commands.
+
+SDIRK2 at 10/5 ms differs by **0.909 mm foot / 0.883 mm body**. Against the
+new 0.625 ms reference, the 20/10/5 ms maximum body differences are
+**1.713 / 1.359 / 0.547 mm**: all fail the 0.5 mm screen. The 5 ms foot
+difference is **0.788 mm**, which passes. Its body comparison against the
+retained 1.25 ms reference also fails at 0.567 mm. Thus refining the reference
+does not remove this accuracy failure. Changing the 5 ms stage guess alters
+body trajectory by only 0.0116 mm, unlike the coarse root jump.
+
+Native teacher rates at SDIRK2 10/5 ms and backward Euler 0.625 ms are
+**0.635× / 0.461× / 0.382×**. `sdirk-physical-refinement-summary.json` retains
+all eight comparisons and the task, timing and source records. The corrected
+SDIRK method is useful shared experimental infrastructure, but this study
+does not establish an accurate realtime browser profile. Keep the detailed
+reference and existing browser recipes; the independent body-tracking,
+held-out support, robustness and coarse-model performance work remains.

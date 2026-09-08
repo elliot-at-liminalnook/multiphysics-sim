@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "outcome": {
+    "kind": "completed",
+    "error": null,
+    "termination_reasons": []
+  },
+  "feet": [
+    {
+      "id": "-Y-foot-surface",
+      "link": "-Y | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 21.44,
+      "integrated_load_weighted_tangential_speed_m": 0.08204108274601113,
+      "integrated_load_weighted_point_speed_m": 0.083201336364472,
+      "integrated_load_weighted_velocity_world_m": [
+        0.006176577059720121,
+        -0.001994805315581951
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.074240851133891,
+      "sampled_translational_shear_dissipation_j": 0.19007282517650892,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "+X-foot-surface",
+      "link": "+X | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 22.22,
+      "integrated_load_weighted_tangential_speed_m": 0.04776386869654747,
+      "integrated_load_weighted_point_speed_m": 0.04776386869654747,
+      "integrated_load_weighted_velocity_world_m": [
+        0.010659550181319904,
+        0.0009338660434192905
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.06842095533692012,
+      "sampled_translational_shear_dissipation_j": 0.10902659113117924,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "+Y-foot-surface",
+      "link": "+Y | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 22.060000000000002,
+      "integrated_load_weighted_tangential_speed_m": 0.08461376289717244,
+      "integrated_load_weighted_point_speed_m": 0.08576120688110872,
+      "integrated_load_weighted_velocity_world_m": [
+        0.003995265971448,
+        0.0054637015250925845
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.06318284050883603,
+      "sampled_translational_shear_dissipation_j": 0.20018248908932385,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "-X-foot-surface",
+      "link": "-X | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 22.38,
+      "integrated_load_weighted_tangential_speed_m": 0.045739580214985906,
+      "integrated_load_weighted_point_speed_m": 0.048394736737179735,
+      "integrated_load_weighted_velocity_world_m": [
+        0.003859640385272809,
+        0.0005250259091410957
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.07535431529594626,
+      "sampled_translational_shear_dissipation_j": 0.08981945354933514,
+      "sampled_translational_shear_supplied_work_j": 0
+    }
+  ],
+  "capture": {
+    "path": "runs/full-robot/learning/direct-support/default-steering.native.json",
+    "sha256": "91809e0f1b1c7d0de9a011195711fa49a999c3666d4cf82319da499ca69c797b"
+  },
+  "sources": [
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    }
+  ],
+  "conventions": {
+    "minimum_endpoint_floor_force_n": 1,
+    "kinematics": "Recorded COM velocity plus angular velocity cross the world contact-point offset. Floor is stationary and horizontal.",
+    "integration": "Trapezoidal 50 Hz samples over intervals with both endpoints loaded. Velocities are weighted by recorded normal forces, not by tracking a fixed contact point."
+  },
+  "scope": "Diagnostic of material velocities at sampled floor contacts, separate from geometric foot-marker travel. Translation of the load-weighted patch and pointwise rotation are both reported. Contact birth/death, changing weights, between-sample peaks and independent torsional friction work are unresolved. No new acceptance threshold or slip-free/hardware claim."
+}

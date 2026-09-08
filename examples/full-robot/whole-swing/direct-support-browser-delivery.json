@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "passed": true,
+  "recipes": [
+    {
+      "id": "direct-support-minute",
+      "asset_sha256": "ad3fda8d234da304b1807a6144cc6d7c249170bba881d56a72acf6bc646a786c"
+    },
+    {
+      "id": "direct-support-steering",
+      "asset_sha256": "7663a8e1157fc8a17b9205a3d08ca920fcc1e94a3d3a875038b7aaab22c99f11"
+    },
+    {
+      "id": "integral-teacher-minute",
+      "asset_sha256": "49a91f69608fd26ef273510d7f4518308df6554ba4924bb0ab7eeda566490718"
+    },
+    {
+      "id": "integral-teacher-steering",
+      "asset_sha256": "e102a9fe63e6c1485364f2ec35c05d65f6db0f8e738b5d5123e70881bc74c37d"
+    },
+    {
+      "id": "browser-crawl-minute",
+      "asset_sha256": "771addc1a917aae9bee10d46c5c35f16846331d14f072980c6e6cbe1c4c5ff91"
+    },
+    {
+      "id": "faster-student-minute",
+      "asset_sha256": "2f6681e8e24e1671d7cce649d5ea68f408a8ff23d276cf0ac240b27e31a5b897"
+    },
+    {
+      "id": "overlapping-forward-stop",
+      "asset_sha256": "a39981e81bd9c5e489e3644617e23fa02104a2cc13d6f23417563c3a0dc3fd71"
+    },
+    {
+      "id": "whole-swing-short",
+      "asset_sha256": "8c4415a28db2230c75d3b5354bea6e5425d684b3930a567484af6452e6978da3"
+    },
+    {
+      "id": "faster-teacher-minute",
+      "asset_sha256": "0f0c6583dc26b3fb8f79967e85349d88eaff29cabe9e9fc2edcc99f961c294a6"
+    },
+    {
+      "id": "faster-steering-short",
+      "asset_sha256": "2b30405b6030b7a2ce8d081706a6ae9920a1bd8dd0bf03f6e2054e6d209555f7"
+    },
+    {
+      "id": "settled-teacher-minute",
+      "asset_sha256": "8d290e797e2b4030c992a320620a9046e12443c3c6cd4b2ab066d627da6ff56f"
+    },
+    {
+      "id": "secant-steering-short",
+      "asset_sha256": "a79bac561104eb3b2864024052b6bd7d89cd2403445bf49d6c54668abb1163aa"
+    },
+    {
+      "id": "refined-teacher-minute",
+      "asset_sha256": "db0c253dd6fed9cc43b80d96f0e7b56e14a976c70a20a54a4a614f7312e8c2db"
+    },
+    {
+      "id": "tangent-steering-short",
+      "asset_sha256": "3959d58f786293bf2d20fe48c0c434acb5636daf87176891af6f9b70aba81004"
+    },
+    {
+      "id": "portable-tangent-steering",
+      "asset_sha256": "31d6c5b3a13ab77269759ace1c0205c10d3970d3a511911d4468899198221bf5"
+    },
+    {
+      "id": "exact-base-steering",
+      "asset_sha256": "0863ca109bad37498a38df14e515d3f1a899d4b1a04fc34b61bd12cbf7984d15"
+    },
+    {
+      "id": "fast-distilled-minute",
+      "asset_sha256": "411ab45dc93bf18d992a6cdda8b8fbe36170578265aeb2838bc41192590bd89f"
+    },
+    {
+      "id": "fast-distilled-steering",
+      "asset_sha256": "5871c52720f23e4018317af9d923effc3cb0a26abf6d44ba301af2863d90da33"
+    }
+  ],
+  "verified_code_files": [
+    "index.html",
+    "leaderboard-model.mjs",
+    "leaderboard.css",
+    "leaderboard.js",
+    "serve-viewer.mjs",
+    "sim_web.js",
+    "sim_web_bg.wasm",
+    "vendor/addons/controls/OrbitControls.js",
+    "vendor/three.core.js",
+    "vendor/three.module.js",
+    "video-export.js",
+    "viewer.css",
+    "viewer.js",
+    "worker-message.mjs",
+    "worker.js"
+  ],
+  "sources": [
+    {
+      "path": "runs/interactive/direct-support/leaderboard.json",
+      "sha256": "fb26c100b556e6890098f29a48e8a8e644d4cf48bba65bce32e7e169595d80e3"
+    },
+    {
+      "path": "runs/interactive/direct-support/viewer/build-manifest.json",
+      "sha256": "4c6a83f5ed304072c4e305e23d230db43431a50968b38430df68beedd4ec1c57"
+    },
+    {
+      "path": "runs/interactive/direct-support-delivery/viewer/build-manifest.json",
+      "sha256": "92a98992d42e16dfcfed62275436a453134828e4ec3c874da1d50b4b3e0d29c4"
+    },
+    {
+      "path": "runs/interactive/direct-support-delivery/viewer/leaderboard.json",
+      "sha256": "46a8479d63db32c68fe917658745ed29f3e04298562359d7455c87879c33e9d8"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/web/leaderboard/verify_metadata_package.mjs",
+      "sha256": "1014916cbb91636feb056365b71cef0ff69a05595e502a3a989ddd90f1d1bb1d"
+    }
+  ],
+  "scope": "Delivery has identical UI/worker/WASM code and all recipe bytes from the successful UI-tested bundle. Only evidence metadata changed; this check does not add physics or timing evidence."
+}

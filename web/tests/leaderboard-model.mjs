@@ -12,7 +12,9 @@ test('failed or absent evidence cannot create a speed rank', () => {
   const good = structuredClone(data.entries[0]);
   good.gates = Object.fromEntries(requiredGates.map(k => [k, {status: 'pass', detail: 'Synthetic unit-test evidence'}]));
   good.metrics.simulated_s = 60; good.metrics.speed_window_s = 40;
+  good.metrics.task_passed = true;
   assert(eligible(good));
+  assert(!eligible({...good, metrics: {...good.metrics, task_passed: false}}));
   for (const key of requiredGates) for (const status of ['fail', 'missing', undefined]) {
     const bad = structuredClone(good); bad.gates[key].status = status;
     assert(!eligible(bad), key); assert.equal(rankEntries([bad]).size, 0);

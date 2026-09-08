@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "default-steering",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/direct-support/default-steering.config.json",
+      "actions": "runs/full-robot/learning/direct-support/default-steering.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "seed": 0,
+      "direct_support_transfer": false,
+      "baseline": {
+        "path": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.native.json",
+        "sha256": "daa997e689ada136074ffe35060d944cca4b10b5ffbfb9f0b0fc20ba4c496462"
+      }
+    },
+    {
+      "name": "direct-minute",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/direct-support/direct-minute.config.json",
+      "actions": "runs/full-robot/learning/direct-support/direct-minute.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "direct_support_transfer": true,
+      "baseline": {
+        "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.native.json",
+        "sha256": "54ee76fc3a432003bdf7a3583a1a18d58dd3b5914801a758d48100bd0fe0b7db"
+      }
+    },
+    {
+      "name": "direct-steering",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/direct-support/direct-steering.config.json",
+      "actions": "runs/full-robot/learning/direct-support/direct-steering.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "seed": 0,
+      "direct_support_transfer": true,
+      "baseline": {
+        "path": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.native.json",
+        "sha256": "daa997e689ada136074ffe35060d944cca4b10b5ffbfb9f0b0fc20ba4c496462"
+      }
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/DIRECT-SUPPORT-PLAN.md",
+      "sha256": "a937c44d9e9baafd1cda9307c8013ac59933db6ab1e3c291ea262b8cce66fdb1"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/shift-duration-summary.json",
+      "sha256": "541608dc6a30ff8228f16c8e426c67221e16bd3932b88988839f1bb5b3208d32"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-recipes.json",
+      "sha256": "49b69c3d2feefb27eeb353e7c987cc6c1e2bfe5cf4585bd6529d7004042a3043"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-status.json",
+      "sha256": "dbfd62e3bb21dd73f24e18e0f65d51bd8eff78d35d50f58649484dd750bc9c40"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/direct-support/default-steering.config.json",
+      "sha256": "9c7cbcf4161d169b1570d5c977fe8d23065f305e0d13dd8d36312c2280ee1b38"
+    },
+    {
+      "path": "runs/full-robot/learning/direct-support/default-steering.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/direct-support/direct-minute.config.json",
+      "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+    },
+    {
+      "path": "runs/full-robot/learning/direct-support/direct-minute.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "runs/full-robot/learning/direct-support/direct-steering.config.json",
+      "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+    },
+    {
+      "path": "runs/full-robot/learning/direct-support/direct-steering.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "crates/sim-domain-control/src/stepping.rs",
+      "sha256": "e594e0b725b8db24dfd6abb45800b3a1a1b77d767bd02047de9c00e7e9a787b7"
+    },
+    {
+      "path": "crates/sim-domain-control/tests/stepping.rs",
+      "sha256": "44f23fc4aab818fb692d675b499f2fa50057c635ffc50aeb63395707f90eadd2"
+    },
+    {
+      "path": "examples/interactive/direct-support-transfer.md",
+      "sha256": "57186914bf6f3872a9deb5cfda244e85d79d11f2707fd5fb30b01b8b845a6cd5"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "runs/direct-support-final-tests.log",
+      "sha256": "32935358aa46960f1359382b3f429878febea4cafa35dd10ea4caafe8bf36330"
+    },
+    {
+      "path": "runs/direct-support-runtime-tests.log",
+      "sha256": "a9973adfe697514c20334b0934bce2d3839bdd11632c76b9932bbc2ead67faef"
+    },
+    {
+      "path": "runs/direct-support-native-build.log",
+      "sha256": "df007a417a1eda41ea486bcd0e55e9d1a9bf7f0002e0159dc3c247b024077ebf"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "d6208252cd771bdc3076c94b8a6640b2feaac320c77b975f541340386622e486"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "defe7cb184d6d59f79aa5dbfc6991b364ea650aa6e8ff544365e6e5fe55cc26b"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_direct_support.mjs",
+      "sha256": "3dcce303cb2d9eda78587af32a230cb34baec5223f25ce9e5782afd5a8bfe425"
+    }
+  ],
+  "scope": "Default identity and two direct-transfer development cases. Identical physical model and controller gains, explicit new shared sequence path. Original task gates plus the prospective contact-motion screen; no browser, timestep, held-out or terrain qualification."
+}

@@ -775,3 +775,64 @@ and next support shift into one smooth transfer, avoiding the stop at the
 center while preserving landing/readiness guards and an explicit recenter on
 stop. That must first be implemented and tested in the shared Rust sequence;
 its contact quality, geometry and measured speed cannot be inferred here.
+
+## Direct support transfer retains speed but remains unqualified
+
+The shared Rust sequence now offers an explicit `direct_support_transfer`
+option, default off. It holds the last swing support reference after landing,
+then shifts directly to the next support posture. Stop handling recenters
+explicitly, with readiness guards and transactional failure. Twenty sequence
+tests cover geometry, phase continuity, turning/reversal, cancel/stop/resume,
+guard failure and default serialization; the two existing runtime integration
+checks also pass. The rebuilt default steering capture matches every physical
+frame, task transition, recording and contract exactly (excluding only frame
+wall-clock time).
+
+With phase times `[0.58, 0.38, 0.38, 0.02, 0.02]`, the minute retains the
+1.38-second nominal transfer, 3.75 mm/s command and original planned foot
+landings: **41** landing sets differ by at most **4.44e-16 m**. All 41 swings
+qualify and measured travel is **3.696 mm/s**. Final position error is **0.753
+mm**, but heading error **0.01361 rad** fails the 0.005 rad gate. The contact
+motion ratio improves to **45.2%**, still far above 5%. Native throughput is
+0.507x and sampled shaft work is 6.244 J. This is a retained failed minute,
+not a validated faster walking controller.
+
+The direct steering case passes all **15** swings and stops within **0.349 mm**,
+with heading **0.00453 rad**, close to its limit. Sampled reference acceleration
+is at most **0.684 m/s²**, versus **2.565 m/s²** for the unchanged steering
+reference. This is a reference finite-difference diagnostic, not actual COM
+acceleration. Direct-minute summed contact motion is **168 mm in shift**,
+**64/35 mm during raise/lower**, and only **2.3 mm in return**. The remaining
+shift and loaded-foot tracking limit persists; merging phases alone does not
+solve it. `direct-support-summary.json` retains the original task failures,
+contact screen, identity checks, work and phase metrics.
+
+The leaderboard now requires a separate loaded-contact-motion gate. Missing
+evidence cannot satisfy it; the integral and direct-transfer candidates expose
+their measured failures. This prevents future speed ranking from relying only
+on supported swings, endpoint stopping and numerical agreement.
+
+Direct steering also completes all 1,200 native/WASM transitions: maximum
+numeric difference is **3.56e-10**, with exact same-host replay and reset.
+Rendered keyboard control completes the accepted 24-second command sequence,
+and its recording exactly matches the native recipe, seed and inputs. Active
+walking runs at **0.415x**, with **89.515 ms p95** transition processing; both
+realtime gates fail. Render interval p95 is **16.67 ms**, while mean WASM-call
+time is **43.58 ms** versus **0.47 ms** transport/dispatch. Physics and controller
+work dominate this measurement. The reverse command waits **1.36 simulated
+seconds** to appear in the walking reference and **3.13 wall seconds** to be
+drawn. These are reference-response measurements, not causal physical-response
+latency. Full-minute browser timing, direct-gait timestep refinement, terrain
+and new held-out qualification remain unmeasured.
+
+The isolated 18-entry browser catalog passes every exact Load and run check,
+full direct-steering input replay, real WebM export, desktop/mobile layout,
+filter/comparison checks and rejection of modified recipe bytes. Static
+eligibility and packaging checks pass, including an explicit failed-task case
+and missing/failed contact evidence. All entries remain unranked. Browser
+reports are retained in `direct-support-browser-{plan,status,parity,integrity}.json`;
+the reusable sequential `measure_browser_suite.mjs` pins its plan, input files,
+bundle manifest and measurement harness and retains failed timing outcomes.
+`direct-support-browser-delivery.json` verifies that the delivered catalog uses
+the same tested UI/worker/WASM and all 39 preset recipe bytes, with updated
+evidence metadata for its 18 leaderboard entries.

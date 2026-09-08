@@ -66,7 +66,7 @@ try {
     await open();
   }
   checks.push('every Load and run executes its pinned controller, seed and tested initial action through WASM');
-  const shortest = data.entries.find(e => e.id === 'integral-teacher-steering') ?? data.entries.find(e => e.id === 'fast-distilled-steering') ?? data.entries.find(e => e.id === 'exact-base-steering') ?? data.entries.find(e => e.id === 'portable-tangent-steering') ?? data.entries.find(e => e.id === 'tangent-steering-short') ?? data.entries.find(e => e.id === 'secant-steering-short') ?? data.entries.find(e => e.id === 'faster-steering-short') ?? [...data.entries].sort((a, b) => a.replay.completed_steps - b.replay.completed_steps)[0];
+  const shortest = data.entries.find(e => e.id === 'direct-support-steering') ?? data.entries.find(e => e.id === 'integral-teacher-steering') ?? data.entries.find(e => e.id === 'fast-distilled-steering') ?? data.entries.find(e => e.id === 'exact-base-steering') ?? data.entries.find(e => e.id === 'portable-tangent-steering') ?? data.entries.find(e => e.id === 'tangent-steering-short') ?? data.entries.find(e => e.id === 'secant-steering-short') ?? data.entries.find(e => e.id === 'faster-steering-short') ?? [...data.entries].sort((a, b) => a.replay.completed_steps - b.replay.completed_steps)[0];
   await row(shortest.id).getByRole('button', {name: 'Replay tested inputs', exact: true}).click();
   await page.waitForFunction(end => parseFloat(document.querySelector('#sim-time').textContent) >= end - 1e-8, shortest.metrics.simulated_s, {timeout: 180000}); await ready();
   assert.equal(parseFloat(await page.locator('#sim-time').textContent()), shortest.metrics.simulated_s);

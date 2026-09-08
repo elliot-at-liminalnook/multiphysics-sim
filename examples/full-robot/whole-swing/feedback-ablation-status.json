@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "no-body",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": false,
+      "error": "policy inputs must match declared count, units and bounds",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 3.65e-7,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+          "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/feedback-ablation/no-body.actions.json",
+          "sha256": "d260a82a9140c5933dbd0ac880816646ef5381186f8338518efad571da5062b7"
+        },
+        {
+          "path": "runs/full-robot/learning/feedback-ablation/no-body.native.json",
+          "sha256": "a055868627f4590c6379aee3cd24800fb6ed5cc1cd3bc1c872eccde55fdc3207"
+        }
+      ]
+    },
+    {
+      "name": "no-point",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": false,
+      "error": "policy inputs must match declared count, units and bounds",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 3.01e-7,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+          "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/feedback-ablation/no-point.actions.json",
+          "sha256": "4e374bfdd59aad0db75efc9a5e3e02761332cd04ac513dff8c9af9d3472e2e9e"
+        },
+        {
+          "path": "runs/full-robot/learning/feedback-ablation/no-point.native.json",
+          "sha256": "2affe2309f10bdd4bc63f0c7a90dbb393b9fd52f864ed42514feb826a09fdeb0"
+        }
+      ]
+    },
+    {
+      "name": "angles-only",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": false,
+      "error": "policy inputs must match declared count, units and bounds",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 3.49e-7,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+          "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/feedback-ablation/angles-only.actions.json",
+          "sha256": "9d84fe44a0d49fe26faf3bda38dab06fe91bd0e7ea26eb682b389c8138d1c53d"
+        },
+        {
+          "path": "runs/full-robot/learning/feedback-ablation/angles-only.native.json",
+          "sha256": "fefca69b9fbc8c52fe424c06d22ae45107f8601834808c485ed167a09dbb3276"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/feedback-ablation/plan.json",
+      "sha256": "d34befa1e29c014685b590ced3cfef93b33cefd027704ff419313b566b521871"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "0abc13e18219d706bfbf578cfe62162fd87f87007ea2c6da8f18d9bd6b786539"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "762b13d40e0163d4e1512541528a70c9d552d773e18accf15083b9258e7953ce"
+    }
+  ],
+  "scope": "Three frozen moving-feedback ablations against a pinned existing baseline. Only selected gain input channels change during nonzero motion requests; original stopping feedback, robot, physics and all other inputs are retained."
+}

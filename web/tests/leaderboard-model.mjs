@@ -6,6 +6,18 @@ import {join, resolve} from 'node:path';
 import {eligible, rankEntries, requiredGates, validateEntry} from '../viewer/leaderboard-model.mjs';
 import {packageLeaderboard} from '../leaderboard/package.mjs';
 const data = JSON.parse(await readFile(new URL('../leaderboard/evaluations.json', import.meta.url)));
+test('command response keeps missing detections distinct and rejects invalid timing metadata',()=>{
+  const e=structuredClone(data.entries[0]);
+  e.command_response={method:'Synthetic paired trajectory test',scope:'No qualification claim',cases:[
+    {command:'Forward',simulated_response_s:null,received_wall_s:null,drawn_wall_s:null,threshold:0.0001,threshold_unit:'m',hold_s:0.1}]};
+  validateEntry(e);assert(!eligible(e));
+  for(const bad of [NaN,Infinity,-0.01]){
+    const invalid=structuredClone(e);invalid.command_response.cases[0].drawn_wall_s=bad;
+    assert.throws(()=>validateEntry(invalid),/Invalid command response/);
+  }
+  e.command_response.cases.push({...e.command_response.cases[0]});
+  assert.throws(()=>validateEntry(e),/Invalid command response/);
+});
 test('failed or absent evidence cannot create a speed rank', () => {
   for (const entry of data.entries) { validateEntry(entry); assert(!eligible(entry)); }
   assert.equal(rankEntries(data.entries).size, 0);

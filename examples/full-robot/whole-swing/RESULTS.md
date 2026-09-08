@@ -886,3 +886,55 @@ for the outstanding paired physical-response experiment, not a claim that
 reference response proves physical causality. The proof and measurement are in
 `causal-response-browser-{status,timeline-integrity}.json`; the live viewer's
 physics and controller recipe are unchanged.
+
+## Paired command response separates body motion from reference changes
+
+Five matched 24-second native runs repeat the accepted direct-steering case
+and omit one forward, turn, reverse or stop command interval at a time. The
+commanded run matches the earlier accepted capture exactly; every paired
+physical prefix through its branch time is identical. The audit verifies that
+only the selected interval's motion-command channels change, retaining feedback
+gains, residual inputs, seed, configuration, robot and physics. All five runs
+complete. The commanded, no-forward and no-turn runs pass the original task;
+no-reverse and no-stop endpoint failures are retained.
+
+The prospectively declared directed-difference thresholds are **0.1 mm** of
+body translation or **0.0005 rad** of yaw, each sustained across **0.1 s** of
+50 Hz samples. These are detection sensitivities, not new task gates. Position
+is projected on the actual body-forward axis at command time. For stop, positive
+displacement relative to continued reverse detects the first command effect;
+it does not prove that motion has ceased.
+
+| Command | First directed response, simulation s | Frame received, wall s | Frame drawn, wall s |
+|---|---:|---:|---:|
+| Forward | 0.96 | 2.204 | 2.225 |
+| Turn | 1.22 | 3.031 | 3.038 |
+| Reverse | 1.72 | 3.504 | 3.517 |
+| Stop request | 0.02 | 0.096 | 0.116 |
+
+Forward has a detectable horizontal difference in any direction at **0.28 s**,
+well before the directed response at 0.96 s. Reverse similarly has an
+any-direction response at **1.40 s** versus 1.72 s directed. A reference change,
+or the first motion of any kind, therefore understates the delay to the declared
+directed body response. Conversely, the stop request affects the physical
+trajectory before the gait finishes landing and recenters; the 20 ms detection
+must not be reported as completed stopping.
+
+The browser recording has the same commanded recipe, seed and inputs; the
+single-page timeline maps the detected native physical samples to their actual
+receipt and WebGL submission times. This is paired native-model evidence
+associated with browser frames. Counterfactual WASM portability, monitor
+presentation, direct-gait timestep accuracy and hardware latency remain
+unmeasured. `causal-response-{plan,status,integrity,summary}.json` and four compact
+signal traces retain the inputs, exact-prefix proofs, sensitivities, failed
+counterfactual endpoints and measured crossings. The reusable analyzer tests
+reject transient and wrong-way crossings and verify yaw wrapping and skipped
+drawn frames; those checks are included in browser CI.
+
+The steering entry's evidence/comparison panel now shows all four directed
+response times and their detection/stop limitations. Three catalog tests pass,
+including rejection of invalid response metadata. The isolated 18-entry viewer
+passes every Load and run, full steering replay, real WebM export, desktop and
+phone response-panel checks, filters/comparison, and modified-recipe rejection.
+`causal-response-browser-ui.json` binds these checks to the exact served bundle;
+no new controller or physical qualification is implied by the UI change.

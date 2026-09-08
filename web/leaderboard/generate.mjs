@@ -71,6 +71,21 @@ const directBrowserPath = 'examples/full-robot/whole-swing/direct-support-browse
 const directBrowserIntegrityPath = 'examples/full-robot/whole-swing/direct-support-browser-integrity.json';
 assert(directBrowser.complete && read(directBrowserIntegrityPath).passed);
 const directMinute = direct.cases.find(c => c.name === 'direct-minute'), directSteering = direct.cases.find(c => c.name === 'direct-steering');
+const causalPath = 'examples/full-robot/whole-swing/causal-response-summary.json', causal = read(causalPath);
+const causalPlanPath = 'examples/full-robot/whole-swing/causal-response-plan.json', causalPlan = read(causalPlanPath);
+const causalBrowserPath = 'examples/full-robot/whole-swing/causal-response-browser-status.json', causalBrowser = read(causalBrowserPath);
+assert(causal.commanded_task_passed && causal.commanded_full_repeat_exact && causal.cases.every(c => c.exact_physical_prefix && c.only_declared_input_interval_changed));
+assert.equal(causalPlan.baseline.sha256, directSteering.sources.find(s => s.path.endsWith('.native.json')).sha256);
+const causalResponse = {
+  method: 'First directed body-pose difference versus holding the previous command: 0.1 mm translation or 0.0005 rad yaw, sustained across 0.1 s of samples.',
+  scope: 'Paired native simulations associated with matching browser frames. An early response to Stop does not mean the robot has stopped. Draw times are WebGL submission, not monitor or hardware latency.',
+  cases: causal.cases.map(c => ({command: ({'hold-forward':'Forward','hold-turn':'Turn','hold-reverse':'Reverse','hold-stop':'Stop request'})[c.name],
+    simulated_response_s: c.sampled_directed_response?.latency_s ?? null,
+    received_wall_s: c.browser_association?.received_wall_latency_s ?? null,
+    drawn_wall_s: c.browser_association?.drawn_wall_latency_s ?? null,
+    any_direction_response_s: c.sampled_any_direction_response?.latency_s ?? null,
+    threshold: c.probe.threshold, threshold_unit: c.probe.metric === 'yaw' ? 'rad' : 'm', hold_s: c.probe.hold_s})),
+};
 const directMotion = directSummary.cases.find(c => c.name === 'direct-minute');
 const directContactGate = {status: directMotion.minute_anti_sliding_screen_passed ? 'pass' : 'fail',
   detail: `Associated minute has ${(100 * directMotion.contact_motion_to_body_advance_ratio).toFixed(1)}% worst-foot loaded contact motion versus a ${(100 * directSummary.maximum_contact_motion_to_body_advance_ratio).toFixed(0)}% limit. This sampled diagnostic and the failed minute heading gate keep the controller experimental.`};
@@ -80,13 +95,14 @@ const definitions = [
     capture: directMinute.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(directMinute.acceptance.source.path), evidence: directPath,
     commands: true, contactMotion: directContactGate, partialParity: true,
     extraEvidence: [directSummaryPath, 'examples/full-robot/whole-swing/direct-support-integrity.json', directBrowserPath, directBrowserIntegrityPath]},
-  {id: 'direct-support-steering', name: 'Direct weight transfer steering', description: 'All 15 development steering swings pass, with 0.35 mm final position error and heading near its limit. Native/WASM agreement and exact replay pass. Rendered pace is 0.42x with 89.5 ms p95. The associated minute fails heading and loaded-contact-motion requirements.',
+  {id: 'direct-support-steering', name: 'Direct weight transfer steering', description: 'All 15 development steering swings pass, with 0.35 mm final position error. Rendered pace is 0.42x with 90.2 ms p95. Directed reverse response takes 1.72 simulated seconds and 3.52 seconds to draw. The associated minute fails heading and loaded-contact-motion requirements.',
     scene: 'examples/full-robot/whole-swing/settled-integral-candidate.scene.json', config: 'examples/full-robot/whole-swing/direct-support-steering.config.json',
     capture: directSteering.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(directSteering.acceptance.source.path), evidence: directPath,
     commands: true, benchmark: 'flat-steering-24s-v1', contactMotion: directContactGate,
-    performance: directBrowser.cases.find(c => c.name === 'direct-turn').measurement,
+    performance: causalBrowser.cases.find(c => c.name === 'direct-turn').measurement, commandResponse: causalResponse,
     parity: directBrowser.parity.passed && directBrowser.parity.replay_exact && directBrowser.parity.reset_exact,
-    extraEvidence: [directSummaryPath, 'examples/full-robot/whole-swing/direct-support-integrity.json', directBrowserPath, directBrowserIntegrityPath]},
+    extraEvidence: [directSummaryPath, 'examples/full-robot/whole-swing/direct-support-integrity.json', directBrowserPath, directBrowserIntegrityPath,
+      causalPath, causalPlanPath, causalBrowserPath, 'examples/full-robot/whole-swing/causal-response-integrity.json']},
   {id: 'integral-teacher-minute', name: 'Walking teacher with bounded stance correction', description: 'Measures 3.78 mm/s with 41 qualified minute-long swings. Mixed steering, two fresh command cases and timestep agreement pass. Loaded contact motion is substantial: 152–198 mm per foot during 213 mm body advance. Browser pace is 0.42x with 93.5 ms p95; this remains experimental.',
     scene: 'examples/full-robot/whole-swing/settled-integral-candidate.scene.json', config: 'examples/full-robot/whole-swing/settled-integral-minute.config.json',
     capture: integralMinute.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(integralMinute.acceptance.source.path), evidence: integralPath,
@@ -246,6 +262,7 @@ for (const d of definitions) {
       browser_active_throughput: performance?.active_motion?.simulation_per_wall_second ?? null,
       browser_active_p95_s: performance?.active_motion?.transition_p95_s ?? null},
     browser_host: d.performance?.host ?? null, browser_runtime: d.performance?.runtime_build ?? null, gates,
+    ...(d.commandResponse ? {command_response: d.commandResponse} : {}),
     evidence: [source(d.evidence), source(omittedPath), ...(d.numerical ? [source(d.numerical)] : []), ...(d.extraEvidence ?? []).map(source)],
     capture: source(d.capture), measurement: {...metrics, motors: undefined, phases: undefined, feet: undefined},
     limitations: 'Uncalibrated CAD-derived simulation, ideal observations and a privileged planner. Sampled marker motion and positive shaft work do not certify slip-free contact or hardware energy use.'};

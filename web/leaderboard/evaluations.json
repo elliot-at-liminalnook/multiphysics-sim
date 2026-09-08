@@ -224,7 +224,7 @@
     {
       "id": "direct-support-steering",
       "name": "Direct weight transfer steering",
-      "description": "All 15 development steering swings pass, with 0.35 mm final position error and heading near its limit. Native/WASM agreement and exact replay pass. Rendered pace is 0.42x with 89.5 ms p95. The associated minute fails heading and loaded-contact-motion requirements.",
+      "description": "All 15 development steering swings pass, with 0.35 mm final position error. Rendered pace is 0.42x with 90.2 ms p95. Directed reverse response takes 1.72 simulated seconds and 3.52 seconds to draw. The associated minute fails heading and loaded-contact-motion requirements.",
       "benchmark_version": "flat-steering-24s-v1",
       "controller_sha256": "03abb5265f59717e213579a1c0bc85d747d0c6832f2d5d73d590da4bd58c1ecc",
       "model_sha256": "9b2fb42eb2790a0b19c8a7dab7608a78cd1526e062a894010fcf7af734cdcbfa",
@@ -360,8 +360,8 @@
         "positive_mechanical_work_j": 2.116724356956835,
         "native_throughput": 0.5368771741366859,
         "native_hardware": "Not recorded with this capture; not a reference benchmark.",
-        "browser_active_throughput": 0.41537775242608393,
-        "browser_active_p95_s": 0.08951499998569488
+        "browser_active_throughput": 0.4181111622137039,
+        "browser_active_p95_s": 0.09017500001192093
       },
       "browser_host": {
         "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
@@ -373,7 +373,7 @@
         "headless": true
       },
       "browser_runtime": {
-        "manifest_sha256": "4c6a83f5ed304072c4e305e23d230db43431a50968b38430df68beedd4ec1c57",
+        "manifest_sha256": "92a98992d42e16dfcfed62275436a453134828e4ec3c874da1d50b4b3e0d29c4",
         "browser_module_sha256": "53f6d055e2f4d2a3d02ddd0037059866625409708c5cbe6d9fa8e8ca5d4f8ad0",
         "compiler_profile": "simd-lto",
         "settings": {
@@ -416,6 +416,52 @@
           "detail": "Associated native/WASM comparison and same-host replay pass."
         }
       },
+      "command_response": {
+        "method": "First directed body-pose difference versus holding the previous command: 0.1 mm translation or 0.0005 rad yaw, sustained across 0.1 s of samples.",
+        "scope": "Paired native simulations associated with matching browser frames. An early response to Stop does not mean the robot has stopped. Draw times are WebGL submission, not monitor or hardware latency.",
+        "cases": [
+          {
+            "command": "Forward",
+            "simulated_response_s": 0.96,
+            "received_wall_s": 2.2041699999570845,
+            "drawn_wall_s": 2.225104999959469,
+            "any_direction_response_s": 0.28,
+            "threshold": 0.0001,
+            "threshold_unit": "m",
+            "hold_s": 0.1
+          },
+          {
+            "command": "Turn",
+            "simulated_response_s": 1.2200000000000006,
+            "received_wall_s": 3.031389999985695,
+            "drawn_wall_s": 3.0383500000238417,
+            "any_direction_response_s": 1.2200000000000006,
+            "threshold": 0.0005,
+            "threshold_unit": "rad",
+            "hold_s": 0.1
+          },
+          {
+            "command": "Reverse",
+            "simulated_response_s": 1.7199999999999989,
+            "received_wall_s": 3.503589999973774,
+            "drawn_wall_s": 3.516829999983311,
+            "any_direction_response_s": 1.3999999999999986,
+            "threshold": 0.0001,
+            "threshold_unit": "m",
+            "hold_s": 0.1
+          },
+          {
+            "command": "Stop request",
+            "simulated_response_s": 0.019999999999999574,
+            "received_wall_s": 0.09571999996900558,
+            "drawn_wall_s": 0.11552499997615814,
+            "any_direction_response_s": 0.019999999999999574,
+            "threshold": 0.0001,
+            "threshold_unit": "m",
+            "hold_s": 0.1
+          }
+        ]
+      },
       "evidence": [
         {
           "path": "examples/full-robot/whole-swing/direct-support-status.json",
@@ -440,6 +486,22 @@
         {
           "path": "examples/full-robot/whole-swing/direct-support-browser-integrity.json",
           "sha256": "a8a01aaa654d45c94991f68b3406304803395318f428648d71996e691a0e3393"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/causal-response-summary.json",
+          "sha256": "91c5eb2874d4ccb7aaa387e1a0b0b2395d9c8da69d0c696f9807045e73bab6d3"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/causal-response-plan.json",
+          "sha256": "4f967928905dca31e3d7bda0178b01ebc4ae8346b15c8fc66d2d50c4ec21bdf8"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/causal-response-browser-status.json",
+          "sha256": "d0906016fd39c55927699a0b06898b142abf2aacbac6af661e82f56e85ed404b"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/causal-response-integrity.json",
+          "sha256": "dd07a42ae69a42c722740e91a28d1b9fd575e6e8911addb0d7e73d25bb681f80"
         }
       ],
       "capture": {
@@ -4447,7 +4509,7 @@
   ],
   "generator": {
     "path": "web/leaderboard/generate.mjs",
-    "sha256": "44456e7b6dc50911fff358ced07a38ead68a146520721b1192cbc1ef38b1d55b"
+    "sha256": "293c14d9314603dd75cce1bc92a3edbf345d9c9116778617310497bc5dd0e662"
   },
   "scope": "Development evidence. No entry currently satisfies the complete declared gate set; speed rankings remain empty."
 }

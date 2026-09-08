@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "maximum_target_reconstruction_error_rad": 0,
+  "phases": {
+    "hold": {
+      "samples": 10,
+      "aggregate_cosine": null,
+      "cancellation_fraction": 0,
+      "opposed_sample_fraction": 0,
+      "body_correction_rms_rad": 0.007592301293250273,
+      "point_correction_rms_rad": 0,
+      "mean_body_error_m": 0.0006538659620618889
+    },
+    "shift": {
+      "samples": 1189,
+      "aggregate_cosine": null,
+      "cancellation_fraction": 0,
+      "opposed_sample_fraction": 0,
+      "body_correction_rms_rad": 0.013389689736945612,
+      "point_correction_rms_rad": 0,
+      "mean_body_error_m": 0.0020474183588788442
+    },
+    "raise": {
+      "samples": 761,
+      "aggregate_cosine": null,
+      "cancellation_fraction": 0,
+      "opposed_sample_fraction": 0,
+      "body_correction_rms_rad": 0.012491618643481379,
+      "point_correction_rms_rad": 0,
+      "mean_body_error_m": 0.0020173619326521466
+    },
+    "lower": {
+      "samples": 760,
+      "aggregate_cosine": null,
+      "cancellation_fraction": 0,
+      "opposed_sample_fraction": 0,
+      "body_correction_rms_rad": 0.012676449545008078,
+      "point_correction_rms_rad": 0,
+      "mean_body_error_m": 0.002134637877389117
+    },
+    "return": {
+      "samples": 40,
+      "aggregate_cosine": null,
+      "cancellation_fraction": 0,
+      "opposed_sample_fraction": 0,
+      "body_correction_rms_rad": 0.012154563224562308,
+      "point_correction_rms_rad": 0,
+      "mean_body_error_m": 0.001745518218546667
+    },
+    "settle": {
+      "samples": 40,
+      "aggregate_cosine": null,
+      "cancellation_fraction": 0,
+      "opposed_sample_fraction": 0,
+      "body_correction_rms_rad": 0.012120717015298097,
+      "point_correction_rms_rad": 0,
+      "mean_body_error_m": 0.0017437839313047168
+    }
+  },
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/feedback-ablation-open/no-point.native.json",
+      "sha256": "8162dbd772b5306d8c135946abbdc5eb36cfcdb399cae150877b755658f4f6f3"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/analyze_feedback_contributions.mjs",
+      "sha256": "26ba45633f36bbb7cebbd42fd37f2c9454007cf162c86e73c3b54bc76678ba3d"
+    },
+    {
+      "path": "examples/interactive/feedback_contributions.mjs",
+      "sha256": "0ef3121d1dc5df6114c95bbb96f3d58b73f9d18c762de7b3f2d7687a915f02e2"
+    }
+  ],
+  "scope": "Only nonzero motion-command samples whose actual targets reconstruct from reference, tracking, body, point and residual contributions. Angular suggestion cancellation is not physical force cancellation or causal proof; stopped integral behavior is excluded."
+}

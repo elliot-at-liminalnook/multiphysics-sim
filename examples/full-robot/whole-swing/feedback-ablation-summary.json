@@ -1,0 +1,413 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "bounds-only",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007529503113993762,
+        "final_yaw_error_rad": 0.013614807720944777,
+        "maximum_body_tilt_rad": 0.00417642363789965,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21148711302864406,
+          -0.00018354095677435928,
+          -0.0002450681604409394
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/feedback-ablation-open/bounds-only-acceptance/summary.json",
+          "sha256": "dab5b1e4e0c15dac48f7aa0f49cc722985f99f944cfb575e638a041261a3af11"
+        }
+      },
+      "exact_bounds_only_physical_frames": true,
+      "only_declared_moving_gains_changed": true,
+      "original_stopping_inputs_preserved": true,
+      "moving_action_samples": 2800,
+      "stopped_action_samples": 200,
+      "contact_motion_to_body_advance_ratio": 0.45179176964174855,
+      "total_integrated_foot_contact_motion_m": 0.2731631058500772,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.003696378951409992,
+          "net_projected_speed_m_s": 0.004141214485567156,
+          "axis_world": [
+            0.9999961758182888,
+            -0.002765564824418445,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 6.24374359242557,
+      "native_compute": {
+        "wall_s": 114.761727808,
+        "simulation_per_wall": 0.5228223829148154,
+        "transition_p95_s": 0.075444159
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/feedback-ablation-open/bounds-only.native.json",
+        "sha256": "a0ffc584251f62610d3372bdc229704155ec5ec8776c1ae1e018a2b105af358e"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-bounds-only-metrics.json",
+          "sha256": "5826909fee84f3d2eed45d580b165aa9c7896f2ff0eb1606418c95f66f0dc15b"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-bounds-only-contact.json",
+          "sha256": "bc370594af1425e983b18f1a6a9e18b2cd7c08217cc23629991f4b3c57a8d138"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-bounds-only-phases.json",
+          "sha256": "9a1bba23aed7aecaa49aad724565534a9876d211316185d36bb11ae4093d7f0c"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-bounds-only-contributions.json",
+          "sha256": "683762775044dcd6e8e07910071ec799c95c9799ee7bbca2f324e28cf4a002f9"
+        }
+      ]
+    },
+    {
+      "name": "no-body",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0014646732183139373,
+        "final_yaw_error_rad": 0.010945120495941188,
+        "maximum_body_tilt_rad": 0.004213309315324853,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21074327987027375,
+          -0.00013348544959347288,
+          -0.00027861575930008924
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/feedback-ablation-open/no-body-acceptance/summary.json",
+          "sha256": "5d5a3ec042b6415acd8ea9ef71eec5e71017433394deb7eda81cf5a5cf7e93b2"
+        }
+      },
+      "exact_bounds_only_physical_frames": null,
+      "only_declared_moving_gains_changed": true,
+      "original_stopping_inputs_preserved": true,
+      "moving_action_samples": 2800,
+      "stopped_action_samples": 200,
+      "contact_motion_to_body_advance_ratio": 0.453689901399025,
+      "total_integrated_foot_contact_motion_m": 0.27348128878639677,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.003643225687720907,
+          "net_projected_speed_m_s": 0.004087402122931223,
+          "axis_world": [
+            0.9999963906232164,
+            -0.0026867713969691872,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 6.310209222987983,
+      "native_compute": {
+        "wall_s": 116.85630230699999,
+        "simulation_per_wall": 0.5134511260023487,
+        "transition_p95_s": 0.076131737
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/feedback-ablation-open/no-body.native.json",
+        "sha256": "ab13e29dc41e15fe5d0cfcd9c7f4c29d02faf767d8552c448c793cd4c1843cea"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-no-body-metrics.json",
+          "sha256": "c0d0dac1cdc01e190fdc0bd550b6fe7ccb7244087b67762997bd7b647030f6b9"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-no-body-contact.json",
+          "sha256": "6df6bfa4b17752de1bd15374a09ce5f81271d61716c15cd1e7d69c25d67bd399"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-no-body-phases.json",
+          "sha256": "603ef48eca54548af5b449684868b88a905c04e3ab16cd4ed963226ba3897f80"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-no-body-contributions.json",
+          "sha256": "4b2afe16a548f39763a7636789bc8ca3eee62a71cef9c5f79500bc74258189fe"
+        }
+      ]
+    },
+    {
+      "name": "no-point",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007816019713790628,
+        "final_yaw_error_rad": 0.012966206929458898,
+        "maximum_body_tilt_rad": 0.004155875712379464,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21144154444973529,
+          -0.00011263997534745812,
+          -0.0002454726734356597
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/feedback-ablation-open/no-point-acceptance/summary.json",
+          "sha256": "cdcb109820a555570b2e64342e707fcfa4f249049e7b7139eb00167af93b2fbb"
+        }
+      },
+      "exact_bounds_only_physical_frames": null,
+      "only_declared_moving_gains_changed": true,
+      "original_stopping_inputs_preserved": true,
+      "moving_action_samples": 2800,
+      "stopped_action_samples": 200,
+      "contact_motion_to_body_advance_ratio": 0.4538614344348471,
+      "total_integrated_foot_contact_motion_m": 0.2865398189997074,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.003700292678636863,
+          "net_projected_speed_m_s": 0.004143577257719655,
+          "axis_world": [
+            0.9999972548222237,
+            -0.002343149166517858,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 6.1534062860316725,
+      "native_compute": {
+        "wall_s": 115.87128931,
+        "simulation_per_wall": 0.5178159348816519,
+        "transition_p95_s": 0.075256254
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/feedback-ablation-open/no-point.native.json",
+        "sha256": "8162dbd772b5306d8c135946abbdc5eb36cfcdb399cae150877b755658f4f6f3"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-no-point-metrics.json",
+          "sha256": "5e39b04bc58f4ecbc3bf334c991dc9b16341479b276f6f2ceaeacdf09988c216"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-no-point-contact.json",
+          "sha256": "14dc49e628538e990a9f39f0dae0fbe085ffbe1def4d26ab521b7888f665231a"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-no-point-phases.json",
+          "sha256": "e1625f25607e5e262e3d059525bab8c09ace53648decbe120243797f85d99358"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-no-point-contributions.json",
+          "sha256": "0a5b349f7f807d6636c59e65d19077dcabbfa6c814bf48d7d72c2467b867cf79"
+        }
+      ]
+    },
+    {
+      "name": "angles-only",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0014907030760208224,
+        "final_yaw_error_rad": 0.010203129852889712,
+        "maximum_body_tilt_rad": 0.004124965903766951,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21071177881537576,
+          -0.00005815325334627297,
+          -0.00027892225592593585
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/feedback-ablation-open/angles-only-acceptance/summary.json",
+          "sha256": "c64d862c3d86bcf8da2e37df95e128c1e52c692027ed6fbcc3730b2dd9ce58f7"
+        }
+      },
+      "exact_bounds_only_physical_frames": null,
+      "only_declared_moving_gains_changed": true,
+      "original_stopping_inputs_preserved": true,
+      "moving_action_samples": 2800,
+      "stopped_action_samples": 200,
+      "contact_motion_to_body_advance_ratio": 0.4453521889369633,
+      "total_integrated_foot_contact_motion_m": 0.2839514741823311,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.003649512000520923,
+          "net_projected_speed_m_s": 0.004093334045445299,
+          "axis_world": [
+            0.9999973648282993,
+            -0.002295721337036097,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 6.235580566780698,
+      "native_compute": {
+        "wall_s": 115.511728682,
+        "simulation_per_wall": 0.5194277731327009,
+        "transition_p95_s": 0.075552656
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/feedback-ablation-open/angles-only.native.json",
+        "sha256": "f1488a3aa3d91428e7f499dc9d78832f34cf4d06548ac68e06520066b6df82d2"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-angles-only-metrics.json",
+          "sha256": "bbeba22d7a9c2f21605dc354b5d14c819a60ff88074db7c895d54d51b41015d5"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-angles-only-contact.json",
+          "sha256": "c61bc1148b10afb8330e7e09b1987dcba493a01062f00553f8b2bb37cbc54f08"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-angles-only-phases.json",
+          "sha256": "415cac77f590c1858c8301d43ef089e438006d12729a0136b3e55684aa966828"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/feedback-ablation-angles-only-contributions.json",
+          "sha256": "008da7ae335b1c46f86235639b49b1e42183ddd005614ca27932a90cf61c8f14"
+        }
+      ]
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/feedback-ablation-open-plan.json",
+      "sha256": "a7584063d53a91d143bb6b0f4684b718a71fa15db0363a7acc448a41a70329c7"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/feedback-ablation-open-status.json",
+      "sha256": "3ccf8be732a45ab0c301f022073708ca8f6aab0caabca6c1943389c7e71dc159"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/feedback-ablation-open-integrity.json",
+      "sha256": "8d8d73f439a6b1a4254b44c566021540a6e5a93d3a21142f6b53b450901d04d5"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/position-only.native.json",
+      "sha256": "bca8e8117ac71daf7c7f74510de6554305e4a68cbd93291b40d26a670a02106c"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_feedback_ablation.mjs",
+      "sha256": "d760710d70740bb58c9d776e7b7822b98d762ae26be1cd3fd053544db81fa4b3"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "examples/interactive/analyze_feedback_contributions.mjs",
+      "sha256": "26ba45633f36bbb7cebbd42fd37f2c9454007cf162c86e73c3b54bc76678ba3d"
+    },
+    {
+      "path": "examples/interactive/feedback_contributions.mjs",
+      "sha256": "0ef3121d1dc5df6114c95bbb96f3d58b73f9d18c762de7b3f2d7687a915f02e2"
+    }
+  ],
+  "scope": "Explicit controller-input minima allow zero body/point gains. Bounds-only physical identity and three frozen moving-feedback ablations; physical actuator bounds, robot, all other inputs and original acceptance gates are unchanged."
+}

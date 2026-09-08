@@ -1,0 +1,340 @@
+{
+  "version": 1,
+  "scene": {
+    "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+    "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+  },
+  "config": {
+    "path": "examples/full-robot/whole-swing/direct-support-minute.config.json",
+    "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+  },
+  "task": {
+    "path": "examples/full-robot/heading-task/task.json",
+    "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+  },
+  "cases": [
+    {
+      "name": "original-bounds",
+      "seed": 0,
+      "input_schema_changes": [],
+      "input_events": [
+        {
+          "at_step": 0,
+          "values": [
+            0.5,
+            0.25,
+            0.25,
+            0.00375,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "at_step": 44800,
+          "values": [
+            0.5,
+            0.25,
+            0.25,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "actions_json_sha256": "1f9127353c0528e17dd6cd2297b63f7aef58b7fff8a4ba26803ed61db95c89bd"
+    },
+    {
+      "name": "bounds-only",
+      "seed": 0,
+      "input_schema_changes": [
+        {
+          "name": "command.body_gain",
+          "field": "lower",
+          "before": 0.25,
+          "after": 0
+        },
+        {
+          "name": "command.point_gain",
+          "field": "lower",
+          "before": 0.25,
+          "after": 0
+        }
+      ],
+      "input_events": [
+        {
+          "at_step": 0,
+          "values": [
+            0.5,
+            0.25,
+            0.25,
+            0.00375,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "at_step": 44800,
+          "values": [
+            0.5,
+            0.25,
+            0.25,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "actions_json_sha256": "1f9127353c0528e17dd6cd2297b63f7aef58b7fff8a4ba26803ed61db95c89bd"
+    },
+    {
+      "name": "no-body",
+      "seed": 0,
+      "input_schema_changes": [
+        {
+          "name": "command.body_gain",
+          "field": "lower",
+          "before": 0.25,
+          "after": 0
+        },
+        {
+          "name": "command.point_gain",
+          "field": "lower",
+          "before": 0.25,
+          "after": 0
+        }
+      ],
+      "input_events": [
+        {
+          "at_step": 0,
+          "values": [
+            0.5,
+            0,
+            0.25,
+            0.00375,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "at_step": 44800,
+          "values": [
+            0.5,
+            0.25,
+            0.25,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "actions_json_sha256": "c589f5acccdb29f78ddc5d39b5abc28b18ef6bab9eedaa6d11e0a2ebc9027006"
+    },
+    {
+      "name": "no-point",
+      "seed": 0,
+      "input_schema_changes": [
+        {
+          "name": "command.body_gain",
+          "field": "lower",
+          "before": 0.25,
+          "after": 0
+        },
+        {
+          "name": "command.point_gain",
+          "field": "lower",
+          "before": 0.25,
+          "after": 0
+        }
+      ],
+      "input_events": [
+        {
+          "at_step": 0,
+          "values": [
+            0.5,
+            0.25,
+            0,
+            0.00375,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "at_step": 44800,
+          "values": [
+            0.5,
+            0.25,
+            0.25,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "actions_json_sha256": "39e6036144cfda6d8dbc3be5aee4c0e80463a75f9035467029730ad825545c40"
+    },
+    {
+      "name": "angles-only",
+      "seed": 0,
+      "input_schema_changes": [
+        {
+          "name": "command.body_gain",
+          "field": "lower",
+          "before": 0.25,
+          "after": 0
+        },
+        {
+          "name": "command.point_gain",
+          "field": "lower",
+          "before": 0.25,
+          "after": 0
+        }
+      ],
+      "input_events": [
+        {
+          "at_step": 0,
+          "values": [
+            0.5,
+            0,
+            0,
+            0.00375,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "at_step": 44800,
+          "values": [
+            0.5,
+            0.25,
+            0.25,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "actions_json_sha256": "175bfe8256404716c94e2ac4ece960201cc0ab2be6cd5041eb73e30c8b31920e"
+    }
+  ],
+  "scope": "Self-contained versioned robot/config/task references, explicit controller gain-input schema changes and complete sparse inputs. Five recipes include the original input-bound baseline and four open-bound ablations. Physical properties and task gates are identical."
+}

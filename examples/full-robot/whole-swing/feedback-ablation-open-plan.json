@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "bounds-only",
+      "scene": "runs/full-robot/learning/feedback-ablation-open/scene.json",
+      "config": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+      "actions": "runs/full-robot/learning/loaded-foot-damping/position-only.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "velocity_damping_s": null,
+      "disabled_moving_gain_channels": []
+    },
+    {
+      "name": "no-body",
+      "disabled_moving_gain_channels": [
+        "command.body_gain"
+      ],
+      "scene": "runs/full-robot/learning/feedback-ablation-open/scene.json",
+      "config": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "actions": "runs/full-robot/learning/feedback-ablation/no-body.actions.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0
+    },
+    {
+      "name": "no-point",
+      "disabled_moving_gain_channels": [
+        "command.point_gain"
+      ],
+      "scene": "runs/full-robot/learning/feedback-ablation-open/scene.json",
+      "config": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "actions": "runs/full-robot/learning/feedback-ablation/no-point.actions.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0
+    },
+    {
+      "name": "angles-only",
+      "disabled_moving_gain_channels": [
+        "command.body_gain",
+        "command.point_gain"
+      ],
+      "scene": "runs/full-robot/learning/feedback-ablation-open/scene.json",
+      "config": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "actions": "runs/full-robot/learning/feedback-ablation/angles-only.actions.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0
+    }
+  ],
+  "baseline": {
+    "name": "position-only",
+    "duration_s": 60,
+    "step_s": 0.00125,
+    "completed": true,
+    "error": null,
+    "passed": false,
+    "acceptance": {
+      "passed": false,
+      "lifts": 41,
+      "failed_lifts": 0,
+      "final_body_error_m": 0.0007529503113993762,
+      "final_yaw_error_rad": 0.013614807720944777,
+      "maximum_body_tilt_rad": 0.00417642363789965,
+      "sampled_internal_contacts": 0,
+      "body_advance_world_m": [
+        0.21148711302864406,
+        -0.00018354095677435928,
+        -0.0002450681604409394
+      ],
+      "budgets": {
+        "minimum_transfers": 4,
+        "maximum_final_body_error_m": 0.001,
+        "maximum_body_tilt_rad": 0.01,
+        "maximum_final_yaw_error_rad": 0.005
+      },
+      "source": {
+        "path": "runs/full-robot/learning/loaded-foot-damping/position-only-acceptance/summary.json",
+        "sha256": "30ed497937868c9bcebb4e38652fcf7ad7a60b84a1c98852726364f89fed67a8"
+      }
+    },
+    "wall_s": 114.829232354,
+    "sources": [
+      {
+        "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+        "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+      },
+      {
+        "path": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+        "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+      },
+      {
+        "path": "examples/full-robot/heading-task/task.json",
+        "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+      },
+      {
+        "path": "runs/full-robot/learning/loaded-foot-damping/position-only.actions.json",
+        "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+      },
+      {
+        "path": "runs/full-robot/learning/loaded-foot-damping/position-only.native.json",
+        "sha256": "bca8e8117ac71daf7c7f74510de6554305e4a68cbd93291b40d26a670a02106c"
+      }
+    ]
+  },
+  "baseline_case": {
+    "name": "position-only",
+    "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+    "config": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+    "actions": "runs/full-robot/learning/loaded-foot-damping/position-only.actions.json",
+    "task": "examples/full-robot/heading-task/task.json",
+    "duration_s": 60,
+    "step_s": 0.00125,
+    "seed": 0,
+    "velocity_damping_s": null
+  },
+  "input_schema_changes": [
+    {
+      "name": "command.body_gain",
+      "field": "lower",
+      "before": 0.25,
+      "after": 0
+    },
+    {
+      "name": "command.point_gain",
+      "field": "lower",
+      "before": 0.25,
+      "after": 0
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/FEEDBACK-ABLATION-OPEN-PLAN.md",
+      "sha256": "e46a9653e86de45afddffb4ee9957a5663cb1d2607042009afc5588a18051df6"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/feedback-ablation-plan.json",
+      "sha256": "d34befa1e29c014685b590ced3cfef93b33cefd027704ff419313b566b521871"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/feedback-ablation-status.json",
+      "sha256": "08b3356805e8f566a81d5d66252709e721193f19a36daba1bd9f0dd733bbf129"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/feedback-ablation-integrity.json",
+      "sha256": "2f2b0aac6e7c6ec20a7d0e9550bba66bb648ec7aa5bb7d1a33ed3c7f5ae873de"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "runs/full-robot/learning/feedback-ablation-open/scene.json",
+      "sha256": "d9dc368c4dd9ca590ee2c50f28bd2d79f034e266b8e07330c5b816056065a94e"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/position-only.config.json",
+      "sha256": "bcbd07d48e91ad596f5e9d7547437ac77beea2a6825004ec12957a27039f6426"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/position-only.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "runs/full-robot/learning/feedback-ablation/no-body.actions.json",
+      "sha256": "d260a82a9140c5933dbd0ac880816646ef5381186f8338518efad571da5062b7"
+    },
+    {
+      "path": "runs/full-robot/learning/feedback-ablation/no-point.actions.json",
+      "sha256": "4e374bfdd59aad0db75efc9a5e3e02761332cd04ac513dff8c9af9d3472e2e9e"
+    },
+    {
+      "path": "runs/full-robot/learning/feedback-ablation/angles-only.actions.json",
+      "sha256": "9d84fe44a0d49fe26faf3bda38dab06fe91bd0e7ea26eb682b389c8138d1c53d"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "0abc13e18219d706bfbf578cfe62162fd87f87007ea2c6da8f18d9bd6b786539"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "762b13d40e0163d4e1512541528a70c9d552d773e18accf15083b9258e7953ce"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_feedback_ablation_open.mjs",
+      "sha256": "49e4d20c88b57b3d9426766cadb960fea35858963d3d3284c8f295e6490cb4d0"
+    }
+  ],
+  "scope": "Explicit controller-input minima allow zero body/point gains. Bounds-only physical identity and three frozen moving-feedback ablations; physical actuator bounds, robot, all other inputs and original acceptance gates are unchanged."
+}

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "passed": true,
+  "cases": [
+    "original-bounds",
+    "bounds-only",
+    "no-body",
+    "no-point",
+    "angles-only"
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/feedback-ablation-open-plan.json",
+      "sha256": "a7584063d53a91d143bb6b0f4684b718a71fa15db0363a7acc448a41a70329c7"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/feedback-ablation-recipes.json",
+      "sha256": "4918c3fa259185dfea2a83e20914734a7315698b07f72420f63dfee92aea4b7f"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/reproduce_feedback_ablation.mjs",
+      "sha256": "7e44b4bbaccfb42cc9650f4c918b545bb2f08075f4eb34360a777585c4bde55b"
+    },
+    {
+      "path": "runs/full-robot/learning/feedback-ablation-reproduction/recipes.json",
+      "sha256": "10122b9e49c576f39778ca522d8baab25630b3866c871f35872d81f6e720b2bd"
+    }
+  ],
+  "scope": "All five reconstructed scenes, configurations, tasks, seeds and dense action arrays match the measured recipes. The reproducer reads only versioned artifact references and the explicit recipe archive; it does not need prior runs."
+}

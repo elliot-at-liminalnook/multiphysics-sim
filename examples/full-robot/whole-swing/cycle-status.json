@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "cycle-3.75-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 6 Return reference has internal contact: -X | Thigh sector gear / -X | Hip output shaft and pulley; penetration 0.007289 mm at world [-0.10542585414698433, -0.0005000992107888434, -0.04745894141668884] m; requested body [0.034342955121719136, -0.00043110419989131696, -0.008926948181531839] m, time 9.720000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.482559489,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-3.75-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-3.75-20ms.config.json",
+          "sha256": "fa88dda9b7f565652b231ec7e960716ec6db8811e53df590fab892621086324e"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-3.75-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-3.75-20ms.native.json",
+          "sha256": "80fd678ad764fb0657ca37e0f8c91bd4358ad271b1214465ca8824f1050a16ed"
+        }
+      ]
+    },
+    {
+      "name": "cycle-3.75-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 6 Return reference has internal contact: -X | Thigh sector gear / -X | Hip output shaft and pulley; penetration 0.007289 mm at world [-0.10542585414698433, -0.0005000992107888434, -0.04745894141668884] m; requested body [0.034342955121719136, -0.00043110419989131696, -0.008926948181531839] m, time 9.720000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 11.205910532,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-3.75-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-3.75-5ms.config.json",
+          "sha256": "2110ba1c80504b82af174cd65ccfde56e756100fe4c34c2022393368e196bf0a"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-3.75-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-3.75-5ms.native.json",
+          "sha256": "7b39b003bdc8a6a56c63964b928e09567f4c99ad1d8fc1bb7ad0beeeeb5e6351"
+        }
+      ]
+    },
+    {
+      "name": "cycle-5-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -X | Thigh sector gear / -X | Hip output shaft and pulley; penetration 0.004691 mm at world [-0.11896345646206022, -0.00020386840975021928, -0.04789213400308004] m, time 4.260000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 2.101598221,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-5-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-5-20ms.config.json",
+          "sha256": "96a849734bb94fad4ff7e5f0ccd6065dfaf059612ed3ad858cd15c3f04fb8f7c"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-5-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-5-20ms.native.json",
+          "sha256": "600881db5d2d92049c8e2ac393b7404e02a0404d398cd7bef03f3e0b28985fd8"
+        }
+      ]
+    },
+    {
+      "name": "cycle-5-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -X | Thigh sector gear / -X | Hip output shaft and pulley; penetration 0.004138 mm at world [-0.11872590379482637, 3.9275938047858214e-5, -0.04797246810050649] m, time 4.240000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 5.176956951,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-5-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-5-5ms.config.json",
+          "sha256": "c11369f0c78483a04d7a8242bb8c9e1e8c16f3762a5043a6b7089720c1a40a20"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-5-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-cycle/cycle-5-5ms.native.json",
+          "sha256": "d3227a2b352a4456d95feb9fef43cb6ea80540ecc6e3d99ceb23a45ee3a9f0fe"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-cycle/plan.json",
+      "sha256": "346a5ef530fe2cb89e8560593af5bdaf980e6a780dc79e3987c80042c023e9a0"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "f5d23abdd1d00c83ae873a4d30a27f7bc22187c383c630037417cb5a4b09bc62"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "93166af5278c752bb86ec3beef28b55a1c9f1eb9858d7855605501377e433c09"
+    }
+  ],
+  "scope": "Derived rear support alignment after the all-foot/front-support whole-swing experiment. Same CAD physics, network, bounds and predeclared acceptance gates. Development only."
+}

@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "frames": 1201,
+  "transitions": 1201,
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.native.json",
+      "sha256": "b9fd028ba28c1aeb221f93a5ed9819cfaf64847ec31955061ee6852c42013022"
+    },
+    {
+      "path": "runs/full-robot/learning/fast-student-fidelity/turn-20ms.native.json",
+      "sha256": "997bb71898dd261a80863811bb26c2a474ae6e13d8fdafda207ea23639318269"
+    }
+  ],
+  "scope": "Rebuilt default-off code strictly preserves all parsed physical states, task transitions, contract and complete recording, distinguishing signed zero. Only measured frame stepping clocks are excluded."
+}

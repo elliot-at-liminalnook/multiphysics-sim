@@ -319,7 +319,7 @@ jobs:
       - name: Overlapping body advance and sampled walking measurements
         run: |
           cargo test --locked -p sim-domain-control --test stepping
-          node --test examples/interactive/test_walking_capture_metrics.mjs
+          node --test examples/interactive/test_walking_capture_metrics.mjs examples/interactive/test_capture_outcome.mjs
           node examples/interactive/check_environment_replay.mjs
           node examples/full-robot/swing-advance/prepare.mjs
           target/release/examples/run_environment examples/full-robot/student-speed/scene.json examples/full-robot/swing-advance/half.config.json examples/full-robot/heading-task/task.json runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-20ms.actions.json > runs/interactive/swing-advance.json

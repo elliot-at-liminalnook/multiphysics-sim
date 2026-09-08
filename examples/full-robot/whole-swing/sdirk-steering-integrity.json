@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "passed": true,
+  "outcomes": [
+    {
+      "name": "student-be-20ms",
+      "completed": true,
+      "passed": true,
+      "completed_transitions": 1200,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "input_identity_verified": true,
+      "verified_seed": 0
+    },
+    {
+      "name": "teacher-sdirk2-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 66,
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "policy output violates software/CAD command bounds at 1.32 s: -Y | Foot servo output.target requested 0.5434898156724169 rad; allowed [-0.6, -0.02] rad",
+        "termination_reasons": []
+      },
+      "input_identity_verified": true,
+      "verified_seed": 0
+    },
+    {
+      "name": "teacher-sdirk2-10ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 66,
+      "outcome": {
+        "kind": "task_termination",
+        "error": null,
+        "termination_reasons": [
+          "body.up.z outside [0.95, 1.000000001]"
+        ],
+        "time_s": 1.32,
+        "completed_steps": 132
+      },
+      "input_identity_verified": true,
+      "verified_seed": 0
+    },
+    {
+      "name": "teacher-sdirk2-5ms",
+      "completed": true,
+      "passed": true,
+      "completed_transitions": 1200,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "input_identity_verified": true,
+      "verified_seed": 0
+    },
+    {
+      "name": "student-sdirk2-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 66,
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "observed inter-link overlap outside reduced-contact operating envelope: -X | Rigid curved connecting link / -X | Thigh sector gear; penetration 0.107891 mm at world [-0.2962013484096255, 0.010832140762775472, 0.029989710749018288] m, time 1.320000 s",
+        "termination_reasons": []
+      },
+      "input_identity_verified": true,
+      "verified_seed": 0
+    },
+    {
+      "name": "student-sdirk2-10ms",
+      "completed": true,
+      "passed": true,
+      "completed_transitions": 1200,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "input_identity_verified": true,
+      "verified_seed": 0
+    },
+    {
+      "name": "student-sdirk2-5ms",
+      "completed": true,
+      "passed": true,
+      "completed_transitions": 1200,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "input_identity_verified": true,
+      "verified_seed": 0
+    }
+  ],
+  "explicit_seed_default": null,
+  "identical_parsed_robot_and_physics_options": true,
+  "unretained_source_scene_fields": [
+    "scene.robot.format",
+    "scene.robot.joints.*.declared",
+    "scene.robot.joints.*.fastened.points",
+    "scene.robot.joints.*.merged_into",
+    "scene.robot.joints.*.physics.bearing.pressure",
+    "scene.robot.joints.*.physics.flex_patch_radius",
+    "scene.robot.joints.*.physics.flex_patch_source",
+    "scene.robot.joints.*.physics.lever",
+    "scene.robot.joints.*.physics.materials",
+    "scene.robot.joints.*.physics.outboard_mass",
+    "scene.robot.links.*.collision.sign_derivation",
+    "scene.robot.links.*.mass_sources",
+    "scene.robot.links.*.member_names",
+    "scene.robot.materials.carbon_tube_provisional.bearing_pressure",
+    "scene.robot.materials.nylon.bearing_pressure",
+    "scene.robot.materials.rubber.bearing_pressure",
+    "scene.robot.materials.steel.bearing_pressure",
+    "scene.robot.motors.*.electrical.stall_current",
+    "scene.robot.motors.*.kind",
+    "scene.robot.motors.*.mass",
+    "scene.robot.motors.*.no_load_speed",
+    "scene.robot.motors.*.notes",
+    "scene.robot.motors.*.stall_torque",
+    "scene.robot.motors.*.thermal.ambient_c",
+    "scene.robot.world.floor_friction_static"
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-plan.json",
+      "sha256": "6757187e1772ea36fd76b6d05f1b466742a6cc2b44e03d0a574ba5e2128e4c97"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-status.json",
+      "sha256": "b171f8afa4f8117938547f9d65199551f08d79ce1f5a09dec73710ace9ff6cbe"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/audit_walking_suite.mjs",
+      "sha256": "1f360058659aa3e135a0c5270554d1ef8c6d41b966cd8da139a7d89237e6b6a8"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "scope": "Every declared outcome matched to hashed inputs and captures, authored configuration, all retained scene fields, seed and sampled actions; completed captures require matching independent acceptance. Raw CAD exports retain additional fields absent from the Rust scene schema, listed explicitly. This integrity audit is not a controller acceptance or hardware certificate."
+}

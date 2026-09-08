@@ -473,3 +473,39 @@ evaluation must use new inputs. Additional support shift fixes the static
 reference abort and, at -24 mm, the dynamic swing, but does not resolve the
 teacher's final tracking error. This separates the next controller problem
 from the independent coarse-integration accuracy and browser timing limits.
+
+## Two-stage integration does not qualify a coarser browser profile
+
+The default-off SDIRK2 experiment passes 45 focused Rust vector, mechanical,
+contact and closed-linkage tests. The held-command scalar screen demonstrates
+second-order improvement for a resolved mode, but also under-resolved stiff
+overshoot. It rejects the proposed BDF2 shortcut across 50 Hz command changes;
+none of these analytic results constitutes robot accuracy evidence.
+
+All seven predeclared 24-second native steering outcomes are retained in
+`sdirk-steering-summary.json` and verified by `sdirk-steering-integrity.json`.
+Rebuilt default-off backward Euler exactly preserves all 1,201 physical frames
+and task transitions from the previous student capture. Both 20 ms SDIRK2
+cases fail at 1.32 s: teacher command bounds and student inter-link overlap.
+The 10 ms teacher terminates at the same time on its upright task guard, with
+large velocity growth. These are immediate failure reasons; the underlying
+numerical cause has not yet been isolated.
+
+The 5 ms teacher and 10/5 ms students each pass all 15 swings and stopping
+gates. However, teacher SDIRK2 at 5 ms versus its 1.25 ms backward-Euler
+reference differs by **0.762 mm foot / 0.564 mm body**: body fails the unchanged
+0.5 mm budget. Student 10/5 ms differences are **1.016 mm foot / 1.045 mm body**,
+failing both trajectory budgets. Passing endpoint task checks is insufficient.
+
+Student stepping throughput is **1.231× at 10 ms** and **0.871× at 5 ms**;
+teacher 5 ms is **0.453×**. These are native compute rates, excluding capture
+serialization. Teacher/student solver settings differ and are explicitly
+retained, so their timings do not isolate the effect of the integrator.
+No SDIRK2 browser build or promotion follows from this failed screen. The
+existing 14-entry browser milestone remains available and experimental.
+
+The shared capture audit now distinguishes a verified task termination from
+a runtime error. Prefix measurements require explicit opt-in and preserve the
+termination reason, final frame time and physics-step count. Three focused
+Node tests pass, including rejection of unexplained, truncated, mismatched
+or continued partial captures; CI includes these checks. Remote CI was not run.

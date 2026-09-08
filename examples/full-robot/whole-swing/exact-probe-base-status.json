@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "exact-probe-base-reference",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582490414785933,
+        "final_yaw_error_rad": 0.0003280784468676339,
+        "maximum_body_tilt_rad": 0.004145772004721206,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779856794775,
+          -0.00021510521103582303,
+          -0.0007700187895747553
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-reference-acceptance/summary.json",
+          "sha256": "adce9beda13928377016a92bdac5b8b162c944f9ac5fd0c21be8065457be5b79"
+        }
+      },
+      "wall_s": 6.051380288,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-reference.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-reference.config.json",
+          "sha256": "e3f5ab0d21e45bd65aa2c2f48594586da2998025ec4f62bdc79f6250aba5db27"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-reference.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-reference.native.json",
+          "sha256": "6022e8daa4e2280daaf05e812662ce23e52231e7a6a09bb1bc85b9e3835973c7"
+        }
+      ]
+    },
+    {
+      "name": "exact-probe-base-enabled",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582490414785933,
+        "final_yaw_error_rad": 0.0003280784468676339,
+        "maximum_body_tilt_rad": 0.004145772004721206,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779856794775,
+          -0.00021510521103582303,
+          -0.0007700187895747553
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-enabled-acceptance/summary.json",
+          "sha256": "201f920a8c5d2b40b6a819948e54eee06e1ce21ec8a96a1341c5e93e12cb5bdf"
+        }
+      },
+      "wall_s": 5.983037284,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-enabled.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-enabled.config.json",
+          "sha256": "92c167ae543a28fe5d1b7c88d8e36f5543ef0121c2876445fb672169577db1b9"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-enabled.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-enabled.native.json",
+          "sha256": "d664d299835b6c0ba229d4b52c972899d7a7ebf4ff2d9d9a2030d7e8cd7c2439"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-exact-probe-base/plan.json",
+      "sha256": "e420cc5eb7fdf54bb058f8f1b04f0012d14b882eaafebab61e8f441bc18bf88d"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "eb7e7b0c9ec72727429a419cc94c4ef4a50eb717772b4ef220a7a9c7fde77e02"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "958986ba3fd2a1865944fcf92bc7ee5811ebec8efe931c339ab93b3b18d77332"
+    }
+  ],
+  "scope": "Identical 24-second steering task and physical model with exact tangent-Jacobian base reuse off/on. Velocity prediction stays off. Require bitwise accepted-frame preservation and unchanged physical gates before measuring browser performance."
+}

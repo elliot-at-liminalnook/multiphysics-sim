@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "passed": true,
+  "checks": [
+    {
+      "label": "declared solver option off/on",
+      "passed": true,
+      "frames": 1201,
+      "transitions": 1201
+    },
+    {
+      "label": "exact-probe-base-reference: profiling off/on",
+      "passed": true,
+      "frames": 1201,
+      "transitions": 1201
+    },
+    {
+      "label": "exact-probe-base-enabled: profiling off/on",
+      "passed": true,
+      "frames": 1201,
+      "transitions": 1201
+    },
+    {
+      "label": "default-off previous reference",
+      "passed": true,
+      "frames": 1201,
+      "transitions": 1201
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/exact-probe-base-study.json",
+      "sha256": "ebb382a497cf3eb9630c7871eab821211e7647266bade6d03af57d06ffbc2ce1"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/exact-probe-base-plan.json",
+      "sha256": "e420cc5eb7fdf54bb058f8f1b04f0012d14b882eaafebab61e8f441bc18bf88d"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-reference.native.json",
+      "sha256": "6022e8daa4e2280daaf05e812662ce23e52231e7a6a09bb1bc85b9e3835973c7"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-enabled.native.json",
+      "sha256": "d664d299835b6c0ba229d4b52c972899d7a7ebf4ff2d9d9a2030d7e8cd7c2439"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/verify_solver_pair_identity.mjs",
+      "sha256": "97f34db1957c61928d5dbca16951c8235b1b4bacded0ed90af23266c2265ceb7"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-reference.profiled.native.json",
+      "sha256": "6d8c79ba0092c306b1be623edaea27ede2e82a361892a23243de5e6978032117"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-enabled.profiled.native.json",
+      "sha256": "29c1608bb5b22044d17a0f2570fed7b392c8d70f561ef0bd54a3c603a6e64267"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001.native.json",
+      "sha256": "58b73c5ed62a6b806aeae8a79c9367f9732294fdca7d82670c7a204c8734d4cd"
+    }
+  ],
+  "scope": "Strict equality of every parsed physical frame (except its top-level stepping clock), task transition, task, contract and recording. Signed zero is distinguished. Only the explicitly declared solver option is ignored in the off/on recording pair; no numerical tolerance is used."
+}

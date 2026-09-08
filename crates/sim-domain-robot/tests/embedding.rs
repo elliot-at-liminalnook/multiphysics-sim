@@ -94,6 +94,7 @@ fn expected(theta: f64) -> (f64, f64) {
 #[test]
 fn linearized_derivative_probes_preserve_exact_fixed_and_rotating_linkage_endpoints() {
     use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    for linearized_probe_relative_step in [1e-6,4e-6,1e-5] {
     for floating in [false,true] {
         let (art, mut seed) = slider_crank(floating);
         let dofs = art.audit_slider_cranks()[0].candidate.as_ref().unwrap().dof_indices;
@@ -110,7 +111,7 @@ fn linearized_derivative_probes_preserve_exact_fixed_and_rotating_linkage_endpoi
         let mut exact = map.solve(&seed,&[0.3],&velocity).unwrap().generalized;
         let mut approximate = exact.clone();
         let original = ImplicitStepConfig::default();
-        let candidate = ImplicitStepConfig {linearized_jacobian_probes:true,..original.clone()};
+        let candidate = ImplicitStepConfig {linearized_jacobian_probes:true,linearized_probe_relative_step,..original.clone()};
         let nb = usize::from(floating)*6;
         let probe_position_error=std::cell::Cell::new(0.0_f64);
         let probe_velocity_error=std::cell::Cell::new(0.0_f64);
@@ -147,6 +148,7 @@ fn linearized_derivative_probes_preserve_exact_fixed_and_rotating_linkage_endpoi
         assert!(probes>=20*map.reduced_dimension() && without_fallback>10,"floating={floating} probes={probes} without_fallback={without_fallback} {fallbacks:?}");
         assert!(probe_position_error.get()<1e-9,"{}",probe_position_error.get());
         assert!(probe_velocity_error.get()<1e-6,"{}",probe_velocity_error.get());
+    }
     }
 }
 

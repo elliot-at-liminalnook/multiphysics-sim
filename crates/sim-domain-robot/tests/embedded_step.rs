@@ -107,6 +107,22 @@ fn cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials(
     assert_eq!(serde_json::to_value(actual.segments).unwrap(),serde_json::to_value(reference.segments).unwrap());
     let smaller = map.advance_implicit_mechanics_cached(&actual.endpoint.generalized,0.41,0.005,&config,&refinement,&mut workspace,load).unwrap();
     assert!(!smaller.segments[0].diagnostics.started_with_reused_jacobian);
+    let mut changed=config.clone(); changed.linearized_probe_relative_step*=4.0;
+    let changed=map.advance_implicit_mechanics_cached(&smaller.endpoint.generalized,0.415,0.005,&changed,&refinement,&mut workspace,load).unwrap();
+    assert!(!changed.segments[0].diagnostics.started_with_reused_jacobian);
+    }
+}
+
+#[test]
+fn derivative_probe_radius_rejects_invalid_configuration_without_changing_state() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    let (art,g)=body(true,false);
+    let map=RigidEmbedding::new(&art,&["slide.slide".into()],Default::default()).unwrap();
+    let before=(g.q.clone(),g.qd.clone(),g.states.clone());
+    for radius in [0.0,-1e-6,f64::NAN,f64::INFINITY,1e-3] {
+        let config=ImplicitStepConfig {linearized_jacobian_probes:true,linearized_probe_relative_step:radius,..Default::default()};
+        assert!(map.step_implicit(&g,0.0,0.01,&config,|_,_|Ok(vec![0.0])).is_err());
+        assert_eq!(before,(g.q.clone(),g.qd.clone(),g.states.clone()));
     }
 }
 

@@ -73,12 +73,13 @@ fn failed_cached_mechanics_restarts_fresh_before_subdivision() {
 fn cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials() {
     use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
     use sim_dynamics::hybrid::HybridConfig;
-    for broyden_updates in [false, true] {
+    for (broyden_updates, broyden_negligible_updates) in [(false, false), (true, false), (true, true)] {
     let (art, mut g) = body(true, false);
     g.q[0] = 0.1;
     let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
     let mut config = ImplicitStepConfig {reuse_step_jacobian: true, ..Default::default()};
     config.newton.broyden_updates = broyden_updates;
+    config.newton.broyden_negligible_updates = broyden_negligible_updates;
     let refinement = HybridConfig {maximum_halvings: 1, ..Default::default()};
     let mut workspace = ImplicitSolverWorkspace::default();
     let load = |_: f64, g: &Generalized| Ok(vec![-30.0*g.q[0]-2.0*g.qd[0]]);

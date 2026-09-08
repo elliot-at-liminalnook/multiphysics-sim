@@ -154,3 +154,10 @@ sustained numerical accuracy and browser realtime remain unresolved. Isolated
 scalar and SIMD/LTO builds record compiler and source hashes; their 20 ms
 student timing still misses the p95 target. See [catalog workflow](leaderboard/README.md)
 and [faster gait evidence](../examples/full-robot/whole-swing/RESULTS.md).
+
+The finer teacher is now a separate reference recipe: 3.750 mm/s measured
+travel, 41 qualified swings, passing stopping and 1.25/0.625 ms trajectory
+agreement. Its full 60-second native/WASM comparison and exact replay/reset
+pass. It remains unranked because realtime, held-out disturbances and terrain
+requirements are unresolved. The faster 20 ms secant steering profile stays
+available with its separate 26.1 ms p95 result.

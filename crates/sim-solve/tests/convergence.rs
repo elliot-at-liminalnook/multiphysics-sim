@@ -62,10 +62,11 @@ fn a_jump_with_no_root_must_not_be_accepted_as_converged() {
     let f = |x: f64| if x < 0.0 { x - 1.0 } else { x + 1.0 };
     for refresh in [false, true] {
     for broyden_updates in [false, true] {
+    for broyden_negligible_updates in [false, true] {
     let mut x = [-1e-10];
     let result = solve_newton_with_jacobian(
         &mut x,
-        NewtonConfig{refresh_before_iteration_limit:refresh,broyden_updates,..Default::default()},
+        NewtonConfig{refresh_before_iteration_limit:refresh,broyden_updates,broyden_negligible_updates,..Default::default()},
         |x, r| r[0] = f(x[0]),
         |x, base, jacobian| {
             let h = 1e-8 * (1.0 + x[0].abs());
@@ -78,6 +79,25 @@ fn a_jump_with_no_root_must_not_be_accepted_as_converged() {
         f(x[0])
     );
     }
+    }
+    }
+}
+
+#[test]
+fn small_secants_still_verify_real_residuals_and_cached_corrections() {
+    use sim_solve::{solve_newton_numeric_cached_audited, NewtonAudit};
+    for row_scale in [1e-9, 1.0, 1e9] {
+        let mut x = [1.0];
+        let mut audit = NewtonAudit::default();
+        let config = NewtonConfig { broyden_updates: true, broyden_negligible_updates: true,
+            relative_tolerance: 1e-5, ..Default::default() };
+        solve_newton_numeric_cached_audited(&mut x, config, |x,r| r[0] = row_scale*(x[0]*x[0]-2.0),
+            &mut None, Some(&mut audit)).unwrap();
+        assert!(audit.iterations.iter().any(|i|i.decision == "broyden_negligible_update"));
+        assert!((x[0]-2.0_f64.sqrt()).abs()<1e-10);
+        assert!((row_scale*(x[0]*x[0]-2.0)).abs() <= audit.residual_limits[0]);
+        let last = audit.iterations.last().unwrap();
+        assert!(last.correction.as_ref().is_some_and(|c| c.tight));
     }
 }
 

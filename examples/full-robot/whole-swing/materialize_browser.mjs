@@ -36,6 +36,7 @@ for (const key of ['scene', 'config']) {
 for (const [study, name, prefix] of [
   ['combined', 'combined-minute-2.5ms', 'combined-minute'],
   ['broyden', 'student-turn-20ms-broyden', 'broyden-turn'],
+  ['minute-refinement', 'combined-minute-1.25ms', 'reference-minute'],
 ]) {
   const plan = JSON.parse(readFileSync(`${root}/${study}-plan.json`));
   const status = JSON.parse(readFileSync(`${root}/${study}-status.json`));

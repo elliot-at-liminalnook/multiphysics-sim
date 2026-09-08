@@ -207,3 +207,35 @@ remain the slowest. `broyden-browser-status.json` retains full compiler,
 hardware, browser, recording, UI and acceptance evidence. The delivered
 experimental bundle uses the source hashes captured at commit `4cbb3b6`;
 the subsequent duplicate-triplet summation fix has a focused solver test.
+
+## Fine minute reference and small secant limit
+
+The repeated 1.25 ms teacher reproduces all 3,001 physical/task frames exactly.
+Its new 0.625 ms comparison passes the predeclared minute accuracy screen:
+maximum foot difference **0.509 mm**, body difference **0.470 mm**. Both
+profiles pass 41 qualified swings; final position errors are 0.659 and
+0.556 mm. This establishes the 1.25 ms combined teacher as a numerically
+checked native reference for the tested minute and mixed steering cases.
+It does not qualify the coarser 2.5 ms or 20 ms profiles. It also does not
+establish calibrated physics, held-out robustness or realtime browser speed.
+
+Extending secants to small, still-insufficient cached corrections preserves
+the 20 ms task, with maximum body difference 0.834 nanometres. However,
+native time is 8.073 versus 7.980 seconds, and profiling finds 2,018 fresh
+Jacobians versus 1,996. Despite fewer Newton iterations, more capped/rejected
+updates require rebuilding. This option stays off and is not promoted to
+the browser. `fine-reference-status.json` and the two study plans retain
+the counts, repeated-state checks and acceptance/trajectory evidence.
+`TANGENT-PROBE-PLAN.md` predeclares the next experiment at the demonstrated
+closure-mapping cost, keeping accepted physics and its gates unchanged.
+
+The fine teacher also passes a full 3,000-transition native/WASM comparison
+and exact replay/reset (maximum numeric difference 4.81e-10). The nine-entry
+leaderboard passes exact recipe loading, replay, video and tamper checks.
+`reference-browser-status.json` records those results and the compiled source
+hashes. UI validation/compilation overlapped portions of parity, so its worker
+timings are observational and are not rendered performance acceptance.
+The separate `walking-reference.yml` CI job reconstructs the exact 3,000
+actions and finer configuration, then enforces both minute task audits and
+the same trajectory budgets. Its inputs match the locally evaluated files;
+the remote workflow itself has not been run in this session.

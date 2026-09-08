@@ -40,6 +40,12 @@ pub struct NewtonConfig {
     /// Jacobian. Raw residual and correction acceptance checks are unchanged.
     #[serde(default, skip_serializing_if = "is_false")]
     pub broyden_updates: bool,
+    /// Experimental extension of `broyden_updates`: also use decreasing full
+    /// corrections that are negligible but have not met the stricter cached
+    /// convergence check. The same update guards and four-step tail refresh
+    /// apply; neither raw residual nor correction acceptance is relaxed.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub broyden_negligible_updates: bool,
 }
 
 impl Default for NewtonConfig {
@@ -53,6 +59,7 @@ impl Default for NewtonConfig {
             reject_nonfinite_trials: false,
             refresh_before_iteration_limit: false,
             broyden_updates: false,
+            broyden_negligible_updates: false,
         }
     }
 }
@@ -703,11 +710,27 @@ where
         if negligible {
             // Stale and merely negligible: take the step and keep going;
             // after a few such steps a fresh Jacobian settles it.
+            let secant = (config.broyden_updates && config.broyden_negligible_updates
+                && cache.as_ref().is_some_and(|c| c.raw.is_some()))
+                .then(|| (unknowns.to_vec(), r.clone()));
             for index in 0..n {
                 unknowns[index] += delta[index];
             }
             profile::RESIDUAL.time(|| residual(unknowns, &mut r));
             finite(&r)?;
+            if let Some((old, old_r)) = secant {
+                let updated = if scaled_norm(&r, &row_scale) < norm {
+                    profile::BROYDEN_UPDATE.time(|| cache.as_ref().unwrap()
+                        .broyden_update(&old, unknowns, &old_r, &r, step_scale))
+                } else { None };
+                if updated.is_some() {
+                    decision!("broyden_negligible_update");
+                } else {
+                    profile::BROYDEN_REFRESH.count(1);
+                    decision!("broyden_negligible_refresh");
+                }
+                *cache = updated;
+            }
             stale_tail += 1;
             if stale_tail >= 4 {
                 decision!("stale_tail_refresh");

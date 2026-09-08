@@ -21,6 +21,8 @@ const turnPath = 'examples/full-robot/whole-swing/turn-support-status.json', tur
 const combinedPath = 'examples/full-robot/whole-swing/combined-status.json', combined = read(combinedPath).cases.find(c => c.name === 'combined-minute-2.5ms');
 const broydenPath = 'examples/full-robot/whole-swing/broyden-status.json', broyden = read(broydenPath).cases.find(c => c.name === 'student-turn-20ms-broyden');
 const broydenBrowserPath = 'examples/full-robot/whole-swing/broyden-browser-status.json', broydenBrowser = read(broydenBrowserPath);
+const refinedTeacherPath = 'examples/full-robot/whole-swing/minute-refinement-status.json', refinedTeacher = read(refinedTeacherPath).cases.find(c => c.name === 'combined-minute-1.25ms');
+const referenceBrowserPath = 'examples/full-robot/whole-swing/reference-browser-status.json', referenceBrowser = read(referenceBrowserPath);
 const definitions = [
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
@@ -61,6 +63,11 @@ const definitions = [
     capture: broyden.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(broyden.acceptance.source.path), evidence: broydenPath,
     commands: true, benchmark: 'flat-steering-24s-v1', extraEvidence: ['examples/full-robot/whole-swing/broyden-difference.json', broydenBrowserPath],
     performance: broydenBrowser.episodes['secant-turn'], parity: broydenBrowser.parity.passed},
+  {id: 'refined-teacher-minute', name: 'Refined walking teacher', description: 'Faster minute-long walking, stopping and mixed steering pass at 1.25 ms. The 0.625 ms comparison meets the declared trajectory screen. This is a fine native reference; realtime browser performance and held-out robustness remain unverified.',
+    scene: 'examples/full-robot/whole-swing/reference-minute.scene.json', config: 'examples/full-robot/whole-swing/reference-minute.config.json',
+    capture: refinedTeacher.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(refinedTeacher.acceptance.source.path), evidence: refinedTeacherPath,
+    numerical: 'examples/full-robot/whole-swing/minute-fine-difference.json', commands: true, parity: referenceBrowser.parity.passed,
+    extraEvidence: ['examples/full-robot/whole-swing/combined-status.json', 'examples/full-robot/whole-swing/combined-turn-refinement.json', referenceBrowserPath]},
 ];
 const taskPath = 'examples/full-robot/heading-task/task.json';
 mkdirSync('runs/leaderboard', {recursive: true});

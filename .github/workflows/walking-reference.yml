@@ -1,0 +1,37 @@
+name: Faster walking numerical reference
+on:
+  push:
+    paths: ['crates/**', 'Cargo.*', 'examples/full-robot/**', 'examples/interactive/**', 'web/leaderboard/**', '.github/workflows/walking-reference.yml']
+  pull_request:
+    paths: ['crates/**', 'Cargo.*', 'examples/full-robot/**', 'examples/interactive/**', 'web/leaderboard/**', '.github/workflows/walking-reference.yml']
+jobs:
+  minute-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build the shared native runtime and independent swing evaluator
+        run: cargo build --locked --release -p sim-runtime --example run_environment --example evaluate_lift
+      - name: Reconstruct the exact tested minute and its finer reference
+        run: |
+          mkdir -p runs/interactive/fine-reference
+          node web/leaderboard/materialize_actions.mjs refined-teacher-minute runs/interactive/fine-reference/actions.json
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs"; const c=JSON.parse(readFileSync("examples/full-robot/whole-swing/reference-minute.config.json")); c.step_s/=2; c.steps*=2; c.report_every*=2; writeFileSync("runs/interactive/fine-reference/finer.config.json",JSON.stringify(c));'
+          target/release/examples/run_environment examples/full-robot/whole-swing/reference-minute.scene.json examples/full-robot/whole-swing/reference-minute.config.json examples/full-robot/heading-task/task.json runs/interactive/fine-reference/actions.json > runs/interactive/fine-reference/reference.native.json
+          target/release/examples/run_environment examples/full-robot/whole-swing/reference-minute.scene.json runs/interactive/fine-reference/finer.config.json examples/full-robot/heading-task/task.json runs/interactive/fine-reference/actions.json > runs/interactive/fine-reference/finer.native.json
+      - name: Enforce supported walking, stopping, closure and timestep agreement
+        run: |
+          node examples/full-robot/check_online_steps.mjs runs/interactive/fine-reference/reference.native.json runs/interactive/fine-reference/reference-acceptance
+          node examples/full-robot/check_online_steps.mjs runs/interactive/fine-reference/finer.native.json runs/interactive/fine-reference/finer-acceptance
+          node examples/full-robot/compare_mechanical_reuse.mjs runs/interactive/fine-reference/reference.native.json runs/interactive/fine-reference/finer.native.json runs/interactive/fine-reference/difference.json --timestep-reference
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/fine-reference/difference.json")); assert(r.metrics.foot_marker_position_m.maximum<=0.001); assert(r.metrics.body_position_m.maximum<=0.0005); assert.equal(r.phase_mismatches,0);'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: faster-walking-reference
+          path: runs/interactive/fine-reference/

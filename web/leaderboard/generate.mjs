@@ -23,6 +23,7 @@ const broydenPath = 'examples/full-robot/whole-swing/broyden-status.json', broyd
 const broydenBrowserPath = 'examples/full-robot/whole-swing/broyden-browser-status.json', broydenBrowser = read(broydenBrowserPath);
 const refinedTeacherPath = 'examples/full-robot/whole-swing/minute-refinement-status.json', refinedTeacher = read(refinedTeacherPath).cases.find(c => c.name === 'combined-minute-1.25ms');
 const referenceBrowserPath = 'examples/full-robot/whole-swing/reference-browser-status.json', referenceBrowser = read(referenceBrowserPath);
+const tangentPath = 'examples/full-robot/whole-swing/tangent-probes-status.json', tangent = read(tangentPath).cases.find(c => c.name === 'tangent-probes-enabled');
 const definitions = [
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
@@ -68,6 +69,11 @@ const definitions = [
     capture: refinedTeacher.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(refinedTeacher.acceptance.source.path), evidence: refinedTeacherPath,
     numerical: 'examples/full-robot/whole-swing/minute-fine-difference.json', commands: true, parity: referenceBrowser.parity.passed,
     extraEvidence: ['examples/full-robot/whole-swing/combined-status.json', 'examples/full-robot/whole-swing/combined-turn-refinement.json', referenceBrowserPath]},
+  {id: 'tangent-steering-short', name: 'Steering with tangent probes', description: 'Uses approximate closure tangents only in derivative probes, with exact accepted physics and exact-derivative fallback. Native steering passes with nanometre solver differences; coarse timestep accuracy still fails.',
+    scene: 'examples/full-robot/whole-swing/tangent-turn.scene.json', config: 'examples/full-robot/whole-swing/tangent-turn.config.json',
+    capture: tangent.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(tangent.acceptance.source.path), evidence: tangentPath,
+    commands: true, benchmark: 'flat-steering-24s-v1', numerical: 'examples/full-robot/whole-swing/tangent-probes-refinement.json',
+    extraEvidence: ['examples/full-robot/whole-swing/tangent-probes-difference.json', 'examples/full-robot/whole-swing/tangent-probes-profile.json']},
 ];
 const taskPath = 'examples/full-robot/heading-task/task.json';
 mkdirSync('runs/leaderboard', {recursive: true});

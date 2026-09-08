@@ -1965,11 +1965,265 @@
         "scope": "Measurements from sampled shared Rust physics. Body travel is distinct from path length, commands and native compute throughput. Loaded-marker motion is a slip diagnostic, not a contact-patch certificate. No acceptance, calibration, browser-performance or hardware-energy claim."
       },
       "limitations": "Uncalibrated CAD-derived simulation, ideal observations and a privileged planner. Sampled marker motion and positive shaft work do not certify slip-free contact or hardware energy use."
+    },
+    {
+      "id": "tangent-steering-short",
+      "name": "Steering with tangent probes",
+      "description": "Uses approximate closure tangents only in derivative probes, with exact accepted physics and exact-derivative fallback. Native steering passes with nanometre solver differences; coarse timestep accuracy still fails.",
+      "benchmark_version": "flat-steering-24s-v1",
+      "controller_sha256": "5d413a7525282194107bcd766c2f17037404111ee3bc3b6592431752eaca5c23",
+      "model_sha256": "9b2fb42eb2790a0b19c8a7dab7608a78cd1526e062a894010fcf7af734cdcbfa",
+      "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "environment_sha256": "86a7d53eeeceaec4973b2d671d4042958904cba403697d807d835d53a1e3cf76",
+      "fidelity_sha256": "a1dd23e8358afda7387872ab6b02ee3c609a48e2ad8e5f01dceab5936ef848a1",
+      "fidelity_label": "Effective servo · dynamic floor · 20 ms",
+      "environment_label": "Flat floor · declared push",
+      "comparison_group": "7387e4fdd1b36218e30c9a1ee94f7b2c3a8e78bbfdade6f0744153063b36746e",
+      "load": {
+        "scene": {
+          "path": "examples/full-robot/whole-swing/tangent-turn.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        "config": {
+          "path": "examples/full-robot/whole-swing/tangent-turn.config.json",
+          "sha256": "fa575a0c6066d62bffa529b302d0c2e3cf7f4e564523b974fada4659779b7679"
+        },
+        "task": {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        "seed": 0,
+        "asset_sha256": "3959d58f786293bf2d20fe48c0c434acb5636daf87176891af6f9b70aba81004"
+      },
+      "replay": {
+        "completed_steps": 1200,
+        "input_events": [
+          {
+            "at_step": 0,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0.00375,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 420,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0,
+              0,
+              0.001,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 840,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              -0.00125,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "at_step": 1000,
+            "values": [
+              0.5,
+              0.25,
+              0.25,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "metrics": {
+        "simulated_s": 24,
+        "sustained_speed_m_s": null,
+        "speed_window_s": 4.38,
+        "short_speed_m_s": 0.003575234277550117,
+        "task_passed": true,
+        "qualified_swings": 15,
+        "swings": 15,
+        "final_heading_error_rad": 0.0003280779520178183,
+        "final_position_error_m": 0.0009582489803772701,
+        "positive_mechanical_work_j": 4.6168161413256,
+        "native_throughput": 3.9491404302420468,
+        "native_hardware": "Not recorded with this capture; not a reference benchmark.",
+        "browser_active_throughput": null,
+        "browser_active_p95_s": null
+      },
+      "browser_host": null,
+      "browser_runtime": null,
+      "gates": {
+        "sustained_walk": {
+          "status": "missing",
+          "detail": "Only a short forward/stop case is associated with this recipe."
+        },
+        "turn_reverse_stop": {
+          "status": "pass",
+          "detail": "The associated controller has a passing forward/turn/reverse/stop case."
+        },
+        "disturbances": {
+          "status": "missing",
+          "detail": "Broader held-out disturbance requirements are not yet established."
+        },
+        "terrain": {
+          "status": "missing",
+          "detail": "This entry is a flat-floor experiment; progressively harder terrain is outstanding."
+        },
+        "numerical_accuracy": {
+          "status": "fail",
+          "detail": "Sampled foot difference 1.599 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 1.481 mm."
+        },
+        "browser_realtime": {
+          "status": "missing",
+          "detail": "Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host."
+        },
+        "replay_parity": {
+          "status": "missing",
+          "detail": "No browser parity result is associated with this exact controller profile."
+        }
+      },
+      "evidence": [
+        {
+          "path": "examples/full-robot/whole-swing/tangent-probes-status.json",
+          "sha256": "7b77e20944e7719019e3403f1ff21d6497310472ddb1f0955fcb83cdafd33bb8"
+        },
+        {
+          "path": "web/leaderboard/unretained-scene-fields.json",
+          "sha256": "d214777edc596d04e7d32fd6e150a03c84f2e8cfa898759787016c65ab00cea6"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/tangent-probes-refinement.json",
+          "sha256": "299d4b543c37e03afb15fa1e8c87926943a6ce7adef9fb97444c55503703bffc"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/tangent-probes-difference.json",
+          "sha256": "014f225efaff78ab16dcdd2169994d76beed65be7e9f1c69e9f140cb79e61f9f"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/tangent-probes-profile.json",
+          "sha256": "58d94a0fcd4d2ebe1f94dbeb59bfcd9dfc7a2e2d525d9ad7ce15bf797b506fcb"
+        }
+      ],
+      "capture": {
+        "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-enabled.native.json",
+        "sha256": "0c79ff0e26a44502224b2cd7c7c98e78ba7ff99feab38d9ba1381233007b839f"
+      },
+      "measurement": {
+        "version": 1,
+        "capture": {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-enabled.native.json",
+          "sha256": "0c79ff0e26a44502224b2cd7c7c98e78ba7ff99feab38d9ba1381233007b839f"
+        },
+        "source": {
+          "path": "examples/interactive/analyze_walking_capture.mjs",
+          "sha256": "deede283de22a23bfa3f41d4d837be0e60b2325e37fe930c4c2f6760f04c75a0"
+        },
+        "simulated_s": 24,
+        "body_displacement_world_m": [
+          0.028140779576623937,
+          -0.00021510501894441016,
+          -0.0007700189555881407
+        ],
+        "horizontal_body_path_m": 0.6539869834286158,
+        "net_horizontal_displacement_m": 0.028141601684149215,
+        "sustained_windows": [
+          {
+            "command_start_s": 0.02,
+            "start_s": 4.0200000000000005,
+            "end_s": 8.4,
+            "command": [
+              0.00375,
+              0,
+              0
+            ],
+            "samples": 220,
+            "measured_sustained_speed_m_s": 0.003575234277550117,
+            "net_projected_speed_m_s": 0.009045172864816393,
+            "axis_world": [
+              0.9999978538460227,
+              -0.002071787476696685,
+              0
+            ]
+          }
+        ],
+        "positive_mechanical_work_j": 4.6168161413256,
+        "positive_mechanical_work_per_net_horizontal_m": 164.05662311417143,
+        "native_compute": {
+          "wall_s": 6.077271858,
+          "simulation_per_wall": 3.9491404302420468,
+          "transition_p95_s": 0.013499848
+        },
+        "conventions": {
+          "steady_command_warmup_s": 4,
+          "loaded_marker_endpoint_force_n": 1,
+          "work_integration": "Trapezoidal samples of shaft torque times gear speed, positive/negative separated; no electrical efficiency or between-sample peak claim."
+        },
+        "scope": "Measurements from sampled shared Rust physics. Body travel is distinct from path length, commands and native compute throughput. Loaded-marker motion is a slip diagnostic, not a contact-patch certificate. No acceptance, calibration, browser-performance or hardware-energy claim."
+      },
+      "limitations": "Uncalibrated CAD-derived simulation, ideal observations and a privileged planner. Sampled marker motion and positive shaft work do not certify slip-free contact or hardware energy use."
     }
   ],
   "generator": {
     "path": "web/leaderboard/generate.mjs",
-    "sha256": "53f2d89c174e1082554707a3503693a9d22b46bee0a08dc41568bc789e8bb603"
+    "sha256": "92e798d599bdc0ea903986f9e088f85e80b3e36b5654decc8bb7dd9345baa55c"
   },
   "scope": "Development evidence. No entry currently satisfies the complete declared gate set; speed rankings remain empty."
 }

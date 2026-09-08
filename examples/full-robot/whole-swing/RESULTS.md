@@ -608,3 +608,29 @@ the source-bound diagnosis. Both invalid new point scales (-0.1 and 1.1)
 are rejected with zero recorded physics steps. No case is promoted. The next
 bounded control experiment is a slow, rate-limited integral bias using the
 existing body suggestion, preserving the stable proportional gain.
+
+## Bounded integral feedback passes the revealed stopping case
+
+The shared Rust `control.angle_integral` component adds a bounded, rate-limited
+angular bias. Registry ports and parameters, Rhai's native binding and the
+direct Rust API share the update and validation. Seven focused tests cover
+bounds, reversal without windup, leakage/release, a synthetic disturbed plant,
+registry units/events, replay, failure rollback and integer-valued JSON inputs.
+The initial binding rejected valid integer fields before physics; all three
+zero-step failures are retained separately and the numeric boundary is fixed.
+
+The repaired gain-zero controller preserves the full point-release reference
+exactly, and all three gains preserve all 1,301 frames through 26 s. At gains
+**0.5 / 1.0 per second**, the unchanged 32-second task passes all **19 swings**,
+stopping at **0.758 / 0.425 mm** body error. Heading, tilt and sampled collision
+checks pass. The stable proportional gain remains 1.5; integral bias is limited
+to 0.04 rad and changes at no more than 0.01 rad/s.
+
+Sampled positive shaft work is **3.156 / 3.158 J**, versus gain-zero's 3.146 J.
+After-stop target-delta reversals are **148 / 150**, versus 152 in the reference;
+the maximum command jump is 0.03652 rad, close to the reference's 0.03632 rad.
+These observations avoid the high-gain ablation's large alternating commands
+and drift. `settled-integral-summary.json` preserves every outcome and source.
+This is revealed development success, not fresh held-out, timestep, terrain,
+browser or hardware qualification. Gain 1.0 supplies the larger stopping margin
+for the next frozen-candidate regression screen.

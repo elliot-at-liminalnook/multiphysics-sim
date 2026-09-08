@@ -2363,11 +2363,28 @@
         "positive_mechanical_work_j": 4.616816196141501,
         "native_throughput": 3.540624363897328,
         "native_hardware": "Not recorded with this capture; not a reference benchmark.",
-        "browser_active_throughput": null,
-        "browser_active_p95_s": null
+        "browser_active_throughput": 1.0000519350636847,
+        "browser_active_p95_s": 0.0208400000333786
       },
-      "browser_host": null,
-      "browser_runtime": null,
+      "browser_host": {
+        "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+        "logical_cpus": 16,
+        "platform": "darwin",
+        "architecture": "x64",
+        "browser": "152.0.7977.76",
+        "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+        "headless": true
+      },
+      "browser_runtime": {
+        "manifest_sha256": "77099a10a26f8d1a27191556a6a3590667af087e04ec858dda81ef4c4b9d674e",
+        "browser_module_sha256": "348473a7df705538f32986595a9959ba4aa33d8ec91a5c42c901ff84ba6f8444",
+        "compiler_profile": "simd-lto",
+        "settings": {
+          "rustflags": "-C target-feature=+simd128",
+          "lto": "fat",
+          "codegen_units": "1"
+        }
+      },
       "gates": {
         "sustained_walk": {
           "status": "missing",
@@ -2390,7 +2407,7 @@
           "detail": "Sampled foot difference 1.599 mm; required at most 1 mm, plus a 0.5 mm body screen. Body difference 1.481 mm."
         },
         "browser_realtime": {
-          "status": "missing",
+          "status": "fail",
           "detail": "Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host."
         },
         "replay_parity": {
@@ -2422,6 +2439,10 @@
         {
           "path": "examples/full-robot/whole-swing/tangent-radius-0.00001-difference.json",
           "sha256": "caab5f75e7dac1e44c72e0ca6f345516577bcfe1ef627a07efc5eda3bb1dbdff"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/tangent-browser-status.json",
+          "sha256": "fd6261680b47d1802f5227aa8794530f7e2c2763b4d5e59cc20fbc63c8ad25fd"
         }
       ],
       "capture": {
@@ -2485,7 +2506,7 @@
   ],
   "generator": {
     "path": "web/leaderboard/generate.mjs",
-    "sha256": "22921f761e5030b5caae0053dec7fb0efa19778e3039c577a91b24dfd95ba3ac"
+    "sha256": "c1d8bc0bc3cb871eca3f5cfd8f24c9c756a941a722da469938051e829a1b113a"
   },
   "scope": "Development evidence. No entry currently satisfies the complete declared gate set; speed rankings remain empty."
 }

@@ -20,6 +20,7 @@ const teacherParityPath = 'examples/full-robot/whole-swing/teacher-browser-parit
 const turnPath = 'examples/full-robot/whole-swing/turn-support-status.json', turn = read(turnPath).cases.find(c => c.name === 'student-turn-20ms-support-24mm');
 const combinedPath = 'examples/full-robot/whole-swing/combined-status.json', combined = read(combinedPath).cases.find(c => c.name === 'combined-minute-2.5ms');
 const broydenPath = 'examples/full-robot/whole-swing/broyden-status.json', broyden = read(broydenPath).cases.find(c => c.name === 'student-turn-20ms-broyden');
+const broydenBrowserPath = 'examples/full-robot/whole-swing/broyden-browser-status.json', broydenBrowser = read(broydenBrowserPath);
 const definitions = [
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
@@ -55,10 +56,11 @@ const definitions = [
     capture: combined.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(combined.acceptance.source.path), evidence: combinedPath,
     commands: true, extraEvidence: ['examples/full-robot/whole-swing/combined-feedback-check.json', 'examples/full-robot/whole-swing/combined-turn-refinement.json'],
     numerical: 'examples/full-robot/whole-swing/combined-minute-refinement.json'},
-  {id: 'secant-steering-short', name: 'Steering with secant solver', description: 'The passing 20 ms steering student with bounded shared-solver secant updates. Native trajectories match within nanometres; this does not establish timestep accuracy, sustained walking or robustness.',
+  {id: 'secant-steering-short', name: 'Steering with secant solver', description: 'Passing 20 ms steering with bounded shared-solver secants. Browser p95 improves to 26.1 ms but still misses 20 ms. Native trajectories match within nanometres; timestep accuracy, sustained walking and robustness remain open.',
     scene: 'examples/full-robot/whole-swing/broyden-turn.scene.json', config: 'examples/full-robot/whole-swing/broyden-turn.config.json',
     capture: broyden.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(broyden.acceptance.source.path), evidence: broydenPath,
-    commands: true, benchmark: 'flat-steering-24s-v1', extraEvidence: ['examples/full-robot/whole-swing/broyden-difference.json']},
+    commands: true, benchmark: 'flat-steering-24s-v1', extraEvidence: ['examples/full-robot/whole-swing/broyden-difference.json', broydenBrowserPath],
+    performance: broydenBrowser.episodes['secant-turn'], parity: broydenBrowser.parity.passed},
 ];
 const taskPath = 'examples/full-robot/heading-task/task.json';
 mkdirSync('runs/leaderboard', {recursive: true});

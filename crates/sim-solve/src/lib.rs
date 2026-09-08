@@ -297,7 +297,12 @@ impl JacobianCache {
             if lu.lu_internal().diagonal().iter().any(|d| *d == 0.0) {
                 return None;
             }
-            let raw = (track && n <= 64).then(|| std::sync::Arc::new(jacobian.to_dense()));
+            let raw = (track && n <= 64).then(|| {
+                // Use exactly the duplicate summation order supplied to LU.
+                let mut matrix = DMatrix::zeros(n, n);
+                for &(r, c, value) in &entries { matrix[(r,c)] = value; }
+                std::sync::Arc::new(matrix)
+            });
             return Some(Self { lu: std::sync::Arc::new(Factor::Dense(lu)), row_scale, col_scale: vec![1.0; n], uses: 0, raw, broyden_steps: 0 });
         }
         let mut row_scale = vec![0.0_f64; n];
@@ -880,6 +885,18 @@ mod tests {
         assert_eq!(snapshot.raw.as_ref().unwrap().as_ref(), &raw);
         assert_eq!(snapshot.broyden_steps, 0);
         assert_eq!(updated.broyden_steps, 1);
+    }
+
+    #[test]
+    fn tracked_matrix_uses_the_factorizations_duplicate_sum_order() {
+        let mut jacobian = SparseJacobian::new(4);
+        for i in 0..200 {
+            jacobian.triplets.push((i%4, (i/4)%4, [1e16, 1.0, -1e16][i%3]));
+        }
+        for i in 0..4 { jacobian.add(i,i,1e18); }
+        let cache = JacobianCache::factorise_tracked(&jacobian, true).unwrap();
+        let raw = cache.raw.as_ref().unwrap();
+        for (r,c,v) in jacobian.summed() { assert_eq!(raw[(r,c)].to_bits(),v.to_bits()); }
     }
 
     #[test]

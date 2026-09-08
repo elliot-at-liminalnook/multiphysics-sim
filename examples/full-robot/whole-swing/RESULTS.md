@@ -196,3 +196,14 @@ The isolated profiled rerun reduces fresh Jacobians from 2,908 to 1,996,
 assembly time from 6.211 to 4.285 seconds and total wall time to 7.984 seconds.
 The 6,213 bounded update attempts cost 0.075 seconds; 345 request a fresh
 matrix. Profiling preserves every sampled physical frame and input exactly.
+
+The matching SIMD/LTO browser build passes all 1,200 native/WASM transitions,
+exact replay/reset and the eight-entry leaderboard UI checks. On/off testing
+in the same WASM binary reduces rendered active steering p95 from 33.72 to
+26.10 ms; the secant case reaches 1.0001 simulated seconds per wall second.
+Forward/stop p95 is 27.39 ms with rate 0.9995. Both remain timing failures;
+the independently re-executed forward task passes. Shift and return phases
+remain the slowest. `broyden-browser-status.json` retains full compiler,
+hardware, browser, recording, UI and acceptance evidence. The delivered
+experimental bundle uses the source hashes captured at commit `4cbb3b6`;
+the subsequent duplicate-triplet summation fix has a focused solver test.

@@ -1490,7 +1490,7 @@
     {
       "id": "secant-steering-short",
       "name": "Steering with secant solver",
-      "description": "The passing 20 ms steering student with bounded shared-solver secant updates. Native trajectories match within nanometres; this does not establish timestep accuracy, sustained walking or robustness.",
+      "description": "Passing 20 ms steering with bounded shared-solver secants. Browser p95 improves to 26.1 ms but still misses 20 ms. Native trajectories match within nanometres; timestep accuracy, sustained walking and robustness remain open.",
       "benchmark_version": "flat-steering-24s-v1",
       "controller_sha256": "5d413a7525282194107bcd766c2f17037404111ee3bc3b6592431752eaca5c23",
       "model_sha256": "9b2fb42eb2790a0b19c8a7dab7608a78cd1526e062a894010fcf7af734cdcbfa",
@@ -1626,11 +1626,28 @@
         "positive_mechanical_work_j": 4.6168161525932945,
         "native_throughput": 2.8712532992369324,
         "native_hardware": "Not recorded with this capture; not a reference benchmark.",
-        "browser_active_throughput": null,
-        "browser_active_p95_s": null
+        "browser_active_throughput": 1.000102425949168,
+        "browser_active_p95_s": 0.02609500002861023
       },
-      "browser_host": null,
-      "browser_runtime": null,
+      "browser_host": {
+        "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+        "logical_cpus": 16,
+        "platform": "darwin",
+        "architecture": "x64",
+        "browser": "152.0.7977.76",
+        "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+        "headless": true
+      },
+      "browser_runtime": {
+        "manifest_sha256": "c81c033ec9192c92051e7e340d5ddcc62c601c9eca388d6b388d1f4d8566e982",
+        "browser_module_sha256": "7ced1c2c9d527ed749cf0fba3d87626c36e3d77c8e662f0df8395da316e123d1",
+        "compiler_profile": "simd-lto",
+        "settings": {
+          "rustflags": "-C target-feature=+simd128",
+          "lto": "fat",
+          "codegen_units": "1"
+        }
+      },
       "gates": {
         "sustained_walk": {
           "status": "missing",
@@ -1653,12 +1670,12 @@
           "detail": "Solver-option agreement does not establish timestep convergence."
         },
         "browser_realtime": {
-          "status": "missing",
+          "status": "fail",
           "detail": "Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host."
         },
         "replay_parity": {
-          "status": "missing",
-          "detail": "No browser parity result is associated with this exact controller profile."
+          "status": "pass",
+          "detail": "Associated native/WASM comparison and same-host replay pass."
         }
       },
       "evidence": [
@@ -1673,6 +1690,10 @@
         {
           "path": "examples/full-robot/whole-swing/broyden-difference.json",
           "sha256": "266cd403a9cb2be7b455e62eb1eb1d04700a8859cc1324d8330c3fab66e4745f"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/broyden-browser-status.json",
+          "sha256": "e1244a46ab4f34f54592c0b17c393c18695da9166838390602b7b0229a67628d"
         }
       ],
       "capture": {
@@ -1736,7 +1757,7 @@
   ],
   "generator": {
     "path": "web/leaderboard/generate.mjs",
-    "sha256": "28848289bc23f14f84218aaa0a5d6721e97e7f7f05756592d99a0cf1a177ad6d"
+    "sha256": "5dcea09658b42faeda74fdb361dc7ffa9fddda87eaa673dd15a6e9aeab7eebb9"
   },
   "scope": "Development evidence. No entry currently satisfies the complete declared gate set; speed rankings remain empty."
 }

@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "timestep_reference": false,
+  "numerical_precision": false,
+  "block_factorization": false,
+  "guarded_backtracking": false,
+  "broyden_updates": false,
+  "linearized_probes": false,
+  "velocity_seed": true,
+  "baseline": {
+    "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.native.json",
+    "sha256": "49c3f53b010408068eb00bce9180505bc917fe506ce8911d8f2bd0f2dbc38d4d"
+  },
+  "candidate": {
+    "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.native.json",
+    "sha256": "bd3b5fc5cc72bae0d3e8a4df9768d7f77c07abe19e8c9aadf77c1703a035aa91"
+  },
+  "markers": {
+    "path": "examples/full-robot/foot-markers.json",
+    "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+  },
+  "frames": 1201,
+  "metrics": {
+    "foot_marker_position_m": {
+      "maximum": 6.974774170465503e-10,
+      "samples": 4804,
+      "worst": {
+        "time_s": 1.76,
+        "identity": "+Y-foot-surface"
+      },
+      "rms": 2.6161035678603904e-10
+    },
+    "link_position_m": {
+      "maximum": 2.904626351253197e-9,
+      "samples": 34829,
+      "worst": {
+        "time_s": 22.98,
+        "identity": "+Y | Foot servo crank 3689"
+      },
+      "rms": 5.567104615383615e-10
+    },
+    "link_velocity_m_s": {
+      "maximum": 3.130140846550473e-8,
+      "samples": 34829,
+      "worst": {
+        "time_s": 14.46,
+        "identity": "+Y | Foot servo crank 3689"
+      },
+      "rms": 2.8799230796537833e-9
+    },
+    "link_angular_velocity_rad_s": {
+      "maximum": 4.5172450655447487e-7,
+      "samples": 34829,
+      "worst": {
+        "time_s": 14.46,
+        "identity": "+X | Worm and input spindle 3a48"
+      },
+      "rms": 2.33949525621057e-8
+    },
+    "rotation_matrix_entry": {
+      "maximum": 4.387605689881724e-8,
+      "samples": 34829,
+      "worst": {
+        "time_s": 22.92,
+        "identity": "+Y | Foot servo crank 3689"
+      },
+      "rms": 4.311761005366754e-9
+    },
+    "body_position_m": {
+      "maximum": 2.5350127254933987e-9,
+      "samples": 1201,
+      "worst": {
+        "time_s": 22.98,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 6.281548634006011e-10
+    },
+    "body_heading_rad": {
+      "maximum": 2.997168742358003e-9,
+      "samples": 1201,
+      "worst": {
+        "time_s": 22.3,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 8.175467196683226e-10
+    },
+    "joint_positions": {
+      "maximum": 8.524679362409415e-8,
+      "samples": 33628,
+      "worst": {
+        "time_s": 22.92,
+        "identity": 26
+      },
+      "rms": 7.174148102614953e-9
+    },
+    "joint_velocities": {
+      "maximum": 7.542473851041009e-7,
+      "samples": 33628,
+      "worst": {
+        "time_s": 14.46,
+        "identity": 26
+      },
+      "rms": 3.4457300428897083e-8
+    },
+    "servo_targets_rad": {
+      "maximum": 4.8210245184865386e-8,
+      "samples": 14412,
+      "worst": {
+        "time_s": 22.88,
+        "identity": 11
+      },
+      "rms": 5.628758523961588e-9
+    },
+    "contact_pair_force_n": {
+      "maximum": 0.0000935850489354292,
+      "samples": 4482,
+      "worst": {
+        "time_s": 18.22,
+        "identity": "6:null"
+      },
+      "rms": 0.000001942266794873026
+    }
+  },
+  "contact_pair_mismatches": 0,
+  "phase_mismatches": 0,
+  "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization, guarded backtracking bounded Broyden updates linearized derivative probes or a guarded temporal velocity seed. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate."
+}

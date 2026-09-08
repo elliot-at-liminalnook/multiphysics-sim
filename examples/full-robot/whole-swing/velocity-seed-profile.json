@@ -1,0 +1,553 @@
+{
+  "version": 1,
+  "complete": true,
+  "default_off_frames_exact": true,
+  "cases": [
+    {
+      "name": "velocity-seed-reference",
+      "profile_preserves_frames": true,
+      "wall_s": 6.222691621,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 1210,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 10425,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 1975,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 485,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 16924,
+          "name": "residual evaluations",
+          "seconds": 2.0990559770000004
+        },
+        {
+          "calls": 1975,
+          "name": "jacobian assembly",
+          "seconds": 2.5226350760000003
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1975,
+          "name": "factorisation",
+          "seconds": 0.024006043
+        },
+        {
+          "calls": 7875,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.024419688000000002
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 10415,
+          "name": "back-substitution",
+          "seconds": 0.007370683
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 23117,
+          "name": "embedded closure mapping",
+          "seconds": 1.449766882
+        },
+        {
+          "calls": 54395,
+          "name": "embedded contact history",
+          "seconds": 0.12349130300000001
+        },
+        {
+          "calls": 52474,
+          "name": "embedded dynamics preparation",
+          "seconds": 2.6562326190000003
+        },
+        {
+          "calls": 53676,
+          "name": "embedded applied force solve",
+          "seconds": 0.14602894400000002
+        },
+        {
+          "calls": 53676,
+          "name": "embedded component equations",
+          "seconds": 0.019850789
+        },
+        {
+          "calls": 23117,
+          "name": "  closure Jacobian",
+          "seconds": 0.39850867500000003
+        },
+        {
+          "calls": 23117,
+          "name": "  closure factorization",
+          "seconds": 0.274706332
+        },
+        {
+          "calls": 93448,
+          "name": "    closure SVD",
+          "seconds": 0.10256225000000001
+        },
+        {
+          "calls": 52474,
+          "name": "  embedded rigid inertia",
+          "seconds": 1.116008562
+        },
+        {
+          "calls": 52474,
+          "name": "  embedded inertia projection",
+          "seconds": 0.205975772
+        },
+        {
+          "calls": 52474,
+          "name": "  embedded force evaluation",
+          "seconds": 1.0080356670000001
+        },
+        {
+          "calls": 56074,
+          "name": "contact geometry queries",
+          "seconds": 0.340915611
+        },
+        {
+          "calls": 56074,
+          "name": "contact force evaluation",
+          "seconds": 0.558112504
+        },
+        {
+          "calls": 58474,
+          "name": "  contact exclusion metadata",
+          "seconds": 0.018388707
+        },
+        {
+          "calls": 58474,
+          "name": "  contact sample transforms",
+          "seconds": 0.22343142900000001
+        },
+        {
+          "calls": 58474,
+          "name": "  contact pair queries",
+          "seconds": 0.15714593500000001
+        },
+        {
+          "calls": 1200,
+          "name": "policy online reference",
+          "seconds": 0.637967547
+        },
+        {
+          "calls": 1200,
+          "name": "policy observations",
+          "seconds": 0.015804887
+        },
+        {
+          "calls": 0,
+          "name": "policy body feedback",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "policy point feedback",
+          "seconds": 0
+        },
+        {
+          "calls": 1200,
+          "name": "policy script",
+          "seconds": 0.118232239
+        },
+        {
+          "calls": 6233,
+          "name": "Broyden update attempts",
+          "seconds": 0.07542823500000001
+        },
+        {
+          "calls": 333,
+          "name": "Broyden rejected/capped updates",
+          "seconds": 0
+        }
+      ],
+      "accepted_steps": 1200,
+      "predicted_steps": 0,
+      "accepted_endpoint_evaluations": 52814,
+      "exact_derivative_fallbacks": [
+        "Newton did not converge after 12 iterations; residual=2.368813966178475e-5",
+        "Newton did not converge after 12 iterations; residual=1.1390895990361716e-1",
+        "Newton did not converge after 12 iterations; residual=7.454425114012675e-3",
+        "Newton did not converge after 12 iterations; residual=1.782014311485756e1",
+        "Newton did not converge after 12 iterations; residual=4.1862641799617073e-4",
+        "Newton did not converge after 12 iterations; residual=6.833974840295132e-5"
+      ],
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.profiled.native.json",
+          "sha256": "9e4da08581032708b13ed99eca2c40f6cc87a7835e5bc61a02fcdcb1d65a3e68"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.profile.json",
+          "sha256": "cf8f7b3d13ccaa2551f0e9c18db669e203329230579ea6502d53664b9b863814"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.profile.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.native.json",
+          "sha256": "49c3f53b010408068eb00bce9180505bc917fe506ce8911d8f2bd0f2dbc38d4d"
+        }
+      ]
+    },
+    {
+      "name": "velocity-seed-enabled",
+      "profile_preserves_frames": true,
+      "wall_s": 6.644363261,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 1211,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 10125,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 1884,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 459,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 16308,
+          "name": "residual evaluations",
+          "seconds": 2.0381384430000002
+        },
+        {
+          "calls": 1884,
+          "name": "jacobian assembly",
+          "seconds": 2.6133091750000004
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1884,
+          "name": "factorisation",
+          "seconds": 0.024105678000000002
+        },
+        {
+          "calls": 7499,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.02414271
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 10114,
+          "name": "back-substitution",
+          "seconds": 0.007322106
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 23736,
+          "name": "embedded closure mapping",
+          "seconds": 1.567976277
+        },
+        {
+          "calls": 53340,
+          "name": "embedded contact history",
+          "seconds": 0.148046122
+        },
+        {
+          "calls": 51512,
+          "name": "embedded dynamics preparation",
+          "seconds": 2.800386627
+        },
+        {
+          "calls": 53456,
+          "name": "embedded applied force solve",
+          "seconds": 0.161913988
+        },
+        {
+          "calls": 53456,
+          "name": "embedded component equations",
+          "seconds": 0.020889753
+        },
+        {
+          "calls": 23736,
+          "name": "  closure Jacobian",
+          "seconds": 0.42292221300000005
+        },
+        {
+          "calls": 23736,
+          "name": "  closure factorization",
+          "seconds": 0.299711408
+        },
+        {
+          "calls": 95969,
+          "name": "    closure SVD",
+          "seconds": 0.11841683700000001
+        },
+        {
+          "calls": 51512,
+          "name": "  embedded rigid inertia",
+          "seconds": 1.160221984
+        },
+        {
+          "calls": 51512,
+          "name": "  embedded inertia projection",
+          "seconds": 0.212764105
+        },
+        {
+          "calls": 51512,
+          "name": "  embedded force evaluation",
+          "seconds": 1.091604319
+        },
+        {
+          "calls": 55112,
+          "name": "contact geometry queries",
+          "seconds": 0.35313695500000003
+        },
+        {
+          "calls": 55112,
+          "name": "contact force evaluation",
+          "seconds": 0.588669777
+        },
+        {
+          "calls": 57512,
+          "name": "  contact exclusion metadata",
+          "seconds": 0.018683242000000003
+        },
+        {
+          "calls": 57512,
+          "name": "  contact sample transforms",
+          "seconds": 0.241590831
+        },
+        {
+          "calls": 57512,
+          "name": "  contact pair queries",
+          "seconds": 0.16129147800000002
+        },
+        {
+          "calls": 1200,
+          "name": "policy online reference",
+          "seconds": 0.6928899900000001
+        },
+        {
+          "calls": 1200,
+          "name": "policy observations",
+          "seconds": 0.01617478
+        },
+        {
+          "calls": 0,
+          "name": "policy body feedback",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "policy point feedback",
+          "seconds": 0
+        },
+        {
+          "calls": 1200,
+          "name": "policy script",
+          "seconds": 0.13275371500000002
+        },
+        {
+          "calls": 5940,
+          "name": "Broyden update attempts",
+          "seconds": 0.074063875
+        },
+        {
+          "calls": 325,
+          "name": "Broyden rejected/capped updates",
+          "seconds": 0
+        }
+      ],
+      "accepted_steps": 1200,
+      "predicted_steps": 742,
+      "accepted_endpoint_evaluations": 52666,
+      "exact_derivative_fallbacks": [
+        "Newton did not converge after 12 iterations; residual=2.3690643113921314e-5",
+        "Newton did not converge after 12 iterations; residual=1.139089445943342e-1",
+        "Newton did not converge after 12 iterations; residual=9.306211325312876e-6",
+        "Newton did not converge after 12 iterations; residual=7.410041422248437e-3",
+        "Newton did not converge after 12 iterations; residual=1.6674108385530232e1",
+        "Newton did not converge after 12 iterations; residual=4.186177724118667e-4",
+        "Newton did not converge after 12 iterations; residual=6.83401054161481e-5"
+      ],
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.profiled.native.json",
+          "sha256": "01c43cd0ca39747cfca92731a67b7533ef4f92be0937c5f8ecec5c39b78bbe5f"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.profile.json",
+          "sha256": "62bbdc8901911202ee0629aedb13156f74fd71b588c66b52263821daeca61fce"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.profile.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.native.json",
+          "sha256": "bd3b5fc5cc72bae0d3e8a4df9768d7f77c07abe19e8c9aadf77c1703a035aa91"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-velocity-seed/plan.json",
+      "sha256": "1afbc3d90757cbfc29226c106fe05e12fd17916e05adf8b7697c1cc148a21af0"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/velocity-seed-status.json",
+      "sha256": "c33578cf5ee3cbe2a1706b61ebe48966b3fb648b0408c474ac417e7649590707"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.00001.native.json",
+      "sha256": "58b73c5ed62a6b806aeae8a79c9367f9732294fdca7d82670c7a204c8734d4cd"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "67a586b88f5ed2b80474fc5df1bd1733def34f38c17eb19b6ab2cccbd46cab26"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/profile_velocity_seed.mjs",
+      "sha256": "239cc239deb56017530f4539e6d06c71c184f5d8c1b6355bd1e4b6b2cb3732a6"
+    }
+  ],
+  "scope": "Isolated sequential profiles; profiling preserves all accepted physical/task frames and recordings. Global solver buckets include rejected attempts but the Newton residual bucket excludes the separate initial-guess screen; endpoint/closure buckets include that work. Accepted-step counts omit rejected outer attempts. Timings nest. Native throughput is not rendered performance or physical accuracy."
+}

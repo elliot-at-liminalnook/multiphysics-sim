@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "velocity-seed-reference",
+      "wall_s": 6.042664047,
+      "transitions": 1200,
+      "p95_s": 0.012581359999999986,
+      "active_p95_s": 0.013146694000000014,
+      "phase_p95_s": {
+        "hold": 0.015519305,
+        "shift": 0.012776984000000047,
+        "raise": 0.007497811000000021,
+        "lower": 0.00883427099999956,
+        "return": 0.020171074999999927,
+        "settle": 0.013146694000000014,
+        "idle": 0.0026335330000000212
+      },
+      "source": {
+        "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-reference.native.json",
+        "sha256": "49c3f53b010408068eb00bce9180505bc917fe506ce8911d8f2bd0f2dbc38d4d"
+      }
+    },
+    {
+      "name": "velocity-seed-enabled",
+      "wall_s": 6.097468415,
+      "transitions": 1200,
+      "p95_s": 0.012965499000000102,
+      "active_p95_s": 0.013353044000000036,
+      "phase_p95_s": {
+        "hold": 0.015857101,
+        "shift": 0.013063241999999864,
+        "raise": 0.008290345999999893,
+        "lower": 0.00899702999999974,
+        "return": 0.02041543800000012,
+        "settle": 0.014042421000000083,
+        "idle": 0.0027957509999998464
+      },
+      "source": {
+        "path": "runs/full-robot/learning/whole-velocity-seed/velocity-seed-enabled.native.json",
+        "sha256": "bd3b5fc5cc72bae0d3e8a4df9768d7f77c07abe19e8c9aadf77c1703a035aa91"
+      }
+    }
+  ],
+  "solver_difference_passed": true,
+  "browser_promoted": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/velocity-seed-difference.json",
+      "sha256": "8647d9af11cceff4ca91d1f90228c7261d1b4c247b1af996ff94c998a83aa190"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/velocity-seed-status.json",
+      "sha256": "c33578cf5ee3cbe2a1706b61ebe48966b3fb648b0408c474ac417e7649590707"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/velocity-seed-profile.json",
+      "sha256": "9f5a0b61464e9417b4f7e7be3c2d832c8723eef4923a889b3650f35d4fe1c292"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/velocity-seed-integrity.json",
+      "sha256": "4239afeca42a821a0816d12974d278649e9f1b412e26d67ef51b5782848d158c"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/summarize_velocity_seed.mjs",
+      "sha256": "eede95169d485d4dd622ae2206d7513d3c8c1678e169ce3d7bc2edc0d22c2cde"
+    }
+  ],
+  "scope": "Native cumulative stepping clocks from the isolated unprofiled captures; excludes browser transfer/drawing and native final serialization. Predictor slightly worsens total time and active/return p95 despite fewer Newton iterations/Jacobians, because proposal screening adds mapping work. Retained default-off; no new WASM performance claim. Physical, exact default preservation and profile results are separate linked evidence."
+}

@@ -25,6 +25,13 @@ derivatives and retry exact numerical derivatives from the original guess,
 before existing subdivision/recovery logic. Record predictor use/fallback;
 default-off physical results must remain exact.
 
+Before robot evaluation, preserve Newton's per-row initial residual bounds:
+a smaller infinity norm can still increase an individual row. Pass the original
+residual as a reference to the shared solver and use the smaller original/new
+magnitude when forming each absolute-plus-relative bound. This can tighten a
+row but cannot loosen it. Ordinary calls without a reference keep the original
+solver path. Validate reference dimensions/finiteness before state/cache work.
+
 Check constant-force and stiff linear analytic endpoints, nonlinear linkage
 closure, state continuity/invalidation, rejected predictor geometry, complete
 rollback, and an accepted prediction whose Newton solve fails but whose original

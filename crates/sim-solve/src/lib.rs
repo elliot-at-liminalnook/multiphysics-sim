@@ -129,9 +129,23 @@ pub fn solve_newton_numeric_scaled_cached_audited<F>(
 ) -> Result<SolveDiagnostics, SolveError>
 where F: Fn(&[f64], &mut [f64]),
 {
+    solve_newton_numeric_scaled_cached_audited_with_reference(unknowns,config,residual,step_scale,cache,audit,None)
+}
+
+/// A warm-started numerical solve whose per-row residual bounds are no looser
+/// than those derived from a supplied original residual. Corrections and all
+/// other acceptance rules are unchanged. `None` is the ordinary solver.
+pub fn solve_newton_numeric_scaled_cached_audited_with_reference<F>(
+    unknowns: &mut [f64], config: NewtonConfig, residual: F,
+    step_scale: &dyn Fn(usize,f64)->f64,
+    cache: &mut Option<JacobianCache>, audit: Option<&mut NewtonAudit>,
+    residual_reference: Option<&[f64]>,
+) -> Result<SolveDiagnostics, SolveError>
+where F: Fn(&[f64], &mut [f64]),
+{
     let n = unknowns.len();
     let mut perturbed_r = vec![0.0; n];
-    solve_newton_cached_audited(unknowns, config, &residual, |x, base, jacobian| {
+    solve_newton_cached_audited_with_reference(unknowns, config, &residual, |x, base, jacobian| {
         for column in 0..n {
             let original = x[column];
             // Keep the reference perturbation above nested finite-difference
@@ -144,7 +158,7 @@ where F: Fn(&[f64], &mut [f64]),
                 jacobian.add(row, column, (perturbed_r[row] - base[row]) / epsilon);
             }
         }
-    }, step_scale, cache, audit)
+    }, step_scale, cache, audit, residual_reference)
 }
 
 /// Newton with a caller-supplied Jacobian assembler: `jacobian(x, r(x), J)`
@@ -506,10 +520,29 @@ pub fn solve_newton_cached_audited<F, J>(
     unknowns: &mut [f64],
     config: NewtonConfig,
     residual: F,
+    jacobian_at: J,
+    step_scale: &dyn Fn(usize, f64) -> f64,
+    cache: &mut Option<JacobianCache>,
+    audit: Option<&mut NewtonAudit>,
+) -> Result<SolveDiagnostics, SolveError>
+where
+    F: Fn(&[f64], &mut [f64]),
+    J: FnMut(&mut [f64], &[f64], &mut SparseJacobian),
+{
+    solve_newton_cached_audited_with_reference(unknowns,config,residual,jacobian_at,step_scale,cache,audit,None)
+}
+
+/// Preserve or tighten each initial residual bound when trying a different
+/// starting guess. The optional reference is validated before cache mutation.
+pub fn solve_newton_cached_audited_with_reference<F, J>(
+    unknowns: &mut [f64],
+    config: NewtonConfig,
+    residual: F,
     mut jacobian_at: J,
     step_scale: &dyn Fn(usize, f64) -> f64,
     cache: &mut Option<JacobianCache>,
     mut audit: Option<&mut NewtonAudit>,
+    residual_reference: Option<&[f64]>,
 ) -> Result<SolveDiagnostics, SolveError>
 where
     F: Fn(&[f64], &mut [f64]),
@@ -523,6 +556,10 @@ where
         };
     }
     let n = unknowns.len();
+    if let Some(reference) = residual_reference {
+        if reference.len() != n { return Err(SolveError::Dimension {expected:n,actual:reference.len()}); }
+        finite(reference)?;
+    }
     if cache.as_ref().is_some_and(|c| c.row_scale.len() != n) {
         *cache = None;
     }
@@ -538,8 +575,8 @@ where
     // inflates the Jacobian. Require actual residual reduction against fixed
     // per-row bounds from the beginning of this solve, independently of the
     // row scaling used to condition the linear system.
-    let residual_limits: Vec<_> = r.iter().map(|v|
-        config.absolute_tolerance + config.relative_tolerance * v.abs()
+    let residual_limits: Vec<_> = r.iter().enumerate().map(|(i,v)|
+        config.absolute_tolerance + config.relative_tolerance * residual_reference.map_or(v.abs(),|reference|v.abs().min(reference[i].abs()))
     ).collect();
     if let Some(audit) = audit.as_deref_mut() {
         audit.residual_limits.clone_from(&residual_limits);

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "maximum_target_reconstruction_error_rad": 0,
+  "phases": {
+    "hold": {
+      "samples": 10,
+      "aggregate_cosine": -0.9925355494216237,
+      "cancellation_fraction": 0.7552230637309544,
+      "opposed_sample_fraction": 0.9,
+      "body_correction_rms_rad": 0.008197296797369014,
+      "point_correction_rms_rad": 0.005049876507726159,
+      "mean_body_error_m": 0.0007088726720616825
+    },
+    "shift": {
+      "samples": 1189,
+      "aggregate_cosine": -0.7594162241006298,
+      "cancellation_fraction": 0.6459846463401872,
+      "opposed_sample_fraction": 1,
+      "body_correction_rms_rad": 0.01391012314072849,
+      "point_correction_rms_rad": 0.011829462287611558,
+      "mean_body_error_m": 0.002170696453551913
+    },
+    "raise": {
+      "samples": 761,
+      "aggregate_cosine": -0.6384374356545437,
+      "cancellation_fraction": 0.6015259553736896,
+      "opposed_sample_fraction": 1,
+      "body_correction_rms_rad": 0.012854433513968588,
+      "point_correction_rms_rad": 0.012521984476442717,
+      "mean_body_error_m": 0.00211194836294284
+    },
+    "lower": {
+      "samples": 760,
+      "aggregate_cosine": -0.6124962524024238,
+      "cancellation_fraction": 0.574470902280854,
+      "opposed_sample_fraction": 1,
+      "body_correction_rms_rad": 0.013181810307772173,
+      "point_correction_rms_rad": 0.013421345804722403,
+      "mean_body_error_m": 0.0022656575214912347
+    },
+    "return": {
+      "samples": 40,
+      "aggregate_cosine": -0.8431568573929742,
+      "cancellation_fraction": 0.7241568611492023,
+      "opposed_sample_fraction": 1,
+      "body_correction_rms_rad": 0.012867404352288577,
+      "point_correction_rms_rad": 0.012283453543975045,
+      "mean_body_error_m": 0.0018759181216763798
+    },
+    "settle": {
+      "samples": 40,
+      "aggregate_cosine": -0.8457258951675943,
+      "cancellation_fraction": 0.7271858305413167,
+      "opposed_sample_fraction": 1,
+      "body_correction_rms_rad": 0.012837159333984037,
+      "point_correction_rms_rad": 0.012279930469291454,
+      "mean_body_error_m": 0.0018717107829288658
+    }
+  },
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/position-only.native.json",
+      "sha256": "bca8e8117ac71daf7c7f74510de6554305e4a68cbd93291b40d26a670a02106c"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/analyze_feedback_contributions.mjs",
+      "sha256": "26ba45633f36bbb7cebbd42fd37f2c9454007cf162c86e73c3b54bc76678ba3d"
+    },
+    {
+      "path": "examples/interactive/feedback_contributions.mjs",
+      "sha256": "0ef3121d1dc5df6114c95bbb96f3d58b73f9d18c762de7b3f2d7687a915f02e2"
+    }
+  ],
+  "scope": "Only nonzero motion-command samples whose actual targets reconstruct from reference, tracking, body, point and residual contributions. Angular suggestion cancellation is not physical force cancellation or causal proof; stopped integral behavior is excluded."
+}

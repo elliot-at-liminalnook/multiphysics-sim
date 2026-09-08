@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "timestep_reference": true,
+  "numerical_precision": false,
+  "block_factorization": false,
+  "guarded_backtracking": false,
+  "broyden_updates": false,
+  "linearized_probes": false,
+  "velocity_seed": false,
+  "baseline": {
+    "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms.native.json",
+    "sha256": "3a87eff3e37f7e141cc507807fea4b50bdc75ee48f44b26c075aa076f5970d56"
+  },
+  "candidate": {
+    "path": "runs/full-robot/learning/sdirk-physical-refinement/teacher-be-0.625ms.native.json",
+    "sha256": "0a53135ba2235d28dab95ae9229c232244eeadada2450fe6397d08ca6cc262d9"
+  },
+  "markers": {
+    "path": "examples/full-robot/foot-markers.json",
+    "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+  },
+  "frames": 1201,
+  "metrics": {
+    "foot_marker_position_m": {
+      "maximum": 0.00021950767132976768,
+      "samples": 4804,
+      "worst": {
+        "time_s": 6.62,
+        "identity": "-Y-foot-surface"
+      },
+      "rms": 0.00007897350682868425
+    },
+    "link_position_m": {
+      "maximum": 0.00022520996932458282,
+      "samples": 34829,
+      "worst": {
+        "time_s": 6.62,
+        "identity": "-Y | Foot servo crank"
+      },
+      "rms": 0.00007547970325490791
+    },
+    "link_velocity_m_s": {
+      "maximum": 0.009639427181554099,
+      "samples": 34829,
+      "worst": {
+        "time_s": 6.640000000000001,
+        "identity": "-Y | Foot servo crank"
+      },
+      "rms": 0.00043157503030571206
+    },
+    "link_angular_velocity_rad_s": {
+      "maximum": 0.15133114299907396,
+      "samples": 34829,
+      "worst": {
+        "time_s": 6.640000000000001,
+        "identity": "-Y | Foot servo crank"
+      },
+      "rms": 0.004379806634705666
+    },
+    "rotation_matrix_entry": {
+      "maximum": 0.005215351909141491,
+      "samples": 34829,
+      "worst": {
+        "time_s": 6.62,
+        "identity": "-Y | Foot servo crank"
+      },
+      "rms": 0.0001368443091444656
+    },
+    "body_position_m": {
+      "maximum": 0.00015613410740117586,
+      "samples": 1201,
+      "worst": {
+        "time_s": 17,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 0.00007314193134642293
+    },
+    "body_heading_rad": {
+      "maximum": 0.00016764141042085513,
+      "samples": 1201,
+      "worst": {
+        "time_s": 6.24,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 0.00008675355713573027
+    },
+    "joint_positions": {
+      "maximum": 0.010313752211584148,
+      "samples": 33628,
+      "worst": {
+        "time_s": 6.62,
+        "identity": 24
+      },
+      "rms": 0.00013256081180795478
+    },
+    "joint_velocities": {
+      "maximum": 0.283882886574101,
+      "samples": 33628,
+      "worst": {
+        "time_s": 6.640000000000001,
+        "identity": 24
+      },
+      "rms": 0.005874093751903501
+    },
+    "servo_targets_rad": {
+      "maximum": 0.009914722522289282,
+      "samples": 14412,
+      "worst": {
+        "time_s": 6.62,
+        "identity": 2
+      },
+      "rms": 0.00014111778255410389
+    },
+    "contact_pair_force_n": {
+      "maximum": 1.7510328960601318,
+      "samples": 4474,
+      "worst": {
+        "time_s": 6.640000000000001,
+        "identity": "6:null"
+      },
+      "rms": 0.11005619796432237
+    }
+  },
+  "contact_pair_mismatches": 1,
+  "phase_mismatches": 0,
+  "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization, guarded backtracking bounded Broyden updates linearized derivative probes or a guarded temporal velocity seed (and exact probe-base reuse when explicitly requested). SDIRK2 may differ only when explicitly requested. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate."
+}

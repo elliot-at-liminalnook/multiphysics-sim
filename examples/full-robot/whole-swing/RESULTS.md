@@ -836,3 +836,53 @@ bundle manifest and measurement harness and retains failed timing outcomes.
 `direct-support-browser-delivery.json` verifies that the delivered catalog uses
 the same tested UI/worker/WASM and all 39 preset recipe bytes, with updated
 evidence metadata for its 18 leaderboard entries.
+
+## Loaded-foot damping does not resolve stance sliding
+
+The shared `control.load_damping` component adds a signed displacement objective
+opposing measured velocity, weighted by floor load. Registry equations, Rust
+and Rhai use the same units and validation. The optional point-feedback adapter
+uses contact-point velocity including rotation, excludes internal contacts,
+adds only horizontal correction and keeps the existing angular cap. It remains
+privileged flat-floor teacher feedback; no robot property or actuator authority
+changed. Thirteen focused kernel, contact, Rhai and runtime tests pass, and the
+browser CI workflow includes the new tests.
+
+Four frozen 60-second development runs retain the same robot, direct-transfer
+gait, inputs and original gates. The rebuilt position-only capture matches all
+physical frames, transitions, recording and contract exactly, excluding only
+frame wall time. In each enabled case, all **12,000** online marker observations
+match the preceding committed frame's independently calculated contact load
+and tangential velocity **exactly**.
+
+| Damping seconds | Travel mm/s | Qualified swings | Stop mm | Heading rad | Worst-foot motion / body advance | Shaft work J | Native sim/wall |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Absent | 3.696 | 41/41 | 0.753 | 0.01361 | 45.2% | 6.244 | 0.523 |
+| 0.05 | 3.695 | 41/41 | 0.765 | 0.01344 | 43.7% | 6.233 | 0.517 |
+| 0.2 | 3.703 | 41/41 | 0.664 | 0.01347 | 42.0% | 6.339 | 0.506 |
+| 0.5 | 3.732 | 37/41 | 0.430 | 0.01189 | 80.8% | 6.788 | 0.490 |
+
+Every case fails the unchanged 0.005 rad heading limit and 5% contact-motion
+screen. At 0.5 seconds, four transfers have only 0.14–0.18 seconds of simultaneous
+clearance, unloading and support, below 0.2 seconds. All runs have zero sampled
+internal contacts and tilt below 0.00432 rad.
+
+The small improvement in the worst-foot ratio at 0.2 seconds does not represent
+an overall reduction in contact motion: total integrated foot motion rises from
+**273 to 284 mm**, including summed shift motion rising from **168 to 187 mm**.
+At 0.5 seconds, motion of the other supporting feet during lower
+rises from **25 to 219 mm**. Stronger velocity correction therefore disrupts
+the coupled stance behavior despite using the correct observed signal. This
+rules out simple gain escalation as the next useful direction. None is promoted
+to the browser or ranked. `loaded-foot-damping-{plan,status,integrity,summary}.json`
+and per-case metrics retain the failures and source identities.
+
+The browser performance harness now also retains per-frame receipt and draw
+submission timestamps on the same page clock as command dispatch. A fresh
+24-second direct-steering run passes exact recording association and timeline
+checks for **1,200** received frames, **1,194** distinct drawn frames and four
+commands. Active throughput is 0.418x with 90.175 ms p95. This is instrumentation
+for the outstanding paired physical-response experiment, not a claim that
+reference response proves physical causality. The proof and measurement are in
+`causal-response-browser-{status,timeline-integrity}.json`; the live viewer's
+physics and controller recipe are unchanged.

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "bundle": "runs/interactive/direct-support-delivery/viewer",
+  "output_directory": "runs/interactive/causal-response",
+  "parity": {
+    "path": "examples/full-robot/whole-swing/direct-support-browser-parity.json",
+    "sha256": "0a7bf5543cf33c185a825617012924bf2d8ff85ef8675a6dd0a36e5e67624fd3"
+  },
+  "frame_encoding": "json",
+  "display_rate_hz": 0,
+  "cases": [
+    {
+      "name": "direct-turn",
+      "preset": "tested-direct-support-steering",
+      "scenario": "turn-reverse"
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/direct-support-steering.config.json",
+      "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/direct-support-browser-delivery.json",
+      "sha256": "22e5103751c80b46131c3b847fcced42519d6ceebf3dc81e43db098182599179"
+    },
+    {
+      "path": "examples/interactive/measure_browser_suite.mjs",
+      "sha256": "dddba15551fb693ae3beaaeb837db17561dca28ef81c650e1eb73d3f3625ffa7"
+    },
+    {
+      "path": "web/tests/live_performance.mjs",
+      "sha256": "9fc7ce4bc0a23147d60b7d867f65352cb6d902c3e7a3b238d4638a0a00e8091c"
+    }
+  ],
+  "scope": "Existing direct-transfer steering recipe with added per-frame browser clock timeline. Commands, worker receipt and WebGL submission are recorded on one clock. This instrumentation run alone does not establish causal physical-response latency; paired counterfactual native runs and exact recording association are still required."
+}

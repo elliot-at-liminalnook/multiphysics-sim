@@ -1,0 +1,567 @@
+{
+  "version": 1,
+  "feet": [
+    {
+      "id": "-Y-foot-surface",
+      "groups": [
+        {
+          "phase": "hold",
+          "role": "other_foot",
+          "loaded_s": 0.18000000000000002,
+          "contact_motion_m": 0.00011857723988904079,
+          "shear_dissipation_j": 0.00017494650074366828,
+          "maximum_shear_to_normal_ratio": 0.23003735974670642,
+          "normal_impulse_ns": 1.7532405578755677
+        },
+        {
+          "phase": "shift",
+          "role": "selected_transfer_foot",
+          "loaded_s": 6.379999999999994,
+          "contact_motion_m": 0.017994559002108085,
+          "shear_dissipation_j": 0.031432128017330745,
+          "maximum_shear_to_normal_ratio": 0.25,
+          "normal_impulse_ns": 54.45283744483618
+        },
+        {
+          "phase": "raise",
+          "role": "selected_transfer_foot",
+          "loaded_s": 2.060000000000003,
+          "contact_motion_m": 0.007003051950454729,
+          "shear_dissipation_j": 0.005056487556160585,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 18.215143864578774
+        },
+        {
+          "phase": "lower",
+          "role": "selected_transfer_foot",
+          "loaded_s": 1.7200000000000053,
+          "contact_motion_m": 0.0026838609435471446,
+          "shear_dissipation_j": 0.0031103455136800295,
+          "maximum_shear_to_normal_ratio": 0.24999999998448602,
+          "normal_impulse_ns": 13.322209092164929
+        },
+        {
+          "phase": "return",
+          "role": "selected_transfer_foot",
+          "loaded_s": 0.2199999999999922,
+          "contact_motion_m": 0.00019297505269540947,
+          "shear_dissipation_j": 0.0004198039749198599,
+          "maximum_shear_to_normal_ratio": 0.1868720946229386,
+          "normal_impulse_ns": 2.7074587458093244
+        },
+        {
+          "phase": "settle",
+          "role": "selected_transfer_foot",
+          "loaded_s": 0.22000000000000197,
+          "contact_motion_m": 0.00018553751430608076,
+          "shear_dissipation_j": 0.00039427939407495044,
+          "maximum_shear_to_normal_ratio": 0.18416884491426314,
+          "normal_impulse_ns": 2.7114621741816216
+        },
+        {
+          "phase": "shift",
+          "role": "other_foot",
+          "loaded_s": 17.40000000000001,
+          "contact_motion_m": 0.05213067759099988,
+          "shear_dissipation_j": 0.17619547075500622,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 194.8290887192818
+        },
+        {
+          "phase": "raise",
+          "role": "other_foot",
+          "loaded_s": 10.21999999999999,
+          "contact_motion_m": 0.01632257435536006,
+          "shear_dissipation_j": 0.014519413689088979,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 136.6024228662254
+        },
+        {
+          "phase": "lower",
+          "role": "other_foot",
+          "loaded_s": 11.400000000000006,
+          "contact_motion_m": 0.0695753494750241,
+          "shear_dissipation_j": 0.046674400488682925,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 143.40541711520632
+        },
+        {
+          "phase": "return",
+          "role": "other_foot",
+          "loaded_s": 0.6000000000000019,
+          "contact_motion_m": 0.0002795420196765189,
+          "shear_dissipation_j": 0.0003327988402002948,
+          "maximum_shear_to_normal_ratio": 0.16280102601867946,
+          "normal_impulse_ns": 6.43951349693071
+        },
+        {
+          "phase": "settle",
+          "role": "other_foot",
+          "loaded_s": 0.6000000000000001,
+          "contact_motion_m": 0.0002457617615777858,
+          "shear_dissipation_j": 0.0002670665621700966,
+          "maximum_shear_to_normal_ratio": 0.13001489666469088,
+          "normal_impulse_ns": 6.424275929194034
+        },
+        {
+          "phase": "recenter",
+          "role": "other_foot",
+          "loaded_s": 0.6000000000000014,
+          "contact_motion_m": 0.0005177615868612651,
+          "shear_dissipation_j": 0.0014144630401444487,
+          "maximum_shear_to_normal_ratio": 0.2185486198462607,
+          "normal_impulse_ns": 8.223756453077705
+        },
+        {
+          "phase": "idle",
+          "role": "other_foot",
+          "loaded_s": 2.6199999999999974,
+          "contact_motion_m": 0.0001978558395371406,
+          "shear_dissipation_j": 0.00011417270977755165,
+          "maximum_shear_to_normal_ratio": 0.15857485519566616,
+          "normal_impulse_ns": 26.843717653049534
+        }
+      ],
+      "total_contact_motion_m": 0.16744808433203723
+    },
+    {
+      "id": "+X-foot-surface",
+      "groups": [
+        {
+          "phase": "hold",
+          "role": "other_foot",
+          "loaded_s": 0.18000000000000002,
+          "contact_motion_m": 0.00011692896438566379,
+          "shear_dissipation_j": 0.00019609812572935598,
+          "maximum_shear_to_normal_ratio": 0.24744654313897638,
+          "normal_impulse_ns": 1.8705264362666172
+        },
+        {
+          "phase": "shift",
+          "role": "other_foot",
+          "loaded_s": 17.979999999999993,
+          "contact_motion_m": 0.029883655439213355,
+          "shear_dissipation_j": 0.09323688764623267,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 181.28705835291535
+        },
+        {
+          "phase": "raise",
+          "role": "other_foot",
+          "loaded_s": 10.579999999999998,
+          "contact_motion_m": 0.014900677372051727,
+          "shear_dissipation_j": 0.014860333017150559,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 138.2036417749695
+        },
+        {
+          "phase": "lower",
+          "role": "other_foot",
+          "loaded_s": 11.580000000000005,
+          "contact_motion_m": 0.0808180292156026,
+          "shear_dissipation_j": 0.05814739135507104,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 139.19945201584372
+        },
+        {
+          "phase": "return",
+          "role": "other_foot",
+          "loaded_s": 0.6199999999999939,
+          "contact_motion_m": 0.0005725711909639979,
+          "shear_dissipation_j": 0.000888407375889337,
+          "maximum_shear_to_normal_ratio": 0.24762541734958765,
+          "normal_impulse_ns": 4.899041210403659
+        },
+        {
+          "phase": "settle",
+          "role": "other_foot",
+          "loaded_s": 0.6199999999999939,
+          "contact_motion_m": 0.0004179187403466024,
+          "shear_dissipation_j": 0.0005391918119342006,
+          "maximum_shear_to_normal_ratio": 0.2309487627593572,
+          "normal_impulse_ns": 4.953449676707079
+        },
+        {
+          "phase": "shift",
+          "role": "selected_transfer_foot",
+          "loaded_s": 5.80000000000001,
+          "contact_motion_m": 0.0037724966331937233,
+          "shear_dissipation_j": 0.004016903287204638,
+          "maximum_shear_to_normal_ratio": 0.22354899184460786,
+          "normal_impulse_ns": 40.945094437452674
+        },
+        {
+          "phase": "raise",
+          "role": "selected_transfer_foot",
+          "loaded_s": 1.7999999999999976,
+          "contact_motion_m": 0.006180340876530636,
+          "shear_dissipation_j": 0.005174342159107385,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 12.593677462826125
+        },
+        {
+          "phase": "lower",
+          "role": "selected_transfer_foot",
+          "loaded_s": 1.3999999999999924,
+          "contact_motion_m": 0.002954821750262044,
+          "shear_dissipation_j": 0.002470923756423857,
+          "maximum_shear_to_normal_ratio": 0.2499999999076141,
+          "normal_impulse_ns": 9.170245085852121
+        },
+        {
+          "phase": "return",
+          "role": "selected_transfer_foot",
+          "loaded_s": 0.20000000000000018,
+          "contact_motion_m": 0.00014601746461035623,
+          "shear_dissipation_j": 0.00023042714394926763,
+          "maximum_shear_to_normal_ratio": 0.16585989716708371,
+          "normal_impulse_ns": 2.0186463906257437
+        },
+        {
+          "phase": "settle",
+          "role": "selected_transfer_foot",
+          "loaded_s": 0.20000000000000817,
+          "contact_motion_m": 0.0001315478142541504,
+          "shear_dissipation_j": 0.00019094898415112187,
+          "maximum_shear_to_normal_ratio": 0.14644892724503478,
+          "normal_impulse_ns": 2.0129568584682755
+        },
+        {
+          "phase": "recenter",
+          "role": "other_foot",
+          "loaded_s": 0.6000000000000014,
+          "contact_motion_m": 0.0001408404387463924,
+          "shear_dissipation_j": 0.0000825689485759917,
+          "maximum_shear_to_normal_ratio": 0.1512886517819856,
+          "normal_impulse_ns": 5.053469398017251
+        },
+        {
+          "phase": "idle",
+          "role": "other_foot",
+          "loaded_s": 2.6199999999999974,
+          "contact_motion_m": 0.00011340772978504269,
+          "shear_dissipation_j": 0.00004400240706996875,
+          "maximum_shear_to_normal_ratio": 0.13194074212539939,
+          "normal_impulse_ns": 25.734778928145346
+        }
+      ],
+      "total_contact_motion_m": 0.1401492536299462
+    },
+    {
+      "id": "+Y-foot-surface",
+      "groups": [
+        {
+          "phase": "hold",
+          "role": "other_foot",
+          "loaded_s": 0.18000000000000002,
+          "contact_motion_m": 0.00011824013414973604,
+          "shear_dissipation_j": 0.000174208788239556,
+          "maximum_shear_to_normal_ratio": 0.22934727877308875,
+          "normal_impulse_ns": 1.7554039137324509
+        },
+        {
+          "phase": "shift",
+          "role": "other_foot",
+          "loaded_s": 17.979999999999997,
+          "contact_motion_m": 0.010352642432962762,
+          "shear_dissipation_j": 0.01882120925433222,
+          "maximum_shear_to_normal_ratio": 0.2494368120859504,
+          "normal_impulse_ns": 207.40522877850353
+        },
+        {
+          "phase": "raise",
+          "role": "other_foot",
+          "loaded_s": 11.120000000000005,
+          "contact_motion_m": 0.006493843556700078,
+          "shear_dissipation_j": 0.00940383517771896,
+          "maximum_shear_to_normal_ratio": 0.24999998785452981,
+          "normal_impulse_ns": 141.29507917036068
+        },
+        {
+          "phase": "lower",
+          "role": "other_foot",
+          "loaded_s": 11.780000000000012,
+          "contact_motion_m": 0.005419788188627679,
+          "shear_dissipation_j": 0.00958719168033612,
+          "maximum_shear_to_normal_ratio": 0.24394129228437644,
+          "normal_impulse_ns": 148.68430921329005
+        },
+        {
+          "phase": "return",
+          "role": "other_foot",
+          "loaded_s": 0.619999999999989,
+          "contact_motion_m": 0.0003541106934254749,
+          "shear_dissipation_j": 0.0005839686483681101,
+          "maximum_shear_to_normal_ratio": 0.16861283719038347,
+          "normal_impulse_ns": 6.925281821422217
+        },
+        {
+          "phase": "settle",
+          "role": "other_foot",
+          "loaded_s": 0.6200000000000094,
+          "contact_motion_m": 0.00031171530025913733,
+          "shear_dissipation_j": 0.000479823421122274,
+          "maximum_shear_to_normal_ratio": 0.15653065555357795,
+          "normal_impulse_ns": 6.916772228146159
+        },
+        {
+          "phase": "shift",
+          "role": "selected_transfer_foot",
+          "loaded_s": 5.800000000000009,
+          "contact_motion_m": 0.046378476218293586,
+          "shear_dissipation_j": 0.07378684513075595,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 52.733113808786825
+        },
+        {
+          "phase": "raise",
+          "role": "selected_transfer_foot",
+          "loaded_s": 1.8000000000000016,
+          "contact_motion_m": 0.004300668049277328,
+          "shear_dissipation_j": 0.0031836941062772374,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 16.345040640948287
+        },
+        {
+          "phase": "lower",
+          "role": "selected_transfer_foot",
+          "loaded_s": 1.400000000000003,
+          "contact_motion_m": 0.0016851930510793495,
+          "shear_dissipation_j": 0.002161793695203162,
+          "maximum_shear_to_normal_ratio": 0.2499999993860523,
+          "normal_impulse_ns": 11.434971781303727
+        },
+        {
+          "phase": "return",
+          "role": "selected_transfer_foot",
+          "loaded_s": 0.20000000000000506,
+          "contact_motion_m": 0.00009486055880780501,
+          "shear_dissipation_j": 0.00012400596167796345,
+          "maximum_shear_to_normal_ratio": 0.12732477925991265,
+          "normal_impulse_ns": 2.3517707885314607
+        },
+        {
+          "phase": "settle",
+          "role": "selected_transfer_foot",
+          "loaded_s": 0.19999999999999263,
+          "contact_motion_m": 0.00009050534322912899,
+          "shear_dissipation_j": 0.00011343462926269806,
+          "maximum_shear_to_normal_ratio": 0.12491420709080081,
+          "normal_impulse_ns": 2.351248699873524
+        },
+        {
+          "phase": "recenter",
+          "role": "other_foot",
+          "loaded_s": 0.6000000000000014,
+          "contact_motion_m": 0.0002967708532502875,
+          "shear_dissipation_j": 0.00040613871952197245,
+          "maximum_shear_to_normal_ratio": 0.1952404213552096,
+          "normal_impulse_ns": 6.2406154547516905
+        },
+        {
+          "phase": "idle",
+          "role": "other_foot",
+          "loaded_s": 2.6199999999999974,
+          "contact_motion_m": 0.000158614111767931,
+          "shear_dissipation_j": 0.0001178518269348387,
+          "maximum_shear_to_normal_ratio": 0.18896562502492617,
+          "normal_impulse_ns": 26.855600408177978
+        }
+      ],
+      "total_contact_motion_m": 0.07605542849183046
+    },
+    {
+      "id": "-X-foot-surface",
+      "groups": [
+        {
+          "phase": "hold",
+          "role": "other_foot",
+          "loaded_s": 0.18000000000000002,
+          "contact_motion_m": 0.0001123916439652631,
+          "shear_dissipation_j": 0.00015292688117132678,
+          "maximum_shear_to_normal_ratio": 0.2140726463643708,
+          "normal_impulse_ns": 1.6847310192387097
+        },
+        {
+          "phase": "shift",
+          "role": "other_foot",
+          "loaded_s": 17.98000000000001,
+          "contact_motion_m": 0.03667629397115868,
+          "shear_dissipation_j": 0.06756933321189738,
+          "maximum_shear_to_normal_ratio": 0.24999999999999975,
+          "normal_impulse_ns": 150.52434422760382
+        },
+        {
+          "phase": "raise",
+          "role": "other_foot",
+          "loaded_s": 11.239999999999995,
+          "contact_motion_m": 0.02807964939396572,
+          "shear_dissipation_j": 0.0281599256909352,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 129.2216608582421
+        },
+        {
+          "phase": "lower",
+          "role": "other_foot",
+          "loaded_s": 11.420000000000002,
+          "contact_motion_m": 0.062888251794469,
+          "shear_dissipation_j": 0.04032818282252335,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 130.91759711467927
+        },
+        {
+          "phase": "return",
+          "role": "other_foot",
+          "loaded_s": 0.6199999999999974,
+          "contact_motion_m": 0.0004180372553065822,
+          "shear_dissipation_j": 0.0004492856822750058,
+          "maximum_shear_to_normal_ratio": 0.19673116213649003,
+          "normal_impulse_ns": 4.892569787589405
+        },
+        {
+          "phase": "settle",
+          "role": "other_foot",
+          "loaded_s": 0.6200000000000028,
+          "contact_motion_m": 0.00034997586109767156,
+          "shear_dissipation_j": 0.00033198944600710254,
+          "maximum_shear_to_normal_ratio": 0.1624155844182714,
+          "normal_impulse_ns": 4.915469534064188
+        },
+        {
+          "phase": "shift",
+          "role": "selected_transfer_foot",
+          "loaded_s": 5.799999999999992,
+          "contact_motion_m": 0.030966729280967754,
+          "shear_dissipation_j": 0.05288141692920968,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 48.721910502934136
+        },
+        {
+          "phase": "raise",
+          "role": "selected_transfer_foot",
+          "loaded_s": 1.6199999999999983,
+          "contact_motion_m": 0.003952908065489374,
+          "shear_dissipation_j": 0.004697409863156827,
+          "maximum_shear_to_normal_ratio": 0.25000000000000006,
+          "normal_impulse_ns": 13.942626715852732
+        },
+        {
+          "phase": "lower",
+          "role": "selected_transfer_foot",
+          "loaded_s": 1.200000000000001,
+          "contact_motion_m": 0.005032495156388386,
+          "shear_dissipation_j": 0.007190191521796011,
+          "maximum_shear_to_normal_ratio": 0.2499999999994403,
+          "normal_impulse_ns": 7.476309302714354
+        },
+        {
+          "phase": "return",
+          "role": "selected_transfer_foot",
+          "loaded_s": 0.19999999999999662,
+          "contact_motion_m": 0.0014232100680475288,
+          "shear_dissipation_j": 0.0029065605777748383,
+          "maximum_shear_to_normal_ratio": 0.24999999999833186,
+          "normal_impulse_ns": 1.7050321842272118
+        },
+        {
+          "phase": "settle",
+          "role": "selected_transfer_foot",
+          "loaded_s": 0.1999999999999993,
+          "contact_motion_m": 0.0011075259493377714,
+          "shear_dissipation_j": 0.002291056454933802,
+          "maximum_shear_to_normal_ratio": 0.24999999999833186,
+          "normal_impulse_ns": 1.6806958232448048
+        },
+        {
+          "phase": "recenter",
+          "role": "other_foot",
+          "loaded_s": 0.6000000000000014,
+          "contact_motion_m": 0.00019790122315763015,
+          "shear_dissipation_j": 0.00011429399077834683,
+          "maximum_shear_to_normal_ratio": 0.13248663540210076,
+          "normal_impulse_ns": 4.168848113869748
+        },
+        {
+          "phase": "idle",
+          "role": "other_foot",
+          "loaded_s": 2.6199999999999974,
+          "contact_motion_m": 0.0001501774913315027,
+          "shear_dissipation_j": 0.000048247559800983686,
+          "maximum_shear_to_normal_ratio": 0.1170800748132784,
+          "normal_impulse_ns": 22.726010875523773
+        }
+      ],
+      "total_contact_motion_m": 0.17135554715468243
+    }
+  ],
+  "phases": {
+    "hold": {
+      "contact_motion_m": 0.00046613798238970375,
+      "selected_foot_motion_m": 0,
+      "other_foot_motion_m": 0.00046613798238970375,
+      "shear_dissipation_j": 0.0006981802958839071
+    },
+    "shift": {
+      "contact_motion_m": 0.2281555305688978,
+      "selected_foot_motion_m": 0.09911226113456315,
+      "other_foot_motion_m": 0.1290432694343347,
+      "shear_dissipation_j": 0.5179401942319696
+    },
+    "raise": {
+      "contact_motion_m": 0.08723371361982965,
+      "selected_foot_motion_m": 0.021436968941752066,
+      "other_foot_motion_m": 0.06579674467807758,
+      "shear_dissipation_j": 0.08505544125959573
+    },
+    "lower": {
+      "contact_motion_m": 0.23105778957500028,
+      "selected_foot_motion_m": 0.012356370901276925,
+      "other_foot_motion_m": 0.21870141867372336,
+      "shear_dissipation_j": 0.1696704208337165
+    },
+    "return": {
+      "contact_motion_m": 0.0034813243035336735,
+      "selected_foot_motion_m": 0.0018570631441610997,
+      "other_foot_motion_m": 0.0016242611593725738,
+      "shear_dissipation_j": 0.005935258205054677
+    },
+    "settle": {
+      "contact_motion_m": 0.0028404882844083284,
+      "selected_foot_motion_m": 0.0015151166211271314,
+      "other_foot_motion_m": 0.001325371663281197,
+      "shear_dissipation_j": 0.004607790703656246
+    },
+    "recenter": {
+      "contact_motion_m": 0.0011532741020155752,
+      "selected_foot_motion_m": 0,
+      "other_foot_motion_m": 0.0011532741020155752,
+      "shear_dissipation_j": 0.0020174646990207597
+    },
+    "idle": {
+      "contact_motion_m": 0.0006200551724216169,
+      "selected_foot_motion_m": 0,
+      "other_foot_motion_m": 0.0006200551724216169,
+      "shear_dissipation_j": 0.00032427450358334277
+    }
+  },
+  "previous_contact_integrals_exact": true,
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/loaded-foot-damping/damping-500ms.native.json",
+      "sha256": "45cf16d65837dc7a17e1f9840889635c8fadef8eeeb88fd4a94612d1ddb9a274"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-500ms-contact.json",
+      "sha256": "16e287602b148117724665bb74aec58663fb89d72f8febcb9f28dc9688e0772d"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    }
+  ],
+  "scope": "Read-only phase attribution using the controller held over each physical interval. Selected transfer foot does not mean unloaded; all contributions require both endpoints to carry at least 1 N. Across-foot sums count each contact separately. The shared kernel exactly preserves prior per-foot integrals. No new physics, acceptance threshold or causal attribution from phase correlation."
+}

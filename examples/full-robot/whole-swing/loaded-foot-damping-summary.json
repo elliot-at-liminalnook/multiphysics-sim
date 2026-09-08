@@ -1,0 +1,398 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "position-only",
+      "velocity_damping_s": null,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007529503113993762,
+        "final_yaw_error_rad": 0.013614807720944777,
+        "maximum_body_tilt_rad": 0.00417642363789965,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21148711302864406,
+          -0.00018354095677435928,
+          -0.0002450681604409394
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/loaded-foot-damping/position-only-acceptance/summary.json",
+          "sha256": "30ed497937868c9bcebb4e38652fcf7ad7a60b84a1c98852726364f89fed67a8"
+        }
+      },
+      "default_frames_transitions_recording_exact": true,
+      "contact_observation_oracle": {
+        "samples": 0,
+        "maximum_force_error_n": 0,
+        "maximum_velocity_error_m_s": 0
+      },
+      "contact_motion_to_body_advance_ratio": 0.45179176964174855,
+      "minute_anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.003696378951409992,
+          "net_projected_speed_m_s": 0.004141214485567156,
+          "axis_world": [
+            0.9999961758182888,
+            -0.002765564824418445,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 114.829232354,
+        "simulation_per_wall": 0.5225150318433697,
+        "transition_p95_s": 0.075736525
+      },
+      "positive_mechanical_work_j": 6.24374359242557,
+      "capture": {
+        "path": "runs/full-robot/learning/loaded-foot-damping/position-only.native.json",
+        "sha256": "bca8e8117ac71daf7c7f74510de6554305e4a68cbd93291b40d26a670a02106c"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-position-only-metrics.json",
+          "sha256": "5f75abe0e13ca48ffe42ee08813f0d0ad437292a590215dd075959042c4728ee"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-position-only-contact.json",
+          "sha256": "7de20210f357c992d2d6d227494feae703e405dde90943db922805f0d87173c6"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-position-only-phases.json",
+          "sha256": "a08bef65a3f2bd91d9365a833f137dca03be2783b2fa2b4108c6a28665807030"
+        }
+      ]
+    },
+    {
+      "name": "damping-50ms",
+      "velocity_damping_s": 0.05,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007649149641772749,
+        "final_yaw_error_rad": 0.01343758280697455,
+        "maximum_body_tilt_rad": 0.004189743117232485,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21146963534038277,
+          -0.00016534506193165009,
+          -0.0002453907290029377
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/loaded-foot-damping/damping-50ms-acceptance/summary.json",
+          "sha256": "261ee7ee784ab33daf32b3e3a1178052d440a6edb20f5f0af1b5a3280fdcd5ef"
+        }
+      },
+      "default_frames_transitions_recording_exact": null,
+      "contact_observation_oracle": {
+        "samples": 12000,
+        "maximum_force_error_n": 0,
+        "maximum_velocity_error_m_s": 0
+      },
+      "contact_motion_to_body_advance_ratio": 0.43736605256497035,
+      "minute_anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.003694903916778206,
+          "net_projected_speed_m_s": 0.0041397427999266745,
+          "axis_world": [
+            0.9999963281151034,
+            -0.002709936587878079,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 116.135019384,
+        "simulation_per_wall": 0.5166400308731187,
+        "transition_p95_s": 0.075412258
+      },
+      "positive_mechanical_work_j": 6.2328148247785204,
+      "capture": {
+        "path": "runs/full-robot/learning/loaded-foot-damping/damping-50ms.native.json",
+        "sha256": "d9c342583ecf1e0258afcd9d34146fbe7560a958c1155e7aba0a3300359e9956"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-50ms-metrics.json",
+          "sha256": "b251cd5a9cfb8440465c572e4d3c34acdcb8f11d13dca2e48ffeb36e413ed6e6"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-50ms-contact.json",
+          "sha256": "e31c060dddd87bf1a267a84e0e4c224125a3b376142878413cbcea65f5e136c5"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-50ms-phases.json",
+          "sha256": "d7f420d885857961f2ca5b9172c59ec271d3dcbd6022694df48aaa6f344c8dd1"
+        }
+      ]
+    },
+    {
+      "name": "damping-200ms",
+      "velocity_damping_s": 0.2,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.000664330254923857,
+        "final_yaw_error_rad": 0.013473320624375054,
+        "maximum_body_tilt_rad": 0.004251937340398814,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.2115982887621243,
+          -0.00022535205656485806,
+          -0.00024073904194663737
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/loaded-foot-damping/damping-200ms-acceptance/summary.json",
+          "sha256": "4f020b7ced7ca56b708156cdeec4ca3028165761a2cccc253e0c4d60559276c4"
+        }
+      },
+      "default_frames_transitions_recording_exact": null,
+      "contact_observation_oracle": {
+        "samples": 12000,
+        "maximum_force_error_n": 0,
+        "maximum_velocity_error_m_s": 0
+      },
+      "contact_motion_to_body_advance_ratio": 0.42001505579921217,
+      "minute_anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0037030615772767044,
+          "net_projected_speed_m_s": 0.0041482687541664984,
+          "axis_world": [
+            0.9999965032185513,
+            -0.002644532221392031,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 118.485953819,
+        "simulation_per_wall": 0.5063891378353288,
+        "transition_p95_s": 0.077188437
+      },
+      "positive_mechanical_work_j": 6.338848965475057,
+      "capture": {
+        "path": "runs/full-robot/learning/loaded-foot-damping/damping-200ms.native.json",
+        "sha256": "1e6c96f27578e3deca497f7d7b8352710f4d580ed090b894c72a87a3599bd9a7"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-200ms-metrics.json",
+          "sha256": "9bd22826bf958b0c0ffef0be2661dc0ea697d6d61caaa653450fed570ca34835"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-200ms-contact.json",
+          "sha256": "77515115ffd91688516a28c1394ceec078d18457dae903211116471bbdeb76cc"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-200ms-phases.json",
+          "sha256": "09388345f6d29e0d7e4e9549182235f327b037cd2bbf6e4d1127a1c67d7c7457"
+        }
+      ]
+    },
+    {
+      "name": "damping-500ms",
+      "velocity_damping_s": 0.5,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 4,
+        "final_body_error_m": 0.0004295063728429362,
+        "final_yaw_error_rad": 0.011894260778774328,
+        "maximum_body_tilt_rad": 0.00431431686575642,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21201498364846383,
+          -0.0003255911421913221,
+          -0.00022991498359260093
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/loaded-foot-damping/damping-500ms-acceptance/summary.json",
+          "sha256": "bb0644350e03aa8db83fb517c07fcd7c1e615c5350b458f701f24bfa4dfb9db3"
+        }
+      },
+      "default_frames_transitions_recording_exact": null,
+      "contact_observation_oracle": {
+        "samples": 12000,
+        "maximum_force_error_n": 0,
+        "maximum_velocity_error_m_s": 0
+      },
+      "contact_motion_to_body_advance_ratio": 0.8082228064560603,
+      "minute_anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0037318307098751957,
+          "net_projected_speed_m_s": 0.004177047271073919,
+          "axis_world": [
+            0.9999968569606319,
+            -0.002507203393712076,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 122.416745677,
+        "simulation_per_wall": 0.4901290233471136,
+        "transition_p95_s": 0.076723028
+      },
+      "positive_mechanical_work_j": 6.787625539117576,
+      "capture": {
+        "path": "runs/full-robot/learning/loaded-foot-damping/damping-500ms.native.json",
+        "sha256": "45cf16d65837dc7a17e1f9840889635c8fadef8eeeb88fd4a94612d1ddb9a274"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-500ms-metrics.json",
+          "sha256": "75d9fb5da11ae8ab1971b7dd2b848bbfc19835b1195ba947a13318cb8ec4c601"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-500ms-contact.json",
+          "sha256": "16e287602b148117724665bb74aec58663fb89d72f8febcb9f28dc9688e0772d"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/loaded-foot-damping-damping-500ms-phases.json",
+          "sha256": "badfb66a591525ca1b3c7a0bacbeaf5f96da5368dbd9328f0693777647ee9542"
+        }
+      ]
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/loaded-foot-damping-plan.json",
+      "sha256": "e0069ce37dbf5b262ea284ea9dfdd25cf6c293dfb119f9ebcb6f2a227cf08d9e"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/loaded-foot-damping-status.json",
+      "sha256": "9ae016ac284a4de0e7f4a9cee1e1f9659d0a9aab7b1815713a7036aaf1f7cedc"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/loaded-foot-damping-integrity.json",
+      "sha256": "80e57b92bb1fbdbba9b1d8ee40e2c3758584daaf7e38c8d9a314e2aec71f7e88"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_loaded_foot_damping.mjs",
+      "sha256": "fe0d9bc054850c45f7a5c382e743e781a0692741adc909b26aa4204db4350581"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "browser_promoted": false,
+  "scope": "Four frozen native development minutes. Identical robot, physics and direct-transfer controller except optional loaded horizontal contact-velocity damping. Task and contact thresholds unchanged; no held-out, terrain, browser or timestep qualification."
+}

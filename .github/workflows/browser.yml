@@ -39,7 +39,8 @@ jobs:
       - run: cargo test --locked -p sim-domain-control --test trajectory
       - run: cargo test --locked -p sim-domain-control --test neural
       - run: node --test web/tests/residual-distillation.mjs
-      - run: cargo test --locked -p sim-domain-control --test motion_clock --test stepping --test support_preload
+      - run: cargo test --locked -p sim-domain-control --test motion_clock --test stepping --test support_preload --test angle_integral
+      - run: cargo test --locked -p sim-script --test angle_integral
       - run: cargo test --locked -p sim-runtime --test step_reference
       - run: cargo test --locked -p sim-runtime --test planning
       - run: cargo test --locked -p sim-runtime --test lift

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "integral-0",
+      "error": "settled-integral-teacher.rhai: Output type incorrect: i64 (expecting f64) @ 'settled-integral-teacher.rhai' (line 46, position 20)\nin call to function 'control' (from 'settled-integral-teacher.rhai') (line 1, position 47)",
+      "recorded_physics_steps": 0,
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral/integral-0.native.json",
+        "sha256": "046199139887a1bd2d82dbf319e5ab0978196ee663cf08e63d14a2a6633d0f14"
+      }
+    },
+    {
+      "name": "integral-0.5",
+      "error": "settled-integral-teacher.rhai: Output type incorrect: i64 (expecting f64) @ 'settled-integral-teacher.rhai' (line 46, position 20)\nin call to function 'control' (from 'settled-integral-teacher.rhai') (line 1, position 47)",
+      "recorded_physics_steps": 0,
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral/integral-0.5.native.json",
+        "sha256": "d344771ae589b701f7177f0f3eb7a446a005a78178b44a99dae461a49e2575db"
+      }
+    },
+    {
+      "name": "integral-1",
+      "error": "settled-integral-teacher.rhai: Output type incorrect: i64 (expecting f64) @ 'settled-integral-teacher.rhai' (line 46, position 20)\nin call to function 'control' (from 'settled-integral-teacher.rhai') (line 1, position 47)",
+      "recorded_physics_steps": 0,
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral/integral-1.native.json",
+        "sha256": "8734be4d87643114a26dc59cfe76b9de96a52b0e0648889f64bdbe9c70bfae83"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-plan.json",
+      "sha256": "33f2add71fb86b5e128ff26451d51d3550a0493095680176867a1fe0828e63ee"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-status.json",
+      "sha256": "5c0573e9a61b45da03b1b3b8144680da5578e2fff4ff84b2ac0efce3079021a0"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-integrity.json",
+      "sha256": "0052c525a6edf3394068e1fbd82401577136d07fc3477d6dd57e3d8d67949e09"
+    },
+    {
+      "path": "crates/sim-script/src/lib.rs",
+      "sha256": "3e0c21c97a8c42a8b2561c4eb516dc01492a7c1539f692c06cfe0fbf641ddd7e"
+    },
+    {
+      "path": "runs/angle-integral-final-tests.log",
+      "sha256": "9a9c0890f69c5d2ef796eca24e60dea69ab54fd6c573e0a8802d2fe47a88ece0"
+    },
+    {
+      "path": "runs/angle-integral-rhai-tests.log",
+      "sha256": "a7755569be97c34f45ffdeb0d67ea0a482f395694ec277577815dc69ee0b63aa"
+    }
+  ],
+  "scope": "All three authored cases were rejected before physics because Rhai typed deserialization required float values even for valid integer-valued JSON parameters. These are binding failures, not controller outcomes. Existing tests used floating-point serialized config and missed this boundary. Retained before fixing normalization."
+}

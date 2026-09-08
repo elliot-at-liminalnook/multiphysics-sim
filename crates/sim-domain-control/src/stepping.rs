@@ -55,6 +55,12 @@ pub struct StepSequenceConfig {
     /// whole-swing motion is enabled. The remainder holds the landing XY.
     #[serde(default = "one", skip_serializing_if = "is_one")]
     pub horizontal_swing_finish_fraction: f64,
+    /// After landing, hold the end-of-swing body pose through return/settle,
+    /// then shift directly to the next support pose. This avoids a separate
+    /// excursion through the center. A stop recenters over shift + settle time.
+    /// Landing/support guards and the nominal commanded stride are unchanged.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub direct_support_transfer: bool,
     pub maximum_speed_m_s: f64,
     pub maximum_yaw_rate_rad_s: f64,
 }
@@ -104,6 +110,14 @@ pub struct StepSequence {
     feet: Vec<[f64; 3]>,
     next_center: [f64; 3],
     shift_body: [f64; 3],
+    body_anchor: [f64; 3],
+    yaw_anchor: f64,
+    shift_start_body: [f64; 3],
+    shift_start_yaw: f64,
+    held_body: [f64; 3],
+    held_yaw: f64,
+    recenter_start_body: [f64; 3],
+    recenter_start_yaw: f64,
     swing_start: [f64; 3],
     swing_end: [f64; 3],
     command: [f64; 3],
@@ -259,6 +273,14 @@ impl StepSequence {
             feet,
             next_center: [body[0], body[1], yaw],
             shift_body: body,
+            body_anchor: body,
+            yaw_anchor: yaw,
+            shift_start_body: body,
+            shift_start_yaw: yaw,
+            held_body: body,
+            held_yaw: yaw,
+            recenter_start_body: body,
+            recenter_start_yaw: yaw,
             swing_start: [0.; 3],
             swing_end: [0.; 3],
             command: [0.; 3],
@@ -296,6 +318,8 @@ impl StepSequence {
         )
     }
     fn start(&mut self, command: [f64; 3]) {
+        self.shift_start_body = self.body_anchor;
+        self.shift_start_yaw = self.yaw_anchor;
         if self.config.restart_order_on_translation_reversal
             && self.last_translation[0] * command[0] + self.last_translation[1] * command[1]
                 < -1e-24
@@ -381,7 +405,7 @@ impl StepSequence {
             Lower => self.ticks[2],
             Return => self.ticks[3],
             Settle => self.ticks[4],
-            Recenter => self.ticks[3] + self.ticks[4],
+            Recenter => self.ticks[if self.config.direct_support_transfer { 0 } else { 3 }] + self.ticks[4],
         };
         let condition = match self.phase {
             Shift => support_ready,
@@ -420,6 +444,8 @@ impl StepSequence {
                     if self.config.update_command_before_lift {
                         if !enabled {
                             self.command = [0.; 3];
+                            self.recenter_start_body = self.shift_body;
+                            self.recenter_start_yaw = self.center[2];
                             self.phase = Recenter;
                         } else if self.last_translation[0] * command[0]
                             + self.last_translation[1] * command[1]
@@ -446,6 +472,12 @@ impl StepSequence {
                 Lower => {
                     let foot = self.next_foot();
                     self.feet[foot] = self.swing_end;
+                    self.held_body = self.shift_body;
+                    let fraction = self.config.swing_body_advance_fraction;
+                    for axis in 0..2 {
+                        self.held_body[axis] += fraction * (self.next_center[axis] - self.center[axis]);
+                    }
+                    self.held_yaw = self.center[2] + fraction * (self.next_center[2] - self.center[2]);
                     self.phase = Return
                 }
                 Return => {
@@ -457,12 +489,19 @@ impl StepSequence {
                     self.order_slot = (self.order_slot + 1) % self.config.order.len();
                     if enabled {
                         self.start(command)
+                    } else if self.config.direct_support_transfer {
+                        self.command = [0.; 3];
+                        self.recenter_start_body = self.held_body;
+                        self.recenter_start_yaw = self.held_yaw;
+                        self.phase = Recenter;
                     } else {
                         self.phase = Idle
                     }
                 }
                 Recenter => {
-                    // No foot transfer took place: preserve its index and order.
+                    // Recenter itself does not count another transfer.
+                    self.body_anchor = [self.center[0], self.center[1], self.center_z];
+                    self.yaw_anchor = self.center[2];
                     if enabled {
                         self.start(command)
                     } else {
@@ -482,7 +521,11 @@ impl StepSequence {
         match self.phase {
             Shift => {
                 progress = self.phase_tick as f64 / self.ticks[0] as f64;
-                body = lerp(body, self.shift_body, smooth(progress));
+                let s = smooth(progress);
+                body = lerp(if self.config.direct_support_transfer { self.shift_start_body } else { body }, self.shift_body, s);
+                if self.config.direct_support_transfer {
+                    yaw = self.shift_start_yaw + s * (self.center[2] - self.shift_start_yaw);
+                }
             }
             Raise | Lower => {
                 body = self.shift_body;
@@ -517,29 +560,45 @@ impl StepSequence {
             }
             Return => {
                 progress = self.phase_tick as f64 / self.ticks[3] as f64;
-                let s = smooth(progress);
-                body = lerp(
-                    self.shift_body,
-                    [self.next_center[0], self.next_center[1], self.center_z],
-                    s,
-                );
-                yaw = self.center[2] + s * (self.next_center[2] - self.center[2]);
-                if self.config.swing_body_advance_fraction > 0. {
-                    let fraction = self.config.swing_body_advance_fraction * (1. - s);
-                    for axis in 0..2 {
-                        body[axis] += fraction * (self.next_center[axis] - self.center[axis]);
+                if self.config.direct_support_transfer {
+                    body = self.held_body;
+                    yaw = self.held_yaw;
+                } else {
+                    let s = smooth(progress);
+                    body = lerp(
+                        self.shift_body,
+                        [self.next_center[0], self.next_center[1], self.center_z],
+                        s,
+                    );
+                    yaw = self.center[2] + s * (self.next_center[2] - self.center[2]);
+                    if self.config.swing_body_advance_fraction > 0. {
+                        let fraction = self.config.swing_body_advance_fraction * (1. - s);
+                        for axis in 0..2 {
+                            body[axis] += fraction * (self.next_center[axis] - self.center[axis]);
+                        }
+                        yaw += fraction * (self.next_center[2] - self.center[2]);
                     }
-                    yaw += fraction * (self.next_center[2] - self.center[2]);
                 }
             }
-            Settle => progress = self.phase_tick as f64 / self.ticks[4] as f64,
+            Settle => {
+                progress = self.phase_tick as f64 / self.ticks[4] as f64;
+                if self.config.direct_support_transfer {
+                    body = self.held_body;
+                    yaw = self.held_yaw;
+                }
+            }
             Recenter => {
-                progress = self.phase_tick as f64 / (self.ticks[3] + self.ticks[4]) as f64;
+                let motion_ticks = self.ticks[if self.config.direct_support_transfer { 0 } else { 3 }];
+                progress = self.phase_tick as f64 / (motion_ticks + self.ticks[4]) as f64;
+                let s = smooth(self.phase_tick as f64 / motion_ticks as f64);
                 body = lerp(
-                    self.shift_body,
+                    if self.config.direct_support_transfer { self.recenter_start_body } else { self.shift_body },
                     body,
-                    smooth(self.phase_tick as f64 / self.ticks[3] as f64),
+                    s,
                 );
+                if self.config.direct_support_transfer {
+                    yaw = self.recenter_start_yaw + s * (self.center[2] - self.recenter_start_yaw);
+                }
             }
             Hold | Idle => {}
         }
@@ -559,6 +618,8 @@ impl StepSequence {
             feet_world_m: feet,
             latched_twist: self.command,
         };
+        self.body_anchor = body;
+        self.yaw_anchor = yaw;
         self.sample += 1;
         self.phase_tick = self.phase_tick.saturating_add(1);
         Ok(reference)

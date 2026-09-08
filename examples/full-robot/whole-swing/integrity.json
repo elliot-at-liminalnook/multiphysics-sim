@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "passed": true,
+  "outcomes": [
+    {
+      "name": "whole-2.5-lateral-original-20ms",
+      "completed": true,
+      "passed": false,
+      "completed_transitions": 1200,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-2.5-lateral-original-5ms",
+      "completed": true,
+      "passed": false,
+      "completed_transitions": 1200,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-3.75-lateral-original-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 190,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-3.75-lateral-original-5ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 190,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-3.75-lateral-derived-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 190,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-3.75-lateral-derived-5ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 190,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-3.75-all-original-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 194,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-3.75-all-original-5ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 194,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-3.75-all-derived-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 225,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-3.75-all-derived-5ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 225,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-5-lateral-original-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 162,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-5-lateral-original-5ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 162,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-5-lateral-derived-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 184,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-5-lateral-derived-5ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 184,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-5-all-original-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 162,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-5-all-original-5ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 162,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-5-all-derived-20ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 213,
+      "input_identity_verified": true
+    },
+    {
+      "name": "whole-5-all-derived-5ms",
+      "completed": false,
+      "passed": false,
+      "completed_transitions": 212,
+      "input_identity_verified": true
+    }
+  ],
+  "identical_parsed_robot_and_physics_options": true,
+  "unretained_source_scene_fields": [
+    "scene.robot.format",
+    "scene.robot.joints.*.declared",
+    "scene.robot.joints.*.fastened.points",
+    "scene.robot.joints.*.merged_into",
+    "scene.robot.joints.*.physics.bearing.pressure",
+    "scene.robot.joints.*.physics.flex_patch_radius",
+    "scene.robot.joints.*.physics.flex_patch_source",
+    "scene.robot.joints.*.physics.lever",
+    "scene.robot.joints.*.physics.materials",
+    "scene.robot.joints.*.physics.outboard_mass",
+    "scene.robot.links.*.collision.sign_derivation",
+    "scene.robot.links.*.mass_sources",
+    "scene.robot.links.*.member_names",
+    "scene.robot.materials.carbon_tube_provisional.bearing_pressure",
+    "scene.robot.materials.nylon.bearing_pressure",
+    "scene.robot.materials.rubber.bearing_pressure",
+    "scene.robot.materials.steel.bearing_pressure",
+    "scene.robot.motors.*.electrical.stall_current",
+    "scene.robot.motors.*.kind",
+    "scene.robot.motors.*.mass",
+    "scene.robot.motors.*.no_load_speed",
+    "scene.robot.motors.*.notes",
+    "scene.robot.motors.*.stall_torque",
+    "scene.robot.motors.*.thermal.ambient_c",
+    "scene.robot.world.floor_friction_static"
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/plan.json",
+      "sha256": "4dbb436b3630c35b443bae0a36a1f35be76bf510a9bfd3465c6d64c151f288a9"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/status.json",
+      "sha256": "98f4bce84c5384b0e7faee5e2a29a0313ec447adde1efa067e73e8ad45e942ce"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/audit_walking_suite.mjs",
+      "sha256": "a28acff20920f3f9fd2b97edd644a6f9f490175449a9c5725333f3cbc26af94f"
+    }
+  ],
+  "scope": "Every declared outcome matched to hashed inputs and captures, authored configuration, all retained scene fields, seed and sampled actions; completed captures require matching independent acceptance. Raw CAD exports retain additional fields absent from the Rust scene schema, listed explicitly. This integrity audit is not a controller acceptance or hardware certificate."
+}

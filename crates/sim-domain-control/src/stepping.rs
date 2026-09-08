@@ -46,6 +46,11 @@ pub struct StepSequenceConfig {
     /// These are references only; callers must still validate support and IK.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub swing_body_advance_fraction: f64,
+    /// Spread horizontal foot travel smoothly across both raise and lower.
+    /// Vertical clearance retains the separate raise/lower trajectory. False
+    /// completes horizontal travel during raise, as in the original crawl.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub whole_swing_horizontal_motion: bool,
     pub maximum_speed_m_s: f64,
     pub maximum_yaw_rate_rad_s: f64,
 }
@@ -489,6 +494,14 @@ impl StepSequence {
                 } else {
                     lerp(peak, self.swing_end, smooth(progress))
                 };
+                if self.config.whole_swing_horizontal_motion {
+                    let elapsed = self.phase_tick + if up { 0 } else { self.ticks[1] };
+                    let fraction = smooth(elapsed as f64 / (self.ticks[1] + self.ticks[2]) as f64);
+                    for axis in 0..2 {
+                        feet[foot][axis] = self.swing_start[axis]
+                            + fraction * (self.swing_end[axis] - self.swing_start[axis]);
+                    }
+                }
             }
             Return => {
                 progress = self.phase_tick as f64 / self.ticks[3] as f64;

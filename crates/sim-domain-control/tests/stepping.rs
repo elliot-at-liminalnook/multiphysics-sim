@@ -20,6 +20,7 @@ fn sequence() -> StepSequence {
             restart_order_on_translation_reversal: false,
             update_command_before_lift: false,
             swing_body_advance_fraction: 0.,
+            whole_swing_horizontal_motion: false,
             maximum_speed_m_s: 0.01,
             maximum_yaw_rate_rad_s: 0.1,
         },
@@ -434,5 +435,48 @@ fn swing_body_advance_preserves_feet_endpoints_and_landing_waits() {
         let mut config = sequence().config().clone();
         config.swing_body_advance_fraction = invalid;
         assert!(StepSequence::new(config, [0.; 3], 0., feet.clone()).is_err());
+    }
+}
+
+#[test]
+fn horizontal_swing_spans_apex_without_changing_clearance_support_or_endpoints() {
+    let feet = vec![[0., -0.3, -0.4], [0.3, 0., -0.4],
+        [0., 0.3, -0.4], [-0.3, 0., -0.4]];
+    let mut config = sequence().config().clone();
+    config.whole_swing_horizontal_motion = true;
+    let mut moving = StepSequence::new(config, [0.; 3], 0., feet.clone()).unwrap();
+    let mut original = sequence();
+    let mut history = Vec::new();
+    for i in 0..=120 {
+        let landed = !(70..80).contains(&i);
+        let command = if i < 60 { [0.005, 0., 0.01] } else { [0.; 3] };
+        let a = original.sample(i as f64 * 0.02, command, true, landed).unwrap();
+        let b = moving.sample(i as f64 * 0.02, command, true, landed).unwrap();
+        assert_eq!(a.body_world_m, b.body_world_m);
+        assert_eq!(a.yaw_rad, b.yaw_rad);
+        assert_eq!(a.phase, b.phase);
+        assert_eq!(a.waiting, b.waiting);
+        assert_eq!(a.step, b.step);
+        for foot in 0..4 {
+            assert_eq!(a.feet_world_m[foot][2], b.feet_world_m[foot][2]);
+            if b.foot != Some(foot) || !matches!(b.phase, StepPhase::Raise | StepPhase::Lower) {
+                assert_eq!(a.feet_world_m[foot], b.feet_world_m[foot]);
+            }
+        }
+        if i == 55 {
+            for axis in 0..2 {
+                assert!((b.feet_world_m[0][axis] -
+                    0.5 * (feet[0][axis] + a.feet_world_m[0][axis])).abs() < 1e-14);
+            }
+        }
+        if i >= 75 { assert_eq!(a.feet_world_m, b.feet_world_m); }
+        history.push(b);
+    }
+    // Continuous horizontal velocity across the apex: the equal-duration
+    // fixture's adjacent finite differences are symmetric around the midpoint.
+    for axis in 0..2 {
+        let before = history[55].feet_world_m[0][axis] - history[54].feet_world_m[0][axis];
+        let after = history[56].feet_world_m[0][axis] - history[55].feet_world_m[0][axis];
+        assert!((before - after).abs() < 1e-14);
     }
 }

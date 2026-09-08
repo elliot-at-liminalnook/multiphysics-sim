@@ -1,0 +1,651 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "whole-2.5-lateral-original-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0025198315884866524,
+        "final_yaw_error_rad": 0.0012546780116081304,
+        "maximum_body_tilt_rad": 0.003716015774512113,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04245234300291527,
+          0.00043116687540497006,
+          -0.0006441174459826705
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-20ms-acceptance/summary.json",
+          "sha256": "f2b8b177fed95efdb7f3cbcbc51cc62e47c2e25e811804f5b330edfe34a0eac8"
+        }
+      },
+      "wall_s": 8.614234003,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-20ms.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-20ms.config.json",
+          "sha256": "7a3fe7666622934df49ad129406c89087f4b861aff54dd6bad82f10fb51bc241"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-20ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-20ms.native.json",
+          "sha256": "8b7ed8c5ad04dc481a9f7b828c5ad966764c75051f3568fed9bcda8b84968d2a"
+        }
+      ]
+    },
+    {
+      "name": "whole-2.5-lateral-original-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0016724489956519513,
+        "final_yaw_error_rad": 0.0017460093311948684,
+        "maximum_body_tilt_rad": 0.0041254780474951356,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04329734157766342,
+          0.00009381894780310284,
+          -0.000614439152103425
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-5ms-acceptance/summary.json",
+          "sha256": "28e3d1f8a8671de67e3f25a9661c12d3acacff1ce08755040e21264281897a43"
+        }
+      },
+      "wall_s": 22.563052587,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-5ms.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-5ms.config.json",
+          "sha256": "11a0c5b54379720ed7ca90b2ee078e152fb9a9e81c2ef0b13a2bdfb15723ff9d"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-5ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-2.5-lateral-original-5ms.native.json",
+          "sha256": "cfbffbc4234ee907a6f3820b53f8ebdd1ed1ba1bcf997ed6addd119f5cce3b4d"
+        }
+      ]
+    },
+    {
+      "name": "whole-3.75-lateral-original-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Lower reference lacks static support: Some([19.256037004165727, 19.255468712287954, 0.49539968347735097])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.819539453,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-original-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-original-20ms.config.json",
+          "sha256": "1d577318dad78a4f799244de84ac5088f01ef613976381645f03ba4649ea2068"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-original-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-original-20ms.native.json",
+          "sha256": "2abd645a6d46cd0748fda925a17ee4712a18128aafd16efe4e336b2a4486ec48"
+        }
+      ]
+    },
+    {
+      "name": "whole-3.75-lateral-original-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Lower reference lacks static support: Some([19.256037004165727, 19.255468712287954, 0.49539968347735097])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.5013293690000005,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-original-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-original-5ms.config.json",
+          "sha256": "c7c8f2e1469e497e9f6ff86c5203e68618d683afbc4fd0d3bda19451ae843f0f"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-original-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-original-5ms.native.json",
+          "sha256": "d24f68623aea5d386e9dc7cd8634929018e5697ef35bbe232c994d6e0c61ec94"
+        }
+      ]
+    },
+    {
+      "name": "whole-3.75-lateral-derived-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Lower reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000479 mm at world [0.16034217365820935, -0.00018098115843911272, 0.03031162430294164] m; requested body [-0.009846368618106595, -0.00043110419989131696, -0.011820466700050356] m, time 3.800000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.872888866,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-derived-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-derived-20ms.config.json",
+          "sha256": "d2e8c4e411432f7ad79e45c2eb91a92a5fc0f9d6665cdbf09094d84ec83c014e"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-derived-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-derived-20ms.native.json",
+          "sha256": "eb75a85f30c8f8977182343d77d4ba167df1404b56e7f50bb1e3aeecd0f9d7b4"
+        }
+      ]
+    },
+    {
+      "name": "whole-3.75-lateral-derived-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Lower reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000479 mm at world [0.16034217365820935, -0.00018098115843911272, 0.03031162430294164] m; requested body [-0.009846368618106595, -0.00043110419989131696, -0.011820466700050356] m, time 3.800000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.622002309,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-derived-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-derived-5ms.config.json",
+          "sha256": "32117f44c7556ecb9b2c266647bb57e65d79565ef995b762091a62cc623e8d9a"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-derived-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-lateral-derived-5ms.native.json",
+          "sha256": "3ea248bdc12ec9d7443e4de3f7228c2dcfe1a74a7d661c6ac3ed66086394eed7"
+        }
+      ]
+    },
+    {
+      "name": "whole-3.75-all-original-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Lower reference lacks static support: Some([19.255076499452418, 19.2546131759258, 0.49721572455280666])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.994573415,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-original-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-original-20ms.config.json",
+          "sha256": "7c00e2a30a1c2ec90fabc80871a121e9dea02c01005b76e50d71ad67dda7f48a"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-original-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-original-20ms.native.json",
+          "sha256": "ad05883996eeae84e42199093a1647c704906eacf3ebc563d421dbfdab4fca90"
+        }
+      ]
+    },
+    {
+      "name": "whole-3.75-all-original-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Lower reference lacks static support: Some([19.255076499452418, 19.2546131759258, 0.49721572455280666])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.575301682,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-original-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-original-5ms.config.json",
+          "sha256": "612ab8c91b65ede16829b405930187d5e5d5ca04014558d2f7491d0d8bfae563"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-original-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-original-5ms.native.json",
+          "sha256": "2725dadf020f1f76d3fd55a0e8633857b79f383a1709ffc6a75b7856705f4376"
+        }
+      ]
+    },
+    {
+      "name": "whole-3.75-all-derived-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 3 Shift reference has internal contact: -X | Thigh sector gear / -X | Hip output shaft and pulley; penetration 0.001502 mm at world [-0.11955693075107432, -0.0005000992107888434, -0.04732043105811179] m; requested body [0.020185196122630367, -0.00043110419989131696, -0.008820466700050357] m, time 4.500000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 2.078069209,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-derived-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-derived-20ms.config.json",
+          "sha256": "a9ebf4e609f75e82de24ccbfba1a1bae3416f47867086c126045ea27d278de86"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-derived-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-derived-20ms.native.json",
+          "sha256": "43468c2c6c89b5aa6bdd81f8bf40ec015ed11bb27b63e371e3f0a63af527270f"
+        }
+      ]
+    },
+    {
+      "name": "whole-3.75-all-derived-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 3 Shift reference has internal contact: -X | Thigh sector gear / -X | Hip output shaft and pulley; penetration 0.001502 mm at world [-0.11955693075107432, -0.0005000992107888434, -0.04732043105811179] m; requested body [0.020185196122630367, -0.00043110419989131696, -0.008820466700050357] m, time 4.500000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 5.427492091,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-derived-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-derived-5ms.config.json",
+          "sha256": "172f4202c374fe5515f7a25cde0058da1581a72e2b74f7438ff12f4701a3f6bb"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-derived-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-3.75-all-derived-5ms.native.json",
+          "sha256": "d0eb73c5abc0cecb5305add8b389b701ff4b1f95445e31a85b98278cdf7dc064"
+        }
+      ]
+    },
+    {
+      "name": "whole-5-lateral-original-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Raise reference lacks static support: Some([19.26751220724386, 19.26748687935298, 0.4719063133341873])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.642315637,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-original-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-original-20ms.config.json",
+          "sha256": "942d3f70a9671bca585299a9314c64669182d8ffe5d3ccd14f870ed0c7251ab2"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-original-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-original-20ms.native.json",
+          "sha256": "f36bd55cf8bff8c26c3fdd70c3dfdb40b959036013414d19895efbb15098969f"
+        }
+      ]
+    },
+    {
+      "name": "whole-5-lateral-original-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Raise reference lacks static support: Some([19.26751220724386, 19.26748687935298, 0.4719063133341873])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.103843032,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-original-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-original-5ms.config.json",
+          "sha256": "15da624569b17421a515f7d4d95fd0c3b7ddc59a8fd16ed47d66ec7a6bf833c4"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-original-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-original-5ms.native.json",
+          "sha256": "cdcc535318ad5d02c101763d891dcb7c9cc8db864771daf06e244e83ae541ef4"
+        }
+      ]
+    },
+    {
+      "name": "whole-5-lateral-derived-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Lower reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000200 mm at world [0.16030216919818907, -0.00018098115843911272, 0.030314690675274272] m; requested body [-0.009901595670821368, -0.00043110419989131696, -0.011820466700050356] m, time 3.680000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.875799174,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-derived-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-derived-20ms.config.json",
+          "sha256": "d7f27685e5dca95a6a28f76da258bb6f31e7a2c1b72711167c091cd774e2e6e0"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-derived-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-derived-20ms.native.json",
+          "sha256": "af2037ca4b1a8936560e8165a8999084c1521ed46fcdf585e16d243f73b30339"
+        }
+      ]
+    },
+    {
+      "name": "whole-5-lateral-derived-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Lower reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000200 mm at world [0.16030216919818907, -0.00018098115843911272, 0.030314690675274272] m; requested body [-0.009901595670821368, -0.00043110419989131696, -0.011820466700050356] m, time 3.680000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.611006124,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-derived-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-derived-5ms.config.json",
+          "sha256": "6765c70fc21df653a17f9de2755b8dcf381c4122b74ed9efad35430981ad6f65"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-derived-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-lateral-derived-5ms.native.json",
+          "sha256": "3d8895b71f5a869a0c37f9f731845c57fb55dffa0db9a6df0d0da887a2a8b72b"
+        }
+      ]
+    },
+    {
+      "name": "whole-5-all-original-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Raise reference lacks static support: Some([19.26751220724386, 19.26748687935298, 0.4719063133341873])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.63951965,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-original-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-original-20ms.config.json",
+          "sha256": "2b823d227927f605d24f990d939602b4b4b6c4c4df6c4995e6e789777a4039bd"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-original-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-original-20ms.native.json",
+          "sha256": "d411bb69b1310612e15f70a46d4db25f0542d8cce009024e9598485db970c226"
+        }
+      ]
+    },
+    {
+      "name": "whole-5-all-original-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Raise reference lacks static support: Some([19.26751220724386, 19.26748687935298, 0.4719063133341873])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.101794249,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-original-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-original-5ms.config.json",
+          "sha256": "91eef124bcb597ff2f41dd3f22f7762f66befb0db28d393a6967328b066f2b9c"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-original-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-original-5ms.native.json",
+          "sha256": "19f6bc372208e104d76aedeae348d379813bfa33c45d197745b66ee12ae7ee65"
+        }
+      ]
+    },
+    {
+      "name": "whole-5-all-derived-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -X | Thigh sector gear / -X | Hip output shaft and pulley; penetration 0.004691 mm at world [-0.11896345646206022, -0.00020386840975021928, -0.04789213400308004] m, time 4.260000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 2.105899443,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-derived-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-derived-20ms.config.json",
+          "sha256": "d02598d1fd59baf8d47183dd3f9c979bde79633a46d1a43387ab58982c470355"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-derived-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-derived-20ms.native.json",
+          "sha256": "99b55b0a67590e6bc98503470ee902d78d0a46447bcd8c2e97dd992a9e7ce8ba"
+        }
+      ]
+    },
+    {
+      "name": "whole-5-all-derived-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -X | Thigh sector gear / -X | Hip output shaft and pulley; penetration 0.004138 mm at world [-0.11872590379482637, 3.9275938047858214e-5, -0.04797246810050649] m, time 4.240000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 5.134169989,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-derived-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-derived-5ms.config.json",
+          "sha256": "e0067167648e479b1619e18cf1aa932f060e6daad1b4071804256d422357e237"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-derived-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-swing/whole-5-all-derived-5ms.native.json",
+          "sha256": "245b8db3b5d9e05e27cf0babc7fb19134b3b6610ff816f016cdc4406e2054bb8"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-swing/plan.json",
+      "sha256": "4dbb436b3630c35b443bae0a36a1f35be76bf510a9bfd3465c6d64c151f288a9"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "f5d23abdd1d00c83ae873a4d30a27f7bc22187c383c630037417cb5a4b09bc62"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "93166af5278c752bb86ec3beef28b55a1c9f1eb9858d7855605501377e433c09"
+    }
+  ],
+  "scope": "Development-only horizontal motion across the full swing, with geometry-derived stance/support comparisons. Same CAD physics, selected weights, motor limits and physical/numerical gates. No sustained or browser acceptance implied."
+}

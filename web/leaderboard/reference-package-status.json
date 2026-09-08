@@ -1,0 +1,1495 @@
+{
+  "version": 1,
+  "passed": true,
+  "recipes": [
+    {
+      "id": "browser-crawl-minute",
+      "asset_sha256": "771addc1a917aae9bee10d46c5c35f16846331d14f072980c6e6cbe1c4c5ff91"
+    },
+    {
+      "id": "faster-student-minute",
+      "asset_sha256": "2f6681e8e24e1671d7cce649d5ea68f408a8ff23d276cf0ac240b27e31a5b897"
+    },
+    {
+      "id": "overlapping-forward-stop",
+      "asset_sha256": "a39981e81bd9c5e489e3644617e23fa02104a2cc13d6f23417563c3a0dc3fd71"
+    },
+    {
+      "id": "whole-swing-short",
+      "asset_sha256": "8c4415a28db2230c75d3b5354bea6e5425d684b3930a567484af6452e6978da3"
+    },
+    {
+      "id": "faster-teacher-minute",
+      "asset_sha256": "0f0c6583dc26b3fb8f79967e85349d88eaff29cabe9e9fc2edcc99f961c294a6"
+    },
+    {
+      "id": "faster-steering-short",
+      "asset_sha256": "2b30405b6030b7a2ce8d081706a6ae9920a1bd8dd0bf03f6e2054e6d209555f7"
+    },
+    {
+      "id": "settled-teacher-minute",
+      "asset_sha256": "8d290e797e2b4030c992a320620a9046e12443c3c6cd4b2ab066d627da6ff56f"
+    },
+    {
+      "id": "secant-steering-short",
+      "asset_sha256": "a79bac561104eb3b2864024052b6bd7d89cd2403445bf49d6c54668abb1163aa"
+    },
+    {
+      "id": "refined-teacher-minute",
+      "asset_sha256": "db0c253dd6fed9cc43b80d96f0e7b56e14a976c70a20a54a4a614f7312e8c2db"
+    }
+  ],
+  "manifest": {
+    "inputs": {
+      "runs/wasm-builds/broyden-simd-lto/build.json": "3ff5fc3f70f3ac358b7979b003845f90da4f35e4e704736bbbb28703d0b41eab",
+      "examples/interactive/pendulum.scene.json": "9643c81ee9f2c80b4aebce29bf35d8a823ee74ea7dd44830b9dd3e75d07182c6",
+      "examples/full-robot/browser-crawl-startup/scene.json": "ef312d2800c7af09986ed22248348d8de3b38dc6c5d795b6a12469452885a777",
+      "examples/full-robot/browser-crawl-startup/config.json": "65db80c84e223ee8e4167b2df72201bc92e801dac06170331b09861cbc6ad4a5",
+      "examples/full-robot/browser-crawl-startup/task.json": "c41684bf9ca1ce73dc84905dc9eeefe5bee75adf571f80a9963442d460194752",
+      "examples/full-robot/browser-effective-servo/scene.json": "ef312d2800c7af09986ed22248348d8de3b38dc6c5d795b6a12469452885a777",
+      "examples/full-robot/browser-effective-servo/config.json": "81b3a52c6d60bafe9c37fe9bd76c885f541dc5c7afbb986ed99fa3d1513e7a80",
+      "examples/full-robot/browser-effective-servo/task.json": "561bc2edfd0f57dae1109e407fac4b49ddb8904acef7283335ecd0bdda4d8fab",
+      "examples/full-robot/teacher-baseline/scene.json": "09e3e8c6c79fea5e141ed9629fb7b17b55042c141aa81b5e55c2f506f1c3c90a",
+      "examples/full-robot/teacher-baseline/config.json": "723bf2ba848dc1d8ad9211037f74602dfcab68eb6b3436f29be5d15346b8b622",
+      "examples/full-robot/teacher-environment.json": "826b8b9203c27293a253bc3de344daec114de7f62842852cbfb13f3edd585f30",
+      "examples/interactive/pendulum.policy.json": "c99d0884256e6b6b06f3167fca4eb1d6df244b0c1657d199018e024247134ef6",
+      "examples/interactive/pendulum.environment.json": "b5063aa69e1d234caeddb783a2417bbf6925266cbaaac43dace02f403f1ae7b8",
+      "examples/full-robot/browser-online-steps/scene.json": "b093dcd07ce3932357f79647740baa391c22f19d648343882b0245e4f108ca59",
+      "examples/full-robot/browser-online-steps/scheduled-posture-screen.config.json": "db7575b3b82272851d42921296aecb42262166fc6fad047be7ad10c9e3620706",
+      "examples/full-robot/browser-online-steps/task.json": "c41684bf9ca1ce73dc84905dc9eeefe5bee75adf571f80a9963442d460194752",
+      "examples/full-robot/browser-reversal/scene.json": "ba8367be73e61f56bb65e2cf846bd9e93417b5319a76e6fa0d08bd9e587fccb6",
+      "examples/full-robot/browser-reversal/config.json": "86341139f4437662ea65b2fd32ff7bb886ab136328aef8fb7d53ca4bbd7ac3a3",
+      "examples/full-robot/browser-reversal/task.json": "c41684bf9ca1ce73dc84905dc9eeefe5bee75adf571f80a9963442d460194752",
+      "examples/full-robot/browser-terrain-contact/scene.json": "441b9feb249b57b6325d32d96dac138c0818aae091aad2be33e5b11afa554102",
+      "examples/full-robot/browser-residual-policy/scene.json": "ddd12a8b98c58499e867ed0f39ef613d801d72f51137d5a475aea345ec74680d",
+      "examples/full-robot/browser-residual-policy/config.json": "86341139f4437662ea65b2fd32ff7bb886ab136328aef8fb7d53ca4bbd7ac3a3",
+      "examples/full-robot/browser-residual-policy/task.json": "782b3b59153df4c13a43282c809b4adbfca4d120f22bc9cf149cb3a0e28d193d",
+      "examples/full-robot/neural-teacher/scene.json": "f794d037a7912342dfcb486cf22c0ea1c93178c63e5bad936303c9f00facf2f8",
+      "examples/full-robot/neural-teacher/config.json": "2773061b57cd4715fa03d4f1564e85409ce8a25104ccf58806ebe01ad5d204d0",
+      "examples/full-robot/neural-teacher/task.json": "c40f2b2c819022bd0ea12a879318a2563cc91bb2606bb09edfa1a6bf579c94e9",
+      "examples/full-robot/student-distillation/scene.json": "1fd3c6103413010dbe5dee8a09084544af9a305f4eac5acb3c3965caa71a0c7b",
+      "examples/full-robot/student-distillation/config.json": "ef6b7cc104226356edbde7fe18968688ff902a6e0a79e39d8291272cbf7283d7",
+      "examples/full-robot/student-distillation/task.json": "0389e93ecbcfde18f34f160dd75289d5bc30dd2a872dcdcda8fe5ad7742d2d0c",
+      "examples/full-robot/student-disturbances/lateral.config.json": "0b67d777f6dd786bd52be4be4f609d4d3a9510188482291bfbd22ef227811a5c",
+      "examples/full-robot/walking-objective/task.json": "11f987bdb42daa1f031a304c3e3cff2f8d01491a91a2c44c554d48576b2273d7",
+      "examples/full-robot/student-robustness/config.json": "b457eca64e0808b2c1b78c3dd5facb15da3b0c4c4b531fc2d263eb438b717d0c",
+      "examples/full-robot/step-margin/retry-sustained.config.json": "a3d8c47a328a074944fa67552de73a17936bf26acff94ea3e967798eac55d239",
+      "examples/full-robot/mechanical-reuse/restart-sustained.config.json": "02ec717df608a028111a4d52d6f683bd1949c001f55a3b7a4d3bf2a823b75836",
+      "examples/full-robot/heading-task/sustained.config.json": "0367010cb48346fe9c026ed88d0ed908f09d5e7ca773813ddbde3d5e945efd51",
+      "examples/full-robot/heading-task/task.json": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c",
+      "examples/full-robot/browser-precision/guarded.config.json": "580367d3d7961864fb73714717a3c2d26958f0d07c4b15e5e66951cbb2a44a9f",
+      "examples/full-robot/student-speed/scene.json": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa",
+      "examples/full-robot/student-speed/2x-support-18-9.config.json": "f8acbfc6cec13251e1ca6fc0c1c6805b08993af48e6c7923f3cce23d91e70ff2",
+      "examples/full-robot/swing-advance/half.config.json": "dbc1d51920c72d94684bd96628e019fd92bdd9d3ab644734aa6c24b22d688c8b",
+      "examples/full-robot/prelift-control/browser.config.json": "be2355e35904d1116c48e4daddb7d55866b286ba0e503d52a1a53b9c3a039fd5",
+      "web/leaderboard/generate.mjs": "53f2d89c174e1082554707a3503693a9d22b46bee0a08dc41568bc789e8bb603",
+      "examples/full-robot/browser-precision/browser-status.json": "8de3ab305fe602228e43db1bdda01cf914615d0d3244bfe63a9245de6eccf72d",
+      "web/leaderboard/unretained-scene-fields.json": "d214777edc596d04e7d32fd6e150a03c84f2e8cfa898759787016c65ab00cea6",
+      "examples/full-robot/student-speed/2x-support-minute.config.json": "b0e43027a0790035df8f6d794f07ad789e64543f02d7e0c3fd479357d3c6bb1c",
+      "examples/full-robot/student-speed/validation-status.json": "93b519e945f123598aef204ea0f8a4a21e0dd57a4a6ac0305fa8b61739bdf98d",
+      "examples/full-robot/student-speed/selected-minute-refinement.json": "98f97a45f3ab3582561e1af8c92c8bd268c059ea87c8dee8d1b78bee559e4db3",
+      "examples/full-robot/swing-advance/browser-status.json": "f5f4a6dba8ee2159d21b23d5e0c297c060e396dedea9c22ebc65bec7596ecfc5",
+      "examples/full-robot/swing-advance/half-refinement.json": "80867b4d0671612060952d730576f15f9810c4a384b711c5824fb278b1d74422",
+      "examples/full-robot/whole-swing/browser.scene.json": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2",
+      "examples/full-robot/whole-swing/browser.config.json": "3d9da35f0b6a1bd5f9ab1e74599d0410b244d1b47817df2d92278647501e77f6",
+      "examples/full-robot/whole-swing/finish-status.json": "45f776e1a787329e809bae497d6ca8d1b9af98ec7fc4828ca5d38dd5f644c766",
+      "examples/full-robot/whole-swing/finish-0.85-refinement.json": "b3109775751ff6e40c36f4b29e937873e0fe246e380440872b03a9868368a674",
+      "examples/full-robot/whole-swing/browser-parity.json": "7f301e8c827346331ee592f9b62329b6237fd0b8afda41dabaa6c084546633fe",
+      "examples/full-robot/whole-swing/browser-status.json": "5fdf5622dac05a20fa4e83114c9cf014165c2f5ed85030ff8323ecde254f3375",
+      "examples/full-robot/whole-swing/teacher-minute.scene.json": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88",
+      "examples/full-robot/whole-swing/teacher-minute.config.json": "a40c6443195d1cdfa327feecde35cb8de26be98380894e95a094a8c9671165a7",
+      "examples/full-robot/whole-swing/sustained-status.json": "271f245e919ec96c47ec33ede471c68b958c835e5d380f1c028b5315aa0e5b06",
+      "examples/full-robot/whole-swing/sustained-refinement.json": "4fd024f80ab1e2708c1036a7a5f923be4e85ab2928d61877df2c4fbed18f74e8",
+      "examples/full-robot/whole-swing/teacher-browser-parity.json": "2e2212c4d3487baf4ba78e32be6a5a0929834d8c04ba3270bcf284f52362e378",
+      "examples/full-robot/whole-swing/turn-browser.scene.json": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b",
+      "examples/full-robot/whole-swing/turn-browser.config.json": "397364a6934db9c7b185aaf599e9153bd2e6be7da2cd79cb242b649cfd96dc3f",
+      "examples/full-robot/whole-swing/turn-support-status.json": "f18349632bf123ccf0e7dc37b1c87781bc5bf3814bd45dddbffc75d559349bfc",
+      "examples/full-robot/whole-swing/turn-student-refinement.json": "28b66136b065077b3afcbea62b9a2c6794c7b8a217c2d5d56766e8f207b5d339",
+      "examples/full-robot/whole-swing/combined-minute.scene.json": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48",
+      "examples/full-robot/whole-swing/combined-minute.config.json": "518427f020bd5dbfc6fa957f255821b8331a5480d18340a7b41ead0b788a22d6",
+      "examples/full-robot/whole-swing/combined-status.json": "61218b0b654e77e512ab0baecb2a9cf4d458faedd5f9f58890b4d45ff1af05ac",
+      "examples/full-robot/whole-swing/combined-minute-refinement.json": "4035e0cadc05b0788e78f6d0f72b7c4e7d1f06709ca906543404c3e48e878d5c",
+      "examples/full-robot/whole-swing/combined-feedback-check.json": "86371c501cb4291dab808fc4c07de95ab49568f53d8efb23d4a9ec45c6fc2f3f",
+      "examples/full-robot/whole-swing/combined-turn-refinement.json": "167d4c637a450670a9109e22e33ba83ade42f005745f6e242c0e935adadba89d",
+      "examples/full-robot/whole-swing/broyden-turn.scene.json": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b",
+      "examples/full-robot/whole-swing/broyden-turn.config.json": "d10fbf60f611289b3ea51c170356cee379e669c40190ea7506c65bddba0dc739",
+      "examples/full-robot/whole-swing/broyden-status.json": "f667636372aa526afe56f77b61b6277d3b7bf33bed7758999f90cd93031096a3",
+      "examples/full-robot/whole-swing/broyden-difference.json": "266cd403a9cb2be7b455e62eb1eb1d04700a8859cc1324d8330c3fab66e4745f",
+      "examples/full-robot/whole-swing/broyden-browser-status.json": "e1244a46ab4f34f54592c0b17c393c18695da9166838390602b7b0229a67628d",
+      "examples/full-robot/whole-swing/reference-minute.scene.json": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48",
+      "examples/full-robot/whole-swing/reference-minute.config.json": "9fbfc92aeebbe1c20a0df32a55e51a08e09e0d310b8e0b407e044bf7ac5ab981",
+      "examples/full-robot/whole-swing/minute-refinement-status.json": "63c22cf8a0a01c619bfc312983dc34f14db46b9130d5b6647d22d5e9a97c1e6d",
+      "examples/full-robot/whole-swing/minute-fine-difference.json": "a87f005ac974c8798d018906a08252efead3566889f1bb883940c29edb9e416e",
+      "examples/full-robot/whole-swing/reference-browser-status.json": "67f178202aee047659305c40a91c7d93911bd7755dc04ba198f7a835581c002a",
+      "web/leaderboard/evaluations.json": "52df556795b6dfda0d7232758a2ea8f73dde23659b304a6a43a12b899e86da8c",
+      "web/leaderboard/package.mjs": "a7a3ea0253b9df9a5fadee4657654fbe6bf1c2bb3e44f0db036fee813703dbd4",
+      "web/viewer/leaderboard.js": "115433b1d347086ddbaf6fc6656c9bf3420c1fe3eb07c74c2ce55adfb5de308c",
+      "web/viewer/leaderboard-model.mjs": "01ef79ab1c7a44eb25b87c4f19fe1160ef2d6e3cf5ec6d8343d61adfeba41257",
+      "web/viewer/leaderboard.css": "358d83728bd0d39e1e73ce4b0f7ea85685a2565c9ba08eee3d72cc120049aae7",
+      "web/viewer/video-export.js": "72053261254e4266bda6511a3b9774a0240dfffaf4230d9311fdbef4289c15ad",
+      "web/build-viewer.mjs": "180c2cf970e19fe7345398c8f444bc260a3052f5b8c424d5900b69ca81960419",
+      "web/serve-viewer.mjs": "f4df0ed6bb95ecb6d26c4d0aaa934f30e66f18cc02d67e98c8006b70f8195cb5",
+      "web/viewer/presets.json": "db0cf61047c9da8a8fb4c0259606122c692c7e49803199be893b0e61aae559dd",
+      "web/viewer/viewer.js": "87f48d3a4a7266ea2e742983fe4a5179dd99b761bf6c7713f93eb2182dbf1427",
+      "web/viewer/viewer.css": "90125d81c09ed07ed58b3e4a10537af5d2519df82d9a6adfa11c05c4460d16ea",
+      "web/viewer/index.html": "cba0ecd0a1d306d35773b8c3c1f6aa561e8a45ac17cdfdd15e69b2b05287c461",
+      "web/worker.js": "40d420fe23a0f03b77c6a074ad902f1ee3c2e2b5907893f91555027a6ea55df5",
+      "web/package-lock.json": "ef2213ccff1ae7ae056f819e43e7757ae643d5d78a0c9fb2d65ee3f27bff9a05",
+      "runs/wasm-builds/broyden-simd-lto/sim_web.wasm": "a3df405e0dc004ba2bd87e7ea5804226f62ab715768992906179221244a5074d"
+    },
+    "presets": [
+      {
+        "id": "pendulum-live",
+        "mode": "live",
+        "path": "data/pendulum-live.json"
+      },
+      {
+        "id": "robot-crawl-startup",
+        "mode": "embedded",
+        "path": "data/robot-crawl-startup.json"
+      },
+      {
+        "id": "robot-effective-servo",
+        "mode": "embedded",
+        "path": "data/robot-effective-servo.json"
+      },
+      {
+        "id": "robot-teacher-environment",
+        "mode": "embedded",
+        "path": "data/robot-teacher-environment.json"
+      },
+      {
+        "id": "pendulum-environment",
+        "mode": "embedded",
+        "path": "data/pendulum-environment.json"
+      },
+      {
+        "id": "robot-online-steps",
+        "mode": "embedded",
+        "path": "data/robot-online-steps.json"
+      },
+      {
+        "id": "robot-reversal-crawl",
+        "mode": "embedded",
+        "path": "data/robot-reversal-crawl.json"
+      },
+      {
+        "id": "robot-terrain-contact",
+        "mode": "embedded",
+        "path": "data/robot-terrain-contact.json"
+      },
+      {
+        "id": "robot-residual-policy",
+        "mode": "embedded",
+        "path": "data/robot-residual-policy.json"
+      },
+      {
+        "id": "robot-neural-teacher",
+        "mode": "embedded",
+        "path": "data/robot-neural-teacher.json"
+      },
+      {
+        "id": "robot-distilled-student",
+        "mode": "embedded",
+        "path": "data/robot-distilled-student.json"
+      },
+      {
+        "id": "robot-student-push",
+        "mode": "embedded",
+        "path": "data/robot-student-push.json"
+      },
+      {
+        "id": "robot-walking-objective",
+        "mode": "embedded",
+        "path": "data/robot-walking-objective.json"
+      },
+      {
+        "id": "robot-improved-student",
+        "mode": "embedded",
+        "path": "data/robot-improved-student.json"
+      },
+      {
+        "id": "robot-paced-student",
+        "mode": "embedded",
+        "path": "data/robot-paced-student.json"
+      },
+      {
+        "id": "robot-reused-student",
+        "mode": "embedded",
+        "path": "data/robot-reused-student.json"
+      },
+      {
+        "id": "robot-heading-student",
+        "mode": "embedded",
+        "path": "data/robot-heading-student.json"
+      },
+      {
+        "id": "robot-browser-solver",
+        "mode": "embedded",
+        "path": "data/robot-browser-solver.json"
+      },
+      {
+        "id": "robot-fast-student",
+        "mode": "embedded",
+        "path": "data/robot-fast-student.json"
+      },
+      {
+        "id": "robot-swing-advance",
+        "mode": "embedded",
+        "path": "data/robot-swing-advance.json"
+      },
+      {
+        "id": "robot-prelift-control",
+        "mode": "embedded",
+        "path": "data/robot-prelift-control.json"
+      },
+      {
+        "id": "tested-browser-crawl-minute",
+        "mode": "embedded",
+        "path": "data/tested-browser-crawl-minute.json"
+      },
+      {
+        "id": "tested-faster-student-minute",
+        "mode": "embedded",
+        "path": "data/tested-faster-student-minute.json"
+      },
+      {
+        "id": "tested-overlapping-forward-stop",
+        "mode": "embedded",
+        "path": "data/tested-overlapping-forward-stop.json"
+      },
+      {
+        "id": "tested-whole-swing-short",
+        "mode": "embedded",
+        "path": "data/tested-whole-swing-short.json"
+      },
+      {
+        "id": "tested-faster-teacher-minute",
+        "mode": "embedded",
+        "path": "data/tested-faster-teacher-minute.json"
+      },
+      {
+        "id": "tested-faster-steering-short",
+        "mode": "embedded",
+        "path": "data/tested-faster-steering-short.json"
+      },
+      {
+        "id": "tested-settled-teacher-minute",
+        "mode": "embedded",
+        "path": "data/tested-settled-teacher-minute.json"
+      },
+      {
+        "id": "tested-secant-steering-short",
+        "mode": "embedded",
+        "path": "data/tested-secant-steering-short.json"
+      },
+      {
+        "id": "tested-refined-teacher-minute",
+        "mode": "embedded",
+        "path": "data/tested-refined-teacher-minute.json"
+      }
+    ],
+    "wasm": {
+      "path": "runs/wasm-builds/broyden-simd-lto/sim_web.wasm",
+      "sha256": "a3df405e0dc004ba2bd87e7ea5804226f62ab715768992906179221244a5074d",
+      "browser_module_sha256": "7ced1c2c9d527ed749cf0fba3d87626c36e3d77c8e662f0df8395da316e123d1",
+      "bindgen_version": "wasm-bindgen 0.2.127",
+      "build": {
+        "version": 1,
+        "completed": true,
+        "profile": "simd-lto",
+        "settings": {
+          "rustflags": "-C target-feature=+simd128",
+          "lto": "fat",
+          "codegen_units": "1"
+        },
+        "target": "wasm32-unknown-unknown",
+        "cargo": "cargo 1.97.1 (c980f4866 2026-06-30)\nrelease: 1.97.1\ncommit-hash: c980f4866141969fab6254a680546a277789d6f0\ncommit-date: 2026-06-30\nhost: x86_64-apple-darwin\nlibgit2: 1.9.2 (sys:0.20.4 vendored)\nlibcurl: 8.7.1 (sys:0.4.88+curl-8.20.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.2 7 Apr 2026\nos: Mac OS 26.6.0 [64-bit]",
+        "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6",
+        "source_revision": "35ce9ec56f165c158c5ebea53f126ab72248c72c",
+        "sources": [
+          {
+            "path": "Cargo.toml",
+            "sha256": "ac9ab0b4a69abf9d340f7ee670b7ced698bad9cc4c138bc41ee652a4be6f1281"
+          },
+          {
+            "path": "Cargo.lock",
+            "sha256": "a89876fcd9a9edecad75c27abe8b5b729c0ae48a606379c1e7b8b87a4215f241"
+          },
+          {
+            "path": "crates/sim-app/Cargo.toml",
+            "sha256": "6cc5855241b0ac1e3f5b681ab6dd522c2e56f4bebb80939dc2c5af19dfd85d87"
+          },
+          {
+            "path": "crates/sim-compile/Cargo.toml",
+            "sha256": "addfca0ffb7a26929340aaa1c531031a28438f75304e582d5cf4cb04271fa272"
+          },
+          {
+            "path": "crates/sim-core/Cargo.toml",
+            "sha256": "9fea56a3b5c7c4d342e9b7f5067b30d26be1ab8f0953be47183794b9ee31c5ba"
+          },
+          {
+            "path": "crates/sim-couple/Cargo.toml",
+            "sha256": "f92d2302a7570275ad04579cda52359b186fcc0af1db2425e1b8f880435e4fb5"
+          },
+          {
+            "path": "crates/sim-domain-acoustic/Cargo.toml",
+            "sha256": "e9d24a09ee5505c7c11ced731fa38b2cb10f1a12fe8735ff68c3de96c26403c3"
+          },
+          {
+            "path": "crates/sim-domain-bridges/Cargo.toml",
+            "sha256": "1bd49e24fca0da7b4486e40af73f13549a180ff6fc0690b9feffb5954d009245"
+          },
+          {
+            "path": "crates/sim-domain-chemical/Cargo.toml",
+            "sha256": "41cb517b08e6928349ecd04fe2b7d70897561c03b6f189e2e938508baeba1a38"
+          },
+          {
+            "path": "crates/sim-domain-control/Cargo.toml",
+            "sha256": "3611e0184cc05ea910ce0908c1661d39cc8bd4f31c4c7da4645765e3abdf5a72"
+          },
+          {
+            "path": "crates/sim-domain-electrical/Cargo.toml",
+            "sha256": "6c6446dcfa82b0d5607c7d00a0f546027172f09a8a7c0049a2cc9b6536f06b4d"
+          },
+          {
+            "path": "crates/sim-domain-fluid/Cargo.toml",
+            "sha256": "dacfeb73aff5b414b6df976a0825c3720f32970618d61bd2205b55e78fc7682f"
+          },
+          {
+            "path": "crates/sim-domain-granular/Cargo.toml",
+            "sha256": "b61c8d26f6a96cee606febb1e442f035ef033c305f61944aaa80b3dee959c6de"
+          },
+          {
+            "path": "crates/sim-domain-hydraulic/Cargo.toml",
+            "sha256": "09309b4abc9b243381e0975b432abced5216de395d85da3b972f44fe22399133"
+          },
+          {
+            "path": "crates/sim-domain-line/Cargo.toml",
+            "sha256": "0e34454d06c5111806bfdec826c61dc9ec617a126b16e4441bbac639f541ac79"
+          },
+          {
+            "path": "crates/sim-domain-magnetic/Cargo.toml",
+            "sha256": "027c6a983d00be3c876290bf0be695272291f9adf0eeeaf759fda83f88aa83c5"
+          },
+          {
+            "path": "crates/sim-domain-multibody/Cargo.toml",
+            "sha256": "b2dc731771409bc7c93c7d0f7c851f345ee52c3f566779d2d10492a676d95356"
+          },
+          {
+            "path": "crates/sim-domain-radiative/Cargo.toml",
+            "sha256": "f839666503e731ff5b62292493f0b237b0d0e746a77874d3dc8a52a48c9198d9"
+          },
+          {
+            "path": "crates/sim-domain-robot/Cargo.toml",
+            "sha256": "dce5b9a7aaeae0fdc22a70580da6a25dcf477aa4e9ea8b71d2d1bae90ff52277"
+          },
+          {
+            "path": "crates/sim-domain-rotational/Cargo.toml",
+            "sha256": "25d3506c3963a21120df9ab00cc979a9414ab30f8328ba2f9f90aa9dcb6074ff"
+          },
+          {
+            "path": "crates/sim-domain-sensing/Cargo.toml",
+            "sha256": "fbc64afbc05fd44cf6081d6def4e9755caf64de8f5589518c18192bf23db9f90"
+          },
+          {
+            "path": "crates/sim-domain-thermal/Cargo.toml",
+            "sha256": "0366c0c6ad9ff0a343ee8651c107cebd2e30eec17b38e00ffb366874d3596be3"
+          },
+          {
+            "path": "crates/sim-domain-translational/Cargo.toml",
+            "sha256": "ace841090b11f148406c456e5de7381934a1af7f43b47fd5a53a51dc3c3ac8e3"
+          },
+          {
+            "path": "crates/sim-dynamics/Cargo.toml",
+            "sha256": "393b3c63089e7a0a3e765c491dda8e533233508b8e2b6f9dc4450db3fddd5f6c"
+          },
+          {
+            "path": "crates/sim-geometry/Cargo.toml",
+            "sha256": "702ad2f8d2175874fedadc397d5ca988c9138f3953a6a48b84f692a58e709426"
+          },
+          {
+            "path": "crates/sim-phenomena/Cargo.toml",
+            "sha256": "083d34082af0b7ea952d3ba85c10e794ca87318bdd8d4ba92633767ce992528d"
+          },
+          {
+            "path": "crates/sim-runtime/Cargo.toml",
+            "sha256": "fcb99b5ccd03c40f6c72dac9f0a2aa7d471eaec61f194c069bc71a7d83bda958"
+          },
+          {
+            "path": "crates/sim-script/Cargo.toml",
+            "sha256": "dd352495836908596d72c1ffd97f928a2c1676572fcbaac24c707e4d2597bbd9"
+          },
+          {
+            "path": "crates/sim-solve/Cargo.toml",
+            "sha256": "8e1328c71a5c6e61defde3928811c8b2d8c259d2d05bc6f5f8163c922e46b258"
+          },
+          {
+            "path": "crates/sim-web/Cargo.toml",
+            "sha256": "867202739fccd54f8d3d6270417fed4392155ae96236be6ea584d7e2ed54c959"
+          },
+          {
+            "path": "crates/sim-app/src/cad_app.rs",
+            "sha256": "0df1dfb6cc2cae07c549542d21318db827f6964810d49c78857e3f197cd8efbb"
+          },
+          {
+            "path": "crates/sim-app/src/main.rs",
+            "sha256": "3f0ac2ffbc29b7cfae40d8c234a998dc61f92a392a8a4e57b16d397abebbad3e"
+          },
+          {
+            "path": "crates/sim-app/src/phenomena_app.rs",
+            "sha256": "c40cedea205a17e4c5c584cec0e1163fca230c50884181db9d265d510720d234"
+          },
+          {
+            "path": "crates/sim-compile/src/island.rs",
+            "sha256": "31a64a30e4f841060f8609d9547ddc65f1d792c28bc910b9b20ee509df42d194"
+          },
+          {
+            "path": "crates/sim-compile/src/lib.rs",
+            "sha256": "c623f4c9a547e6e67b02deb6cd979467aa8565b3ac145b08d8721b8376362dd7"
+          },
+          {
+            "path": "crates/sim-compile/src/runtime.rs",
+            "sha256": "23d6e41c8253a5ce4671552edbe559889239def43efaae33cf7b5ebdfd0eb896"
+          },
+          {
+            "path": "crates/sim-compile/tests/island.rs",
+            "sha256": "0c55d233fcdf1d9efc221e9da1e31f201c3ab07659f5ef951c81ba2509595356"
+          },
+          {
+            "path": "crates/sim-compile/tests/parallel_jacobian.rs",
+            "sha256": "88b0d8387ccd1510c8b75879c6ab98c90f2c05f3b1ae8aeb8fc2bfca0971f01e"
+          },
+          {
+            "path": "crates/sim-compile/tests/rate_jacobian.rs",
+            "sha256": "516a1c4d081406f11473038d5858108308626febdab8dfcec20edb480c1bbd19"
+          },
+          {
+            "path": "crates/sim-compile/tests/residual_row_scales.rs",
+            "sha256": "9266041c49c2b07db8ee265bfe5fa5ce6b1cdeb3cad34d95a93f5d4c2a6969c6"
+          },
+          {
+            "path": "crates/sim-compile/tests/state_row_jacobian.rs",
+            "sha256": "4e9916da06698304b80baedc37c7055805c9305a0dc4d20ba2f7f38b766e62be"
+          },
+          {
+            "path": "crates/sim-core/src/couple.rs",
+            "sha256": "f08bfa49c5c041c840e250ac6d3d97555dd3f2691faa3afa5c3fc83eefc77739"
+          },
+          {
+            "path": "crates/sim-core/src/equations.rs",
+            "sha256": "c64cc33da9260ec6e837a4f21139a66ca29ced49045876293fe62a0af0bbbd8e"
+          },
+          {
+            "path": "crates/sim-core/src/lib.rs",
+            "sha256": "80138b2da8e581b2ef88af2e111fa1f54aa85e33681938a846bc3e04034d7b9b"
+          },
+          {
+            "path": "crates/sim-core/src/parameters.rs",
+            "sha256": "ba64714b44bcda34800acf0d26082c7a1e0f8d223200a4e5a73f3c16206490d3"
+          },
+          {
+            "path": "crates/sim-couple/src/environment.rs",
+            "sha256": "51c4a4dfe2f45f5754e8bca8c565e1c8d93a2d81429a8310e92f3fa78958e383"
+          },
+          {
+            "path": "crates/sim-couple/src/lib.rs",
+            "sha256": "2ff6578359670ef79a6a271f0dc2bb446dfe0f7419ced12255702ea6c78a8217"
+          },
+          {
+            "path": "crates/sim-couple/src/native.rs",
+            "sha256": "1e439045c065ac7a23889dbc6a539e0e1edae507de91846c726f976c507ed315"
+          },
+          {
+            "path": "crates/sim-domain-acoustic/src/lib.rs",
+            "sha256": "cc9e893bf934c368720c385192aa2016a691bd6d6f2b8c50fd81e311593916b5"
+          },
+          {
+            "path": "crates/sim-domain-bridges/src/elements.rs",
+            "sha256": "85e2f861d11988a26f533072a99e5403e52ded0284ea54921009d16992c36236"
+          },
+          {
+            "path": "crates/sim-domain-bridges/src/lib.rs",
+            "sha256": "5b2eb89294ed2236146e5d6fddd11f95f6153fd6dc3cd9fcb9b5d730780c3f30"
+          },
+          {
+            "path": "crates/sim-domain-chemical/src/lib.rs",
+            "sha256": "03c3982030a07b0572d335109c9c4c51b13236ad82c5b17e2887a37c34980308"
+          },
+          {
+            "path": "crates/sim-domain-control/src/distillation.rs",
+            "sha256": "393dd8cf7f9ebecf02c72c69d1ec3cfb3d439d803ef603c1b7e1198dd7214761"
+          },
+          {
+            "path": "crates/sim-domain-control/src/elements.rs",
+            "sha256": "b96135f25c649b9b0c236088c173c5a848aff12209c1b5205fe228b335d4a611"
+          },
+          {
+            "path": "crates/sim-domain-control/src/external.rs",
+            "sha256": "19845e5c122278baa251a6d4f121a3b1caeaa8e211767209757afc9baa1086a9"
+          },
+          {
+            "path": "crates/sim-domain-control/src/lib.rs",
+            "sha256": "9b80635deb15a925dfe8d7f519ecb10a5ec216d9ba0688bd36396eb5ebb819e5"
+          },
+          {
+            "path": "crates/sim-domain-control/src/motion_clock.rs",
+            "sha256": "12c095ac14116f98e25c240cd4425a5ef6c5fae4c34aedfc37279a37da7e6c7a"
+          },
+          {
+            "path": "crates/sim-domain-control/src/neural.rs",
+            "sha256": "7d2e8f4ffe9e213c9aeba9416ebfeb40d5562b8dc80dc9011c3792df79c6e7bd"
+          },
+          {
+            "path": "crates/sim-domain-control/src/policy_search.rs",
+            "sha256": "28bddebcf1bc6a6149f4c8e2747fdfcddfac960026bda29eec4a94007bf52c7f"
+          },
+          {
+            "path": "crates/sim-domain-control/src/stepping.rs",
+            "sha256": "d77d7d30702088720951086ed54e19d11f70ea2ff514f96c94899ce87cb2c2e3"
+          },
+          {
+            "path": "crates/sim-domain-control/src/support_preload.rs",
+            "sha256": "a6095440c2ccc69e0c72d4c53568f2beac1a7f6a484d86082dba95d81f9dc4c3"
+          },
+          {
+            "path": "crates/sim-domain-control/src/trajectory.rs",
+            "sha256": "29d2a2d71fd9110bf998a936e65fc859dfc126f1dd9cdc4d15599e50e9fb1b00"
+          },
+          {
+            "path": "crates/sim-domain-control/tests/motion_clock.rs",
+            "sha256": "b313af13a34fc5bb352a3c0a43a492dd10f6027dfd94b7c2f3774604fd1c3fed"
+          },
+          {
+            "path": "crates/sim-domain-control/tests/neural.rs",
+            "sha256": "2e3904c787459ab4ce182518a8eadf4fb8c4ddddc4dfcb45b6f2322615e7f0e6"
+          },
+          {
+            "path": "crates/sim-domain-control/tests/stepping.rs",
+            "sha256": "843741d08cefc0340dd3128518405ce5adbd8808aa02bf18bd8c42c2d6bd7716"
+          },
+          {
+            "path": "crates/sim-domain-control/tests/support_preload.rs",
+            "sha256": "1b60520e4585caaee4900a5442f68b3e969c65e537a97075c23e4aac97e6e7e5"
+          },
+          {
+            "path": "crates/sim-domain-control/tests/trajectory.rs",
+            "sha256": "22dfe87a5feefacdd7684bcf130f298c4cce00ec1a6f000ca8a409bbf854cd09"
+          },
+          {
+            "path": "crates/sim-domain-electrical/src/elements.rs",
+            "sha256": "23f0c899604fe3e5f0c164c75b4eacabec93f1de10d5492fab74007aa30667f2"
+          },
+          {
+            "path": "crates/sim-domain-electrical/src/lib.rs",
+            "sha256": "5cf1f4b44595739411fcc1f6c64ad0c5de9d7443707c2ec8d8d350e58bfbdccc"
+          },
+          {
+            "path": "crates/sim-domain-fluid/src/lib.rs",
+            "sha256": "37a764675339db8b549a812b99e36a22b903a4c3853e91806805d1255309b591"
+          },
+          {
+            "path": "crates/sim-domain-fluid/src/twophase.rs",
+            "sha256": "5ec1c88f4e9a601c4b20023be26e10a03cc33b60d39e05112a6f8a969be930e0"
+          },
+          {
+            "path": "crates/sim-domain-granular/src/lib.rs",
+            "sha256": "bfbb5ed2cb6f22f014fa4d233f26c3b8fe50ce2245995342684ea38a3ab1b720"
+          },
+          {
+            "path": "crates/sim-domain-hydraulic/src/lib.rs",
+            "sha256": "533aa750386f7573dd600ee5280d2d3039718c91a74e7df1c6bac988557d47c6"
+          },
+          {
+            "path": "crates/sim-domain-line/src/lib.rs",
+            "sha256": "028d3be622d7b3864f74143a59a4f2e3adcffb7ed084aea2670da7c0da5ffcfa"
+          },
+          {
+            "path": "crates/sim-domain-magnetic/src/lib.rs",
+            "sha256": "dfa7c457bb1192e0a5fd75ce9c15c5b1391deca29cb1fedc8821b8e6f8930c08"
+          },
+          {
+            "path": "crates/sim-domain-multibody/src/chain.rs",
+            "sha256": "a03feb7835d213a148c8fdd6cf251acf67915e3cad984fe264c98319480338ff"
+          },
+          {
+            "path": "crates/sim-domain-multibody/src/contact.rs",
+            "sha256": "26b18c6f1a3bc043a841eb621d70fc7ba0e37437f7ee27f2c5eb933aef9621b1"
+          },
+          {
+            "path": "crates/sim-domain-multibody/src/elements.rs",
+            "sha256": "199fda86e90ee5019656edd62734995630d1578871ae1bc4c12041d6ff5549d7"
+          },
+          {
+            "path": "crates/sim-domain-multibody/src/lib.rs",
+            "sha256": "74add1e1fc9385e96b9ce3ad00b4094dcb5d9526829f6dab9f33f25d6689882d"
+          },
+          {
+            "path": "crates/sim-domain-multibody/src/planar.rs",
+            "sha256": "d2dc804d200f53cd9ab7bbfda5fd56264730b6decf1f4ac36eee1cd57c107c4e"
+          },
+          {
+            "path": "crates/sim-domain-multibody/tests/regularized_friction.rs",
+            "sha256": "74fc83939c3efbf2458d3a0575f2e00f46305742e6cee290ca1842f9210e0e02"
+          },
+          {
+            "path": "crates/sim-domain-radiative/src/lib.rs",
+            "sha256": "b31bc276be6722150b50da58bb0683bb8046d71090284f9725ad32e4af37e230"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/actuator_audit.rs",
+            "sha256": "2a40ba3163bf5342f10f987a8494eb9ad7d988da0a7bef4a18c1ea4ba9132f52"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated.rs",
+            "sha256": "5572e6f3b559a3ed8cb9124012d77be6af2c3dbbbfdaf7715723c4212f43b691"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/effective_servo.rs",
+            "sha256": "ec8f5b3bc3c55c40952e9076cb4bd758a55cba2ef52c65e760eafce0def38207"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/lib.rs",
+            "sha256": "16594bd1dd68154eb9e59f36e151230d7295f8cf53f965291892cdd8ae8d0fb4"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/math.rs",
+            "sha256": "217b49d74240f296e98d1539ff820d317a1277cd4ed3f2d2ff8ee4d002cea299"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/model.rs",
+            "sha256": "f823acbb74029c329613579ef2c2780dc34b92ecb6811e5fe93c7ee3cfbe76fd"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/motor.rs",
+            "sha256": "b021661ccff07bcb96c9e8b485fb8477f0affcf993ff31e5cee6a95483544231"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/sdf.rs",
+            "sha256": "fe5b9197b8d7e99ad799d98f06beda3755718a4fcdbd90cc5855749702896a4e"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/world_load.rs",
+            "sha256": "2be360142bdef81572197bd82756d4aa2b2c88e54454b88355a33e54a884af5d"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/articulated.rs",
+            "sha256": "5e75ac1add8a9caa0cdfbc1268f2806217e43dc76fd889be1badf8be1f808b1b"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/backlash_events.rs",
+            "sha256": "e0e7bc3d1330c09e968894d4a0f4a49336e55680b69a91932ba1f2f0e33ea0c7"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/constraint_audit.rs",
+            "sha256": "161373ceb09b7caf6ad92abc6159b5fafefee44d04c63f51d23cfbad4d168c19"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/effective_servo.rs",
+            "sha256": "4a5556c5598ac8115c961a754d759aa7d4820ee6d3d75d4bfaca2867753171b9"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/embedded_motor.rs",
+            "sha256": "0de7f402b4cfd37a168df46aee6d54cb48bc527a37df00f91116882569a1582e"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/embedded_step.rs",
+            "sha256": "d8f07fbcf9d95d3489456b7212b3c7bb41f49d2bea2392b2765cc2f4cbd758bf"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/embedding.rs",
+            "sha256": "6ac80a5b54869b0f062f3cf551013b9ee01c75ce2dee8700ab5c0d737a8a952b"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/floor_dissipation.rs",
+            "sha256": "437cc879b4eb5d8c837b8b9a1eaefc1e18b1115680dbb7e1312ad861584e88a7"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/jacobian.rs",
+            "sha256": "7a98d06c21978b655a465afe20df2bb98266d2a33a9982cec8a261680e37774b"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/motor.rs",
+            "sha256": "45ed4343de572d2538c56c9cb881d21768bc8bfc08e370f137c9111f97e8e509"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/motor_jacobian.rs",
+            "sha256": "0ba30716297813c2646f9b2bf9b00af2711d538e53ab527d9eee5957b83d67be"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/motor_reduction.rs",
+            "sha256": "cbd2880473b2731ce5fc298e5a8a7d7cff08480145e77ae824e64c261b49e558"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/regularized_friction.rs",
+            "sha256": "d2ce587e1303fd74838c75f41d5c475f16f0b59c93f582153bd0b39d3e169d3f"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/rigid_inertia.rs",
+            "sha256": "c4c63831e215e8bb388f15737fbccfce183dd015b90f714cf03ecb28cf11df17"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/sensor_seed.rs",
+            "sha256": "2905e13a7f3fb0767660ff322211988c5d76da710b6c141b65f8cc1a119a07db"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/servo_clock.rs",
+            "sha256": "6e340da348a22aa2d2b309645cdbb0377aedf078e8c94c7f5bee1853e1773356"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/transmission_coordinates.rs",
+            "sha256": "0d2e90e593e4c2cd006d6a12c8fa1a9edfb42d0064c72741ae722ca15d907cd8"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/transmissions.rs",
+            "sha256": "d52a3bae492aa4707031b135e777efc2b241793134d56da9ace604b3e0ea7a15"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/world_load.rs",
+            "sha256": "1da24bb53186ff1811a744c0d3587bb5109da55d53b871146ceade29373b2a6b"
+          },
+          {
+            "path": "crates/sim-domain-rotational/src/elements.rs",
+            "sha256": "e3cad433ad480a8ec2864f96cb70b7fda85f5a9f56df8b7bd3b7f3a4c6fcb4ef"
+          },
+          {
+            "path": "crates/sim-domain-rotational/src/lib.rs",
+            "sha256": "f305e87c64a12e97175f5f703b2ead6e6e600da4ee920138221d8a280faf80c9"
+          },
+          {
+            "path": "crates/sim-domain-sensing/src/chain.rs",
+            "sha256": "b0143c46422adbacee35f6c58984185573ea11f06c1088daff6af603138df5c0"
+          },
+          {
+            "path": "crates/sim-domain-sensing/src/lib.rs",
+            "sha256": "11ced075966c3b4befcb1a099bac7f2122e7476fa9f037d29cc40d453d7091e3"
+          },
+          {
+            "path": "crates/sim-domain-sensing/tests/sensing.rs",
+            "sha256": "47531d585fe439382943b3a49a5eb0ee4a2d58e5cc116c23172a6c0d9ad13503"
+          },
+          {
+            "path": "crates/sim-domain-thermal/src/lib.rs",
+            "sha256": "390fd455e2216219a4d15beca88002509f749d677f1e1b06d9ec8ad1af496ec7"
+          },
+          {
+            "path": "crates/sim-domain-translational/src/elements.rs",
+            "sha256": "49dc89712c7d39e83c7adf68da1f5eb7d9298731c3cf688d475e71b6ab5cabb4"
+          },
+          {
+            "path": "crates/sim-domain-translational/src/lib.rs",
+            "sha256": "cabf3c77bd1b48a0d046f7cd354ec4db06f05d6a7af84984a4104f1c6de0b4b5"
+          },
+          {
+            "path": "crates/sim-dynamics/src/analysis.rs",
+            "sha256": "bf6b8b8257d1980e2579da1ace404eb6dbd4b0c2e422b4124bbc08efd67a1fb6"
+          },
+          {
+            "path": "crates/sim-dynamics/src/attempt_check.rs",
+            "sha256": "37500206637074ef813ecd59db4def7f0cb78ce9ab8f6031fb118fa273ddd932"
+          },
+          {
+            "path": "crates/sim-dynamics/src/event_root.rs",
+            "sha256": "d756a1334e7442dbefa2471e832247fa2b4916ee8c2cc023173752f0ea670561"
+          },
+          {
+            "path": "crates/sim-dynamics/src/hybrid.rs",
+            "sha256": "0345ff11dea682fbe479f1ebc6763e256c15a82c4711f2f6241790d866166806"
+          },
+          {
+            "path": "crates/sim-dynamics/src/jacobian.rs",
+            "sha256": "9b4b416a3048988f5d5c3f02d19c6ea0907e30b35bbe07c038b9b1220ee3fda3"
+          },
+          {
+            "path": "crates/sim-dynamics/src/jacobian_check.rs",
+            "sha256": "3880b4ce39f46ede5fc0c9c7097a0f9b69a1f425e88fdb812f1296c79480ba80"
+          },
+          {
+            "path": "crates/sim-dynamics/src/lib.rs",
+            "sha256": "1e6a9be9ebf41513f4634f813c99ff9bed0152083bf14db5e71c26386a73b535"
+          },
+          {
+            "path": "crates/sim-dynamics/src/linear.rs",
+            "sha256": "f5f04d5eae389361f514c960f55eff57283bcc2ad5091d63635c47b1d78789c5"
+          },
+          {
+            "path": "crates/sim-dynamics/src/report.rs",
+            "sha256": "1712a4cb16940363ce890d541867dab1b2ededd928bf244c1d66e0361401a723"
+          },
+          {
+            "path": "crates/sim-dynamics/tests/hybrid_stepper.rs",
+            "sha256": "f20d3015a21b0c8b140aa089890f7e30e7336ffdbb4ba2d828b75800403c1bf7"
+          },
+          {
+            "path": "crates/sim-dynamics/tests/implicit_audit.rs",
+            "sha256": "eea17ebab1527c03230acec287fd75d2f84acb3820eaae85b19b932ec9b95271"
+          },
+          {
+            "path": "crates/sim-dynamics/tests/jacobian_check.rs",
+            "sha256": "9c227b88c06d87432c574d10c771cddd83d7295ba4bbc33521e568f36240d509"
+          },
+          {
+            "path": "crates/sim-dynamics/tests/root_order.rs",
+            "sha256": "75d3df62062fa39c05e54690d7e56702650e68eb253ed33342f4ccc28f764669"
+          },
+          {
+            "path": "crates/sim-dynamics/tests/scheduled_events.rs",
+            "sha256": "c64a1a285f30b08bd300d45e1810879e6cf589eb930714eb139acbd3a87b62c6"
+          },
+          {
+            "path": "crates/sim-dynamics/tests/step_breakpoints.rs",
+            "sha256": "a6bcc4b10fa998bc43930045796cd08622d04da4eab87bac8f58788af8c072a3"
+          },
+          {
+            "path": "crates/sim-geometry/src/lib.rs",
+            "sha256": "a3b097fec0d8671d9390a51dd64874ad6671758d8db1c916dfae296ec6bcfa56"
+          },
+          {
+            "path": "crates/sim-phenomena/examples/plank_debug.rs",
+            "sha256": "1437542cb7c04ebcb009865ac5ef6accac3242210b275194e254fefd130d22b9"
+          },
+          {
+            "path": "crates/sim-phenomena/examples/quadruped_profile.rs",
+            "sha256": "1e1620234fe46f752289db4751e1ef873cda7779f32c0f8f5c668a7a1d1369fe"
+          },
+          {
+            "path": "crates/sim-phenomena/examples/thermoelastic_precision.rs",
+            "sha256": "ae1a02e058ad2c58a4a671a63ac879d59e2b57de192bd6d84e827edb0ab1921d"
+          },
+          {
+            "path": "crates/sim-phenomena/src/exhibit.rs",
+            "sha256": "f12ad06347e9fbaf45112c46cd7fe7f33fb2db9587d68b9ed6cbf5fde3ba1f0b"
+          },
+          {
+            "path": "crates/sim-phenomena/src/exhibits.rs",
+            "sha256": "bc5f28879f51755c65b7b60cf64e4644d671da1c90e6db1522481202c186aac7"
+          },
+          {
+            "path": "crates/sim-phenomena/src/experiment.rs",
+            "sha256": "622c457825ccb0d47897a1b99ca5254a1353a425492c8f4fa1fa35936f4dbae3"
+          },
+          {
+            "path": "crates/sim-phenomena/src/lib.rs",
+            "sha256": "928fb450241f9a8a0a32cb9fc1fce81af66ee7f9c7944a61dc168a7bf7fb5754"
+          },
+          {
+            "path": "crates/sim-phenomena/src/main.rs",
+            "sha256": "4a6eccf63a974e5d4e6b78f5e5dce7c8718d7ba469a30f3d44e5ab154ccc7c7e"
+          },
+          {
+            "path": "crates/sim-phenomena/src/world.rs",
+            "sha256": "708ca55e176016799904d1ea5e584b67cddc78ee1a382b2f8a003f6209d92ce0"
+          },
+          {
+            "path": "crates/sim-phenomena/tests/acceptance.rs",
+            "sha256": "818b2d319d4ca521b6425e42d9655aefdcda49e8348e3d0552c61aac2e87e72a"
+          },
+          {
+            "path": "crates/sim-phenomena/tests/adaptive.rs",
+            "sha256": "40f0bb350414745ba0be5425ea7356be120614bcb603d0d2d87465534573f83f"
+          },
+          {
+            "path": "crates/sim-phenomena/tests/chain.rs",
+            "sha256": "73e2175c808df41847f15522a6d28720492529a2fa82f7afdf519f4077207f65"
+          },
+          {
+            "path": "crates/sim-phenomena/tests/dylib_gait.rs",
+            "sha256": "3cc017943eb881e8bf6e922bf2c58b875af60125213eff9b179b3b952fb10424"
+          },
+          {
+            "path": "crates/sim-phenomena/tests/exhibits.rs",
+            "sha256": "3f6465596d0687c1ae0aabb0b49f67089218481e758b190ba452af26c5323ea2"
+          },
+          {
+            "path": "crates/sim-phenomena/tests/jacobian.rs",
+            "sha256": "752e9401584db56e2a273e1501d4fffb71eded2b74fa69b9f9852690186e33e9"
+          },
+          {
+            "path": "crates/sim-phenomena/tests/seam.rs",
+            "sha256": "a44970db2af89ef6cee4fa43c7ecf870aa5591598275df645de155b42cbc25b3"
+          },
+          {
+            "path": "crates/sim-phenomena/tests/wheel.rs",
+            "sha256": "880d8e0dff3e9d8bbc5265c0b15b528b6ea386b5fbbd531a69450d5982164504"
+          },
+          {
+            "path": "crates/sim-runtime/examples/audit_actuators.rs",
+            "sha256": "3c97737058038d7ddbc303719934ae3df99a046f0679cd787fbadb9a324b4279"
+          },
+          {
+            "path": "crates/sim-runtime/examples/audit_analytic_mechanisms.rs",
+            "sha256": "6f93edd23e1453eda0f84559feabd3e4c0413b77b3182039e7eb1e506846a20c"
+          },
+          {
+            "path": "crates/sim-runtime/examples/audit_embedding.rs",
+            "sha256": "c814f338a5ce0a18bbe326c920a35a084dbf72610cafc416b43ec8ea388219f3"
+          },
+          {
+            "path": "crates/sim-runtime/examples/capture_contact_impulses.rs",
+            "sha256": "e8f2ffd3d3f584409d70c192a597e628a3f73da60a2f97713a330175daff501b"
+          },
+          {
+            "path": "crates/sim-runtime/examples/capture_embedded_window.rs",
+            "sha256": "eca2186bb899c5d4d0c898e2082f8fe0fdde723f6866c358c31eb7972f445fc9"
+          },
+          {
+            "path": "crates/sim-runtime/examples/capture_trajectory.rs",
+            "sha256": "9d8afe0daee9feaa0a567b956965821b810613e50d497f70a865e16dd8e1982e"
+          },
+          {
+            "path": "crates/sim-runtime/examples/check_captured_stage.rs",
+            "sha256": "9d352657d7f04f2ea65190188071f8f73d2ddbe8257d575b62d989854ea39a23"
+          },
+          {
+            "path": "crates/sim-runtime/examples/compare_constraint_rows.rs",
+            "sha256": "df49061cf459f58e13b2544fb2a9d1e15936ff9e1809f13ca5c8998d62418332"
+          },
+          {
+            "path": "crates/sim-runtime/examples/compare_embedding.rs",
+            "sha256": "7bdcdc7987cbd3887436cdb465980a52463067a87cae347e731f62aaf3416d64"
+          },
+          {
+            "path": "crates/sim-runtime/examples/compare_matrices.rs",
+            "sha256": "fc631ef3103809aaa9a7af516cc152f4eebdca0ee40eafc693660ec0f7262a26"
+          },
+          {
+            "path": "crates/sim-runtime/examples/compare_motion.rs",
+            "sha256": "0152485dce70cbe0c0823b1a2b39197a47ecb8d68d0573a7d7784e0f69ddc823"
+          },
+          {
+            "path": "crates/sim-runtime/examples/compare_transmission_block.rs",
+            "sha256": "c4b33237c7ec29e02487d4905d8889b0e60cd193fe20aef22ca78bcf1baa56f8"
+          },
+          {
+            "path": "crates/sim-runtime/examples/distill_policy.rs",
+            "sha256": "548588b90b2aa8f2b6002f47e8507712cfa739d1a66c9923a8af52e262d8b84d"
+          },
+          {
+            "path": "crates/sim-runtime/examples/evaluate_lift.rs",
+            "sha256": "c4c5dde4453e1ca2926d61ae1511a13b205fbce250d63b1ba0c9d743b640406e"
+          },
+          {
+            "path": "crates/sim-runtime/examples/integrate_embedding.rs",
+            "sha256": "5dd2343fb260b67147f93dba58c8dc665a36249ca9e606327ab1f7b8b4798d1b"
+          },
+          {
+            "path": "crates/sim-runtime/examples/place_supports.rs",
+            "sha256": "5be7be0e3cba2971bdd42f7c5ac90869528b464be1417b33a1a3601a2032c5c5"
+          },
+          {
+            "path": "crates/sim-runtime/examples/plan_marker_motion.rs",
+            "sha256": "3dd18b31517a249403ddbcc7719ed3b77f6bc4a8e1e3ddeefdfd1c3ef626c4c4"
+          },
+          {
+            "path": "crates/sim-runtime/examples/rescore_walking.rs",
+            "sha256": "170d7bad9db8feb1f3678bcb76546d7f24b283175cd389d0d8e87240a29843d4"
+          },
+          {
+            "path": "crates/sim-runtime/examples/resolve_captured_step.rs",
+            "sha256": "9d306b8f135ba4595971f8a8320bd2880dac50c22881cb030260b535d9b7fcfa"
+          },
+          {
+            "path": "crates/sim-runtime/examples/run_environment.rs",
+            "sha256": "ed35f5617619720f099157dfb9a4062b3863aa2f004b90ac72ecbc5c8bb352da"
+          },
+          {
+            "path": "crates/sim-runtime/examples/summarize_hold.rs",
+            "sha256": "f8242fc3f893ee57f72273b7b92fca0b418946de41900f2dd071b856bf7b72d5"
+          },
+          {
+            "path": "crates/sim-runtime/examples/summarize_marker_clearance.rs",
+            "sha256": "02de62d3347006ff8b5b3881e48c013f20712a74e2840f3a4e72d72218f79dd1"
+          },
+          {
+            "path": "crates/sim-runtime/examples/train_policy_suite.rs",
+            "sha256": "6e9dbeb6ae1a8d99df2d07f6ebd1fa3e6fd6d7a9c2eb728a588816f81a93df82"
+          },
+          {
+            "path": "crates/sim-runtime/examples/train_residual_policy.rs",
+            "sha256": "b7514188d0c538d86a203523c45b27460316c121fc3ce713aeae5e714748e120"
+          },
+          {
+            "path": "crates/sim-runtime/src/body_feedback.rs",
+            "sha256": "183560648c59a0804b8b1a30345bd507fc07c7d1840cd5b632904b88858a590a"
+          },
+          {
+            "path": "crates/sim-runtime/src/contact_audit.rs",
+            "sha256": "194f4d2fb16cce179a4730a7446aee5ed826ff736d43224f1a854a7a58587fc0"
+          },
+          {
+            "path": "crates/sim-runtime/src/embedded.rs",
+            "sha256": "c39441641e7d62b68a8ded798f755db291599d2692ae078a5840224c4f6da26f"
+          },
+          {
+            "path": "crates/sim-runtime/src/embedded_policy.rs",
+            "sha256": "c2b0459dd9b6cf479e6b6e933b44bcb9c3961e6f29f3cb1087e69fb9736b1daa"
+          },
+          {
+            "path": "crates/sim-runtime/src/environment.rs",
+            "sha256": "e3e225e041c9deff217583d6ca483459c68bbfdf0ac88a20c5593caeb8bf590b"
+          },
+          {
+            "path": "crates/sim-runtime/src/lib.rs",
+            "sha256": "17c21d6266d61f4f904f09bbcb08b7476a823db2e56f50e9d51fd37a0d0ec33c"
+          },
+          {
+            "path": "crates/sim-runtime/src/lift.rs",
+            "sha256": "2de8d69743712e260b8cecd80da75f8499b08f3d806862ed8d04bf1a9d7250df"
+          },
+          {
+            "path": "crates/sim-runtime/src/motion_tracking.rs",
+            "sha256": "838ac87d9116173ceb9d14d59772c920fc5b9ddde2ec358dea95ff0feb439693"
+          },
+          {
+            "path": "crates/sim-runtime/src/physical.rs",
+            "sha256": "398f2c215acb879ae1adf46cd35e6dd052afdac8a0e1b3583bcd339f555cbce1"
+          },
+          {
+            "path": "crates/sim-runtime/src/planning.rs",
+            "sha256": "ed3a54f51fc0d3218a3cfe017e40eefc7bc8e52a6700f0817a7ed80433b8913f"
+          },
+          {
+            "path": "crates/sim-runtime/src/point_feedback.rs",
+            "sha256": "3d1fd14ae102a2c66aea1bbf8a84b75ec921a1a3a9dc2de69fdc285faba9339c"
+          },
+          {
+            "path": "crates/sim-runtime/src/policy_evaluation.rs",
+            "sha256": "4736c2c2cd279507d4de3466c209eafc23d72578cbefb6065f4d13ab6a487a40"
+          },
+          {
+            "path": "crates/sim-runtime/src/posture.rs",
+            "sha256": "4cc3bf0790a0bc7c58a00bc0a92fa22b1f1f01b8f16e6c1f28aad6b7aa05e4d4"
+          },
+          {
+            "path": "crates/sim-runtime/src/session.rs",
+            "sha256": "0e9a60050b36b0c4c8c29b8b0b168a1874e220110c56cfa7038bbf621476dbe3"
+          },
+          {
+            "path": "crates/sim-runtime/src/step_reference.rs",
+            "sha256": "a407753d8f53f7a99e12ad41cfbd5ad3152845ef54ec5904f2cc5785fac47366"
+          },
+          {
+            "path": "crates/sim-runtime/src/support.rs",
+            "sha256": "f2b29f7aef3514d6562d9b2681212b0179ba16b3a13a29b2eb0c0d264b03dd7b"
+          },
+          {
+            "path": "crates/sim-runtime/src/task_observation.rs",
+            "sha256": "d35a51904c08a3f4693924bbdbf756ae3cf18b499ed54283d31610916e537fe9"
+          },
+          {
+            "path": "crates/sim-runtime/src/tracking.rs",
+            "sha256": "6e7d2bbd2c5a3114be3f0e544f73c8481d7a89f9dc52370cc5b711bf1c45d8c7"
+          },
+          {
+            "path": "crates/sim-runtime/src/validation.rs",
+            "sha256": "39d22a96465848a2f6f14058d22ff702aafd562d314f2b0861e1b8b00b3ce3ce"
+          },
+          {
+            "path": "crates/sim-runtime/src/walking_task.rs",
+            "sha256": "fed4366056712d14cbf59724fee3b56f25c64a06dea76aef76cb99bb1074be5e"
+          },
+          {
+            "path": "crates/sim-runtime/tests/body_feedback.rs",
+            "sha256": "579d64021448e5d74f148d39adbcf6be9bf23a89ed05a5b0284346a411bc0520"
+          },
+          {
+            "path": "crates/sim-runtime/tests/drive_backlash.rs",
+            "sha256": "753b350a742d8e9b517379464fb3caa7e540fcc09189a028f0527e0957f9eee8"
+          },
+          {
+            "path": "crates/sim-runtime/tests/effective_servo.rs",
+            "sha256": "7eddb576e892fbc8a34a54f713d87227b2d513d474f409a8080ac5cfda7a4436"
+          },
+          {
+            "path": "crates/sim-runtime/tests/embedded_session.rs",
+            "sha256": "3558a6f913e5f6e651770b6ea39677a231a48f58626e67cf1787364504ae366c"
+          },
+          {
+            "path": "crates/sim-runtime/tests/environment.rs",
+            "sha256": "12dcd35c047fd8e473f6153ea7534c4e315014258423f3a16437e62ef08a60e8"
+          },
+          {
+            "path": "crates/sim-runtime/tests/lift.rs",
+            "sha256": "d72499754bbf1d7f232e28b8dd2f90ce1872067f51e276374c71baf82066a641"
+          },
+          {
+            "path": "crates/sim-runtime/tests/motion_tracking.rs",
+            "sha256": "faec663aab009946c2dbe3ecf5458ea234b2e298be8884a159794a8242884c49"
+          },
+          {
+            "path": "crates/sim-runtime/tests/neural_policy.rs",
+            "sha256": "6b5aaeb1b684a53bf0d90b5cdc1198566b5db23246136ef875133e62ca028011"
+          },
+          {
+            "path": "crates/sim-runtime/tests/planning.rs",
+            "sha256": "f8606b4548fb01cf61c21375105dd9e1fb325836b001e79e7481d9b0a5f752bb"
+          },
+          {
+            "path": "crates/sim-runtime/tests/point_feedback.rs",
+            "sha256": "b27a9eef1aefc9db0421df580018b821b10a8acaab08366a70138af488f91db5"
+          },
+          {
+            "path": "crates/sim-runtime/tests/policy_evaluation.rs",
+            "sha256": "08efd5ed7593d3dbf57af29c549c474042f6d12094bc8f150e982e4d8897dda6"
+          },
+          {
+            "path": "crates/sim-runtime/tests/posture.rs",
+            "sha256": "e4c1f7300989fe7003a2d3db85cd29afccc7b73129cdbd5c1fa3dbecefce0762"
+          },
+          {
+            "path": "crates/sim-runtime/tests/residual_policy.rs",
+            "sha256": "47af1867185290d6cdd707d9517dda23186b947587db0c56a5d11da5ae35cc38"
+          },
+          {
+            "path": "crates/sim-runtime/tests/session.rs",
+            "sha256": "ce0f079da743c87322073f178f8840607193935b1e4f2d9a8f7fda9996e7d2ec"
+          },
+          {
+            "path": "crates/sim-runtime/tests/step_reference.rs",
+            "sha256": "14c28fdae3c73194c056c4080673b36fe25ea437f806aff09c39a92445b8a63d"
+          },
+          {
+            "path": "crates/sim-runtime/tests/task_observation.rs",
+            "sha256": "5fd61bfbef1c119244df5c580a1af9aff45f3481a3981eca7e47f495bff00226"
+          },
+          {
+            "path": "crates/sim-runtime/tests/tracking.rs",
+            "sha256": "66a2d141a8569b77bccac71b3a47fdc0394c5841b1a298e1a8a9d844424e123a"
+          },
+          {
+            "path": "crates/sim-runtime/tests/walking_task.rs",
+            "sha256": "f58235d0a7e70a9f3880018dd4a79253c201b6c71f2a3c2b9cbc7f3a3a8bb17b"
+          },
+          {
+            "path": "crates/sim-runtime/tests/world_load.rs",
+            "sha256": "9c08bb1823756beba929522ff19bf6c7784f3bed06bf96f9dcd560e760c0d8f2"
+          },
+          {
+            "path": "crates/sim-script/src/lib.rs",
+            "sha256": "6b5b3a5ff7e6ac815f7162c58d6b8e2c56c95668b9fc7523b10f6fd5b3a0e4d9"
+          },
+          {
+            "path": "crates/sim-script/tests/authoring.rs",
+            "sha256": "6944414d92e3ac511b1c5a34cd4f6817fa916e848971cf31bf6c551ee5b97f95"
+          },
+          {
+            "path": "crates/sim-script/tests/multiphysics_discovery.rs",
+            "sha256": "e7918f876a87f22ea66a0ea68e39b0c32b28f3f9e8d668a5bae5fba74d83fb88"
+          },
+          {
+            "path": "crates/sim-solve/src/coloring.rs",
+            "sha256": "7a94cacbefaf1a6fcd188870ef9155bbcecd51c05a2d22227b71ab9149ed1cfa"
+          },
+          {
+            "path": "crates/sim-solve/src/lib.rs",
+            "sha256": "997c6b096dbb104ea77980425d8406bc08ac685c4aa79da6e51555f60ba3db29"
+          },
+          {
+            "path": "crates/sim-solve/src/profile.rs",
+            "sha256": "cb8153eb67b2c552466982829011a03a69f48c992c58963a03430f9fa368ce19"
+          },
+          {
+            "path": "crates/sim-solve/tests/coloring.rs",
+            "sha256": "ffe68ac4b9a2d7b9c0805518eb0ef4eb7b83d104333dfc818bf5502c00ae7ab4"
+          },
+          {
+            "path": "crates/sim-solve/tests/convergence.rs",
+            "sha256": "c72c372afb59f351914d8e135ff1f90226dd4fb0c4bcca13d29085f04d7e5aef"
+          },
+          {
+            "path": "crates/sim-web/src/lib.rs",
+            "sha256": "01c54c71b6b3140b549561a7c0c2bbdd41b8360243f51e15646c97087262260f"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/closure.rs",
+            "sha256": "bd86d09685704cd59d1bc2d7bed0fc0cd2198c11fa07ebdbce406ab33a9bc2c1"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/constraints.rs",
+            "sha256": "39b3f91c17f04ac7bfedf899698bae908c48c05e4c27e8808a28d9262b7c47fe"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding.rs",
+            "sha256": "49dd4279715ec57f2ea78e1e5d3b87b74489b35cde728379ad946c44a1b6b4d3"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/friction.rs",
+            "sha256": "9ce79e0bb6783acf5a16164ade2e2af05df431398e788c0e8a4d5f4a5c99d523"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/inertia.rs",
+            "sha256": "f1ecd12632f585713c9da65f1f0a1fa50681bda87c225f6b8b0d921e5e54d6be"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/jacobian.rs",
+            "sha256": "71ba1af238022813761a056314b9b4e26895a857fba336886a562f96495b791c"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/prepared.rs",
+            "sha256": "1613aa22acd467a3040c79c53fb7e47bd1cedfe934fbeedf9928a04c5d35063b"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/transmission_coordinates.rs",
+            "sha256": "474152cd44021f8ba3de6014d5bd2473bc5bf35eb31bc26901e87b1e88d471aa"
+          },
+          {
+            "path": "crates/sim-domain-robot/tests/common/mod.rs",
+            "sha256": "9a871705868ada90cfd24bfdabf8822c512d7126df5cab71b6fb1e63f39af5e6"
+          },
+          {
+            "path": "crates/sim-phenomena/src/bin/sim_cad.rs",
+            "sha256": "b5d2b3e1fef97ed75dcf98e37683b5714a4180a85647026843e8e579dfc5ea2d"
+          },
+          {
+            "path": "crates/sim-phenomena/src/bin/sim_experiment.rs",
+            "sha256": "3d9e7d80e07f23edb474674297ae2734531195a642bedd817420b6250acefb19"
+          },
+          {
+            "path": "crates/sim-phenomena/src/bin/sim_gym.rs",
+            "sha256": "d8e25c6747949d232a8671c1f242b99f57eeb5d2d3a6c0e32f3db95d1435dde8"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/backlash_hunting.rs",
+            "sha256": "f00e2f331ef2262137c42f4374ce96c1644969e41b571315751380731973f241"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/cad_physical.rs",
+            "sha256": "10d9dad74d9e458c740124772026ca5cf966cd466c4bed98ab8402f16f177181"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/cad_robot.rs",
+            "sha256": "992551a7dd1bf20fcf2da13bb52b655d0b905718b38878dcb8c5dadd7d8cc018"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/chua_circuit.rs",
+            "sha256": "d91033b88f62a114a340b05afeb03020bb0f81bfb63ecad08d822762a3d87d5f"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/cruise_control.rs",
+            "sha256": "e7510df6cbd326c6f7ff8c9e9e82cec59d87d15e6a36f92453930a902f16fcd8"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/current_hogging.rs",
+            "sha256": "aa301a5ee44dd0989f4a92d7b9061f8bcf004aba54bd29e5b9edb4d0e68287ed"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/double_pendulum.rs",
+            "sha256": "5438452c35bb356ce7ca31d5d126a74826ab185478b0a445afbdb2f785f24a00"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/dzhanibekov.rs",
+            "sha256": "b1bc194f344caa5d100aac4f9857efe0c81ded4053f5ec13a1fda822c508fdf7"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/euler_buckling.rs",
+            "sha256": "a6a23489ff43fd3c1422725c1d45eeced0dc04a5a790abe8e1cafc5e339ea544"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/flutter.rs",
+            "sha256": "0ef36b9a9e771af5aacf9a650a049f2ca5dc8bc04d31ecfaed8da7c6d253a440"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/geyser.rs",
+            "sha256": "4337333b23e9bc099c3eb4ba6643a9a5ebdc0aa779caff69f2d69cddbe4e0712"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/huygens_clocks.rs",
+            "sha256": "bb2dd7687a83d74d41566a10f169ef805f9c39000d4f14feffeffd965ded0e2b"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/janssen_silo.rs",
+            "sha256": "e682060b6c677dfa786adfb1cfe6b455bc0faa4c7c3fd06fca5208b33ccb4bd0"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/kapitza_pendulum.rs",
+            "sha256": "395604e23236328c56f70140341fc33480cfff905065c13224a41d73c38b5355"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/language_independence.rs",
+            "sha256": "42474fc254d39a11c9005596319dd9b44548b57f308d5a5451357a2de67d3af6"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/latency_instability.rs",
+            "sha256": "5b4a8eaa859eec96cbb3401e20cef2138bfd1db12b5ff60fb5b00ba324b67825"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/leg_seam.rs",
+            "sha256": "b06e99bb1930c5ce3544b4f24723c769dc57f2453b608559094b9e9424048ea5"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/levitron.rs",
+            "sha256": "60f1c6a4a490a37ba38028153cec2ea876ed39f50c74d1ee990bea31b83e4794"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/missed_deadlines.rs",
+            "sha256": "afad09a61b116282c530855184e94c52ec2ddb9af9e139e9468713748781baad"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/mod.rs",
+            "sha256": "8fdeccee1a9d18739dc4ebe19864c258c48e7fbcbb4d380ee34afdad0098be95"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/motor_hogging.rs",
+            "sha256": "76d02402a76385bd38b0d0a9c4583d791568bdba04e8caccc2790ebb15916bbe"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/painleve_rod.rs",
+            "sha256": "70b162218ac62bd98820dd48837e94036959442ec6d9844718706f616d2e7e65"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/passive_walker.rs",
+            "sha256": "63725da139eacb25e53e703ede7b7c981de0a9c3c6f1d9e5408843b0aaac3f03"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/quadruped_gait.rs",
+            "sha256": "d14675b40fa16134c1e338ef6095f454aeb22bb7c1625d17c18bc61d220a6cbd"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/quantisation_hunt.rs",
+            "sha256": "262aefe31b34898c6ad81811fc0839b5cac43cce9a9aab84b30398414adb2651"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/rijke_tube.rs",
+            "sha256": "c362af55cce6d64efa3fc36cfd6670f6009c5a2e51d65b3c38e5137658d4456c"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/sample_rate_instability.rs",
+            "sha256": "66db55346cf82053c51f8f813d50a6d2ab3065563f6d06663779ec9c24c8764a"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/scaling_ladder.rs",
+            "sha256": "51b3775b74f3e306a6386231f7ee308ad7eb2e4688d834261aefce14490a97d1"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/semenov_ignition.rs",
+            "sha256": "a6b68c89a645e78bfe2d2479e801ed149b78aed1d97a365638d47617dd5c868c"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/sky_cooling.rs",
+            "sha256": "b6ddb795972656987851fcbd9a90f509f8117e709d1eb38017ce1db8f5be4f5b"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/spring_pendulum.rs",
+            "sha256": "af36fc7bdf669f30d0fb291babfbc13760a63f7edb9dd2afedb11603cb8f5414"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/stick_slip.rs",
+            "sha256": "da6ccd69df0100f637829c4e7c8b1d6c3bf33d679f889752a47f37608ec750d3"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/stochastic_resonance.rs",
+            "sha256": "1ddf0cacda426755bf453e66ddd61f74fe0a4cac8d08bb419c152766a298021b"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/thermoelastic_damping.rs",
+            "sha256": "565f38c7b15a38051510724336c2e089929d3cdf5290528bc0462a65fcebb77d"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/tippe_top.rs",
+            "sha256": "4d45a9e22871f2324d5ee36050c4a72d7b37e88ba5d51e798ffde02bb557dcaf"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/viv_lock_in.rs",
+            "sha256": "86d9e8df73dae01699d1f372bdaae1ba2b88b0f36863052bf76158017280850a"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/walk_the_plank.rs",
+            "sha256": "28e728668902eed532f6889e281447777879a97566175736c1d6329f0dc1b24f"
+          },
+          {
+            "path": "crates/sim-phenomena/src/scenarios/water_hammer.rs",
+            "sha256": "c525afafa887221c217ca93e6a01aaea369bb1242e4371cc4c20ae232ae85138"
+          },
+          {
+            "path": "crates/sim-runtime/src/bin/sim-profile.rs",
+            "sha256": "63264d23e0dfc5a6dd9b060aa6104b8850522917f1612d283cd326ecfa86ad04"
+          },
+          {
+            "path": "crates/sim-runtime/src/bin/sim-session.rs",
+            "sha256": "06e328f24bf57272b1b616bab5cb57d99872e7cf3c1daabb529c7d323ac4a666"
+          },
+          {
+            "path": "crates/sim-runtime/src/bin/sim-track.rs",
+            "sha256": "5d3578b222293e54317aa7a7d97ce707118f31914060c5466064096f6173e4e4"
+          },
+          {
+            "path": "crates/sim-runtime/src/bin/sim-validate.rs",
+            "sha256": "3ee10701eac659f780d23ebd205f08e3053b9be2c2da9c275b34e6a783d52e28"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/control.rs",
+            "sha256": "11e5bc25155f21b6b088ed2b9a85ae18c750e6d400ec1d473888e795cd2a3541"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/drivers.rs",
+            "sha256": "0964fe95d881e28acf03701e37c840ccc11021dcca773138257f04d4a9ca9f91"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/dynamics.rs",
+            "sha256": "379060be1516962971c41d31acf21bc75eb04ebf83a430e7d52cf0f27707e84c"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/factor_blocks.rs",
+            "sha256": "3ea332e945d09fe2567c196ba5637d129de332473bb61568e38810b50cf970a9"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/implicit.rs",
+            "sha256": "89a4f3aab6bcb6392cca87569ad96aebdb2b7d238cc4fbdc4d665100e378700b"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/mechanical_advance.rs",
+            "sha256": "0da58169d43e315f317dbbf162a2b860f0d546790a3b93f6ded1a63c128b1241"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs",
+            "sha256": "fe048991445f50c645a25772f0ccf4bcf95efc17fd5051633c334e5ea2918e36"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/motors.rs",
+            "sha256": "9fca29e4214770ef23923a69e9c2f82c40027514bd66e712bdab4268fe24d543"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/placement.rs",
+            "sha256": "55b183af2db75c153e42f47c9f01016f4ee208f0e8aebeb84e5d45c492cafed0"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/servos.rs",
+            "sha256": "c14a0d238f4e4197e50fee10da40a7e02b1640f187db76063581fdbc58f5bed4"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/slider_crank.rs",
+            "sha256": "448234be8fc711c6b57d926d9954066e42827c8f23e44e51f80bdf15cdf2068e"
+          },
+          {
+            "path": "crates/sim-domain-robot/src/articulated/embedding/step.rs",
+            "sha256": "783da8a905177600c69f3605b7c09d7b0bdff1174b64ec946f04254c3de6cd93"
+          }
+        ],
+        "builder": {
+          "path": "web/build-wasm.mjs",
+          "sha256": "7ab281dbf44eef2077cbdba093ffd2af9f7c99fdcbfb3566f8c02202d3c7c650"
+        },
+        "scope": "Compiler optimization only. SIMD profile requires a browser supporting WebAssembly SIMD; physical equations and controller recipes are unchanged. Native/WASM agreement and browser performance require separate measured checks.",
+        "artifact": {
+          "path": "runs/wasm-builds/broyden-simd-lto/sim_web.wasm",
+          "sha256": "a3df405e0dc004ba2bd87e7ea5804226f62ab715768992906179221244a5074d"
+        }
+      }
+    }
+  },
+  "sources": [
+    {
+      "path": "runs/interactive/refined-teacher/viewer/build-manifest.json",
+      "sha256": "4e21c48278f0e3d12144dcfe7ceb14e725a6d7a10f7dfd685c655ba114b9513d"
+    },
+    {
+      "path": "runs/interactive/refined-teacher/viewer/leaderboard.json",
+      "sha256": "5ad14a781df709989205cfed0cd58b13f9f64ae481e7df7f6d99800c20f1a0bd"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/reference-browser-status.json",
+      "sha256": "67f178202aee047659305c40a91c7d93911bd7755dc04ba198f7a835581c002a"
+    }
+  ],
+  "scope": "Final metadata package has the exact nine recipe asset hashes exercised by the successful UI checks and the identical compiled WASM artifact. Native/WASM parity metadata was added after those UI checks; physical recipes and UI/runtime code did not change."
+}

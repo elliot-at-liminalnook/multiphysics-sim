@@ -3,7 +3,12 @@ import {readFileSync, writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 const [planPath, statusPath, output] = process.argv.slice(2);
-assert(planPath && statusPath && output, 'usage: audit_walking_suite.mjs plan.json status.json audit.json');
+const auditOptions = process.argv.slice(5);
+assert(auditOptions.length <= 1 && auditOptions.every(a => /^--seed=\d+$/.test(a)), 'expected optional --seed=N');
+const seedArgument = auditOptions[0];
+const declaredSeedDefault = seedArgument === undefined ? undefined : Number(seedArgument.slice(7));
+assert(declaredSeedDefault === undefined || Number.isSafeInteger(declaredSeedDefault) && declaredSeedDefault >= 0, 'invalid declared seed');
+assert(planPath && statusPath && output, 'usage: audit_walking_suite.mjs plan.json status.json audit.json [--seed=N]');
 const read = p => JSON.parse(readFileSync(p));
 const source = path => ({path, sha256: createHash('sha256').update(readFileSync(path)).digest('hex')});
 const plan = read(planPath), status = read(statusPath), omitted = new Set();
@@ -33,7 +38,9 @@ for (const [index, c] of plan.cases.entries()) {
   const r = read(captured.path), config = read(c.config), scene = read(c.scene), actions = read(c.actions);
   authored(config, r.recording.config, 'config'); authored(scene, r.recording.scene, 'scene', true);
   assert.deepEqual(read(c.task), r.task);
-  assert.equal(r.recording.seed, c.seed);
+  const declaredSeed = c.seed ?? declaredSeedDefault;
+  assert(Number.isSafeInteger(declaredSeed), 'declare the seed in each case or pass --seed=N explicitly');
+  assert.equal(r.recording.seed, declaredSeed);
   if (robot) { assert.deepEqual(r.recording.scene.robot, robot); assert.deepEqual(r.recording.scene.options, options); }
   else { robot = r.recording.scene.robot; options = r.recording.scene.options; }
   const stride = r.task.period_s / config.step_s;
@@ -58,9 +65,10 @@ for (const [index, c] of plan.cases.entries()) {
     assert.deepEqual(a.budgets, result.acceptance.budgets);
   } else { assert(r.error); assert.equal(result.passed, false); assert.equal(result.acceptance, null); }
   outcomes.push({name: c.name, completed: r.completed, passed: result.passed,
-    completed_transitions: r.frames.length - 1, input_identity_verified: true});
+    completed_transitions: r.frames.length - 1, input_identity_verified: true, verified_seed: declaredSeed});
 }
 writeFileSync(output, JSON.stringify({version: 1, passed: true, outcomes,
+  explicit_seed_default: declaredSeedDefault ?? null,
   identical_parsed_robot_and_physics_options: true,
   unretained_source_scene_fields: [...omitted].sort(),
   sources: [source(planPath), source(statusPath), source(import.meta.filename)],

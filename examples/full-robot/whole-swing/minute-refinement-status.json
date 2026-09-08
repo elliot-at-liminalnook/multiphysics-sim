@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "combined-minute-1.25ms",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006590046799974194,
+        "final_yaw_error_rad": 0.0028806727673650707,
+        "maximum_body_tilt_rad": 0.0044986371641338035,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21259064263793573,
+          0.00006845162853665748,
+          -0.000506796547284187
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-1.25ms-acceptance/summary.json",
+          "sha256": "3a21a74b64ed0cc4cd45cc368086b24b1b511244d986c4ce68efac6d90f013ae"
+        }
+      },
+      "wall_s": 112.298264312,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-1.25ms.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-1.25ms.config.json",
+          "sha256": "9fbfc92aeebbe1c20a0df32a55e51a08e09e0d310b8e0b407e044bf7ac5ab981"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-1.25ms.actions.json",
+          "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-1.25ms.native.json",
+          "sha256": "bb208738babe0dfeed000d124369a3b8e488d87c88f0c92a004092b85010a1d5"
+        }
+      ]
+    },
+    {
+      "name": "combined-minute-0.625ms",
+      "duration_s": 60,
+      "step_s": 0.000625,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0005555311931410907,
+        "final_yaw_error_rad": 0.0028714628098165775,
+        "maximum_body_tilt_rad": 0.0045283416657411375,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21236999684267308,
+          0.00011796332207750129,
+          -0.0005066318116194561
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-0.625ms-acceptance/summary.json",
+          "sha256": "37fe7e597be2ada03e127f29219c9a0094f206591157828e89f9e74576e6a862"
+        }
+      },
+      "wall_s": 161.751782192,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-0.625ms.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-0.625ms.config.json",
+          "sha256": "376ff4f575cb1e310170d49011a8ab3dcc76510b6fce16d7640b4d65e819f0c4"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-0.625ms.actions.json",
+          "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-0.625ms.native.json",
+          "sha256": "3962c008d6addc8f676e0bf24c9b53e6ef8c365726cf69f39ac5cae7f898a209"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-minute-refinement/plan.json",
+      "sha256": "9a3c269d562e9d7426c10e29f375ae4138bd3279f2507b234e1988bf2871a3d6"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "6500fb1107d23263967e6d90c97244cddb44e02f295985b6256d1dcbebff7974"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Repeated 1.25 ms and new 0.625 ms minute-long combined teacher; identical physical model, controller, inputs and accuracy gates; no secant updates."
+}

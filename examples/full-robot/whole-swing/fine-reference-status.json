@@ -1,0 +1,298 @@
+{
+  "version": 1,
+  "exact_repeat": {
+    "passed": true,
+    "frames": 3001,
+    "scope": "Exact same-host frame, transition, contract, task and recording equality; only diagnostic wall timing excluded."
+  },
+  "exact_profile": {
+    "passed": true,
+    "frames": 1201,
+    "scope": "Exact same-host frame, transition, contract, task and recording equality; only diagnostic wall timing excluded."
+  },
+  "minute_numerical_passed": true,
+  "budgets": {
+    "maximum_foot_difference_m": 0.001,
+    "maximum_body_difference_m": 0.0005
+  },
+  "maximum_foot_difference_m": 0.0005093570349610497,
+  "maximum_body_difference_m": 0.00047039655808606254,
+  "small_secants_profile": {
+    "completed": true,
+    "wall_s": 8.11374536,
+    "buckets": [
+      {
+        "calls": 0,
+        "name": "step (total)",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "implicit solve",
+        "seconds": 0
+      },
+      {
+        "calls": 1206,
+        "name": "newton calls",
+        "seconds": 0
+      },
+      {
+        "calls": 9948,
+        "name": "newton iterations",
+        "seconds": 0
+      },
+      {
+        "calls": 2018,
+        "name": "fresh jacobians",
+        "seconds": 0
+      },
+      {
+        "calls": 469,
+        "name": "stale full-step refreshes",
+        "seconds": 0
+      },
+      {
+        "calls": 16547,
+        "name": "residual evaluations",
+        "seconds": 2.060922213
+      },
+      {
+        "calls": 2018,
+        "name": "jacobian assembly",
+        "seconds": 4.414666416
+      },
+      {
+        "calls": 0,
+        "name": "  slots supplied",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "  slots with supplied rate partials",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "  slots finite-difference",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "  component FD residual calls",
+        "seconds": 0
+      },
+      {
+        "calls": 2018,
+        "name": "factorisation",
+        "seconds": 0.025520547
+      },
+      {
+        "calls": 9043,
+        "name": "  factor entries sum/sort",
+        "seconds": 0.027116445000000003
+      },
+      {
+        "calls": 0,
+        "name": "  sparse matrix construction",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "  symbolic cache lookup/build",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "    symbolic cache misses",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "  sparse numeric factorisation",
+        "seconds": 0
+      },
+      {
+        "calls": 9942,
+        "name": "back-substitution",
+        "seconds": 0.007022511
+      },
+      {
+        "calls": 0,
+        "name": "guards",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "event location",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "jumps (incl. coupler)",
+        "seconds": 0
+      },
+      {
+        "calls": 56173,
+        "name": "embedded closure mapping",
+        "seconds": 3.4404938940000003
+      },
+      {
+        "calls": 52873,
+        "name": "embedded contact history",
+        "seconds": 0.122400136
+      },
+      {
+        "calls": 52873,
+        "name": "embedded dynamics preparation",
+        "seconds": 2.764880566
+      },
+      {
+        "calls": 54077,
+        "name": "embedded applied force solve",
+        "seconds": 0.152852084
+      },
+      {
+        "calls": 54077,
+        "name": "embedded component equations",
+        "seconds": 0.022186951
+      },
+      {
+        "calls": 56173,
+        "name": "  closure Jacobian",
+        "seconds": 0.959351237
+      },
+      {
+        "calls": 56173,
+        "name": "  closure factorization",
+        "seconds": 0.6259806440000001
+      },
+      {
+        "calls": 226167,
+        "name": "    closure SVD",
+        "seconds": 0.236196915
+      },
+      {
+        "calls": 52873,
+        "name": "  embedded rigid inertia",
+        "seconds": 1.150867019
+      },
+      {
+        "calls": 52873,
+        "name": "  embedded inertia projection",
+        "seconds": 0.20886537000000002
+      },
+      {
+        "calls": 52873,
+        "name": "  embedded force evaluation",
+        "seconds": 1.0596951460000001
+      },
+      {
+        "calls": 56473,
+        "name": "contact geometry queries",
+        "seconds": 0.36372481500000003
+      },
+      {
+        "calls": 56473,
+        "name": "contact force evaluation",
+        "seconds": 0.591862738
+      },
+      {
+        "calls": 58873,
+        "name": "  contact exclusion metadata",
+        "seconds": 0.01850647
+      },
+      {
+        "calls": 58873,
+        "name": "  contact sample transforms",
+        "seconds": 0.245138975
+      },
+      {
+        "calls": 58873,
+        "name": "  contact pair queries",
+        "seconds": 0.15844517600000002
+      },
+      {
+        "calls": 1200,
+        "name": "policy online reference",
+        "seconds": 0.640395837
+      },
+      {
+        "calls": 1200,
+        "name": "policy observations",
+        "seconds": 0.015567582000000002
+      },
+      {
+        "calls": 0,
+        "name": "policy body feedback",
+        "seconds": 0
+      },
+      {
+        "calls": 0,
+        "name": "policy point feedback",
+        "seconds": 0
+      },
+      {
+        "calls": 1200,
+        "name": "policy script",
+        "seconds": 0.120200497
+      },
+      {
+        "calls": 7556,
+        "name": "Broyden update attempts",
+        "seconds": 0.08886144500000001
+      },
+      {
+        "calls": 534,
+        "name": "Broyden rejected/capped updates",
+        "seconds": 0
+      }
+    ]
+  },
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-combined/combined-minute-1.25ms.native.json",
+      "sha256": "697506878d7152b9f587cd295f777ed3b045097f2f6669729c86e6bf3c49d22d"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-minute-refinement/combined-minute-1.25ms.native.json",
+      "sha256": "bb208738babe0dfeed000d124369a3b8e488d87c88f0c92a004092b85010a1d5"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-small-secants/small-secants-enabled.native.json",
+      "sha256": "71f804e068522681ca1f4455c2bd811d0b0e4aef991edf3a8c2c5d872077c1ae"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-small-secants/enabled.profiled.native.json",
+      "sha256": "e8d07a0ac3d74dff39cd44ccf5d7fe9e385f0e06da61bd233ccd618433ec80c8"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-small-secants/enabled.profile.json",
+      "sha256": "c471e2683ea51967c326c93ef6f13da53231c48433d5b47562133f6c35491f24"
+    },
+    {
+      "path": "examples/interactive/check_profile_capture.mjs",
+      "sha256": "d1ce9222bae695f65f97d95f3e2d8510569ad1915ae9cf62d4646ed5528c5096"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/minute-refinement-status.json",
+      "sha256": "63c22cf8a0a01c619bfc312983dc34f14db46b9130d5b6647d22d5e9a97c1e6d"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/minute-fine-difference.json",
+      "sha256": "a87f005ac974c8798d018906a08252efead3566889f1bb883940c29edb9e416e"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/small-secants-status.json",
+      "sha256": "9306e003354216474681812e5cb1e4e83a2a29909fec219f5c48f89014c6d5f7"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/small-secants-difference.json",
+      "sha256": "878e314e9faab60b157ff2c7501b6efc38dd5d261f9ed91620752dc5456f2b8c"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/collect_fine_reference.mjs",
+      "sha256": "1735e084a1a599e20fe8ee533eefeb17a0decf552a6e281cdf1ebd3f000fb76e"
+    }
+  ],
+  "scope": "Full minute physical acceptance and declared sampled timestep screen at 1.25/0.625 ms; repeated 1.25 ms physical/task/replay frames exactly preserved. Small secants preserve their physical case but do not reduce derivative count or measured time. No browser realtime, held-out robustness or hardware calibration claim."
+}

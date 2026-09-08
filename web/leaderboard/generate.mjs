@@ -41,6 +41,15 @@ assert(read('examples/full-robot/whole-swing/exact-probe-base-identity.json').pa
 const exactBaseBrowserPath = 'examples/full-robot/whole-swing/exact-probe-base-browser-status.json', exactBaseBrowser = read(exactBaseBrowserPath);
 const exactBaseBrowserIntegrityPath = 'examples/full-robot/whole-swing/exact-probe-base-browser-integrity.json';
 assert(exactBaseBrowser.complete && read(exactBaseBrowserIntegrityPath).passed);
+const distilledPath = 'examples/full-robot/whole-swing/fast-distillation-evaluation-status.json', distilled = read(distilledPath);
+const distilledMinute = distilled.cases.find(c => c.name === 'fitted-minute');
+const distilledSummaryPath = 'examples/full-robot/whole-swing/fast-distillation-summary.json';
+const distilledFidelityPath = 'examples/full-robot/whole-swing/fast-student-fidelity-status.json', distilledFidelity = read(distilledFidelityPath);
+const distilledTurn = distilledFidelity.cases.find(c => c.name === 'turn-20ms');
+assert(distilled.complete && distilledFidelity.complete);
+const distilledBrowserPath = 'examples/full-robot/whole-swing/fast-student-browser-status.json', distilledBrowser = read(distilledBrowserPath);
+const distilledBrowserIntegrityPath = 'examples/full-robot/whole-swing/fast-student-browser-integrity.json';
+assert(distilledBrowser.complete && read(distilledBrowserIntegrityPath).passed);
 const definitions = [
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
@@ -106,6 +115,18 @@ const definitions = [
     parity: exactBaseParity.passed && exactBaseParity.replay_exact && exactBaseParity.reset_exact,
     performance: exactBaseBrowser.cases.find(c => c.name === 'enabled-turn').measurement,
     extraEvidence: [exactBaseParityPath, exactBaseBrowserPath, exactBaseBrowserIntegrityPath, 'examples/full-robot/whole-swing/exact-probe-base-identity.json', 'examples/full-robot/whole-swing/exact-probe-base-profile.json', 'examples/full-robot/whole-swing/exact-probe-base-integrity.json']},
+  {id: 'fast-distilled-minute', name: 'Faster learned motor feedback', description: 'Distilled from the faster fine-step teacher. Measured minute-long travel is 3.75 mm/s with 41 qualified swings. Fine development steering passes; the reserved mirrored transition fails planned support. The planner still uses ideal state.',
+    scene: 'examples/full-robot/whole-swing/fast-distilled-minute.scene.json', config: 'examples/full-robot/whole-swing/fast-distilled-minute.config.json',
+    capture: distilledMinute.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(distilledMinute.acceptance.source.path), evidence: distilledPath,
+    commands: true, heldoutCommandsFailed: true, numerical: 'examples/full-robot/whole-swing/fast-student-fine-refinement.json',
+    extraEvidence: [distilledSummaryPath, 'examples/full-robot/whole-swing/fast-distillation/observation-boundary.json']},
+  {id: 'fast-distilled-steering', name: 'Faster learned browser candidate', description: 'The new learned motor feedback passes short 20 ms steering. Minute-long stopping and trajectory refinement fail, so this remains experimental. Encoder/IMU signals and the upstream planner are still ideal simulation.',
+    scene: 'examples/full-robot/whole-swing/fast-distilled-turn.scene.json', config: 'examples/full-robot/whole-swing/fast-distilled-turn.config.json',
+    capture: distilledTurn.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(distilledTurn.acceptance.source.path), evidence: distilledFidelityPath,
+    commands: true, benchmark: 'flat-steering-24s-v1', numerical: 'examples/full-robot/whole-swing/fast-student-coarse-refinement.json',
+    performance: distilledBrowser.cases.find(c => c.name === 'student-turn').measurement,
+    parity: distilledBrowser.parity.passed && distilledBrowser.parity.replay_exact && distilledBrowser.parity.reset_exact,
+    extraEvidence: [distilledSummaryPath, distilledBrowserPath, distilledBrowserIntegrityPath, 'examples/full-robot/whole-swing/fast-student-fidelity-summary.json', 'examples/full-robot/whole-swing/fast-student-unused-feedback.json']},
 ];
 const taskPath = 'examples/full-robot/heading-task/task.json';
 mkdirSync('runs/leaderboard', {recursive: true});
@@ -149,7 +170,7 @@ for (const d of definitions) {
   const performance = d.performance?.performance;
   const gates = {
     sustained_walk: gate(simulated < 60 ? 'missing' : a.passed ? 'pass' : 'fail', simulated < 60 ? 'Only a short forward/stop case is associated with this recipe.' : '60-second supported-swing, sampled geometry and endpoint audit.'),
-    turn_reverse_stop: gate(d.commands ? 'pass' : d.commandsFailed ? 'fail' : 'missing', d.commands ? 'The associated controller has a passing forward/turn/reverse/stop case.' : d.commandsFailed ? 'Live turning loses planned static support before the reverse command is reached; native inputs reproduce the failure.' : 'Full steering coverage at this speed is not associated with this entry.'),
+    turn_reverse_stop: gate(d.heldoutCommandsFailed ? 'fail' : d.commands ? 'pass' : d.commandsFailed ? 'fail' : 'missing', d.heldoutCommandsFailed ? 'Development steering passes, but the predeclared mirrored-turn-to-forward sequence fails planned static support at 14.84 s.' : d.commands ? 'The associated controller has a passing forward/turn/reverse/stop case.' : d.commandsFailed ? 'Live turning loses planned static support before the reverse command is reached; native inputs reproduce the failure.' : 'Full steering coverage at this speed is not associated with this entry.'),
     disturbances: gate('missing', 'Broader held-out disturbance requirements are not yet established.'),
     terrain: gate('missing', 'This entry is a flat-floor experiment; progressively harder terrain is outstanding.'),
     numerical_accuracy: gate(numericalStatus, numerical ? `Sampled foot difference ${(footDifference * 1000).toFixed(3)} mm; required at most 1 mm, plus a 0.5 mm body screen. ${Number.isFinite(bodyDifference) ? `Body difference ${(bodyDifference * 1000).toFixed(3)} mm.` : 'Body screen not recorded.'}` : 'Solver-option agreement does not establish timestep convergence.'),

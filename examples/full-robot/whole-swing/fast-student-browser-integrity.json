@@ -1,0 +1,379 @@
+{
+  "version": 1,
+  "passed": true,
+  "forward_acceptance": {
+    "version": 1,
+    "passed": true,
+    "capture": {
+      "path": "runs/interactive/fast-distilled/student-forward.native.json",
+      "sha256": "04a41d02feb58f83f662e426d778f35f8078723071c1243bb7eb855f0c8b0f4f"
+    },
+    "simulated_s": 24,
+    "lifts": [
+      {
+        "step": 0,
+        "foot": 0,
+        "failed_clearance_samples": 20,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 16,
+        "longest_qualifying_span_s": 0.3400000000000001,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031620284247760866,
+        "qualifying_start_s": 0.72,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 1,
+        "foot": 2,
+        "failed_clearance_samples": 20,
+        "failed_support_samples": 5,
+        "failed_unloading_samples": 16,
+        "longest_qualifying_span_s": 0.2599999999999998,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003240035661308982,
+        "qualifying_start_s": 2.18,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 2,
+        "foot": 1,
+        "failed_clearance_samples": 21,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.26000000000000023,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003146831261464089,
+        "qualifying_start_s": 3.54,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 3,
+        "foot": 3,
+        "failed_clearance_samples": 20,
+        "failed_support_samples": 5,
+        "failed_unloading_samples": 16,
+        "longest_qualifying_span_s": 0.2599999999999998,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0034154730813372725,
+        "qualifying_start_s": 4.94,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 4,
+        "foot": 0,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.3000000000000007,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.00279472396200775,
+        "qualifying_start_s": 6.26,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 5,
+        "foot": 2,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 3,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.2600000000000007,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.002842387937313784,
+        "qualifying_start_s": 7.68,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 6,
+        "foot": 1,
+        "failed_clearance_samples": 21,
+        "failed_support_samples": 3,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.27999999999999936,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0030789629753505965,
+        "qualifying_start_s": 9.040000000000001,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 7,
+        "foot": 3,
+        "failed_clearance_samples": 20,
+        "failed_support_samples": 6,
+        "failed_unloading_samples": 16,
+        "longest_qualifying_span_s": 0.2599999999999998,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0034773668491636656,
+        "qualifying_start_s": 10.46,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 8,
+        "foot": 0,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.3000000000000007,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0027946024977058004,
+        "qualifying_start_s": 11.78,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 9,
+        "foot": 2,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 3,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.2599999999999998,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0028448129699528146,
+        "qualifying_start_s": 13.200000000000001,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 10,
+        "foot": 1,
+        "failed_clearance_samples": 21,
+        "failed_support_samples": 3,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.27999999999999936,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.003078956480345174,
+        "qualifying_start_s": 14.56,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 11,
+        "foot": 3,
+        "failed_clearance_samples": 20,
+        "failed_support_samples": 6,
+        "failed_unloading_samples": 16,
+        "longest_qualifying_span_s": 0.26000000000000156,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0034773671676239237,
+        "qualifying_start_s": 15.98,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 12,
+        "foot": 0,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 18,
+        "longest_qualifying_span_s": 0.3000000000000007,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0027946024980309847,
+        "qualifying_start_s": 17.3,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 13,
+        "foot": 2,
+        "failed_clearance_samples": 22,
+        "failed_support_samples": 3,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.26000000000000156,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.00284481296993494,
+        "qualifying_start_s": 18.72,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      },
+      {
+        "step": 14,
+        "foot": 1,
+        "failed_clearance_samples": 21,
+        "failed_support_samples": 3,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.2799999999999976,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0030133453248419872,
+        "qualifying_start_s": 20.080000000000002,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      }
+    ],
+    "final_phase": "idle",
+    "body_advance_world_m": [
+      0.07789006884464077,
+      -0.000036935000963906294,
+      -0.0008684602722105333
+    ],
+    "final_yaw_rad": 0.0003937492896068754,
+    "final_target_yaw_rad": 0,
+    "final_yaw_error_rad": 0.00039374928960687547,
+    "final_body_error_m": 0.00090876230726378,
+    "maximum_body_tilt_rad": 0.004157573767838444,
+    "sampled_internal_contacts": 0,
+    "inter_link_geometry_audit": {
+      "frames": 1201,
+      "maximum_penetration_m": 0,
+      "penetrating_samples": 0,
+      "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+    },
+    "budgets": {
+      "minimum_transfers": 4,
+      "maximum_final_body_error_m": 0.001,
+      "maximum_body_tilt_rad": 0.01,
+      "maximum_final_yaw_error_rad": 0.005
+    },
+    "scope": "Initial flat-floor commissioning with ideal observations. Actual clearance/support samples, endpoint tracking and stop checked; not between-sample impact accuracy, terrain robustness, hardware calibration or sustained realtime acceptance."
+  },
+  "ui": {
+    "version": 1,
+    "passed": true,
+    "browser": "152.0.7977.76",
+    "recipes": [
+      {
+        "id": "browser-crawl-minute",
+        "asset_sha256": "771addc1a917aae9bee10d46c5c35f16846331d14f072980c6e6cbe1c4c5ff91"
+      },
+      {
+        "id": "faster-student-minute",
+        "asset_sha256": "2f6681e8e24e1671d7cce649d5ea68f408a8ff23d276cf0ac240b27e31a5b897"
+      },
+      {
+        "id": "overlapping-forward-stop",
+        "asset_sha256": "a39981e81bd9c5e489e3644617e23fa02104a2cc13d6f23417563c3a0dc3fd71"
+      },
+      {
+        "id": "whole-swing-short",
+        "asset_sha256": "8c4415a28db2230c75d3b5354bea6e5425d684b3930a567484af6452e6978da3"
+      },
+      {
+        "id": "faster-teacher-minute",
+        "asset_sha256": "0f0c6583dc26b3fb8f79967e85349d88eaff29cabe9e9fc2edcc99f961c294a6"
+      },
+      {
+        "id": "faster-steering-short",
+        "asset_sha256": "2b30405b6030b7a2ce8d081706a6ae9920a1bd8dd0bf03f6e2054e6d209555f7"
+      },
+      {
+        "id": "settled-teacher-minute",
+        "asset_sha256": "8d290e797e2b4030c992a320620a9046e12443c3c6cd4b2ab066d627da6ff56f"
+      },
+      {
+        "id": "secant-steering-short",
+        "asset_sha256": "a79bac561104eb3b2864024052b6bd7d89cd2403445bf49d6c54668abb1163aa"
+      },
+      {
+        "id": "refined-teacher-minute",
+        "asset_sha256": "db0c253dd6fed9cc43b80d96f0e7b56e14a976c70a20a54a4a614f7312e8c2db"
+      },
+      {
+        "id": "tangent-steering-short",
+        "asset_sha256": "3959d58f786293bf2d20fe48c0c434acb5636daf87176891af6f9b70aba81004"
+      },
+      {
+        "id": "portable-tangent-steering",
+        "asset_sha256": "31d6c5b3a13ab77269759ace1c0205c10d3970d3a511911d4468899198221bf5"
+      },
+      {
+        "id": "exact-base-steering",
+        "asset_sha256": "0863ca109bad37498a38df14e515d3f1a899d4b1a04fc34b61bd12cbf7984d15"
+      },
+      {
+        "id": "fast-distilled-minute",
+        "asset_sha256": "411ab45dc93bf18d992a6cdda8b8fbe36170578265aeb2838bc41192590bd89f"
+      },
+      {
+        "id": "fast-distilled-steering",
+        "asset_sha256": "5871c52720f23e4018317af9d923effc3cb0a26abf6d44ba301af2863d90da33"
+      }
+    ],
+    "sources": [
+      {
+        "path": "/Users/elliot/physics-simulator/runs/interactive/fast-distilled/viewer/leaderboard.json",
+        "sha256": "65222b17e08058f576bdbddd06d05203201778ac0a075b1d30c1f2241e40b7ca"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/runs/interactive/fast-distilled/viewer/build-manifest.json",
+        "sha256": "328e02f4205dcee12e6d085a7582d004dbea6f3ff86f8dc927d3fd7b189dd956"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/web/tests/leaderboard.mjs",
+        "sha256": "d6799910e3a7f007979ff0d1d8232f005c08bd7ee03495d4fff4a4faff952a6b"
+      }
+    ],
+    "checks": [
+      "failed and missing gates remain unranked; search, status and comparison work",
+      "every Load and run executes its pinned controller, seed and tested initial action through WASM",
+      "tested sparse input sequence re-executes its full duration in Rust",
+      "canvas video downloads real WebM bytes; dialog fits desktop and narrow viewports",
+      "optional 30 fps display persists through exact loads, replay and video; control fits the narrow viewport",
+      "mutated recipe bytes are rejected before physics can run"
+    ]
+  },
+  "all_realtime_gates_passed": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/fast-student-browser-status.json",
+      "sha256": "833e87af20f323098b70f089441f07c3b2a1994206117d2e6a848e15f8c85f3d"
+    },
+    {
+      "path": "runs/interactive/fast-distilled/student-forward-acceptance/summary.json",
+      "sha256": "d2419fdea4e23fb38e90d5aaeb6ecab05f5e17e7ea5bcaf8563df49c1fadd919"
+    },
+    {
+      "path": "runs/interactive/fast-distilled/leaderboard.json",
+      "sha256": "77d6ff1083448bd280e6e52217c43e0cd6853f380eefd91a8616748a73e6a263"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-exact-probe-base/exact-probe-base-enabled.native.json",
+      "sha256": "d664d299835b6c0ba229d4b52c972899d7a7ebf4ff2d9d9a2030d7e8cd7c2439"
+    },
+    {
+      "path": "runs/full-robot/learning/fast-student-fidelity/turn-20ms.native.json",
+      "sha256": "997bb71898dd261a80863811bb26c2a474ae6e13d8fdafda207ea23639318269"
+    },
+    {
+      "path": "runs/interactive/fast-distilled/student-forward.native.json",
+      "sha256": "04a41d02feb58f83f662e426d778f35f8078723071c1243bb7eb855f0c8b0f4f"
+    },
+    {
+      "path": "runs/interactive/fast-distilled/previous-turn.recording.json",
+      "sha256": "d28f97dd9ff5719d116200bd8e2e92dedc120ef5aa06ab9fce499e83b4a90a33"
+    },
+    {
+      "path": "runs/interactive/fast-distilled/student-turn.recording.json",
+      "sha256": "b354cd17710421fe6a711ea1c036dd8b3fe167bb8b1b1ca185a43fbc48eb5595"
+    },
+    {
+      "path": "runs/interactive/fast-distilled/student-forward.recording.json",
+      "sha256": "46f9bb21062493fb8d7a43bc8f229a29451179c17bdcd0349b03b1927ff62524"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_fast_student_browser.mjs",
+      "sha256": "1e279312afc71f304750d047f987349078480223ba0977df22bfb83cae733bec"
+    }
+  ],
+  "scope": "Identical physical model, numerical options and held commands for previous/new rendered steering; controller recipe changes are explicit. Each exact browser recording matches the associated native capture. Forward acceptance retains its outcome independently of timing. All leaderboard loads, replay/video and integrity checks pass. Coarse accuracy, longer stopping and reserved transition failures remain disqualifying."
+}

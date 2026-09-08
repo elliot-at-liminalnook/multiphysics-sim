@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "passed": true,
+  "full": {
+    "path": "runs/full-robot/learning/fast-student-fidelity/turn-20ms-full.native.json",
+    "sha256": "f5b3386fb4e44dce824a328bfcadaecc45d0d62a7f0def19001d4de3e8d05f38"
+  },
+  "reduced": {
+    "path": "runs/full-robot/learning/fast-student-fidelity/turn-20ms.native.json",
+    "sha256": "997bb71898dd261a80863811bb26c2a474ae6e13d8fdafda207ea23639318269"
+  },
+  "exact_physical_frames": 1201,
+  "omitted_observation_samples": 43200,
+  "scope": "Unused body/point feedback calculations and policy-side floor-force observations are omitted. Every physical frame, retained controller value and teacher transition remains exact. Upstream planner and physical contact still use ideal simulated state."
+}

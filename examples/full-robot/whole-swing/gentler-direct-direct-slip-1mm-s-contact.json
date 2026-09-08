@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "outcome": {
+    "kind": "completed",
+    "error": null,
+    "termination_reasons": []
+  },
+  "feet": [
+    {
+      "id": "-Y-foot-surface",
+      "link": "-Y | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 56,
+      "integrated_load_weighted_tangential_speed_m": 0.03750239628111131,
+      "integrated_load_weighted_point_speed_m": 0.03881278151742546,
+      "integrated_load_weighted_velocity_world_m": [
+        0.01037970900227748,
+        -0.0070288536189176696
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.07202986921184498,
+      "sampled_translational_shear_dissipation_j": 0.04678340788575981,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "+X-foot-surface",
+      "link": "+X | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 56.04,
+      "integrated_load_weighted_tangential_speed_m": 0.032189542635253365,
+      "integrated_load_weighted_point_speed_m": 0.03218954263525336,
+      "integrated_load_weighted_velocity_world_m": [
+        0.01586420570903969,
+        -0.0008925644954539111
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.022015421163498913,
+      "sampled_translational_shear_dissipation_j": 0.03788671069491749,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "+Y-foot-surface",
+      "link": "+Y | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 56.02,
+      "integrated_load_weighted_tangential_speed_m": 0.029600487125646394,
+      "integrated_load_weighted_point_speed_m": 0.03093523425369263,
+      "integrated_load_weighted_velocity_world_m": [
+        0.0036198945299903574,
+        0.003673284919325848
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.037541890041435586,
+      "sampled_translational_shear_dissipation_j": 0.03713781767707343,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "-X-foot-surface",
+      "link": "-X | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 56.12,
+      "integrated_load_weighted_tangential_speed_m": 0.026755720275165422,
+      "integrated_load_weighted_point_speed_m": 0.02745632198201591,
+      "integrated_load_weighted_velocity_world_m": [
+        0.0030017333443887735,
+        0.0012438232007797494
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.03004389944487538,
+      "sampled_translational_shear_dissipation_j": 0.02985590399565715,
+      "sampled_translational_shear_supplied_work_j": 0
+    }
+  ],
+  "capture": {
+    "path": "runs/full-robot/learning/gentler-direct/direct-slip-1mm-s.native.json",
+    "sha256": "613147f1ac68f422b3690e806e20e41cd41d96e0bffb973eb724e565c32d6d2a"
+  },
+  "sources": [
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    }
+  ],
+  "conventions": {
+    "minimum_endpoint_floor_force_n": 1,
+    "kinematics": "Recorded COM velocity plus angular velocity cross the world contact-point offset. Floor is stationary and horizontal.",
+    "integration": "Trapezoidal 50 Hz samples over intervals with both endpoints loaded. Velocities are weighted by recorded normal forces, not by tracking a fixed contact point."
+  },
+  "scope": "Diagnostic of material velocities at sampled floor contacts, separate from geometric foot-marker travel. Translation of the load-weighted patch and pointwise rotation are both reported. Contact birth/death, changing weights, between-sample peaks and independent torsional friction work are unresolved. No new acceptance threshold or slip-free/hardware claim."
+}

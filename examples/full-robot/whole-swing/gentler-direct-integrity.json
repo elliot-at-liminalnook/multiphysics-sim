@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "passed": true,
+  "profiles": [
+    {
+      "name": "direct-slip-1mm-s",
+      "slip_speed_m_s": 0.001,
+      "source": {
+        "path": "examples/full-robot/whole-swing/gentler-direct-direct-slip-1mm-s-integrity.json",
+        "sha256": "b4478bdf9e10b84bbec3dc67037ab46af04ae9c1f264526a14f78eeed5d26ac4"
+      }
+    },
+    {
+      "name": "direct-slip-0.1mm-s",
+      "slip_speed_m_s": 0.0001,
+      "source": {
+        "path": "examples/full-robot/whole-swing/gentler-direct-direct-slip-0.1mm-s-integrity.json",
+        "sha256": "7a326ac50ee5e92e6906965fe1a36a463787254c5f40d1ee80a5b851cb7a2f26"
+      }
+    },
+    {
+      "name": "direct-slip-0.03mm-s",
+      "slip_speed_m_s": 0.00003,
+      "source": {
+        "path": "examples/full-robot/whole-swing/gentler-direct-direct-slip-0.03mm-s-integrity.json",
+        "sha256": "fc45ff019c4ca7608d0adc94a027e03af0e1cb5bf03bacdcd90a527b677ad934"
+      }
+    }
+  ],
+  "identical_parsed_robot": true,
+  "identical_physics_options_except": [
+    "floor_friction.slip_speed_m_s"
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/gentler-direct-plan.json",
+      "sha256": "b33a5a1277aa7d3312b03dd4e330b94412f2b3e55ed22173c32f606fd4976ac1"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-direct-status.json",
+      "sha256": "fc1c53c98d6eb3c4f385e01db931632ad947429be125a6a03816d7f356a135c9"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/audit_gentler_direct.mjs",
+      "sha256": "3b4d6ce5749137ed0e4fee2ab2e6e62db4868149db22a425664afd40474ddcc9"
+    },
+    {
+      "path": "examples/interactive/audit_walking_suite.mjs",
+      "sha256": "bfddc6f33a843d42a8db5b73b718aebaec36c9ed1e1c98ae4781b39c4820a1d0"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-direct-direct-slip-1mm-s-integrity.json",
+      "sha256": "b4478bdf9e10b84bbec3dc67037ab46af04ae9c1f264526a14f78eeed5d26ac4"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-direct-direct-slip-0.1mm-s-integrity.json",
+      "sha256": "7a326ac50ee5e92e6906965fe1a36a463787254c5f40d1ee80a5b851cb7a2f26"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-direct-direct-slip-0.03mm-s-integrity.json",
+      "sha256": "fc45ff019c4ca7608d0adc94a027e03af0e1cb5bf03bacdcd90a527b677ad934"
+    }
+  ],
+  "scope": "Per-profile authored recipe, seed, actions and acceptance audits retain the standard same-options rule. Across profiles only the predeclared smoothing speed differs; this is explicitly a contact-model sensitivity study, not identical physics or timestep convergence."
+}

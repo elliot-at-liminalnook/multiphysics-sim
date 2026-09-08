@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "direct-slip-1mm-s",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 30,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0005972761678029309,
+        "final_yaw_error_rad": 0.00811969482094397,
+        "maximum_body_tilt_rad": 0.004155101698439963,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.1547492705372959,
+          -0.0001031737620800092,
+          -0.0003088106225886955
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-1mm-s-acceptance/summary.json",
+          "sha256": "4f52daebd3cd76cdbf4d3fd573768d3058c2296c0922eee297942796d7ff21c3"
+        }
+      },
+      "wall_s": 92.663628884,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-1mm-s.scene.json",
+          "sha256": "35b31e54550d404cc16662a07ada4cbda5ac8b838898b974f14d5d58c1349ebc"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-1mm-s.config.json",
+          "sha256": "408d44c0c73a90f302a18324aa6e94cbef91ae1851870310184ee841bdcba80e"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/reference-recipes/actions.json",
+          "sha256": "d085e74426e861cf037e0828d6df67a2ecb0b7e7b7e00e25bf6476be2b83aff8"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-1mm-s.native.json",
+          "sha256": "613147f1ac68f422b3690e806e20e41cd41d96e0bffb973eb724e565c32d6d2a"
+        }
+      ]
+    },
+    {
+      "name": "direct-slip-0.1mm-s",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 30,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.000770994203959947,
+        "final_yaw_error_rad": 0.009933457613057993,
+        "maximum_body_tilt_rad": 0.004078777748152458,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.15454035457457913,
+          -0.00001275391523572662,
+          -0.0003011191962747316
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.1mm-s-acceptance/summary.json",
+          "sha256": "34dee90e219d0e89752dd225f2cd389460f062d0ecdb51242cca1dd0cbd10df2"
+        }
+      },
+      "wall_s": 130.185561224,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-0.1mm-s.scene.json",
+          "sha256": "b7230a1982890d99cbb43d68d2906bc8ed43a248413049babe6fec7f5d1a855e"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.1mm-s.config.json",
+          "sha256": "408d44c0c73a90f302a18324aa6e94cbef91ae1851870310184ee841bdcba80e"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/reference-recipes/actions.json",
+          "sha256": "d085e74426e861cf037e0828d6df67a2ecb0b7e7b7e00e25bf6476be2b83aff8"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.1mm-s.native.json",
+          "sha256": "bda8f90e180a8de5445ffad898f2e4f2f952140488ab59160a49a42f82c95426"
+        }
+      ]
+    },
+    {
+      "name": "direct-slip-0.03mm-s",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 30,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009661032957108505,
+        "final_yaw_error_rad": 0.01043164633843828,
+        "maximum_body_tilt_rad": 0.0040657196700002495,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.15433231007886597,
+          -0.00003250885979263156,
+          -0.00030023983857454216
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.03mm-s-acceptance/summary.json",
+          "sha256": "9a24497e3f70e2ba21d7b286e7116a85d287ef2807d46c1b2246e8e4215ad23e"
+        }
+      },
+      "wall_s": 353.32624189,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-0.030000000000000002mm-s.scene.json",
+          "sha256": "6e6d176fd230b6e592a5d895a68e7f924c28f71b868412a11125ced21d375f51"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.03mm-s.config.json",
+          "sha256": "408d44c0c73a90f302a18324aa6e94cbef91ae1851870310184ee841bdcba80e"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/reference-recipes/actions.json",
+          "sha256": "d085e74426e861cf037e0828d6df67a2ecb0b7e7b7e00e25bf6476be2b83aff8"
+        },
+        {
+          "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.03mm-s.native.json",
+          "sha256": "4626fa7a26cd16e5370ce365b9a102f535ea6331dd973e71a4585cff6a37199a"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/gentler-direct/plan.json",
+      "sha256": "b33a5a1277aa7d3312b03dd4e330b94412f2b3e55ed22173c32f606fd4976ac1"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "0abc13e18219d706bfbf578cfe62162fd87f87007ea2c6da8f18d9bd6b786539"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "762b13d40e0163d4e1512541528a70c9d552d773e18accf15083b9258e7953ce"
+    }
+  ],
+  "scope": "Three matched contact fidelity profiles with a gentler direct support path and unchanged nominal stride/period. Only direct_support_transfer and phase_durations_s change within each matched baseline. Original task and 5% contact screen retained; no timestep, held-out, terrain or browser qualification."
+}

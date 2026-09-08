@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "passed": true,
+  "cases": 3,
+  "identical_authored_scenes_configs_actions_tasks_and_seeds": true,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/gentler-direct-plan.json",
+      "sha256": "b33a5a1277aa7d3312b03dd4e330b94412f2b3e55ed22173c32f606fd4976ac1"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/prepare_gentler_direct.mjs",
+      "sha256": "6f14aff9e407bd9f78ec98ed5b2728584a4c3d66006d5bc8f7c71fa74e4aca21"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/prepare_gentler_contact.mjs",
+      "sha256": "9d8369ddd5cd5186a9835b3fff5b80b5065142bd34f5f6862e44a9edd1db2b68"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct-reproduction/plan.json",
+      "sha256": "ac192c5c1d0ec57f88d986e0e88ab68cf808c146ec2256455c7e992591e04547"
+    }
+  ],
+  "scope": "Fresh reconstruction from versioned recipe sources exactly reproduces all three authored experiments, without reading baseline captures."
+}

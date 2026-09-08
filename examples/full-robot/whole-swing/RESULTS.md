@@ -456,3 +456,20 @@ recipe/native identity are retained in `fast-student-browser-status.json`
 and `fast-student-browser-integrity.json`. CI now includes the typed dataset
 guards and exact learned browser recipe's native acceptance/parity; remote
 CI has not been run here.
+
+## Transition support improvement exposes a stopping limit
+
+The two predeclared forward front-foot support offsets both complete the
+formerly aborted 32-second teacher sequence at 1.25 ms. At -22.5 mm, the
+affected swing qualifies for only 0.14 s against the 0.20 s requirement, and
+final body error is 1.610 mm. At -24 mm, **all 19 swings qualify** with no
+sampled internal collisions, but final body error is **2.052 mm**. Heading
+and tilt pass both cases. Neither passes the full unchanged task, so neither
+is promoted and no minute/steering regression claim is made.
+
+`transition-support-summary.json` and its integrity audit preserve both
+outcomes. The revealed sequence is now development evidence; future held-out
+evaluation must use new inputs. Additional support shift fixes the static
+reference abort and, at -24 mm, the dynamic swing, but does not resolve the
+teacher's final tracking error. This separates the next controller problem
+from the independent coarse-integration accuracy and browser timing limits.

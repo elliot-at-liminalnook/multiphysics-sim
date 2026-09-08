@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "teacher-forward-support-22.5mm",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 1,
+        "final_body_error_m": 0.0016098971249232895,
+        "final_yaw_error_rad": 0.0005145996525032236,
+        "maximum_body_tilt_rad": 0.004459957159187497,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06175202326105594,
+          0.0006247854622729751,
+          -0.0004866578484988837
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm-acceptance/summary.json",
+          "sha256": "a07fbd973b78df2bbdbc0feb333aa71ceab83e292ae8596008b33ca4a5ec0fc1"
+        }
+      },
+      "wall_s": 60.074348345,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm.config.json",
+          "sha256": "95ea84afb23bb131bf425d1e2a90ee513b606f422979c80e11af25ec0ac0f624"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm.native.json",
+          "sha256": "bb936e2c80003d60078036dbecae12606cd9d6276a198fba1fdfac5cce94d194"
+        }
+      ]
+    },
+    {
+      "name": "teacher-forward-support-24mm",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0020520398422045065,
+        "final_yaw_error_rad": 0.0002968805731730262,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06225809880883483,
+          0.0006025427196751298,
+          -0.00048540941628911517
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm-acceptance/summary.json",
+          "sha256": "ffb2e5124d1490e38b1ad5303fb981e05ff54d6d19de5874c679b7dc0163db49"
+        }
+      },
+      "wall_s": 59.143946382,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+          "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.native.json",
+          "sha256": "2cc646fde549dee29e8d823e8084777b6d23ab397f2df51d52fbb5f6426d0a47"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/transition-support/plan.json",
+      "sha256": "f2f34948fbbcd9762301c8426ed4831743273c2709f806f4e3885b6804d69bc5"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "eb7e7b0c9ec72727429a419cc94c4ef4a50eb717772b4ef220a7a9c7fde77e02"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "958986ba3fd2a1865944fcf92bc7ee5811ebec8efe931c339ab93b3b18d77332"
+    }
+  ],
+  "scope": "Two predeclared teacher policy support offsets on the revealed 32-second transition failure. Same CAD physical model, fine timestep, controller weights, commands and acceptance gates. This episode is now development evidence, not untouched validation. Native wall time is not a browser or isolated performance qualification."
+}

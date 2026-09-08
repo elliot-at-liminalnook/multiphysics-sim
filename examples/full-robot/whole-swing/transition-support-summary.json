@@ -1,0 +1,176 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "teacher-forward-support-22.5mm",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 1,
+        "final_body_error_m": 0.0016098971249232895,
+        "final_yaw_error_rad": 0.0005145996525032236,
+        "maximum_body_tilt_rad": 0.004459957159187497,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06175202326105594,
+          0.0006247854622729751,
+          -0.0004866578484988837
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm-acceptance/summary.json",
+          "sha256": "a07fbd973b78df2bbdbc0feb333aa71ceab83e292ae8596008b33ca4a5ec0fc1"
+        }
+      },
+      "wall_s": 60.074348345,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm.config.json",
+          "sha256": "95ea84afb23bb131bf425d1e2a90ee513b606f422979c80e11af25ec0ac0f624"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-22.5mm.native.json",
+          "sha256": "bb936e2c80003d60078036dbecae12606cd9d6276a198fba1fdfac5cce94d194"
+        }
+      ],
+      "failed_swings": [
+        {
+          "step": 10,
+          "foot": 1,
+          "failed_clearance_samples": 21,
+          "failed_support_samples": 9,
+          "failed_unloading_samples": 17,
+          "longest_qualifying_span_s": 0.14000000000000057,
+          "minimum_swing_force_n": 0,
+          "passed": false,
+          "peak_clearance_m": 0.0031258183395668215,
+          "qualifying_start_s": 14.58,
+          "samples": 38,
+          "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+        }
+      ],
+      "affected_swing": {
+        "step": 10,
+        "foot": 1,
+        "failed_clearance_samples": 21,
+        "failed_support_samples": 9,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.14000000000000057,
+        "minimum_swing_force_n": 0,
+        "passed": false,
+        "peak_clearance_m": 0.0031258183395668215,
+        "qualifying_start_s": 14.58,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      }
+    },
+    {
+      "name": "teacher-forward-support-24mm",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0020520398422045065,
+        "final_yaw_error_rad": 0.0002968805731730262,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06225809880883483,
+          0.0006025427196751298,
+          -0.00048540941628911517
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm-acceptance/summary.json",
+          "sha256": "ffb2e5124d1490e38b1ad5303fb981e05ff54d6d19de5874c679b7dc0163db49"
+        }
+      },
+      "wall_s": 59.143946382,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+          "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.native.json",
+          "sha256": "2cc646fde549dee29e8d823e8084777b6d23ab397f2df51d52fbb5f6426d0a47"
+        }
+      ],
+      "failed_swings": [],
+      "affected_swing": {
+        "step": 10,
+        "foot": 1,
+        "failed_clearance_samples": 21,
+        "failed_support_samples": 4,
+        "failed_unloading_samples": 17,
+        "longest_qualifying_span_s": 0.2599999999999998,
+        "minimum_swing_force_n": 0,
+        "passed": true,
+        "peak_clearance_m": 0.0031424288566757053,
+        "qualifying_start_s": 14.58,
+        "samples": 38,
+        "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+      }
+    }
+  ],
+  "selected": null,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/transition-support-status.json",
+      "sha256": "c806bbc0a1f525af183400177530fa90d36aeb9b21913ee7faba6e256d5cdeb2"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/transition-support-integrity.json",
+      "sha256": "2f8e97f8af07da5ed2a1847ba4f5ea4f38d8a58cc04396dab31ca23bf07dca30"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/TRANSITION-SUPPORT-PLAN.md",
+      "sha256": "af8095826af9002334d1e6d3e5a9d999263cf3c563c6a56dc15ba4f7cbdf6b99"
+    }
+  ],
+  "scope": "Both fixed teacher offsets complete the formerly aborted reference. The 22.5 mm shift fails swing qualification and stopping; 24 mm qualifies all 19 swings but fails stopping. Neither passes the unchanged full task, so neither is promoted. Revealed held-out inputs are now development evidence."
+}

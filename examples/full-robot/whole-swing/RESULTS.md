@@ -938,3 +938,49 @@ passes every Load and run, full steering replay, real WebM export, desktop and
 phone response-panel checks, filters/comparison, and modified-recipe rejection.
 `causal-response-browser-ui.json` binds these checks to the exact served bundle;
 no new controller or physical qualification is implied by the UI change.
+
+## Removing opposing feedback does not cure the loaded-foot motion
+
+The moving direct-transfer target decomposition reconstructs the actual servo
+targets to below 1e-10 rad. Body and foot correction vectors oppose one another
+in every moving shift, raise, lower, return and settle sample. Shift's aggregate
+cosine is **-0.759**, with **64.6%** norm-weighted cancellation. These are angular
+target suggestions, not opposing physical-force measurements.
+
+The first three zero-gain attempts were rejected before physics: the controller
+schema fixed both gain inputs at 0.25. Their rejected captures and audit remain
+versioned. A new explicit experimental input profile lowers only those two
+input minima to zero, preserving maxima/initial values, physical actuator
+limits and task gates. Its bounds-only baseline reproduces every prior physical
+frame and transition exactly. All gain changes below apply only during nonzero
+motion requests; original stopping inputs and the settled integral are restored.
+
+| Moving feedback | Travel mm/s | Qualified swings | Stop mm | Heading rad | Worst-foot motion / body advance | Total foot motion mm | Shaft work J |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Original body + foot | 3.696 | 41/41 | 0.753 | 0.01361 | 45.2% | 273.2 | 6.244 |
+| No body correction | 3.643 | 41/41 | 1.465 | 0.01095 | 45.4% | 273.5 | 6.310 |
+| No foot correction | 3.700 | 41/41 | 0.782 | 0.01297 | 45.4% | 286.5 | 6.153 |
+| Joint tracking only | 3.650 | 41/41 | 1.491 | 0.01020 | 44.5% | 284.0 | 6.236 |
+
+Every case fails heading and the unchanged 5% contact-motion screen. Removing
+body feedback also fails the 1 mm stop-position limit. Removing foot feedback
+increases total contact motion. Thus the observed target cancellation does not
+justify simply dropping a correction or escalating its gain. The remaining
+stance motion persists under the feedforward joint trajectory and needs a
+closer examination of contact-force distribution and contact-model behavior.
+No ablation is promoted to the browser or ranked.
+
+`feedback-ablation-{open-plan,open-status,open-integrity,summary}.json` and
+per-case contact, phase, target-contribution and motion reports retain all four
+physical outcomes. The audit now accepts a correctly omitted empty input-event
+history after input rejection; a focused test also verifies that a fabricated
+event is rejected. The correction-vector analytic test and audit regression
+test pass and are included in browser CI.
+
+`feedback-ablation-recipes.json` durably references the versioned scene,
+configuration and task and stores all sparse inputs and the explicit input-bound
+changes. `node examples/full-robot/whole-swing/reproduce_feedback_ablation.mjs
+NEW_DIRECTORY` reconstructs all five recipes, including the original-bound
+baseline, without a prior `runs/` tree. All reconstructed scenes, configurations,
+tasks, seeds and dense action arrays match the measured recipes exactly;
+`feedback-ablation-reproduction-check.json` records that check.

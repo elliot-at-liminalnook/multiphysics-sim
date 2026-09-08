@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "slip-1mm-s-reference",
+      "slip_speed_m_s": 0.001,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0005286096017170919,
+        "final_yaw_error_rad": 0.003375872552504301,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21266910229300054,
+          0.000024143587130046908,
+          -0.00018630116016761684
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms-acceptance/summary.json",
+          "sha256": "5a6913aaab60d209f15314f6677fc5859787dc0ed86346def4810c12ed34af89"
+        }
+      },
+      "maximum_contact_motion_to_body_advance_ratio": 0.931381436906892,
+      "prospective_anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0037778909088736364,
+          "net_projected_speed_m_s": 0.0042571047999167754,
+          "axis_world": [
+            0.9999998145196206,
+            -0.0006090654515667041,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 112.568877624,
+        "simulation_per_wall": 0.5330070021699127,
+        "transition_p95_s": 0.080409157
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.native.json",
+        "sha256": "54ee76fc3a432003bdf7a3583a1a18d58dd3b5914801a758d48100bd0fe0b7db"
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/contact-smoothing-slip-1mm-s-reference-metrics.json",
+        "sha256": "b4936fcdd42a6b27f7f5822a7c12d9c4b0678595a532fd767b2a3b30e18d0b3b"
+      },
+      "contact": {
+        "path": "examples/full-robot/whole-swing/contact-smoothing-slip-1mm-s-reference-contact.json",
+        "sha256": "36ba6ab40f61629895b1d18d0eea8c19f5939c2c6642a0cde2c1f9d25b7f4937"
+      }
+    },
+    {
+      "name": "slip-0.1mm-s",
+      "slip_speed_m_s": 0.0001,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0004610719254019799,
+        "final_yaw_error_rad": 0.0037912183958990005,
+        "maximum_body_tilt_rad": 0.00495365738017941,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.2125989761585672,
+          0.000007410042532107243,
+          -0.00018104316786424213
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/contact-smoothing/slip-0.1mm-s-acceptance/summary.json",
+          "sha256": "8a38b32dfe929969cb64a07b0136690f854161779b860a6cf81b24b99fa32123"
+        }
+      },
+      "maximum_contact_motion_to_body_advance_ratio": 0.8745587868149385,
+      "prospective_anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.003773850135235575,
+          "net_projected_speed_m_s": 0.0042497404320409595,
+          "axis_world": [
+            0.9999998262638886,
+            -0.0005894677198047,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 153.184501453,
+        "simulation_per_wall": 0.39168453355843685,
+        "transition_p95_s": 0.126206097
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/contact-smoothing/slip-0.1mm-s.native.json",
+        "sha256": "f17087fd7b2c11bf9b3fa3b240c45ae4c0dac8bc410fd81b6a0bcb6ba9214b45"
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/contact-smoothing-slip-0.1mm-s-metrics.json",
+        "sha256": "cf5e7eb6ff17a9a5ac635b6d7e1c9eca229104aa355b7836b3644224f0a477b3"
+      },
+      "contact": {
+        "path": "examples/full-robot/whole-swing/contact-smoothing-slip-0.1mm-s-contact.json",
+        "sha256": "dcf06bfb7f3f427db9d5bc33978465d9e5b2ad2cc3e3cfc3a45843a6ab8e4165"
+      }
+    },
+    {
+      "name": "slip-0.03mm-s",
+      "slip_speed_m_s": 0.00003,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00044739791986107765,
+        "final_yaw_error_rad": 0.0037874968810337785,
+        "maximum_body_tilt_rad": 0.005011018849207132,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21258551950963694,
+          -0.000016778474328807088,
+          -0.00017707939943093637
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/contact-smoothing/slip-0.03mm-s-acceptance/summary.json",
+          "sha256": "b1e9cce040f7974a84665bbbbcab401e1541f8fded64446bb30008d48ce3b5af"
+        }
+      },
+      "maximum_contact_motion_to_body_advance_ratio": 0.8749422375474614,
+      "prospective_anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0037727047176707848,
+          "net_projected_speed_m_s": 0.004248450828730127,
+          "axis_world": [
+            0.9999998312191086,
+            -0.0005810006491356478,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 291.374609615,
+        "simulation_per_wall": 0.20592048181301517,
+        "transition_p95_s": 0.309379082
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/contact-smoothing/slip-0.03mm-s.native.json",
+        "sha256": "e45b898b3033061178e7a87d1c60accc90c5b330503f78ce93e0649bd96f935c"
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/contact-smoothing-slip-0.03mm-s-metrics.json",
+        "sha256": "5d12efd646913c499f411994c108ed35cc0e031f74777bcdbb9fa521c5c344b1"
+      },
+      "contact": {
+        "path": "examples/full-robot/whole-swing/contact-smoothing-slip-0.03mm-s-contact.json",
+        "sha256": "656baeb8ec8259791697086d9eaa66638a72f60980b74d7abd9f7453286847cc"
+      }
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/contact-smoothing-plan.json",
+      "sha256": "23797c3f96f5ecdc266f78d828f24e20ae327b60a76bddd720144d93a14fce70"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/contact-smoothing-status.json",
+      "sha256": "37a486c51f355ddcadb709a5748bbb07c1b79a127ace9148d8a3730b5cdcac00"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/contact-smoothing-integrity.json",
+      "sha256": "2fa45afb3e064e6a6e4091b0a66d2978071c9bc832eb14b1971be2917695300a"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_contact_smoothing.mjs",
+      "sha256": "1bf1aec6e30d0fd6927aeb0af56dd6fd16fd332a45beb41a32255b46523fffa3"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "95d9b4e2e7dda99d35bcad2e8aa8ea23899e4e95c13057fe2d90d7782794a835"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "browser_promoted": false,
+  "scope": "Different explicit contact fidelity profiles with identical CAD, controller and solver settings. Original task outcomes and the prospective anti-sliding screen are separate. Full contact integrals require completed episodes; failed prefixes do not qualify the minute. No timestep convergence, terrain, new held-out or browser qualification."
+}

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "passed": true,
+  "profiles": [
+    {
+      "name": "slip-0.1mm-s",
+      "slip_speed_m_s": 0.0001,
+      "source": {
+        "path": "examples/full-robot/whole-swing/contact-smoothing-slip-0.1mm-s-integrity.json",
+        "sha256": "8f8186c9edfe34aa5e50b434ba6885de1db7187ed7929e311d7614d7dba2a43e"
+      }
+    },
+    {
+      "name": "slip-0.03mm-s",
+      "slip_speed_m_s": 0.00003,
+      "source": {
+        "path": "examples/full-robot/whole-swing/contact-smoothing-slip-0.03mm-s-integrity.json",
+        "sha256": "e7bb77c5ee35af62684c70f150c8e63a12a2c45107300b3d171742d46a7fc120"
+      }
+    }
+  ],
+  "identical_parsed_robot": true,
+  "identical_physics_options_except": [
+    "floor_friction.slip_speed_m_s"
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/contact-smoothing-plan.json",
+      "sha256": "23797c3f96f5ecdc266f78d828f24e20ae327b60a76bddd720144d93a14fce70"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/contact-smoothing-status.json",
+      "sha256": "37a486c51f355ddcadb709a5748bbb07c1b79a127ace9148d8a3730b5cdcac00"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/audit_contact_smoothing.mjs",
+      "sha256": "60026cf94d89c86d455108cb42bc9201f16e99c0f6ced9eff0348b5a00f1a8fa"
+    },
+    {
+      "path": "examples/interactive/audit_walking_suite.mjs",
+      "sha256": "1f360058659aa3e135a0c5270554d1ef8c6d41b966cd8da139a7d89237e6b6a8"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/contact-smoothing-slip-0.1mm-s-integrity.json",
+      "sha256": "8f8186c9edfe34aa5e50b434ba6885de1db7187ed7929e311d7614d7dba2a43e"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/contact-smoothing-slip-0.03mm-s-integrity.json",
+      "sha256": "e7bb77c5ee35af62684c70f150c8e63a12a2c45107300b3d171742d46a7fc120"
+    }
+  ],
+  "scope": "Per-profile authored recipe, seed, actions and acceptance audits retain the standard same-options rule. Across profiles only the predeclared smoothing speed differs; this is explicitly a contact-model sensitivity study, not identical physics or timestep convergence."
+}

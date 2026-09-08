@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "outcome": {
+    "kind": "completed",
+    "error": null,
+    "termination_reasons": []
+  },
+  "feet": [
+    {
+      "id": "-Y-foot-surface",
+      "link": "-Y | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 54.34000000000001,
+      "integrated_load_weighted_tangential_speed_m": 0.1741067821391823,
+      "integrated_load_weighted_point_speed_m": 0.17802908132678358,
+      "integrated_load_weighted_velocity_world_m": [
+        0.019165954583489214,
+        -0.0026347901566926794
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.06160135879535128,
+      "sampled_translational_shear_dissipation_j": 0.43149835898475064,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "+X-foot-surface",
+      "link": "+X | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 53.41999999999999,
+      "integrated_load_weighted_tangential_speed_m": 0.1527698247320582,
+      "integrated_load_weighted_point_speed_m": 0.1527698247320582,
+      "integrated_load_weighted_velocity_world_m": [
+        0.048490840184778984,
+        0.0032963856008882413
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.07011495093858383,
+      "sampled_translational_shear_dissipation_j": 0.3705772522955205,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "+Y-foot-surface",
+      "link": "+Y | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 55.06,
+      "integrated_load_weighted_tangential_speed_m": 0.18593030278027234,
+      "integrated_load_weighted_point_speed_m": 0.18982805981275605,
+      "integrated_load_weighted_velocity_world_m": [
+        0.016278535010692326,
+        0.012251935495961859
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.06779663246903253,
+      "sampled_translational_shear_dissipation_j": 0.4678358199497486,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "-X-foot-surface",
+      "link": "-X | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 54.59999999999999,
+      "integrated_load_weighted_tangential_speed_m": 0.13215002912142343,
+      "integrated_load_weighted_point_speed_m": 0.13473703396787037,
+      "integrated_load_weighted_velocity_world_m": [
+        0.027852868102026234,
+        0.0006315045830406427
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.07638074554960682,
+      "sampled_translational_shear_dissipation_j": 0.26388564903075024,
+      "sampled_translational_shear_supplied_work_j": 0
+    }
+  ],
+  "capture": {
+    "path": "runs/full-robot/learning/contact-smoothing/slip-0.1mm-s.native.json",
+    "sha256": "f17087fd7b2c11bf9b3fa3b240c45ae4c0dac8bc410fd81b6a0bcb6ba9214b45"
+  },
+  "sources": [
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "95d9b4e2e7dda99d35bcad2e8aa8ea23899e4e95c13057fe2d90d7782794a835"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "conventions": {
+    "minimum_endpoint_floor_force_n": 1,
+    "kinematics": "Recorded COM velocity plus angular velocity cross the world contact-point offset. Floor is stationary and horizontal.",
+    "integration": "Trapezoidal 50 Hz samples over intervals with both endpoints loaded. Velocities are weighted by recorded normal forces, not by tracking a fixed contact point."
+  },
+  "scope": "Diagnostic of material velocities at sampled floor contacts, separate from geometric foot-marker travel. Translation of the load-weighted patch and pointwise rotation are both reported. Contact birth/death, changing weights, between-sample peaks and independent torsional friction work are unresolved. No new acceptance threshold or slip-free/hardware claim."
+}

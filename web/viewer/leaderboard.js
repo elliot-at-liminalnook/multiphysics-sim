@@ -31,6 +31,7 @@ export async function installLeaderboard({load, pause}) {
         ['Active browser throughput', value(e.metrics.browser_active_throughput, 3, '×')],
         ['Active browser p95', value(e.metrics.browser_active_p95_s == null ? null : e.metrics.browser_active_p95_s * 1000, 2, ' ms')],
         ['Browser hardware', e.browser_host ? `${e.browser_host.cpu}; ${e.browser_host.platform}; browser ${e.browser_host.browser}` : 'Not recorded'],
+        ['Browser build', e.browser_runtime ? `${e.browser_runtime.compiler_profile}; WASM ${e.browser_runtime.browser_module_sha256}` : 'Compiler settings not recorded with the browser measurement'],
         ['Controller version', e.controller_sha256], ['CAD model', e.cad_sha256],
         ['Environment version', e.environment_sha256], ['Benchmark', e.benchmark_version], ['Seed', String(e.load.seed)],
       ]) { dl.append(el('dt', name), el('dd', text)); }

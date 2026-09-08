@@ -8,6 +8,7 @@ const timestepReference=process.argv.includes('--timestep-reference');
 const numericalPrecision=process.argv.includes('--numerical-precision');
 const blockFactorization=process.argv.includes('--block-factorization');
 const guardedBacktracking=process.argv.includes('--guarded-backtracking');
+const broydenUpdates=process.argv.includes('--broyden-updates');
 assert(baselinePath&&candidatePath&&output,'usage: compare_mechanical_reuse baseline candidate report');
 const read=p=>JSON.parse(fs.readFileSync(p));
 const hash=p=>createHash('sha256').update(fs.readFileSync(p)).digest('hex');
@@ -16,7 +17,7 @@ assert(a.completed&&b.completed&&!a.error&&!b.error);
 assert.deepEqual(a.task,b.task);
 const events=c=>(c.recording.input_events??[]).map(e=>({time_ns:Math.round(e.at_step*c.recording.config.step_s*1e9),values:e.values}));
 assert.deepEqual(events(a),events(b));
-const clean=c=>{c=structuredClone(c);for(const field of ['reuse_step_jacobian','reuse_controller_sample_jacobian','restart_failed_reused_mechanics','cached_mechanical_iteration_limit'])delete c.implicit[field];if(numericalPrecision){delete c.implicit.newton.absolute_tolerance;delete c.implicit.newton.relative_tolerance;}if(blockFactorization)delete c.embedding.block_dependent_factorization;if(guardedBacktracking)delete c.implicit.newton.guarded_backtracking;if(timestepReference){delete c.step_s;delete c.steps;delete c.report_every;}return c;};
+const clean=c=>{c=structuredClone(c);for(const field of ['reuse_step_jacobian','reuse_controller_sample_jacobian','restart_failed_reused_mechanics','cached_mechanical_iteration_limit'])delete c.implicit[field];if(numericalPrecision){delete c.implicit.newton.absolute_tolerance;delete c.implicit.newton.relative_tolerance;}if(blockFactorization)delete c.embedding.block_dependent_factorization;if(guardedBacktracking)delete c.implicit.newton.guarded_backtracking;if(broydenUpdates)delete c.implicit.newton.broyden_updates;if(timestepReference){delete c.step_s;delete c.steps;delete c.report_every;}return c;};
 assert.deepEqual(clean(a.recording.config),clean(b.recording.config));
 assert.deepEqual(a.recording.scene,b.recording.scene);
 assert.equal(a.frames.length,b.frames.length);
@@ -55,6 +56,6 @@ for(let i=0;i<a.frames.length;i++){
  if(x.policy?.step_reference?.reference.phase!==y.policy?.step_reference?.reference.phase)phase_mismatches++;
 }
 for(const m of Object.values(metrics)){m.rms=Math.sqrt(m.sum_squared/m.samples);delete m.sum_squared;}
-fs.writeFileSync(output,JSON.stringify({version:1,timestep_reference:timestepReference,numerical_precision:numericalPrecision,block_factorization:blockFactorization,guarded_backtracking:guardedBacktracking,baseline:{path:baselinePath,sha256:hash(baselinePath)},candidate:{path:candidatePath,sha256:hash(candidatePath)},markers:{path:markerPath,sha256:hash(markerPath)},frames:a.frames.length,metrics,contact_pair_mismatches,phase_mismatches,
- scope:'Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization or guarded backtracking. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate.'},null,2)+'\n');
+fs.writeFileSync(output,JSON.stringify({version:1,timestep_reference:timestepReference,numerical_precision:numericalPrecision,block_factorization:blockFactorization,guarded_backtracking:guardedBacktracking,broyden_updates:broydenUpdates,baseline:{path:baselinePath,sha256:hash(baselinePath)},candidate:{path:candidatePath,sha256:hash(candidatePath)},markers:{path:markerPath,sha256:hash(markerPath)},frames:a.frames.length,metrics,contact_pair_mismatches,phase_mismatches,
+ scope:'Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization, guarded backtracking or bounded Broyden updates. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate.'},null,2)+'\n');
 console.log(JSON.stringify({metrics,contact_pair_mismatches,phase_mismatches}));

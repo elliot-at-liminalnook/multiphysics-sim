@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "frames": 1201,
+  "frames": 3001,
   "maximum_absolute_differences": {
     "joint_positions": 0,
     "joint_velocities": 0,
@@ -12,12 +12,12 @@
   },
   "sources": [
     {
-      "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.native.json",
-      "sha256": "e98565847e4cbd3a59e551b935f5c06a70291eaea59dd32ed97248a8d50e17fa"
+      "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms.native.json",
+      "sha256": "c06cf715ca71c32ea618facf7d5b232496bda4facc649979d2991099c82a408e"
     },
     {
-      "path": "runs/full-robot/learning/whole-steering/student-forward-20ms.native.json",
-      "sha256": "d62877e3380b77b7f10695e03bd8fa14ed765cc7313f53e7a5557c5c2c1af9c2"
+      "path": "runs/full-robot/learning/whole-combined/combined-minute-2.5ms.native.json",
+      "sha256": "0e17407f4221d909c6221876a798b3b26fc341ef43f5c07178afeb714533955d"
     },
     {
       "path": "examples/full-robot/whole-swing/check_forward_preservation.mjs",

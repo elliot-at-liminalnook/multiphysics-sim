@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "student-turn-20ms-support-24mm-refined",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0014405463564035952,
+        "final_yaw_error_rad": 0.0001577218092054956,
+        "maximum_body_tilt_rad": 0.004726791010036287,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028740922779606052,
+          -0.0003887952390757351,
+          -0.0008046603364191603
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-turn-refinement/student-turn-20ms-support-24mm-refined-acceptance/summary.json",
+          "sha256": "3d5892cb7f0df94003e57ec4c4dc8d2e16de9e96f4c383ddf9176cadb22a20aa"
+        }
+      },
+      "wall_s": 25.140951541,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-turn-refinement/student-turn-20ms-support-24mm-refined.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-turn-refinement/student-turn-20ms-support-24mm-refined.config.json",
+          "sha256": "610d06498028874a7396aa0ffd658217b984304ad4d92fd2143989e1b7b4e593"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-turn-refinement/student-turn-20ms-support-24mm-refined.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-turn-refinement/student-turn-20ms-support-24mm-refined.native.json",
+          "sha256": "59c0063e68f2aedac5d65abc83818bf2e9a1afc47c5f6f40214acaef75098fff"
+        }
+      ]
+    },
+    {
+      "name": "teacher-turn-5ms-support-24mm-refined",
+      "duration_s": 24,
+      "step_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.001112418588955066,
+        "final_yaw_error_rad": 0.00011528694043794543,
+        "maximum_body_tilt_rad": 0.004171334858285633,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02838629978534003,
+          0.0003923424082767808,
+          -0.0006620172756771521
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-turn-refinement/teacher-turn-5ms-support-24mm-refined-acceptance/summary.json",
+          "sha256": "14995dbf0f28c7943199fc673542fcfd97e447d19c7b67249a22052e84d936f7"
+        }
+      },
+      "wall_s": 32.652620937,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-turn-refinement/teacher-turn-5ms-support-24mm-refined.scene.json",
+          "sha256": "905c9c1a7e69e1785a06f4451f27e9937691aaa7c3407881300f1e058931177a"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-turn-refinement/teacher-turn-5ms-support-24mm-refined.config.json",
+          "sha256": "a572af846c6f4edc8a50d1532e8bbb6b205fc6cf49ff3ab9981a867850b3b932"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-turn-refinement/teacher-turn-5ms-support-24mm-refined.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-turn-refinement/teacher-turn-5ms-support-24mm-refined.native.json",
+          "sha256": "5432e795c1ea3cd399e85d1a0053b3ece424f120b1047b2a06191067aa250de6"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-turn-refinement/plan.json",
+      "sha256": "f7cb76be0b2a28133cf96ba2f270d89885b2f2bc072f9f4dbe69606086502d41"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "978e284647ac7de61be25b3e482b34291b77f92143dbd76ea48a95d609dcca8c"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Paired refinement of passing short steering cases; no changed physical limits or promotion without task and accuracy checks."
+}

@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "student-turn-20ms-reference",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582490458576234,
+        "final_yaw_error_rad": 0.0003280768883966254,
+        "maximum_body_tilt_rad": 0.004145771960106189,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02814077981890141,
+          -0.0002151050155766268,
+          -0.0007700188677707328
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-reference-acceptance/summary.json",
+          "sha256": "3168ebe6ede18633d827f228988335884ba5d0be67c81ebe8a63f48e905474b8"
+        }
+      },
+      "wall_s": 10.160591847,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-reference.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-reference.config.json",
+          "sha256": "397364a6934db9c7b185aaf599e9153bd2e6be7da2cd79cb242b649cfd96dc3f"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-reference.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-reference.native.json",
+          "sha256": "92eda3fb19ff71ad8d06961b4749f06f7298403786f7f199420f117c33f0ec9a"
+        }
+      ]
+    },
+    {
+      "name": "student-turn-20ms-broyden",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582486487327153,
+        "final_yaw_error_rad": 0.00032807738082035054,
+        "maximum_body_tilt_rad": 0.0041457719958571185,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779149125775,
+          -0.00021510492716122223,
+          -0.000770018864680734
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-broyden-acceptance/summary.json",
+          "sha256": "fc0db517337e351de25e788d15b335d94146c00ad85c78ea4a05c6d4bcbbca41"
+        }
+      },
+      "wall_s": 8.358719172,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-broyden.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-broyden.config.json",
+          "sha256": "d10fbf60f611289b3ea51c170356cee379e669c40190ea7506c65bddba0dc739"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-broyden.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-broyden/student-turn-20ms-broyden.native.json",
+          "sha256": "50afd8759e25ab912f9d8de5012795f973ea845990308fc7f20c286d0c2d2b32"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-broyden/plan.json",
+      "sha256": "b70cba52861baa6ed0d49a81187690510ddf9b198e98d0522797bd7418791b56"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "d68160b56aa99efe9ae0cd0cde1ac575c3a9af0ef16367ddf5cdb8de7c7a2318"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Identical 20 ms steering student with bounded secant updates disabled/enabled; unchanged model, controls, convergence and physical acceptance."
+}

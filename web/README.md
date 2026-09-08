@@ -148,7 +148,9 @@ search, validation/profile filters, side-by-side evidence, exact hash-checked
 Load and run actions, Rust input replay and canvas WebM export. Experimental
 controllers remain unranked until every declared gate passes. Physical travel,
 native throughput and browser timing are displayed separately. The new teacher
-reaches 3.751 mm/s measured travel over a minute with 41 qualified swings, but
-stopping and sustained numerical accuracy still fail; live 3.75 mm/s steering
-and realtime timing also remain unresolved. See [catalog workflow](leaderboard/README.md)
+reaches 3.755 mm/s measured travel over a minute with 41 qualified swings and
+passing stopping. Its mixed steering task also passes at 2.5/1.25 ms, while
+sustained numerical accuracy and browser realtime remain unresolved. Isolated
+scalar and SIMD/LTO builds record compiler and source hashes; their 20 ms
+student timing still misses the p95 target. See [catalog workflow](leaderboard/README.md)
 and [faster gait evidence](../examples/full-robot/whole-swing/RESULTS.md).

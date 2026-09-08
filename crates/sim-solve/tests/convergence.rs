@@ -61,10 +61,11 @@ fn a_jump_with_no_root_must_not_be_accepted_as_converged() {
     // Consequently |F(x)| >= 1 for every finite x: there is no root to accept.
     let f = |x: f64| if x < 0.0 { x - 1.0 } else { x + 1.0 };
     for refresh in [false, true] {
+    for broyden_updates in [false, true] {
     let mut x = [-1e-10];
     let result = solve_newton_with_jacobian(
         &mut x,
-        NewtonConfig{refresh_before_iteration_limit:refresh,..Default::default()},
+        NewtonConfig{refresh_before_iteration_limit:refresh,broyden_updates,..Default::default()},
         |x, r| r[0] = f(x[0]),
         |x, base, jacobian| {
             let h = 1e-8 * (1.0 + x[0].abs());
@@ -77,6 +78,27 @@ fn a_jump_with_no_root_must_not_be_accepted_as_converged() {
         f(x[0])
     );
     }
+    }
+}
+
+#[test]
+fn secants_reduce_derivative_probes_with_the_same_raw_acceptance() {
+    use sim_solve::{solve_newton_numeric_cached_audited, NewtonAudit};
+    let mut costs = Vec::new();
+    for broyden_updates in [false, true] {
+        let mut x = [1.0];
+        let mut audit = NewtonAudit::default();
+        let calls = std::cell::Cell::new(0);
+        let config = NewtonConfig { broyden_updates, refresh_before_iteration_limit: true, ..Default::default() };
+        solve_newton_numeric_cached_audited(&mut x, config, |x,r| {
+            calls.set(calls.get()+1); r[0] = x[0]*x[0]-2.0;
+        }, &mut None, Some(&mut audit)).unwrap();
+        assert!((x[0]-2.0_f64.sqrt()).abs() < 1e-12);
+        assert!((x[0]*x[0]-2.0).abs() <= config.absolute_tolerance);
+        if broyden_updates { assert!(audit.iterations.iter().any(|i| i.decision == "broyden_update")); }
+        costs.push((calls.get(), audit.iterations.iter().filter(|i| i.fresh_jacobian).count()));
+    }
+    assert!(costs[1].0 < costs[0].0 && costs[1].1 < costs[0].1, "{costs:?}");
 }
 
 #[test]

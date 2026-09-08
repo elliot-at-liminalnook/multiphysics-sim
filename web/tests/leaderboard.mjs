@@ -49,9 +49,9 @@ try {
     await open();
   }
   checks.push('every Load and run executes its pinned controller, seed and tested initial action through WASM');
-  const shortest = [...data.entries].sort((a, b) => a.replay.completed_steps - b.replay.completed_steps)[0];
+  const shortest = data.entries.find(e => e.id === 'secant-steering-short') ?? data.entries.find(e => e.id === 'faster-steering-short') ?? [...data.entries].sort((a, b) => a.replay.completed_steps - b.replay.completed_steps)[0];
   await row(shortest.id).getByRole('button', {name: 'Replay tested inputs', exact: true}).click();
-  await page.waitForFunction(() => parseFloat(document.querySelector('#sim-time').textContent) >= 23.99, null, {timeout: 180000}); await ready();
+  await page.waitForFunction(end => parseFloat(document.querySelector('#sim-time').textContent) >= end - 1e-8, shortest.metrics.simulated_s, {timeout: 180000}); await ready();
   assert.equal(parseFloat(await page.locator('#sim-time').textContent()), shortest.metrics.simulated_s);
   checks.push('tested sparse input sequence re-executes its full duration in Rust');
   await page.locator('#reset').click(); await ready();

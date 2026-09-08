@@ -25,7 +25,7 @@ mod mechanical_advance;
 pub use mechanical_advance::{EmbeddedMechanicalAdvance, MechanicalSegment};
 pub use implicit::{
     CoupledForces, EmbeddedImplicitStep, ImplicitSolverWorkspace, ImplicitStepConfig,
-    ImplicitStepDiagnostics,
+    ImplicitStepDiagnostics, ImplicitEndpointAudit,
 };
 mod motors;
 pub use motors::{EmbeddedMotorBank, EmbeddedMotorConfig, EmbeddedMotorReading, MotorBoundary};

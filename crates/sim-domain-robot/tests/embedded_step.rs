@@ -65,6 +65,27 @@ fn sdirk_mechanics_uses_two_stages_and_exact_force_clock() {
         };
         assert!((x-0.01).abs()<1e-10,"{x}");assert!((v-0.2).abs()<1e-10);
         for t in times.borrow().iter(){assert!(t.to_bits()==(0.3+sim_dynamics::sdirk::GAMMA*0.1).to_bits()||t.to_bits()==0.4f64.to_bits());}
+        assert!(step.segments[0].diagnostics.endpoint_audit.is_none());
+        let mut audited_config=config.clone();audited_config.newton_audit_window_s=Some([0.3,0.4]);
+        let audited=map.advance_implicit_mechanics(&g,0.3,0.1,&audited_config,&HybridConfig::default(),loads).unwrap();
+        for (a,b) in [(&step.endpoint.generalized.q,&audited.endpoint.generalized.q),
+            (&step.endpoint.generalized.qd,&audited.endpoint.generalized.qd),
+            (&step.endpoint.generalized.states,&audited.endpoint.generalized.states)] {
+            assert_eq!(a.iter().map(|x|x.to_bits()).collect::<Vec<_>>(),b.iter().map(|x|x.to_bits()).collect::<Vec<_>>());
+        }
+        let first=audited.segments[0].first_stage_diagnostics.as_ref().unwrap().endpoint_audit.as_ref().unwrap();
+        let second=audited.segments[0].diagnostics.endpoint_audit.as_ref().unwrap();
+        let gamma=sim_dynamics::sdirk::GAMMA;
+        assert_eq!(first.equation_start_time_s,0.3);
+        assert!((first.endpoint_reduced_velocity[0]-gamma*0.2).abs()<1e-12);
+        assert!((second.seed_reduced_velocity[0]-(1.-gamma)*0.2).abs()<1e-12);
+        assert!((second.endpoint_reduced_velocity[0]-0.2).abs()<1e-12);
+        assert!(!first.newton.iterations.is_empty());
+        assert_eq!(second.endpoint_joint_positions,audited.endpoint.generalized.q);
+        audited_config.newton_audit_window_s=Some([0.5,0.6]);
+        let outside=map.advance_implicit_mechanics(&g,0.3,0.1,&audited_config,&HybridConfig::default(),loads).unwrap();
+        assert!(outside.segments[0].diagnostics.endpoint_audit.is_none());
+        assert!(outside.segments[0].first_stage_diagnostics.as_ref().unwrap().endpoint_audit.is_none());
         let before=workspace.clone();let mut after=before.clone();
         assert!(map.advance_implicit_mechanics_cached(&g,0.,0.1,&config,&HybridConfig::default(),&mut after,|_,_|Err("stage failure".into())).is_err());
         assert!(map.step_implicit(&g,0.,0.1,&config,|_,_|Ok(vec![])).unwrap_err().contains("mechanical advancement adapter"));

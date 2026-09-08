@@ -53,8 +53,8 @@ pub struct ImplicitStepConfig {
     /// fresh restart; that restart retains the original Newton iteration limit.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cached_mechanical_iteration_limit: Option<usize>,
-    /// Collect iteration diagnostics for trials starting in this inclusive
-    /// simulation-time window. On failure, append a bounded convergence tail
+    /// Collect iteration and accepted endpoint diagnostics for trials starting
+    /// in this inclusive simulation-time window. On failure, append a bounded convergence tail
     /// to the error. Observational only; absent by default.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub newton_audit_window_s: Option<[f64; 2]>,
@@ -167,7 +167,28 @@ impl ImplicitSolverWorkspace {
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
+pub struct ImplicitEndpointAudit {
+    /// Times of this backward-Euler equation. In a multistage adapter its seed
+    /// may be an affine anchor, not a physical intermediate trajectory state.
+    pub equation_start_time_s: f64,
+    pub equation_step_s: f64,
+    pub seed_reduced_velocity: Vec<f64>,
+    pub endpoint_reduced_velocity: Vec<f64>,
+    pub seed_joint_positions: Vec<f64>,
+    pub endpoint_joint_positions: Vec<f64>,
+    /// Full model state layout, including floating poses and contact memory.
+    pub seed_states: Vec<f64>,
+    pub endpoint_states: Vec<f64>,
+    pub endpoint_reduced_accelerations: Vec<f64>,
+    pub endpoint_bristle_rates: Vec<f64>,
+    pub newton: NewtonAudit,
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
 pub struct ImplicitStepDiagnostics {
+    /// Observational only, retained only in the configured Newton audit window.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub endpoint_audit: Option<ImplicitEndpointAudit>,
     pub nonlinear: SolveDiagnostics,
     /// Includes numerical derivative probes, backtracks and final verification.
     pub endpoint_evaluations: usize,
@@ -885,10 +906,24 @@ impl RigidEmbedding<'_> {
             next_workspace.clear();
         }
         *workspace = next_workspace;
+        let endpoint_audit = audit.map(|newton| ImplicitEndpointAudit {
+            equation_start_time_s: time_s,
+            equation_step_s: step_s,
+            seed_reduced_velocity: old_u,
+            endpoint_reduced_velocity: self.reduced_velocity(&a.generalized),
+            seed_joint_positions: seed.q.clone(),
+            endpoint_joint_positions: a.generalized.q.clone(),
+            seed_states: seed.states.clone(),
+            endpoint_states: a.generalized.states.clone(),
+            endpoint_reduced_accelerations: a.reduced_accelerations.as_slice().to_vec(),
+            endpoint_bristle_rates: a.bristle_rates.clone(),
+            newton,
+        });
         Ok(EmbeddedImplicitStep {
             time_s: time_s + step_s,
             endpoint: a,
             diagnostics: ImplicitStepDiagnostics {
+                endpoint_audit,
                 nonlinear,
                 endpoint_evaluations: evaluations.get(),
                 started_with_reused_jacobian,

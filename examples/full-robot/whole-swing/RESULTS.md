@@ -526,3 +526,19 @@ tool invocation (which incorrectly rejected the runner's documented exit 1
 for a retained runtime error) is preserved under `runner-guard-rejection`
 filenames. The reusable diagnostic runner now checks exit status against the
 parsed outcome. No new physics or controller qualification is claimed.
+
+The opt-in stage audit preserves the previous 20/5 ms teacher captures exactly.
+Its 19 mechanical tests include analytic stage values, bitwise preservation,
+and audit-window exclusion. The coarse jump appears in the second stage of
+the 1.30–1.32 s macrostep: its seed's largest reduced speed is 5.372 rad/s
+at the foot servo, and the endpoint reaches 247.622 rad/s. A proposed Newton
+correction of 12,667.23 rad/s is accepted at fraction 1/64 before convergence
+to the distant state. The bounded 5 ms audit reaches only 3.402 rad/s in this
+window. The active regularized-Coulomb profile has zero recorded contact
+memory and zero audited bristle rates, excluding memory overshoot here.
+
+`sdirk-stage-summary.json` retains the evidence. The vector SDIRK primitive
+already uses the first physical stage as the next Newton guess; the mechanical
+adapter instead uses the affine seed. Testing that difference is the next
+bounded experiment. The current evidence locates the jump but does not yet
+prove another guess finds a bounded solution or qualifies coarse integration.

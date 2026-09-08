@@ -1,0 +1,1020 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "teacher-20ms-audited",
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "policy output violates software/CAD command bounds at 1.32 s: -Y | Foot servo output.target requested 0.5434898156724169 rad; allowed [-0.6, -0.02] rad",
+        "termination_reasons": []
+      },
+      "exact_previous_physics_and_task": true,
+      "recorded_contact_memory_zero": true,
+      "floor_friction": {
+        "kind": "regularized_coulomb",
+        "slip_speed_m_s": 0.001
+      },
+      "stages": [
+        {
+          "equation_start_time_s": 1.254142135623731,
+          "equation_step_s": 0.005857864376269054,
+          "maximum_seed_reduced_speed": 0.076151949352629,
+          "maximum_endpoint_reduced_speed": 0.03483630904664538,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.04889198256981908,
+            "endpoint_rad": -0.04868791619605404,
+            "seed_speed_rad_s": -0.076151949352629,
+            "endpoint_speed_rad_s": 0.03483630904664538
+          },
+          "iterations": 9,
+          "scaled_velocity_residual": 7.410753804885928e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.11170738693244112,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.26,
+          "equation_step_s": 0.005857864376269054,
+          "maximum_seed_reduced_speed": 0.03483630904664538,
+          "maximum_endpoint_reduced_speed": 0.3493136957142971,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.04868791619605404,
+            "endpoint_rad": -0.05073414845032171,
+            "seed_speed_rad_s": 0.03483630904664538,
+            "endpoint_speed_rad_s": -0.3493136957142971
+          },
+          "iterations": 9,
+          "scaled_velocity_residual": 1.4053763645448941e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -0.3826610438006785,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.274142135623731,
+          "equation_step_s": 0.005857864376269054,
+          "maximum_seed_reduced_speed": 0.8925838423528344,
+          "maximum_endpoint_reduced_speed": 0.17626637602452339,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.05362795785607232,
+            "endpoint_rad": -0.05466050238092042,
+            "seed_speed_rad_s": -0.8925838423528344,
+            "endpoint_speed_rad_s": -0.17626637602452339
+          },
+          "iterations": 12,
+          "scaled_velocity_residual": 3.1652716975250073e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.720950877323075,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.28,
+          "equation_step_s": 0.005857864376269054,
+          "maximum_seed_reduced_speed": 0.17626637602452339,
+          "maximum_endpoint_reduced_speed": 1.5954933969745333,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.05466050238092042,
+            "endpoint_rad": -0.06400668631363005,
+            "seed_speed_rad_s": -0.17626637602452339,
+            "endpoint_speed_rad_s": -1.5954933969745333
+          },
+          "iterations": 11,
+          "scaled_velocity_residual": 4.2476452216666516e-10,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -1.385595763006624,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.294142135623731,
+          "equation_step_s": 0.005857864376269054,
+          "maximum_seed_reduced_speed": 3.6025834981738885,
+          "maximum_endpoint_reduced_speed": 0.7834935461391834,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.0772241863877015,
+            "endpoint_rad": -0.08181378532066694,
+            "seed_speed_rad_s": -3.6025834981738885,
+            "endpoint_speed_rad_s": -0.7834935461391834
+          },
+          "iterations": 18,
+          "scaled_velocity_residual": 1.124943360686359e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 1,
+            "column": 7,
+            "delta": -12.940575196292848,
+            "selected_alpha": null
+          }
+        },
+        {
+          "equation_start_time_s": 1.3,
+          "equation_step_s": 0.005857864376269054,
+          "maximum_seed_reduced_speed": 0.7834935461391834,
+          "maximum_endpoint_reduced_speed": 2.6839864180114508,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.08181378532066694,
+            "endpoint_rad": -0.0975362137451262,
+            "seed_speed_rad_s": -0.7834935461391834,
+            "endpoint_speed_rad_s": -2.6839864180114508
+          },
+          "iterations": 14,
+          "scaled_velocity_residual": 8.683967493566813e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -1.7730156369136576,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.314142135623731,
+          "equation_step_s": 0.005857864376269054,
+          "maximum_seed_reduced_speed": 5.371689230557614,
+          "maximum_endpoint_reduced_speed": 247.62151423040962,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.11977108525643675,
+            "endpoint_rad": -1.5703043322645538,
+            "seed_speed_rad_s": -5.371689230557614,
+            "endpoint_speed_rad_s": -247.62151423040962
+          },
+          "iterations": 13,
+          "scaled_velocity_residual": 2.0483157392447993e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 3,
+            "column": 8,
+            "delta": -12667.229238850337,
+            "selected_alpha": 0.015625
+          }
+        }
+      ]
+    },
+    {
+      "name": "teacher-5ms-audited",
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "exact_previous_physics_and_task": true,
+      "recorded_contact_memory_zero": true,
+      "floor_friction": {
+        "kind": "regularized_coulomb",
+        "slip_speed_m_s": 0.001
+      },
+      "stages": [
+        {
+          "equation_start_time_s": 1.25,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.07115430979871519,
+          "maximum_endpoint_reduced_speed": 0.06572346544044487,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.049281257442733435,
+            "endpoint_rad": -0.049185007656011304,
+            "seed_speed_rad_s": 0.07115430979871519,
+            "endpoint_speed_rad_s": 0.06572346544044487
+          },
+          "iterations": 4,
+          "scaled_velocity_residual": 9.468827116756052e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -0.0054311251592589265,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2535355339059326,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.05804309383657226,
+          "maximum_endpoint_reduced_speed": 0.05394190960511418,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.04904888990225335,
+            "endpoint_rad": -0.04896989380458742,
+            "seed_speed_rad_s": 0.05804309383657226,
+            "endpoint_speed_rad_s": 0.05394190960511418
+          },
+          "iterations": 4,
+          "scaled_velocity_residual": 3.7231490131574632e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -0.0041022317691754686,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2550000000000001,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.05394190960511418,
+          "maximum_endpoint_reduced_speed": 0.05013864277897529,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.04896989380458742,
+            "endpoint_rad": -0.04889646746223506,
+            "seed_speed_rad_s": 0.05394190960511418,
+            "endpoint_speed_rad_s": 0.05013864277897529
+          },
+          "iterations": 4,
+          "scaled_velocity_residual": 2.9307231870826476e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -0.003804187511340437,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2585355339059328,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.04476001422746023,
+          "maximum_endpoint_reduced_speed": 0.04201480119747094,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.048792626933044904,
+            "endpoint_rad": -0.04873109768124223,
+            "seed_speed_rad_s": 0.04476001422746023,
+            "endpoint_speed_rad_s": 0.04201480119747094
+          },
+          "iterations": 4,
+          "scaled_velocity_residual": 1.492910974888479e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -0.0027456018860507352,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.26,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.04201480119747094,
+          "maximum_endpoint_reduced_speed": 0.40825060023262605,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.04873109768124223,
+            "endpoint_rad": -0.049328966843165505,
+            "seed_speed_rad_s": 0.04201480119747094,
+            "endpoint_speed_rad_s": -0.40825060023262605
+          },
+          "iterations": 8,
+          "scaled_velocity_residual": 2.0678860267360488e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -0.4478425395476612,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2635355339059327,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.0450220379200714,
+          "maximum_endpoint_reduced_speed": 0.3637918069916876,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.05017448152048204,
+            "endpoint_rad": -0.05070724228712081,
+            "seed_speed_rad_s": -1.0450220379200714,
+            "endpoint_speed_rad_s": -0.3637918069916876
+          },
+          "iterations": 12,
+          "scaled_velocity_residual": 4.606055137960918e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.6831624636650667,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2650000000000001,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.3637918069916876,
+          "maximum_endpoint_reduced_speed": 0.3197812680656116,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.05070724228712081,
+            "endpoint_rad": -0.05117555111172072,
+            "seed_speed_rad_s": -0.3637918069916876,
+            "endpoint_speed_rad_s": -0.3197812680656116
+          },
+          "iterations": 6,
+          "scaled_velocity_residual": 1.456927225321203e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.044018915792925134,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2685355339059328,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.25754118250793584,
+          "maximum_endpoint_reduced_speed": 0.27356500146992113,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.05183783980284892,
+            "endpoint_rad": -0.052238466472025076,
+            "seed_speed_rad_s": -0.25754118250793584,
+            "endpoint_speed_rad_s": -0.27356500146992113
+          },
+          "iterations": 7,
+          "scaled_velocity_residual": 1.3489804291666463e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -0.016018806317754392,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.27,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.27356500146992113,
+          "maximum_endpoint_reduced_speed": 0.26267722734018184,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.052238466472025076,
+            "endpoint_rad": -0.052623148365148364,
+            "seed_speed_rad_s": -0.27356500146992113,
+            "endpoint_speed_rad_s": -0.26267722734018184
+          },
+          "iterations": 7,
+          "scaled_velocity_residual": 1.8148752561723824e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.010885250781630032,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2735355339059327,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.24727960137604782,
+          "maximum_endpoint_reduced_speed": 0.23331384429586716,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.053167170715602674,
+            "endpoint_rad": -0.05350885092985045,
+            "seed_speed_rad_s": -0.24727960137604782,
+            "endpoint_speed_rad_s": -0.23331384429586716
+          },
+          "iterations": 7,
+          "scaled_velocity_residual": 8.086713051535382e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.013978777481261697,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2750000000000001,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.23331384429586716,
+          "maximum_endpoint_reduced_speed": 0.21963504932995387,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.05350885092985045,
+            "endpoint_rad": -0.05383049901266295,
+            "seed_speed_rad_s": -0.23331384429586716,
+            "endpoint_speed_rad_s": -0.21963504932995387
+          },
+          "iterations": 8,
+          "scaled_velocity_residual": 3.472833480077514e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.013695764781247047,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2785355339059328,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.2002903098530344,
+          "maximum_endpoint_reduced_speed": 0.1863879701479524,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.05428537809368769,
+            "endpoint_rad": -0.05455833695631138,
+            "seed_speed_rad_s": -0.2002903098530344,
+            "endpoint_speed_rad_s": -0.1863879701479524
+          },
+          "iterations": 7,
+          "scaled_velocity_residual": 4.7211576477239336e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.013902933347934663,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.28,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.1863879701479524,
+          "maximum_endpoint_reduced_speed": 1.8987770723492157,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.05455833695631138,
+            "endpoint_rad": -0.05733903159895905,
+            "seed_speed_rad_s": -0.1863879701479524,
+            "endpoint_speed_rad_s": -1.8987770723492157
+          },
+          "iterations": 12,
+          "scaled_velocity_residual": 5.42089984012506e-12,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -1.6855686429903889,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2835355339059327,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 4.320460964754856,
+          "maximum_endpoint_reduced_speed": 1.6709576867767477,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.06127152767540959,
+            "endpoint_rad": -0.06371858855231514,
+            "seed_speed_rad_s": -4.320460964754856,
+            "endpoint_speed_rad_s": -1.6709576867767477
+          },
+          "iterations": 17,
+          "scaled_velocity_residual": 3.9576775953675813e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 2.705513352912666,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.285,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.6709576867767477,
+          "maximum_endpoint_reduced_speed": 1.4872884103620918,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.06371858855231514,
+            "endpoint_rad": -0.06589667200138957,
+            "seed_speed_rad_s": -1.6709576867767477,
+            "endpoint_speed_rad_s": -1.4872884103620918
+          },
+          "iterations": 7,
+          "scaled_velocity_residual": 1.47781746492881e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.18388304294539384,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2885355339059326,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.2275408310023106,
+          "maximum_endpoint_reduced_speed": 1.273929856343133,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.06897694715505101,
+            "endpoint_rad": -0.07084257423588547,
+            "seed_speed_rad_s": -1.2275408310023106,
+            "endpoint_speed_rad_s": -1.273929856343133
+          },
+          "iterations": 7,
+          "scaled_velocity_residual": 2.4362583356946077e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 7,
+            "delta": -0.15306863495515807,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.29,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.273929856343133,
+          "maximum_endpoint_reduced_speed": 1.2092087083845198,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.07084257423588547,
+            "endpoint_rad": -0.07261341938996543,
+            "seed_speed_rad_s": -1.273929856343133,
+            "endpoint_speed_rad_s": -1.2092087083845198
+          },
+          "iterations": 32,
+          "scaled_velocity_residual": 8.935265984749696e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 4,
+            "column": 7,
+            "delta": -0.1945825640845173,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2935355339059327,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.117679029109098,
+          "maximum_endpoint_reduced_speed": 1.0522580415248641,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.07511777262372799,
+            "endpoint_rad": -0.07665876884775073,
+            "seed_speed_rad_s": -1.117679029109098,
+            "endpoint_speed_rad_s": -1.0522580415248641
+          },
+          "iterations": 18,
+          "scaled_velocity_residual": 7.068494877957021e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 3,
+            "column": 13,
+            "delta": 0.5736341018932755,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.295,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.0522580415248641,
+          "maximum_endpoint_reduced_speed": 0.98729176623089,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.07665876884775073,
+            "endpoint_rad": -0.07810462416434762,
+            "seed_speed_rad_s": -1.0522580415248641,
+            "endpoint_speed_rad_s": -0.98729176623089
+          },
+          "iterations": 9,
+          "scaled_velocity_residual": 3.96670911197855e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.0650163895648748,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.2985355339059326,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.8954155667607082,
+          "maximum_endpoint_reduced_speed": 0.8490505505666653,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.0801493723623082,
+            "endpoint_rad": -0.08139277810576219,
+            "seed_speed_rad_s": -0.8954155667607082,
+            "endpoint_speed_rad_s": -0.8490505505666653
+          },
+          "iterations": 10,
+          "scaled_velocity_residual": 3.3288897836186715e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.04623481841165542,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.3,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 0.8490505505666653,
+          "maximum_endpoint_reduced_speed": 3.120218661669167,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.08139277810576219,
+            "endpoint_rad": -0.08596223254185252,
+            "seed_speed_rad_s": -0.8490505505666653,
+            "endpoint_speed_rad_s": -3.120218661669167
+          },
+          "iterations": 10,
+          "scaled_velocity_residual": 7.910401156677183e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -2.167754780777569,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.3035355339059327,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 6.332135330429886,
+          "maximum_endpoint_reduced_speed": 2.723238372309456,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.09242441697801737,
+            "endpoint_rad": -0.0964125072403274,
+            "seed_speed_rad_s": -6.332135330429886,
+            "endpoint_speed_rad_s": -2.723238372309456
+          },
+          "iterations": 13,
+          "scaled_velocity_residual": 6.980559098812567e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 3.7186019722268635,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.305,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 2.723238372309456,
+          "maximum_endpoint_reduced_speed": 2.440432554059541,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.0964125072403274,
+            "endpoint_rad": -0.0999864379706055,
+            "seed_speed_rad_s": -2.723238372309456,
+            "endpoint_speed_rad_s": -2.440432554059541
+          },
+          "iterations": 6,
+          "scaled_velocity_residual": 2.5405301709580108e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.28333165366841595,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.3085355339059326,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 2.040484746215182,
+          "maximum_endpoint_reduced_speed": 2.0866729302055256,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.10504073928034675,
+            "endpoint_rad": -0.10809660103604066,
+            "seed_speed_rad_s": -2.040484746215182,
+            "endpoint_speed_rad_s": -2.0866729302055256
+          },
+          "iterations": 10,
+          "scaled_velocity_residual": 1.3770897434872698e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 13,
+            "delta": -0.15163493041148343,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.31,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 2.0866729302055256,
+          "maximum_endpoint_reduced_speed": 1.9624376866481616,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.10809660103604066,
+            "endpoint_rad": -0.11097052448985663,
+            "seed_speed_rad_s": -2.0866729302055256,
+            "endpoint_speed_rad_s": -1.9624376866481616
+          },
+          "iterations": 18,
+          "scaled_velocity_residual": 2.2892629458759473e-10,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.12537546021272436,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.3135355339059327,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.7867425205283904,
+          "maximum_endpoint_reduced_speed": 1.6570774437588163,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.1150348660154653,
+            "endpoint_rad": -0.11746159974709368,
+            "seed_speed_rad_s": -1.7867425205283904,
+            "endpoint_speed_rad_s": -1.6570774437588163
+          },
+          "iterations": 11,
+          "scaled_velocity_residual": 2.5339068997209946e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 1,
+            "column": 13,
+            "delta": -0.31879975321925874,
+            "selected_alpha": null
+          }
+        },
+        {
+          "equation_start_time_s": 1.315,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.6570774437588163,
+          "maximum_endpoint_reduced_speed": 1.5531807717691892,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.11746159974709368,
+            "endpoint_rad": -0.11973618032530683,
+            "seed_speed_rad_s": -1.6570774437588163,
+            "endpoint_speed_rad_s": -1.5531807717691892
+          },
+          "iterations": 11,
+          "scaled_velocity_residual": 7.00617792948055e-11,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.10405556693986164,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.3185355339059326,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.4062486892009731,
+          "maximum_endpoint_reduced_speed": 1.3537248798253365,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.12295292302772631,
+            "endpoint_rad": -0.12493540721492576,
+            "seed_speed_rad_s": -1.4062486892009731,
+            "endpoint_speed_rad_s": -1.3537248798253365
+          },
+          "iterations": 9,
+          "scaled_velocity_residual": 1.548035901549616e-7,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.052630155151445666,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.32,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.3537248798253365,
+          "maximum_endpoint_reduced_speed": 3.4019308541483544,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.12493540721492576,
+            "endpoint_rad": -0.12991741960518718,
+            "seed_speed_rad_s": -1.3537248798253365,
+            "endpoint_speed_rad_s": -3.4019308541483544
+          },
+          "iterations": 14,
+          "scaled_velocity_residual": 7.064926421662676e-11,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -1.8555005550320975,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.3235355339059327,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 6.298531521648576,
+          "maximum_endpoint_reduced_speed": 2.9792822700406822,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.13696304909540571,
+            "endpoint_rad": -0.14132610696453596,
+            "seed_speed_rad_s": -6.298531521648576,
+            "endpoint_speed_rad_s": -2.9792822700406822
+          },
+          "iterations": 12,
+          "scaled_velocity_residual": 3.688165383991179e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 3.4327102082379093,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.325,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 2.9792822700406822,
+          "maximum_endpoint_reduced_speed": 2.6867683715107975,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.14132610696453596,
+            "endpoint_rad": -0.14526078814722576,
+            "seed_speed_rad_s": -2.9792822700406822,
+            "endpoint_speed_rad_s": -2.6867683715107975
+          },
+          "iterations": 6,
+          "scaled_velocity_residual": 5.4287264999314244e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 7,
+            "delta": -0.36495360112946956,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.3285355339059326,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 2.2730912482819527,
+          "maximum_endpoint_reduced_speed": 2.3061133757098307,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.15082526763939988,
+            "endpoint_rad": -0.15420249248720186,
+            "seed_speed_rad_s": -2.2730912482819527,
+            "endpoint_speed_rad_s": -2.3061133757098307
+          },
+          "iterations": 6,
+          "scaled_velocity_residual": 2.0181802409813265e-11,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 13,
+            "delta": -0.15443795564312188,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.33,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 2.3061133757098307,
+          "maximum_endpoint_reduced_speed": 2.1479544705355105,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.15420249248720186,
+            "endpoint_rad": -0.15734809898090124,
+            "seed_speed_rad_s": -2.3061133757098307,
+            "endpoint_speed_rad_s": -2.1479544705355105
+          },
+          "iterations": 10,
+          "scaled_velocity_residual": 6.707796539051625e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.16051042185046485,
+            "selected_alpha": 0.5
+          }
+        },
+        {
+          "equation_start_time_s": 1.3335355339059327,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.9242839195779977,
+          "maximum_endpoint_reduced_speed": 1.8105450018403597,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.1617966583461798,
+            "endpoint_rad": -0.1644481401131579,
+            "seed_speed_rad_s": -1.9242839195779977,
+            "endpoint_speed_rad_s": -1.8105450018403597
+          },
+          "iterations": 12,
+          "scaled_velocity_residual": 1.2942176982888576e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 1,
+            "column": 13,
+            "delta": 0.28559988633840905,
+            "selected_alpha": 0.5
+          }
+        },
+        {
+          "equation_start_time_s": 1.335,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.8105450018403597,
+          "maximum_endpoint_reduced_speed": 1.7300437324216786,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.1644481401131579,
+            "endpoint_rad": -0.16698173050054296,
+            "seed_speed_rad_s": -1.8105450018403597,
+            "endpoint_speed_rad_s": -1.7300437324216786
+          },
+          "iterations": 6,
+          "scaled_velocity_residual": 1.3789882846726442e-9,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": 0.08049457256443396,
+            "selected_alpha": 1
+          }
+        },
+        {
+          "equation_start_time_s": 1.3385355339059326,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.6161977437812622,
+          "maximum_endpoint_reduced_speed": 1.5970331901435604,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.17056476838788104,
+            "endpoint_rad": -0.1729035693459463,
+            "seed_speed_rad_s": -1.6161977437812622,
+            "endpoint_speed_rad_s": -1.5970331901435604
+          },
+          "iterations": 10,
+          "scaled_velocity_residual": 5.7093001874786165e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 14,
+            "delta": 0.061146047447118705,
+            "selected_alpha": 0.5
+          }
+        },
+        {
+          "equation_start_time_s": 1.34,
+          "equation_step_s": 0.001464466094067231,
+          "maximum_seed_reduced_speed": 1.5970331901435604,
+          "maximum_endpoint_reduced_speed": 3.1266500706023383,
+          "maximum_bristle_rate": 0,
+          "observed_foot_servo": {
+            "name": "joint.-Y | Foot servo output",
+            "seed_rad": -0.1729035693459463,
+            "endpoint_rad": -0.17748244236235636,
+            "seed_speed_rad_s": -1.5970331901435604,
+            "endpoint_speed_rad_s": -3.1266500706023383
+          },
+          "iterations": 9,
+          "scaled_velocity_residual": 4.734778630277603e-8,
+          "largest_reported_newton_correction": {
+            "iteration": 0,
+            "column": 8,
+            "delta": -1.5215722296789274,
+            "selected_alpha": 1
+          }
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-stage-plan.json",
+      "sha256": "c62abf1a5fcf9eacbe48a09170c2710dab9d4070efe1a24656d5c0228a1ae600"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-stage-status.json",
+      "sha256": "031d03d3a627ec01f7d3bd57fc405d7a430caa68655710689f79b5dd91a94376"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_sdirk_stage_audit.mjs",
+      "sha256": "d0dd68476b3072c1b2aed98217d528431aeb49c3c9661481e8ce8a53dedf1f01"
+    }
+  ],
+  "scope": "Auditing exactly preserves both original trajectories. The 20 ms large velocity jump occurs in the second-stage solve at equation start 1.3141421356 s, not in its affine seed. Large Newton corrections precede the distant converged state. This locates the jump but does not prove that another initial guess finds a bounded root. This profile uses regularized Coulomb friction; all sampled contact-memory states and audited bristle rates are zero. No browser, accuracy or hardware qualification."
+}

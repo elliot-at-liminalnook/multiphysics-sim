@@ -27,6 +27,9 @@ if(configPath){
  configOverride={path:configPath,sha256:createHash('sha256').update(bytes).digest('hex')};
 }
 const duration=data.config.step_s*data.config.steps;
+// Allow slow validation profiles to finish and retain measured timing failures.
+// This execution timeout does not relax the realtime or transition gates.
+const measurementTimeoutMs=Math.max(180000,duration*10000);
 const steering=Boolean(data.config.policy?.step_reference);
 const schedules={
  'turn-reverse':[[0,'w'],[8.4,'a'],[16.8,'s'],[20,null]],
@@ -117,7 +120,7 @@ try{
   }});p.observer.observe(document.querySelector('#execution-state'),{childList:true,subtree:true});
   document.querySelector('#play').click();
  },{steering,schedule,commandChannels:data.config.policy?.step_reference?.command_channels??[]});
- await page.waitForFunction(()=>window.liveProbe.ended!=null,null,{timeout:180000});
+ await page.waitForFunction(()=>window.liveProbe.ended!=null,null,{timeout:measurementTimeoutMs});
  const result=await page.evaluate(()=>{
   const p=window.liveProbe,canvas=document.querySelector('canvas'),gl=canvas.getContext('webgl2');const ext=gl?.getExtension('WEBGL_debug_renderer_info');
   return {wall_s:(p.ended-p.started)/1000,simulated_s:parseFloat(document.querySelector('#sim-time').textContent),status:document.querySelector('#execution-state').textContent,simulation_error:p.simulationError,
@@ -151,7 +154,7 @@ try{
   return [k,{samples:values.length,mean:values.reduce((a,b)=>a+b,0)/values.length,p95:p95(values),maximum:Math.max(...values)}];
  }));
  performance.breakdown={all:summarize(result.transition_samples),by_phase:Object.fromEntries([...new Set(result.transition_samples.map(s=>s.phase))].map(phase=>[phase,summarize(result.transition_samples.filter(s=>s.phase===phase))])),scope:'WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive.'};
- const report={completed,preset,scenario,display_rate_hz:displayRateHz,config_override:configOverride,runtime_build:runtimeBuild,performance,meets_speed_target:performance.simulation_per_wall_second>=1&&(!performance.active_motion||performance.active_motion.simulation_per_wall_second>=1),meets_transition_target:performance.transition_p95_s<=.02&&(!performance.active_motion||performance.active_motion.transition_p95_s<=.02),
+ const report={completed,preset,scenario,measurement_timeout_s:measurementTimeoutMs/1000,display_rate_hz:displayRateHz,config_override:configOverride,runtime_build:runtimeBuild,performance,meets_speed_target:performance.simulation_per_wall_second>=1&&(!performance.active_motion||performance.active_motion.simulation_per_wall_second>=1),meets_transition_target:performance.transition_p95_s<=.02&&(!performance.active_motion||performance.active_motion.transition_p95_s<=.02),
   host:{cpu:cpus()[0]?.model,logical_cpus:cpus().length,platform:platform(),architecture:arch(),browser:await browser.version(),gpu:result.gpu,headless:process.env.HEADED!=='1'},errors,status:result.status,simulation_error:result.simulation_error,phase_messages:result.phase_messages,
   scope:'One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. Command-reference delays are measured separately from physical response; no sustained terrain or physical stopping acceptance.'};
  try { if(steering&&completed){

@@ -50,7 +50,30 @@ assert(distilled.complete && distilledFidelity.complete);
 const distilledBrowserPath = 'examples/full-robot/whole-swing/fast-student-browser-status.json', distilledBrowser = read(distilledBrowserPath);
 const distilledBrowserIntegrityPath = 'examples/full-robot/whole-swing/fast-student-browser-integrity.json';
 assert(distilledBrowser.complete && read(distilledBrowserIntegrityPath).passed);
+const integralPath = 'examples/full-robot/whole-swing/settled-integral-regression-status.json', integral = read(integralPath);
+const integralSummaryPath = 'examples/full-robot/whole-swing/settled-integral-regression-summary.json', integralSummary = read(integralSummaryPath);
+assert(integral.complete && integralSummary.declared_suite_passed);
+const integralMinute = integral.cases.find(c => c.name === 'minute-1.25ms');
+const integralSteering = integral.cases.find(c => c.name === 'steering-1.25ms');
+const integralBrowserPath = 'examples/full-robot/whole-swing/settled-integral-browser-status.json', integralBrowser = read(integralBrowserPath);
+const integralBrowserIntegrityPath = 'examples/full-robot/whole-swing/settled-integral-browser-integrity.json';
+assert(integralBrowser.complete && read(integralBrowserIntegrityPath).passed);
+const integralContactPath = 'examples/full-robot/whole-swing/settled-integral-minute-contact-motion.json';
 const definitions = [
+  {id: 'integral-teacher-minute', name: 'Walking teacher with bounded stance correction', description: 'Measures 3.78 mm/s with 41 qualified minute-long swings. Mixed steering, two fresh command cases and timestep agreement pass. Loaded contact motion is substantial: 152–198 mm per foot during 213 mm body advance. Browser pace is 0.42x with 93.5 ms p95; this remains experimental.',
+    scene: 'examples/full-robot/whole-swing/settled-integral-candidate.scene.json', config: 'examples/full-robot/whole-swing/settled-integral-minute.config.json',
+    capture: integralMinute.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(integralMinute.acceptance.source.path), evidence: integralPath,
+    commands: true, numerical: 'examples/full-robot/whole-swing/settled-integral-regression-refinement.json', partialParity: true,
+    performance: integralBrowser.cases.find(c => c.name === 'teacher-minute').measurement,
+    disturbance: {status: 'pass', detail: 'Frozen 48-second held-out command sequence passes with -0.75 N lateral and -0.5 N forward-axis pulses; all three stop checkpoints pass. This bounded flat-floor test does not establish a broad disturbance distribution.'},
+    extraEvidence: [integralSummaryPath, 'examples/full-robot/whole-swing/settled-integral-regression-integrity.json', integralBrowserPath, integralBrowserIntegrityPath, integralContactPath]},
+  {id: 'integral-teacher-steering', name: 'Steering teacher with bounded stance correction', description: 'All 15 development steering swings pass with 0.34 mm final stop error. Native/WASM agreement and exact replay pass. Rendered pace is 0.40x with 92.7 ms p95. The same teacher shows substantial loaded sliding in its minute test; terrain and deployable sensing remain open.',
+    scene: 'examples/full-robot/whole-swing/settled-integral-candidate.scene.json', config: 'examples/full-robot/whole-swing/settled-integral-steering.config.json',
+    capture: integralSteering.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(integralSteering.acceptance.source.path), evidence: integralPath,
+    commands: true, benchmark: 'flat-steering-24s-v1',
+    performance: integralBrowser.cases.find(c => c.name === 'teacher-turn').measurement,
+    parity: integralBrowser.parity.passed && integralBrowser.parity.replay_exact && integralBrowser.parity.reset_exact,
+    extraEvidence: [integralSummaryPath, 'examples/full-robot/whole-swing/settled-integral-regression-integrity.json', integralBrowserPath, integralBrowserIntegrityPath, integralContactPath]},
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
     capture: browser.minute_walking.capture.path, acceptance: browser.minute_walking, evidence: browserPath,
@@ -171,7 +194,7 @@ for (const d of definitions) {
   const gates = {
     sustained_walk: gate(simulated < 60 ? 'missing' : a.passed ? 'pass' : 'fail', simulated < 60 ? 'Only a short forward/stop case is associated with this recipe.' : '60-second supported-swing, sampled geometry and endpoint audit.'),
     turn_reverse_stop: gate(d.heldoutCommandsFailed ? 'fail' : d.commands ? 'pass' : d.commandsFailed ? 'fail' : 'missing', d.heldoutCommandsFailed ? 'Development steering passes, but the predeclared mirrored-turn-to-forward sequence fails planned static support at 14.84 s.' : d.commands ? 'The associated controller has a passing forward/turn/reverse/stop case.' : d.commandsFailed ? 'Live turning loses planned static support before the reverse command is reached; native inputs reproduce the failure.' : 'Full steering coverage at this speed is not associated with this entry.'),
-    disturbances: gate('missing', 'Broader held-out disturbance requirements are not yet established.'),
+    disturbances: d.disturbance ?? gate('missing', 'Broader held-out disturbance requirements are not yet established.'),
     terrain: gate('missing', 'This entry is a flat-floor experiment; progressively harder terrain is outstanding.'),
     numerical_accuracy: gate(numericalStatus, numerical ? `Sampled foot difference ${(footDifference * 1000).toFixed(3)} mm; required at most 1 mm, plus a 0.5 mm body screen. ${Number.isFinite(bodyDifference) ? `Body difference ${(bodyDifference * 1000).toFixed(3)} mm.` : 'Body screen not recorded.'}` : 'Solver-option agreement does not establish timestep convergence.'),
     browser_realtime: gate(!d.performance ? 'missing' : performance?.active_motion?.simulation_per_wall_second >= 1 && performance?.active_motion?.transition_p95_s <= .020 ? 'pass' : 'fail', 'Requires active simulation/wall >=1 and active transition p95 <=20 ms on the recorded browser host.'),

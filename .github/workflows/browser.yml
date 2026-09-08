@@ -143,6 +143,12 @@ jobs:
             exit 1
           fi
           node --input-type=module -e 'import assert from "node:assert/strict"; import {readFileSync} from "node:fs"; const p=JSON.parse(readFileSync("runs/interactive/whole-swing-failed-turn.json")); assert.equal(p.completed,false); assert.match(p.simulation_error,/reference lacks static support/); assert(JSON.parse(readFileSync("runs/interactive/whole-swing-failed-turn.recording.json")).runtime.completed_steps>0);'
+      - name: Bounded shared secants preserve faster steering and host replay
+        run: |
+          node web/leaderboard/materialize_actions.mjs secant-steering-short runs/interactive/secant-actions.json
+          target/release/examples/run_environment examples/full-robot/whole-swing/broyden-turn.scene.json examples/full-robot/whole-swing/broyden-turn.config.json examples/full-robot/heading-task/task.json runs/interactive/secant-actions.json > runs/interactive/secant-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/secant-native.json runs/interactive/secant-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer tested-secant-steering-short runs/interactive/secant-native.json runs/interactive/secant-parity.json
       - name: Effective-servo browser profile and replay
         run: |
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/browser-effective-servo/scene.json examples/full-robot/browser-effective-servo/config.json examples/full-robot/browser-effective-servo/task.json > runs/interactive/effective-servo-native.json

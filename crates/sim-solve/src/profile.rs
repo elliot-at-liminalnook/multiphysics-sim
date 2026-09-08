@@ -54,6 +54,8 @@ pub static ITERATIONS: Bucket = Bucket::new("newton iterations");
 pub static FRESH: Bucket = Bucket::new("fresh jacobians");
 /// Failed full trials with a reused matrix, refreshed without discarded backtracking probes.
 pub static STALE_FULL_REFRESH: Bucket = Bucket::new("stale full-step refreshes");
+pub static BROYDEN_UPDATE: Bucket = Bucket::new("Broyden update attempts");
+pub static BROYDEN_REFRESH: Bucket = Bucket::new("Broyden rejected/capped updates");
 pub static RESIDUAL: Bucket = Bucket::new("residual evaluations");
 pub static JACOBIAN: Bucket = Bucket::new("jacobian assembly");
 pub static ANALYTIC_SLOTS: Bucket = Bucket::new("  slots supplied");
@@ -95,13 +97,14 @@ pub static POLICY_BODY_FEEDBACK: Bucket = Bucket::new("policy body feedback");
 pub static POLICY_POINT_FEEDBACK: Bucket = Bucket::new("policy point feedback");
 pub static POLICY_SCRIPT: Bucket = Bucket::new("policy script");
 
-pub fn all() -> [&'static Bucket; 43] {
+pub fn all() -> [&'static Bucket; 45] {
     [&STEP, &IMPLICIT, &NEWTON, &ITERATIONS, &FRESH, &STALE_FULL_REFRESH, &RESIDUAL, &JACOBIAN, &ANALYTIC_SLOTS, &RATE_SLOTS, &FD_SLOTS, &FD_RESIDUALS, &FACTORISE, &FACTOR_SUM, &FACTOR_MATRIX, &FACTOR_SYMBOLIC, &FACTOR_SYMBOLIC_BUILD, &FACTOR_NUMERIC, &SOLVE, &GUARDS, &LOCATE, &JUMP,
         &EMBEDDED_MAPPING, &EMBEDDED_HISTORY, &EMBEDDED_DYNAMICS_PREPARE, &EMBEDDED_DYNAMICS_APPLY, &EMBEDDED_COMPONENTS,
         &EMBEDDED_CLOSURE_JACOBIAN, &EMBEDDED_CLOSURE_FACTOR, &EMBEDDED_CLOSURE_SVD,
         &EMBEDDED_INERTIA, &EMBEDDED_PROJECT_INERTIA, &EMBEDDED_FORCE_EVALUATION,
         &CONTACT_GEOMETRY, &CONTACT_FORCES, &CONTACT_TOPOLOGY, &CONTACT_SAMPLES, &CONTACT_PAIRS,
-        &POLICY_REFERENCE, &POLICY_OBSERVATIONS, &POLICY_BODY_FEEDBACK, &POLICY_POINT_FEEDBACK, &POLICY_SCRIPT]
+        &POLICY_REFERENCE, &POLICY_OBSERVATIONS, &POLICY_BODY_FEEDBACK, &POLICY_POINT_FEEDBACK, &POLICY_SCRIPT,
+        &BROYDEN_UPDATE, &BROYDEN_REFRESH]
 }
 
 pub fn enable() {

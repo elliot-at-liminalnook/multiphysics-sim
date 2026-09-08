@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "timestep_reference": true,
+  "numerical_precision": false,
+  "block_factorization": false,
+  "guarded_backtracking": false,
+  "baseline": {
+    "path": "runs/full-robot/learning/whole-combined/combined-turn-2.5ms.native.json",
+    "sha256": "40026cf19b15cad9f73826f60081fbf6743b584e60d7d8916fadc2d141df043c"
+  },
+  "candidate": {
+    "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms.native.json",
+    "sha256": "3a87eff3e37f7e141cc507807fea4b50bdc75ee48f44b26c075aa076f5970d56"
+  },
+  "markers": {
+    "path": "examples/full-robot/foot-markers.json",
+    "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+  },
+  "frames": 1201,
+  "metrics": {
+    "foot_marker_position_m": {
+      "maximum": 0.0003046396658008623,
+      "samples": 4804,
+      "worst": {
+        "time_s": 17.02,
+        "identity": "-Y-foot-surface"
+      },
+      "rms": 0.00015818354197857432
+    },
+    "link_position_m": {
+      "maximum": 0.0003753080303896209,
+      "samples": 34829,
+      "worst": {
+        "time_s": 17,
+        "identity": "-Y | Foot servo crank"
+      },
+      "rms": 0.00014988902085107214
+    },
+    "link_velocity_m_s": {
+      "maximum": 0.007658863515670541,
+      "samples": 34829,
+      "worst": {
+        "time_s": 4.86,
+        "identity": "+X | Sliding foot crosshead"
+      },
+      "rms": 0.000708241091648173
+    },
+    "link_angular_velocity_rad_s": {
+      "maximum": 0.09222034765746126,
+      "samples": 34829,
+      "worst": {
+        "time_s": 4.86,
+        "identity": "+X | Worm and input spindle 3a48"
+      },
+      "rms": 0.007493138642467294
+    },
+    "rotation_matrix_entry": {
+      "maximum": 0.0023012615341803933,
+      "samples": 34829,
+      "worst": {
+        "time_s": 4.86,
+        "identity": "+X | Worm and input spindle 3a48"
+      },
+      "rms": 0.00024842849162868516
+    },
+    "body_position_m": {
+      "maximum": 0.00032309761100014745,
+      "samples": 1201,
+      "worst": {
+        "time_s": 17,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 0.00014460963623671292
+    },
+    "body_heading_rad": {
+      "maximum": 0.00029475872631227334,
+      "samples": 1201,
+      "worst": {
+        "time_s": 18.66,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 0.0001648341789166424
+    },
+    "joint_positions": {
+      "maximum": 0.0031361399625615544,
+      "samples": 33628,
+      "worst": {
+        "time_s": 18.42,
+        "identity": 24
+      },
+      "rms": 0.00023126261065253037
+    },
+    "joint_velocities": {
+      "maximum": 0.11926881184901428,
+      "samples": 33628,
+      "worst": {
+        "time_s": 0.02,
+        "identity": 25
+      },
+      "rms": 0.009485819501466685
+    },
+    "servo_targets_rad": {
+      "maximum": 0.004217371423674954,
+      "samples": 14412,
+      "worst": {
+        "time_s": 4.86,
+        "identity": 4
+      },
+      "rms": 0.0002218804142626409
+    },
+    "contact_pair_force_n": {
+      "maximum": 1.1363004486139698,
+      "samples": 4474,
+      "worst": {
+        "time_s": 3.86,
+        "identity": "11:null"
+      },
+      "rms": 0.17080748317902067
+    }
+  },
+  "contact_pair_mismatches": 1,
+  "phase_mismatches": 0,
+  "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization or guarded backtracking. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate."
+}

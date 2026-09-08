@@ -17,6 +17,9 @@ const wholeParityPath = 'examples/full-robot/whole-swing/browser-parity.json', w
 const wholeBrowserPath = 'examples/full-robot/whole-swing/browser-status.json', wholeBrowser = read(wholeBrowserPath);
 const teacherPath = 'examples/full-robot/whole-swing/sustained-status.json', teacher = read(teacherPath).cases.find(c => c.name === 'teacher-minute-5ms');
 const teacherParityPath = 'examples/full-robot/whole-swing/teacher-browser-parity.json';
+const turnPath = 'examples/full-robot/whole-swing/turn-support-status.json', turn = read(turnPath).cases.find(c => c.name === 'student-turn-20ms-support-24mm');
+const combinedPath = 'examples/full-robot/whole-swing/combined-status.json', combined = read(combinedPath).cases.find(c => c.name === 'combined-minute-2.5ms');
+const broydenPath = 'examples/full-robot/whole-swing/broyden-status.json', broyden = read(broydenPath).cases.find(c => c.name === 'student-turn-20ms-broyden');
 const definitions = [
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
@@ -43,6 +46,19 @@ const definitions = [
     capture: teacher.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(teacher.acceptance.source.path), evidence: teacherPath,
     partialParity: true, extraEvidence: [teacherParityPath],
     numerical: 'examples/full-robot/whole-swing/sustained-refinement.json'},
+  {id: 'faster-steering-short', name: 'Faster steering student', description: 'Separate forward and turning postures. Native forward/turn/reverse/stop passes at +3.75/-1.25 mm/s command limits; refined stopping and numerical accuracy still fail.',
+    scene: 'examples/full-robot/whole-swing/turn-browser.scene.json', config: 'examples/full-robot/whole-swing/turn-browser.config.json',
+    capture: turn.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(turn.acceptance.source.path), evidence: turnPath,
+    numerical: 'examples/full-robot/whole-swing/turn-student-refinement.json', commands: true, benchmark: 'flat-steering-24s-v1'},
+  {id: 'settled-teacher-minute', name: 'Settled feedback teacher', description: 'Minute-long walking and mixed steering pass at 2.5 and 1.25 ms. Added standing feedback waits until the reference settles. Minute-long timestep agreement still misses the body limit; browser speed and robustness remain open.',
+    scene: 'examples/full-robot/whole-swing/combined-minute.scene.json', config: 'examples/full-robot/whole-swing/combined-minute.config.json',
+    capture: combined.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(combined.acceptance.source.path), evidence: combinedPath,
+    commands: true, extraEvidence: ['examples/full-robot/whole-swing/combined-feedback-check.json', 'examples/full-robot/whole-swing/combined-turn-refinement.json'],
+    numerical: 'examples/full-robot/whole-swing/combined-minute-refinement.json'},
+  {id: 'secant-steering-short', name: 'Steering with secant solver', description: 'The passing 20 ms steering student with bounded shared-solver secant updates. Native trajectories match within nanometres; this does not establish timestep accuracy, sustained walking or robustness.',
+    scene: 'examples/full-robot/whole-swing/broyden-turn.scene.json', config: 'examples/full-robot/whole-swing/broyden-turn.config.json',
+    capture: broyden.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(broyden.acceptance.source.path), evidence: broydenPath,
+    commands: true, benchmark: 'flat-steering-24s-v1', extraEvidence: ['examples/full-robot/whole-swing/broyden-difference.json']},
 ];
 const taskPath = 'examples/full-robot/heading-task/task.json';
 mkdirSync('runs/leaderboard', {recursive: true});
@@ -76,7 +92,7 @@ for (const d of definitions) {
   const modelHash = hash(canonical(capture.recording.scene.robot));
   const environmentHash = hash(canonical({world: scene.robot.world, loads: config.world_loads ?? null}));
   const fidelityHash = hash(canonical({options: scene.options, physics}));
-  const benchmark = simulated >= 60 ? 'flat-forward-stop-60s-v1' : 'flat-forward-stop-24s-v1';
+  const benchmark = d.benchmark ?? (simulated >= 60 ? 'flat-forward-stop-60s-v1' : 'flat-forward-stop-24s-v1');
   const numerical = d.numerical ? read(d.numerical) : null;
   const footDifference = numerical?.metrics.foot_marker_position_m.maximum;
   const bodyDifference = numerical?.metrics.body_position_m?.maximum;
@@ -110,7 +126,7 @@ for (const d of definitions) {
       native_throughput: metrics.native_compute.simulation_per_wall, native_hardware: 'Not recorded with this capture; not a reference benchmark.',
       browser_active_throughput: performance?.active_motion?.simulation_per_wall_second ?? null,
       browser_active_p95_s: performance?.active_motion?.transition_p95_s ?? null},
-    browser_host: d.performance?.host ?? null, gates,
+    browser_host: d.performance?.host ?? null, browser_runtime: d.performance?.runtime_build ?? null, gates,
     evidence: [source(d.evidence), source(omittedPath), ...(d.numerical ? [source(d.numerical)] : []), ...(d.extraEvidence ?? []).map(source)],
     capture: source(d.capture), measurement: {...metrics, motors: undefined, phases: undefined, feet: undefined},
     limitations: 'Uncalibrated CAD-derived simulation, ideal observations and a privileged planner. Sampled marker motion and positive shaft work do not certify slip-free contact or hardware energy use.'};

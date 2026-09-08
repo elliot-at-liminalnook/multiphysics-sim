@@ -148,3 +148,51 @@ specific next hypothesis: using roughly 39 N total weight and a 0.32 m rear
 support arm, 1 mm of rearward shift redistributes about 0.12 N to that support.
 This estimate must be checked against CAD reach, all other support forces and
 actual tracking; no additional shift has yet been accepted.
+
+## Controlled steering and settled stopping
+
+The subsequent -24 mm neutral front-lift support shift passes the student
+20 ms and teacher 5 ms mixed steering tasks with 15 qualified swings.
+-27 mm collides with the front gear/pulley at 9.4 s; that failure is retained.
+Refining the successful profiles initially exposes 1.44/1.11 mm stopping
+errors. Increasing standing gain immediately also fails: the last transfer
+is still moving when the motion command becomes zero.
+
+`settled-teacher.rhai` adds standing feedback only after reference joint
+angles stay stable for 0.4 seconds with zero motion command. It uses existing
+Rust corrections and retains all target bounds. Combining this with the
+turning posture passes all four `combined-status.json` cases:
+
+| Case | Step | Qualified swings | Final position error |
+| --- | --- | --- | --- |
+| Forward/stop, 60 s | 2.5 ms | 41 | 0.803 mm |
+| Forward/stop, 60 s | 1.25 ms | 41 | 0.659 mm |
+| Forward/turn/reverse/stop, 24 s | 2.5 ms | 15 | 0.818 mm |
+| Forward/turn/reverse/stop, 24 s | 1.25 ms | 15 | 0.847 mm |
+
+The 2.5 ms minute measures **3.755 mm/s** sustained travel. All added-gain
+frames are idle; combined minute physics exactly preserves the earlier
+settled teacher at 2.5 ms. The mixed trajectory difference passes the declared
+1 mm foot / 0.5 mm body screen (0.305 / 0.323 mm). The minute still fails
+the body screen (0.700 / 0.685 mm). These are development cases with the
+existing 0.5 N push, not held-out robustness or calibrated hardware results.
+
+## Compiler and derivative cost
+
+The isolated scalar and SIMD/LTO builds preserve full 24-second native/WASM
+parity and exact replay/reset. Rendered forward and mixed steering p95 remains
+32.9–37.4 ms: a 5–7% compiler benefit, still above 20 ms. Build and episode
+hashes are in `web/leaderboard/wasm-profile-status.json`.
+
+Native profiling attributes 6.211 of 10.064 seconds to 2,908 Jacobian
+assemblies, versus 0.631 seconds to online planning. Nested closure/dynamics
+timers are not additive. The opt-in bounded shared Broyden solver first
+reduces native elapsed time from 10.16 to 8.36 seconds on identical 20 ms
+steering inputs. Both cases pass 15 swings, with maximum body difference
+2.08 nanometres and no contact/phase identity differences. This comparison
+does not establish timestep accuracy. `BROYDEN-PLAN.md`, the paired status,
+integrity and trajectory reports preserve the exact experiment.
+The isolated profiled rerun reduces fresh Jacobians from 2,908 to 1,996,
+assembly time from 6.211 to 4.285 seconds and total wall time to 7.984 seconds.
+The 6,213 bounded update attempts cost 0.075 seconds; 345 request a fresh
+matrix. Profiling preserves every sampled physical frame and input exactly.

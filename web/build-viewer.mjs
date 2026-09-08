@@ -9,6 +9,7 @@ const root = resolve(import.meta.dirname, '..');
 const output = resolve(root, process.argv[2] || 'runs/interactive/viewer');
 const fixtureOnly = process.argv.includes('--fixture-only');
 const environmentOnly = process.argv.includes('--environment-only');
+const wasmArtifact = process.env.WASM_ARTIFACT || 'target/wasm32-unknown-unknown/release/sim_web.wasm';
 const read = async p => JSON.parse(await readFile(resolve(root,p)));
 const hash = async p => createHash('sha256').update(await readFile(resolve(root,p))).digest('hex');
 await mkdir(output, { recursive:true }); await mkdir(join(output,'data'), { recursive:true });
@@ -20,8 +21,16 @@ await mkdir(join(output,'vendor/addons/controls'), { recursive:true });
 await cp(join(root,'web/node_modules/three/LICENSE'),join(output,'vendor/three-LICENSE'));
 for (const file of ['three.module.js','three.core.js']) await cp(join(root,'web/node_modules/three/build',file),join(output,'vendor',file));
 await cp(join(root,'web/node_modules/three/examples/jsm/controls/OrbitControls.js'),join(output,'vendor/addons/controls/OrbitControls.js'));
-execFileSync(process.env.WASM_BINDGEN || 'wasm-bindgen',[join(root,'target/wasm32-unknown-unknown/release/sim_web.wasm'),'--target','web','--out-dir',output],{stdio:'inherit'});
+const bindgen = process.env.WASM_BINDGEN || 'wasm-bindgen';
+execFileSync(bindgen,[resolve(root,wasmArtifact),'--target','web','--out-name','sim_web','--out-dir',output],{stdio:'inherit'});
 const configured = await read('web/viewer/presets.json'); const catalog = {presets:[]}; const manifest = {inputs:{},presets:[]};
+manifest.wasm = {path: wasmArtifact, sha256: await hash(wasmArtifact), browser_module_sha256: await hash(join(output, 'sim_web_bg.wasm')),
+  bindgen_version: execFileSync(bindgen, ['--version'], {encoding: 'utf8'}).trim()};
+if (process.env.WASM_BUILD_MANIFEST) {
+  const build = await read(process.env.WASM_BUILD_MANIFEST);
+  if (!build.completed || build.artifact?.sha256 !== manifest.wasm.sha256) throw Error('WASM build manifest does not match the packaged artifact');
+  manifest.wasm.build = build; manifest.inputs[process.env.WASM_BUILD_MANIFEST] = await hash(process.env.WASM_BUILD_MANIFEST);
+}
 for (const preset of configured.presets) {
   if (environmentOnly && !preset.task && preset.mode !== 'live') continue;
   if (fixtureOnly && preset.mode !== 'live' && !preset.fixture) continue;
@@ -57,6 +66,6 @@ for (const preset of configured.presets) {
 await packageLeaderboard(root, output, catalog, manifest, fixtureOnly);
 await writeFile(join(output,'catalog.json'),JSON.stringify(catalog,null,2));
 for (const path of ['web/leaderboard/package.mjs','web/viewer/leaderboard.js','web/viewer/leaderboard-model.mjs','web/viewer/leaderboard.css','web/viewer/video-export.js']) manifest.inputs[path]=await hash(path);
-for (const path of ['web/build-viewer.mjs','web/serve-viewer.mjs','web/viewer/presets.json','web/viewer/viewer.js','web/viewer/viewer.css','web/viewer/index.html','web/worker.js','web/package-lock.json','target/wasm32-unknown-unknown/release/sim_web.wasm']) manifest.inputs[path]=await hash(path);
+for (const path of ['web/build-viewer.mjs','web/serve-viewer.mjs','web/viewer/presets.json','web/viewer/viewer.js','web/viewer/viewer.css','web/viewer/index.html','web/worker.js','web/package-lock.json',wasmArtifact]) manifest.inputs[path]=await hash(path);
 await writeFile(join(output,'build-manifest.json'),JSON.stringify(manifest,null,2));
 console.log(`Packaged ${catalog.presets.length} presets in ${output}`);

@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "settled-teacher-minute-5ms",
+      "duration_s": 60,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008075130548970202,
+        "final_yaw_error_rad": 0.0022596882425220855,
+        "maximum_body_tilt_rad": 0.004220824589896164,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21268827914786287,
+          -0.00036309493428469643,
+          -0.0005067385113599315
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-5ms-acceptance/summary.json",
+          "sha256": "c09e49f8361916bf34eeb54d19623ace0fd0c098f8eeb125ab3d85b7866c8458"
+        }
+      },
+      "wall_s": 61.79238157,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-5ms.scene.json",
+          "sha256": "4d746f2fbf3dca63cf775abc083d9b6b1792d96c63c8d4043e90a98bff522c2f"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-5ms.config.json",
+          "sha256": "a40c6443195d1cdfa327feecde35cb8de26be98380894e95a094a8c9671165a7"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-5ms.actions.json",
+          "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-5ms.native.json",
+          "sha256": "69c1eac77e567e3ffc9750056f105d4c3810661c21fbf09fa4178f8650f7a1e5"
+        }
+      ]
+    },
+    {
+      "name": "settled-teacher-minute-2.5ms",
+      "duration_s": 60,
+      "step_s": 0.0025,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008030749161544369,
+        "final_yaw_error_rad": 0.0029619445030081297,
+        "maximum_body_tilt_rad": 0.004414571861853388,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21278305508185885,
+          -0.0001351830700834612,
+          -0.0005068765884760611
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms-acceptance/summary.json",
+          "sha256": "a708d4dda715264c355a6239492e082fe571895cd92c15541407d279dc82552b"
+        }
+      },
+      "wall_s": 81.703635788,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms.scene.json",
+          "sha256": "4d746f2fbf3dca63cf775abc083d9b6b1792d96c63c8d4043e90a98bff522c2f"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms.config.json",
+          "sha256": "ba2050b05f01625ba72a0a3cdc7c2ae264effd96c73197da60e95f934155c635"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms.actions.json",
+          "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms.native.json",
+          "sha256": "c06cf715ca71c32ea618facf7d5b232496bda4facc649979d2991099c82a408e"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-settled/plan.json",
+      "sha256": "96d96a3d09dacbf4aad9ab85461e8e0df4c6df9e692ec2e14ef3ba6b42e90246"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "978e284647ac7de61be25b3e482b34291b77f92143dbd76ea48a95d609dcca8c"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Paired minute test of reference-history-gated standing feedback, with unchanged moving gains, motor limits and acceptance budgets."
+}

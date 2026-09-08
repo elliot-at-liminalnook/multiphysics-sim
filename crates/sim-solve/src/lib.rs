@@ -34,6 +34,12 @@ pub struct NewtonConfig {
     /// The iteration cap and raw-residual/correction tolerances are unchanged.
     #[serde(default, skip_serializing_if = "is_false")]
     pub refresh_before_iteration_limit: bool,
+    /// Experimental bounded, scaled good-Broyden updates for dense islands of
+    /// at most 64 unknowns. Only decreasing full steps supply secants; after
+    /// eight updates or an unsafe update the next iteration rebuilds the
+    /// Jacobian. Raw residual and correction acceptance checks are unchanged.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub broyden_updates: bool,
 }
 
 impl Default for NewtonConfig {
@@ -46,6 +52,7 @@ impl Default for NewtonConfig {
             guarded_backtracking: false,
             reject_nonfinite_trials: false,
             refresh_before_iteration_limit: false,
+            broyden_updates: false,
         }
     }
 }
@@ -223,6 +230,9 @@ pub struct JacobianCache {
     col_scale: Vec<f64>,
     /// How many iterations this factorisation has served.
     pub uses: usize,
+    // Immutable snapshots remain cheap and safe for speculative integration.
+    raw: Option<std::sync::Arc<DMatrix<f64>>>,
+    broyden_steps: usize,
 }
 
 /// Dense below `SPARSE_FROM` unknowns (partial pivoting on the whole row
@@ -264,6 +274,9 @@ fn scaled_column_matrix(n: usize, entries: &[(usize, usize, f64)], row_scale: &[
 impl JacobianCache {
     /// Row-equilibrate and factorise; `None` when the matrix is singular.
     fn factorise(jacobian: &SparseJacobian) -> Option<Self> {
+        Self::factorise_tracked(jacobian, false)
+    }
+    fn factorise_tracked(jacobian: &SparseJacobian, track: bool) -> Option<Self> {
         let n = jacobian.n;
         let entries = profile::FACTOR_SUM.time(|| jacobian.summed());
         if n < sparse_from() {
@@ -284,7 +297,8 @@ impl JacobianCache {
             if lu.lu_internal().diagonal().iter().any(|d| *d == 0.0) {
                 return None;
             }
-            return Some(Self { lu: std::sync::Arc::new(Factor::Dense(lu)), row_scale, col_scale: vec![1.0; n], uses: 0 });
+            let raw = (track && n <= 64).then(|| std::sync::Arc::new(jacobian.to_dense()));
+            return Some(Self { lu: std::sync::Arc::new(Factor::Dense(lu)), row_scale, col_scale: vec![1.0; n], uses: 0, raw, broyden_steps: 0 });
         }
         let mut row_scale = vec![0.0_f64; n];
         for (r, _, v) in &entries {
@@ -326,7 +340,41 @@ impl JacobianCache {
             })
         })?;
         let lu = profile::FACTOR_NUMERIC.time(|| faer::sparse::linalg::solvers::Lu::try_new_with_symbolic((*symbolic).clone(), matrix.as_ref())).ok()?;
-        Some(Self { lu: std::sync::Arc::new(Factor::Sparse(lu)), row_scale, col_scale, uses: 0 })
+        Some(Self { lu: std::sync::Arc::new(Factor::Sparse(lu)), row_scale, col_scale, uses: 0, raw: None, broyden_steps: 0 })
+    }
+    /// Weighted good-Broyden: minimize the update in caller-scaled coordinates
+    /// while satisfying J_new * (x_new-x_old) = r_new-r_old. This only proposes
+    /// a correction matrix; the solver still evaluates and checks real residuals.
+    fn broyden_update(&self, old: &[f64], new: &[f64], r: &[f64], next_r: &[f64],
+        step_scale: &dyn Fn(usize, f64) -> f64) -> Option<Self> {
+        let raw = self.raw.as_ref()?;
+        let n = old.len();
+        if self.broyden_steps >= 8 || n == 0 { return None; }
+        let scales: Vec<_> = (0..n).map(|j| step_scale(j, old[j])).collect();
+        if scales.iter().any(|s| !s.is_finite() || *s <= 0.0) { return None; }
+        let s: Vec<_> = (0..n).map(|j| new[j] - old[j]).collect();
+        let denominator: f64 = (0..n).map(|j| (s[j] / scales[j]).powi(2)).sum();
+        if !denominator.is_finite() || denominator <= 1e-24 { return None; }
+        let mut updated = (**raw).clone();
+        let mut matrix_norm = 0.0_f64;
+        let mut update_norm = 0.0_f64;
+        for i in 0..n {
+            let error = next_r[i] - r[i] - (0..n).map(|j| raw[(i,j)] * s[j]).sum::<f64>();
+            for j in 0..n {
+                let change = error * (s[j] / scales[j]) / denominator / scales[j];
+                updated[(i,j)] += change;
+                matrix_norm = matrix_norm.hypot(raw[(i,j)] * self.row_scale[i] * scales[j]);
+                update_norm = update_norm.hypot(change * self.row_scale[i] * scales[j]);
+            }
+        }
+        // Large derivative jumps belong to a fresh probe, not extrapolation.
+        if !matrix_norm.is_finite() || !update_norm.is_finite()
+            || update_norm > 2.0 * matrix_norm
+            || updated.iter().any(|v| !v.is_finite()) { return None; }
+        let mut factor = Self::factorise_tracked(&SparseJacobian::from_dense(&updated), true)?;
+        factor.uses = self.uses;
+        factor.broyden_steps = self.broyden_steps + 1;
+        Some(factor)
     }
     fn solve(&self, rhs: &[f64]) -> Option<Vec<f64>> {
         let n = rhs.len();
@@ -515,7 +563,9 @@ where
             if jacobian.triplets.iter().any(|(_, _, v)| !v.is_finite()) {
                 return Err(SolveError::NonFinite);
             }
-            match profile::FACTORISE.time(|| JacobianCache::factorise(&jacobian)) {
+            match profile::FACTORISE.time(|| if config.broyden_updates {
+                JacobianCache::factorise_tracked(&jacobian, true)
+            } else { JacobianCache::factorise(&jacobian) }) {
                 Some(factor) => *cache = Some(factor),
                 None => {
                     if trace_enabled() {
@@ -700,13 +750,23 @@ where
             if alpha == 1.0 && candidate_norm < old_norm {
                 selected_alpha!(alpha);
                 failed_searches = 0;
-                r.copy_from_slice(&candidate_r);
+                if config.broyden_updates && cache.as_ref().is_some_and(|c| c.raw.is_some()) {
+                    let updated = profile::BROYDEN_UPDATE.time(|| cache.as_ref().unwrap()
+                        .broyden_update(&old, unknowns, &r, &candidate_r, step_scale));
+                    if updated.is_some() {
+                        decision!("broyden_update");
+                    } else {
+                        profile::BROYDEN_REFRESH.count(1);
+                        decision!("broyden_update_refresh");
+                    }
+                    *cache = updated;
                 // A reused factorisation earns its keep by halving the
                 // residual; otherwise the next iteration rebuilds.
-                if !fresh && candidate_norm > 0.5 * old_norm {
+                } else if !fresh && candidate_norm > 0.5 * old_norm {
                     decision!("poor_contraction_refresh");
                     *cache = None;
                 }
+                r.copy_from_slice(&candidate_r);
                 break;
             }
             if !fresh {
@@ -802,6 +862,41 @@ pub mod profile;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn scaled_secant_is_satisfied_without_mutating_snapshot() {
+        let raw = DMatrix::from_row_slice(2, 2, &[2.0, 0.5, -0.2, 3.0]);
+        let cache = JacobianCache::factorise_tracked(&SparseJacobian::from_dense(&raw), true).unwrap();
+        let snapshot = cache.clone();
+        let old = [0.0, 0.0];
+        let new = [0.2, -0.3];
+        let y = [0.3, -0.8];
+        let updated = cache.broyden_update(&old, &new, &[0.0, 0.0], &y,
+            &|j, _| if j == 0 { 0.01 } else { 100.0 }).unwrap();
+        for i in 0..2 {
+            let actual: f64 = (0..2).map(|j| updated.raw.as_ref().unwrap()[(i,j)] * new[j]).sum();
+            assert!((actual-y[i]).abs() < 1e-12);
+        }
+        assert_eq!(snapshot.raw.as_ref().unwrap().as_ref(), &raw);
+        assert_eq!(snapshot.broyden_steps, 0);
+        assert_eq!(updated.broyden_steps, 1);
+    }
+
+    #[test]
+    fn unsafe_or_exhausted_secants_request_fresh_derivatives() {
+        let mut cache = JacobianCache::factorise_tracked(&SparseJacobian::from_dense(&DMatrix::identity(1,1)), true).unwrap();
+        let scale = |_: usize, _: f64| 1.0;
+        for (x, y) in [(0.0, 1.0), (1e-14, 1.0), (1.0, 10.0), (1.0, f64::NAN), (1.0, 0.0)] {
+            assert!(cache.broyden_update(&[0.0], &[x], &[0.0], &[y], &scale).is_none());
+        }
+        assert!(cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &|_,_|0.0).is_none());
+        for _ in 0..8 {
+            cache = cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &scale).unwrap();
+        }
+        assert!(cache.broyden_update(&[0.0], &[1.0], &[0.0], &[1.0], &scale).is_none());
+        let large = JacobianCache::factorise_tracked(&SparseJacobian::from_dense(&DMatrix::identity(65,65)), true).unwrap();
+        assert!(large.raw.is_none());
+    }
 
     #[test]
     fn direct_csc_matches_triplet_constructor_bits_for_duplicates_zeros_and_empty_columns() {

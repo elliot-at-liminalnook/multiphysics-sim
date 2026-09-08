@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "name": "settled-teacher-minute-5ms",
+      "boosted_idle_frames": 145,
+      "first_boost_frame_s": 57.120000000000005,
+      "unchanged_pre_boost_frames": 2855,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-5ms.native.json",
+          "sha256": "69c1eac77e567e3ffc9750056f105d4c3810661c21fbf09fa4178f8650f7a1e5"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-sustained/teacher-minute-5ms.native.json",
+          "sha256": "dccf902734ccde61a517c768feb626009bc75ff92aa6122b5eeb81ad8392f9cf"
+        }
+      ]
+    },
+    {
+      "name": "settled-teacher-minute-2.5ms",
+      "boosted_idle_frames": 145,
+      "first_boost_frame_s": 57.120000000000005,
+      "unchanged_pre_boost_frames": 2855,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms.native.json",
+          "sha256": "c06cf715ca71c32ea618facf7d5b232496bda4facc649979d2991099c82a408e"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-sustained/teacher-minute-2.5ms.native.json",
+          "sha256": "f4e96a20fa00038c12c192f1559c78d10fce543614a46312d6f10f1f0c1491aa"
+        }
+      ]
+    }
+  ],
+  "scope": "Actual recorded motor targets use only the original or declared settled gain. Every observed added-gain frame is idle; where an original-teacher capture is included, all physical frames before the first boost are identical."
+}

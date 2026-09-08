@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "frames": 3001,
+  "maximum_absolute_differences": {
+    "joint_positions": 0,
+    "joint_velocities": 0,
+    "poses": 0,
+    "servo_targets_rad": 0,
+    "reference_targets_rad": 0,
+    "contacts": 0,
+    "planned_reference": 0
+  },
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms.native.json",
+      "sha256": "c06cf715ca71c32ea618facf7d5b232496bda4facc649979d2991099c82a408e"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-combined/combined-minute-2.5ms.native.json",
+      "sha256": "0e17407f4221d909c6221876a798b3b26fc341ef43f5c07178afeb714533955d"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/check_forward_preservation.mjs",
+      "sha256": "85cd8ebda5ad3d9a69b582b058a122087a1b3f83f6bb26e8671e14980993d798"
+    }
+  ],
+  "scope": "Full-forward physical and planned frames with the explicit positive-speed posture knot. 1e-9 numeric preservation check, not physical accuracy."
+}

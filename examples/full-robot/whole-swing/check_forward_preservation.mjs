@@ -2,7 +2,8 @@ import {readFileSync, writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 const root = 'examples/full-robot/whole-swing';
-const paths = ['runs/full-robot/learning/whole-finish/finish-0.85-20ms.native.json', 'runs/full-robot/learning/whole-steering/student-forward-20ms.native.json'];
+const combined = process.argv.includes('--combined');
+const paths = combined ? ['runs/full-robot/learning/whole-settled/settled-teacher-minute-2.5ms.native.json', 'runs/full-robot/learning/whole-combined/combined-minute-2.5ms.native.json'] : ['runs/full-robot/learning/whole-finish/finish-0.85-20ms.native.json', 'runs/full-robot/learning/whole-steering/student-forward-20ms.native.json'];
 const [a, b] = paths.map(p => JSON.parse(readFileSync(p)));
 assert(a.completed && b.completed && !a.error && !b.error);
 assert.deepEqual(a.recording.input_events, b.recording.input_events); assert.equal(a.recording.seed, b.recording.seed);
@@ -19,7 +20,7 @@ for (let i = 0; i < a.frames.length; i++) {
   compare(a.frames[i].policy?.step_reference?.reference, b.frames[i].policy?.step_reference?.reference, 'planned_reference');
 }
 const passed = Object.values(metrics).every(v => v <= 1e-9);
-writeFileSync(`${root}/forward-preservation.json`, JSON.stringify({passed, frames: a.frames.length, maximum_absolute_differences: metrics,
+writeFileSync(`${root}/${combined ? 'combined-' : ''}forward-preservation.json`, JSON.stringify({passed, frames: a.frames.length, maximum_absolute_differences: metrics,
   sources: [...paths, `${root}/check_forward_preservation.mjs`].map(path => ({path, sha256: createHash('sha256').update(readFileSync(path)).digest('hex')})),
   scope: 'Full-forward physical and planned frames with the explicit positive-speed posture knot. 1e-9 numeric preservation check, not physical accuracy.'}, null, 2) + '\n');
 assert(passed); console.log(metrics);

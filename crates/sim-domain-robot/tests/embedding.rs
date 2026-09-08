@@ -176,6 +176,43 @@ fn rejected_probe_geometry_restarts_with_exact_derivatives() {
 }
 
 #[test]
+fn temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages() {
+    use sim_domain_robot::articulated::embedding::{ImplicitStepConfig,ImplicitSolverWorkspace};
+    use sim_dynamics::hybrid::HybridConfig;
+    for floating in [false,true] {
+    for linearized_jacobian_probes in [false,true] {
+        let (art,mut seed)=slider_crank(floating);
+        let dofs=art.audit_slider_cranks()[0].candidate.as_ref().unwrap().dof_indices;
+        let map=RigidEmbedding::new(&art,&["joint.motor".into()],EmbeddingConfig {direct_closure_jacobian:true,..Default::default()}).unwrap();
+        let mut velocity=vec![0.0;map.reduced_dimension()];*velocity.last_mut().unwrap()=0.7;
+        if floating {
+            let s=art.bases[0].state;
+            seed.states[s+3..s+7].copy_from_slice(&[0.9_f64.cos(),0.0,0.0,0.9_f64.sin()]);
+            velocity[..6].copy_from_slice(&[0.02,-0.01,0.03,0.1,-0.2,0.3]);
+        }
+        let mut exact=map.solve(&seed,&[0.3],&velocity).unwrap().generalized;
+        let mut predicted=exact.clone();let mut workspace=ImplicitSolverWorkspace::default();let mut used=0;
+        let config=ImplicitStepConfig {reuse_step_jacobian:true,extrapolate_velocity_seed:true,linearized_jacobian_probes,linearized_probe_relative_step:1e-5,..Default::default()};
+        let nb=usize::from(floating)*6;
+        let load=|_:f64,g:&Generalized| {let mut f=vec![0.0;nb+g.q.len()];f[nb+dofs[0]]=0.003-0.02*g.qd[dofs[0]];Ok(f)};
+        for i in 0..30 {
+            let a=map.step_implicit(&exact,i as f64*0.01,0.01,&ImplicitStepConfig::default(),load).unwrap();
+            let b=map.advance_implicit_mechanics_cached(&predicted,i as f64*0.01,0.01,&config,&HybridConfig::default(),&mut workspace,load).unwrap();
+            assert_eq!(b.segments.len(),1);used+=usize::from(b.segments[0].diagnostics.predicted_velocity_seed==Some(true));
+            exact=a.endpoint.generalized;predicted=b.endpoint.generalized;
+            let position=expected(predicted.q[dofs[0]]);
+            assert!((predicted.q[dofs[1]]-position.0).abs()<1e-9&&(predicted.q[dofs[2]]-position.1).abs()<1e-9);
+            for r in art.original_closure_values(&predicted) {assert!(r.position.abs()<1e-9&&r.velocity.abs()<1e-9&&r.acceleration.abs()<1e-8);}
+            for (a,b) in exact.q.iter().chain(&exact.qd).chain(&exact.states).zip(predicted.q.iter().chain(&predicted.qd).chain(&predicted.states)) {
+                assert!((a-b).abs()<1e-8,"floating={floating} interval={i} difference={}",(a-b).abs());
+            }
+        }
+        assert!(used>0,"prediction must execute: floating={floating} tangent={linearized_jacobian_probes}");
+    }
+    }
+}
+
+#[test]
 fn point_jacobians_match_closed_linkage_position_differences_with_rotated_base() {
     use sim_domain_robot::articulated::embedding::EmbeddedPoint;
     let (art, mut seed) = slider_crank(true);

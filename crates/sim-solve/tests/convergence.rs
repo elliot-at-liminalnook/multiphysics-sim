@@ -2,6 +2,31 @@
 use sim_solve::{solve_newton_with_jacobian, NewtonConfig};
 
 #[test]
+fn warm_start_residual_reference_preserves_each_row_bound() {
+    use sim_solve::{solve_newton_numeric_scaled_cached_audited_with_reference,NewtonAudit};
+    let config=NewtonConfig {absolute_tolerance:1e-10,relative_tolerance:1e-6,max_iterations:40,..Default::default()};
+    let mut x=[10.0,10.0];let mut audit=NewtonAudit::default();
+    let r=|x:&[f64],r:&mut[f64]| {r[0]=x[0]-1.0;r[1]=1e-8*(x[1]-2.0);};
+    solve_newton_numeric_scaled_cached_audited_with_reference(&mut x,config,r,&|_,v|1.0+v.abs(),&mut None,Some(&mut audit),Some(&[0.0,100.0])).unwrap();
+    assert!((x[0]-1.0).abs()<1e-10&&(x[1]-2.0).abs()<1e-10);
+    assert_eq!(audit.residual_limits[0],config.absolute_tolerance);
+    assert!(audit.residual_limits[1]<=config.absolute_tolerance+config.relative_tolerance*8e-8);
+    let mut actual=[0.0;2];r(&x,&mut actual);
+    assert!(actual.iter().zip(&audit.residual_limits).all(|(r,limit)|r.abs()<=*limit));
+}
+
+#[test]
+fn invalid_warm_start_reference_rejects_before_evaluation_or_mutation() {
+    use sim_solve::solve_newton_numeric_scaled_cached_audited_with_reference;
+    for reference in [vec![],vec![f64::NAN],vec![f64::INFINITY],vec![1.0,2.0]] {
+        let mut x=[3.0];let mut cache=None;
+        let result=solve_newton_numeric_scaled_cached_audited_with_reference(&mut x,NewtonConfig::default(),
+            |_,_|panic!("invalid reference must not evaluate physics"),&|_,v|1.0+v.abs(),&mut cache,None,Some(&reference));
+        assert!(result.is_err());assert_eq!(x,[3.0]);assert!(cache.is_none());
+    }
+}
+
+#[test]
 fn fresh_final_iterations_finish_a_contracting_tail_at_the_same_tolerances() {
     use sim_solve::{solve_newton_numeric_cached_audited, NewtonAudit};
     for refresh in [false,true] {

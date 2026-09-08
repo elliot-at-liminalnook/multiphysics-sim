@@ -10,7 +10,8 @@ use sim_solve::{
 };
 use sim_solve::{
     JacobianCache, NewtonAudit, NewtonConfig, SolveDiagnostics, solve_newton_numeric_cached_audited,
-    solve_newton_cached_audited,
+    solve_newton_cached_audited_with_reference,
+    solve_newton_numeric_scaled_cached_audited_with_reference,
 };
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -85,6 +86,11 @@ pub struct ImplicitStepConfig {
     /// ordinary exact derivatives keep the original 1e-6 step.
     #[serde(skip_serializing_if = "is_default_probe_step")]
     pub linearized_probe_relative_step: f64,
+    /// Experimental temporal Newton guess from the last accepted velocity
+    /// increment. Requires the cached-step path. Exact residuals must improve
+    /// by 10%; failure retries original velocities with fresh exact derivatives.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub extrapolate_velocity_seed: bool,
 }
 fn is_default_probe_step(value: &f64) -> bool {
     *value == 1e-6
@@ -112,12 +118,14 @@ impl Default for ImplicitStepConfig {
             auxiliary_endpoint_correction_scale: false,
             linearized_jacobian_probes: false,
             linearized_probe_relative_step: 1e-6,
+            extrapolate_velocity_seed: false,
         }
     }
 }
 
 /// Caller-owned numerical workspace for one continuous model/trajectory.
-/// Only correction matrices are reused, never physical results. Clear after
+/// Reuses correction matrices and optional initial-guess history; every accepted
+/// physical endpoint is recomputed. Clear after
 /// edits, external resets or changed force-law definitions. Cloning shares an
 /// immutable factorization; trial refreshes cannot change another snapshot.
 #[derive(Clone, Default)]
@@ -132,6 +140,9 @@ pub struct ImplicitSolverWorkspace {
     auxiliary_endpoint_correction_scale: Option<bool>,
     linearized_jacobian_probes: Option<bool>,
     linearized_probe_relative_step: Option<f64>,
+    extrapolate_velocity_seed: Option<bool>,
+    // Accepted endpoint velocity and its increment, solely for the next guess.
+    velocity_seed_history: Option<(Vec<f64>, Vec<f64>)>,
 }
 impl ImplicitSolverWorkspace {
     pub(super) fn has_jacobian(&self) -> bool {
@@ -168,6 +179,8 @@ pub struct ImplicitStepDiagnostics {
     pub linearized_probe_evaluations: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub exact_jacobian_fallback: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub predicted_velocity_seed: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -319,6 +332,9 @@ impl RigidEmbedding<'_> {
         }
         if config.reuse_controller_sample_jacobian && !config.reuse_step_jacobian {
             return Err("controller-sample reuse requires cross-step Jacobian reuse".into());
+        }
+        if config.extrapolate_velocity_seed && !config.reuse_step_jacobian {
+            return Err("velocity seed extrapolation requires cross-step Jacobian reuse".into());
         }
         if config.reuse_mechanical_dynamics && !config.reuse_mechanical_endpoint {
             return Err("mechanical dynamics reuse requires exact endpoint reuse".into());
@@ -684,6 +700,11 @@ impl RigidEmbedding<'_> {
                 != Some(config.auxiliary_endpoint_correction_scale)
             || next_workspace.linearized_jacobian_probes != Some(config.linearized_jacobian_probes)
             || next_workspace.linearized_probe_relative_step != Some(config.linearized_probe_relative_step)
+            || next_workspace.extrapolate_velocity_seed != Some(config.extrapolate_velocity_seed)
+            || next_workspace.velocity_seed_history.as_ref().is_some_and(|(velocity, increment)| {
+                config.extrapolate_velocity_seed && (increment.len() != n || velocity.len() != n
+                    || velocity.iter().zip(&old_u).any(|(a,b)|a.to_bits()!=b.to_bits()))
+            })
             || !next_workspace
                 .step_s
                 .is_some_and(|h| (h - step_s).abs() <= 1e-10 * step_s)
@@ -695,6 +716,33 @@ impl RigidEmbedding<'_> {
             next_workspace.clear();
         }
         let started_with_reused_jacobian = next_workspace.cache.is_some();
+        let original_u = (config.linearized_jacobian_probes || config.extrapolate_velocity_seed).then(||u.clone());
+        let mut predicted_velocity_seed = false;
+        let mut original_residual = None;
+        if config.extrapolate_velocity_seed {
+            if let Some((_, increment)) = &next_workspace.velocity_seed_history {
+                let mut candidate = u.clone();
+                for j in 0..n { candidate[j] += increment[j]; }
+                if candidate.iter().all(|v|v.is_finite()) {
+                    let norm = |r:&[f64]| if r.iter().all(|v|v.is_finite()) {
+                        r.iter().map(|v|v.abs()).fold(0.0_f64,f64::max)
+                    } else {f64::INFINITY};
+                    let mut r = vec![0.0;u.len()];
+                    residual(&u,&mut r);
+                    let original_norm = norm(&r);
+                    if original_norm.is_finite() && original_norm > 0.0 {
+                        let before_prediction = r.clone();
+                        residual(&candidate,&mut r);
+                        if norm(&r) < 0.9*original_norm {
+                            u = candidate;
+                            predicted_velocity_seed = true;
+                            original_residual = Some(before_prediction);
+                        }
+                    }
+                    *last_error.borrow_mut() = None;
+                }
+            }
+        }
         let mut audit = config
             .newton_audit_window_s
             .filter(|[from, until]| time_s >= *from && time_s <= *until)
@@ -707,10 +755,9 @@ impl RigidEmbedding<'_> {
                 line_search_reductions: 0,
             }
         } else {
-            let initial_u = config.linearized_jacobian_probes.then(||u.clone());
             let result = if config.linearized_jacobian_probes {
                 let mut perturbed = vec![0.0; u.len()];
-                solve_newton_cached_audited(&mut u, nc, &residual, |x, base, jacobian| {
+                solve_newton_cached_audited_with_reference(&mut u, nc, &residual, |x, base, jacobian| {
                     *cache.borrow_mut() = None;
                     *dynamics_cache.borrow_mut() = None;
                     let motion = prepare(&x[..n]);
@@ -731,13 +778,13 @@ impl RigidEmbedding<'_> {
                     *probe_context.borrow_mut() = None;
                     *cache.borrow_mut() = None;
                     *dynamics_cache.borrow_mut() = None;
-                }, &|_,v|1.0+v.abs(), &mut next_workspace.cache, audit.as_mut())
+                }, &|_,v|1.0+v.abs(), &mut next_workspace.cache, audit.as_mut(), original_residual.as_deref())
             } else {
-                solve_newton_numeric_cached_audited(&mut u, nc, &residual, &mut next_workspace.cache, audit.as_mut())
+                solve_newton_numeric_scaled_cached_audited_with_reference(&mut u, nc, &residual, &|_,v|1.0+v.abs(), &mut next_workspace.cache, audit.as_mut(), original_residual.as_deref())
             };
-            let result = if config.linearized_jacobian_probes && result.is_err() {
+            let result = if (config.linearized_jacobian_probes || predicted_velocity_seed) && result.is_err() {
                 exact_jacobian_fallback = Some(result.unwrap_err().to_string());
-                u.clone_from(initial_u.as_ref().expect("approximate solve initial state"));
+                u.clone_from(original_u.as_ref().expect("guarded solve original guess"));
                 next_workspace.cache = None;
                 *cache.borrow_mut() = None;
                 *dynamics_cache.borrow_mut() = None;
@@ -787,9 +834,15 @@ impl RigidEmbedding<'_> {
             return Err("nonfinite implicit endpoint residual".into());
         }
         let contacts: Vec<_> = a.contacts.iter().map(|c| (c.link, c.other)).collect();
-        if contacts != next_workspace.contacts {
+        let changed_contacts = contacts != next_workspace.contacts;
+        if changed_contacts {
             next_workspace.cache = None;
         }
+        next_workspace.velocity_seed_history = if config.extrapolate_velocity_seed && !changed_contacts && exact_jacobian_fallback.is_none() {
+            let velocity = self.reduced_velocity(&a.generalized);
+            let increment = velocity.iter().zip(&old_u).map(|(a,b)|a-b).collect();
+            Some((velocity,increment))
+        } else { None };
         next_workspace.contacts = contacts;
         next_workspace.step_s = Some(step_s);
         next_workspace.end_time_s = Some(time_s + step_s);
@@ -800,6 +853,7 @@ impl RigidEmbedding<'_> {
             Some(config.auxiliary_endpoint_correction_scale);
         next_workspace.linearized_jacobian_probes = Some(config.linearized_jacobian_probes);
         next_workspace.linearized_probe_relative_step = Some(config.linearized_probe_relative_step);
+        next_workspace.extrapolate_velocity_seed = Some(config.extrapolate_velocity_seed);
         if !config.reuse_step_jacobian {
             next_workspace.clear();
         }
@@ -824,6 +878,7 @@ impl RigidEmbedding<'_> {
                 maximum_contact_history_residual: history_error,
                 maximum_auxiliary_residual: auxiliary.iter().map(|v| v.abs()).fold(0.0, f64::max),
                 linearized_probe_evaluations: config.linearized_jacobian_probes.then_some(linearized_probes.get()),
+                predicted_velocity_seed: config.extrapolate_velocity_seed.then_some(predicted_velocity_seed),
                 exact_jacobian_fallback,
             },
             auxiliary: auxiliary_endpoint,

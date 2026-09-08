@@ -73,13 +73,15 @@ fn failed_cached_mechanics_restarts_fresh_before_subdivision() {
 fn cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials() {
     use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
     use sim_dynamics::hybrid::HybridConfig;
-    for (broyden_updates, broyden_negligible_updates) in [(false, false), (true, false), (true, true)] {
+    for (broyden_updates, broyden_negligible_updates, linearized_jacobian_probes) in
+        [(false, false, false), (true, false, false), (true, true, false), (true, false, true)] {
     let (art, mut g) = body(true, false);
     g.q[0] = 0.1;
     let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
     let mut config = ImplicitStepConfig {reuse_step_jacobian: true, ..Default::default()};
     config.newton.broyden_updates = broyden_updates;
     config.newton.broyden_negligible_updates = broyden_negligible_updates;
+    config.linearized_jacobian_probes = linearized_jacobian_probes;
     let refinement = HybridConfig {maximum_halvings: 1, ..Default::default()};
     let mut workspace = ImplicitSolverWorkspace::default();
     let load = |_: f64, g: &Generalized| Ok(vec![-30.0*g.q[0]-2.0*g.qd[0]]);
@@ -406,6 +408,8 @@ fn implicit_stiff_viscous_load_matches_backward_euler_without_reversal() {
 
 #[test]
 fn implicit_oscillator_refines_to_the_continuous_solution() {
+    for linearized_jacobian_probes in [false,true] {
+    let config=sim_domain_robot::articulated::embedding::ImplicitStepConfig {linearized_jacobian_probes,..Default::default()};
     let (art, mut seed) = body(true, false);
     seed.q[0] = 0.2;
     let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
@@ -415,7 +419,7 @@ fn implicit_oscillator_refines_to_the_continuous_solution() {
         let mut g = seed.clone();
         for i in 0..n {
             g = map
-                .step_implicit(&g, i as f64 * h, h, &Default::default(), |_, g| {
+                .step_implicit(&g, i as f64 * h, h, &config, |_, g| {
                     Ok(vec![-8.0 * g.q[0]])
                 })
                 .unwrap()
@@ -431,6 +435,7 @@ fn implicit_oscillator_refines_to_the_continuous_solution() {
             .all(|e| e[0] / e[1] > 1.9 && e[0] / e[1] < 2.1),
         "{errors:?}"
     );
+    }
 }
 
 #[test]
@@ -525,8 +530,10 @@ fn implicit_sliding_contact_matches_independent_scalar_force_balance() {
         }
     }
     let expected = 0.5 * (lo + hi);
+    for linearized_jacobian_probes in [false,true] {
+    let config=sim_domain_robot::articulated::embedding::ImplicitStepConfig {linearized_jacobian_probes,..Default::default()};
     let step = map
-        .step_implicit(&g, 0.0, h, &Default::default(), |_, _| Ok(vec![0.0]))
+        .step_implicit(&g, 0.0, h, &config, |_, _| Ok(vec![0.0]))
         .unwrap();
     let end = &step.endpoint.generalized;
     assert!(
@@ -545,4 +552,5 @@ fn implicit_sliding_contact_matches_independent_scalar_force_balance() {
         .sum();
     assert!((measured_normal - normal).abs() < 1e-8);
     assert!(step.diagnostics.maximum_contact_history_residual < 1e-11);
+    }
 }

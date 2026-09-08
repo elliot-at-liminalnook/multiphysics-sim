@@ -92,6 +92,88 @@ fn expected(theta: f64) -> (f64, f64) {
 }
 
 #[test]
+fn linearized_derivative_probes_preserve_exact_fixed_and_rotating_linkage_endpoints() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    for floating in [false,true] {
+        let (art, mut seed) = slider_crank(floating);
+        let dofs = art.audit_slider_cranks()[0].candidate.as_ref().unwrap().dof_indices;
+        let map = RigidEmbedding::new(&art,&["joint.motor".into()],EmbeddingConfig {
+            direct_closure_jacobian:true,..Default::default()
+        }).unwrap();
+        let mut velocity = vec![0.0;map.reduced_dimension()];
+        *velocity.last_mut().unwrap() = 0.7;
+        if floating {
+            let s = art.bases[0].state;
+            seed.states[s+3..s+7].copy_from_slice(&[0.9_f64.cos(),0.0,0.0,0.9_f64.sin()]);
+            velocity[..6].copy_from_slice(&[0.02,-0.01,0.03,0.1,-0.2,0.3]);
+        }
+        let mut exact = map.solve(&seed,&[0.3],&velocity).unwrap().generalized;
+        let mut approximate = exact.clone();
+        let original = ImplicitStepConfig::default();
+        let candidate = ImplicitStepConfig {linearized_jacobian_probes:true,..original.clone()};
+        let nb = usize::from(floating)*6;
+        let probe_position_error=std::cell::Cell::new(0.0_f64);
+        let probe_velocity_error=std::cell::Cell::new(0.0_f64);
+        let load = |_:f64,g:&Generalized| {
+            let theta=g.q[dofs[0]];
+            let position=expected(theta);
+            let derivative=[0.25*theta.cos()/(1.0-0.0625*theta.sin().powi(2)).sqrt()-1.0,
+                -0.05*theta.sin()+0.0025*theta.sin()*theta.cos()/(0.04-0.0025*theta.sin().powi(2)).sqrt()];
+            for (j,position) in [position.0,position.1].into_iter().enumerate() {
+                probe_position_error.set(probe_position_error.get().max((g.q[dofs[j+1]]-position).abs()));
+                probe_velocity_error.set(probe_velocity_error.get().max((g.qd[dofs[j+1]]-derivative[j]*g.qd[dofs[0]]).abs()));
+            }
+            let mut forces=vec![0.0;nb+g.q.len()]; forces[nb+dofs[0]]=0.003-0.02*g.qd[dofs[0]]; Ok(forces)
+        };
+        let mut probes = 0; let mut without_fallback = 0; let mut fallbacks=Vec::new();
+        for i in 0..20 {
+            let a = map.step_implicit(&exact,i as f64*0.01,0.01,&original,load).unwrap();
+            let b = map.step_implicit(&approximate,i as f64*0.01,0.01,&candidate,load).unwrap();
+            probes += b.diagnostics.linearized_probe_evaluations.unwrap();
+            without_fallback += usize::from(b.diagnostics.exact_jacobian_fallback.is_none());
+            if let Some(reason)=&b.diagnostics.exact_jacobian_fallback { fallbacks.push(reason.clone()); }
+            exact=a.endpoint.generalized; approximate=b.endpoint.generalized;
+            let expected=expected(approximate.q[dofs[0]]);
+            assert!((approximate.q[dofs[1]]-expected.0).abs()<1e-9);
+            assert!((approximate.q[dofs[2]]-expected.1).abs()<1e-9);
+            for row in art.original_closure_values(&approximate) {
+                assert!(row.position.abs()<1e-9 && row.velocity.abs()<1e-9 && row.acceleration.abs()<1e-8);
+            }
+            for (a,b) in exact.q.iter().chain(&exact.qd).chain(&exact.states)
+                .zip(approximate.q.iter().chain(&approximate.qd).chain(&approximate.states)) {
+                assert!((a-b).abs()<1e-8,"floating={floating} interval={i} difference={}",(a-b).abs());
+            }
+        }
+        assert!(probes>=20*map.reduced_dimension() && without_fallback>10,"floating={floating} probes={probes} without_fallback={without_fallback} {fallbacks:?}");
+        assert!(probe_position_error.get()<1e-9,"{}",probe_position_error.get());
+        assert!(probe_velocity_error.get()<1e-6,"{}",probe_velocity_error.get());
+    }
+}
+
+#[test]
+fn rejected_probe_geometry_restarts_with_exact_derivatives() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    let (art,seed)=slider_crank(false);
+    let map=RigidEmbedding::new(&art,&["joint.motor".into()],Default::default()).unwrap();
+    let seed=map.solve(&seed,&[0.3],&[0.7]).unwrap().generalized;
+    let load=|_:f64,g:&Generalized| {
+        // A consumer requiring exact acceleration closure rejects the frozen
+        // curvature probes. Ordinary fully closed states still satisfy it.
+        if art.original_closure_values(g).iter().any(|r|r.acceleration.abs()>1e-9) {
+            return Err("force callback requires exact acceleration closure".into());
+        }
+        Ok(vec![0.003-0.02*g.qd[0],0.0,0.0])
+    };
+    let exact=map.step_implicit(&seed,0.0,0.02,&ImplicitStepConfig::default(),load).unwrap();
+    let candidate=map.step_implicit(&seed,0.0,0.02,&ImplicitStepConfig {linearized_jacobian_probes:true,..Default::default()},load).unwrap();
+    assert!(candidate.diagnostics.linearized_probe_evaluations.unwrap()>0);
+    assert!(candidate.diagnostics.exact_jacobian_fallback.is_some());
+    assert_eq!(exact.endpoint.generalized.q,candidate.endpoint.generalized.q);
+    assert_eq!(exact.endpoint.generalized.qd,candidate.endpoint.generalized.qd);
+    assert_eq!(exact.endpoint.generalized.states,candidate.endpoint.generalized.states);
+}
+
+#[test]
 fn point_jacobians_match_closed_linkage_position_differences_with_rotated_base() {
     use sim_domain_robot::articulated::embedding::EmbeddedPoint;
     let (art, mut seed) = slider_crank(true);

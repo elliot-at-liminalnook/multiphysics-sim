@@ -10,6 +10,7 @@ use sim_solve::{
 };
 use sim_solve::{
     JacobianCache, NewtonAudit, NewtonConfig, SolveDiagnostics, solve_newton_numeric_cached_audited,
+    solve_newton_cached_audited,
 };
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -73,6 +74,12 @@ pub struct ImplicitStepConfig {
     /// Original residual bounds are unchanged. Requires condensed rate unknowns.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub auxiliary_endpoint_correction_scale: bool,
+    /// Experimental correction matrix: reuse one exact closure tangent and
+    /// curvature only inside tiny numerical Jacobian probes. Ordinary residuals
+    /// and accepted endpoints always solve full closure. Failed solves restart
+    /// with exact numerical derivatives from the original state.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub linearized_jacobian_probes: bool,
 }
 impl Default for ImplicitStepConfig {
     fn default() -> Self {
@@ -95,6 +102,7 @@ impl Default for ImplicitStepConfig {
             condense_auxiliary: false,
             color_auxiliary_jacobian: false,
             auxiliary_endpoint_correction_scale: false,
+            linearized_jacobian_probes: false,
         }
     }
 }
@@ -113,6 +121,7 @@ pub struct ImplicitSolverWorkspace {
     condense_auxiliary: Option<bool>,
     color_auxiliary_jacobian: Option<bool>,
     auxiliary_endpoint_correction_scale: Option<bool>,
+    linearized_jacobian_probes: Option<bool>,
 }
 impl ImplicitSolverWorkspace {
     pub(super) fn has_jacobian(&self) -> bool {
@@ -144,6 +153,11 @@ pub struct ImplicitStepDiagnostics {
     pub maximum_scaled_velocity_residual: f64,
     pub maximum_contact_history_residual: f64,
     pub maximum_auxiliary_residual: f64,
+    /// Probe-only approximations; never counts an accepted physical endpoint.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub linearized_probe_evaluations: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exact_jacobian_fallback: Option<String>,
 }
 
 #[derive(Debug)]
@@ -348,6 +362,10 @@ impl RigidEmbedding<'_> {
         // continuous solve, event jump, step change, or mutable history update.
         let cache: RefCell<Option<(Vec<u64>, Rc<EmbeddedMotion>)>> = RefCell::new(None);
         let dynamics_cache = RefCell::new(None);
+        // Present only while a fresh Jacobian is assembled. Both endpoint
+        // caches are cleared on entry/exit, so probe geometry cannot escape.
+        let probe_context: RefCell<Option<(Vec<f64>, Rc<EmbeddedMotion>)>> = RefCell::new(None);
+        let linearized_probes = Cell::new(0usize);
         let prepare = |u: &[f64]| -> Result<Rc<EmbeddedMotion>, String> {
             if config.reuse_mechanical_endpoint {
                 if let Some((key, motion)) = cache.borrow().as_ref() {
@@ -375,7 +393,35 @@ impl RigidEmbedding<'_> {
                 .enumerate()
                 .map(|(j, i)| seed.q[*i] + step_s * u[self.base_columns + j])
                 .collect();
-            let mut motion = self.solve(&trial, &q, u)?;
+            let mut motion = if let Some((base_u, base)) = probe_context.borrow().as_ref() {
+                let mut probe = (**base).clone();
+                // Only the ordinary FD radius is allowed. A future caller
+                // requesting a larger move automatically uses full closure.
+                let small = u.iter().zip(base_u).all(|(a,b)| (a-b).abs() <= 2e-6*(1.0+b.abs()));
+                if small {
+                    linearized_probes.set(linearized_probes.get()+1);
+                    let delta = nalgebra::DVector::from_iterator(n, u.iter().zip(base_u).map(|(a,b)|step_s*(a-b)));
+                    let full_delta = &base.tangent * delta;
+                    for i in 0..probe.generalized.q.len() {
+                        probe.generalized.q[i] += full_delta[self.base_columns+i];
+                    }
+                    for (&i, &value) in self.independent.iter().zip(&q) { probe.generalized.q[i] = value; }
+                    for b in self.art.bases.iter().filter(|b| !b.grounded) {
+                        probe.generalized.states[b.state..b.state+7].copy_from_slice(&trial.states[b.state..b.state+7]);
+                    }
+                    let velocity = &base.tangent * nalgebra::DVector::from_column_slice(u);
+                    self.set_motion(&mut probe.generalized, velocity.as_slice(), base.acceleration_bias.as_slice());
+                    // Report actual probe errors internally, without asserting
+                    // that this approximate point satisfies full closure.
+                    let rows = self.art.original_closure_values(&probe.generalized);
+                    let error = |get: fn(&super::super::constraints::ClosureValues)->f64| rows.iter()
+                        .map(|r|get(r).abs()/self.row_scale(&r.unit)).fold(0.0_f64,f64::max);
+                    probe.maximum_scaled_position_error = error(|r|r.position);
+                    probe.maximum_scaled_velocity_error = error(|r|r.velocity);
+                    probe.maximum_scaled_acceleration_error = error(|r|r.acceleration);
+                    probe
+                } else { self.solve(&trial, &q, u)? }
+            } else { self.solve(&trial, &q, u)? };
             if self.art.contact_on {
                 sim_solve::profile::EMBEDDED_HISTORY.time(|| -> Result<(), String> {
                     let mut zero = motion.generalized.clone();
@@ -623,6 +669,7 @@ impl RigidEmbedding<'_> {
             || next_workspace.color_auxiliary_jacobian != Some(config.color_auxiliary_jacobian)
             || next_workspace.auxiliary_endpoint_correction_scale
                 != Some(config.auxiliary_endpoint_correction_scale)
+            || next_workspace.linearized_jacobian_probes != Some(config.linearized_jacobian_probes)
             || !next_workspace
                 .step_s
                 .is_some_and(|h| (h - step_s).abs() <= 1e-10 * step_s)
@@ -638,6 +685,7 @@ impl RigidEmbedding<'_> {
             .newton_audit_window_s
             .filter(|[from, until]| time_s >= *from && time_s <= *until)
             .map(|_| NewtonAudit::default());
+        let mut exact_jacobian_fallback = None;
         let nonlinear = if u.is_empty() {
             SolveDiagnostics {
                 iterations: 0,
@@ -645,7 +693,45 @@ impl RigidEmbedding<'_> {
                 line_search_reductions: 0,
             }
         } else {
-            solve_newton_numeric_cached_audited(&mut u, nc, &residual, &mut next_workspace.cache, audit.as_mut()).map_err(
+            let initial_u = config.linearized_jacobian_probes.then(||u.clone());
+            let result = if config.linearized_jacobian_probes {
+                let mut perturbed = vec![0.0; u.len()];
+                solve_newton_cached_audited(&mut u, nc, &residual, |x, base, jacobian| {
+                    *cache.borrow_mut() = None;
+                    *dynamics_cache.borrow_mut() = None;
+                    let motion = prepare(&x[..n]);
+                    *cache.borrow_mut() = None;
+                    *dynamics_cache.borrow_mut() = None;
+                    match motion {
+                        Ok(motion) => *probe_context.borrow_mut() = Some((x[..n].to_vec(),motion)),
+                        Err(_) => { jacobian.add(0,0,f64::NAN); return; }
+                    }
+                    for column in 0..x.len() {
+                        let original = x[column];
+                        let epsilon = 1e-6*(1.0+original.abs());
+                        x[column] = original+epsilon;
+                        residual(x,&mut perturbed);
+                        x[column] = original;
+                        for row in 0..x.len() { jacobian.add(row,column,(perturbed[row]-base[row])/epsilon); }
+                    }
+                    *probe_context.borrow_mut() = None;
+                    *cache.borrow_mut() = None;
+                    *dynamics_cache.borrow_mut() = None;
+                }, &|_,v|1.0+v.abs(), &mut next_workspace.cache, audit.as_mut())
+            } else {
+                solve_newton_numeric_cached_audited(&mut u, nc, &residual, &mut next_workspace.cache, audit.as_mut())
+            };
+            let result = if config.linearized_jacobian_probes && result.is_err() {
+                exact_jacobian_fallback = Some(result.unwrap_err().to_string());
+                u.clone_from(initial_u.as_ref().expect("approximate solve initial state"));
+                next_workspace.cache = None;
+                *cache.borrow_mut() = None;
+                *dynamics_cache.borrow_mut() = None;
+                *last_error.borrow_mut() = None;
+                if let Some(audit) = audit.as_mut() { *audit = NewtonAudit::default(); }
+                solve_newton_numeric_cached_audited(&mut u, nc, &residual, &mut next_workspace.cache, audit.as_mut())
+            } else { result };
+            result.map_err(
                 |e| {
                     // Re-evaluate the rejected final candidate to identify the
                     // failing equation, without committing state or accepting
@@ -698,6 +784,7 @@ impl RigidEmbedding<'_> {
         next_workspace.color_auxiliary_jacobian = Some(config.color_auxiliary_jacobian);
         next_workspace.auxiliary_endpoint_correction_scale =
             Some(config.auxiliary_endpoint_correction_scale);
+        next_workspace.linearized_jacobian_probes = Some(config.linearized_jacobian_probes);
         if !config.reuse_step_jacobian {
             next_workspace.clear();
         }
@@ -721,6 +808,8 @@ impl RigidEmbedding<'_> {
                 maximum_scaled_velocity_residual: velocity_error,
                 maximum_contact_history_residual: history_error,
                 maximum_auxiliary_residual: auxiliary.iter().map(|v| v.abs()).fold(0.0, f64::max),
+                linearized_probe_evaluations: config.linearized_jacobian_probes.then_some(linearized_probes.get()),
+                exact_jacobian_fallback,
             },
             auxiliary: auxiliary_endpoint,
         })

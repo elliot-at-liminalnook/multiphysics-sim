@@ -37,6 +37,21 @@ fn frame(time: f64, phase: &str, support: f64) -> serde_json::Value {
         "contacts":[{"link":2,"other":null,"force_n":[0,0,support]}],
         "policy":{"step_reference":{"reference":{"sample":(time*10.)as u64,"step":1,"foot":0,"phase":phase,"body_world_m":[0,0,0]}}}})
 }
+
+#[test]
+fn canceled_prelift_recentering_earns_no_step_credit_or_failure() {
+    let (art, c) = fixture();
+    let mut monitor = WalkingMonitor::new(c, 0.1, "body".into(), vec!["a".into(), "b".into()], &art).unwrap();
+    for (i, phase) in ["shift", "recenter", "recenter", "idle"].into_iter().enumerate() {
+        let mut f = frame((i + 1) as f64 * 0.1, phase, 2.);
+        f["policy"]["step_reference"]["reference"]["foot"] = serde_json::Value::Null;
+        let r = monitor.observe(&art, &f, 0.1, i == 3).unwrap();
+        assert_eq!(r.qualified_steps, 0);
+        assert_eq!(r.failed_steps, 0);
+        assert_eq!(r.step_reward, 0.);
+        assert!(r.outcome.is_none());
+    }
+}
 #[test]
 fn heading_cost_wraps_angles_uses_declared_offset_and_is_bounded() {
     use sim_runtime::walking_task::HeadingTaskConfig;

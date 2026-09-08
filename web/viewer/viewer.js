@@ -161,8 +161,9 @@ function showMotionProgress(next) {
     const box=$('motion-progress');box.hidden=false;box.replaceChildren();
     const title=document.createElement('strong');
     const marker=current.data.policy_contract?.point_feedback?.config.markers[step.foot]?.id;
-    title.textContent=next.done?'Episode ended · reset to continue':step.phase==='idle'?'Standing · ready for a command':step.phase==='hold'?'Settling initial stance':`${marker || 'Foot'} · ${step.phase}${step.waiting?' · waiting for support':''}`;
-    const detail=document.createElement('p');detail.textContent=`Completed transfers: ${step.step}. Current transfer: ${(step.progress*100).toFixed(0)}%. Latched speed: ${(step.latched_twist[0]*1000).toFixed(2)} mm/s · turn: ${(step.latched_twist[2]*180/Math.PI).toFixed(3)}°/s. Changes apply at the next transfer.`;
+    const prelift=current.data.policy_contract?.step_reference?.config.sequence.update_command_before_lift;
+    title.textContent=next.done?'Episode ended · reset to continue':step.phase==='idle'?'Standing · ready for a command':step.phase==='hold'?'Settling initial stance':step.phase==='recenter'?`Returning to standing · lift canceled${step.waiting?' · waiting for all feet to support the body':''}`:`${marker || 'Foot'} · ${step.phase}${step.waiting?' · waiting for support':''}`;
+    const detail=document.createElement('p');detail.textContent=`Completed transfers: ${step.step}. Current transfer: ${(step.progress*100).toFixed(0)}%. Latched speed: ${(step.latched_twist[0]*1000).toFixed(2)} mm/s · turn: ${(step.latched_twist[2]*180/Math.PI).toFixed(3)}°/s. ${prelift?'New requests are checked again before lift-off. Airborne steps and reversals finish the current transfer.':'Changes apply at the next transfer.'}`;
     box.append(title,detail);return;
   }
   const p = next.motion_progress, box = $('motion-progress'); box.hidden = !p;
@@ -219,7 +220,7 @@ function makeInputs(channels) {
   driveKeys.clear();const drive=channels.length&&current.data?.policy_contract?.step_reference?.config;
   $('teleop').hidden=!drive;$('teleop').replaceChildren();
   if (drive) {
-    const help=document.createElement('p');help.textContent='Press Play, then hold W/S to move, A/D to turn. Release to request a stop after the current foot transfer.';$('teleop').append(help);
+    const help=document.createElement('p');help.textContent='Press Play, then hold W/S to move, A/D to turn. '+(drive.sequence.update_command_before_lift?'Release to request a stop. This controller can cancel a lift before it starts.':'Release to request a stop after the current foot transfer.');$('teleop').append(help);
     for (const [key,label] of [['w','W · Forward'],['a','A · Left'],['s','S · Back'],['d','D · Right']]) {
       const button=document.createElement('button');button.textContent=label;button.dataset.driveKey=key;
       button.onpointerdown=e=>{e.preventDefault();button.setPointerCapture(e.pointerId);driveKeys.add(key);applyDriveKeys();};
@@ -281,7 +282,7 @@ async function loadPreset(id) {
       if (result.metadata) Object.assign(current.data, result.metadata);
       makeInputs(result.inputs); showFrame(result.frame); $('timeline').max = result.metadata ? result.metadata.steps * result.metadata.step_s : data.duration_s;
       $('input-help').textContent = result.metadata?.environment_contract ? `Each command is held for ${result.metadata.environment_contract.period_s*1000} ms of simulation time. The selected controller and actuator profile determine the motor response. ${data.task?.walking ? 'The task scores joint tracking, body position and supported steps'+(data.task.walking.heading?', plus heading':'')+'.' : 'Scores follow the selected task; this preset has no supported-step walking objective.'} Saving and replay preserve the task and command sequence.` : result.metadata?.policy_contract ? 'Rhai reads ideal simulated joint state and sends motor targets at its declared sampling rate. Adjust the commands above; save and replay preserve when they changed. Hardware sensor bindings and walking commands are not yet available.' : preset.mode === 'embedded' ? 'The Rust servo controller executes this experiment live. Pause and reset are available; this preset does not yet declare WASD walking commands.' : 'Use the position slider while running. This fixture has no walking command; WASD locomotion is unavailable.';
-      if (current.data.policy_contract?.step_reference) $('input-help').textContent+=' Motion requests are latched at foot-transfer boundaries. Releasing a key finishes the current transfer before standing; this provisional crawl is deliberately slow.';
+      if (current.data.policy_contract?.step_reference) $('input-help').textContent+=current.data.policy_contract.step_reference.config.sequence.update_command_before_lift?' New motion requests are checked before lift-off. A stop at that point keeps the feet planted and returns the body to standing. Airborne feet complete their landing, and reversals wait for the current transfer.':' Motion requests are latched at foot-transfer boundaries. Releasing a key finishes the current transfer before standing; this provisional crawl is deliberately slow.';
       $('performance').textContent = 'Waiting for physics'; $('speed').disabled = true;
     } else {
       playback = data.frames; showFrame(playback[0]); $('timeline').max = playback.at(-1).time_s; $('timeline').disabled = false; $('speed').disabled = false;

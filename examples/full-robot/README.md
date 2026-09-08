@@ -1,5 +1,13 @@
 # Four-leg robot commissioning
 
+The [faster-gait and overlap study](swing-advance/RESULTS.md) measures the selected
+student at 2.477 mm/s and tests 40 new hybrid-feedback, overlapping-motion and
+geometry-derived stance cases. Half overlap passes short walking checks and
+native/WASM parity, but timestep agreement and rendered realtime gates still
+fail. Higher-speed trials expose leading/front-leg geometry and support limits.
+The **Faster student trial** and **Move during swing** presets are runnable,
+explicitly experimental milestones; no faster controller is promoted.
+
 The [browser solver experiment](browser-precision/README.md) reduces numerical
 work and avoids redrawing unchanged views. Six tested walks pass, including a
 new forward/turn/reverse/stop case. Its rendered turning case keeps up with

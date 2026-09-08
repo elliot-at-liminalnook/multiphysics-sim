@@ -1,13 +1,20 @@
 # Robot motion workspace
 
 The browser renders CAD-derived collision surfaces and telemetry. Physics and
-Rhai control execute in Rust inside a Web Worker. The quadruped has a **live WASM
-lift experiment** and **recorded physical experiments** for comparison. Pendulum
-fixtures exercise live Rhai control and the incremental servo runtime. The joint
-feedback presets add sampled Rhai correction to the full robot motor runtime. The live
-quadruped uses the same Rust session and motor-controller recipe as the headless
-run. It is slower than realtime and does not establish a walking controller or
-calibrated hardware. See [the session contract](../examples/interactive/embedded-session.md).
+Rhai control execute in Rust inside a Web Worker. Earlier commissioning presets
+include live lift/servo experiments and recorded physical comparisons; newer
+presets add live walking. Each uses the same Rust session and controller recipe
+as its native experiment. Performance and physical acceptance are specific to
+the selected preset; hardware remains uncalibrated. See
+[the session contract](../examples/interactive/embedded-session.md).
+
+Newer walking presets provide live WASD control through the same Rust environment
+as native experiments. Build with `--environment-only` to include them. The
+**Faster student trial** and **Move during swing** presets expose the 2.5 mm/s
+development gait; they remain experimental because sustained heading, numerical
+agreement and realtime processing gates are not all satisfied. See the
+[current measurements](../examples/full-robot/swing-advance/RESULTS.md). Controller
+descriptions distinguish these trials from the earlier commissioning presets.
 
 ## Build and open
 
@@ -89,9 +96,9 @@ for physical provenance, and the original CAD archive remains unchanged.
   qualification dwell and timeout. These are provisional ideal-force conditions,
   not a validated landing or balance detector. Saved failures replay the failed
   attempt and verify its reason and timing through Rust.
-- WASD locomotion is not enabled for these presets: none has a walking
-  command interface. Future controllers must receive motion requests through
-  the shared controller contract, not through browser-side pose edits.
+- Walking presets accept W/S for forward/reverse and A/D for turning. Releasing
+  keys or using Stop sends a zero motion request through the controller. Earlier
+  lift/servo presets have no walking command interface.
 
 The displayed simulation/wall ratio is recorded stepping cost or measured live
 worker request cost, as labeled. It is not rendering FPS or a training benchmark.

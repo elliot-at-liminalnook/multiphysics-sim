@@ -23,6 +23,8 @@ const schedules={
  'forward-reverse':[[0,'w'],[8.4,'s'],[16.8,null]],
  'reverse-forward':[[0,'s'],[8.4,'w'],[16.8,null]],
  'sustained-forward':[[0,'w'],[duration-4,null]],
+ 'cancel-resume':[[0,'w'],[.4,null],[2,'w'],[16.8,null]],
+ 'prelift-turn':[[0,'w'],[.4,'a'],[8.4,'w'],[16.8,null]],
 };
 assert(schedules[scenario],'unknown keyboard scenario');const schedule=schedules[scenario];
 const server=spawn(process.execPath,['web/serve-viewer.mjs',directory,'0']);
@@ -32,7 +34,7 @@ try{
  browser=await chromium.launch({headless:process.env.HEADED!=='1',...(process.env.CHROME_EXECUTABLE?{executablePath:process.env.CHROME_EXECUTABLE}:{})});
  const page=await browser.newPage({viewport:{width:1440,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(()=>{
-  window.liveProbe={steps:[],samples:[],commands:[]};const Original=window.Worker;
+  window.liveProbe={steps:[],samples:[],commands:[],phase_messages:[]};const Original=window.Worker;
   window.Worker=class extends Original{
    constructor(...args){super(...args);this.starts=new Map();this.addEventListener('message',({data})=>{
     if(data.progress)return;const start=this.starts.get(data.id);if(start!=null){const p=window.liveProbe,now=performance.now(),wall=(now-start)/1000;
@@ -83,6 +85,8 @@ try{
   };requestAnimationFrame(draw);
   p.observer=new MutationObserver(()=>{
    const last=p.samples.at(-1);if(last&&last.view_update_s===undefined)last.view_update_s=(performance.now()-p.previousResponse)/1000;
+   const phaseText=document.querySelector('#motion-progress strong')?.textContent;
+   if(phaseText&&phaseText!==p.phase_messages.at(-1))p.phase_messages.push(phaseText);
    const time=parseFloat(document.querySelector('#sim-time').textContent);
    while(steering&&schedule[stage+1]&&time>=schedule[stage+1][0]){
     if(schedule[stage][1])key('keyup',schedule[stage][1]);stage++;
@@ -100,13 +104,14 @@ try{
   return {wall_s:(p.ended-p.started)/1000,simulated_s:parseFloat(document.querySelector('#sim-time').textContent),status:document.querySelector('#execution-state').textContent,
    worker_transitions_s:p.steps,transition_samples:p.samples,final_phase:p.finalPhase,render_intervals_s:p.frames,
    actual_drawn_frames:p.readRenderCount?p.readRenderCount()-p.initialDraws:null,
-   commands:p.commands,drawn_reference_supported:Boolean(p.readRenderedFrame),
+   commands:p.commands,drawn_reference_supported:Boolean(p.readRenderedFrame),phase_messages:p.phase_messages,
    gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):null};
  });
  const p95=a=>[...a].sort((a,b)=>a-b)[Math.ceil(a.length*.95)-1];
  const completed=Math.abs(result.simulated_s-duration)<1e-9&&!errors.length
   &&result.worker_transitions_s.length===Math.round(duration/data.task.period_s);
- if(steering&&completed&&result.drawn_reference_supported){
+ const validationErrors=[];
+ try { if(steering&&completed&&result.drawn_reference_supported){
   assert.equal(result.commands.length,schedule.length);
   for(const command of result.commands){
    assert(!command.superseded,'scheduled command must reach the controller before its replacement');
@@ -114,7 +119,7 @@ try{
    assert(Number.isFinite(command.drawn_reference_s)&&command.drawn_reference_s>=command.reference_response_s);
    assert(command.drawn_frame_time_s>=command.reference_frame_time_s);
   }
- }
+ }} catch(error) { validationErrors.push(`command association: ${error.message}`); }
  const performance={simulation_per_wall_second:result.simulated_s/result.wall_s,transition_p95_s:p95(result.worker_transitions_s),render_interval_p95_s:p95(result.render_intervals_s),render_frames:result.render_intervals_s.length,
   actual_drawn_frames:result.actual_drawn_frames,
   command_response:{drawn_reference_supported:result.drawn_reference_supported,commands:result.commands,
@@ -128,9 +133,11 @@ try{
  }));
  performance.breakdown={all:summarize(result.transition_samples),by_phase:Object.fromEntries([...new Set(result.transition_samples.map(s=>s.phase))].map(phase=>[phase,summarize(result.transition_samples.filter(s=>s.phase===phase))])),scope:'WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive.'};
  const report={completed,preset,scenario,config_override:configOverride,performance,meets_speed_target:performance.simulation_per_wall_second>=1&&(!performance.active_motion||performance.active_motion.simulation_per_wall_second>=1),meets_transition_target:performance.transition_p95_s<=.02&&(!performance.active_motion||performance.active_motion.transition_p95_s<=.02),
-  host:{cpu:cpus()[0]?.model,logical_cpus:cpus().length,platform:platform(),architecture:arch(),browser:await browser.version(),gpu:result.gpu,headless:process.env.HEADED!=='1'},errors,status:result.status,
+  host:{cpu:cpus()[0]?.model,logical_cpus:cpus().length,platform:platform(),architecture:arch(),browser:await browser.version(),gpu:result.gpu,headless:process.env.HEADED!=='1'},errors,status:result.status,phase_messages:result.phase_messages,
   scope:'One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. Command-reference delays are measured separately from physical response; no sustained terrain or physical stopping acceptance.'};
- if(steering&&completed){
+ try { if(steering&&completed){
+  if(scenario==='cancel-resume'&&data.config.policy.step_reference.sequence.update_command_before_lift)
+   assert(result.phase_messages.some(text=>text.startsWith('Returning to standing · lift canceled')),'cancellation must be visible in the UI');
   assert.match(await page.locator('#motion-progress').textContent(),/Episode ended/);assert.equal(result.final_phase,'idle');
   const download=page.waitForEvent('download');await page.locator('#download').click();const file=await download;await file.saveAs(reportPath.replace(/\.json$/,'.recording.json'));
   const record=JSON.parse(await readFile(reportPath.replace(/\.json$/,'.recording.json'))),events=record.runtime.input_events;
@@ -138,16 +145,18 @@ try{
   const motion=data.config.policy.step_reference.command_channels.map(name=>channels.findIndex(c=>c.name===name));
   assert.equal(motion.length,3);assert(motion.every(i=>i>=0));
   assert(events.some(e=>e.values[motion[0]]>0));
-  if(scenario!=='sustained-forward')assert(events.some(e=>e.values[motion[0]]<0));
-  if(scenario==='turn-reverse')assert(events.some(e=>e.values[motion[2]]>0));
+  if(schedule.some(([,key])=>key==='s'))assert(events.some(e=>e.values[motion[0]]<0));
+  if(schedule.some(([,key])=>key==='a'))assert(events.some(e=>e.values[motion[2]]>0));
   assert.deepEqual(motion.map(i=>events.at(-1).values[i]),[0,0,0]);
   // Keyboard scenarios must not silently modify gains or policy corrections.
   for(const event of events)for(const [i,channel] of channels.entries()){
    if(!motion.includes(i))assert.equal(event.values[i],channel.initial);
   }
   report.keyboard_commands_recorded=true;
- }
+ }} catch(error) { validationErrors.push(`keyboard recording: ${error.message}`); }
+ report.validation_errors=validationErrors;
+ report.validation_passed=validationErrors.length===0;
  await page.screenshot({path:reportPath.replace(/\.json$/,'.png')});
  await writeFile(reportPath.replace(/\.json$/,'.timing.json'),JSON.stringify(result.transition_samples)+'\n');
- await writeFile(reportPath,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));assert(completed);
+ await writeFile(reportPath,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));assert(completed);assert(report.validation_passed);
 }finally{await browser?.close();server.kill();}

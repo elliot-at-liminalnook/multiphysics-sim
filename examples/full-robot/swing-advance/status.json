@@ -1,0 +1,743 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "speed-2.5-overlap-0-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008097229109298466,
+        "final_yaw_error_rad": 0.002096759134256982,
+        "maximum_body_tilt_rad": 0.0038312833740873587,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04485694481414591,
+          0.0002723944845792085,
+          -0.00076249866020342
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-20ms-acceptance/summary.json",
+          "sha256": "18b108337aa38e2a8491f9c5416455ff95fbe2aae89a1f6b3fb096e8c788891c"
+        }
+      },
+      "wall_s": 12.489387747,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-20ms.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-20ms.config.json",
+          "sha256": "69f20747e58655a33526741a7903270adcda25663636a2cd6af431665aabc9bb"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-20ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-20ms.native.json",
+          "sha256": "5266a4b2951da020bcbeb486cb2eae564ecb88a5fb69e45e8e2225a1ad842ade"
+        }
+      ]
+    },
+    {
+      "name": "speed-2.5-overlap-0-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006508713057194413,
+        "final_yaw_error_rad": 0.0020347810643730454,
+        "maximum_body_tilt_rad": 0.0042373208490528984,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04485813565755747,
+          -0.00014266800424660105,
+          -0.0006349906363477577
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-5ms-acceptance/summary.json",
+          "sha256": "341690ec49771f1dc9e8b30085f00d620228468320e7ccd2ceb16c28ccb495d9"
+        }
+      },
+      "wall_s": 21.557333751,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-5ms.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-5ms.config.json",
+          "sha256": "e993053a6ab14fb3deae0a839565b187718fc38651204c204078aa741ea70fb9"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-5ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-5ms.native.json",
+          "sha256": "296ade27b2b67cc99c1a3cb32b93189a4d8e6a1c73324d957f12b0ef2779d1cf"
+        }
+      ]
+    },
+    {
+      "name": "speed-2.5-overlap-0.5-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009258871174203303,
+        "final_yaw_error_rad": 0.0028743957326786474,
+        "maximum_body_tilt_rad": 0.003797250417640078,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04504093609997306,
+          0.00036740102776346075,
+          -0.0008281466323848477
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-20ms-acceptance/summary.json",
+          "sha256": "77fafc3a03f431a3b578262e05c5e3b0c2600e9430c9cedf3c24c83d4a8c44a3"
+        }
+      },
+      "wall_s": 9.157538175,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-20ms.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-20ms.config.json",
+          "sha256": "dbc1d51920c72d94684bd96628e019fd92bdd9d3ab644734aa6c24b22d688c8b"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-20ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-20ms.native.json",
+          "sha256": "2c46ee2091f1fb6fbb52181607a9b82d286f8f3b92605de892e26356b719b639"
+        }
+      ]
+    },
+    {
+      "name": "speed-2.5-overlap-0.5-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006961537633056548,
+        "final_yaw_error_rad": 0.0029467592664830793,
+        "maximum_body_tilt_rad": 0.004165088783742316,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.045091348109012344,
+          -0.000019902596658059413,
+          -0.0006526752937618101
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-5ms-acceptance/summary.json",
+          "sha256": "7456ee80eef655498bfaa860123e3d5e69eab989592c4c52c0e0ccdb448ef5d7"
+        }
+      },
+      "wall_s": 22.023548298,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-5ms.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-5ms.config.json",
+          "sha256": "1b6d14f71bbf81b215596c6f6ad064736d156a6dac4a517b41e8773535d454bb"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-5ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-5ms.native.json",
+          "sha256": "68278818fd1da3f84988840714462161e2bae977425b8fce340eb6d31b4608f0"
+        }
+      ]
+    },
+    {
+      "name": "speed-2.5-overlap-1-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.001097079081742615,
+        "final_yaw_error_rad": 0.0034817220682067294,
+        "maximum_body_tilt_rad": 0.003770105539081142,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04511496450376571,
+          0.0005153625690966643,
+          -0.0009315458902896326
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-20ms-acceptance/summary.json",
+          "sha256": "a98f84cdb52f8b79cad812932b95d316798a42d246bfc04448d5446f6bb893d0"
+        }
+      },
+      "wall_s": 8.682313704,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-20ms.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-20ms.config.json",
+          "sha256": "746de5c67defd637e96230bc8695ae4ec5050ea6fefe61699bf33eae9043c4b1"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-20ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-20ms.native.json",
+          "sha256": "583fd35d37eb29085b4bc5a31650777ae1eec4fe01bb8a09737d7ff2b08480a6"
+        }
+      ]
+    },
+    {
+      "name": "speed-2.5-overlap-1-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008282504074279059,
+        "final_yaw_error_rad": 0.0032771296786444537,
+        "maximum_body_tilt_rad": 0.003985533349265896,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.045340147028080625,
+          0.00000836111582470017,
+          -0.0006675962252817216
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-5ms-acceptance/summary.json",
+          "sha256": "930cd6da95bba75c7329bbbc9df05992bc2f0471c1823628ff060d177707e1df"
+        }
+      },
+      "wall_s": 21.538033359,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-5ms.scene.json",
+          "sha256": "0c8442814eaa5d27177b9268009b44e621f329480967d206f63f706f36ff8bfa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-5ms.config.json",
+          "sha256": "d19b7c2c47888cbb6cd4d33242dd7e7780871ba43cf574c6e926cd3dbe99720d"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-5ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-1-5ms.native.json",
+          "sha256": "276886ce9c5c666b5749c61395a9beb927aa9a49e3f76cb929fb0f4fc40384d5"
+        }
+      ]
+    },
+    {
+      "name": "speed-3.75-overlap-0-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000872 mm at world [0.004564976742726096, -0.11859629459114607, -0.04748179448847525] m; requested body [-0.0010288620079104774, 0.021568895800108682, -0.008820466700050357] m, time 0.760000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.408531847,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0-20ms.config.json",
+          "sha256": "88def307937278df190d718b3646e49cdbeecfd386e5ffe3eae50147366655be"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0-20ms.native.json",
+          "sha256": "3f50abe4b5afe0af67e4005b21ec8837ad8544a5f567a4728b73a4570b6d112b"
+        }
+      ]
+    },
+    {
+      "name": "speed-3.75-overlap-0-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000872 mm at world [0.004564976742726096, -0.11859629459114607, -0.04748179448847525] m; requested body [-0.0010288620079104774, 0.021568895800108682, -0.008820466700050357] m, time 0.760000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.823800722,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0-5ms.config.json",
+          "sha256": "75a0898a54e62059250e63181f18c3e3ef617db33f2f85906b907dcd368e6822"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0-5ms.native.json",
+          "sha256": "59ace8494776fcd9c49759909bc3fb05dca4e5c93648888d266813e5bd76b990"
+        }
+      ]
+    },
+    {
+      "name": "speed-3.75-overlap-0.5-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000100 mm at world [0.0051333457191982245, -0.11860482772714381, -0.04747665993702074] m; requested body [-0.00034461579542058914, 0.021568895800108682, -0.008820466700050357] m, time 0.760000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.408048612,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0.5-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0.5-20ms.config.json",
+          "sha256": "19a6bdad9db9371d65f3996ec448a5cc9542397341d3b2bda69fd6fef82ae88e"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0.5-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0.5-20ms.native.json",
+          "sha256": "83aa6705fc2504aa33348b31b604ce50309bf4b188b77c55f0f5c08ad24aaa31"
+        }
+      ]
+    },
+    {
+      "name": "speed-3.75-overlap-0.5-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000100 mm at world [0.0051333457191982245, -0.11860482772714381, -0.04747665993702074] m; requested body [-0.00034461579542058914, 0.021568895800108682, -0.008820466700050357] m, time 0.760000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.793418764,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0.5-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0.5-5ms.config.json",
+          "sha256": "600d34ad503cf188ccb8b503d1b6b16bcb51eab52a55df6bde6bebe1dae5256c"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0.5-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-0.5-5ms.native.json",
+          "sha256": "bc74f69474d8477ff6cf725d35f811efdd331a1d3f4d45672dd270ea86d9d573"
+        }
+      ]
+    },
+    {
+      "name": "speed-3.75-overlap-1-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000924 mm at world [0.006141287713480409, -0.1185987859021056, -0.04748214269884935] m; requested body [0.0005670344632120422, 0.021568895800108682, -0.008820466700050357] m, time 0.780000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.387697252,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-1-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-1-20ms.config.json",
+          "sha256": "3991f3e4d6fd237f44ed4e288b5559068b288e5e1bb58c402fe4b77ea2c10265"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-1-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-1-20ms.native.json",
+          "sha256": "335b0043a62c2c0c8f5119a1903e5716a572189ab09fc582a35332f4e5897b7b"
+        }
+      ]
+    },
+    {
+      "name": "speed-3.75-overlap-1-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000924 mm at world [0.006141287713480409, -0.1185987859021056, -0.04748214269884935] m; requested body [0.0005670344632120422, 0.021568895800108682, -0.008820466700050357] m, time 0.780000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.827041194,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-1-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-1-5ms.config.json",
+          "sha256": "7ac79dc50ebaebf7320a5923a7c297c2ead281f751d7da81921596a88a35b9d7"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-1-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-3.75-overlap-1-5ms.native.json",
+          "sha256": "fcd9ba9a529d268ec3692e225e12d3bf9e01c6fcb099e69b9f2eb0d08bd3ca35"
+        }
+      ]
+    },
+    {
+      "name": "speed-5-overlap-0-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000791 mm at world [0.0041323287523857746, -0.11975255281023964, -0.04921755227559542] m, time 0.720000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.369934288,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0-20ms.config.json",
+          "sha256": "dda8d185962c40fff6b2216e1a97bdc09ab7d876dca7afde8b97499d8dbd5e0c"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0-20ms.native.json",
+          "sha256": "5dff1371b59d73ef282badbdf70a992d4a5523fc34c960895c4057bced7da80b"
+        }
+      ]
+    },
+    {
+      "name": "speed-5-overlap-0-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.001357 mm at world [0.004711716715781942, -0.11858227446459574, -0.047485051663066914] m; requested body [-0.0010288620079104774, 0.021568895800108682, -0.008820466700050357] m, time 0.720000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.744102592,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0-5ms.config.json",
+          "sha256": "1ad8f32e27c2369640ec9fc6f74a201ff97e45e1f6792f70dd71d29ea65abdf2"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0-5ms.native.json",
+          "sha256": "f7c86bfdeec5e08ef7c5aa6a9d026f6569a9f94c750cc0507047034f2e74f466"
+        }
+      ]
+    },
+    {
+      "name": "speed-5-overlap-0.5-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000028 mm at world [0.004524232738920659, -0.11976885674007917, -0.04917831388927754] m, time 0.720000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.361723001,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0.5-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0.5-20ms.config.json",
+          "sha256": "d35937b1fc119cd6503241c788d3705c2fe13e96bfc72a33dffe8bf921822db8"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0.5-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0.5-20ms.native.json",
+          "sha256": "9716c2f2806c248496cc52bc6e6f49018214695865609029162caad632b25f4f"
+        }
+      ]
+    },
+    {
+      "name": "speed-5-overlap-0.5-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000614 mm at world [0.005240777366410217, -0.1185904402668568, -0.047480072594400485] m; requested body [-0.00039203642056522177, 0.021568895800108682, -0.008820466700050357] m, time 0.720000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.724149901,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0.5-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0.5-5ms.config.json",
+          "sha256": "14efc437596998c9897b5cbe7ee71c4b43c29763f0c188e95eecf82f6062f150"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0.5-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-0.5-5ms.native.json",
+          "sha256": "7fa5c4ef13adb66f24d446a43a17b42edc426fb8d34561cc6d99e28ec430f1b7"
+        }
+      ]
+    },
+    {
+      "name": "speed-5-overlap-1-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.001149 mm at world [0.005748721809101272, -0.11982321712273875, -0.04915564081765678] m, time 0.740000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.386316023,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-1-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-1-20ms.config.json",
+          "sha256": "b98dffa510725c7511abb0a605cede095d18accf675c18ad736af9fdc1a815b8"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-1-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-1-20ms.native.json",
+          "sha256": "84ecb45d332e0eca211e805ccf4844fa13e696c772dcbd6adc0793a3f76e1608"
+        }
+      ]
+    },
+    {
+      "name": "speed-5-overlap-1-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 0 Raise reference has internal contact: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.003206 mm at world [0.006471360121375772, -0.11856667325927739, -0.04749762861762197] m; requested body [0.0005101188799700154, 0.021568895800108682, -0.008820466700050357] m, time 0.740000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.831013113,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-1-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-1-5ms.config.json",
+          "sha256": "1448be3cf594b284fba22b715eb8e98cbb01649f9f7fdbbc102c7865652a70b8"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-1-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-advance/speed-5-overlap-1-5ms.native.json",
+          "sha256": "68a9c76f4d2aec4ca742faae80178c7f0bae690c557480c2fcc4e634b78c2157"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/swing-advance/plan.json",
+      "sha256": "e6cb956d3b6b9850256756c59aea911aabd8a370eea4753fd23c7b7e0c063934"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "2f70f6497328c731b693da7b2e373fdbe92c34224ce3552bd6010dc1d7c024fe"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "24a9b3f888c360c35d2b80eea646c85abfba34be6a82ca8fc89efac69584005d"
+    }
+  ],
+  "scope": "Development-only overlap of body advance and swing using shared Rust references. Unchanged CAD physics, weights, motor limits and physical/numerical gates. All failures retained; no browser or sustained acceptance implied."
+}

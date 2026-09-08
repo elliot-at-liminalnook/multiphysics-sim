@@ -1,0 +1,584 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "default-turn",
+      "passed": true,
+      "cancellations": [],
+      "lifts": 9,
+      "final_body_error_m": 0.0007809225310023492,
+      "final_yaw_error_rad": 0.0004084914017543542,
+      "maximum_body_tilt_rad": 0.003722381178311248,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-turn.native.json",
+          "sha256": "bef9f2675756d153faef8affd78519c67022f3785ea5e91c397ea102e2e00b22"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-turn-acceptance/summary.json",
+          "sha256": "c17c1e48dc0e877ad15035ab8e2afde22526a21cb8bf67916aaee233c09018d3"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-turn.config.json",
+          "sha256": "4c04c3731df94a788f9defb3dc480152ec1978983d9bd7d01361a771cc59b371"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-turn.actions.json",
+          "sha256": "a22be9d63891e49d2b2be68cbe92b45236a96ca1718e341b5e10e24b08f27899"
+        }
+      ]
+    },
+    {
+      "name": "enabled-turn",
+      "passed": true,
+      "cancellations": [],
+      "lifts": 9,
+      "final_body_error_m": 0.0007809225310023492,
+      "final_yaw_error_rad": 0.0004084914017543542,
+      "maximum_body_tilt_rad": 0.003722381178311248,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/enabled-turn.native.json",
+          "sha256": "809c938ae005091766ccc8da346e046329e581b1ee1f6165a48fb28e5d218464"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/enabled-turn-acceptance/summary.json",
+          "sha256": "229ff44e7972287561b0ecd7cd28df1de96f70fda0a983a8c7ded88056d853a4"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/enabled-turn.config.json",
+          "sha256": "be2355e35904d1116c48e4daddb7d55866b286ba0e503d52a1a53b9c3a039fd5"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/enabled-turn.actions.json",
+          "sha256": "a22be9d63891e49d2b2be68cbe92b45236a96ca1718e341b5e10e24b08f27899"
+        }
+      ]
+    },
+    {
+      "name": "cancel-resume",
+      "passed": true,
+      "cancellations": [
+        {
+          "start_s": 0.72,
+          "end_s": 1.42,
+          "step": 0,
+          "next_phase": "idle",
+          "planted_references_unchanged": true,
+          "walking_credit_unchanged": true,
+          "exit_support_qualified": true,
+          "maximum_actual_marker_displacement_m": 0.0006461501658585847,
+          "minimum_sampled_support_force_n": 7.431940876654758
+        }
+      ],
+      "lifts": 7,
+      "final_body_error_m": 0.0005696359759056485,
+      "final_yaw_error_rad": 0.0016481567500339694,
+      "maximum_body_tilt_rad": 0.00384929311307479,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-resume.native.json",
+          "sha256": "c6e17e34027f463a80ec00da7202fbd5e0407cdc457c1c5b6f842f74ac7a08ff"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-resume-acceptance/summary.json",
+          "sha256": "39054a59705ecc48123b1f56c0b78aad5d6fdc29d96060b32a5e75608645db3b"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-resume.config.json",
+          "sha256": "be2355e35904d1116c48e4daddb7d55866b286ba0e503d52a1a53b9c3a039fd5"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-resume.actions.json",
+          "sha256": "499abb7f0d286d69fe01904611f958b09043dfd4b8cc6ec2be205799281c0de7"
+        }
+      ]
+    },
+    {
+      "name": "cancel-later-resume",
+      "passed": true,
+      "cancellations": [
+        {
+          "start_s": 5.12,
+          "end_s": 5.82,
+          "step": 2,
+          "next_phase": "idle",
+          "planted_references_unchanged": true,
+          "walking_credit_unchanged": true,
+          "exit_support_qualified": true,
+          "maximum_actual_marker_displacement_m": 0.0004262247885984289,
+          "minimum_sampled_support_force_n": 7.808745465893662
+        }
+      ],
+      "lifts": 7,
+      "final_body_error_m": 0.0005637710774002675,
+      "final_yaw_error_rad": 0.001487655544551432,
+      "maximum_body_tilt_rad": 0.003650810189751269,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-later-resume.native.json",
+          "sha256": "8b8d5455a7bb89b6ed9641490f69b252eb0f8ca6dded24ece8bb5cf6d47cd32f"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-later-resume-acceptance/summary.json",
+          "sha256": "91de39068fcdec1ec49ecec775ba0f9f5e5dc38046c0f61589643f97e5357a53"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-later-resume.config.json",
+          "sha256": "be2355e35904d1116c48e4daddb7d55866b286ba0e503d52a1a53b9c3a039fd5"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-later-resume.actions.json",
+          "sha256": "176e8ed28484b39bef4920795a87969e5da893e2c1a3c48cc7db5fcd2b1d60ab"
+        }
+      ]
+    },
+    {
+      "name": "prelift-reverse",
+      "passed": true,
+      "cancellations": [],
+      "lifts": 8,
+      "final_body_error_m": 0.000667019960084912,
+      "final_yaw_error_rad": 0.000858907127121568,
+      "maximum_body_tilt_rad": 0.00404762299461968,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-reverse.native.json",
+          "sha256": "667bbb5cff5e7b13b575ea36cf5352d322efa273c9d2c135e46a48e16ea9662c"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-reverse-acceptance/summary.json",
+          "sha256": "fc2a5ddf0434f34cec9a2deaa042146e3c4782c53948a1088ae29bfc15cd0c81"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-reverse.config.json",
+          "sha256": "be2355e35904d1116c48e4daddb7d55866b286ba0e503d52a1a53b9c3a039fd5"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-reverse.actions.json",
+          "sha256": "878f719a8cf8213abd0d6bff6dc481f1e1a7e1c4787fe046cc42565d0f46814f"
+        }
+      ]
+    },
+    {
+      "name": "default-early-reverse",
+      "passed": true,
+      "cancellations": [],
+      "lifts": 8,
+      "final_body_error_m": 0.000667019960084912,
+      "final_yaw_error_rad": 0.000858907127121568,
+      "maximum_body_tilt_rad": 0.00404762299461968,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-early-reverse.native.json",
+          "sha256": "b3c7bace4fdfe27d99ad187040345da0c28cff4131a4a88d170616db59e0a21a"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-early-reverse-acceptance/summary.json",
+          "sha256": "070a799f1048d5a2315a6408f2f26b9b8bbfe03ed3b2f08da49c3dfa4f70faaa"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-early-reverse.config.json",
+          "sha256": "4c04c3731df94a788f9defb3dc480152ec1978983d9bd7d01361a771cc59b371"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-early-reverse.actions.json",
+          "sha256": "878f719a8cf8213abd0d6bff6dc481f1e1a7e1c4787fe046cc42565d0f46814f"
+        }
+      ]
+    },
+    {
+      "name": "prelift-turn",
+      "passed": true,
+      "cancellations": [],
+      "lifts": 8,
+      "final_body_error_m": 0.0006337981934071273,
+      "final_yaw_error_rad": 0.0013466384431297836,
+      "maximum_body_tilt_rad": 0.0037226024823525774,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-turn.native.json",
+          "sha256": "ad58c80b1f7e366d84403a6ddca60aa9f64d0d10fa5e131dc21b8973edddd7f7"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-turn-acceptance/summary.json",
+          "sha256": "d63a722bbf0d283d93a6dce2c554c11920e8662903545dcb47bea76a407d0fd2"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-turn.config.json",
+          "sha256": "be2355e35904d1116c48e4daddb7d55866b286ba0e503d52a1a53b9c3a039fd5"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-turn.actions.json",
+          "sha256": "e69c652ce104a744b4185262cd2091e3b8906f35a496f5a3bb45349a086165fd"
+        }
+      ]
+    },
+    {
+      "name": "default-cancel-resume",
+      "passed": true,
+      "cancellations": [],
+      "lifts": 8,
+      "final_body_error_m": 0.000607601185500941,
+      "final_yaw_error_rad": 0.0015404128906444552,
+      "maximum_body_tilt_rad": 0.0036487985568082744,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-cancel-resume.native.json",
+          "sha256": "e7350bd57556bf5b2894bbda9d3941e428285ca7eec6be69bba67f1df0ce0676"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-cancel-resume-acceptance/summary.json",
+          "sha256": "266d08145aa65fe8e96c482eaff1a6e990729649f83adc99bfa05da8a97e0cd4"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-cancel-resume.config.json",
+          "sha256": "4c04c3731df94a788f9defb3dc480152ec1978983d9bd7d01361a771cc59b371"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/default-cancel-resume.actions.json",
+          "sha256": "499abb7f0d286d69fe01904611f958b09043dfd4b8cc6ec2be205799281c0de7"
+        }
+      ]
+    },
+    {
+      "name": "cancel-resume-refined",
+      "passed": true,
+      "cancellations": [
+        {
+          "start_s": 0.72,
+          "end_s": 1.42,
+          "step": 0,
+          "next_phase": "idle",
+          "planted_references_unchanged": true,
+          "walking_credit_unchanged": true,
+          "exit_support_qualified": true,
+          "maximum_actual_marker_displacement_m": 0.0006421613504318798,
+          "minimum_sampled_support_force_n": 7.1075213898365535
+        }
+      ],
+      "lifts": 7,
+      "final_body_error_m": 0.0005405238648057231,
+      "final_yaw_error_rad": 0.0018295528782286158,
+      "maximum_body_tilt_rad": 0.004202145265989302,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-resume-refined.native.json",
+          "sha256": "ae7455d7b8433f78c80570d6245fdbdd3a68c7fd335ee966b8ee9656e138d240"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-resume-refined-acceptance/summary.json",
+          "sha256": "a44a1988096580a7feee310e4b41e082eb684e690c48587c4bbb891e45df46c4"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-resume-refined.config.json",
+          "sha256": "b71c16819db6815ee95e80ae8e95d062135b2bebccdef82491849c85671b9c3d"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/cancel-resume-refined.actions.json",
+          "sha256": "499abb7f0d286d69fe01904611f958b09043dfd4b8cc6ec2be205799281c0de7"
+        }
+      ]
+    },
+    {
+      "name": "prelift-turn-refined",
+      "passed": true,
+      "cancellations": [],
+      "lifts": 8,
+      "final_body_error_m": 0.0006320184023276188,
+      "final_yaw_error_rad": 0.001468944795769537,
+      "maximum_body_tilt_rad": 0.00420801582771397,
+      "sampled_internal_contacts": 0,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-turn-refined.native.json",
+          "sha256": "d9434b5e9bf6d66b88ae0a269f71750a40d85248c0c0b5bbecf1d38f8629f056"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-turn-refined-acceptance/summary.json",
+          "sha256": "01691fc3ce47485b428690887d5b94c12d2ac890948be9d5dcb929baf499778e"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-turn-refined.config.json",
+          "sha256": "b71c16819db6815ee95e80ae8e95d062135b2bebccdef82491849c85671b9c3d"
+        },
+        {
+          "path": "runs/full-robot/learning/prelift-control/prelift-turn-refined.actions.json",
+          "sha256": "e69c652ce104a744b4185262cd2091e3b8906f35a496f5a3bb45349a086165fd"
+        }
+      ]
+    }
+  ],
+  "preserved": [
+    {
+      "baseline": "default-turn",
+      "candidate": "enabled-turn",
+      "frames": 1201,
+      "physical_frames_and_task_transitions_exact": true
+    },
+    {
+      "baseline": "default-early-reverse",
+      "candidate": "prelift-reverse",
+      "frames": 1201,
+      "physical_frames_and_task_transitions_exact": true
+    }
+  ],
+  "refinements": [
+    {
+      "name": "cancel-resume",
+      "version": 1,
+      "timestep_reference": true,
+      "numerical_precision": false,
+      "block_factorization": false,
+      "guarded_backtracking": false,
+      "baseline": {
+        "path": "runs/full-robot/learning/prelift-control/cancel-resume.native.json",
+        "sha256": "c6e17e34027f463a80ec00da7202fbd5e0407cdc457c1c5b6f842f74ac7a08ff"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/prelift-control/cancel-resume-refined.native.json",
+        "sha256": "ae7455d7b8433f78c80570d6245fdbdd3a68c7fd335ee966b8ee9656e138d240"
+      },
+      "markers": {
+        "path": "examples/full-robot/foot-markers.json",
+        "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+      },
+      "frames": 1201,
+      "metrics": {
+        "foot_marker_position_m": {
+          "maximum": 0.0005983174205643943,
+          "samples": 4804,
+          "worst": {
+            "time_s": 2.7600000000000002,
+            "identity": "-Y-foot-surface"
+          },
+          "rms": 0.00009506349218606458
+        },
+        "link_position_m": {
+          "maximum": 0.0007823380076370136,
+          "samples": 34829,
+          "worst": {
+            "time_s": 2.7600000000000002,
+            "identity": "-Y | Foot servo crank"
+          },
+          "rms": 0.00016632695569583115
+        },
+        "link_velocity_m_s": {
+          "maximum": 0.02551770563637212,
+          "samples": 34829,
+          "worst": {
+            "time_s": 0.02,
+            "identity": "+X | Sliding foot crosshead"
+          },
+          "rms": 0.003938510412659095
+        },
+        "link_angular_velocity_rad_s": {
+          "maximum": 0.32047700748259406,
+          "samples": 34829,
+          "worst": {
+            "time_s": 9.4,
+            "identity": "-X | Foot servo crank 9a9b"
+          },
+          "rms": 0.03702143535913445
+        },
+        "rotation_matrix_entry": {
+          "maximum": 0.008440161540437752,
+          "samples": 34829,
+          "worst": {
+            "time_s": 8.56,
+            "identity": "-X | Foot servo crank 9a9b"
+          },
+          "rms": 0.0010497276882891766
+        },
+        "joint_positions": {
+          "maximum": 0.016047150066641702,
+          "samples": 33628,
+          "worst": {
+            "time_s": 8.56,
+            "identity": 27
+          },
+          "rms": 0.0016550158291370792
+        },
+        "joint_velocities": {
+          "maximum": 0.6148179941282133,
+          "samples": 33628,
+          "worst": {
+            "time_s": 9.4,
+            "identity": 27
+          },
+          "rms": 0.048333788705490065
+        },
+        "servo_targets_rad": {
+          "maximum": 0.011671855890311666,
+          "samples": 14412,
+          "worst": {
+            "time_s": 6.92,
+            "identity": 11
+          },
+          "rms": 0.001428337992373348
+        },
+        "contact_pair_force_n": {
+          "maximum": 6.294899625164818,
+          "samples": 4599,
+          "worst": {
+            "time_s": 16.98,
+            "identity": "11:null"
+          },
+          "rms": 1.0694558017394291
+        }
+      },
+      "contact_pair_mismatches": 2,
+      "phase_mismatches": 0,
+      "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization or guarded backtracking. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate.",
+      "source": {
+        "path": "runs/full-robot/learning/prelift-control/cancel-resume-refinement.json",
+        "sha256": "8118b499b896cdab2fddd5a6e73d22e91ec4879246416c1e974a797f4537ff05"
+      }
+    },
+    {
+      "name": "prelift-turn",
+      "version": 1,
+      "timestep_reference": true,
+      "numerical_precision": false,
+      "block_factorization": false,
+      "guarded_backtracking": false,
+      "baseline": {
+        "path": "runs/full-robot/learning/prelift-control/prelift-turn.native.json",
+        "sha256": "ad58c80b1f7e366d84403a6ddca60aa9f64d0d10fa5e131dc21b8973edddd7f7"
+      },
+      "candidate": {
+        "path": "runs/full-robot/learning/prelift-control/prelift-turn-refined.native.json",
+        "sha256": "d9434b5e9bf6d66b88ae0a269f71750a40d85248c0c0b5bbecf1d38f8629f056"
+      },
+      "markers": {
+        "path": "examples/full-robot/foot-markers.json",
+        "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+      },
+      "frames": 1201,
+      "metrics": {
+        "foot_marker_position_m": {
+          "maximum": 0.0004247625146744985,
+          "samples": 4804,
+          "worst": {
+            "time_s": 0.96,
+            "identity": "-Y-foot-surface"
+          },
+          "rms": 0.00008870885469159027
+        },
+        "link_position_m": {
+          "maximum": 0.0007900789755011504,
+          "samples": 34829,
+          "worst": {
+            "time_s": 10.06,
+            "identity": "+Y | Foot servo crank 3689"
+          },
+          "rms": 0.00016470886062517096
+        },
+        "link_velocity_m_s": {
+          "maximum": 0.02551770563637212,
+          "samples": 34829,
+          "worst": {
+            "time_s": 0.02,
+            "identity": "+X | Sliding foot crosshead"
+          },
+          "rms": 0.003640344847282975
+        },
+        "link_angular_velocity_rad_s": {
+          "maximum": 0.3255815258218322,
+          "samples": 34829,
+          "worst": {
+            "time_s": 16.4,
+            "identity": "-X | Foot servo crank 9a9b"
+          },
+          "rms": 0.03457615626977067
+        },
+        "rotation_matrix_entry": {
+          "maximum": 0.008662989323918513,
+          "samples": 34829,
+          "worst": {
+            "time_s": 15.56,
+            "identity": "-X | Foot servo crank 9a9b"
+          },
+          "rms": 0.0010091694021797787
+        },
+        "joint_positions": {
+          "maximum": 0.016470041943750457,
+          "samples": 33628,
+          "worst": {
+            "time_s": 15.56,
+            "identity": 27
+          },
+          "rms": 0.0015978235260364045
+        },
+        "joint_velocities": {
+          "maximum": 0.6243178475437741,
+          "samples": 33628,
+          "worst": {
+            "time_s": 16.4,
+            "identity": 27
+          },
+          "rms": 0.04536474719491564
+        },
+        "servo_targets_rad": {
+          "maximum": 0.011725087246825527,
+          "samples": 14412,
+          "worst": {
+            "time_s": 10.200000000000001,
+            "identity": 11
+          },
+          "rms": 0.0013661652445972092
+        },
+        "contact_pair_force_n": {
+          "maximum": 5.767554894599527,
+          "samples": 4573,
+          "worst": {
+            "time_s": 15.1,
+            "identity": "11:null"
+          },
+          "rms": 0.9878522222417759
+        }
+      },
+      "contact_pair_mismatches": 3,
+      "phase_mismatches": 0,
+      "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization or guarded backtracking. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate.",
+      "source": {
+        "path": "runs/full-robot/learning/prelift-control/prelift-turn-refinement.json",
+        "sha256": "82b1a42d01381e97a6365cd21ad74e63270f464c1a8d08a0f09ece9da4e697ec"
+      }
+    }
+  ],
+  "rejected_prototype": {
+    "source_commit": "f3ea689",
+    "capture": "runs/full-robot/learning/prelift-control/prototype-early-reverse.native.json",
+    "note": "The first opt-in implementation also retargeted translation reversals before lift-off; it failed a later foot-motor command bound. Retain this rejected prototype separately from the guarded implementation.",
+    "error": "policy output violates software/CAD command bounds at 7.2 s: +X | Foot servo output.target requested -0.01949985806754366 rad; allowed [-0.6, -0.02] rad",
+    "source": {
+      "path": "runs/full-robot/learning/prelift-control/prototype-early-reverse.native.json",
+      "sha256": "75af4acbe70506b91a878124f3cf95a8c8151d74d060505a341d169544c8c8da"
+    }
+  },
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/prelift-control/plan.json",
+      "sha256": "2449b7ee061fcff6c182520d2eb12e81296041829d20d05d523dc46580f9984c"
+    },
+    {
+      "path": "examples/full-robot/foot-markers.json",
+      "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+    },
+    {
+      "path": "examples/full-robot/prelift-control/collect.mjs",
+      "sha256": "df2e169762b8a6c9920da71232050de5632dfbe73f3bd5a03a1f1811a88d44de"
+    }
+  ],
+  "scope": "Sampled 24-second flat-floor cases with identical CAD physics, weights and motor limits. Canceled transfers preserve foot references and earn no walking credit; actual marker motion is measured separately. Independent executed-step, endpoint and geometry checks pass. Timestep differences are reported, not hidden by those task checks. No general command, physical stopping-time, sustained performance, terrain or hardware-transfer certificate."
+}

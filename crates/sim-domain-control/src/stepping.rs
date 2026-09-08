@@ -33,11 +33,19 @@ pub struct StepSequenceConfig {
     pub restart_order_on_translation_reversal: bool,
     /// Reconsider the command after the support shift, before lifting a foot.
     /// A stop cancels the unstarted swing and recenters with all feet planted.
-    /// Direction changes preserve the completed support shift and retarget only
-    /// the unstarted swing and subsequent body return. The caller still checks
+    /// Non-reversing direction changes preserve the completed support shift and
+    /// retarget only the unstarted swing and subsequent body return. Translation
+    /// reversals retain the committed transfer before selecting a new stance.
+    /// The caller still checks
     /// inverse kinematics, clearance and support of every reference.
     #[serde(default, skip_serializing_if = "is_false")]
     pub update_command_before_lift: bool,
+    /// Fraction [0,1] of the commanded planar body advance performed during
+    /// raise/lower, with one smooth profile across both phases. The support
+    /// shift is retained until landing. Zero preserves sequential body return.
+    /// These are references only; callers must still validate support and IK.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub swing_body_advance_fraction: f64,
     pub maximum_speed_m_s: f64,
     pub maximum_yaw_rate_rad_s: f64,
 }
@@ -81,7 +89,6 @@ pub struct StepSequence {
     step: usize,
     order_slot: usize,
     last_translation: [f64; 2],
-    restart_pending: bool,
     center: [f64; 3], // world x,y,yaw
     center_z: f64,
     home: Vec<[f64; 3]>, // heading-local XYZ relative to initial center
@@ -94,6 +101,9 @@ pub struct StepSequence {
 }
 fn is_false(value: &bool) -> bool {
     !*value
+}
+fn is_zero(value: &f64) -> bool {
+    *value == 0.
 }
 fn rotate(yaw: f64, v: [f64; 2]) -> [f64; 2] {
     let (s, c) = yaw.sin_cos();
@@ -139,6 +149,11 @@ impl StepSequence {
             }
             Ok(t.round() as u64)
         };
+        if !config.swing_body_advance_fraction.is_finite()
+            || !(0.0..=1.0).contains(&config.swing_body_advance_fraction)
+        {
+            return Err("swing body advance fraction must be finite and in [0,1]".into());
+        }
         if !config.period_s.is_finite()
             || config.period_s <= 0.
             || feet.len() < 3
@@ -222,7 +237,6 @@ impl StepSequence {
             step: 0,
             order_slot: 0,
             last_translation: [0.; 2],
-            restart_pending: false,
             center: [body[0], body[1], yaw],
             center_z: body[2],
             home,
@@ -267,13 +281,11 @@ impl StepSequence {
     }
     fn start(&mut self, command: [f64; 3]) {
         if self.config.restart_order_on_translation_reversal
-            && (self.restart_pending
-                || self.last_translation[0] * command[0] + self.last_translation[1] * command[1]
-                    < -1e-24)
+            && self.last_translation[0] * command[0] + self.last_translation[1] * command[1]
+                < -1e-24
         {
             self.order_slot = 0;
         }
-        self.restart_pending = false;
         if command[0].hypot(command[1]) > 1e-12 {
             self.last_translation = [command[0], command[1]];
         }
@@ -393,18 +405,21 @@ impl StepSequence {
                         if !enabled {
                             self.command = [0.; 3];
                             self.phase = Recenter;
-                        } else {
-                            if self.last_translation[0] * command[0]
-                                + self.last_translation[1] * command[1]
-                                < -1e-24
-                            {
-                                self.restart_pending = true;
-                            }
+                        } else if self.last_translation[0] * command[0]
+                            + self.last_translation[1] * command[1]
+                            >= -1e-24
+                        {
                             if command[0].hypot(command[1]) > 1e-12 {
                                 self.last_translation = [command[0], command[1]];
                             }
                             self.command = command;
                             self.plan_landing(command);
+                            self.phase = Raise;
+                        } else {
+                            // The completed support shift was chosen for the
+                            // old direction. Reversal needs the next transfer's
+                            // stance/order selection, rather than a new landing
+                            // imposed on that committed support arrangement.
                             self.phase = Raise;
                         }
                     } else {
@@ -458,6 +473,15 @@ impl StepSequence {
                 let up = matches!(self.phase, Raise);
                 let duration = if up { self.ticks[1] } else { self.ticks[2] };
                 progress = self.phase_tick as f64 / duration as f64;
+                if self.config.swing_body_advance_fraction > 0. {
+                    let elapsed = self.phase_tick + if up { 0 } else { self.ticks[1] };
+                    let fraction = self.config.swing_body_advance_fraction
+                        * smooth(elapsed as f64 / (self.ticks[1] + self.ticks[2]) as f64);
+                    for axis in 0..2 {
+                        body[axis] += fraction * (self.next_center[axis] - self.center[axis]);
+                    }
+                    yaw += fraction * (self.next_center[2] - self.center[2]);
+                }
                 let mut peak = self.swing_end;
                 peak[2] += self.config.lift_m;
                 feet[foot] = if up {
@@ -475,6 +499,13 @@ impl StepSequence {
                     s,
                 );
                 yaw = self.center[2] + s * (self.next_center[2] - self.center[2]);
+                if self.config.swing_body_advance_fraction > 0. {
+                    let fraction = self.config.swing_body_advance_fraction * (1. - s);
+                    for axis in 0..2 {
+                        body[axis] += fraction * (self.next_center[axis] - self.center[axis]);
+                    }
+                    yaw += fraction * (self.next_center[2] - self.center[2]);
+                }
             }
             Settle => progress = self.phase_tick as f64 / self.ticks[4] as f64,
             Recenter => {

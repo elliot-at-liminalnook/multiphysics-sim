@@ -35,6 +35,12 @@ for(let i=0;i<a.frames.length;i++){
  for(let j=0;j<x.poses.length;j++){
   const p=x.poses[j],q=y.poses[j];
   add('link_position_m',distance(p.position_m,q.position_m),t,p.name);
+  if(p.name===a.recording.config.policy?.body_feedback?.reference_link){
+   add('body_position_m',distance(p.position_m,q.position_m),t,p.name);
+   const yaw=p=>Math.atan2(p.rotation[1][0],p.rotation[0][0]);
+   const error=yaw(p)-yaw(q);
+   add('body_heading_rad',Math.abs(Math.atan2(Math.sin(error),Math.cos(error))),t,p.name);
+  }
   add('link_velocity_m_s',distance(p.velocity_m_s,q.velocity_m_s),t,p.name);
   add('link_angular_velocity_rad_s',distance(p.angular_velocity_rad_s,q.angular_velocity_rad_s),t,p.name);
   add('rotation_matrix_entry',Math.max(...p.rotation.flat().map((v,k)=>Math.abs(v-q.rotation.flat()[k]))),t,p.name);

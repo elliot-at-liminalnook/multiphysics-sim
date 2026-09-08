@@ -634,3 +634,38 @@ and drift. `settled-integral-summary.json` preserves every outcome and source.
 This is revealed development success, not fresh held-out, timestep, terrain,
 browser or hardware qualification. Gain 1.0 supplies the larger stopping margin
 for the next frozen-candidate regression screen.
+
+## Frozen integral teacher passes sustained and fresh command checks
+
+All five predeclared regression cases pass. The 60-second run completes **41
+qualified swings**, measures **3.778 mm/s** sustained forward travel, and stops
+within **0.529 mm**. The original mixed steering run completes **15 swings**
+and stops within **0.338 mm**. At 0.625 ms, the minute still passes all 41 swings,
+measures 3.774 mm/s and stops within 0.487 mm. The full-trajectory comparison
+is **0.495 mm foot / 0.327 mm body**, passing the unchanged 1 / 0.5 mm budgets.
+This compares two finite timesteps; it does not establish hardware accuracy.
+
+Both fresh 48-second episodes complete **23 qualified swings**. The unforced
+case's three predeclared stop errors are **0.171 / 0.184 / 0.268 mm**; the
+case with bounded lateral/forward pulses gives **0.171 / 0.182 / 0.267 mm**.
+Every checkpoint is idle and meets the heading limit. The controller resumes
+motion after releasing its bounded bias without failing these task gates.
+These two cases were held out from this candidate's selection and are now
+regression cases for future changes. Their short straight command windows
+include transfer transients and are not substitutes for the sustained-minute
+speed estimate.
+
+Minute sampled positive shaft work is **6.868 J**, versus **6.734 J** at the
+finer timestep. Native compute runs at **0.533x / 0.363x** for the two minute
+timesteps; neither is realtime. Native throughput is separate from measured
+walking speed and browser performance. Terrain, broader disturbance/seed
+coverage, student observability and calibrated hardware remain unresolved.
+
+`settled-integral-regression-summary.json` retains all task, stop and numerical
+outcomes. `settled-integral-regression-recipes.json` contains every authored
+configuration and sparse command sequence, with the versioned CAD-derived
+scene and task hashes. `reproduce_settled_integral.mjs NEW_OUTPUT` reconstructs
+all five cases without earlier ignored run inputs; its reconstructed actions
+are checked against their original hashes. Raw captures remain local and are
+identified separately by source hashes. The browser milestone uses a new
+isolated WASM build with the shared integral binding.

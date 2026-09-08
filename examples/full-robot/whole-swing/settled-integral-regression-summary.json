@@ -1,0 +1,511 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "minute-1.25ms",
+      "split": "development",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0005286096017170919,
+        "final_yaw_error_rad": 0.003375872552504301,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21266910229300054,
+          0.000024143587130046908,
+          -0.00018630116016761684
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms-acceptance/summary.json",
+          "sha256": "5a6913aaab60d209f15314f6677fc5859787dc0ed86346def4810c12ed34af89"
+        }
+      },
+      "stop_checks": [],
+      "declared_case_passed": true,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0037778909088736364,
+          "net_projected_speed_m_s": 0.0042571047999167754,
+          "axis_world": [
+            0.9999998145196206,
+            -0.0006090654515667041,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 6.867681858157539,
+      "maximum_loaded_marker_path_m": 0.185587621801048,
+      "native_compute": {
+        "wall_s": 112.568877624,
+        "simulation_per_wall": 0.5330070021699127,
+        "transition_p95_s": 0.080409157
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-integral-regression-minute-1.25ms-metrics.json",
+        "sha256": "b4936fcdd42a6b27f7f5822a7c12d9c4b0678595a532fd767b2a3b30e18d0b3b"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.native.json",
+        "sha256": "54ee76fc3a432003bdf7a3583a1a18d58dd3b5914801a758d48100bd0fe0b7db"
+      }
+    },
+    {
+      "name": "steering-1.25ms",
+      "split": "development",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0003383165766945533,
+        "final_yaw_error_rad": 0.00015195622494797514,
+        "maximum_body_tilt_rad": 0.004173164422446213,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027848439336634043,
+          0.00010040695259032253,
+          -0.0001868992412273028
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms-acceptance/summary.json",
+          "sha256": "996b0830e155537589fde8fade6e6ad09e143fbc8b96fb3c7c65290be70a4e11"
+        }
+      },
+      "stop_checks": [],
+      "declared_case_passed": true,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 8.4,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 220,
+          "measured_sustained_speed_m_s": 0.0036070814215485836,
+          "net_projected_speed_m_s": 0.009679878271099158,
+          "axis_world": [
+            0.9999998145196206,
+            -0.0006090654515667041,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 2.46684739820921,
+      "maximum_loaded_marker_path_m": 0.07535931837623049,
+      "native_compute": {
+        "wall_s": 44.969104722,
+        "simulation_per_wall": 0.533699751159569,
+        "transition_p95_s": 0.078339799
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-integral-regression-steering-1.25ms-metrics.json",
+        "sha256": "3ca55394f462c4c50842a237aef267f7355ee1673788ab0f21afea497962ebda"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.native.json",
+        "sha256": "daa997e689ada136074ffe35060d944cca4b10b5ffbfb9f0b0fc20ba4c496462"
+      }
+    },
+    {
+      "name": "minute-0.625ms",
+      "split": "refinement",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00048683780484157804,
+        "final_yaw_error_rad": 0.0032815689893951694,
+        "maximum_body_tilt_rad": 0.004372486584223486,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21262407155425625,
+          0.00003908165429097215,
+          -0.00018389782945673998
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-regression/minute-0.625ms-acceptance/summary.json",
+          "sha256": "d0164119d68be80c30b17d2242c70d7bba586d361d0aeeb232b91550df1a9069"
+        }
+      },
+      "stop_checks": [],
+      "declared_case_passed": true,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0037739756732274553,
+          "net_projected_speed_m_s": 0.004252311551288956,
+          "axis_world": [
+            0.9999998422782399,
+            -0.0005616435660922255,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 6.73445291939377,
+      "maximum_loaded_marker_path_m": 0.19297003465193588,
+      "native_compute": {
+        "wall_s": 165.103314817,
+        "simulation_per_wall": 0.36340881505924827,
+        "transition_p95_s": 0.108466351
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-integral-regression-minute-0.625ms-metrics.json",
+        "sha256": "5c1967037fa3a308ddb05eccb7b541596e290ca28d873acb1a7f9944e668c1fb"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/minute-0.625ms.native.json",
+        "sha256": "11c124b49523c055069e289b418772f6eaa44d94c211670841c46a7e39c4ef70"
+      }
+    },
+    {
+      "name": "fresh-commands",
+      "split": "heldout",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 23,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0002682444787414526,
+        "final_yaw_error_rad": 0.001013011420791723,
+        "maximum_body_tilt_rad": 0.005002331518564115,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.05194706403875625,
+          0.00027526345023016314,
+          -0.00010702791574502234
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-regression/fresh-commands-acceptance/summary.json",
+          "sha256": "04d01e2a12930c8219281864115a02f11d41c056cd15a2c1c353f7fe6db636d4"
+        }
+      },
+      "stop_checks": [
+        {
+          "time_s": 15.98,
+          "policy_time_s": 15.96,
+          "observed": true,
+          "reference_phase": "idle",
+          "body_error_m": 0.00017119351339611033,
+          "yaw_error_rad": 0.00009088921714260452,
+          "passed": true
+        },
+        {
+          "time_s": 27.98,
+          "policy_time_s": 27.96,
+          "observed": true,
+          "reference_phase": "idle",
+          "body_error_m": 0.00018358791728506112,
+          "yaw_error_rad": 0.00045832547407886,
+          "passed": true
+        },
+        {
+          "time_s": 48,
+          "policy_time_s": 47.980000000000004,
+          "observed": true,
+          "reference_phase": "idle",
+          "body_error_m": 0.0002682444787414526,
+          "yaw_error_rad": 0.001013011420791723,
+          "passed": true
+        }
+      ],
+      "declared_case_passed": true,
+      "sustained_windows": [
+        {
+          "command_start_s": 4.0200000000000005,
+          "start_s": 8.02,
+          "end_s": 12,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 200,
+          "measured_sustained_speed_m_s": 0.002233669926025442,
+          "net_projected_speed_m_s": 0.002937469000350174,
+          "axis_world": [
+            0.9999998407736514,
+            -0.0005643161097490198,
+            0
+          ]
+        },
+        {
+          "command_start_s": 16.02,
+          "start_s": 20.02,
+          "end_s": 24,
+          "command": [
+            -0.00125,
+            0,
+            0
+          ],
+          "samples": 200,
+          "measured_sustained_speed_m_s": 0.004329817030335601,
+          "net_projected_speed_m_s": 0.0010585578043187742,
+          "axis_world": [
+            -0.9999996075098389,
+            0.0008859910656465169,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 3.911553957722788,
+      "maximum_loaded_marker_path_m": 0.11486238675527058,
+      "native_compute": {
+        "wall_s": 77.159236602,
+        "simulation_per_wall": 0.622090136111531,
+        "transition_p95_s": 0.076410563
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-integral-regression-fresh-commands-metrics.json",
+        "sha256": "372eacdefb639c75d3a41b476f0259ff58da201e8c02493bc0de1aafe23222ab"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/fresh-commands.native.json",
+        "sha256": "07e7392eed66245085cbc7f434f2c9f00ec00c0c3974579535ce9baeb231a3c4"
+      }
+    },
+    {
+      "name": "fresh-pushes",
+      "split": "heldout",
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 23,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0002665657538815305,
+        "final_yaw_error_rad": 0.0010099789528473793,
+        "maximum_body_tilt_rad": 0.005002331518564115,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.05194608413991053,
+          0.00027360416076345365,
+          -0.00010689834232875846
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-regression/fresh-pushes-acceptance/summary.json",
+          "sha256": "26b8f0e6443dc735f328679c1b7373ffa30211c18190da5c7a9ab98c8ba00cca"
+        }
+      },
+      "stop_checks": [
+        {
+          "time_s": 15.98,
+          "policy_time_s": 15.96,
+          "observed": true,
+          "reference_phase": "idle",
+          "body_error_m": 0.00017119351339611033,
+          "yaw_error_rad": 0.00009088921714260452,
+          "passed": true
+        },
+        {
+          "time_s": 27.98,
+          "policy_time_s": 27.96,
+          "observed": true,
+          "reference_phase": "idle",
+          "body_error_m": 0.0001819974438123284,
+          "yaw_error_rad": 0.0004509897050800625,
+          "passed": true
+        },
+        {
+          "time_s": 48,
+          "policy_time_s": 47.980000000000004,
+          "observed": true,
+          "reference_phase": "idle",
+          "body_error_m": 0.0002665657538815305,
+          "yaw_error_rad": 0.001009978952847379,
+          "passed": true
+        }
+      ],
+      "declared_case_passed": true,
+      "sustained_windows": [
+        {
+          "command_start_s": 4.0200000000000005,
+          "start_s": 8.02,
+          "end_s": 12,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 200,
+          "measured_sustained_speed_m_s": 0.002233669926025442,
+          "net_projected_speed_m_s": 0.002937469000350174,
+          "axis_world": [
+            0.9999998407736514,
+            -0.0005643161097490198,
+            0
+          ]
+        },
+        {
+          "command_start_s": 16.02,
+          "start_s": 20.02,
+          "end_s": 24,
+          "command": [
+            -0.00125,
+            0,
+            0
+          ],
+          "samples": 200,
+          "measured_sustained_speed_m_s": 0.004329892807154481,
+          "net_projected_speed_m_s": 0.001058622790595454,
+          "axis_world": [
+            -0.9999996184692714,
+            0.0008735338066694586,
+            0
+          ]
+        }
+      ],
+      "positive_mechanical_work_j": 3.9116508648991166,
+      "maximum_loaded_marker_path_m": 0.1148339011482374,
+      "native_compute": {
+        "wall_s": 76.817857284,
+        "simulation_per_wall": 0.6248547108329416,
+        "transition_p95_s": 0.07783299
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-integral-regression-fresh-pushes-metrics.json",
+        "sha256": "8498f2d392bfbbc97290ecc4bcf88999814763ff8d55630a43099fdff32b6924"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/fresh-pushes.native.json",
+        "sha256": "362b767fbb1bb8b9237136ff9b0358e63eee1d886dd3b4214dba29de10f2c86e"
+      }
+    }
+  ],
+  "comparison": {
+    "observed": true,
+    "maximum_foot_difference_m": 0.000495078711998136,
+    "maximum_body_difference_m": 0.0003265663192910143,
+    "passed": true,
+    "source": {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-refinement.json",
+      "sha256": "8b71f61da71c621326f25fe59e704353d48bbba148a4abe92e5eeb656c152dc4"
+    }
+  },
+  "budgets": {
+    "maximum_body_error_m": 0.001,
+    "maximum_yaw_error_rad": 0.005,
+    "maximum_foot_difference_m": 0.001,
+    "maximum_body_difference_m": 0.0005
+  },
+  "declared_suite_passed": true,
+  "browser_promoted": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-plan.json",
+      "sha256": "6ed6c5d43f0cc2852b9f5593b6841d43ca236ca57430aaaaf38932d37240c0e5"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-status.json",
+      "sha256": "dbfd62e3bb21dd73f24e18e0f65d51bd8eff78d35d50f58649484dd750bc9c40"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-integrity.json",
+      "sha256": "6e1ea6d37ddc120072066c8ad008f7c83a60700277f054d501dd0dc578341ffb"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_settled_integral_regression.mjs",
+      "sha256": "6f0502822ecff9a4f88ff6f6b581de6a531c601e91099f0b94adfe8e117f597e"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    },
+    {
+      "path": "examples/full-robot/compare_mechanical_reuse.mjs",
+      "sha256": "d9293f382c35d444ebea797d71c94bd7de5f57582df1f8c5c9c8c9ea484c86c3"
+    }
+  ],
+  "scope": "Frozen development, timestep refinement and two fresh held-out command cases. Intermediate stop checks pair each recorded physical endpoint with its own held reference and task transition; policy time precedes the physical endpoint by one control interval. Accepted failed prefixes do not qualify full episodes. Numerical budgets compare finite timesteps, not ground truth. No terrain, browser performance, hardware calibration or sim-to-real qualification."
+}

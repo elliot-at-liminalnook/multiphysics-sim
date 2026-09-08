@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "passed": true,
+  "compared": [
+    "frames excluding stepping_wall_s",
+    "transitions",
+    "recording",
+    "contract",
+    "task"
+  ],
+  "frames": 3001,
+  "transitions": 3001,
+  "baseline": {
+    "path": "runs/full-robot/learning/shift-duration/shift-return-2x.native.json",
+    "sha256": "33877129a4358e0de00fca91c6614be50748a979af507b3d91e0a4c2d01fad42"
+  },
+  "repeated": {
+    "path": "runs/full-robot/learning/gentler-contact/slip-1mm-s.native.json",
+    "sha256": "a95509afeaeac23238c823524ff8702bd42d3c8266e50c681a715520d5f4b39f"
+  },
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/shift-duration-status.json",
+      "sha256": "d5027f1306d4149797151c3cde9524b9858d14d7dab1978df12f768a4af25fbc"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-status.json",
+      "sha256": "6386ae77b9c215481c5bb65069958cdb03b4932b533e2c88853b207d245c151f"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/verify_gentler_baseline.mjs",
+      "sha256": "6d92fa12be92d64d1840e6a583a55c8a6c3f672ac18385596094224c4306b4a8"
+    }
+  ],
+  "scope": "Exact repeated physical trajectory and authored recording for the original 1 mm/s contact profile. Wall times are excluded. No changed-contact-law or timestep equivalence claim."
+}

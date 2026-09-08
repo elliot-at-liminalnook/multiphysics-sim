@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "passed": true,
+  "profiles": [
+    {
+      "name": "slip-1mm-s",
+      "slip_speed_m_s": 0.001,
+      "source": {
+        "path": "examples/full-robot/whole-swing/gentler-contact-slip-1mm-s-integrity.json",
+        "sha256": "2d746efcd0d5120f82d16204a98de8ff6f1092b996904585a6be64cae7bb531d"
+      }
+    },
+    {
+      "name": "slip-0.1mm-s",
+      "slip_speed_m_s": 0.0001,
+      "source": {
+        "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.1mm-s-integrity.json",
+        "sha256": "9e1625804a529cc243f18e6ac5941ec216162372fe62caa0550da9198dcc6479"
+      }
+    },
+    {
+      "name": "slip-0.030000000000000002mm-s",
+      "slip_speed_m_s": 0.00003,
+      "source": {
+        "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.030000000000000002mm-s-integrity.json",
+        "sha256": "0c4ec1a9c5372059e13a59b37c1d407eb2dac59b5a0ac4be2f4eb860f697d030"
+      }
+    }
+  ],
+  "identical_parsed_robot": true,
+  "identical_physics_options_except": [
+    "floor_friction.slip_speed_m_s"
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-plan.json",
+      "sha256": "4209a8b3ac4a32f835592b375a4fbfaf411070b5f1c26498ec7f710a0c250ec4"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-status.json",
+      "sha256": "6386ae77b9c215481c5bb65069958cdb03b4932b533e2c88853b207d245c151f"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/audit_gentler_contact.mjs",
+      "sha256": "48d775459a69873a9d23c2d692a0c15876e9b33d216fc6ceb7213555e4ed4b70"
+    },
+    {
+      "path": "examples/interactive/audit_walking_suite.mjs",
+      "sha256": "bfddc6f33a843d42a8db5b73b718aebaec36c9ed1e1c98ae4781b39c4820a1d0"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-slip-1mm-s-integrity.json",
+      "sha256": "2d746efcd0d5120f82d16204a98de8ff6f1092b996904585a6be64cae7bb531d"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.1mm-s-integrity.json",
+      "sha256": "9e1625804a529cc243f18e6ac5941ec216162372fe62caa0550da9198dcc6479"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.030000000000000002mm-s-integrity.json",
+      "sha256": "0c4ec1a9c5372059e13a59b37c1d407eb2dac59b5a0ac4be2f4eb860f697d030"
+    }
+  ],
+  "scope": "Per-profile authored recipe, seed, actions and acceptance audits retain the standard same-options rule. Across profiles only the predeclared smoothing speed differs; this is explicitly a contact-model sensitivity study, not identical physics or timestep convergence."
+}

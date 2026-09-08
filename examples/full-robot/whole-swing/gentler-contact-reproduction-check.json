@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "passed": true,
+  "cases": 3,
+  "all_authored_recipes_reconstructed": true,
+  "baseline_matches_prior_2x_gait_recipe": true,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-plan.json",
+      "sha256": "4209a8b3ac4a32f835592b375a4fbfaf411070b5f1c26498ec7f710a0c250ec4"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/prepare_gentler_contact.mjs",
+      "sha256": "9d8369ddd5cd5186a9835b3fff5b80b5065142bd34f5f6862e44a9edd1db2b68"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-2x.scene.json",
+      "sha256": "35b31e54550d404cc16662a07ada4cbda5ac8b838898b974f14d5d58c1349ebc"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-2x.config.json",
+      "sha256": "5dc0fe582290a09e6e91146005e4dcf4019c4382473f0869313f67551c019a6f"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-2x.actions.json",
+      "sha256": "d085e74426e861cf037e0828d6df67a2ecb0b7e7b7e00e25bf6476be2b83aff8"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    }
+  ],
+  "scope": "Fresh preparation exactly reproduces all three authored scenes/configs/actions/tasks. Baseline matches the previous 2x gait authored recipe; physical trajectory parity is checked separately."
+}

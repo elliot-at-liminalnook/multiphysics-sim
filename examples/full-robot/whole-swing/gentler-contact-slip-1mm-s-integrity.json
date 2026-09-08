@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "passed": true,
+  "outcomes": [
+    {
+      "name": "slip-1mm-s",
+      "completed": true,
+      "passed": true,
+      "completed_transitions": 3000,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "input_identity_verified": true,
+      "verified_seed": 0
+    }
+  ],
+  "explicit_seed_default": null,
+  "identical_parsed_robot_and_physics_options": true,
+  "unretained_source_scene_fields": [
+    "scene.robot.format",
+    "scene.robot.joints.*.declared",
+    "scene.robot.joints.*.fastened.points",
+    "scene.robot.joints.*.merged_into",
+    "scene.robot.joints.*.physics.bearing.pressure",
+    "scene.robot.joints.*.physics.flex_patch_radius",
+    "scene.robot.joints.*.physics.flex_patch_source",
+    "scene.robot.joints.*.physics.lever",
+    "scene.robot.joints.*.physics.materials",
+    "scene.robot.joints.*.physics.outboard_mass",
+    "scene.robot.links.*.collision.sign_derivation",
+    "scene.robot.links.*.mass_sources",
+    "scene.robot.links.*.member_names",
+    "scene.robot.materials.carbon_tube_provisional.bearing_pressure",
+    "scene.robot.materials.nylon.bearing_pressure",
+    "scene.robot.materials.rubber.bearing_pressure",
+    "scene.robot.materials.steel.bearing_pressure",
+    "scene.robot.motors.*.electrical.stall_current",
+    "scene.robot.motors.*.kind",
+    "scene.robot.motors.*.mass",
+    "scene.robot.motors.*.no_load_speed",
+    "scene.robot.motors.*.notes",
+    "scene.robot.motors.*.stall_torque",
+    "scene.robot.motors.*.thermal.ambient_c",
+    "scene.robot.world.floor_friction_static"
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/gentler-contact/slip-1mm-s.audit-plan.json",
+      "sha256": "fa3cbaf5a218b95d1af6ef38708f9b709b4406c5aeb74bcc263fc74ff6fc0461"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-contact/slip-1mm-s.audit-status.json",
+      "sha256": "55869f7608e4d096fa9ac984f552f9d4b7faab48a8e7ba149e75cc0e37ad014a"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/audit_walking_suite.mjs",
+      "sha256": "bfddc6f33a843d42a8db5b73b718aebaec36c9ed1e1c98ae4781b39c4820a1d0"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "scope": "Every declared outcome matched to hashed inputs and captures, authored configuration, all retained scene fields, seed and sampled actions; completed captures require matching independent acceptance. Raw CAD exports retain additional fields absent from the Rust scene schema, listed explicitly. This integrity audit is not a controller acceptance or hardware certificate."
+}

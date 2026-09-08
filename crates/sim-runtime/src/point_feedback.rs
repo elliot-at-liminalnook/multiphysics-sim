@@ -6,6 +6,7 @@ use crate::{
 use nalgebra::Vector3;
 use serde::{Deserialize, Serialize};
 use sim_domain_control::trajectory::{Trajectory, TrajectoryConfig};
+use sim_domain_control::load_damping::{LoadDamping, LoadDampingConfig};
 use sim_domain_robot::{
     Articulated, Generalized,
     articulated::embedding::{EmbeddedPoint, RigidEmbedding},
@@ -24,12 +25,24 @@ pub struct PointFeedbackConfig {
     pub activation: TrajectoryConfig,
     pub damping_m_per_rad: f64,
     pub maximum_correction_rad: f64,
+    /// Optional privileged stationary-floor contact-velocity objective. No
+    /// vertical correction is added, and unloaded feet receive no damping.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub floor_velocity_damping: Option<LoadDampingConfig>,
 }
 pub struct PointFeedback {
     config: PointFeedbackConfig,
     points: Vec<EmbeddedPoint>,
     path: Trajectory,
     activation: Trajectory,
+    floor_damping: Option<LoadDamping>,
+}
+#[derive(Debug, Serialize)]
+pub struct FloorVelocityDampingSample {
+    pub normal_force_n: Vec<f64>,
+    pub contact_velocity_world_m_s: Vec<[f64; 3]>,
+    /// Before per-marker activation and the joint-space correction cap.
+    pub displacement_world_m: Vec<[f64; 3]>,
 }
 #[derive(Debug, Serialize)]
 pub struct PointFeedbackSample {
@@ -39,10 +52,17 @@ pub struct PointFeedbackSample {
     pub position_errors_world_m: Vec<[f64; 3]>,
     pub activation: Vec<f64>,
     pub correction_rad: Vec<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub floor_velocity_damping: Option<FloorVelocityDampingSample>,
 }
 impl PointFeedback {
     pub fn new(art: &Articulated, config: PointFeedbackConfig) -> Result<Self, String> {
         validate_markers(&config.markers)?;
+        let floor_damping = config.floor_velocity_damping.clone().map(LoadDamping::new).transpose()?;
+        if floor_damping.is_some() && (!art.contact_on || art.terrain.is_some()
+            || art.gravity.x != 0. || art.gravity.y != 0. || art.gravity.z >= 0.) {
+            return Err("floor velocity damping requires active stationary world-Z flat-floor contact".into());
+        }
         if config.expected_cad_sha256.is_empty()
             || art.model.source["cad_sha256"].as_str() != Some(&config.expected_cad_sha256)
             || config.coordinate_frame.trim().is_empty()
@@ -91,6 +111,7 @@ impl PointFeedback {
             points,
             path,
             activation,
+            floor_damping,
         })
     }
     pub fn config(&self) -> &PointFeedbackConfig {
@@ -156,7 +177,11 @@ impl PointFeedback {
         let (_, values) = map.point_jacobians(g, &coordinates, &self.points)?;
         // Evaluate actual committed poses, rather than silently substituting the
         // embedding's projected pose for the observed state.
-        let links = art.evaluate_kinematics_only(g);
+        let evaluation = self.floor_damping.as_ref().map(|_| art.evaluate(g));
+        let kinematics;
+        let links = if let Some(e) = &evaluation { &e.links } else {
+            kinematics = art.evaluate_kinematics_only(g); &kinematics
+        };
         let actual = self
             .points
             .iter()
@@ -172,11 +197,25 @@ impl PointFeedback {
             .zip(&actual)
             .map(|(t, a)| t - a)
             .collect::<Vec<_>>();
-        let displacements = errors
+        let mut displacements = errors
             .iter()
             .zip(&activation)
             .map(|(e, a)| e * *a)
             .collect::<Vec<_>>();
+        let floor_velocity_damping = if let (Some(damping), Some(evaluation)) = (&self.floor_damping, &evaluation) {
+            let mut sample = FloorVelocityDampingSample { normal_force_n: vec![],
+                contact_velocity_world_m_s: vec![], displacement_world_m: vec![] };
+            for (i, point) in self.points.iter().enumerate() {
+                let (force, velocity) = evaluation.world_z_floor_contact_velocity(point.link)?;
+                let delta = Vector3::new(damping.displacement(velocity.x, force)?,
+                    damping.displacement(velocity.y, force)?, 0.);
+                displacements[i] += delta * activation[i];
+                sample.normal_force_n.push(force);
+                sample.contact_velocity_world_m_s.push(velocity.into());
+                sample.displacement_world_m.push(delta.into());
+            }
+            Some(sample)
+        } else { None };
         let jacobians = values.into_iter().map(|(_, j)| j).collect::<Vec<_>>();
         // Inactive points impose no least-squares objective on shared joints.
         let weights = activation.clone();
@@ -194,6 +233,7 @@ impl PointFeedback {
             position_errors_world_m: errors.into_iter().map(Into::into).collect(),
             activation,
             correction_rad,
+            floor_velocity_damping,
         })
     }
 }

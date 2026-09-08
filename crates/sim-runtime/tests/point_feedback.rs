@@ -23,6 +23,61 @@ fn distinct_point_objectives_and_inactive_points_are_resolved_together() {
 }
 
 #[test]
+fn loaded_floor_velocity_objective_respects_activation_and_existing_joint_cap() {
+    use sim_domain_control::load_damping::LoadDampingConfig;
+    let mut scene: Scene = serde_json::from_str(include_str!(
+        "../../../examples/interactive/pendulum.scene.json")).unwrap();
+    scene.robot.source = serde_json::json!({"cad_sha256":"floor-feedback-fixture"});
+    let mut art = Articulated::new(Arc::new(scene.robot), &Default::default()).unwrap();
+    let mut g = art.generalized(art.states().iter().map(|s|s.initial).collect(),
+        vec![0.;art.state_count], &vec![0.;art.port_names.len()+1], vec![]);
+    g.qd[0] = 0.1;
+    let names = art.dofs().map(|(_,d)|d.name.clone()).collect::<Vec<_>>();
+    let link = art.links.iter().position(|l|l.name=="pendulum").unwrap();
+    art.floor_z = art.evaluate_kinematics_only(&g)[link].p.z + 0.1;
+    let map = RigidEmbedding::new(&art,&names,Default::default()).unwrap();
+    let point = EmbeddedPoint {link,local_point_m:[0.03,0.02,0.]};
+    let (_, values) = map.point_jacobians(&g,&g.q,std::slice::from_ref(&point)).unwrap();
+    let target: [f64;3] = values[0].0.into();
+    let config: PointFeedbackConfig = serde_json::from_value(serde_json::json!({
+        "expected_cad_sha256":"floor-feedback-fixture","coordinate_frame":"fixture-world-m",
+        "markers":[{"id":"tip","link":"pendulum","local_point_m":point.local_point_m}],
+        "position_world_m":{"keyframes":[{"time_s":0,"values":target}]},
+        "activation":{"keyframes":[{"time_s":0,"values":[1]}]},
+        "damping_m_per_rad":0.001,"maximum_correction_rad":0.002
+    })).unwrap();
+    assert!(serde_json::to_value(&config).unwrap().get("floor_velocity_damping").is_none());
+    let original = PointFeedback::new(&art,config.clone()).unwrap().sample(&art,&map,&g,0.).unwrap();
+    assert!(original.floor_velocity_damping.is_none());
+    let mut enabled = config.clone();
+    enabled.floor_velocity_damping = Some(LoadDampingConfig {velocity_damping_s:0.2,full_support_force_n:1.});
+    let helper = PointFeedback::new(&art,enabled.clone()).unwrap();
+    let on = helper.sample(&art,&map,&g,0.).unwrap();
+    let d = on.floor_velocity_damping.as_ref().unwrap();
+    assert!(d.normal_force_n[0] > 0.);
+    let velocity = Vector3::from(d.contact_velocity_world_m_s[0]);
+    let delta = Vector3::from(d.displacement_world_m[0]);
+    assert!(velocity.norm() > 1e-5); assert!(velocity.dot(&delta) < 0.); assert_eq!(delta.z,0.);
+    assert!(on.correction_rad[0].abs() <= 0.002);
+    let suggested = &values[0].1 * DVector::from_vec(on.correction_rad.clone());
+    assert!(suggested.dot(&velocity) < 0.);
+    let off = helper.sample_target(&art,&map,&g,0.,&[target],&[0.]).unwrap();
+    assert_eq!(off.correction_rad,vec![0.]);
+    enabled.floor_velocity_damping.as_mut().unwrap().velocity_damping_s=0.;
+    let zero = PointFeedback::new(&art,enabled).unwrap().sample(&art,&map,&g,0.).unwrap();
+    assert_eq!(zero.correction_rad, original.correction_rad);
+    drop(map); art.floor_z=-10.;
+    let map = RigidEmbedding::new(&art,&names,Default::default()).unwrap();
+    let unloaded = helper.sample(&art,&map,&g,0.).unwrap();
+    assert_eq!(unloaded.floor_velocity_damping.unwrap().normal_force_n,vec![0.]);
+    assert_eq!(unloaded.correction_rad, original.correction_rad);
+    drop(map); art.contact_on=false;
+    let mut invalid = config;
+    invalid.floor_velocity_damping=Some(LoadDampingConfig {velocity_damping_s:0.2,full_support_force_n:1.});
+    assert!(PointFeedback::new(&art,invalid).is_err());
+}
+
+#[test]
 fn actual_world_marker_error_drives_bounded_phase_activated_angular_suggestion() {
     let mut scene: Scene = serde_json::from_str(include_str!(
         "../../../examples/interactive/pendulum.scene.json"

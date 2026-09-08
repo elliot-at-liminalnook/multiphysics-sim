@@ -127,6 +127,17 @@ fn engine(sources: Sources, parameters: Map, seed: u64) -> Engine {
         sim_domain_control::angle_integral::AngleIntegral::new(config).map_err(error)?
             .update(bias, correction, enabled).map_err(error)
     });
+    engine.register_fn("load_damping_displacement", |velocity: rhai::FLOAT, normal_force: rhai::FLOAT,
+        mut parameters: Map| -> ScriptResult<rhai::FLOAT> {
+        for value in parameters.values_mut() {
+            if value.is::<rhai::INT>() {
+                *value = Dynamic::from_float(value.clone_cast::<rhai::INT>() as rhai::FLOAT);
+            }
+        }
+        let config = rhai::serde::from_dynamic(&Dynamic::from(parameters))?;
+        sim_domain_control::load_damping::LoadDamping::new(config).map_err(error)?
+            .displacement(velocity, normal_force).map_err(error)
+    });
     engine
 }
 

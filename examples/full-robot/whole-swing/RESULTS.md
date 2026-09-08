@@ -509,3 +509,20 @@ a runtime error. Prefix measurements require explicit opt-in and preserve the
 termination reason, final frame time and physics-step count. Three focused
 Node tests pass, including rejection of unexplained, truncated, mismatched
 or continued partial captures; CI includes these checks. Remote CI was not run.
+
+The follow-up tolerance diagnosis also fails at 1.32 s with both Newton
+tolerances tightened from 1e-5 to 1e-8. Maximum accepted-prefix differences
+are only **4.083e-9 rad joint position**, **7.229e-7 rad/s joint velocity** and
+**3.192e-10 m body position**. Both reach about **247.622 rad/s** sampled gear
+speed, with zero external force during the preceding return-phase samples.
+The instrumented authored run preserves every recorded physical frame and
+task transition exactly. Smaller residuals do not remove the early jump;
+this simple solver-tolerance change is not a sufficient remedy.
+
+`sdirk-tolerance-summary.json` preserves the two profiles and this comparison.
+Profile stage/interval records may include work before a failed environment
+transition; they are not counts of published control frames. The failed first
+tool invocation (which incorrectly rejected the runner's documented exit 1
+for a retained runtime error) is preserved under `runner-guard-rejection`
+filenames. The reusable diagnostic runner now checks exit status against the
+parsed outcome. No new physics or controller qualification is claimed.

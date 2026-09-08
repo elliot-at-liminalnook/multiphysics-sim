@@ -1,0 +1,569 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "teacher-20ms-authored",
+      "completed": false,
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "policy output violates software/CAD command bounds at 1.32 s: -Y | Foot servo output.target requested 0.5434898156724169 rad; allowed [-0.6, -0.02] rad",
+        "termination_reasons": []
+      },
+      "accepted_simulated_s": 1.32,
+      "accepted_transitions": 66,
+      "profiled_wall_s": 1.809638981,
+      "accepted_stage_solves": 134,
+      "maximum_accepted_scaled_velocity_residual": 0.000004694395032145415,
+      "maximum_accepted_contact_history_residual": 0,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 135,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 1678,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 626,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 113,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 2810,
+          "name": "residual evaluations",
+          "seconds": 0.33411300200000005
+        },
+        {
+          "calls": 626,
+          "name": "jacobian assembly",
+          "seconds": 1.3415601050000001
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 626,
+          "name": "factorisation",
+          "seconds": 0.008251267000000001
+        },
+        {
+          "calls": 626,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.00538713
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 1677,
+          "name": "back-substitution",
+          "seconds": 0.0011361400000000001
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 14483,
+          "name": "embedded closure mapping",
+          "seconds": 0.875083189
+        },
+        {
+          "calls": 14076,
+          "name": "embedded contact history",
+          "seconds": 0.031566273
+        },
+        {
+          "calls": 14076,
+          "name": "embedded dynamics preparation",
+          "seconds": 0.700976794
+        },
+        {
+          "calls": 14211,
+          "name": "embedded applied force solve",
+          "seconds": 0.039163116000000005
+        },
+        {
+          "calls": 14211,
+          "name": "embedded component equations",
+          "seconds": 0.005640226
+        },
+        {
+          "calls": 14483,
+          "name": "  closure Jacobian",
+          "seconds": 0.246713692
+        },
+        {
+          "calls": 14483,
+          "name": "  closure factorization",
+          "seconds": 0.157261375
+        },
+        {
+          "calls": 58203,
+          "name": "    closure SVD",
+          "seconds": 0.059737859000000004
+        },
+        {
+          "calls": 14076,
+          "name": "  embedded rigid inertia",
+          "seconds": 0.271814279
+        },
+        {
+          "calls": 14076,
+          "name": "  embedded inertia projection",
+          "seconds": 0.05519886
+        },
+        {
+          "calls": 14076,
+          "name": "  embedded force evaluation",
+          "seconds": 0.283914121
+        },
+        {
+          "calls": 14409,
+          "name": "contact geometry queries",
+          "seconds": 0.095040124
+        },
+        {
+          "calls": 14409,
+          "name": "contact force evaluation",
+          "seconds": 0.15137509000000002
+        },
+        {
+          "calls": 14543,
+          "name": "  contact exclusion metadata",
+          "seconds": 0.00310843
+        },
+        {
+          "calls": 14543,
+          "name": "  contact sample transforms",
+          "seconds": 0.062967417
+        },
+        {
+          "calls": 14543,
+          "name": "  contact pair queries",
+          "seconds": 0.011442572000000002
+        },
+        {
+          "calls": 67,
+          "name": "policy online reference",
+          "seconds": 0.039952494000000005
+        },
+        {
+          "calls": 67,
+          "name": "policy observations",
+          "seconds": 0.0016293280000000002
+        },
+        {
+          "calls": 67,
+          "name": "policy body feedback",
+          "seconds": 0.010176851
+        },
+        {
+          "calls": 67,
+          "name": "policy point feedback",
+          "seconds": 0.009112477
+        },
+        {
+          "calls": 67,
+          "name": "policy script",
+          "seconds": 0.015101977
+        },
+        {
+          "calls": 0,
+          "name": "Broyden update attempts",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "Broyden rejected/capped updates",
+          "seconds": 0
+        }
+      ],
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-authored.config.json",
+          "sha256": "720ab3f6cf3b1356174cfe8955745b731468c0884d9a37e65e07b6559da13af4"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-authored.native.json",
+          "sha256": "699ebe97befdc262ec14b48f69949752c1a66620e1f7487d5a0221af9e7cd2a4"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-authored.profile.json",
+          "sha256": "d44342bf73852bf376efca5d5dcb87b7de32ae5494eefc9e55631cbd23d93220"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-authored.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "teacher-20ms-tight",
+      "completed": false,
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "policy output violates software/CAD command bounds at 1.32 s: -Y | Foot servo output.target requested 0.5434898157326703 rad; allowed [-0.6, -0.02] rad",
+        "termination_reasons": []
+      },
+      "accepted_simulated_s": 1.32,
+      "accepted_transitions": 66,
+      "profiled_wall_s": 1.855997576,
+      "accepted_stage_solves": 134,
+      "maximum_accepted_scaled_velocity_residual": 5.8603707442372865e-9,
+      "maximum_accepted_contact_history_residual": 0,
+      "buckets": [
+        {
+          "calls": 0,
+          "name": "step (total)",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "implicit solve",
+          "seconds": 0
+        },
+        {
+          "calls": 135,
+          "name": "newton calls",
+          "seconds": 0
+        },
+        {
+          "calls": 2214,
+          "name": "newton iterations",
+          "seconds": 0
+        },
+        {
+          "calls": 625,
+          "name": "fresh jacobians",
+          "seconds": 0
+        },
+        {
+          "calls": 113,
+          "name": "stale full-step refreshes",
+          "seconds": 0
+        },
+        {
+          "calls": 3226,
+          "name": "residual evaluations",
+          "seconds": 0.38699996000000003
+        },
+        {
+          "calls": 625,
+          "name": "jacobian assembly",
+          "seconds": 1.3375437920000002
+        },
+        {
+          "calls": 0,
+          "name": "  slots supplied",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots with supplied rate partials",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  slots finite-difference",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  component FD residual calls",
+          "seconds": 0
+        },
+        {
+          "calls": 625,
+          "name": "factorisation",
+          "seconds": 0.008072416
+        },
+        {
+          "calls": 625,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.0052840890000000005
+        },
+        {
+          "calls": 0,
+          "name": "  sparse matrix construction",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  symbolic cache lookup/build",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "    symbolic cache misses",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "  sparse numeric factorisation",
+          "seconds": 0
+        },
+        {
+          "calls": 2213,
+          "name": "back-substitution",
+          "seconds": 0.0015222620000000001
+        },
+        {
+          "calls": 0,
+          "name": "guards",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "event location",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "jumps (incl. coupler)",
+          "seconds": 0
+        },
+        {
+          "calls": 14881,
+          "name": "embedded closure mapping",
+          "seconds": 0.895784431
+        },
+        {
+          "calls": 14475,
+          "name": "embedded contact history",
+          "seconds": 0.033309084
+        },
+        {
+          "calls": 14475,
+          "name": "embedded dynamics preparation",
+          "seconds": 0.723726442
+        },
+        {
+          "calls": 14610,
+          "name": "embedded applied force solve",
+          "seconds": 0.040043756
+        },
+        {
+          "calls": 14610,
+          "name": "embedded component equations",
+          "seconds": 0.005702834
+        },
+        {
+          "calls": 14881,
+          "name": "  closure Jacobian",
+          "seconds": 0.250979316
+        },
+        {
+          "calls": 14881,
+          "name": "  closure factorization",
+          "seconds": 0.16184963000000002
+        },
+        {
+          "calls": 59840,
+          "name": "    closure SVD",
+          "seconds": 0.061325699000000004
+        },
+        {
+          "calls": 14475,
+          "name": "  embedded rigid inertia",
+          "seconds": 0.280057374
+        },
+        {
+          "calls": 14475,
+          "name": "  embedded inertia projection",
+          "seconds": 0.058540831
+        },
+        {
+          "calls": 14475,
+          "name": "  embedded force evaluation",
+          "seconds": 0.290705586
+        },
+        {
+          "calls": 14808,
+          "name": "contact geometry queries",
+          "seconds": 0.09740979100000001
+        },
+        {
+          "calls": 14808,
+          "name": "contact force evaluation",
+          "seconds": 0.15482240700000002
+        },
+        {
+          "calls": 14942,
+          "name": "  contact exclusion metadata",
+          "seconds": 0.003265656
+        },
+        {
+          "calls": 14942,
+          "name": "  contact sample transforms",
+          "seconds": 0.063932046
+        },
+        {
+          "calls": 14942,
+          "name": "  contact pair queries",
+          "seconds": 0.011045655000000001
+        },
+        {
+          "calls": 67,
+          "name": "policy online reference",
+          "seconds": 0.038575595000000004
+        },
+        {
+          "calls": 67,
+          "name": "policy observations",
+          "seconds": 0.001631571
+        },
+        {
+          "calls": 67,
+          "name": "policy body feedback",
+          "seconds": 0.010236918000000001
+        },
+        {
+          "calls": 67,
+          "name": "policy point feedback",
+          "seconds": 0.009167009
+        },
+        {
+          "calls": 67,
+          "name": "policy script",
+          "seconds": 0.014700208000000001
+        },
+        {
+          "calls": 0,
+          "name": "Broyden update attempts",
+          "seconds": 0
+        },
+        {
+          "calls": 0,
+          "name": "Broyden rejected/capped updates",
+          "seconds": 0
+        }
+      ],
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-tight.config.json",
+          "sha256": "a82768fc68526e2d504f3cb2a673e401eb23034786085eb83de10208bd0629c9"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-tight.native.json",
+          "sha256": "5bb55b96005f8d5e45cb1354efb1d41500c25342358c0b177dbff44eb3e93a3e"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-tight.profile.json",
+          "sha256": "0469a414789a6ca69a3a705f2ec252a0d8062ef745e0c35622c2c3232d9ff348"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-tight.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-tolerance-plan.json",
+      "sha256": "439ef5604144b4cd6b83f45afc6c33d5d848f69e92fa2e04a3106c0c750af87c"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "c0bd20f264a01278d40c5b862c49ccbc246cfd331c09e2fb301fd2386252704e"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/run_profiled_study.mjs",
+      "sha256": "73175ce3718a1bfe5247f78563f703f68a24c9c1fbe44bf4badd0714ec2970bb"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "scope": "Predeclared nonlinear tolerance diagnosis, not a new controller or a performance test. Same seed 0, CAD model and 24-second development inputs, with instrumented profiles. Only absolute/relative Newton tolerances differ. Instrumented diagnostic only: completion means all cases were executed, not task acceptance. Accepted stage counters omit rejected outer attempts; profiler buckets can overlap. No browser timing claim."
+}

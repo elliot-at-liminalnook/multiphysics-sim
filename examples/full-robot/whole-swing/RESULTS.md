@@ -742,3 +742,36 @@ and support role, then test body-shift/return motion or traction-aware control.
 Do not compensate by inflating friction or actuator authority without an
 explicit physical hypothesis and provenance. Numerical, browser, terrain and
 held-out qualification of any resulting controller remain separate.
+
+## Phase attribution and slower shifts isolate traction demand
+
+The shared read-only contact kernel preserves every prior per-foot integral
+exactly. Phase attribution uses the controller sample held over each physical
+interval, with a focused test guarding against a one-sample offset. **77.7%**
+of total sampled contact motion occurs in shift/return: **226 / 330 mm** summed
+across the four feet. Both the selected transfer foot and other loaded feet
+contribute. Raising/lowering account for **85 / 37 mm**. Many shift/return
+samples reach a shear/normal ratio of 0.25, the observed traction limit.
+
+Doubling shift/return duration while retaining each 5.175 mm planned step gives
+**2.741 mm/s** measured travel, **30 passing swings** and **0.283 mm** final stop
+error. The worst-foot contact-motion/body-advance ratio falls from **93.1% to
+29.2%**, a substantial improvement but still above the fixed 5% screen.
+Quadrupling gives **1.726 mm/s**, **19 passing swings**, **0.131 mm** stop error
+and **25.0%** contact motion. The measured speed/reliability tradeoff therefore
+does not justify simply slowing this gait further as the final experience.
+
+All completed-transfer planned body/foot endpoints agree with the original
+spatial sequence within **7e-18 m**; controller gains, CAD, force laws and motor
+authority are unchanged. Sampled shaft work falls from 6.868 J to **5.294 /
+4.192 J**, and native rates rise to **0.610x / 0.821x**. These are native timing
+measurements, not browser acceptance. Both slower cases remain unqualified by
+the prospective contact screen. All outcomes and phase breakdowns are retained
+in `shift-duration-summary.json`.
+
+The doubled case still accumulates 33/54 mm of shift/return contact motion and
+47/25 mm during raise/lower. A more useful next gait can combine the body return
+and next support shift into one smooth transfer, avoiding the stop at the
+center while preserving landing/readiness guards and an explicit recenter on
+stop. That must first be implemented and tested in the shared Rust sequence;
+its contact quality, geometry and measured speed cannot be inferred here.

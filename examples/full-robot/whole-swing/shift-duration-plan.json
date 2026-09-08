@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "shift-return-2x",
+      "scene": "runs/full-robot/learning/shift-duration/shift-return-2x.scene.json",
+      "config": "runs/full-robot/learning/shift-duration/shift-return-2x.config.json",
+      "actions": "runs/full-robot/learning/shift-duration/shift-return-2x.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "shift_return_time_factor": 2,
+      "forward_speed_m_s": 0.0027236842105263157,
+      "nominal_transfer_s": 1.9000000000000001,
+      "nominal_stride_m": 0.005175
+    },
+    {
+      "name": "shift-return-4x",
+      "scene": "runs/full-robot/learning/shift-duration/shift-return-4x.scene.json",
+      "config": "runs/full-robot/learning/shift-duration/shift-return-4x.config.json",
+      "actions": "runs/full-robot/learning/shift-duration/shift-return-4x.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "shift_return_time_factor": 4,
+      "forward_speed_m_s": 0.0017602040816326531,
+      "nominal_transfer_s": 2.94,
+      "nominal_stride_m": 0.005175
+    }
+  ],
+  "baseline": {
+    "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.native.json",
+    "sha256": "54ee76fc3a432003bdf7a3583a1a18d58dd3b5914801a758d48100bd0fe0b7db"
+  },
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/SHIFT-DURATION-PLAN.md",
+      "sha256": "c667a21dfec341c90f64b71a78d0c11e7238edf9f9677758aa11d4a3fa947f8e"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/contact-phase-reference.json",
+      "sha256": "0b4ee471055ee0f1661d93bfdc0d96fe46771463bd5c641c80430fd9a4222490"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/contact-smoothing-summary.json",
+      "sha256": "8975b30689d80fe0ea470f751f1a7f82bdaed14cdf47403c29789aab5eab8fc0"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+      "sha256": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-recipes.json",
+      "sha256": "49b69c3d2feefb27eeb353e7c987cc6c1e2bfe5cf4585bd6529d7004042a3043"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-2x.scene.json",
+      "sha256": "35b31e54550d404cc16662a07ada4cbda5ac8b838898b974f14d5d58c1349ebc"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-2x.config.json",
+      "sha256": "5dc0fe582290a09e6e91146005e4dcf4019c4382473f0869313f67551c019a6f"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-2x.actions.json",
+      "sha256": "d085e74426e861cf037e0828d6df67a2ecb0b7e7b7e00e25bf6476be2b83aff8"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-4x.scene.json",
+      "sha256": "64f636e3eae435f696a61d7e20918a71cc3c9f78c73e20d47abaf9b718e4ae66"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-4x.config.json",
+      "sha256": "b5760a56b34a48259c8c000579a907655d35b58a8e97440bc7f7ddf4c2f6ced6"
+    },
+    {
+      "path": "runs/full-robot/learning/shift-duration/shift-return-4x.actions.json",
+      "sha256": "da675e019682a81ec6dddd5ee5f2210d72cee86ba66f7083c5144dfb3e31c4ee"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "503c689e47157df669b8129aa6cdbc48489625a5c15ccfdbb3efc3e648a63ae2"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "c9a014ab5a5c45273acb0045f0ecf8f44471efcd7086fd11391de780328c3e90"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_shift_duration.mjs",
+      "sha256": "7a9cef0eab43fc25240093f37b9fcb43b899188e9c686d6fece6f0c77d6498ee"
+    }
+  ],
+  "scope": "Two fixed-stride slower shift/return development gaits. Same CAD, physical equations, controller gains and fine solver. Original task gates plus the previously declared 5% contact screen; no browser, held-out, terrain or timestep qualification."
+}

@@ -39,6 +39,7 @@ for (const [study, name, prefix] of [
   ['minute-refinement', 'combined-minute-1.25ms', 'reference-minute'],
   ['tangent-probes', 'tangent-probes-enabled', 'tangent-turn'],
   ['tangent-radius', JSON.parse(readFileSync(`${root}/tangent-radius-selection.json`)).selected.name, 'portable-tangent-turn'],
+  ['exact-probe-base', 'exact-probe-base-enabled', 'exact-base-turn'],
 ]) {
   const plan = JSON.parse(readFileSync(`${root}/${study}-plan.json`));
   const status = JSON.parse(readFileSync(`${root}/${study}-status.json`));

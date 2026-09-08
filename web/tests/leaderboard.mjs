@@ -18,6 +18,17 @@ let browser; const checks = [], errors = [];
 try {
   browser = await chromium.launch({headless: true, ...(process.env.CHROME_EXECUTABLE ? {executablePath: process.env.CHROME_EXECUTABLE} : {})});
   const page = await browser.newPage({viewport: {width: 1440, height: 950}, acceptDownloads: true});
+  await page.addInitScript(() => {
+    window.videoEvents = [];
+    const Original = window.MediaRecorder;
+    if (Original) window.MediaRecorder = class extends Original {
+      constructor(...args) {
+        super(...args);
+        for (const name of ['start', 'dataavailable', 'stop', 'error']) this.addEventListener(name, e =>
+          window.videoEvents.push({event: name, at_ms: performance.now(), size: e.data?.size, error: e.error?.message}));
+      }
+    };
+  });
   page.on('pageerror', e => errors.push(e.message));
   const ready = () => page.locator('#overlay').waitFor({state: 'hidden', timeout: 60000});
   const open = () => page.locator('#open-leaderboard').click();
@@ -55,7 +66,7 @@ try {
     await open();
   }
   checks.push('every Load and run executes its pinned controller, seed and tested initial action through WASM');
-  const shortest = data.entries.find(e => e.id === 'portable-tangent-steering') ?? data.entries.find(e => e.id === 'tangent-steering-short') ?? data.entries.find(e => e.id === 'secant-steering-short') ?? data.entries.find(e => e.id === 'faster-steering-short') ?? [...data.entries].sort((a, b) => a.replay.completed_steps - b.replay.completed_steps)[0];
+  const shortest = data.entries.find(e => e.id === 'exact-base-steering') ?? data.entries.find(e => e.id === 'portable-tangent-steering') ?? data.entries.find(e => e.id === 'tangent-steering-short') ?? data.entries.find(e => e.id === 'secant-steering-short') ?? data.entries.find(e => e.id === 'faster-steering-short') ?? [...data.entries].sort((a, b) => a.replay.completed_steps - b.replay.completed_steps)[0];
   await row(shortest.id).getByRole('button', {name: 'Replay tested inputs', exact: true}).click();
   await page.waitForFunction(end => parseFloat(document.querySelector('#sim-time').textContent) >= end - 1e-8, shortest.metrics.simulated_s, {timeout: 180000}); await ready();
   assert.equal(parseFloat(await page.locator('#sim-time').textContent()), shortest.metrics.simulated_s);
@@ -64,7 +75,13 @@ try {
   await page.locator('#video').click(); await page.locator('#play').click();
   await page.waitForFunction(() => parseFloat(document.querySelector('#sim-time').textContent) > .3);
   const videoPending = page.waitForEvent('download'); await page.locator('#video').click();
-  const video = await videoPending; assert.match(video.suggestedFilename(), /\.webm$/); assert((await readFile(await video.path())).length > 1000);
+  let video;
+  try { video = await videoPending; }
+  catch (error) {
+    await writeFile(reportPath.replace(/\.json$/, '.video-error.json'), JSON.stringify({error: error.message, events: await page.evaluate(() => window.videoEvents), button: await page.locator('#video').textContent(), sources}, null, 2));
+    throw error;
+  }
+  assert.match(video.suggestedFilename(), /\.webm$/); assert((await readFile(await video.path())).length > 1000);
   await open(); await page.screenshot({path: reportPath.replace(/\.json$/, '.desktop.png')});
   await page.setViewportSize({width: 390, height: 844});
   await page.screenshot({path: reportPath.replace(/\.json$/, '.mobile.png')});

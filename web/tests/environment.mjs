@@ -8,6 +8,8 @@ import {cpus,platform,arch} from 'node:os';
 import {createHash} from 'node:crypto';
 const [directory,presetId,nativePath,reportPath,configOverride]=process.argv.slice(2);
 assert(directory&&presetId&&nativePath&&reportPath,'usage: environment.mjs bundle preset native-capture report [explicit-config-override]');
+const frameEncoding=process.env.FRAME_ENCODING??'object';
+assert(['object','json'].includes(frameEncoding),'FRAME_ENCODING must be object or json');
 await mkdir(dirname(reportPath),{recursive:true});
 const read=async p=>JSON.parse(await readFile(p));
 const catalog=await read(resolve(directory,'catalog.json'));
@@ -30,17 +32,25 @@ try {
  browser=await chromium.launch({headless:true,...(process.env.CHROME_EXECUTABLE?{executablePath:process.env.CHROME_EXECUTABLE}:{})});
  const page=await browser.newPage();await page.goto(url+'/OPEN.txt');
  await page.exposeFunction('reportProgress',p=>console.log(JSON.stringify(p)));
- const result=await page.evaluate(async ({data,events})=>{
+ const result=await page.evaluate(async ({data,events,frameEncoding})=>{
+  const decode = frameEncoding==='json' ? (await import('/worker-message.mjs')).decodeWorkerResult : d=>d.result;
   const worker=new Worker('/worker.js',{type:'module'});let id=0;const pending=new Map();let progress=0;
-  worker.onmessage=({data})=>{const p=pending.get(data.id);if(!p)return;clearTimeout(p.timer);if(data.progress){progress++;p.timer=setTimeout(p.expire,30000);return;}pending.delete(data.id);data.error?p.reject(Error(data.error)):p.resolve(data.result);};
+  worker.onmessage=({data})=>{const p=pending.get(data.id);if(!p)return;clearTimeout(p.timer);if(data.progress){progress++;p.timer=setTimeout(p.expire,30000);return;}pending.delete(data.id);try{data.error?p.reject(Error(data.error)):p.resolve(decode(data));}catch(error){p.reject(error);}};
   worker.onerror=e=>{for(const p of pending.values()){clearTimeout(p.timer);p.reject(Error(e.message));}pending.clear();};
-  const rpc=d=>new Promise((resolve,reject)=>{const key=++id;const expire=()=>{pending.delete(key);reject(Error('worker response timed out'));};pending.set(key,{resolve,reject,expire,timer:setTimeout(expire,30000)});worker.postMessage({...d,id:key});});
+  const rpc=d=>new Promise((resolve,reject)=>{const key=++id;const expire=()=>{pending.delete(key);reject(Error('worker response timed out'));};pending.set(key,{resolve,reject,expire,timer:setTimeout(expire,30000)});worker.postMessage({...(d.type==='step'?{response_encoding:frameEncoding}:{}),...d,id:key});});
   const stable=f=>{const x=structuredClone(f);delete x.stepping_wall_s;return JSON.stringify(x);};
   let ticks=0;const pulse=setInterval(()=>ticks++,10);
   try {
    const loaded=await rpc({type:'load',...data,seed:0});
    let invalid=false;try {await rpc({type:'step',action:[]});}catch {invalid=true;}
    const preserved=invalid&&stable(await rpc({type:'frame'}))===stable(loaded.frame);
+   let encodingPreserved=null;
+   if(frameEncoding==='json'){
+    let rejected=false;try{await rpc({type:'step',action:loaded.inputs.map(c=>c.initial),response_encoding:'unsupported'});}catch{rejected=true;}
+    encodingPreserved=rejected&&stable(await rpc({type:'frame'}))===stable(loaded.frame);
+    let resetRejected=false;try{await rpc({type:'reset',seed:1,response_encoding:'json'});}catch{resetRejected=true;}
+    encodingPreserved=encodingPreserved&&resetRejected&&stable(await rpc({type:'frame'}))===stable(loaded.frame);
+   }
    const frames=[loaded.frame],transitionWall=[];
    let held=loaded.inputs.map(c=>c.initial),eventIndex=0;
    const stride=Math.round(data.task.period_s/data.config.step_s);
@@ -56,9 +66,9 @@ try {
    const recipePreserved=rejected&&stable(await rpc({type:'frame'}))===stable(frames.at(-1));
    const replay=await rpc({type:'replay',recording:record});
    const reset=await rpc({type:'reset',seed:0});
-   return {frames,record,preserved,recipePreserved,replayExact:stable(replay)===stable(frames.at(-1)),resetExact:stable(reset)===stable(loaded.frame),contract:loaded.metadata.environment_contract,progress,ticks,transitionWall};
+   return {frames,record,preserved,encodingPreserved,recipePreserved,replayExact:stable(replay)===stable(frames.at(-1)),resetExact:stable(reset)===stable(loaded.frame),contract:loaded.metadata.environment_contract,progress,ticks,transitionWall};
   }finally{clearInterval(pulse);worker.terminate();}
- },{data,events:native.recording.input_events??[]});
+ },{data,events:native.recording.input_events??[],frameEncoding});
  // Internal rotor speeds have much larger magnitudes than output-joint angles.
  // Use explicit absolute + relative portability budgets, matching the default
  // Newton relative correction scale. Task/physical accuracy gates are separate.
@@ -93,11 +103,12 @@ try {
   simulation_per_wall_second:result.frames.at(-1).time_s/wall,
   transition_p95_s:timed[Math.ceil(timed.length*.95)-1],
   scope:'Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance.'};
- const passed=!differences.length&&result.preserved&&result.recipePreserved&&result.replayExact&&result.resetExact&&result.progress>0&&result.ticks>0;
+ const passed=!differences.length&&result.preserved&&result.encodingPreserved!==false&&result.recipePreserved&&result.replayExact&&result.resetExact&&result.progress>0&&result.ticks>0;
  const report={passed,preset:presetId,transitions:result.frames.length-1,maximum_native_wasm_difference:maximum,worst,differences:differences.slice(0,20),invalid_action_preserved:result.preserved,changed_task_replay_preserved:result.recipePreserved,replay_exact:result.replayExact,reset_exact:result.resetExact,main_thread_heartbeats:result.ticks,replay_progress_messages:result.progress,
  numeric_tolerance:{absolute:absoluteTolerance,relative:relativeTolerance,maximum_fraction:maximumToleranceFraction},
  scope:'Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.'};
  report.performance=performance;
+ report.frame_encoding=frameEncoding;report.invalid_encoding_preserved=result.encodingPreserved;
  report.numeric_groups=numericGroups;report.difference_count=differences.length;
  if(overrideEvidence){report.config_override=overrideEvidence;report.scope+=' Uses the explicitly recorded configuration override, not the packaged preset horizon.';}
  report.host={platform:platform(),architecture:arch(),cpu:cpus()[0]?.model,logical_cpus:cpus().length,browser:await browser.version()};

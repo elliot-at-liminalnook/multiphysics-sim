@@ -130,7 +130,7 @@ jobs:
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-teacher-environment runs/interactive/robot-environment-native.json runs/interactive/robot-environment-browser.json
       - name: Controller leaderboard integrity, exact loading, replay and video
         run: |
-          node --test web/tests/leaderboard-model.mjs
+          node --test web/tests/leaderboard-model.mjs web/tests/worker-message.mjs
           node web/tests/leaderboard.mjs runs/interactive/teacher-viewer runs/interactive/leaderboard-report.json
       - name: Faster horizontal swing task, host parity and steering failure evidence
         run: |
@@ -156,7 +156,7 @@ jobs:
           node examples/full-robot/check_online_steps.mjs runs/interactive/tangent-native.json runs/interactive/tangent-acceptance
           node examples/full-robot/compare_mechanical_reuse.mjs runs/interactive/secant-native.json runs/interactive/tangent-native.json runs/interactive/tangent-difference.json --linearized-probes
           node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/tangent-difference.json")); assert(r.metrics.foot_marker_position_m.maximum<=0.001); assert(r.metrics.body_position_m.maximum<=0.0005);'
-          node web/tests/environment.mjs runs/interactive/teacher-viewer tested-portable-tangent-steering runs/interactive/tangent-native.json runs/interactive/tangent-parity.json
+          FRAME_ENCODING=json node web/tests/environment.mjs runs/interactive/teacher-viewer tested-portable-tangent-steering runs/interactive/tangent-native.json runs/interactive/tangent-parity.json
       - name: Effective-servo browser profile and replay
         run: |
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/browser-effective-servo/scene.json examples/full-robot/browser-effective-servo/config.json examples/full-robot/browser-effective-servo/task.json > runs/interactive/effective-servo-native.json

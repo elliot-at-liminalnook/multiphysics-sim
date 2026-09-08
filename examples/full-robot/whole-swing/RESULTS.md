@@ -304,3 +304,27 @@ inspected. `display-cadence-status.json` retains the sequential measurements;
 `display-cadence-integrity.json` binds them to the original captures and UI
 checks. The next isolated transport experiment should distinguish outgoing
 object cloning and message delivery from rendering and Rust stepping.
+
+## JSON frame transport is a small cost
+
+Sending the exact Rust JSON step frame to the receiver passes all 1,200
+native/WASM transitions at the unchanged tolerance (maximum 8.28e-9), exact
+replay/reset, and invalid-encoding state-preservation checks. The original
+object reply remains available for compatibility. The viewer requests JSON
+step replies and parses each frame once; timings include that receiving parse.
+
+On the same bundle with automatic display, object steering active p95 is
+**20.29 ms**, JSON steering **20.19 ms**, and JSON forward/stop **22.07 ms**.
+All three meet active and overall pace, but all still miss the 20 ms gate.
+Object/JSON transport plus dispatch p95 is 7.19/7.40 ms; JSON receiving parse
+p95 is 0.185 ms. One sample per case does not establish a significant speed
+advantage. Together with the display-cadence experiment, this rules out these
+small presentation/encoding changes as a sufficient latency fix on this host.
+
+All recordings exactly match the previous physically audited inputs and
+recipes. Eleven-entry UI load/replay/video/mobile checks and the six-preset
+fixture suite pass, including cancellation, reset recovery, condensed
+mechanics and replayed physical errors. `frame-transport-status.json` and
+`frame-transport-integrity.json` retain measurements and source bindings.
+CI exercises JSON host parity and decoding while existing object clients
+continue to cover the compatible reply path. Remote CI has not been run here.

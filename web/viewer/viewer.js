@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { installLeaderboard } from './leaderboard.js';
 import { installVideoExport } from './video-export.js';
+import { decodeWorkerResult } from './worker-message.mjs';
 const $ = id => document.getElementById(id);
 const viewport = $('viewport');
 const scene = new THREE.Scene();
@@ -55,7 +56,10 @@ function workerClient() {
   function rejectAll(message) { for (const item of requests.values()) { clearTimeout(item.timer); item.reject(new Error(message)); } requests.clear(); }
   instance.onmessage = ({ data }) => { const item = requests.get(data.id); if (!item) return; clearTimeout(item.timer);
     if (data.progress) { item.timer = setTimeout(item.expire, 30000); item.progress?.(data.progress); return; }
-    requests.delete(data.id); data.error ? item.reject(new Error(data.error)) : item.resolve(data.result); };
+    requests.delete(data.id);
+    try { data.error ? item.reject(new Error(data.error)) : item.resolve(decodeWorkerResult(data)); }
+    catch (error) { item.reject(error); }
+  };
   instance.onerror = e => rejectAll(e.message || 'Simulation worker failed');
   return {
     request(type, data = {}, progress) { return new Promise((resolve, reject) => {
@@ -307,7 +311,7 @@ async function loadPreset(id) {
 }
 async function advanceLive(single=false) {
   if (busy || (!playing && !single) || !worker) return; busy = true; const token = epoch, before = performance.now(), old = tick;
-  try { const next = await worker.request('step', { action: values }); if (token !== epoch) return; showFrame(next);
+  try { const next = await worker.request('step', { action: values, response_encoding: 'json' }); if (token !== epoch) return; showFrame(next);
     wallWork += (performance.now()-before)/1000; simulatedWork += tick-old;
     const liveRate = (tick-liveStartSim)/((performance.now()-liveStartWall)/1000);
     $('performance').textContent = single ? `${(simulatedWork/wallWork).toFixed(2)}× processing` : `${liveRate.toFixed(2)}× live`;

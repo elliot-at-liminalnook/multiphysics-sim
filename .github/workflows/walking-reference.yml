@@ -5,6 +5,32 @@ on:
   pull_request:
     paths: ['crates/**', 'Cargo.*', 'examples/full-robot/**', 'examples/interactive/**', 'web/leaderboard/**', '.github/workflows/walking-reference.yml']
 jobs:
+  integral-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build the shared runtime and swing evaluator
+        run: cargo build --locked --release -p sim-runtime --example run_environment --example evaluate_lift
+      - name: Reproduce the frozen minute, steering and stop-to-motion cases
+        run: |
+          node examples/full-robot/whole-swing/reproduce_settled_integral.mjs runs/integral-regression
+          node examples/full-robot/hybrid-speed/run.mjs runs/integral-regression runs/integral-regression/status.json
+          node examples/interactive/audit_walking_suite.mjs runs/integral-regression/plan.json runs/integral-regression/status.json runs/integral-regression/integrity.json
+      - name: Enforce swing, stop checkpoint and timestep budgets
+        run: |
+          node examples/full-robot/whole-swing/collect_settled_integral_regression.mjs runs/integral-regression/plan.json runs/integral-regression/status.json runs/integral-regression/integrity.json runs/integral-regression/results
+          node -e 'require("node:assert/strict")(require("./runs/integral-regression/results-summary.json").declared_suite_passed)'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integral-walking-regression
+          path: runs/integral-regression/
   minute-reference:
     runs-on: ubuntu-latest
     timeout-minutes: 25

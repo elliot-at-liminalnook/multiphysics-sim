@@ -1,0 +1,226 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "minute-1.25ms",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.config.json",
+      "actions": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "split": "development"
+    },
+    {
+      "name": "steering-1.25ms",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.config.json",
+      "actions": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "seed": 0,
+      "split": "development"
+    },
+    {
+      "name": "minute-0.625ms",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/settled-integral-regression/minute-0.625ms.config.json",
+      "actions": "runs/full-robot/learning/settled-integral-regression/minute-0.625ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 60,
+      "step_s": 0.000625,
+      "seed": 0,
+      "split": "refinement"
+    },
+    {
+      "name": "fresh-commands",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/settled-integral-regression/fresh-commands.config.json",
+      "actions": "runs/full-robot/learning/settled-integral-regression/fresh-commands.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 48,
+      "step_s": 0.00125,
+      "seed": 0,
+      "split": "heldout"
+    },
+    {
+      "name": "fresh-pushes",
+      "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "config": "runs/full-robot/learning/settled-integral-regression/fresh-pushes.config.json",
+      "actions": "runs/full-robot/learning/settled-integral-regression/fresh-pushes.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 48,
+      "step_s": 0.00125,
+      "seed": 0,
+      "split": "heldout"
+    }
+  ],
+  "heldout_schedule_s": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      4,
+      0.00375,
+      0
+    ],
+    [
+      12,
+      0,
+      0
+    ],
+    [
+      16,
+      -0.00125,
+      0
+    ],
+    [
+      24,
+      0,
+      0
+    ],
+    [
+      28,
+      0.00375,
+      0.001
+    ],
+    [
+      36,
+      0,
+      -0.001
+    ],
+    [
+      42,
+      0,
+      0
+    ]
+  ],
+  "intermediate_stop_check_times_s": [
+    15.98,
+    27.98,
+    48
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/SETTLED-INTEGRAL-REGRESSION.md",
+      "sha256": "3f9acff171b6882d12837a54a3573b7215e61986e282486b65b7ff3e6b4dac5e"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-summary.json",
+      "sha256": "f973c67df6d55d986d7f2a995f9730df7992268ff911508b1aa8e52fec49709a"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-numeric-plan.json",
+      "sha256": "827797d79e1965bd2916afb2458f084a2ba4e50a0cb73996a9249f98bc0d6d61"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/combined-plan.json",
+      "sha256": "a266130c3872258dd41d976e7e48feb49505ad5d6d1edd744cd676646afc8e5d"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.config.json",
+      "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "503c689e47157df669b8129aa6cdbc48489625a5c15ccfdbb3efc3e648a63ae2"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "c9a014ab5a5c45273acb0045f0ecf8f44471efcd7086fd11391de780328c3e90"
+    },
+    {
+      "path": "crates/sim-domain-control/src/angle_integral.rs",
+      "sha256": "011989b663d3e92c172c4d5c83b45f53bdc3ab9bf9b14c06241f79df1e3c6834"
+    },
+    {
+      "path": "crates/sim-script/src/lib.rs",
+      "sha256": "3d37144547bd3e8cb6cd4dd6bcc6d06618dfddca111e89327d48f980572509b2"
+    },
+    {
+      "path": "runs/angle-integral-final-tests.log",
+      "sha256": "9a9c0890f69c5d2ef796eca24e60dea69ab54fd6c573e0a8802d2fe47a88ece0"
+    },
+    {
+      "path": "runs/angle-integral-numeric-tests.log",
+      "sha256": "f76f0b1982cc4c54afb731cd53fed68aa676fa56f2c67bceb25702e3f981aa33"
+    },
+    {
+      "path": "runs/angle-integral-numeric-build.log",
+      "sha256": "21ed23ddcb7c6da5c1961480074195813e5c753ba1cc8166527cdcde9bc6853b"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_settled_integral_regression.mjs",
+      "sha256": "11f66ac4f2640366089e8048ab4255ecdc9a952a336f471370322fe6f10f9b16"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-combined/combined-minute-1.25ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-combined/combined-minute-1.25ms.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.config.json",
+      "sha256": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.config.json",
+      "sha256": "9c7cbcf4161d169b1570d5c977fe8d23065f305e0d13dd8d36312c2280ee1b38"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/steering-1.25ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/minute-0.625ms.config.json",
+      "sha256": "11e3a9858815edcb935e78ca71fea8cfb5e5fe9ff2496aea5ab192a433759838"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/minute-0.625ms.actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/fresh-commands.config.json",
+      "sha256": "f44c7ec50028eca7167625f54c81a387af4b9aabdd28d903bb1c46076846b0db"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/fresh-commands.actions.json",
+      "sha256": "51efe65f29092c3c034477a483bc62902eb62bc2dec57c7c47f227c8bee9956f"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/fresh-pushes.config.json",
+      "sha256": "466e93c30fdaa9a1043f9c262d53d4685817a7274884e8218273ba30eae663fa"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-integral-regression/fresh-pushes.actions.json",
+      "sha256": "51efe65f29092c3c034477a483bc62902eb62bc2dec57c7c47f227c8bee9956f"
+    }
+  ],
+  "scope": "Frozen gain-1 integral teacher: sustained and steering development, minute timestep refinement, and two fresh held-out stop-to-motion cases. Original task and trajectory budgets. Explicit unforced/pushed held-out environments. No tuning from these outcomes or browser/terrain/hardware qualification."
+}

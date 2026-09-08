@@ -1,0 +1,253 @@
+{
+  "version": 1,
+  "completed": true,
+  "wall_s": 6.154084859,
+  "buckets": [
+    {
+      "calls": 0,
+      "name": "step (total)",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "implicit solve",
+      "seconds": 0
+    },
+    {
+      "calls": 1210,
+      "name": "newton calls",
+      "seconds": 0
+    },
+    {
+      "calls": 10410,
+      "name": "newton iterations",
+      "seconds": 0
+    },
+    {
+      "calls": 1950,
+      "name": "fresh jacobians",
+      "seconds": 0
+    },
+    {
+      "calls": 483,
+      "name": "stale full-step refreshes",
+      "seconds": 0
+    },
+    {
+      "calls": 16755,
+      "name": "residual evaluations",
+      "seconds": 2.067184605
+    },
+    {
+      "calls": 1950,
+      "name": "jacobian assembly",
+      "seconds": 2.503245977
+    },
+    {
+      "calls": 0,
+      "name": "  slots supplied",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "  slots with supplied rate partials",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "  slots finite-difference",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "  component FD residual calls",
+      "seconds": 0
+    },
+    {
+      "calls": 1950,
+      "name": "factorisation",
+      "seconds": 0.026037595
+    },
+    {
+      "calls": 7831,
+      "name": "  factor entries sum/sort",
+      "seconds": 0.025789453
+    },
+    {
+      "calls": 0,
+      "name": "  sparse matrix construction",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "  symbolic cache lookup/build",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "    symbolic cache misses",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "  sparse numeric factorisation",
+      "seconds": 0
+    },
+    {
+      "calls": 10400,
+      "name": "back-substitution",
+      "seconds": 0.007432086
+    },
+    {
+      "calls": 0,
+      "name": "guards",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "event location",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "jumps (incl. coupler)",
+      "seconds": 0
+    },
+    {
+      "calls": 22838,
+      "name": "embedded closure mapping",
+      "seconds": 1.4313392710000001
+    },
+    {
+      "calls": 53756,
+      "name": "embedded contact history",
+      "seconds": 0.12153677500000001
+    },
+    {
+      "calls": 51855,
+      "name": "embedded dynamics preparation",
+      "seconds": 2.630689674
+    },
+    {
+      "calls": 53057,
+      "name": "embedded applied force solve",
+      "seconds": 0.143806692
+    },
+    {
+      "calls": 53057,
+      "name": "embedded component equations",
+      "seconds": 0.018538217000000003
+    },
+    {
+      "calls": 22838,
+      "name": "  closure Jacobian",
+      "seconds": 0.39563814900000005
+    },
+    {
+      "calls": 22838,
+      "name": "  closure factorization",
+      "seconds": 0.26826883100000004
+    },
+    {
+      "calls": 92289,
+      "name": "    closure SVD",
+      "seconds": 0.100266933
+    },
+    {
+      "calls": 51855,
+      "name": "  embedded rigid inertia",
+      "seconds": 1.107729798
+    },
+    {
+      "calls": 51855,
+      "name": "  embedded inertia projection",
+      "seconds": 0.204806383
+    },
+    {
+      "calls": 51855,
+      "name": "  embedded force evaluation",
+      "seconds": 0.995775633
+    },
+    {
+      "calls": 55455,
+      "name": "contact geometry queries",
+      "seconds": 0.33302569000000004
+    },
+    {
+      "calls": 55455,
+      "name": "contact force evaluation",
+      "seconds": 0.5493883350000001
+    },
+    {
+      "calls": 57855,
+      "name": "  contact exclusion metadata",
+      "seconds": 0.017533784
+    },
+    {
+      "calls": 57855,
+      "name": "  contact sample transforms",
+      "seconds": 0.21813173500000002
+    },
+    {
+      "calls": 57855,
+      "name": "  contact pair queries",
+      "seconds": 0.151192927
+    },
+    {
+      "calls": 1200,
+      "name": "policy online reference",
+      "seconds": 0.6284868880000001
+    },
+    {
+      "calls": 1200,
+      "name": "policy observations",
+      "seconds": 0.015552358
+    },
+    {
+      "calls": 0,
+      "name": "policy body feedback",
+      "seconds": 0
+    },
+    {
+      "calls": 0,
+      "name": "policy point feedback",
+      "seconds": 0
+    },
+    {
+      "calls": 1200,
+      "name": "policy script",
+      "seconds": 0.11711173200000001
+    },
+    {
+      "calls": 6218,
+      "name": "Broyden update attempts",
+      "seconds": 0.074784765
+    },
+    {
+      "calls": 337,
+      "name": "Broyden rejected/capped updates",
+      "seconds": 0
+    }
+  ],
+  "accepted_steps": 1200,
+  "linearized_probe_evaluations": 33840,
+  "exact_jacobian_fallbacks": [
+    "Newton did not converge after 12 iterations; residual=1.9262749691391357e-5",
+    "Newton did not converge after 12 iterations; residual=6.973717357810716e-3",
+    "Newton did not converge after 12 iterations; residual=1.4520343990010888e1",
+    "Newton did not converge after 12 iterations; residual=2.559535631158072e-5",
+    "Newton did not converge after 12 iterations; residual=1.0773642696408625e-5",
+    "Newton did not converge after 12 iterations; residual=4.8751010864572786e-4"
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-tangent-probes/enabled.profile.json",
+      "sha256": "c57fc1ea61090a2850c353ad98958d7a4609b556dc7d0afce3dfd4985a31632d"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/implicit.rs",
+      "sha256": "fd59ac38e8792f695ae7d1f8f130f153d5d03f06383fbcb3069bb55a15f57fdd"
+    }
+  ],
+  "scope": "Native isolated profile. Probe approximations only construct correction matrices; accepted physical endpoints use exact closure. Bucket timings nest. Accepted-step counters omit any failed outer interval attempts; global solver bucket counts include attempted solves."
+}

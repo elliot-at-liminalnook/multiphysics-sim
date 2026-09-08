@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "tangent-probes-reference",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582486487327153,
+        "final_yaw_error_rad": 0.00032807738082035054,
+        "maximum_body_tilt_rad": 0.0041457719958571185,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779149125775,
+          -0.00021510492716122223,
+          -0.000770018864680734
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-reference-acceptance/summary.json",
+          "sha256": "253cabec0537c826a2d9f8588f40831c124bfb62764b1f19299205c46a246423"
+        }
+      },
+      "wall_s": 8.261098186,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-reference.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-reference.config.json",
+          "sha256": "d10fbf60f611289b3ea51c170356cee379e669c40190ea7506c65bddba0dc739"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-reference.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-reference.native.json",
+          "sha256": "8d4303eb1e1a444636e48c2bac2305e49187628712de48cd63b408d3585139a0"
+        }
+      ]
+    },
+    {
+      "name": "tangent-probes-enabled",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009582489803772701,
+        "final_yaw_error_rad": 0.0003280779520178183,
+        "maximum_body_tilt_rad": 0.004145772118213665,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028140779576623937,
+          -0.00021510501894441016,
+          -0.0007700189555881407
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-enabled-acceptance/summary.json",
+          "sha256": "6457cce228402424c3b5878298240a3709737d1485514d401ef7accf03eb8534"
+        }
+      },
+      "wall_s": 6.077271858,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-enabled.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-enabled.config.json",
+          "sha256": "fa575a0c6066d62bffa529b302d0c2e3cf7f4e564523b974fada4659779b7679"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-enabled.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-enabled.native.json",
+          "sha256": "0c79ff0e26a44502224b2cd7c7c98e78ba7ff99feab38d9ba1381233007b839f"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-tangent-probes/plan.json",
+      "sha256": "05ae21acf74af2344646e2511a1d1586600c069f32992cbf33675759ae99ef5e"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "cb68a2a4664db5e7cda1e0f9a5ee49201cff778344d9344f9bd6abc9d6e2e26d"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Same 20 ms steering profile, seed, controls, world, physics and acceptance with derivative-only tangent probes disabled/enabled. Ordinary residuals and accepted endpoints retain full closure; failed approximate solves restart with exact derivatives."
+}

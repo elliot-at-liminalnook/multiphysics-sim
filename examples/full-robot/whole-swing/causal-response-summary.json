@@ -1,0 +1,377 @@
+{
+  "version": 1,
+  "commanded_task_passed": true,
+  "commanded_full_repeat_exact": true,
+  "commanded_capture": {
+    "path": "runs/full-robot/learning/causal-response/commanded.native.json",
+    "sha256": "9b4eb2afe96c8b17a88f24452478277a5d588e725f26544eb83da14b6d927142"
+  },
+  "cases": [
+    {
+      "name": "hold-forward",
+      "probe": {
+        "name": "hold-forward",
+        "stage": 0,
+        "start_s": 0,
+        "end_s": 8.4,
+        "metric": "translation",
+        "direction": 1,
+        "body_link": "Robot | Chassis and hip mounts",
+        "threshold": 0.0001,
+        "hold_s": 0.1
+      },
+      "counterfactual_completed": true,
+      "counterfactual_task_passed": true,
+      "counterfactual_acceptance": {
+        "passed": true,
+        "lifts": 9,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00024911903058329107,
+        "final_yaw_error_rad": 0.002503836879568262,
+        "maximum_body_tilt_rad": 0.003974972133930011,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          -0.00357455754178563,
+          -0.000026459996533601947,
+          -0.00021554219089973264
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/hold-forward-acceptance/summary.json",
+          "sha256": "6bef867d02afe036feff2dd4719b64ae6bfc30bd27e5181bb9fad03f4a9090a7"
+        }
+      },
+      "counterfactual_error": null,
+      "exact_physical_prefix": true,
+      "only_declared_input_interval_changed": true,
+      "complete_response_window": true,
+      "sampled_directed_response": {
+        "index": 48,
+        "time_s": 0.96,
+        "latency_s": 0.96,
+        "previous_sample_time_s": 0.9400000000000001,
+        "confirmation_time_s": 1.06,
+        "last_contiguous_time_s": 3.2,
+        "value": 0.0001416494598559853
+      },
+      "sampled_any_direction_response": {
+        "index": 14,
+        "time_s": 0.28,
+        "latency_s": 0.28,
+        "previous_sample_time_s": 0.26,
+        "confirmation_time_s": 0.38,
+        "last_contiguous_time_s": 8.4,
+        "value": 0.00016959079153660545
+      },
+      "browser_association": {
+        "received_wall_latency_s": 2.2041699999570845,
+        "drawn_wall_latency_s": 2.225104999959469,
+        "drawn_physics_time_s": 0.96,
+        "drawn_frame": 52,
+        "commanded_native_signal_at_draw": 0.0001416494598559853
+      },
+      "maximum_directed_difference": 0.026399877978075,
+      "minimum_directed_difference": -0.013738206690663163,
+      "capture": {
+        "path": "runs/full-robot/learning/causal-response/hold-forward.native.json",
+        "sha256": "0cea05705052da5c9c5731211f5920a47304d686c5d171d7df080a539be94dbd"
+      },
+      "signal": {
+        "path": "examples/full-robot/whole-swing/causal-response-hold-forward-signal.json",
+        "sha256": "79f685ded82ebf261437e68e0976c5e5d2066d2c6f0d149bf6f5938665c155a6"
+      }
+    },
+    {
+      "name": "hold-turn",
+      "probe": {
+        "name": "hold-turn",
+        "stage": 1,
+        "start_s": 8.4,
+        "end_s": 16.8,
+        "metric": "yaw",
+        "direction": 1,
+        "body_link": "Robot | Chassis and hip mounts",
+        "threshold": 0.0005,
+        "hold_s": 0.1
+      },
+      "counterfactual_completed": true,
+      "counterfactual_task_passed": true,
+      "counterfactual_acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00035733979674828657,
+        "final_yaw_error_rad": 0.004817437256641573,
+        "maximum_body_tilt_rad": 0.004226415454034475,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06357714467898862,
+          0.00010577133456801294,
+          -0.00023467401852391573
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/hold-turn-acceptance/summary.json",
+          "sha256": "d3442ce08104e709e69bc895e57cbae387731ae2713fc4cc878aaf2dc5584127"
+        }
+      },
+      "counterfactual_error": null,
+      "exact_physical_prefix": true,
+      "only_declared_input_interval_changed": true,
+      "complete_response_window": true,
+      "sampled_directed_response": {
+        "index": 481,
+        "time_s": 9.620000000000001,
+        "latency_s": 1.2200000000000006,
+        "previous_sample_time_s": 9.6,
+        "confirmation_time_s": 9.72,
+        "last_contiguous_time_s": 16.8,
+        "value": 0.0005183668374152445
+      },
+      "sampled_any_direction_response": {
+        "index": 481,
+        "time_s": 9.620000000000001,
+        "latency_s": 1.2200000000000006,
+        "previous_sample_time_s": 9.6,
+        "confirmation_time_s": 9.72,
+        "last_contiguous_time_s": 16.8,
+        "value": 0.0005183668374152445
+      },
+      "browser_association": {
+        "received_wall_latency_s": 3.031389999985695,
+        "drawn_wall_latency_s": 3.0383500000238417,
+        "drawn_physics_time_s": 9.620000000000001,
+        "drawn_frame": 485,
+        "commanded_native_signal_at_draw": 0.0005183668374152445
+      },
+      "maximum_directed_difference": 0.006858220665002472,
+      "minimum_directed_difference": -9.207563795273279e-7,
+      "capture": {
+        "path": "runs/full-robot/learning/causal-response/hold-turn.native.json",
+        "sha256": "3efb5270970a846a6c1cfbf1726ec967fbc316df42540d0a9dd617249c258fab"
+      },
+      "signal": {
+        "path": "examples/full-robot/whole-swing/causal-response-hold-turn-signal.json",
+        "sha256": "010fe525b1536cd713947968d79f854ee76d3f370b74a9d9c7e9d84ec944c106"
+      }
+    },
+    {
+      "name": "hold-reverse",
+      "probe": {
+        "name": "hold-reverse",
+        "stage": 2,
+        "start_s": 16.8,
+        "end_s": 20,
+        "metric": "translation",
+        "direction": -1,
+        "body_link": "Robot | Chassis and hip mounts",
+        "threshold": 0.0001,
+        "hold_s": 0.1
+      },
+      "counterfactual_completed": true,
+      "counterfactual_task_passed": false,
+      "counterfactual_acceptance": {
+        "passed": false,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.000335313879844472,
+        "final_yaw_error_rad": 0.006816506903445224,
+        "maximum_body_tilt_rad": 0.004161834108511887,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.030838948876126537,
+          0.0001332828359963059,
+          -0.00022389396319884465
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/hold-reverse-acceptance/summary.json",
+          "sha256": "0668302249017baf60dca2f5e90a27d9c525316ce68de4973f8f63c6762fa4ee"
+        }
+      },
+      "counterfactual_error": null,
+      "exact_physical_prefix": true,
+      "only_declared_input_interval_changed": true,
+      "complete_response_window": true,
+      "sampled_directed_response": {
+        "index": 926,
+        "time_s": 18.52,
+        "latency_s": 1.7199999999999989,
+        "previous_sample_time_s": 18.5,
+        "confirmation_time_s": 18.62,
+        "last_contiguous_time_s": 19.64,
+        "value": 0.00010473776658639332
+      },
+      "sampled_any_direction_response": {
+        "index": 910,
+        "time_s": 18.2,
+        "latency_s": 1.3999999999999986,
+        "previous_sample_time_s": 18.18,
+        "confirmation_time_s": 18.3,
+        "last_contiguous_time_s": 20,
+        "value": 0.00010011675201168554
+      },
+      "browser_association": {
+        "received_wall_latency_s": 3.503589999973774,
+        "drawn_wall_latency_s": 3.516829999983311,
+        "drawn_physics_time_s": 18.52,
+        "drawn_frame": 929,
+        "commanded_native_signal_at_draw": 0.00010473776658639332
+      },
+      "maximum_directed_difference": 0.001092746714798796,
+      "minimum_directed_difference": -0.021121035489257412,
+      "capture": {
+        "path": "runs/full-robot/learning/causal-response/hold-reverse.native.json",
+        "sha256": "869d8253b612565f4283a8187c6d9a276e21778ada42576ac96b15d08a270d33"
+      },
+      "signal": {
+        "path": "examples/full-robot/whole-swing/causal-response-hold-reverse-signal.json",
+        "sha256": "51233b33c5598be47ee0f0ee6d9e67e4cf45ab0c95039d1818d2c5c13ace07c0"
+      }
+    },
+    {
+      "name": "hold-stop",
+      "probe": {
+        "name": "hold-stop",
+        "stage": 3,
+        "start_s": 20,
+        "end_s": 24,
+        "metric": "translation",
+        "direction": 1,
+        "body_link": "Robot | Chassis and hip mounts",
+        "threshold": 0.0001,
+        "hold_s": 0.1
+      },
+      "counterfactual_completed": true,
+      "counterfactual_task_passed": false,
+      "counterfactual_acceptance": {
+        "passed": false,
+        "lifts": 17,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.001384402580340232,
+        "final_yaw_error_rad": 0.005867506540479943,
+        "maximum_body_tilt_rad": 0.004161834108511887,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02900770066576868,
+          0.013666447117837087,
+          -0.0007578314341042565
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/hold-stop-acceptance/summary.json",
+          "sha256": "753e6ff8aa196eae0c4558c4a4e424b4eb5107adf95f58528e199e5aa0f84b44"
+        }
+      },
+      "counterfactual_error": null,
+      "exact_physical_prefix": true,
+      "only_declared_input_interval_changed": true,
+      "complete_response_window": true,
+      "sampled_directed_response": {
+        "index": 1001,
+        "time_s": 20.02,
+        "latency_s": 0.019999999999999574,
+        "previous_sample_time_s": 20,
+        "confirmation_time_s": 20.12,
+        "last_contiguous_time_s": 20.28,
+        "value": 0.0001883557269812482
+      },
+      "sampled_any_direction_response": {
+        "index": 1001,
+        "time_s": 20.02,
+        "latency_s": 0.019999999999999574,
+        "previous_sample_time_s": 20,
+        "confirmation_time_s": 20.12,
+        "last_contiguous_time_s": 20.34,
+        "value": 0.00024763531945656673
+      },
+      "browser_association": {
+        "received_wall_latency_s": 0.09571999996900558,
+        "drawn_wall_latency_s": 0.11552499997615814,
+        "drawn_physics_time_s": 20.02,
+        "drawn_frame": 1004,
+        "commanded_native_signal_at_draw": 0.0001883557269812482
+      },
+      "maximum_directed_difference": 0.021545630920606268,
+      "minimum_directed_difference": -0.011895423888551061,
+      "capture": {
+        "path": "runs/full-robot/learning/causal-response/hold-stop.native.json",
+        "sha256": "0579656f1fe00c06ff6b4763ca415dceb838b88a576591aada56bc9f98d53339"
+      },
+      "signal": {
+        "path": "examples/full-robot/whole-swing/causal-response-hold-stop-signal.json",
+        "sha256": "2c218efd324358999a6181b9f26463e41737f905e59c3a094ab5392b155bc750"
+      }
+    }
+  ],
+  "browser_performance": {
+    "transitions": 1065,
+    "simulated_s": 21.3,
+    "wall_s": 50.94338999998569,
+    "simulation_per_wall_second": 0.4181111622137039,
+    "transition_p95_s": 0.09017500001192093
+  },
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/causal-response-plan.json",
+      "sha256": "4f967928905dca31e3d7bda0178b01ebc4ae8346b15c8fc66d2d50c4ec21bdf8"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/causal-response-status.json",
+      "sha256": "0b751605153233558b9b32cc653e16ded15b0b8ef0f661dc16383cc13548f67e"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/causal-response-integrity.json",
+      "sha256": "dd07a42ae69a42c722740e91a28d1b9fd575e6e8911addb0d7e73d25bb681f80"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/causal-response-browser-status.json",
+      "sha256": "d0906016fd39c55927699a0b06898b142abf2aacbac6af661e82f56e85ed404b"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/causal-response-browser-timeline-integrity.json",
+      "sha256": "d2bd0a00726e17400b55d81ab5e0e4d4017fd3d868cb2e2045ace9c2fd917043"
+    },
+    {
+      "path": "runs/interactive/causal-response/direct-turn.frames.json",
+      "sha256": "7bb2c49183589cc9e4fdea581a3103b314bcf95aa4f85efa1237dba23f3dc81b"
+    },
+    {
+      "path": "runs/interactive/causal-response/direct-turn.recording.json",
+      "sha256": "31767e4c086d54315866d24d3cef0186302fab1629b99eb1caae51e5b4b96880"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_causal_response.mjs",
+      "sha256": "4bc0e50d6bc0063fa62826791ba72d5d016255dbf53f57c877878c227ca81e10"
+    },
+    {
+      "path": "examples/interactive/causal_response.mjs",
+      "sha256": "9bbd1a9fc4577f4c7ebecee955ce6d96bb64ec9648e6f73b8d2c081164c083c3"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "scope": "Directed body-pose response in paired native simulations with exact pre-command physical states and one changed input interval. Native commanded trajectory is associated with the exact recorded browser recipe and its receipt/draw timeline. Dwell is sampled, not continuous; detection is not settling or completed reversal. Counterfactual WASM portability, monitor presentation, hardware response and direct-gait timestep accuracy are unmeasured. No controller qualification or realtime acceptance is inferred."
+}

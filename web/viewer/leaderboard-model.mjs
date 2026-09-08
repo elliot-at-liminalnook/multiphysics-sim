@@ -33,5 +33,13 @@ export function validateEntry(e) {
         event.at_step < e.replay.completed_steps && (!i || event.at_step > events[i - 1].at_step) &&
         Array.isArray(event.values) && event.values.length > 0 && event.values.every(Number.isFinite)) ||
       !Array.isArray(e.evidence) || e.evidence.length === 0 || !e.evidence.every(source)) throw Error('Invalid controller evaluation entry');
+  if(e.command_response){
+    const r=e.command_response, duration=v=>v===null||Number.isFinite(v)&&v>=0;
+    if(!r.method||!r.scope||!Array.isArray(r.cases)||!r.cases.length||
+      new Set(r.cases.map(c=>c.command)).size!==r.cases.length||r.cases.some(c=>!c.command||
+        ![c.simulated_response_s,c.received_wall_s,c.drawn_wall_s].every(duration)||
+        !Number.isFinite(c.threshold)||c.threshold<=0||!['m','rad'].includes(c.threshold_unit)||
+        !Number.isFinite(c.hold_s)||c.hold_s<=0))throw Error('Invalid command response evidence');
+  }
   return e;
 }

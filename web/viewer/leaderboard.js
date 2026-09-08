@@ -36,6 +36,16 @@ export async function installLeaderboard({load, pause}) {
         ['Environment version', e.environment_sha256], ['Benchmark', e.benchmark_version], ['Seed', String(e.load.seed)],
       ]) { dl.append(el('dt', name), el('dd', text)); }
       card.append(dl);
+      if(e.command_response){
+        const response=e.command_response, timings=el('dl'), section=el('section',null,'controller-response');
+        section.append(el('h4','Measured command response'),el('p',response.method));
+        for(const c of response.cases){
+          const text=c.simulated_response_s==null?'No sustained directed response in the test window':
+            `${value(c.simulated_response_s,2,' s simulation')} · ${value(c.drawn_wall_s,2,' s to draw')}`;
+          timings.append(el('dt',c.command),el('dd',text));
+        }
+        section.append(timings,el('p',response.scope,'muted'));card.append(section);
+      }
       const gates = el('ul', null, 'controller-gates');
       for (const key of requiredGates) { const gate = e.gates[key], li = el('li', `${labels[key]}: ${gate.status} — ${gate.detail}`); li.dataset.gate = gate.status; gates.append(li); }
       card.append(gates, el('p', e.limitations, 'muted'));

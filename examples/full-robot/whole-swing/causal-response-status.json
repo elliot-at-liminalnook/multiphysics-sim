@@ -1,0 +1,304 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "commanded",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0003486838799393154,
+        "final_yaw_error_rad": 0.004526924641219822,
+        "maximum_body_tilt_rad": 0.004161834108511887,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02735567102480652,
+          0.0000704292900998782,
+          -0.00022592002025400952
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/commanded-acceptance/summary.json",
+          "sha256": "8db6673462ca7b25743028344f14c1160949c56e245b5fac9b75731bf8ec539b"
+        }
+      },
+      "wall_s": 43.515944769,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-steering.config.json",
+          "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/commanded.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/commanded.native.json",
+          "sha256": "9b4eb2afe96c8b17a88f24452478277a5d588e725f26544eb83da14b6d927142"
+        }
+      ]
+    },
+    {
+      "name": "hold-forward",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 9,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00024911903058329107,
+        "final_yaw_error_rad": 0.002503836879568262,
+        "maximum_body_tilt_rad": 0.003974972133930011,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          -0.00357455754178563,
+          -0.000026459996533601947,
+          -0.00021554219089973264
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/hold-forward-acceptance/summary.json",
+          "sha256": "6bef867d02afe036feff2dd4719b64ae6bfc30bd27e5181bb9fad03f4a9090a7"
+        }
+      },
+      "wall_s": 34.110786247,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-steering.config.json",
+          "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/hold-forward.actions.json",
+          "sha256": "cd3f910bb24ee30b9eff6789f4339d99035a730be74976edcffa64c43a61bdd4"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/hold-forward.native.json",
+          "sha256": "0cea05705052da5c9c5731211f5920a47304d686c5d171d7df080a539be94dbd"
+        }
+      ]
+    },
+    {
+      "name": "hold-turn",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00035733979674828657,
+        "final_yaw_error_rad": 0.004817437256641573,
+        "maximum_body_tilt_rad": 0.004226415454034475,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06357714467898862,
+          0.00010577133456801294,
+          -0.00023467401852391573
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/hold-turn-acceptance/summary.json",
+          "sha256": "d3442ce08104e709e69bc895e57cbae387731ae2713fc4cc878aaf2dc5584127"
+        }
+      },
+      "wall_s": 43.594830819,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-steering.config.json",
+          "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/hold-turn.actions.json",
+          "sha256": "9dccada3a0db8ebbbcbf242638b4a9c18e70bfbeb7cdf8b98b3cb2f6dcb03eec"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/hold-turn.native.json",
+          "sha256": "3efb5270970a846a6c1cfbf1726ec967fbc316df42540d0a9dd617249c258fab"
+        }
+      ]
+    },
+    {
+      "name": "hold-reverse",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.000335313879844472,
+        "final_yaw_error_rad": 0.006816506903445224,
+        "maximum_body_tilt_rad": 0.004161834108511887,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.030838948876126537,
+          0.0001332828359963059,
+          -0.00022389396319884465
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/hold-reverse-acceptance/summary.json",
+          "sha256": "0668302249017baf60dca2f5e90a27d9c525316ce68de4973f8f63c6762fa4ee"
+        }
+      },
+      "wall_s": 45.240858627,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-steering.config.json",
+          "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/hold-reverse.actions.json",
+          "sha256": "8e440f0ba39908d57c5e1bfa6f8f93d5ffedfe8b0d8df1fb5648e43078f88d68"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/hold-reverse.native.json",
+          "sha256": "869d8253b612565f4283a8187c6d9a276e21778ada42576ac96b15d08a270d33"
+        }
+      ]
+    },
+    {
+      "name": "hold-stop",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 17,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.001384402580340232,
+        "final_yaw_error_rad": 0.005867506540479943,
+        "maximum_body_tilt_rad": 0.004161834108511887,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02900770066576868,
+          0.013666447117837087,
+          -0.0007578314341042565
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/causal-response/hold-stop-acceptance/summary.json",
+          "sha256": "753e6ff8aa196eae0c4558c4a4e424b4eb5107adf95f58528e199e5aa0f84b44"
+        }
+      },
+      "wall_s": 47.625993897,
+      "sources": [
+        {
+          "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+          "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/direct-support-steering.config.json",
+          "sha256": "a6cb5cf7fc48162e72a7b62080a030dc5d1cd27807ca22f209aebf7d492c5aa6"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/hold-stop.actions.json",
+          "sha256": "3db4ebccddb8ea9a01da1c53e29cee6c08c9f59b6caa330dd0fb1b9f0d8cde34"
+        },
+        {
+          "path": "runs/full-robot/learning/causal-response/hold-stop.native.json",
+          "sha256": "0579656f1fe00c06ff6b4763ca415dceb838b88a576591aada56bc9f98d53339"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/causal-response/plan.json",
+      "sha256": "4f967928905dca31e3d7bda0178b01ebc4ae8346b15c8fc66d2d50c4ec21bdf8"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "0abc13e18219d706bfbf578cfe62162fd87f87007ea2c6da8f18d9bd6b786539"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "762b13d40e0163d4e1512541528a70c9d552d773e18accf15083b9258e7953ce"
+    }
+  ],
+  "scope": "Five matched native steering runs: one exact repeat and four single-interval held-command counterfactuals. Sensitivity and dwell frozen before evaluation; no controller promotion, new accuracy or hardware claim."
+}

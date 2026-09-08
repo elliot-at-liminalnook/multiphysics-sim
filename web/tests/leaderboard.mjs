@@ -50,6 +50,21 @@ try {
   for (const e of data.entries.slice(0, 2)) await row(e.id).locator('input').check();
   await page.locator('#compare-controllers').click(); assert.equal(await page.locator('#controller-comparison article').count(), 2);
   assert.match(await page.locator('#controller-comparison').textContent(), /Different comparison groups/);
+  if(data.entries.slice(0,2).some(e=>e.command_response)){
+    const measured=page.locator('#controller-comparison .controller-response');
+    assert.equal(await measured.count(),1);
+    assert.match(await measured.textContent(),/Measured command response/);
+    assert.match(await measured.textContent(),/does not mean the robot has stopped/);
+    for(const c of data.entries.find(e=>e.command_response).command_response.cases){
+      assert.match(await measured.textContent(),new RegExp(c.command));
+      if(c.simulated_response_s!==null)assert((await measured.textContent()).includes(`${c.simulated_response_s.toFixed(2)} s simulation`));
+    }
+    await measured.screenshot({path:reportPath.replace(/\.json$/,'.response-desktop.png')});
+    await page.setViewportSize({width:390,height:844});
+    await measured.screenshot({path:reportPath.replace(/\.json$/,'.response-mobile.png')});
+    await page.setViewportSize({width:1440,height:950});
+    checks.push('paired body-response measurements display with explicit detection and stopping limitations');
+  }
   checks.push('failed and missing gates remain unranked; search, status and comparison work');
   for (const entry of data.entries) {
     await row(entry.id).getByRole('button', {name: 'Load and run', exact: true}).click(); await ready();

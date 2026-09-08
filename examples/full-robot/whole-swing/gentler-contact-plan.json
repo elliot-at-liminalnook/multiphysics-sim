@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "slip-1mm-s",
+      "scene": "runs/full-robot/learning/gentler-contact/slip-1mm-s.scene.json",
+      "config": "runs/full-robot/learning/gentler-contact/gentler.config.json",
+      "actions": "runs/full-robot/learning/gentler-contact/actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "slip_speed_m_s": 0.001,
+      "forward_speed_m_s": 0.0027236842105263157,
+      "nominal_stride_m": 0.005175,
+      "split": "development"
+    },
+    {
+      "name": "slip-0.1mm-s",
+      "scene": "runs/full-robot/learning/gentler-contact/slip-0.1mm-s.scene.json",
+      "config": "runs/full-robot/learning/gentler-contact/gentler.config.json",
+      "actions": "runs/full-robot/learning/gentler-contact/actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "slip_speed_m_s": 0.0001,
+      "forward_speed_m_s": 0.0027236842105263157,
+      "nominal_stride_m": 0.005175,
+      "split": "development"
+    },
+    {
+      "name": "slip-0.030000000000000002mm-s",
+      "scene": "runs/full-robot/learning/gentler-contact/slip-0.030000000000000002mm-s.scene.json",
+      "config": "runs/full-robot/learning/gentler-contact/gentler.config.json",
+      "actions": "runs/full-robot/learning/gentler-contact/actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "slip_speed_m_s": 0.00003,
+      "forward_speed_m_s": 0.0027236842105263157,
+      "nominal_stride_m": 0.005175,
+      "split": "development"
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/GENTLER-CONTACT-PLAN.md",
+      "sha256": "6e64d6098ab64198d25dc7acf16dcad87bcf8694414c27dae4b4698598393980"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+      "sha256": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-recipes.json",
+      "sha256": "49b69c3d2feefb27eeb353e7c987cc6c1e2bfe5cf4585bd6529d7004042a3043"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-contact/gentler.config.json",
+      "sha256": "5dc0fe582290a09e6e91146005e4dcf4019c4382473f0869313f67551c019a6f"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-contact/actions.json",
+      "sha256": "d085e74426e861cf037e0828d6df67a2ecb0b7e7b7e00e25bf6476be2b83aff8"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-contact/slip-1mm-s.scene.json",
+      "sha256": "35b31e54550d404cc16662a07ada4cbda5ac8b838898b974f14d5d58c1349ebc"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-contact/slip-0.1mm-s.scene.json",
+      "sha256": "b7230a1982890d99cbb43d68d2906bc8ed43a248413049babe6fec7f5d1a855e"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-contact/slip-0.030000000000000002mm-s.scene.json",
+      "sha256": "6e6d176fd230b6e592a5d895a68e7f924c28f71b868412a11125ced21d375f51"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "0abc13e18219d706bfbf578cfe62162fd87f87007ea2c6da8f18d9bd6b786539"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "762b13d40e0163d4e1512541528a70c9d552d773e18accf15083b9258e7953ce"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_gentler_contact.mjs",
+      "sha256": "9d8369ddd5cd5186a9835b3fff5b80b5065142bd34f5f6862e44a9edd1db2b68"
+    }
+  ],
+  "scope": "Three explicit contact smoothing profiles under the fixed 2x shift/return gait. Identical CAD, controller, commands and solver settings. Original task and 5% contact screen; no timestep, held-out, terrain or browser qualification."
+}

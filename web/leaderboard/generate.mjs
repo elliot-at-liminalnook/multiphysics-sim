@@ -34,6 +34,13 @@ const tangentBrowserPath = 'examples/full-robot/whole-swing/tangent-browser-stat
 const transportPath = 'examples/full-robot/whole-swing/frame-transport-status.json', transport = read(transportPath);
 const transportIntegrityPath = 'examples/full-robot/whole-swing/frame-transport-integrity.json';
 assert(transport.complete && read(transportIntegrityPath).passed);
+const exactBasePath = 'examples/full-robot/whole-swing/exact-probe-base-status.json';
+const exactBase = read(exactBasePath).cases.find(c => c.name === 'exact-probe-base-enabled');
+const exactBaseParityPath = 'examples/full-robot/whole-swing/exact-probe-base-browser-parity.json', exactBaseParity = read(exactBaseParityPath);
+assert(read('examples/full-robot/whole-swing/exact-probe-base-identity.json').passed);
+const exactBaseBrowserPath = 'examples/full-robot/whole-swing/exact-probe-base-browser-status.json', exactBaseBrowser = read(exactBaseBrowserPath);
+const exactBaseBrowserIntegrityPath = 'examples/full-robot/whole-swing/exact-probe-base-browser-integrity.json';
+assert(exactBaseBrowser.complete && read(exactBaseBrowserIntegrityPath).passed);
 const definitions = [
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
@@ -92,6 +99,13 @@ const definitions = [
     parity: radiusParity.passed && radiusParity.replay_exact && radiusParity.reset_exact,
     performance: transport.cases.find(c => c.name === 'json-turn').measurement,
     extraEvidence: [radiusSelectionPath, radiusParityPath, radiusSelection.selected.comparison.path, tangentBrowserPath, transportPath, transportIntegrityPath]},
+  {id: 'exact-base-steering', name: 'Steering with exact base reuse', description: 'Reuses an identical closure calculation before derivative probes. All 15 steering swings and native/WASM replay checks pass; native physical states are unchanged. Coarse timestep accuracy still fails.',
+    scene: 'examples/full-robot/whole-swing/exact-base-turn.scene.json', config: 'examples/full-robot/whole-swing/exact-base-turn.config.json',
+    capture: exactBase.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(exactBase.acceptance.source.path), evidence: exactBasePath,
+    commands: true, benchmark: 'flat-steering-24s-v1', numerical: 'examples/full-robot/whole-swing/exact-probe-base-refinement.json',
+    parity: exactBaseParity.passed && exactBaseParity.replay_exact && exactBaseParity.reset_exact,
+    performance: exactBaseBrowser.cases.find(c => c.name === 'enabled-turn').measurement,
+    extraEvidence: [exactBaseParityPath, exactBaseBrowserPath, exactBaseBrowserIntegrityPath, 'examples/full-robot/whole-swing/exact-probe-base-identity.json', 'examples/full-robot/whole-swing/exact-probe-base-profile.json', 'examples/full-robot/whole-swing/exact-probe-base-integrity.json']},
 ];
 const taskPath = 'examples/full-robot/heading-task/task.json';
 mkdirSync('runs/leaderboard', {recursive: true});

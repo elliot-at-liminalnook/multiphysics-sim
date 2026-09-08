@@ -157,6 +157,13 @@ jobs:
           node examples/full-robot/compare_mechanical_reuse.mjs runs/interactive/secant-native.json runs/interactive/tangent-native.json runs/interactive/tangent-difference.json --linearized-probes
           node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/tangent-difference.json")); assert(r.metrics.foot_marker_position_m.maximum<=0.001); assert(r.metrics.body_position_m.maximum<=0.0005);'
           FRAME_ENCODING=json node web/tests/environment.mjs runs/interactive/teacher-viewer tested-portable-tangent-steering runs/interactive/tangent-native.json runs/interactive/tangent-parity.json
+      - name: Exact Jacobian-base reuse preserves every steering state and host replay
+        run: |
+          node web/leaderboard/materialize_actions.mjs exact-base-steering runs/interactive/exact-base-actions.json
+          target/release/examples/run_environment examples/full-robot/whole-swing/exact-base-turn.scene.json examples/full-robot/whole-swing/exact-base-turn.config.json examples/full-robot/heading-task/task.json runs/interactive/exact-base-actions.json > runs/interactive/exact-base-native.json
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const read=p=>JSON.parse(readFileSync(p)); const a=read("runs/interactive/tangent-native.json"),b=read("runs/interactive/exact-base-native.json"); const frames=c=>c.frames.map(({stepping_wall_s,...f})=>f); assert.deepEqual(frames(a),frames(b)); for(const k of ["transitions","task","contract"])assert.deepEqual(a[k],b[k]); delete b.recording.config.implicit.reuse_exact_probe_base; assert.deepEqual(a.recording,b.recording);'
+          node examples/full-robot/check_online_steps.mjs runs/interactive/exact-base-native.json runs/interactive/exact-base-acceptance
+          FRAME_ENCODING=json node web/tests/environment.mjs runs/interactive/teacher-viewer tested-exact-base-steering runs/interactive/exact-base-native.json runs/interactive/exact-base-parity.json
       - name: Effective-servo browser profile and replay
         run: |
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/browser-effective-servo/scene.json examples/full-robot/browser-effective-servo/config.json examples/full-robot/browser-effective-servo/task.json > runs/interactive/effective-servo-native.json

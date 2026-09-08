@@ -351,3 +351,44 @@ time rises 6.223→6.644 seconds. The proposal screen costs more than it saves
 on this robot. The option remains off and is not promoted to a WASM timing
 experiment. `velocity-seed-summary.json` links all outcomes, exact preservation,
 profiles and unchanged physical/solver-difference gates.
+
+## Exact Jacobian-base reuse saves little browser time
+
+The optional shared cache reuses an already exact closure mapping only when
+every mechanical unknown matches bitwise. Derivative-probe context remains
+separate, and the ordinary exact residual, endpoint acceptance and fallback
+remain unchanged. All 38 focused linkage/contact/cache tests pass. The two
+24-second native captures have strictly identical physical states, task
+transitions and recordings apart from the declared option. The strict check
+distinguishes signed zero and also verifies profiled runs and the previous
+default-off reference.
+
+Reuse removes 806 accepted Jacobian-base preparations. Native unprofiled time
+falls **6.051→5.983 seconds** and profiled active transition p95
+**13.757→13.517 ms**. Full 1,200-step JSON native/WASM parity passes with maximum
+difference **8.282e-9**, exact replay/reset and invalid-input preservation.
+
+On the same SIMD/LTO WASM with automatic display and JSON transport, rendered
+steering active p95 is **20.55 ms off / 20.48 ms on**. Enabled forward/stop is
+**22.67 ms**. All active and overall simulation rates pass; both enabled
+latency cases still fail the original 20 ms requirement. One run per case
+does not establish a significant browser speed advantage. Native replay of
+the exact browser forward inputs passes all 15 swings, with 0.933 mm final
+body error. The 20 ms versus 5 ms trajectory screen remains a failure; no
+tolerance or physical parameter was relaxed.
+
+`exact-probe-base-browser-status.json` retains the rendered outcomes and
+hardware details. `exact-probe-base-identity.json`, `exact-probe-base-profile.json`
+and `exact-probe-base-refinement.json` preserve the native comparisons. The
+new leaderboard recipe explicitly enables reuse; the library default remains
+off. This small exact-work optimization does not resolve realtime latency,
+coarse-step accuracy or the outstanding learning and held-out robustness work.
+
+The 12-entry browser suite passes every exact Load and run, selected full
+replay, video export, narrow layout and tampered-recipe rejection. Its first
+attempt timed out on a short video download. Focused 0.3/2-second clips both
+produce valid WebM bytes, and a full retry with recorder-event diagnostics
+passes without lengthening the clip or timeout. The cause was not reproduced;
+the failed log and successful evidence are retained in
+`exact-probe-base-browser-integrity.json`. CI now checks strict off/on native
+steering identity and enabled host parity. Remote CI remains unrun.

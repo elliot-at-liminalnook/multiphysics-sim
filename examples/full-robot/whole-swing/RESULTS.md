@@ -708,3 +708,37 @@ independent torsional dissipation. Contact-model sensitivity and anti-sliding
 qualification must be addressed alongside realtime computation, before this
 candidate can become a validated walking choice. The CI regression is added;
 its remote execution has not been observed in this session.
+
+## Smaller contact smoothing does not cure loaded sliding
+
+With the teacher, CAD, friction coefficients, commands and solver tolerances
+frozen, smoothing speeds **1 / 0.1 / 0.03 mm/s** all pass the minute's original
+41-swing task. Sustained travel is **3.778 / 3.774 / 3.773 mm/s** and final stop
+error is **0.529 / 0.461 / 0.447 mm**. These are distinct constitutive fidelity
+profiles, not timestep refinements. The standard suite audit correctly rejects
+different physics options; per-profile audits retain that rule, and a separate
+cross-profile check proves that only the declared smoothing speed changes.
+
+The largest per-foot accumulated load-weighted contact motion divided by net
+body advance is **93.1% / 87.5% / 87.5%**. Every profile fails the prospective
+**5%** anti-sliding screen declared before evaluating the alternatives. The
+tenfold smoothing reduction gives only a small change, and a further reduction
+has effectively plateaued. Native rates fall to **0.392x / 0.206x** from the
+reference's 0.533x; p95 rises to **126 / 309 ms** from 80 ms. None is promoted.
+`contact-smoothing-summary.json` retains every task and contact-screen outcome.
+
+A focused analytic diagnostic test distinguishes pure rolling from sliding:
+COM motion with cancelling angular velocity produces zero material-contact
+motion; added 2 mm/s sliding produces the expected displacement and shear
+work. Internal contacts are excluded. This test passes and is included in CI.
+The large measured contact motion is therefore not simply counting a moving
+COM or a rotating marker as sliding.
+
+The reference body's horizontal path is **1.742 m** for **0.213 m** net advance.
+Shift and return phases account for **0.715 / 0.755 m** of that path. Lower
+smoothing is neither an adequate sliding fix nor a computational improvement.
+The next diagnosis must attribute contact motion and traction demand to phase
+and support role, then test body-shift/return motion or traction-aware control.
+Do not compensate by inflating friction or actuator authority without an
+explicit physical hypothesis and provenance. Numerical, browser, terrain and
+held-out qualification of any resulting controller remain separate.

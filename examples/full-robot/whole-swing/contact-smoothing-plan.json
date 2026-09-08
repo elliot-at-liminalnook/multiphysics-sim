@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "slip-0.1mm-s",
+      "scene": "runs/full-robot/learning/contact-smoothing/slip-0.1mm-s.scene.json",
+      "config": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "actions": "runs/full-robot/learning/contact-smoothing/actions.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "slip_speed_m_s": 0.0001,
+      "split": "development"
+    },
+    {
+      "name": "slip-0.03mm-s",
+      "scene": "runs/full-robot/learning/contact-smoothing/slip-0.03mm-s.scene.json",
+      "config": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "actions": "runs/full-robot/learning/contact-smoothing/actions.json",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "seed": 0,
+      "slip_speed_m_s": 0.00003,
+      "split": "development"
+    }
+  ],
+  "baseline": {
+    "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.native.json",
+    "sha256": "54ee76fc3a432003bdf7a3583a1a18d58dd3b5914801a758d48100bd0fe0b7db"
+  },
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/CONTACT-SMOOTHING-PLAN.md",
+      "sha256": "269ccbdb6a9b7a07cceec3fbf6d56e0c29b859f030daa8f30f2821d35af628a1"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+      "sha256": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-recipes.json",
+      "sha256": "49b69c3d2feefb27eeb353e7c987cc6c1e2bfe5cf4585bd6529d7004042a3043"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-status.json",
+      "sha256": "dbfd62e3bb21dd73f24e18e0f65d51bd8eff78d35d50f58649484dd750bc9c40"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-minute-contact-motion.json",
+      "sha256": "36ba6ab40f61629895b1d18d0eea8c19f5939c2c6642a0cde2c1f9d25b7f4937"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "95d9b4e2e7dda99d35bcad2e8aa8ea23899e4e95c13057fe2d90d7782794a835"
+    },
+    {
+      "path": "runs/full-robot/learning/contact-smoothing/actions.json",
+      "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+    },
+    {
+      "path": "runs/full-robot/learning/contact-smoothing/slip-0.1mm-s.scene.json",
+      "sha256": "5c4c4672fa399a4b94189ba7e30d9d5f96965a42c45a386593ec309f9ee3e231"
+    },
+    {
+      "path": "runs/full-robot/learning/contact-smoothing/slip-0.03mm-s.scene.json",
+      "sha256": "514ffb4938ae864f6c7e40cb9908630de0465e2e2c804fce87c12c092029e48b"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "503c689e47157df669b8129aa6cdbc48489625a5c15ccfdbb3efc3e648a63ae2"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "c9a014ab5a5c45273acb0045f0ecf8f44471efcd7086fd11391de780328c3e90"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_contact_smoothing.mjs",
+      "sha256": "a8b73ad406deac7cfca7cf120c70d66fb9712aeed9c3681c98aa2b70c59120d1"
+    }
+  ],
+  "scope": "Two explicit alternative contact-smoothing profiles with a frozen teacher and original development minute. Full task gates plus a prospective 5% contact-motion screen; runtime failures retained. No timestep, held-out, browser or calibrated hardware qualification."
+}

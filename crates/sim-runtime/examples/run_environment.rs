@@ -2,7 +2,7 @@
 use serde_json::json;
 use sim_runtime::{
     embedded::Config,
-    environment::{EmbeddedEnvironment, Task},
+    environment::{EmbeddedEnvironment, EnvironmentRecording, Task},
     session::Scene,
 };
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -14,22 +14,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         None
     };
-    if !(3..=4).contains(&args.len()) {
+    let replay = args.len() == 2 && args[0] == "--replay";
+    if !replay && !(3..=4).contains(&args.len()) {
         return Err(
-            "usage: run_environment scene.json config.json task.json [actions.json] [--profile report.json]".into(),
+            "usage: run_environment scene.json config.json task.json [actions.json] [--profile report.json], or run_environment --replay episode.recording.json [--profile report.json]".into(),
         );
     }
-    let scene: Scene = serde_json::from_slice(&std::fs::read(&args[0])?)?;
-    let config: Config = serde_json::from_slice(&std::fs::read(&args[1])?)?;
-    let task: Task = serde_json::from_slice(&std::fs::read(&args[2])?)?;
-    let steps = config.steps;
-    let mut env = EmbeddedEnvironment::new(scene, config, task, 0)?;
-    let actions: Option<Vec<Vec<f64>>> = args
-        .get(3)
-        .map(|p| -> Result<_, Box<dyn std::error::Error>> {
-            Ok(serde_json::from_slice(&std::fs::read(p)?)?)
-        })
-        .transpose()?;
+    let (mut env, actions, steps, episode_steps) = if replay {
+        let record: EnvironmentRecording = serde_json::from_slice(&std::fs::read(&args[1])?)?;
+        let steps = record.runtime.completed_steps;
+        let episode_steps = record.runtime.config.steps;
+        let loaded = EmbeddedEnvironment::new(record.runtime.scene.clone(),
+            record.runtime.config.clone(), record.task.clone(), record.runtime.seed)?;
+        // Reuse the browser's validation, seed handling and held-action reconstruction.
+        let (env, actions) = loaded.prepare_replay(record)?;
+        (env, Some(actions), steps, episode_steps)
+    } else {
+        let scene: Scene = serde_json::from_slice(&std::fs::read(&args[0])?)?;
+        let config: Config = serde_json::from_slice(&std::fs::read(&args[1])?)?;
+        let task: Task = serde_json::from_slice(&std::fs::read(&args[2])?)?;
+        let steps = config.steps;
+        let env = EmbeddedEnvironment::new(scene, config, task, 0)?;
+        let actions: Option<Vec<Vec<f64>>> = args.get(3)
+            .map(|p| -> Result<_, Box<dyn std::error::Error>> {
+                Ok(serde_json::from_slice(&std::fs::read(p)?)?)
+            }).transpose()?;
+        (env, actions, steps, steps)
+    };
     let initial_action = env.inputs().iter().map(|c| c.initial).collect::<Vec<_>>();
     let mut frames = vec![env.frame()?];
     let mut transitions = vec![env.transition().clone()];
@@ -42,7 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = std::time::Instant::now();
     let mut error = None;
     let mut transition_wall_s = Vec::new();
-    while !env.transition().terminated && !env.transition().truncated {
+    while env.transition().completed_steps < steps
+        && !env.transition().terminated && !env.transition().truncated {
         let action = match &actions {
             Some(a) => a
                 .get(transitions.len() - 1)
@@ -61,7 +73,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         transition_wall_s.push(transition_start.elapsed().as_secs_f64());
     }
     let wall_s = start.elapsed().as_secs_f64();
-    let completed = error.is_none() && env.transition().completed_steps == steps;
+    // A successfully replayed prefix is not a completed benchmark episode.
+    let completed = error.is_none() && env.transition().completed_steps == episode_steps;
+    let requested_steps_completed = error.is_none() && env.transition().completed_steps == steps;
     if let Some(path) = profile_path {
         let buckets = sim_solve::profile::all()
             .iter()
@@ -81,6 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "{}",
         serde_json::to_string(&json!({"version":1,"kind":"sampled_environment_capture",
         "completed":completed,"error":error,"contract":env.contract(),"task":env.task(),"metadata":env.metadata(),
+        "requested_steps_completed":requested_steps_completed,"requested_capture_steps":steps,
         "recording":env.recording(),"transitions":transitions,"frames":frames,"wall_s":wall_s,
         "transition_wall_s":transition_wall_s,
         "scope":"Teacher-only endpoint task diagnostic; includes observation and capture overhead. No learning or hardware accuracy claim."}))?

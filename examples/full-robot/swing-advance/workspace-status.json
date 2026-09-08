@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "workspace-3.75-overlap-0-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Raise reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000733 mm at world [0.1614954440327765, -0.00018098115843911272, 0.030308752147544096] m; requested body [-0.008678862007910477, -0.00043110419989131696, -0.011820466700050356] m, time 3.540000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 2.116989349,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0-20ms.config.json",
+          "sha256": "e01e640dd1be6c7bf7d10ab2721c9ba3e2a926c223c97c6b025a2ae51ab4dd7b"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0-20ms.native.json",
+          "sha256": "97152e4a96dedb7acccd61b9f0aef44a721524663eeacefafacadc4828fdbb59"
+        }
+      ]
+    },
+    {
+      "name": "workspace-3.75-overlap-0-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Raise reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000733 mm at world [0.1614954440327765, -0.00018098115843911272, 0.030308752147544096] m; requested body [-0.008678862007910477, -0.00043110419989131696, -0.011820466700050356] m, time 3.540000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 5.6102568470000005,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0-5ms.config.json",
+          "sha256": "9deaf7eb0e56d47bf6cde5e0bab1ceefbeff2620ac3f3469fb2ac0a499d50b22"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0-5ms.native.json",
+          "sha256": "9483c6de3d243406f9dbe298d5b469a8f90a44ec25e55daafc9b173309ee5ffc"
+        }
+      ]
+    },
+    {
+      "name": "workspace-3.75-overlap-0.5-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Raise reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000421 mm at world [0.16242993940252703, -0.00018098115843911272, 0.03031227109796756] m; requested body [-0.007761811760727307, -0.00043110419989131696, -0.011820466700050356] m, time 3.560000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 2.053518136,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0.5-20ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0.5-20ms.config.json",
+          "sha256": "c5fb61cd9f9b7b47df50e3c0936f69d8f999cf7f697866250f4492f3d9c983da"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0.5-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0.5-20ms.native.json",
+          "sha256": "4cac8c9dff8f38e3498d8f69c5052f484d56fd8b6dbd28c0260a360483a67b46"
+        }
+      ]
+    },
+    {
+      "name": "workspace-3.75-overlap-0.5-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Raise reference has internal contact: +X | Thigh sector gear / +X | Hip output shaft and pulley b6c0; penetration 0.000421 mm at world [0.16242993940252703, -0.00018098115843911272, 0.03031227109796756] m; requested body [-0.007761811760727307, -0.00043110419989131696, -0.011820466700050356] m, time 3.560000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.584327614,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0.5-5ms.scene.json",
+          "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0.5-5ms.config.json",
+          "sha256": "dd03112e19407ac530ebc42bcdf9dd7e236ac7fa108c552199aab59d618cbaa3"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0.5-5ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-3.75-overlap-0.5-5ms.native.json",
+          "sha256": "420cfd667d3892faa845c5ecbca527e419c9ff0598d4163160a1e523657b7ea2"
+        }
+      ]
+    },
+    {
+      "name": "workspace-5-overlap-0-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Raise reference lacks static support: Some([19.26751220724386, 19.26748687935298, 0.4719063133341873])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.7169216870000001,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0-20ms.config.json",
+          "sha256": "9e689f3573a7051d9b89cf8f3eb1fce1c5b6f2569b4ef687621718b953a23c75"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0-20ms.native.json",
+          "sha256": "38ba55cea80543a05c10c3c8ec3e247b2126fe7732c8c7c54182ccfe42f228f0"
+        }
+      ]
+    },
+    {
+      "name": "workspace-5-overlap-0-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Raise reference lacks static support: Some([19.26751220724386, 19.26748687935298, 0.4719063133341873])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.503345941,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0-5ms.config.json",
+          "sha256": "f677187ebe2a480a2a9eee9ae7b301d6c426e3a6fe5e4a05ddc35cc79a99b9e1"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0-5ms.native.json",
+          "sha256": "130d91b9b95278dd087afe822cc8c757baae5bb80558defa01c74793200152b1"
+        }
+      ]
+    },
+    {
+      "name": "workspace-5-overlap-0.5-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 2 Raise reference lacks static support: Some([19.26751220724386, 19.26748687935298, 0.4719063133341873])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.779112911,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0.5-20ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0.5-20ms.config.json",
+          "sha256": "526c34e079f07f687e45e689bfb37a7a67106784b93c48d213ca5cee7a4dc686"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0.5-20ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0.5-20ms.native.json",
+          "sha256": "ce7ca655b028bb354f3346acbbbff9131ec396b30c74f5dd1ed354bd7b415bfe"
+        }
+      ]
+    },
+    {
+      "name": "workspace-5-overlap-0.5-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 2 Raise reference lacks static support: Some([19.26751220724386, 19.26748687935298, 0.4719063133341873])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 4.423418944,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0.5-5ms.scene.json",
+          "sha256": "6aa58384add306e47447a2e6331e17132e4d21529cb4a806663b12ee4b412339"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0.5-5ms.config.json",
+          "sha256": "f9f729f7fa9ef55dd965530ba4e2d3ca8a6801e9374be046a8491e60ea24999d"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0.5-5ms.actions.json",
+          "sha256": "8b9dee176bfa8aa5a0ce7c17a8b2bc26d7d14e35d7e09f2cad396de5420827fa"
+        },
+        {
+          "path": "runs/full-robot/learning/swing-workspace/workspace-5-overlap-0.5-5ms.native.json",
+          "sha256": "3ec50625be0132f74f9d92009e84b72ff20dc23e6df4ffea16b0155d4e1b948d"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/swing-workspace/plan.json",
+      "sha256": "df20478b9dc38c22c121ac1f8271d899c98af6c8618ed73199ec1978e4a799f8"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "2f70f6497328c731b693da7b2e373fdbe92c34224ce3552bd6010dc1d7c024fe"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "24a9b3f888c360c35d2b80eea646c85abfba34be6a82ca8fc89efac69584005d"
+    }
+  ],
+  "scope": "Development-only stance shift derived to preserve the leading-foot forward endpoint at higher speed. Same CAD physics, selected weights, support shifts, motor limits and physical/numerical gates. No sustained or browser acceptance implied."
+}

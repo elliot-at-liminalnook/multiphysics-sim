@@ -229,16 +229,17 @@ try {
   assert(!(await page.locator('#motion-progress').isVisible()));
   checks.push('synthetic missing-support timeout is visible, replayable, and recoverable by reset');
  }
- for(const id of ['pendulum-environment','robot-teacher-environment','robot-effective-servo','robot-crawl-startup','robot-online-steps','robot-reversal-crawl','robot-terrain-contact','robot-residual-policy','robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student','robot-browser-solver']) {
-  if(!catalog.presets.some(p=>p.id===id))continue;
+ for(const preset of catalog.presets.filter(p=>p.task)) {
+  const id=preset.id,presetData=JSON.parse(await readFile(resolve(directory,preset.path)));
+  const neural=presetData.config.policy?.neural_residual;
   await page.locator('#preset').selectOption(id);await ready();
   assert(await page.locator('#learning-progress').isVisible());
   assert.match(await page.locator('#input-help').textContent(),/20 ms/);
-  if(['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student','robot-browser-solver'].includes(id)){
-    assert.equal(await page.locator('#inputs input:disabled').count(),16);
+  if(neural){
+    assert.equal(await page.locator('#inputs input:disabled').count(),presetData.scene.controller.inputs.filter(c=>c.lower===c.upper).length);
     assert(!(await page.locator('#residual-inputs').isVisible()));
     await page.locator('#neural-residuals summary').click();
-    assert.equal(await page.locator('#neural-residuals [data-target]').count(),12);
+    assert.equal(await page.locator('#neural-residuals [data-target]').count(),neural.outputs.length);
   }
   if(['robot-student-push','robot-walking-objective'].includes(id)){
     assert.match(await page.locator('#world-load-panel').textContent(),/7.00–7.20 s/);
@@ -258,29 +259,33 @@ try {
   assert.equal(await page.locator('#sim-time').textContent(),'0.020 s');
   assert.match(await page.locator('#learning-progress').textContent(),/Last 20 ms score:/);
   const score=await page.locator('#learning-progress').textContent();
-  if(['robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student','robot-browser-solver'].includes(id)) {
+  if(presetData.task.walking) {
     assert(await page.locator('#walking-overlay').isVisible());
     assert.match(await page.locator('#walking-overlay').textContent(),/qualified.*failed/);
     assert.match(score,/Body reference error:/);
   }
-  if(['robot-heading-student','robot-browser-solver'].includes(id)){
+  if(presetData.task.walking?.heading){
     assert.match(await page.locator('#walking-overlay').textContent(),/heading .*°/);
     assert.match(score,/Heading error: .*°; heading score:/);
     assert.match(await page.locator('#input-help').textContent(),/supported steps, plus heading/);
   }
-  const neuralText=['robot-neural-teacher','robot-distilled-student','robot-student-push','robot-walking-objective','robot-improved-student','robot-paced-student','robot-reused-student','robot-heading-student','robot-browser-solver'].includes(id)?await page.locator('#neural-residuals').textContent():null;
+  const neuralText=neural?await page.locator('#neural-residuals').textContent():null;
   if(neuralText){
     const outputs=[...neuralText.matchAll(/: (-?\d+\.\d+) rad/g)].map(m=>Number(m[1]));
-    assert.equal(outputs.length,12);assert(outputs.some(v=>v!==0));assert(outputs.every(v=>Math.abs(v)<=(id==='robot-neural-teacher'?.001:.05)));
+    assert.equal(outputs.length,neural.outputs.length);assert(outputs.some(v=>v!==0));
+    assert(outputs.every(v=>Math.abs(v)<=Math.max(...neural.outputs.map(o=>o.scale))));
   }
   const download=page.waitForEvent('download');await page.locator('#download').click();
   const recipe=JSON.parse(await readFile(await (await download).path()));
   assert.equal(recipe.kind,'sampled_environment_recording');assert.equal(recipe.runtime.completed_steps*recipe.runtime.config.step_s,0.02);
+  assert.deepEqual(recipe.runtime.scene.controller.sources,presetData.scene.controller.sources);
+  assert.equal(recipe.runtime.config.policy?.step_reference?.sequence.swing_body_advance_fraction??0,
+    presetData.config.policy?.step_reference?.sequence.swing_body_advance_fraction??0);
   await page.locator('#replay').click();await ready();
   assert.equal(await page.locator('#learning-progress').textContent(),score);
   if(neuralText){
     assert.equal(await page.locator('#neural-residuals').textContent(),neuralText);
-    assert.equal(recipe.runtime.config.policy.neural_residual.outputs.length,12);
+    assert.deepEqual(recipe.runtime.config.policy.neural_residual,neural);
     checks.push(id+': live bounded output readouts, policy artifact recording and exact visible replay');
   }
   if(id==='robot-residual-policy'){

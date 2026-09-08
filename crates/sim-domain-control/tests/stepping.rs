@@ -19,6 +19,7 @@ fn sequence() -> StepSequence {
             command_postures: vec![],
             restart_order_on_translation_reversal: false,
             update_command_before_lift: false,
+            swing_body_advance_fraction: 0.,
             maximum_speed_m_s: 0.01,
             maximum_yaw_rate_rad_s: 0.1,
         },
@@ -317,7 +318,7 @@ fn airborne_stop_preserves_the_committed_landing() {
 }
 
 #[test]
-fn prelift_reversal_keeps_the_support_shift_and_restarts_order_after_landing() {
+fn prelift_reversal_keeps_the_committed_transfer_and_then_restarts_order() {
     let mut s = responsive_sequence();
     let mut starts = vec![];
     for i in 0..250 {
@@ -333,18 +334,40 @@ fn prelift_reversal_keeps_the_support_shift_and_restarts_order_after_landing() {
         if i == 135 {
             assert_eq!(r.phase, StepPhase::Raise);
             assert_eq!(r.foot, Some(2), "do not change which foot was unloaded");
-            assert_eq!(r.latched_twist[0], -0.00125);
+            assert_eq!(r.latched_twist[0], 0.00125);
             assert_eq!(r.body_world_m, [0.0025, -0.016, 0.]);
         }
         if i == 175 {
             assert_eq!(r.phase, StepPhase::Return);
             assert!(
-                r.feet_world_m[2][0] < 0.01,
-                "new landing follows the reverse request"
+                r.feet_world_m[2][0] > 0.01,
+                "finish the landing selected with the committed support shift"
             );
         }
     }
     assert_eq!(starts, vec![Some(0), Some(2), Some(0)]);
+}
+
+#[test]
+fn a_turn_request_updates_before_lift_without_jumping_planted_positions() {
+    let mut s = responsive_sequence();
+    let mut before = None;
+    for i in 0..=35 {
+        let command = if i < 20 {
+            [0.00125, 0., 0.]
+        } else {
+            [0., 0., 0.002]
+        };
+        let r = s.sample(i as f64 * 0.02, command, true, true).unwrap();
+        if i == 35 {
+            let previous: StepReference = before.unwrap();
+            assert_eq!(r.phase, StepPhase::Raise);
+            assert_eq!(r.latched_twist, [0., 0., 0.002]);
+            assert_eq!(r.feet_world_m, previous.feet_world_m);
+            assert_eq!(r.body_world_m, [0., 0.016, 0.]);
+        }
+        before = Some(r);
+    }
 }
 
 #[test]
@@ -366,5 +389,50 @@ fn recenter_waits_for_four_foot_support_and_timeout_is_transactional() {
                 assert_eq!(r.step, 0);
             }
         }
+    }
+}
+
+#[test]
+fn swing_body_advance_preserves_feet_endpoints_and_landing_waits() {
+    let feet = vec![[0., -0.3, -0.4], [0.3, 0., -0.4],
+        [0., 0.3, -0.4], [-0.3, 0., -0.4]];
+    for fraction in [0.5, 1.] {
+        let mut config = sequence().config().clone();
+        config.swing_body_advance_fraction = fraction;
+        let mut moving = StepSequence::new(config, [0.; 3], 0., feet.clone()).unwrap();
+        let mut baseline = sequence();
+        let mut previous: Option<StepReference> = None;
+        for i in 0..=120 {
+            // Delay first landing after the scheduled end of lowering, then
+            // command a stop while airborne. Both planners must finish safely.
+            let landed = !(70..80).contains(&i);
+            let command = if i < 60 { [0.005, 0., 0.01] } else { [0.; 3] };
+            let a = baseline.sample(i as f64 * 0.02, command, true, landed).unwrap();
+            let b = moving.sample(i as f64 * 0.02, command, true, landed).unwrap();
+            assert_eq!(a.feet_world_m, b.feet_world_m);
+            assert_eq!(a.phase, b.phase);
+            assert_eq!(a.waiting, b.waiting);
+            assert_eq!(a.step, b.step);
+            if i == 55 { // Midpoint of the combined raise/lower trajectory.
+                let next = advance_planar([0.; 3], [0.005, 0., 0.01], 2.);
+                assert!((b.body_world_m[0] - a.body_world_m[0] - 0.5 * fraction * next[0]).abs() < 1e-14);
+                assert!((b.yaw_rad - a.yaw_rad - 0.5 * fraction * next[2]).abs() < 1e-14);
+            }
+            if matches!(b.phase, StepPhase::Hold | StepPhase::Shift | StepPhase::Idle | StepPhase::Settle) {
+                assert_eq!(a.body_world_m, b.body_world_m);
+                assert_eq!(a.yaw_rad, b.yaw_rad);
+            }
+            if let Some(p) = previous {
+                assert!((b.body_world_m[0] - p.body_world_m[0]).abs() < 0.002);
+                assert!((b.yaw_rad - p.yaw_rad).abs() < 0.002);
+                if b.waiting && p.waiting { assert_eq!(b.body_world_m, p.body_world_m); }
+            }
+            previous = Some(b);
+        }
+    }
+    for invalid in [-0.1, 1.01, f64::NAN] {
+        let mut config = sequence().config().clone();
+        config.swing_body_advance_fraction = invalid;
+        assert!(StepSequence::new(config, [0.; 3], 0., feet.clone()).is_err());
     }
 }

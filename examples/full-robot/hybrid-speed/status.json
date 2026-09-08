@@ -1,0 +1,648 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "point-0-60s-20ms",
+      "gain": 0,
+      "duration_s": 60,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0011781410664302022,
+        "final_yaw_error_rad": 0.006894607619722176,
+        "maximum_body_tilt_rad": 0.0038312849079746134,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.14105956542644513,
+          0.0008732405632207598,
+          -0.0006877704085872238
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-20ms-acceptance/summary.json",
+          "sha256": "903493871962ec691bd1652caf2c4bd879377627c6346e03144ab768f8d4ee88"
+        }
+      },
+      "wall_s": 29.205555685,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-20ms.scene.json",
+          "sha256": "9fe3a28ecb5be0c9b0842539f14fb95aacc758ac3d99242a20679838fd7afaee"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-20ms.config.json",
+          "sha256": "28bf73f431b9382efe31df58c3d1ca5c8c1c1a3ddf86cc466612cc8ec9d8d259"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-20ms.actions.json",
+          "sha256": "9d23e0185ca084da00ec7e9cc65b82de034c7f831cc8eba11e3ade358c94cb73"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-20ms.native.json",
+          "sha256": "3f42d368664ee15a84c5e29360d21611be74881e6ec27326645e797223952675"
+        }
+      ]
+    },
+    {
+      "name": "point-0-60s-5ms",
+      "gain": 0,
+      "duration_s": 60,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008181888947936962,
+        "final_yaw_error_rad": 0.00682715898259439,
+        "maximum_body_tilt_rad": 0.0042373208490528984,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.1411928929060458,
+          0.0005602300088167643,
+          -0.0005380254148489149
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-5ms-acceptance/summary.json",
+          "sha256": "a054aefb30cf299b75c8e0078a321192f2d2c1b3073d75fb6b10f83ef5cf950b"
+        }
+      },
+      "wall_s": 66.227369172,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-5ms.scene.json",
+          "sha256": "9fe3a28ecb5be0c9b0842539f14fb95aacc758ac3d99242a20679838fd7afaee"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-5ms.config.json",
+          "sha256": "a441eab2e5063916990e21ed1b32ee28b9fb0fbe9b43058327a8bfe6fa4ba465"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-5ms.actions.json",
+          "sha256": "9d23e0185ca084da00ec7e9cc65b82de034c7f831cc8eba11e3ade358c94cb73"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0-60s-5ms.native.json",
+          "sha256": "6ca510fee36d7ead82ac1cb2ea143d727da193a6eb8ece241a331efc4596eea8"
+        }
+      ]
+    },
+    {
+      "name": "point-0.1-24s-20ms",
+      "gain": 0.1,
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.000708212357279807,
+        "final_yaw_error_rad": 0.003002143386724124,
+        "maximum_body_tilt_rad": 0.0039546441842765335,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04499909805784648,
+          0.0001222939838720468,
+          -0.0006814533686606422
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-20ms-acceptance/summary.json",
+          "sha256": "5b83db07dd31fd2af9435ba6151bc6295b4f65da4cc0e4fb4c98e11de8258cd3"
+        }
+      },
+      "wall_s": 9.717842747,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-20ms.scene.json",
+          "sha256": "67d94600143a00d6074f31a709c27b76d3c31fff453c3a87e89b6e6c07f51e4c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-20ms.config.json",
+          "sha256": "94cc95453fa6f7c7d502274fbbd4408bd82584ae69b958937e72ae6c1b630e84"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-20ms.actions.json",
+          "sha256": "e5e82dbbc192b333aaa451f9d74568c8384318fcab131e257c630bf965728ead"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-20ms.native.json",
+          "sha256": "1dd6cf676c09555dfd67e7fdc33ea2bb2305715d7e73881063e4a543d913eff7"
+        }
+      ]
+    },
+    {
+      "name": "point-0.1-24s-5ms",
+      "gain": 0.1,
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006473706067673706,
+        "final_yaw_error_rad": 0.0029924852165232056,
+        "maximum_body_tilt_rad": 0.004251498793001926,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04493400942800615,
+          -0.00013896868517270015,
+          -0.0006266728197822265
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-5ms-acceptance/summary.json",
+          "sha256": "73e0d98073d76b827a66c03fc28863e0d131c9ca3294fcc406530ba6ca198e14"
+        }
+      },
+      "wall_s": 23.589614232,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-5ms.scene.json",
+          "sha256": "67d94600143a00d6074f31a709c27b76d3c31fff453c3a87e89b6e6c07f51e4c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-5ms.config.json",
+          "sha256": "6d0a972b827e45b32130c957bf7e14ef112a17235ceb9880904cae85cc186081"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-5ms.actions.json",
+          "sha256": "e5e82dbbc192b333aaa451f9d74568c8384318fcab131e257c630bf965728ead"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-24s-5ms.native.json",
+          "sha256": "b10ce67d82c7047c2762a514962b884675ef957adc2493020bb4ca5d7418cc9a"
+        }
+      ]
+    },
+    {
+      "name": "point-0.1-60s-20ms",
+      "gain": 0.1,
+      "duration_s": 60,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 7,
+        "final_body_error_m": 0.0008126051416418857,
+        "final_yaw_error_rad": 0.009016673669486058,
+        "maximum_body_tilt_rad": 0.0039546441842765335,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.14135633404115508,
+          0.0006295232767563834,
+          -0.0005052269276259961
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-20ms-acceptance/summary.json",
+          "sha256": "cf8e4717f27b1ce30aea7edb9e1eb26d40d396e87ab267a3f5232cb60a0d96f8"
+        }
+      },
+      "wall_s": 28.667144615,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-20ms.scene.json",
+          "sha256": "67d94600143a00d6074f31a709c27b76d3c31fff453c3a87e89b6e6c07f51e4c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-20ms.config.json",
+          "sha256": "74593a8d9b33ba771c10be110a0cfcc832eca33e0355a474225a78147c2f41b2"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-20ms.actions.json",
+          "sha256": "b62eb4470f60a57a7d88e9bc1d43b5afe40453980f72d73454064383a6fdd49d"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-20ms.native.json",
+          "sha256": "948559de00151f6b493f0705b0b7cf6f392675d56f2b5ad7f95066cce3c8fb71"
+        }
+      ]
+    },
+    {
+      "name": "point-0.1-60s-5ms",
+      "gain": 0.1,
+      "duration_s": 60,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 41,
+        "failed_lifts": 5,
+        "final_body_error_m": 0.0008625157414158279,
+        "final_yaw_error_rad": 0.009171169697522004,
+        "maximum_body_tilt_rad": 0.004290010866256817,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.14134735698752568,
+          0.0007023564171079071,
+          -0.0004899931423271581
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-5ms-acceptance/summary.json",
+          "sha256": "21ac38f95cd144b1e3e727c974217e1f59fd6e753822127f4d3e1dc40adfa638"
+        }
+      },
+      "wall_s": 69.942388307,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-5ms.scene.json",
+          "sha256": "67d94600143a00d6074f31a709c27b76d3c31fff453c3a87e89b6e6c07f51e4c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-5ms.config.json",
+          "sha256": "9fa47b637ae3d8bddad4e0128431b4252b3f2e8f99afa4108664a46a87133d96"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-5ms.actions.json",
+          "sha256": "b62eb4470f60a57a7d88e9bc1d43b5afe40453980f72d73454064383a6fdd49d"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.1-60s-5ms.native.json",
+          "sha256": "2692f0aee53f1d330d6202d3f610d5863bb93bc1e669b0f3434a8bcdb10b4649"
+        }
+      ]
+    },
+    {
+      "name": "point-0.25-24s-20ms",
+      "gain": 0.25,
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009318097422703044,
+        "final_yaw_error_rad": 0.0037161475767624333,
+        "maximum_body_tilt_rad": 0.003907859100809592,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.04509531276632507,
+          0.00019621849807351227,
+          -0.0008772624142647251
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-20ms-acceptance/summary.json",
+          "sha256": "cbad2792c80fd4b18d375eaa9d889e6f81703f886bbbbe94abc073f29c489501"
+        }
+      },
+      "wall_s": 10.143109157,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-20ms.scene.json",
+          "sha256": "9d8e88b92153ebdf3217f9723fbac3dfbe1fad81fc014f0be6ec41450afd75e9"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-20ms.config.json",
+          "sha256": "94cc95453fa6f7c7d502274fbbd4408bd82584ae69b958937e72ae6c1b630e84"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-20ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-20ms.native.json",
+          "sha256": "7b99aa089ec0c5a850823b37cfe533d0c1195ee845642fbaf11ab38b572c55b9"
+        }
+      ]
+    },
+    {
+      "name": "point-0.25-24s-5ms",
+      "gain": 0.25,
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000077 mm at world [0.017775831914371463, -0.11956914449653819, -0.04928648441659071] m, time 6.380000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 7.4263885290000005,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-5ms.scene.json",
+          "sha256": "9d8e88b92153ebdf3217f9723fbac3dfbe1fad81fc014f0be6ec41450afd75e9"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-5ms.config.json",
+          "sha256": "6d0a972b827e45b32130c957bf7e14ef112a17235ceb9880904cae85cc186081"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-5ms.actions.json",
+          "sha256": "855d15669dd503d65faab6cd632326c0667b844e0cd6fffbd6fe34c7503013bc"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-24s-5ms.native.json",
+          "sha256": "16a5447c5e2352847d7cdc4c2c7e24ab2e35078ff9f6907cc9095a2561ec462e"
+        }
+      ]
+    },
+    {
+      "name": "point-0.25-60s-20ms",
+      "gain": 0.25,
+      "duration_s": 60,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000013 mm at world [0.09977799182531419, -0.11885177973300945, -0.04928463898346842] m, time 39.460000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 20.308099122,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-60s-20ms.scene.json",
+          "sha256": "9d8e88b92153ebdf3217f9723fbac3dfbe1fad81fc014f0be6ec41450afd75e9"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-60s-20ms.config.json",
+          "sha256": "74593a8d9b33ba771c10be110a0cfcc832eca33e0355a474225a78147c2f41b2"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-60s-20ms.actions.json",
+          "sha256": "ac09d7eeb87e7ab7632f62cc99ba55ae95bcdfc89d036f912c125bbe338b314a"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-60s-20ms.native.json",
+          "sha256": "a98ed5a544a248dad255f578a1e439d10e3e28314b93a271a300fd499c0c5ce1"
+        }
+      ]
+    },
+    {
+      "name": "point-0.25-60s-5ms",
+      "gain": 0.25,
+      "duration_s": 60,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000077 mm at world [0.017775831914371463, -0.11956914449653819, -0.04928648441659071] m, time 6.380000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 7.5620499,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-60s-5ms.scene.json",
+          "sha256": "9d8e88b92153ebdf3217f9723fbac3dfbe1fad81fc014f0be6ec41450afd75e9"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-60s-5ms.config.json",
+          "sha256": "9fa47b637ae3d8bddad4e0128431b4252b3f2e8f99afa4108664a46a87133d96"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-60s-5ms.actions.json",
+          "sha256": "ac09d7eeb87e7ab7632f62cc99ba55ae95bcdfc89d036f912c125bbe338b314a"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.25-60s-5ms.native.json",
+          "sha256": "7258448303f75aebfa20c1e4bbbb03ac5a769b93308fa6400e16fef484623d09"
+        }
+      ]
+    },
+    {
+      "name": "point-0.5-24s-20ms",
+      "gain": 0.5,
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000209 mm at world [0.017746586495709732, -0.11970063244183149, -0.04947886323455027] m, time 6.380000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 3.297435636,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-24s-20ms.scene.json",
+          "sha256": "b698d8b9047aedbd978a3c6f3f7ff4df605ab6271e94e26f8e66ad255126d774"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-24s-20ms.config.json",
+          "sha256": "94cc95453fa6f7c7d502274fbbd4408bd82584ae69b958937e72ae6c1b630e84"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-24s-20ms.actions.json",
+          "sha256": "25b2de24853ca8d18b31fee6ffec14133e633c604e1812f4b372cbe044193759"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-24s-20ms.native.json",
+          "sha256": "05e7df8eb4df54a22abb42538aea2cd8969c4c5f8f2697325b35d81d567f7554"
+        }
+      ]
+    },
+    {
+      "name": "point-0.5-24s-5ms",
+      "gain": 0.5,
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000451 mm at world [0.00408877211448597, -0.11993259459994776, -0.04956592892948526] m, time 0.880000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.319654066,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-24s-5ms.scene.json",
+          "sha256": "b698d8b9047aedbd978a3c6f3f7ff4df605ab6271e94e26f8e66ad255126d774"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-24s-5ms.config.json",
+          "sha256": "6d0a972b827e45b32130c957bf7e14ef112a17235ceb9880904cae85cc186081"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-24s-5ms.actions.json",
+          "sha256": "25b2de24853ca8d18b31fee6ffec14133e633c604e1812f4b372cbe044193759"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-24s-5ms.native.json",
+          "sha256": "aff61759a86da3f895f3df742f3850892e832210b6d7677a61c12382b4f3838d"
+        }
+      ]
+    },
+    {
+      "name": "point-0.5-60s-20ms",
+      "gain": 0.5,
+      "duration_s": 60,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000209 mm at world [0.017746586495709732, -0.11970063244183149, -0.04947886323455027] m, time 6.380000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 3.43373354,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-60s-20ms.scene.json",
+          "sha256": "b698d8b9047aedbd978a3c6f3f7ff4df605ab6271e94e26f8e66ad255126d774"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-60s-20ms.config.json",
+          "sha256": "74593a8d9b33ba771c10be110a0cfcc832eca33e0355a474225a78147c2f41b2"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-60s-20ms.actions.json",
+          "sha256": "ea4d051a6fe8734a54fbbea1bfe714911c608803297ac8a353ddab750f0a152a"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-60s-20ms.native.json",
+          "sha256": "b4bd232c6d42f9f504672fd38126c221e93dd0d5e325b4a9846c350c05cb1e35"
+        }
+      ]
+    },
+    {
+      "name": "point-0.5-60s-5ms",
+      "gain": 0.5,
+      "duration_s": 60,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -Y | Thigh sector gear / -Y | Hip output shaft and pulley; penetration 0.000451 mm at world [0.00408877211448597, -0.11993259459994776, -0.04956592892948526] m, time 0.880000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.927484892,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-60s-5ms.scene.json",
+          "sha256": "b698d8b9047aedbd978a3c6f3f7ff4df605ab6271e94e26f8e66ad255126d774"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-60s-5ms.config.json",
+          "sha256": "9fa47b637ae3d8bddad4e0128431b4252b3f2e8f99afa4108664a46a87133d96"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-60s-5ms.actions.json",
+          "sha256": "ea4d051a6fe8734a54fbbea1bfe714911c608803297ac8a353ddab750f0a152a"
+        },
+        {
+          "path": "runs/full-robot/learning/hybrid-speed/point-0.5-60s-5ms.native.json",
+          "sha256": "481b2e8d812c1bf3bb15fc0be54bcec2f537ebee0f521a84c5f2cac26804659c"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/hybrid-speed/plan.json",
+      "sha256": "d3c651f710647d592d02355ffbc5a47b0e131fe69082fd8897b0596b6b441ee8"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "6d087cbfeb34af90b9eca933b3c0b0a0050ec6ab00679a028e3d35426b6c5fbc"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "ebfeab6fa7a210ba37edb0c97f7a0e4c15643251118f3bc05d97dc82f97e4ed9"
+    }
+  ],
+  "scope": "Development-only point-feedback hybrid, not a newly distilled student. Same CAD physics, selected network, motor and geometry bounds, timestep pairs and acceptance gates. Ideal world foot observations are privileged. Gain sweep and both failures and successes are retained."
+}

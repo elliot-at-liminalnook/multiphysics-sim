@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "passed": true,
+  "frames": 1201,
+  "transitions": 1201,
+  "only_ignored_field": "frame.stepping_wall_s",
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/student-speed/2x-support-18-9.selected.native.json",
+      "sha256": "b7a29e7514a4ddadf06f7702800650a7684b0b292d05c1a3257ed361cc2da61f"
+    },
+    {
+      "path": "runs/full-robot/learning/swing-advance/speed-2.5-overlap-0-20ms.native.json",
+      "sha256": "5266a4b2951da020bcbeb486cb2eae564ecb88a5fb69e45e8e2225a1ad842ade"
+    }
+  ],
+  "scope": "Zero-overlap default preserves every sampled physical frame and task transition of the previous selected short student run exactly; no claim for nonzero overlap."
+}

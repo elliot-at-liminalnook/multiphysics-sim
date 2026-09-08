@@ -409,7 +409,12 @@ impl SampledPolicy {
             metadata["neural_residual"] = json!({"definition":neural.definition(),"scope":"Bounded corrections after Rhai feedback, before software/CAD command validation. Pure Rust inference from current sampled observations; no physics bypass."});
         }
         if let Some(r) = &self.step_reference {
-            metadata["step_reference"] = json!({"config":r.config(),"scope":"Online support sequence and bounded CAD inverse kinematics. Commands latch at foot-transfer boundaries; geometric references never mutate physical state. Ideal floor loads qualify lift/landing transitions."});
+            let scope = if r.config().sequence.update_command_before_lift {
+                "Online support sequence and bounded CAD inverse kinematics. Non-reversing commands are reconsidered before lift-off after support qualification. Stops cancel unstarted swings and recenter without moving planted foot references; airborne swings finish landing. Translation reversals retain the committed transfer before selecting a new stance. Every reference still passes CAD geometry/placement checks. Ideal floor loads qualify lift, landing and recenter transitions."
+            } else {
+                "Online support sequence and bounded CAD inverse kinematics. Commands latch at foot-transfer boundaries; geometric references never mutate physical state. Ideal floor loads qualify lift/landing transitions."
+            };
+            metadata["step_reference"] = json!({"config":r.config(),"scope":scope});
         }
         if let Some(observer) = &self.task_observer {
             metadata["task_observations"] = json!({"config":observer.config(),"coordinate_frame":"Body gravity direction, absolute COM velocity and angular velocity resolved in reference-link axes. Marker position and its time derivative relative to reference-link COM/axes. Floor force in world axes; link resultant excluding internal contacts, not force at marker."});

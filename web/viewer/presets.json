@@ -411,6 +411,39 @@
       "description": "The heading controller with less solver work and drawing only when the view changes. WASD drives live Rust physics; earlier controller presets remain available.",
       "readiness": "Experimental browser improvement · tested walks pass · realtime average speed · minute p95 20.98 ms misses 20 ms · turning/reversing p95 18.97 ms passes.",
       "evidence": "The selected profile uses independent constraint-block factorization, 1e-5 Newton precision, a 12-correction cached-attempt cap and guarded backtracking. Fresh restarts retain 80 corrections; all original closure and rank checks remain. The native minute needs 26196 Newton iterations versus 39405; sampled foot difference is below 1.34 nm, not a hardware accuracy claim. Short, refined-minute, two reserved twists and forward/turn/reverse/stop cases pass unchanged walking gates. All 50 Hz physics updates execute; unchanged views avoid redundant drawing. The rendered minute keeps up with realtime but still misses the 20 ms p95 target; maximum measured WASM call is 74.2 ms. The rendered turning/reversing case passes both timing targets. These are limited flat-floor tests at 1.25 mm/s, with ideal observations and a privileged planner. Broader terrain, useful walking speed and command-to-visible-motion latency remain unvalidated."
+    },
+    {
+      "id": "robot-fast-student",
+      "label": "Quadruped · Faster student trial",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-speed/scene.json",
+      "config": "examples/full-robot/student-speed/2x-support-18-9.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "The 2.5 mm/s learned gait, available for live inspection with WASD. The short forward test passes; sustained heading, timestep agreement and broader steering remain experimental.",
+      "readiness": "Experimental faster gait · measured sustained speed 2.48 mm/s · minute fails heading/stop gates · not a validated controller.",
+      "evidence": "The selected learned weights advance the body about 141 mm in a minute with 41 supported swings and no sampled internal overlap. A regression over the steady forward interval measures 2.477 mm/s; body path length is not counted as forward travel. The 20 ms minute ends with 1.178 mm position error and 0.00689 rad heading error, exceeding the unchanged gates. The 20/5 ms comparison also exceeds the 1 mm foot screen. This preset loads the exact selected 24-second configuration; no faster controller is promoted. Reverse, turning, disturbances, rendered timing and hardware transfer at this speed remain unvalidated. Ideal encoder/IMU-style observations and a privileged planner are used."
+    },
+    {
+      "id": "robot-swing-advance",
+      "label": "Quadruped · Move during swing",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-speed/scene.json",
+      "config": "examples/full-robot/swing-advance/half.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "A 2.5 mm/s trial that advances half the body motion while raising and lowering a foot. Load it to inspect the shared Rust planner and steer with WASD.",
+      "readiness": "Experimental overlapping motion · short forward audit passes at 20/5 ms · timestep foot difference 1.167 mm exceeds 1 mm · not validated.",
+      "evidence": "Both short trials complete 13 supported swings without sampled internal overlap; final body errors are 0.926/0.696 mm. The sampled foot difference exceeds the unchanged numerical screen. Increasing the command to 3.75 or 5 mm/s with this posture reaches first-leg geometry interference despite overlap. The CAD mechanisms, motor limits, contact physics, neural weights and acceptance thresholds are unchanged. Sustained walking, steering, held-out disturbances, browser timing and hardware calibration remain separate gates."
+    },
+    {
+      "id": "robot-prelift-control",
+      "label": "Quadruped · Cancel before lift",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/prelift-control/browser.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "A live WASD crawl that can cancel a foot lift before it starts. Release during the weight shift to request a return to standing; airborne steps and reversals finish the current transfer.",
+      "readiness": "Experimental command response · same 1.25 mm/s crawl · native stop/resume checks pass · browser and timestep validation in progress.",
+      "evidence": "An optional shared Rust planner change preserves motor limits, physical components and student weights. It rechecks a stop or non-reversing command once support is qualified before lift-off. Canceled lifts earn no walking credit. An early reversal prototype exceeded a later motor command bound, so reversals retain the committed transfer. This does not establish physical stopping latency, useful walking speed, general terrain behavior or hardware accuracy."
     }
   ]
 }

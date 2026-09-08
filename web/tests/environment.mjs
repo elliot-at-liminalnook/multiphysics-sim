@@ -63,9 +63,24 @@ try {
  // Use explicit absolute + relative portability budgets, matching the default
  // Newton relative correction scale. Task/physical accuracy gates are separate.
  const absoluteTolerance=1e-7,relativeTolerance=1e-8;
- const differences=[];let maximum=0,worst='',maximumToleranceFraction=0;
+ const differences=[],numericGroups={};let maximum=0,worst='',maximumToleranceFraction=0;
+ function numericGroup(path){
+  const observation=path.match(/^transition\[\d+\]\.observations\.(\d+)$/);
+  if(observation)return `observation:${native.contract.observations[Number(observation[1])].unit}`;
+  if(/\.contacts\.\d+\.force_n\./.test(path))return 'contact_force_N';
+  if(/\.poses\.\d+\.position_m\./.test(path))return 'link_position_m';
+  if(/\.poses\.\d+\.velocity_m_s\./.test(path))return 'link_velocity_m_s';
+  return path.replace(/\[\d+\]|\.\d+(?=\.|$)/g,'');
+ }
  function compare(a,b,path){
-  if(typeof a==='number'&&typeof b==='number'){const d=Math.abs(a-b),bound=absoluteTolerance+relativeTolerance*Math.max(Math.abs(a),Math.abs(b));if(d>maximum){maximum=d;worst=path;}maximumToleranceFraction=Math.max(maximumToleranceFraction,d/bound);if(!Number.isFinite(a)||!Number.isFinite(b)||d>bound)differences.push(path);return;}
+  if(typeof a==='number'&&typeof b==='number'){
+   const d=Math.abs(a-b),bound=absoluteTolerance+relativeTolerance*Math.max(Math.abs(a),Math.abs(b));
+   if(d>maximum){maximum=d;worst=path;}maximumToleranceFraction=Math.max(maximumToleranceFraction,d/bound);
+   const group=numericGroups[numericGroup(path)]??={samples:0,maximum_difference:0,maximum_tolerance_fraction:0,failures:0};
+   group.samples++;group.maximum_difference=Math.max(group.maximum_difference,d);group.maximum_tolerance_fraction=Math.max(group.maximum_tolerance_fraction,d/bound);
+   if(!Number.isFinite(a)||!Number.isFinite(b)||d>bound){differences.push(path);group.failures++;}
+   return;
+  }
   if(a&&b&&typeof a==='object'&&typeof b==='object'){if(Array.isArray(a)&&a.length!==b.length)differences.push(path+'.length');for(const k of Object.keys(a)){if(k!=='stepping_wall_s')compare(a[k],b[k],path+'.'+k);}return;}
   if(a!==b)differences.push(path);
  }
@@ -83,6 +98,7 @@ try {
  numeric_tolerance:{absolute:absoluteTolerance,relative:relativeTolerance,maximum_fraction:maximumToleranceFraction},
  scope:'Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.'};
  report.performance=performance;
+ report.numeric_groups=numericGroups;report.difference_count=differences.length;
  if(overrideEvidence){report.config_override=overrideEvidence;report.scope+=' Uses the explicitly recorded configuration override, not the packaged preset horizon.';}
  report.host={platform:platform(),architecture:arch(),cpu:cpus()[0]?.model,logical_cpus:cpus().length,browser:await browser.version()};
  await writeFile(reportPath,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));assert(passed);

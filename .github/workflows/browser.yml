@@ -273,6 +273,16 @@ jobs:
           target/release/examples/run_environment examples/full-robot/student-distillation/scene.json runs/interactive/command-response/probe.config.json examples/full-robot/heading-task/task.json runs/interactive/command-response/probe.actions.json > runs/interactive/command-response/probe.native.json
           node web/tests/live_performance.mjs runs/interactive/teacher-viewer robot-browser-solver runs/interactive/command-response/probe.json sustained-forward runs/interactive/command-response/probe.config.json
           node web/tests/check_command_response.mjs runs/interactive/command-response/probe.json runs/interactive/command-response/probe.recording.json runs/interactive/command-response/probe.native.json runs/interactive/command-response/probe-check.json
+      - name: Overlapping body advance and sampled walking measurements
+        run: |
+          cargo test --locked -p sim-domain-control --test stepping
+          node --test examples/interactive/test_walking_capture_metrics.mjs
+          node examples/interactive/check_environment_replay.mjs
+          node examples/full-robot/swing-advance/prepare.mjs
+          target/release/examples/run_environment examples/full-robot/student-speed/scene.json examples/full-robot/swing-advance/half.config.json examples/full-robot/heading-task/task.json runs/full-robot/learning/swing-advance/speed-2.5-overlap-0.5-20ms.actions.json > runs/interactive/swing-advance.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/swing-advance.json runs/interactive/swing-advance-acceptance
+          node examples/interactive/analyze_walking_capture.mjs runs/interactive/swing-advance.json runs/interactive/swing-advance-metrics.json
+          node web/tests/environment.mjs runs/interactive/teacher-viewer robot-swing-advance runs/interactive/swing-advance.json runs/interactive/swing-advance-browser.json
       - name: Condensed detailed motor native and WASM parity
         run: |
           cargo run --locked --release -p sim-runtime --example integrate_embedding -- examples/interactive/pendulum.scene.json examples/interactive/pendulum.condensed.json > runs/interactive/pendulum-condensed-native.json

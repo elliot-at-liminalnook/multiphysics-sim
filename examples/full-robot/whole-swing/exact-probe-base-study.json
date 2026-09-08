@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "exact-probe-base",
+  "recipe_id": "portable-tangent-steering",
+  "boolean_solver_option": "implicit.reuse_exact_probe_base",
+  "plan_document": "examples/full-robot/whole-swing/EXACT-PROBE-BASE-PLAN.md",
+  "output": "runs/full-robot/learning/whole-exact-probe-base",
+  "plan_output": "examples/full-robot/whole-swing/exact-probe-base-plan.json",
+  "sources": [
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs",
+    "crates/sim-domain-robot/tests/embedding.rs",
+    "crates/sim-domain-robot/tests/embedded_step.rs"
+  ],
+  "scope": "Identical 24-second steering task and physical model with exact tangent-Jacobian base reuse off/on. Velocity prediction stays off. Require bitwise accepted-frame preservation and unchanged physical gates before measuring browser performance."
+}

@@ -73,8 +73,8 @@ fn failed_cached_mechanics_restarts_fresh_before_subdivision() {
 fn cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials() {
     use sim_domain_robot::articulated::embedding::{ImplicitSolverWorkspace, ImplicitStepConfig};
     use sim_dynamics::hybrid::HybridConfig;
-    for (broyden_updates, broyden_negligible_updates, linearized_jacobian_probes, extrapolate_velocity_seed) in
-        [(false, false, false, false), (true, false, false, false), (true, true, false, false), (true, false, true, false), (true, false, true, true)] {
+    for (broyden_updates, broyden_negligible_updates, linearized_jacobian_probes, extrapolate_velocity_seed, reuse_exact_probe_base) in
+        [(false, false, false, false, false), (true, false, false, false, false), (true, true, false, false, false), (true, false, true, false, false), (true, false, true, true, false), (true, false, true, false, true)] {
     let (art, mut g) = body(true, false);
     g.q[0] = 0.1;
     let map = RigidEmbedding::new(&art, &["slide.slide".into()], Default::default()).unwrap();
@@ -83,6 +83,8 @@ fn cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials(
     config.newton.broyden_negligible_updates = broyden_negligible_updates;
     config.linearized_jacobian_probes = linearized_jacobian_probes;
     config.extrapolate_velocity_seed = extrapolate_velocity_seed;
+    config.reuse_exact_probe_base = reuse_exact_probe_base;
+    config.reuse_mechanical_endpoint = reuse_exact_probe_base;
     let refinement = HybridConfig {maximum_halvings: 1, ..Default::default()};
     let mut workspace = ImplicitSolverWorkspace::default();
     let load = |_: f64, g: &Generalized| Ok(vec![-30.0*g.q[0]-2.0*g.qd[0]]);
@@ -111,6 +113,11 @@ fn cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials(
     let mut changed=config.clone(); changed.linearized_probe_relative_step*=4.0;
     let changed=map.advance_implicit_mechanics_cached(&smaller.endpoint.generalized,0.415,0.005,&changed,&refinement,&mut workspace,load).unwrap();
     assert!(!changed.segments[0].diagnostics.started_with_reused_jacobian);
+    if reuse_exact_probe_base {
+        let mut toggled=config.clone();toggled.linearized_probe_relative_step*=4.0;toggled.reuse_exact_probe_base=false;
+        let toggled=map.advance_implicit_mechanics_cached(&changed.endpoint.generalized,0.42,0.005,&toggled,&refinement,&mut workspace,load).unwrap();
+        assert!(!toggled.segments[0].diagnostics.started_with_reused_jacobian);
+    }
     }
 }
 
@@ -651,12 +658,13 @@ fn implicit_sliding_contact_matches_independent_scalar_force_balance() {
         }
     }
     let expected = 0.5 * (lo + hi);
-    for linearized_jacobian_probes in [false,true] {
-    let config=sim_domain_robot::articulated::embedding::ImplicitStepConfig {linearized_jacobian_probes,..Default::default()};
+    for (linearized_jacobian_probes,reuse_exact_probe_base) in [(false,false),(true,false),(true,true)] {
+    let config=sim_domain_robot::articulated::embedding::ImplicitStepConfig {linearized_jacobian_probes,reuse_exact_probe_base,reuse_mechanical_endpoint:reuse_exact_probe_base,..Default::default()};
     let step = map
         .step_implicit(&g, 0.0, h, &config, |_, _| Ok(vec![0.0]))
         .unwrap();
     let end = &step.endpoint.generalized;
+    if reuse_exact_probe_base {assert!(step.diagnostics.reused_exact_probe_bases.unwrap()>0);}
     assert!(
         (end.qd[0] - expected).abs() < 1e-9,
         "{} vs {expected}",

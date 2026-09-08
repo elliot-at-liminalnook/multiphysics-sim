@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "teacher-20ms-audited",
+      "scene": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-stage-audit/teacher-20ms-audited.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "seed": 0,
+      "integration": "sdirk2",
+      "previous_capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.native.json",
+        "sha256": "e19c6bf1736a64cd23b9e3757086541d8dfee10cafbe9b7c03d251bb5f3faea4"
+      },
+      "profile": "runs/full-robot/learning/sdirk-stage-audit/teacher-20ms-audited.profile.json"
+    },
+    {
+      "name": "teacher-5ms-audited",
+      "scene": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-stage-audit/teacher-5ms-audited.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "seed": 0,
+      "integration": "sdirk2",
+      "previous_capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.native.json",
+        "sha256": "ac1c8228f7d15a65789da8451cf63fc123244cbf88ac3583753362eabfc090ed"
+      },
+      "profile": "runs/full-robot/learning/sdirk-stage-audit/teacher-5ms-audited.profile.json"
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/SDIRK2-STAGE-AUDIT.md",
+      "sha256": "cb4845fb9a68e5ed756ea383db73e9a0d4f01a68a50cb9fa4ab4011230336a57"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-plan.json",
+      "sha256": "6757187e1772ea36fd76b6d05f1b466742a6cc2b44e03d0a574ba5e2128e4c97"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-status.json",
+      "sha256": "b171f8afa4f8117938547f9d65199551f08d79ce1f5a09dec73710ace9ff6cbe"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "21668534de2568891282fdacfb21ee327db74c93ad5eb65fdc0110859f38decc"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/implicit.rs",
+      "sha256": "00e8c0bc24d7eb46cee92b08ddc0c9ee04de20b3a1344eb373afd70b2e77272d"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedded_step.rs",
+      "sha256": "81f10775a6ec249fd9dcd4e7e77a0cb355f8512b417d8016ed6fa72e1ebc109a"
+    },
+    {
+      "path": "runs/sdirk-endpoint-audit-tests.log",
+      "sha256": "db6b9a2943988773d08118dc63e2208a95c472e41603e85b3ade561692817e23"
+    },
+    {
+      "path": "runs/sdirk-endpoint-audit-build.log",
+      "sha256": "f237087eeeb7043094dcaeb2bb11e3f998b0658b79a35887a0490901147cfd09"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_sdirk_stage_audit.mjs",
+      "sha256": "c3bf17850df1e3001483a9a86c04f413d4877b65acfa0a1f6349704c03ae297e"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-stage-audit/teacher-20ms-audited.config.json",
+      "sha256": "d157b609b33477401e539a4415694ea17c2cb1d6933c3b565a3ecd8dad27d4ed"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.native.json",
+      "sha256": "e19c6bf1736a64cd23b9e3757086541d8dfee10cafbe9b7c03d251bb5f3faea4"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-stage-audit/teacher-5ms-audited.config.json",
+      "sha256": "e0060634f52e036dca0193f4f4d37dd31db43eb6aa3e36c33462917e311a34d1"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.native.json",
+      "sha256": "ac1c8228f7d15a65789da8451cf63fc123244cbf88ac3583753362eabfc090ed"
+    }
+  ],
+  "scope": "Original 24-second teacher 20/5 ms development recipes, seed 0. Only observational Newton audit window added. Preserve previous states exactly; instrumented timing is not performance evidence."
+}

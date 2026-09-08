@@ -579,3 +579,32 @@ SDIRK method is useful shared experimental infrastructure, but this study
 does not establish an accurate realtime browser profile. Keep the detailed
 reference and existing browser recipes; the independent body-tracking,
 held-out support, robustness and coarse-model performance work remains.
+
+## Settled body and foot corrections oppose each other
+
+At the revealed -24 mm support stop, all feet carry about 9.7–9.9 N and the
+inferred standing body gain is exactly 1.5. Its body and world-foot angular
+corrections have cosine **-0.985**. The 2x2 settled-feedback ablation preserves
+the original full reference exactly and all 1,301 frames through 26 s before
+the stop in every case. All 19 swings remain passing.
+
+Releasing point correction after settling reduces body error from
+**2.052 to 1.776 mm**, still failing 1 mm. Raising settled body gain to 4.5
+is unstable: point-on/off cases drift **193.990 / 126.527 mm**. They remain
+upright with no sampled internal collisions, but clearly fail stopping;
+the combined case also fails heading. Thus upright motion alone would give
+a misleading success signal.
+
+The high-gain runs have **2,947 / 2,183** consecutive target-delta reversals
+above 1e-5 rad after stopping, versus **141 / 152** in reference/point-release.
+Maximum per-sample command changes rise from **0.028 / 0.036 rad** to
+**0.232 / 0.291 rad**. Sampled positive shaft work increases from about
+**3.14 J** to **10.42 / 9.38 J**. Maximum loaded-marker path rises from
+about **0.091 m** to **1.405 / 0.603 m**; this is a geometric path proxy,
+not resolved contact-patch slip.
+
+`settled-stance-summary.json` retains all four failed full-task outcomes and
+the source-bound diagnosis. Both invalid new point scales (-0.1 and 1.1)
+are rejected with zero recorded physics steps. No case is promoted. The next
+bounded control experiment is a slow, rate-limited integral bias using the
+existing body suggestion, preserving the stable proportional gain.

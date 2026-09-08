@@ -1,0 +1,312 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "reference",
+      "completed": true,
+      "task_passed": false,
+      "error": null,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0020520398422045065,
+        "final_yaw_error_rad": 0.0002968805731730262,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06225809880883483,
+          0.0006025427196751298,
+          -0.00048540941628911517
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-stance/reference-acceptance/summary.json",
+          "sha256": "9d4539fab5ffd721021bda8e18e72763c00b799a68047ebe14eebc03e35508f0"
+        }
+      },
+      "pre_stop_frames_exact": 1301,
+      "original_full_reference_exact": true,
+      "after_stop_target_variation_rad": 1.3734598116569543,
+      "after_stop_maximum_target_jump_rad": 0.027991495838208376,
+      "positive_mechanical_work_j": 3.138029797265176,
+      "maximum_loaded_marker_path_m": 0.0907953139126157,
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-stance-reference-metrics.json",
+        "sha256": "a0f1098566b1db564661a0a152b5cdaa8267ae865e004156e7aec9d7bca1d5ad"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-stance/reference.native.json",
+        "sha256": "30e28dac06420fc8b6f1761328f0980f4d758a257ec6230f08357296c80c0b8d"
+      },
+      "after_stop_target_delta_reversals_above_1e_minus5_rad": 141
+    },
+    {
+      "name": "point-release",
+      "completed": true,
+      "task_passed": false,
+      "error": null,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0017764860197379024,
+        "final_yaw_error_rad": 0.00027192513752125665,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.061997584688150906,
+          0.0005164986576719731,
+          -0.00044640156411071726
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-stance/point-release-acceptance/summary.json",
+          "sha256": "222b3ff3c3a4d75bc10fb9b8f1bed72f1c5dac6ad530e8c3d5a8a502a30581d8"
+        }
+      },
+      "pre_stop_frames_exact": 1301,
+      "original_full_reference_exact": null,
+      "after_stop_target_variation_rad": 1.5219938032991398,
+      "after_stop_maximum_target_jump_rad": 0.03631574503233276,
+      "positive_mechanical_work_j": 3.145941776448728,
+      "maximum_loaded_marker_path_m": 0.09101213968126208,
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-stance-point-release-metrics.json",
+        "sha256": "f50fb995211f595d38826a508141a0b1d18ce2f019a5db8e20580f17e50a9ee5"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-stance/point-release.native.json",
+        "sha256": "dfc576a42c7450e28b5c4f249cec8d12133c643d789eb57901dd313f16f3c2f6"
+      },
+      "after_stop_target_delta_reversals_above_1e_minus5_rad": 152
+    },
+    {
+      "name": "higher-body-gain",
+      "completed": true,
+      "task_passed": false,
+      "error": null,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.1939904671042464,
+        "final_yaw_error_rad": 0.0047722666187719875,
+        "maximum_body_tilt_rad": 0.004537067512191485,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.2543519795648638,
+          0.00208141153772179,
+          -0.0008072548503296351
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-stance/higher-body-gain-acceptance/summary.json",
+          "sha256": "d47152eeb4d57a57f77ee9f5c1c8ae5bfcb71823051c9e2a151d91ab7465e748"
+        }
+      },
+      "pre_stop_frames_exact": 1301,
+      "original_full_reference_exact": null,
+      "after_stop_target_variation_rad": 225.61529056052154,
+      "after_stop_maximum_target_jump_rad": 0.2323806479413954,
+      "positive_mechanical_work_j": 10.417685876406601,
+      "maximum_loaded_marker_path_m": 1.4051267504443818,
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-stance-higher-body-gain-metrics.json",
+        "sha256": "9d2d546a8f4b83d78bae9d93b4ae77de57f99c0c68ac3bd6a759d41f694c2e12"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-stance/higher-body-gain.native.json",
+        "sha256": "d7f2205af7add489e7dafbfc825e529e033c32bf1b2190e276ab050d0e32711f"
+      },
+      "after_stop_target_delta_reversals_above_1e_minus5_rad": 2947
+    },
+    {
+      "name": "combined",
+      "completed": true,
+      "task_passed": false,
+      "error": null,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.1265268225547589,
+        "final_yaw_error_rad": 0.005925245966841778,
+        "maximum_body_tilt_rad": 0.008447530431283436,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          -0.06614655512104586,
+          -0.0007408510773189432,
+          -0.0009365887875401446
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-stance/combined-acceptance/summary.json",
+          "sha256": "aead5cea7e679ae1ac711cf0db3be04508dd5b7e2b1e7f351c6b552fb284772b"
+        }
+      },
+      "pre_stop_frames_exact": 1301,
+      "original_full_reference_exact": null,
+      "after_stop_target_variation_rad": 167.30221017897165,
+      "after_stop_maximum_target_jump_rad": 0.29078283995288046,
+      "positive_mechanical_work_j": 9.383780525817496,
+      "maximum_loaded_marker_path_m": 0.6027981474847329,
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-stance-combined-metrics.json",
+        "sha256": "5c4bcf6b7b8ed9ed9c88536521ba25b3f29536c32626c30cee2b092a212b7842"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-stance/combined.native.json",
+        "sha256": "7a50f90d4ebdcb60cbbb2171598b0c057bbbd3b5b551e19cc74a31410a6946e2"
+      },
+      "after_stop_target_delta_reversals_above_1e_minus5_rad": 2183
+    }
+  ],
+  "diagnosis": [
+    {
+      "time_s": 28,
+      "body_error_world_m": [
+        -0.0018802722487466159,
+        -0.0006496900084638488,
+        0.00048505551616742637
+      ],
+      "floor_forces_n": [
+        9.726240442712273,
+        9.870036592442235,
+        9.739551798168826,
+        9.67101517806702
+      ],
+      "inferred_body_gain_range": [
+        1.499999999999998,
+        1.5000000000000095
+      ],
+      "body_point_correction_cosine": -0.9850118762154819
+    },
+    {
+      "time_s": 30,
+      "body_error_world_m": [
+        -0.0018826590565437923,
+        -0.000653925668534421,
+        0.00048541879079050734
+      ],
+      "floor_forces_n": [
+        9.728066443016836,
+        9.867974999710935,
+        9.742057312796712,
+        9.668804815792747
+      ],
+      "inferred_body_gain_range": [
+        1.4999999999999973,
+        1.5000000000000009
+      ],
+      "body_point_correction_cosine": -0.9850052223783881
+    },
+    {
+      "time_s": 32,
+      "body_error_world_m": [
+        -0.0018831690760372152,
+        -0.0006549093312995742,
+        0.0004854094586912473
+      ],
+      "floor_forces_n": [
+        9.728014060852976,
+        9.867981929641429,
+        9.742175519504878,
+        9.668733572686953
+      ],
+      "inferred_body_gain_range": [
+        1.499999999999994,
+        1.5000000000000064
+      ],
+      "body_point_correction_cosine": -0.9850149726594805
+    }
+  ],
+  "validation": [
+    {
+      "scale": -0.1,
+      "rejected_before_first_physics_frame": true,
+      "error": "settled-stance-teacher.rhai: Runtime error: settled point gain scale must be in [0, 1] @ 'settled-stance-teacher.rhai' (line 32, position 9)\nin call to function 'control' (from 'settled-stance-teacher.rhai') (line 1, position 47)",
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/settled-stance/invalid-scale--0.1.scene.json",
+          "sha256": "6ac3b200d8002baec7ae2cf4f58ae5a3443fa603314ef07ac968e6af966e16d7"
+        },
+        {
+          "path": "runs/full-robot/learning/settled-stance/invalid-scale--0.1.native.json",
+          "sha256": "921ea066c622726a37f1edd93892e0c4f5ab8b256b137451f2e606c19d814aa3"
+        },
+        {
+          "path": "runs/full-robot/learning/settled-stance/invalid-scale--0.1.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "scale": 1.1,
+      "rejected_before_first_physics_frame": true,
+      "error": "settled-stance-teacher.rhai: Runtime error: settled point gain scale must be in [0, 1] @ 'settled-stance-teacher.rhai' (line 32, position 9)\nin call to function 'control' (from 'settled-stance-teacher.rhai') (line 1, position 47)",
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/settled-stance/invalid-scale-1.1.scene.json",
+          "sha256": "7b82003b16e7fde8690e07ad1083b6a2f32e26c2cf79a323c4caad4b7b8d80b0"
+        },
+        {
+          "path": "runs/full-robot/learning/settled-stance/invalid-scale-1.1.native.json",
+          "sha256": "01a076455007879e5c73ff2ff435708d46f122110c333a7f31a09ba27a200a1a"
+        },
+        {
+          "path": "runs/full-robot/learning/settled-stance/invalid-scale-1.1.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "promoted": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/settled-stance-plan.json",
+      "sha256": "4fa5eee5e70c67465fb9422bd6bf2a707cb89d7938ec5e09be0f0530388c2492"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-stance-status.json",
+      "sha256": "ab7adc03034876b164f945ef3fea3f0a2a62f04833c09ab2bd4ee0c2170cb7df"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-stance-integrity.json",
+      "sha256": "b3218a30c882008b9410a2237a00d173fdd954f48f79c7b87cdf70fbbdf4c2f4"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_settled_stance.mjs",
+      "sha256": "9f2fabc1b2b716df31443f5eeef0d28604d0c31c0ac09b177174f33d63d48d1a"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "scope": "Four predeclared settled-controller ablations with exact prior reference and pre-stop frame identity. All original task gates retained. Command-reversal counts use consecutive target deltas greater than 1e-5 rad; they describe sampled oscillation, not a formal stability proof. Loaded marker travel is a sampled geometric proxy, not resolved contact-patch slip. Revealed development data, no held-out or browser qualification."
+}

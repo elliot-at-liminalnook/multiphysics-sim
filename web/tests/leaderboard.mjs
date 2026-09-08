@@ -22,7 +22,13 @@ try {
   const ready = () => page.locator('#overlay').waitFor({state: 'hidden', timeout: 60000});
   const open = () => page.locator('#open-leaderboard').click();
   const row = id => page.locator(`[data-controller="${id}"]`);
-  await page.goto(url); await ready(); await open();
+  await page.goto(url); await ready();
+  const displayControl = await page.locator('#display-rate').count() > 0;
+  if (displayControl) {
+    assert.equal(await page.locator('#display-rate').inputValue(), '0');
+    await page.locator('#display-rate').selectOption('30');
+  }
+  await open();
   assert.equal(await page.locator('#leaderboard-rows tr').count(), data.entries.length);
   assert.match(await page.locator('#leaderboard-summary').textContent(), /0 meet every declared gate/);
   await page.locator('#controller-status').selectOption('validated');
@@ -65,6 +71,13 @@ try {
   assert(await page.evaluate(() => document.querySelector('#leaderboard-dialog').getBoundingClientRect().right <= innerWidth));
   checks.push('canvas video downloads real WebM bytes; dialog fits desktop and narrow viewports');
   await page.locator('#close-leaderboard').click();
+  if (displayControl) {
+    assert.equal(await page.locator('#display-rate').inputValue(), '30');
+    const bounds = await page.locator('#display-rate').boundingBox();
+    assert(bounds.x >= 0 && bounds.x + bounds.width <= 390);
+    await page.locator('#viewport').screenshot({path: reportPath.replace(/\.json$/, '.viewer-mobile.png')});
+    checks.push('optional 30 fps display persists through exact loads, replay and video; control fits the narrow viewport');
+  }
   await page.route(`**/data/${shortest.preset_id}.json`, async route => { const response = await route.fetch(); await route.fulfill({response, body: (await response.text()) + ' '}); });
   await page.locator('#preset').selectOption(shortest.preset_id);
   await page.waitForFunction(() => document.querySelector('#status').textContent.includes('integrity mismatch'));

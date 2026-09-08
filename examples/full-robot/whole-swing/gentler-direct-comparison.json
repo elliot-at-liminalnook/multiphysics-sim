@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "slip_speed_m_s": 0.001,
+      "baseline": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-1mm-s.native.json",
+        "sha256": "a95509afeaeac23238c823524ff8702bd42d3c8266e50c681a715520d5f4b39f"
+      },
+      "changed": {
+        "path": "runs/full-robot/learning/gentler-direct/direct-slip-1mm-s.native.json",
+        "sha256": "613147f1ac68f422b3690e806e20e41cd41d96e0bffb973eb724e565c32d6d2a"
+      },
+      "baseline_contact_ratio": 0.2919945213184757,
+      "direct_contact_ratio": 0.24234290614626766,
+      "baseline_total_contact_motion_m": 0.16283788877833283,
+      "direct_total_contact_motion_m": 0.12604814631717648,
+      "baseline_heading_error_rad": 0.00039272067832859067,
+      "direct_heading_error_rad": 0.00811969482094397,
+      "baseline_task_passed": true,
+      "direct_task_passed": false,
+      "raise_fraction_of_total_contact_motion": 0.36836001852483535,
+      "raise_selected_contact_motion_m": 0.02483512336230262,
+      "raise_other_contact_motion_m": 0.02159597415011366
+    },
+    {
+      "slip_speed_m_s": 0.0001,
+      "baseline": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-0.1mm-s.native.json",
+        "sha256": "2b8c8074ce2c79c33a22ae1cdc510b2ca7aad47a5cac324a5356ae90ebbf25cc"
+      },
+      "changed": {
+        "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.1mm-s.native.json",
+        "sha256": "bda8f90e180a8de5445ffad898f2e4f2f952140488ab59160a49a42f82c95426"
+      },
+      "baseline_contact_ratio": 0.1906168281740059,
+      "direct_contact_ratio": 0.11744460383469803,
+      "baseline_total_contact_motion_m": 0.09386442268631832,
+      "direct_total_contact_motion_m": 0.05422942398330032,
+      "baseline_heading_error_rad": 0.00036745612559557897,
+      "direct_heading_error_rad": 0.009933457613057993,
+      "baseline_task_passed": true,
+      "direct_task_passed": false,
+      "raise_fraction_of_total_contact_motion": 0.5284892279163971,
+      "raise_selected_contact_motion_m": 0.01826177173505642,
+      "raise_other_contact_motion_m": 0.010397894676228907
+    },
+    {
+      "slip_speed_m_s": 0.00003,
+      "baseline": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-0.030000000000000002mm-s.native.json",
+        "sha256": "5173d036ea152cfc160629e443fd13f625e497cd1ed08caafc359c9bc6c518fc"
+      },
+      "changed": {
+        "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.03mm-s.native.json",
+        "sha256": "4626fa7a26cd16e5370ce365b9a102f535ea6331dd973e71a4585cff6a37199a"
+      },
+      "baseline_contact_ratio": 0.17805798920814314,
+      "direct_contact_ratio": 0.1139478502145242,
+      "baseline_total_contact_motion_m": 0.0897495276906406,
+      "direct_total_contact_motion_m": 0.052437766182702114,
+      "baseline_heading_error_rad": 0.0005566517380434831,
+      "direct_heading_error_rad": 0.01043164633843828,
+      "baseline_task_passed": true,
+      "direct_task_passed": false,
+      "raise_fraction_of_total_contact_motion": 0.5612717004434566,
+      "raise_selected_contact_motion_m": 0.018681073272476506,
+      "raise_other_contact_motion_m": 0.010750760920345095
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-summary.json",
+      "sha256": "8a04666540331de7a88d31443d86304a0027053a7a0bc652eeb690936be6ed21"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-direct-summary.json",
+      "sha256": "4f7dd104b5c8879ebae9242949fb310de1e5543c94d69ba22eaf55e3978984c2"
+    }
+  ],
+  "scope": "Matched gait comparisons at each unchanged contact profile. Body path and phase allocation change together. Contact and heading outcomes remain separate; no causal attribution to one of those two changes alone."
+}

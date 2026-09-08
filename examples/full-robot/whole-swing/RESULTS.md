@@ -1039,3 +1039,62 @@ are recorded in `gentler-contact-reproduction-check.json`. The shared contact
 kinematics/phase test and rejected-input audit test both pass. No Rust runtime
 or live browser bundle changes, candidate promotion, timestep convergence,
 fresh held-out, terrain, or hardware qualification are claimed by this study.
+
+## Gentler direct transfers reduce sliding but expose heading and liftoff limits
+
+Three matched development minutes enable the existing direct-transfer sequence
+and reallocate the same nominal 1.90 s transfer period to
+`[1.10, 0.38, 0.38, 0.02, 0.02]` seconds. The 5.175 mm stride and 2.723684 mm/s
+request stay fixed. Each case preserves its corresponding gentler-contact
+baseline's CAD, friction coefficients, controller gains, servo model, command
+history, development push and fine solver. The body path and phase allocation
+change together; this is not an isolated test of either one.
+
+| Smoothing mm/s | Travel mm/s | Qualified swings | Stop mm | Heading rad | Worst-foot motion / body advance | Total foot motion mm | Shaft work J |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 2.740 | 30/30 | 0.597 | 0.008120 | 24.2% | 126.0 | 5.717 |
+| 0.1 | 2.732 | 30/30 | 0.771 | 0.009933 | 11.7% | 54.2 | 5.234 |
+| 0.03 | 2.723 | 30/30 | 0.966 | 0.010432 | 11.4% | 52.4 | 5.128 |
+
+All three complete the minute with zero sampled internal contacts and body
+tilt below 0.00416 rad. All fail **heading ≤0.005 rad** and the unchanged
+**5%** contact-motion screen. All 30 planned forward foot-landing sets match
+their baseline within **2.776e-17 m**. Maximum sampled body-reference
+acceleration is 0.19056 m/s²; this is not actual body acceleration.
+
+The matched worst-foot contact ratios improve from **29.2→24.2%**,
+**19.1→11.7%**, and **17.8→11.4%**. At the smallest smoothing, Return motion
+falls from 42.697 to **0.138 mm**, while Raise increases from 26.056 to
+**29.432 mm**. Raise now accounts for **56.1%** of total loaded contact motion:
+18.681 mm belongs to the selected transfer foot and 10.751 mm to the others.
+Shift contributes another 14.641 mm. These phase measurements identify where
+motion remains; they do not prove a particular feedback or trajectory remedy.
+
+Native simulation/wall ratios are **0.648×, 0.461×, 0.170×**, with transition
+p95 **55.5, 85.1, 445.9 ms**. These runs were sequential, with no analysis or
+build jobs overlapping simulation. Reducing smoothing from 0.1 to 0.03 mm/s
+offers only a small further contact-motion reduction at a large compute cost.
+Neither qualifies browser realtime control. The corresponding previous
+0.1 mm/s baseline timing had concurrent analysis and is not an isolated
+before/after performance comparison.
+
+The controller's existing body-feedback component requests translation only;
+yaw relies on planned foot placement and the existing point tracking. All
+direct-transfer profiles now repeat a heading failure. An explicit bounded
+heading-feedback experiment is warranted, alongside investigating the loaded
+motion during Raise. The 0.1 mm/s profile is a useful development compromise
+for that work, not an accepted physical or browser fidelity profile. No gait
+or smoothing variant from this study is promoted or ranked.
+
+`GENTLER-DIRECT-PLAN.md` and `gentler-direct-{plan,status,integrity,summary}.json`
+retain the frozen cases, audits and outcomes; `gentler-direct-comparison.json`
+binds matched contact/heading comparisons. The collector verifies identical
+scenes, completed inputs and all configuration except the two declared
+sequence fields, then checks foot landing geometry. Per-case motion, contact
+and phase reports retain measurements. All three recipes reconstruct exactly
+in a fresh directory using `prepare_gentler_direct.mjs NEW_DIRECTORY`, recorded
+in `gentler-direct-reproduction-check.json`. The shared contact kinematics/phase
+and rejected-input audit tests pass. Preparation rejected two duration-sum
+roundoff assertions before any physics ran; the final prospective plan bounds
+summation error below 1e-15 s. No timestep, steering, fresh held-out, terrain,
+browser or hardware qualification is established here.

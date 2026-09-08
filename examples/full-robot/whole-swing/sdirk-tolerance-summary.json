@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "teacher-20ms-authored",
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "policy output violates software/CAD command bounds at 1.32 s: -Y | Foot servo output.target requested 0.5434898156724169 rad; allowed [-0.6, -0.02] rad",
+        "termination_reasons": []
+      },
+      "newton": {
+        "absolute_tolerance": 0.00001,
+        "guarded_backtracking": true,
+        "max_iterations": 80,
+        "min_line_search": 0.000244140625,
+        "refresh_before_iteration_limit": true,
+        "reject_nonfinite_trials": true,
+        "relative_tolerance": 0.00001
+      },
+      "accepted_transitions": 66,
+      "accepted_simulated_s": 1.32,
+      "samples": [
+        {
+          "time_s": 1.26,
+          "phase": "return",
+          "body_speed_m_s": 0.0007797050714035371,
+          "maximum_gear_speed_rad_s": 0.03483630904664538,
+          "external_force_world_n": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 1.28,
+          "phase": "return",
+          "body_speed_m_s": 0.007159955318711793,
+          "maximum_gear_speed_rad_s": 0.17626637602452339,
+          "external_force_world_n": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 1.3,
+          "phase": "return",
+          "body_speed_m_s": 0.037632489127139596,
+          "maximum_gear_speed_rad_s": 0.7834935461391834,
+          "external_force_world_n": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 1.32,
+          "phase": "return",
+          "body_speed_m_s": 0.23318889576938298,
+          "maximum_gear_speed_rad_s": 247.62151423040962,
+          "external_force_world_n": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "solver_accepted_stage_records": 134,
+      "solver_accepted_interval_records": 66,
+      "intervals_with_subdivision": 1,
+      "final_four_stage_residuals": [
+        4.2476452216666516e-10,
+        1.124943360686359e-9,
+        8.683967493566813e-7,
+        2.0483157392447993e-9
+      ]
+    },
+    {
+      "name": "teacher-20ms-tight",
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "policy output violates software/CAD command bounds at 1.32 s: -Y | Foot servo output.target requested 0.5434898157326703 rad; allowed [-0.6, -0.02] rad",
+        "termination_reasons": []
+      },
+      "newton": {
+        "absolute_tolerance": 1e-8,
+        "guarded_backtracking": true,
+        "max_iterations": 80,
+        "min_line_search": 0.000244140625,
+        "refresh_before_iteration_limit": true,
+        "reject_nonfinite_trials": true,
+        "relative_tolerance": 1e-8
+      },
+      "accepted_transitions": 66,
+      "accepted_simulated_s": 1.32,
+      "samples": [
+        {
+          "time_s": 1.26,
+          "phase": "return",
+          "body_speed_m_s": 0.0007797051407313184,
+          "maximum_gear_speed_rad_s": 0.03483630871270601,
+          "external_force_world_n": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 1.28,
+          "phase": "return",
+          "body_speed_m_s": 0.007159955316638272,
+          "maximum_gear_speed_rad_s": 0.17626637591993943,
+          "external_force_world_n": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 1.3,
+          "phase": "return",
+          "body_speed_m_s": 0.03763248939180129,
+          "maximum_gear_speed_rad_s": 0.7834935457763882,
+          "external_force_world_n": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "time_s": 1.32,
+          "phase": "return",
+          "body_speed_m_s": 0.23318889487539252,
+          "maximum_gear_speed_rad_s": 247.62151425534833,
+          "external_force_world_n": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "solver_accepted_stage_records": 134,
+      "solver_accepted_interval_records": 66,
+      "intervals_with_subdivision": 1,
+      "final_four_stage_residuals": [
+        3.813532269917458e-11,
+        1.0012686599975007e-10,
+        9.042092907751709e-10,
+        1.0611067580157396e-11
+      ]
+    }
+  ],
+  "authored_profile_preserves_physics_and_task_exactly": true,
+  "accepted_prefix_difference": {
+    "maximum_joint_position_rad": 4.082575999486693e-9,
+    "maximum_joint_velocity_rad_s": 7.228532870051652e-7,
+    "maximum_body_position_m": 3.191131148654234e-10
+  },
+  "tightening_prevents_early_failure": false,
+  "browser_promoted": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-tolerance-status.json",
+      "sha256": "962cec30e2bb972b5005558558dd79b6a05552e922f19ce0674804aa23473ff3"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-tolerance-plan.json",
+      "sha256": "439ef5604144b4cd6b83f45afc6c33d5d848f69e92fa2e04a3106c0c750af87c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.native.json",
+      "sha256": "e19c6bf1736a64cd23b9e3757086541d8dfee10cafbe9b7c03d251bb5f3faea4"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_sdirk_diagnosis.mjs",
+      "sha256": "35f1f5844780138e22daadde3fc05990606f98cc0f9700d615bf58af7d9412eb"
+    }
+  ],
+  "scope": "Both tolerance choices retain the same early failure, so 1000x tighter absolute/relative Newton tolerances are not a sufficient remedy. This does not establish which integration, nonlinear contact or chart mechanism causes the jump. Profiles are instrumented; stage/interval records can include work before a failed environment transition and are not counts of published control frames. No task, trajectory, performance or hardware qualification."
+}

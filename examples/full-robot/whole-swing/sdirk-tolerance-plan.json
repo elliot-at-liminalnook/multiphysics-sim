@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "teacher-20ms-authored",
+      "scene": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-authored.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "seed": 0,
+      "integration": "sdirk2",
+      "profile": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-authored.profile.json"
+    },
+    {
+      "name": "teacher-20ms-tight",
+      "scene": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-tight.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "seed": 0,
+      "integration": "sdirk2",
+      "profile": "runs/full-robot/learning/sdirk-tolerance-diagnosis/teacher-20ms-tight.profile.json"
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/SDIRK2-FAILURE-DIAGNOSIS.md",
+      "sha256": "be19d3d974875af0367677c7f48a4e9b1b05ec06e851d4499301ee77ed0016b6"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-plan.json",
+      "sha256": "6757187e1772ea36fd76b6d05f1b466742a6cc2b44e03d0a574ba5e2128e4c97"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.config.json",
+      "sha256": "720ab3f6cf3b1356174cfe8955745b731468c0884d9a37e65e07b6559da13af4"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "c0bd20f264a01278d40c5b862c49ccbc246cfd331c09e2fb301fd2386252704e"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "882ad4211ffc6ae34b39be5618cca21a408c59e0855db9b3a3547e05c7b6c5a6"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_sdirk_diagnosis.mjs",
+      "sha256": "f59398b2135f424e70916d93172677ae18545ace8e2119d581a96b071dfcf2b5"
+    }
+  ],
+  "scope": "Predeclared nonlinear tolerance diagnosis, not a new controller or a performance test. Same seed 0, CAD model and 24-second development inputs, with instrumented profiles. Only absolute/relative Newton tolerances differ."
+}

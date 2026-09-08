@@ -1,0 +1,299 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "slip-1mm-s",
+      "slip_speed_m_s": 0.001,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 30,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00028334297065847483,
+        "final_yaw_error_rad": 0.00039272067832859067,
+        "maximum_body_tilt_rad": 0.004171546285901135,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.1550509555238793,
+          0.000007684854181444207,
+          -0.0002015080111647926
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/gentler-contact/slip-1mm-s-acceptance/summary.json",
+          "sha256": "6f3e8625d8f772ceb44dce53563c584806ba318734da455fec58e790091509b1"
+        }
+      },
+      "maximum_contact_motion_to_body_advance_ratio": 0.2919945213184757,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.0027236842105263157,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.002741240341577212,
+          "net_projected_speed_m_s": 0.0026315455975332745,
+          "axis_world": [
+            0.9999996947113247,
+            -0.0007813944314571731,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 100.18786391,
+        "simulation_per_wall": 0.5988749301402287,
+        "transition_p95_s": 0.066879749
+      },
+      "native_timing_scope": "Native shared-host measurement; no browser realtime qualification.",
+      "positive_mechanical_work_j": 5.293880207659334,
+      "total_loaded_contact_motion_m": 0.16283788877833283,
+      "capture": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-1mm-s.native.json",
+        "sha256": "a95509afeaeac23238c823524ff8702bd42d3c8266e50c681a715520d5f4b39f"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-1mm-s-metrics.json",
+          "sha256": "b9f26f0c9e7aeeee908b5c366d277e9e697d2e1f2adbf4cd0dab07793c344dda"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-1mm-s-contact.json",
+          "sha256": "b24eb6e5496068f04c5a0f77abe43f32e94685259e45e3f1bea6856eebade83e"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-1mm-s-phases.json",
+          "sha256": "db646f9aab4b1b26b2fa888f1c377fbbdb8c7c5c67bf020a1700c2dcb87aa5ee"
+        }
+      ]
+    },
+    {
+      "name": "slip-0.1mm-s",
+      "slip_speed_m_s": 0.0001,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 30,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00033454730338204765,
+        "final_yaw_error_rad": 0.00036745612559557897,
+        "maximum_body_tilt_rad": 0.004073461248673267,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.15498175547644868,
+          -0.000013859658310091732,
+          -0.0001994359136575606
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/gentler-contact/slip-0.1mm-s-acceptance/summary.json",
+          "sha256": "07b73e081d7de2ebfc7331ba7d49e613e3fddae74505f81543bf80677ff0a021"
+        }
+      },
+      "maximum_contact_motion_to_body_advance_ratio": 0.1906168281740059,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.0027236842105263157,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.002737501352594958,
+          "net_projected_speed_m_s": 0.0026269144900882527,
+          "axis_world": [
+            0.9999994183211861,
+            -0.0010785904179357155,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 142.541338083,
+        "simulation_per_wall": 0.4209305230814009,
+        "transition_p95_s": 0.113537303
+      },
+      "native_timing_scope": "Exploratory shared-host timing: a memory-heavy trajectory comparison overlapped part of this case; not an isolated throughput comparison.",
+      "positive_mechanical_work_j": 5.019434233176315,
+      "total_loaded_contact_motion_m": 0.09386442268631832,
+      "capture": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-0.1mm-s.native.json",
+        "sha256": "2b8c8074ce2c79c33a22ae1cdc510b2ca7aad47a5cac324a5356ae90ebbf25cc"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.1mm-s-metrics.json",
+          "sha256": "9c45eacb248b320f0a085a12d65a4512c3c5ae4792c1f80f07b55d863d972624"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.1mm-s-contact.json",
+          "sha256": "a4204c9af0fa929586291830badef6cf269371e71eb5818a3339c337a6b40fab"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.1mm-s-phases.json",
+          "sha256": "d337c5a08ec6f10f62aafae22f2e107850e8cc6ce2ee5b9ea7758df48d0c6849"
+        }
+      ]
+    },
+    {
+      "name": "slip-0.030000000000000002mm-s",
+      "slip_speed_m_s": 0.00003,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 30,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0004417343350856248,
+        "final_yaw_error_rad": 0.0005566517380434831,
+        "maximum_body_tilt_rad": 0.004085615246019938,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.15485590852434875,
+          -0.000016073437279935426,
+          -0.00019890393718204925
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/gentler-contact/slip-0.030000000000000002mm-s-acceptance/summary.json",
+          "sha256": "d0025e670812e218de36be8b066d36a585b2c4ce62fdaf3e1e1d7032a38faf28"
+        }
+      },
+      "maximum_contact_motion_to_body_advance_ratio": 0.17805798920814314,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.0027236842105263157,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0027293631817884413,
+          "net_projected_speed_m_s": 0.002618458178818402,
+          "axis_world": [
+            0.9999993937287984,
+            -0.0011011548644764377,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 268.197421286,
+        "simulation_per_wall": 0.22371579753564177,
+        "transition_p95_s": 0.233571217
+      },
+      "native_timing_scope": "Native shared-host measurement; no browser realtime qualification.",
+      "positive_mechanical_work_j": 4.950293896577663,
+      "total_loaded_contact_motion_m": 0.0897495276906406,
+      "capture": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-0.030000000000000002mm-s.native.json",
+        "sha256": "5173d036ea152cfc160629e443fd13f625e497cd1ed08caafc359c9bc6c518fc"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.030000000000000002mm-s-metrics.json",
+          "sha256": "e79e69109a6da0569e17921e97d4594df8fbdba06f1ce8d4beb5c55bc8ab4370"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.030000000000000002mm-s-contact.json",
+          "sha256": "b5acc0be11d91031c05c79421b373ef19410dfe6a360f37e6b42d27e9cb35501"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/gentler-contact-slip-0.030000000000000002mm-s-phases.json",
+          "sha256": "30b668ddea960bb24837f287b2ac98222c6b62bafabd0ce2fa70173d19e16c3f"
+        }
+      ]
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "identical_config_controller_and_completed_input_events": true,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-plan.json",
+      "sha256": "4209a8b3ac4a32f835592b375a4fbfaf411070b5f1c26498ec7f710a0c250ec4"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-status.json",
+      "sha256": "6386ae77b9c215481c5bb65069958cdb03b4932b533e2c88853b207d245c151f"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-integrity.json",
+      "sha256": "c53f4e005ea283711ecee11614cf7b0452e626a1e5b4ffd5adc91b1bc5d30a2d"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_gentler_contact.mjs",
+      "sha256": "f1873e42cd46c2cad5dbd4cc63e56271cc461985dc3f5edfc7b55940528f8dd2"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "browser_promoted": false,
+  "scope": "Explicit contact-model sensitivity under the same gentler gait. Original task and 5% contact screen retained. Failed prefixes cannot qualify the minute. No timestep, fresh held-out, terrain, browser or calibrated hardware qualification."
+}

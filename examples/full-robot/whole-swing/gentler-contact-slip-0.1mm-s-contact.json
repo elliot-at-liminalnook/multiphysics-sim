@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "outcome": {
+    "kind": "completed",
+    "error": null,
+    "termination_reasons": []
+  },
+  "feet": [
+    {
+      "id": "-Y-foot-surface",
+      "link": "-Y | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 55.79999999999998,
+      "integrated_load_weighted_tangential_speed_m": 0.02470591925757051,
+      "integrated_load_weighted_point_speed_m": 0.028368781494834672,
+      "integrated_load_weighted_velocity_world_m": [
+        0.0031950061429195124,
+        -0.0029394038237723816
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.05879095211286089,
+      "sampled_translational_shear_dissipation_j": 0.052784377645562985,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "+X-foot-surface",
+      "link": "+X | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 56.18,
+      "integrated_load_weighted_tangential_speed_m": 0.029542130771888792,
+      "integrated_load_weighted_point_speed_m": 0.029542130771888792,
+      "integrated_load_weighted_velocity_world_m": [
+        0.025529339950059633,
+        0.00018401170824377714
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.022863183155473064,
+      "sampled_translational_shear_dissipation_j": 0.06776168687913503,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "+Y-foot-surface",
+      "link": "+Y | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 55.959999999999994,
+      "integrated_load_weighted_tangential_speed_m": 0.016844435920907033,
+      "integrated_load_weighted_point_speed_m": 0.020300042061691427,
+      "integrated_load_weighted_velocity_world_m": [
+        0.0037206676481095825,
+        0.0016921672914797551
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.042265562192319375,
+      "sampled_translational_shear_dissipation_j": 0.028904106631522326,
+      "sampled_translational_shear_supplied_work_j": 0
+    },
+    {
+      "id": "-X-foot-surface",
+      "link": "-X | Sliding foot crosshead",
+      "sampled_loaded_duration_s": 56.059999999999995,
+      "integrated_load_weighted_tangential_speed_m": 0.022771936735951983,
+      "integrated_load_weighted_point_speed_m": 0.02504176289951222,
+      "integrated_load_weighted_velocity_world_m": [
+        0.01408684081916709,
+        0.0004032466488855539
+      ],
+      "maximum_load_weighted_tangential_speed_m_s": 0.027280262446849553,
+      "sampled_translational_shear_dissipation_j": 0.03152230962869993,
+      "sampled_translational_shear_supplied_work_j": 0
+    }
+  ],
+  "capture": {
+    "path": "runs/full-robot/learning/gentler-contact/slip-0.1mm-s.native.json",
+    "sha256": "2b8c8074ce2c79c33a22ae1cdc510b2ca7aad47a5cac324a5356ae90ebbf25cc"
+  },
+  "sources": [
+    {
+      "path": "/Users/elliot/physics-simulator/examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    }
+  ],
+  "conventions": {
+    "minimum_endpoint_floor_force_n": 1,
+    "kinematics": "Recorded COM velocity plus angular velocity cross the world contact-point offset. Floor is stationary and horizontal.",
+    "integration": "Trapezoidal 50 Hz samples over intervals with both endpoints loaded. Velocities are weighted by recorded normal forces, not by tracking a fixed contact point."
+  },
+  "scope": "Diagnostic of material velocities at sampled floor contacts, separate from geometric foot-marker travel. Translation of the load-weighted patch and pointwise rotation are both reported. Contact birth/death, changing weights, between-sample peaks and independent torsional friction work are unresolved. No new acceptance threshold or slip-free/hardware claim."
+}

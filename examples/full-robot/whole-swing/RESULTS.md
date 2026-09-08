@@ -984,3 +984,58 @@ NEW_DIRECTORY` reconstructs all five recipes, including the original-bound
 baseline, without a prior `runs/` tree. All reconstructed scenes, configurations,
 tasks, seeds and dense action arrays match the measured recipes exactly;
 `feedback-ablation-reproduction-check.json` records that check.
+
+## Gentler motion separates some contact creep from remaining sliding
+
+The next frozen study repeats the fixed-stride 2× Shift/Return gait with
+regularized-Coulomb speed scales of 1, 0.1 and 0.03 mm/s. Its 5.175 mm planned
+stride, 1.90 s transfer period, controller, CAD material coefficients, servo
+limits, development input minute and push, and 1.25 ms backward Euler settings
+are identical across profiles. Only the declared smoothing option differs.
+The repeated 1 mm/s baseline exactly reproduces all 3,001 physical frames and
+transitions from the previous 2× gait, excluding wall times.
+
+| Smoothing mm/s | Travel mm/s | Qualified swings | Stop mm | Heading rad | Worst-foot motion / body advance | Total foot motion mm | Shaft work J |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 2.741 | 30/30 | 0.283 | 0.000393 | 29.2% | 162.8 | 5.294 |
+| 0.1 | 2.738 | 30/30 | 0.335 | 0.000367 | 19.1% | 93.9 | 5.019 |
+| 0.03 | 2.729 | 30/30 | 0.442 | 0.000557 | 17.8% | 89.7 | 4.950 |
+
+All three complete the minute and pass the original task checks, with zero
+sampled internal contacts and maximum body tilt below 0.00418 rad. All fail
+the unchanged **5%** loaded-contact-motion screen. Smaller smoothing changes
+the constitutive approximation; it is not a controller improvement or a newly
+measured material property. Its benefit is larger here than with the original
+fast shifts, but the remaining motion is substantial.
+
+At 0.03 mm/s, Return contributes **42.697 mm** of across-foot contact motion,
+Raise **26.056 mm**, Shift **13.207 mm**, and Lower **7.398 mm**. Return plus
+Raise account for **76.6%** of the 89.750 mm total. Reducing smoothing from 0.1
+to 0.03 mm/s barely changes either Return or Raise motion. This supports
+testing a gentler direct support transfer that removes the return-to-center
+excursion; phase association alone does not prove its causal effect or predict
+that it will pass. The earlier faster direct-transfer gait remains a separate
+heading/sliding failure.
+
+Native measured throughput is 0.599×, 0.421× and 0.224×, with p95 transitions
+66.9, 113.5 and 233.6 ms. The **0.1 mm/s timing is not an isolated comparison**:
+a memory-heavy diagnostic briefly overlapped it. That diagnostic mistakenly
+compared frame wall times, was terminated, and was replaced after simulation
+with the explicit per-frame physical parity check. The 0.03 mm/s result still
+demonstrates a large cost against the repeated baseline. These are native
+shared-host observations, not browser realtime tests.
+
+`GENTLER-CONTACT-PLAN.md` and `gentler-contact-{plan,status,integrity,summary}.json`
+retain the prospective definitions, outcomes and independent per-profile
+audits. The collector asserts identical parsed robot, controller, full config
+and completed input histories, with only the declared physics option allowed
+to vary. Per-case contact, phase and motion reports retain the measurements.
+`gentler-contact-baseline-parity.json` records exact physical repeatability.
+
+`node examples/full-robot/whole-swing/prepare_gentler_contact.mjs NEW_DIRECTORY`
+reconstructs all three recipes from versioned inputs without prior captures;
+the fresh reconstruction and match to the previous 2× gait's authored recipe
+are recorded in `gentler-contact-reproduction-check.json`. The shared contact
+kinematics/phase test and rejected-input audit test both pass. No Rust runtime
+or live browser bundle changes, candidate promotion, timestep convergence,
+fresh held-out, terrain, or hardware qualification are claimed by this study.

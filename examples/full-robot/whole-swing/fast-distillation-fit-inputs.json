@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "path": "target/release/examples/distill_policy",
+      "sha256": "329679723f3f0e040520bb46519ecc4e2570dbaf67ae9ef2714201061525cf0b"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/fast-distillation/experiment.json",
+      "sha256": "5a4b27b14896e99664ecd7c85a895c3a1751326e40ad27c58486f127484bc691"
+    },
+    {
+      "path": "crates/sim-domain-control/src/neural.rs",
+      "sha256": "7d2e8f4ffe9e213c9aeba9416ebfeb40d5562b8dc80dc9011c3792df79c6e7bd"
+    },
+    {
+      "path": "crates/sim-domain-control/src/distillation.rs",
+      "sha256": "393dd8cf7f9ebecf02c72c69d1ec3cfb3d439d803ef603c1b7e1198dd7214761"
+    },
+    {
+      "path": "crates/sim-runtime/examples/distill_policy.rs",
+      "sha256": "548588b90b2aa8f2b6002f47e8507712cfa739d1a66c9923a8af52e262d8b84d"
+    },
+    {
+      "path": "runs/fast-distillation-build.log",
+      "sha256": "b60fe264d48492b646d909ca8323b5933b108b0b4d64eb2a55b7568fb3038a57"
+    }
+  ],
+  "scope": "Binary and experiment observed while the deterministic Rust fit is running; verify unchanged at completion. No stochastic initialization or validation-based checkpoint selection."
+}

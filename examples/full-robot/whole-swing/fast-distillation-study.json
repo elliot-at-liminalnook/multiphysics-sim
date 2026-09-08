@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "output": "examples/full-robot/whole-swing/fast-distillation",
+  "network": {
+    "path": "examples/full-robot/whole-swing/fast-distillation/network-seed.json",
+    "sha256": "2b39b5740b8ceaf422431d4c8599d7d18f1b8bc719d3c4da1ed0177294b56eee"
+  },
+  "scene": {
+    "path": "examples/full-robot/whole-swing/fast-distillation/authored-student.scene.json",
+    "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+  },
+  "config": {
+    "path": "examples/full-robot/whole-swing/fast-distillation/teacher.config.json",
+    "sha256": "9fbfc92aeebbe1c20a0df32a55e51a08e09e0d310b8e0b407e044bf7ac5ab981"
+  },
+  "task": {
+    "path": "examples/full-robot/heading-task/task.json",
+    "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+  },
+  "scene_schema_omissions": {
+    "path": "web/leaderboard/unretained-scene-fields.json",
+    "sha256": "d214777edc596d04e7d32fd6e150a03c84f2e8cfa898759787016c65ab00cea6"
+  },
+  "training": [
+    {
+      "capture": {
+        "path": "runs/full-robot/learning/whole-combined/combined-minute-1.25ms.native.json",
+        "sha256": "697506878d7152b9f587cd295f777ed3b045097f2f6669729c86e6bf3c49d22d"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/whole-combined/combined-minute-1.25ms-acceptance/summary.json",
+        "sha256": "f26282cb5d16f20777230a6b63525f6a75383c2fd06c4ca7275f19790ae374b6"
+      }
+    },
+    {
+      "capture": {
+        "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms.native.json",
+        "sha256": "3a87eff3e37f7e141cc507807fea4b50bdc75ee48f44b26c075aa076f5970d56"
+      },
+      "acceptance": {
+        "path": "runs/full-robot/learning/whole-combined/combined-turn-1.25ms-acceptance/summary.json",
+        "sha256": "857d2f1105286049f65c1509b8af279511febf0ddfd24f938b6e37597bcafc66"
+      }
+    }
+  ],
+  "validation": [
+    {
+      "capture": {
+        "path": "runs/full-robot/learning/fast-distillation-holdout/teacher-heldout-mirrored-32s.native.json",
+        "sha256": "5cbdd1fcd84b77bf56b904c0704aefa1b9a7f826fd54cd5589cd0ae76648a434"
+      },
+      "allow_accepted_prefix": true
+    }
+  ],
+  "baseline": [
+    {
+      "target": "-Y | Hip servo output.target",
+      "reference": "-Y | Hip servo output.reference",
+      "position": "-Y | Hip servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "-Y | Worm servo output.target",
+      "reference": "-Y | Worm servo output.reference",
+      "position": "-Y | Worm servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "-Y | Foot servo output.target",
+      "reference": "-Y | Foot servo output.reference",
+      "position": "-Y | Foot servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "+X | Hip servo output.target",
+      "reference": "+X | Hip servo output.reference",
+      "position": "+X | Hip servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "+X | Worm servo output.target",
+      "reference": "+X | Worm servo output.reference",
+      "position": "+X | Worm servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "+X | Foot servo output.target",
+      "reference": "+X | Foot servo output.reference",
+      "position": "+X | Foot servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "+Y | Hip servo output.target",
+      "reference": "+Y | Hip servo output.reference",
+      "position": "+Y | Hip servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "+Y | Worm servo output.target",
+      "reference": "+Y | Worm servo output.reference",
+      "position": "+Y | Worm servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "+Y | Foot servo output.target",
+      "reference": "+Y | Foot servo output.reference",
+      "position": "+Y | Foot servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "-X | Hip servo output.target",
+      "reference": "-X | Hip servo output.reference",
+      "position": "-X | Hip servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "-X | Worm servo output.target",
+      "reference": "-X | Worm servo output.reference",
+      "position": "-X | Worm servo output.angle",
+      "gain": "command.tracking_gain"
+    },
+    {
+      "target": "-X | Foot servo output.target",
+      "reference": "-X | Foot servo output.reference",
+      "position": "-X | Foot servo output.angle",
+      "gain": "command.tracking_gain"
+    }
+  ],
+  "optimizer": {
+    "epochs": 1000,
+    "learning_rate": 0.0005,
+    "batch_size": 64
+  },
+  "preparation_sources": [
+    {
+      "path": "examples/full-robot/whole-swing/FAST-DISTILLATION-PLAN.md",
+      "sha256": "967102b10d425434baea616e671636bfafb087d6e480d8fd163396511b293f47"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/combined-status.json",
+      "sha256": "61218b0b654e77e512ab0baecb2a9cf4d458faedd5f9f58890b4d45ff1af05ac"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/fast-distillation-holdout-status.json",
+      "sha256": "fed17bf5b5b0a589edec532de1bcfdfe1fc90e8ac74b85b753264ab6a9415741"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/reference-minute.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/reference-minute.config.json",
+      "sha256": "9fbfc92aeebbe1c20a0df32a55e51a08e09e0d310b8e0b407e044bf7ac5ab981"
+    },
+    {
+      "path": "examples/full-robot/student-distillation/initial.policy.json",
+      "sha256": "2b39b5740b8ceaf422431d4c8599d7d18f1b8bc719d3c4da1ed0177294b56eee"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_fast_distillation.mjs",
+      "sha256": "9c283a16573989d5c558c4f47024a352baa162ce5b51557d3d8202a914cfe717"
+    }
+  ],
+  "scope": "Faster minute and mixed-steering fine teacher demonstrations for training. The predeclared mirrored held-out episode fails at 14.84 s; its accepted prefix remains validation-only, and full episode acceptance remains failed. No substitution of a passing validation case."
+}

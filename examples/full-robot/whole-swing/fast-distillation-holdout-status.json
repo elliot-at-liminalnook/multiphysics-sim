@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "teacher-heldout-mirrored-32s",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": false,
+      "error": "step 10 Lower reference lacks static support: Some([19.261323140751717, 19.254121385350242, 0.4914608738290663])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 29.119863309,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/fast-distillation-holdout/teacher-heldout-mirrored-32s.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-holdout/teacher-heldout-mirrored-32s.config.json",
+          "sha256": "1ec1c86a494eec23be89c68fb9f5c1089f6aa8ab232d2d063fa84b0f7c90136b"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-holdout/teacher-heldout-mirrored-32s.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-holdout/teacher-heldout-mirrored-32s.native.json",
+          "sha256": "5cbdd1fcd84b77bf56b904c0704aefa1b9a7f826fd54cd5589cd0ae76648a434"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/fast-distillation-holdout/plan.json",
+      "sha256": "81965cbc3ffca78d30c1ef4db59cab960583ec45e6223630927d4ad02e034532"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "eb7e7b0c9ec72727429a419cc94c4ef4a50eb717772b4ef220a7a9c7fde77e02"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "958986ba3fd2a1865944fcf92bc7ee5811ebec8efe931c339ab93b3b18d77332"
+    }
+  ],
+  "scope": "Predeclared whole held-out teacher episode; changed command timing and yaw sign, unchanged physical recipe and existing development push. Reserved from fitting and checkpoint selection. Seed zero with explicit deterministic inputs is one case, not stochastic robustness coverage."
+}

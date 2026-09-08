@@ -5,7 +5,9 @@ import assert from 'node:assert/strict';
 const [capturePath, output] = process.argv.slice(2);
 assert(capturePath && output, 'usage: analyze_walking_capture.mjs capture.json report.json');
 const bytes = readFileSync(capturePath), c = JSON.parse(bytes);
-assert(c.completed && !c.error, 'complete capture required; retain failed runs separately');
+const acceptedPrefix = process.argv.includes('--accepted-prefix') && !c.completed;
+assert(c.completed && !c.error || acceptedPrefix && c.error && c.frames.length >= 2,
+  'complete capture required unless explicitly measuring the accepted prefix of a retained failed run');
 const config = c.recording.config, frames = c.frames;
 const bodyName = config.policy.body_feedback.reference_link;
 const markers = config.policy.point_feedback.markers;
@@ -96,6 +98,8 @@ for (let i = 1; i <= frames.length; i++) {
 const delta = sub(body(frames.at(-1)).position_m, body(frames[0]).position_m);
 const work = motors.reduce((s, m) => s + m.positive_mechanical_work_j, 0);
 writeFileSync(output, JSON.stringify({version: 1,
+  ...(acceptedPrefix ? {accepted_prefix_only: true, episode_completed: false, episode_error: c.error,
+    failure_scope: 'Only accepted frames before termination are measured. No full-episode task, speed, energy or recovery qualification is implied.'} : {}),
   capture: {path: capturePath, sha256: createHash('sha256').update(bytes).digest('hex')},
   source: {path: 'examples/interactive/analyze_walking_capture.mjs', sha256: createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex')},
   simulated_s: frames.at(-1).time_s, body_displacement_world_m: delta,

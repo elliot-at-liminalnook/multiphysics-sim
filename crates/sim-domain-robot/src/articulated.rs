@@ -335,6 +335,30 @@ pub struct Evaluation {
     pub joint_points: Vec<V>,
 }
 
+impl Evaluation {
+    /// Total world-Z floor load (N) and its normal-force-weighted tangential
+    /// contact velocity (m/s). Uses material-point velocity, including rotation;
+    /// internal contacts are excluded. The caller must establish a stationary
+    /// world-Z floor. This observation adds no forces or contact constraints.
+    pub fn world_z_floor_contact_velocity(&self, link: usize) -> Result<(f64, V), String> {
+        let body = self.links.get(link).ok_or("contact velocity link out of range")?;
+        let mut force = 0.;
+        let mut weighted = V::zeros();
+        for c in self.contacts.iter().filter(|c| c.link == link && c.other.is_none()) {
+            let velocity = body.vel + body.w.cross(&(c.point - body.p));
+            if !c.force.z.is_finite() || c.force.z < 0. || velocity.iter().any(|v| !v.is_finite()) {
+                return Err("nonfinite contact velocity or invalid floor normal force".into());
+            }
+            force += c.force.z;
+            weighted += V::new(velocity.x, velocity.y, 0.) * c.force.z;
+        }
+        if !force.is_finite() || weighted.iter().any(|v| !v.is_finite()) {
+            return Err("nonfinite weighted contact velocity".into());
+        }
+        Ok((force, if force > 0. { weighted / force } else { V::zeros() }))
+    }
+}
+
 /// Build-time options.
 #[derive(Clone, Debug)]
 pub struct Options {

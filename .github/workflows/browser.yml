@@ -39,8 +39,8 @@ jobs:
       - run: cargo test --locked -p sim-domain-control --test trajectory
       - run: cargo test --locked -p sim-domain-control --test neural
       - run: node --test web/tests/residual-distillation.mjs
-      - run: cargo test --locked -p sim-domain-control --test motion_clock --test stepping --test support_preload --test angle_integral
-      - run: cargo test --locked -p sim-script --test angle_integral
+      - run: cargo test --locked -p sim-domain-control --test motion_clock --test stepping --test support_preload --test angle_integral --test load_damping
+      - run: cargo test --locked -p sim-script --test angle_integral --test load_damping
       - run: cargo test --locked -p sim-runtime --test step_reference
       - run: cargo test --locked -p sim-runtime --test planning
       - run: cargo test --locked -p sim-runtime --test lift
@@ -93,6 +93,7 @@ jobs:
       - run: cargo test --locked -p sim-domain-multibody --test regularized_friction
       - run: cargo test --locked -p sim-domain-robot --test regularized_friction
       - run: cargo test --locked -p sim-domain-robot --test floor_dissipation
+      - run: cargo test --locked -p sim-domain-robot --test contact_velocity
       - run: cargo test --locked -p sim-runtime --test session floor_dissipation
       - run: cargo test --locked -p sim-domain-robot --no-default-features --test regularized_friction
       - run: cargo test --locked -p sim-domain-robot --no-default-features --test jacobian

@@ -124,7 +124,12 @@ impl RigidEmbedding<'_> {
         // intermediate state. Floating rotations use composed world-frame
         // exponentials; contact history uses the same RK weights.
         let anchor=self.solve(&trial,&q,&u)?;
-        let second=self.step_implicit(&anchor.generalized,t+(1.-gamma)*h,gamma*h,&config,|_,g|loads(t+h,g))?;
+        // Match the shared vector SDIRK primitive: start Newton from the first
+        // physical stage, not the extrapolated affine anchor. The equation
+        // still uses that anchor and all original endpoint checks.
+        let first_velocity=self.reduced_velocity(&first.endpoint.generalized);
+        let second=self.step_implicit_with_velocity_guess(&anchor.generalized,t+(1.-gamma)*h,gamma*h,&config,
+            &first_velocity,|_,g|loads(t+h,g))?;
         Ok((second.endpoint,first.diagnostics,second.diagnostics))
     }
     /// Retry failed backward-Euler trials using the shared bounded subdivision

@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "student-be-20ms",
+      "scene": "runs/full-robot/learning/sdirk-steering/student-be-20ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-steering/student-be-20ms.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/student-be-20ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "seed": 0,
+      "integration": "backward_euler",
+      "previous_capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.native.json",
+        "sha256": "b9fd028ba28c1aeb221f93a5ed9819cfaf64847ec31955061ee6852c42013022"
+      }
+    },
+    {
+      "name": "teacher-sdirk2-20ms",
+      "scene": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "seed": 0,
+      "integration": "sdirk2",
+      "previous_capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.native.json",
+        "sha256": "e19c6bf1736a64cd23b9e3757086541d8dfee10cafbe9b7c03d251bb5f3faea4"
+      }
+    },
+    {
+      "name": "student-sdirk2-20ms",
+      "scene": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.scene.json",
+      "config": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.config.json",
+      "actions": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "seed": 0,
+      "integration": "sdirk2",
+      "previous_capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.native.json",
+        "sha256": "f10a23fb1b05410b90f7c7dc834d658404254cfa805afd01aef6ec529481d07b"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/SDIRK2-PHYSICAL-GUESS.md",
+      "sha256": "fd97d2d0664b78af633891ebf0d497acd9e2319ebed0ec313d3974f6f4561847"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-plan.json",
+      "sha256": "6757187e1772ea36fd76b6d05f1b466742a6cc2b44e03d0a574ba5e2128e4c97"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-status.json",
+      "sha256": "b171f8afa4f8117938547f9d65199551f08d79ce1f5a09dec73710ace9ff6cbe"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "1da23de7f6fde610f20d4cf8cc1c6a62e7db8715bb0a262e15ef306b5b4b988e"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "31e2fbd1c3bc7df53c6fac103141bbb332d2b581d9ed49981335f6087adca7e2"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/implicit.rs",
+      "sha256": "9eb9af5b46a0ec8c4559d164ba044ef67af3eceb60c23aaedf0e3ae099a5e129"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/mechanical_advance.rs",
+      "sha256": "e206153bb7abc5b8e2d915a09acb02b81a72fc76b6f2dbef32eaf4467a5f2861"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedded_step.rs",
+      "sha256": "71dbe839a3ee93610ce9ea6360b7f4774518a5ef245421ba56a5e69e03545bde"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedding.rs",
+      "sha256": "6c9198ecd2ae55ce4f5a3131f9be84028dfaf392e7777ad46f8fd1e7fc291f1c"
+    },
+    {
+      "path": "runs/sdirk-physical-guess-tests.log",
+      "sha256": "072a7fc3212cba26de6dd8d6aec461f926a38edf16987fa099c1ff1386e254fe"
+    },
+    {
+      "path": "runs/sdirk-physical-guess-build.log",
+      "sha256": "68448cda1440a4e62799ffcf9bafaf13a71a746d95d134518144ceba0ae605c8"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_sdirk_physical_guess.mjs",
+      "sha256": "73c9517350edcb9e3ece33ddf6eac2a3336ec6162368fdd1a97d81069e1d7ec1"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.scene.json",
+      "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.config.json",
+      "sha256": "ef664725f6d98fff5fd72723bd07f49cd232d3ecc56af20a5f974d15e834b8dc"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.native.json",
+      "sha256": "b9fd028ba28c1aeb221f93a5ed9819cfaf64847ec31955061ee6852c42013022"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+      "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.config.json",
+      "sha256": "720ab3f6cf3b1356174cfe8955745b731468c0884d9a37e65e07b6559da13af4"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.native.json",
+      "sha256": "e19c6bf1736a64cd23b9e3757086541d8dfee10cafbe9b7c03d251bb5f3faea4"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.scene.json",
+      "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.config.json",
+      "sha256": "46a15fd8a835c686eb8433590beca8240f9c65fb49973bb3d136ad8d0fb9afbd"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.actions.json",
+      "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+    },
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.native.json",
+      "sha256": "f10a23fb1b05410b90f7c7dc834d658404254cfa805afd01aef6ec529481d07b"
+    }
+  ],
+  "scope": "Same authored 24-second steering recipes, seed 0, CAD and task budgets. Experimental mechanical SDIRK2 now starts the second solve from the first physical stage, matching the vector primitive. Default backward Euler must preserve all previous physics and task transitions exactly. No browser or timestep-accuracy qualification."
+}

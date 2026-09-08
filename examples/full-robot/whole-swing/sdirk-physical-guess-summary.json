@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "student-be-20ms",
+      "completed": true,
+      "task_passed": true,
+      "error": null,
+      "accepted_simulated_s": 24,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007028089897926064,
+        "final_yaw_error_rad": 0.00012122055075906336,
+        "maximum_body_tilt_rad": 0.004146111350482572,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.0273886899360929,
+          -0.0004412306959257123,
+          -0.0005318219915835132
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-physical-guess/student-be-20ms-acceptance/summary.json",
+          "sha256": "536f46d95d4209176e818d2ac6f31c6946a95fe2fcce010d45695ff64ccc2d3f"
+        }
+      },
+      "default_identity": {
+        "passed": true,
+        "frames": 1201,
+        "transitions": 1201,
+        "previous": {
+          "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.native.json",
+          "sha256": "b9fd028ba28c1aeb221f93a5ed9819cfaf64847ec31955061ee6852c42013022"
+        },
+        "comparison": "Strict parsed values including signed zero; only frame stepping_wall_s excluded."
+      },
+      "maximum_sampled_gear_speed_rad_s": 2.2057920050974236,
+      "native_compute": {
+        "wall_s": 6.243475883,
+        "simulation_per_wall": 3.844012606078645,
+        "transition_p95_s": 0.013968823
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-guess-student-be-20ms-metrics.json",
+        "sha256": "25462c5c3e959878264023e601341f13324aff8ab4b5605562ee28942341daac"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-physical-guess/student-be-20ms.native.json",
+        "sha256": "5982048084507d7d3a74cd04d41a28008d30eed4d1ece9367d2173ea0b8bd0cb"
+      }
+    },
+    {
+      "name": "teacher-sdirk2-20ms",
+      "completed": true,
+      "task_passed": false,
+      "error": null,
+      "accepted_simulated_s": 24,
+      "acceptance": {
+        "passed": false,
+        "lifts": 15,
+        "failed_lifts": 1,
+        "final_body_error_m": 0.0014181563788013974,
+        "final_yaw_error_rad": 0.0012810365227012479,
+        "maximum_body_tilt_rad": 0.004336815748496537,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.02887562593646111,
+          0.00034270966788628015,
+          -0.000492903077273784
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-physical-guess/teacher-sdirk2-20ms-acceptance/summary.json",
+          "sha256": "3829d60174432e40474ea7a34ba0be13b88364b18c038d8e9e8df2972fd736e3"
+        }
+      },
+      "default_identity": null,
+      "maximum_sampled_gear_speed_rad_s": 1.7616128957446426,
+      "native_compute": {
+        "wall_s": 23.321361058,
+        "simulation_per_wall": 1.0290994569447396,
+        "transition_p95_s": 0.041252951
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-guess-teacher-sdirk2-20ms-metrics.json",
+        "sha256": "af49cc82b817e78a35e5721da9f87290e14a8ac825dbcb032f28d36873e670bd"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-physical-guess/teacher-sdirk2-20ms.native.json",
+        "sha256": "f76c3f27854eba9d6f7959cdf0b5ce774eca7a9dd23c7743bf9831f5c3158f91"
+      }
+    },
+    {
+      "name": "student-sdirk2-20ms",
+      "completed": true,
+      "task_passed": false,
+      "error": null,
+      "accepted_simulated_s": 24,
+      "acceptance": {
+        "passed": false,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.002917489746285153,
+        "final_yaw_error_rad": 0.0003719208696589278,
+        "maximum_body_tilt_rad": 0.0043072799980540906,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.03043143720034041,
+          0.00043084897413268116,
+          -0.0005293037530375716
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-physical-guess/student-sdirk2-20ms-acceptance/summary.json",
+          "sha256": "4d4368946f14439b97ab2fc7a701b07035beefbe02c090a47a10d245648da2c3"
+        }
+      },
+      "default_identity": null,
+      "maximum_sampled_gear_speed_rad_s": 1.7788758156167241,
+      "native_compute": {
+        "wall_s": 12.333243961,
+        "simulation_per_wall": 1.9459600471613503,
+        "transition_p95_s": 0.020752674
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-physical-guess-student-sdirk2-20ms-metrics.json",
+        "sha256": "a2c4a31d01f50425113165604013ba68e8135a10f14cc2e57562054e061c38dd"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-physical-guess/student-sdirk2-20ms.native.json",
+        "sha256": "c3b0f2806ea6e72a0a3ac7fb696502c0aa64754cfd91c885f0b29352415a4227"
+      }
+    }
+  ],
+  "teacher_reference": {
+    "source": {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-guess-teacher-reference.json",
+      "sha256": "0a8a41a63e34649b5923b0b953f0679697a1b5da40f4a7350b3f976fb7d29312"
+    },
+    "maximum_foot_difference_m": 0.0017657956380303429,
+    "maximum_body_difference_m": 0.0016689496955939426,
+    "foot_budget_m": 0.001,
+    "body_budget_m": 0.0005,
+    "passed": false
+  },
+  "browser_promoted": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-guess-plan.json",
+      "sha256": "aa984954b903d6e1d175dcb1c81f757c7f7b6aa1adc6fbd0aac68244d77a5218"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-guess-status.json",
+      "sha256": "546e488661c2ba29ec311d8fd25d8c0448dcfd24ef2e12df4e8bde5e5d519d2a"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-physical-guess-integrity.json",
+      "sha256": "8350d0dfd70025c202f8c794f92ce56792b76008149c497cb3f4c22d2ccdf17f"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_sdirk_physical_guess.mjs",
+      "sha256": "16828b6b3643c404ca552b01ee8a1a52f5f5f08d9988a516bf32f8fccd84e7a0"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "scope": "Predeclared 24-second native steering screen. Same physical equations and tolerances; experimental SDIRK second-stage initial guess now uses the first stage velocity. Default backward Euler is checked exactly. Task checks and native rates are separate from missing trajectory refinement and browser qualification; failed prefixes are not full episodes."
+}

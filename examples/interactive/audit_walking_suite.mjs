@@ -52,14 +52,14 @@ for (const [index, c] of plan.cases.entries()) {
     assert.deepEqual(held, actions[i], `${c.name} action ${i}`);
     assert.deepEqual(r.frames[i + 1].policy_inputs, actions[i], `${c.name} frame ${i + 1}`);
   }
-  for (const e of r.recording.input_events) {
+  for (const e of r.recording.input_events ?? []) {
     assert.equal(e.at_step % stride, 0);
     assert.deepEqual(e.values, actions[e.at_step / stride]);
   }
   assert.equal(r.completed, result.completed); assert.equal(r.error, result.error);
   const outcome = captureOutcome(r);
   if (r.completed) {
-    assert.equal(r.frames.length, actions.length + 1); assert.equal(event, r.recording.input_events.length);
+    assert.equal(r.frames.length, actions.length + 1); assert.equal(event, (r.recording.input_events ?? []).length);
     assert(result.acceptance);
     const a = read(result.acceptance.source.path);
     assert.equal(source(result.acceptance.source.path).sha256, result.acceptance.source.sha256);

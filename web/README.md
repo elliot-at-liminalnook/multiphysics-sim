@@ -142,3 +142,13 @@ remains default. One browser force reading also exceeds the strict parity
 limit; the trial bundle is retained for diagnosis and does not replace the
 previously passing live viewer. Browser configuration disables only native
 process-global profiling. See `examples/full-robot/block-factor-validation.md` for evidence.
+
+The **Controller leaderboard** opens the measured recipe catalog. It provides
+search, validation/profile filters, side-by-side evidence, exact hash-checked
+Load and run actions, Rust input replay and canvas WebM export. Experimental
+controllers remain unranked until every declared gate passes. Physical travel,
+native throughput and browser timing are displayed separately. The new teacher
+reaches 3.751 mm/s measured travel over a minute with 41 qualified swings, but
+stopping and sustained numerical accuracy still fail; live 3.75 mm/s steering
+and realtime timing also remain unresolved. See [catalog workflow](leaderboard/README.md)
+and [faster gait evidence](../examples/full-robot/whole-swing/RESULTS.md).

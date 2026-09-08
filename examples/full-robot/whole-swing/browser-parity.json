@@ -1,0 +1,3751 @@
+{
+  "passed": true,
+  "preset": "tested-whole-swing-short",
+  "transitions": 1200,
+  "maximum_native_wasm_difference": 1.1023469514981343e-7,
+  "worst": "transition[85].observations.67",
+  "differences": [],
+  "invalid_action_preserved": true,
+  "changed_task_replay_preserved": true,
+  "replay_exact": true,
+  "reset_exact": true,
+  "main_thread_heartbeats": 3620,
+  "replay_progress_messages": 1200,
+  "numeric_tolerance": {
+    "absolute": 1e-7,
+    "relative": 1e-8,
+    "maximum_fraction": 0.9480703410137635
+  },
+  "scope": "Same task and physical frames through production Rust environment, 1e-7 absolute + 1e-8 relative numeric portability tolerance. Same-host replay/reset remain exact. Not physical accuracy or learned control.",
+  "performance": {
+    "simulated_s": 24,
+    "transition_wall_s": 10.48038500016927,
+    "simulation_per_wall_second": 2.2899922092186853,
+    "transition_p95_s": 0.028834999978542327,
+    "scope": "Headless browser worker round trips including serialization; excludes loading, replay and rendering. This timing is not rendered active-walking or visible-responsiveness acceptance."
+  },
+  "numeric_groups": {
+    "physics.completed_steps": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.contact_history.bristle_state": {
+      "samples": 104487,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.environment_load.force_world_n": {
+      "samples": 3603,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.environment_load.moment_world_nm": {
+      "samples": 3603,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.joint_positions": {
+      "samples": 33628,
+      "maximum_difference": 2.5804559877773414e-11,
+      "maximum_tolerance_fraction": 0.00025701400382588206,
+      "failures": 0
+    },
+    "physics.joint_velocities": {
+      "samples": 33628,
+      "maximum_difference": 1.2902403589976075e-9,
+      "maximum_tolerance_fraction": 0.01166306243628677,
+      "failures": 0
+    },
+    "physics.motor_readings.gear_speed_rad_s": {
+      "samples": 14412,
+      "maximum_difference": 1.2902403589976075e-9,
+      "maximum_tolerance_fraction": 0.01166306243628677,
+      "failures": 0
+    },
+    "physics.motor_readings.shaft_torque_nm": {
+      "samples": 14412,
+      "maximum_difference": 1.7398872342866412e-9,
+      "maximum_tolerance_fraction": 0.016885540939655594,
+      "failures": 0
+    },
+    "physics.original_rows.acceleration": {
+      "samples": 33628,
+      "maximum_difference": 2.3397950243975174e-14,
+      "maximum_tolerance_fraction": 2.3397950243975142e-7,
+      "failures": 0
+    },
+    "physics.original_rows.position": {
+      "samples": 33628,
+      "maximum_difference": 2.220446049250313e-16,
+      "maximum_tolerance_fraction": 2.220446049250313e-9,
+      "failures": 0
+    },
+    "physics.original_rows.stabilized": {
+      "samples": 33628,
+      "maximum_difference": 2.220910955141875e-12,
+      "maximum_tolerance_fraction": 0.000022209109551416282,
+      "failures": 0
+    },
+    "physics.original_rows.velocity": {
+      "samples": 33628,
+      "maximum_difference": 1.3322676295501878e-15,
+      "maximum_tolerance_fraction": 1.3322676295501877e-8,
+      "failures": 0
+    },
+    "physics.policy_inputs": {
+      "samples": 21618,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.poses.angular_velocity_rad_s": {
+      "samples": 104487,
+      "maximum_difference": 1.1959835344299563e-9,
+      "maximum_tolerance_fraction": 0.010743326359600661,
+      "failures": 0
+    },
+    "link_position_m": {
+      "samples": 104487,
+      "maximum_difference": 3.2951419370874646e-12,
+      "maximum_tolerance_fraction": 0.000031935344539272456,
+      "failures": 0
+    },
+    "physics.poses.rotation": {
+      "samples": 313461,
+      "maximum_difference": 2.3742757759848132e-11,
+      "maximum_tolerance_fraction": 0.00023458378049096218,
+      "failures": 0
+    },
+    "link_velocity_m_s": {
+      "samples": 104487,
+      "maximum_difference": 1.5751802640018298e-10,
+      "maximum_tolerance_fraction": 0.0015710386046249153,
+      "failures": 0
+    },
+    "physics.reference_targets_rad": {
+      "samples": 14412,
+      "maximum_difference": 1.7708057242771247e-14,
+      "maximum_tolerance_fraction": 1.7622900761330713e-7,
+      "failures": 0
+    },
+    "physics.requested_steps": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.servo_targets_rad": {
+      "samples": 14412,
+      "maximum_difference": 2.229945395004762e-11,
+      "maximum_tolerance_fraction": 0.0002207929971973449,
+      "failures": 0
+    },
+    "physics.time_s": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.completed_steps": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.elapsed_s": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "observation:rad": {
+      "samples": 43236,
+      "maximum_difference": 2.5804559877773414e-11,
+      "maximum_tolerance_fraction": 0.00025701400382588206,
+      "failures": 0
+    },
+    "observation:rad/s": {
+      "samples": 19216,
+      "maximum_difference": 1.2902403589976075e-9,
+      "maximum_tolerance_fraction": 0.01166306243628677,
+      "failures": 0
+    },
+    "observation:m": {
+      "samples": 3603,
+      "maximum_difference": 2.373845911507466e-12,
+      "maximum_tolerance_fraction": 0.00002371664741151065,
+      "failures": 0
+    },
+    "observation:m/s": {
+      "samples": 9608,
+      "maximum_difference": 7.850271821485677e-11,
+      "maximum_tolerance_fraction": 0.0007780042052135015,
+      "failures": 0
+    },
+    "observation:N·m": {
+      "samples": 14412,
+      "maximum_difference": 1.7398872342866412e-9,
+      "maximum_tolerance_fraction": 0.016885540939655594,
+      "failures": 0
+    },
+    "observation:N": {
+      "samples": 14412,
+      "maximum_difference": 1.1023469514981343e-7,
+      "maximum_tolerance_fraction": 0.9480703410137635,
+      "failures": 0
+    },
+    "observation:1": {
+      "samples": 3603,
+      "maximum_difference": 4.5460900668925497e-13,
+      "maximum_tolerance_fraction": 0.000004544574329407176,
+      "failures": 0
+    },
+    "transition.reward": {
+      "samples": 1201,
+      "maximum_difference": 1.8558279912817e-12,
+      "maximum_tolerance_fraction": 0.000018525390998493402,
+      "failures": 0
+    },
+    "transition.reward_terms.value": {
+      "samples": 51642,
+      "maximum_difference": 1.5865854637031607e-12,
+      "maximum_tolerance_fraction": 0.000015861945406762583,
+      "failures": 0
+    },
+    "transition.time_s": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.body_error_world_m": {
+      "samples": 3603,
+      "maximum_difference": 2.373845911507466e-12,
+      "maximum_tolerance_fraction": 0.00002373790290328657,
+      "failures": 0
+    },
+    "transition.walking.body_reward": {
+      "samples": 1201,
+      "maximum_difference": 1.1034147770830338e-12,
+      "maximum_tolerance_fraction": 0.000011033626149437174,
+      "failures": 0
+    },
+    "transition.walking.failed_steps": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.qualified_steps": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.step_reward": {
+      "samples": 1201,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contact_force_N": {
+      "samples": 31389,
+      "maximum_difference": 1.0518926862879141e-7,
+      "maximum_tolerance_fraction": 0.9094150566988023,
+      "failures": 0
+    },
+    "physics.contacts.link": {
+      "samples": 10463,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.contacts.penetration_m": {
+      "samples": 10463,
+      "maximum_difference": 5.1736392947532295e-14,
+      "maximum_tolerance_fraction": 5.17361975634673e-7,
+      "failures": 0
+    },
+    "physics.contacts.point_m": {
+      "samples": 31389,
+      "maximum_difference": 3.859301767050738e-12,
+      "maximum_tolerance_fraction": 0.000037391513923675475,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.+X | Foot servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 5.087675723422502e-12,
+      "maximum_tolerance_fraction": 0.00005086821112131735,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.+X | Hip servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 1.9958817584764255e-12,
+      "maximum_tolerance_fraction": 0.000019952843893470838,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.+X | Worm servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 3.1755540037814445e-12,
+      "maximum_tolerance_fraction": 0.00003175054342605078,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.+Y | Foot servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 1.1081004169799513e-11,
+      "maximum_tolerance_fraction": 0.00011079299887679187,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.+Y | Hip servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 3.4300270956855172e-12,
+      "maximum_tolerance_fraction": 0.00003429419174716489,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.+Y | Worm servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 4.487730499713738e-12,
+      "maximum_tolerance_fraction": 0.000044843066281810706,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.-X | Foot servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 7.424666784161538e-12,
+      "maximum_tolerance_fraction": 0.00007420977179717387,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.-X | Hip servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 4.982817110310567e-12,
+      "maximum_tolerance_fraction": 0.00004981399967971783,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.-X | Worm servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 2.7033592378544746e-12,
+      "maximum_tolerance_fraction": 0.000027030098414335397,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.-Y | Foot servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 1.171620201030621e-11,
+      "maximum_tolerance_fraction": 0.00011714348986943203,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.-Y | Hip servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 2.566305241230582e-12,
+      "maximum_tolerance_fraction": 0.00002565942194564822,
+      "failures": 0
+    },
+    "physics.policy.neural_residual.-Y | Worm servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 9.397711775438466e-12,
+      "maximum_tolerance_fraction": 0.00009389808037447196,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Foot servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 4.523881269591357e-12,
+      "maximum_tolerance_fraction": 0.00004353034485270395,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Foot servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 2.2614116135244444e-10,
+      "maximum_tolerance_fraction": 0.0022265490773516108,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Foot servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 3.497202527569243e-15,
+      "maximum_tolerance_fraction": 3.3984558988245e-8,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Hip servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 9.098929942830125e-12,
+      "maximum_tolerance_fraction": 0.00009072330881299996,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Hip servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 3.28101212865306e-10,
+      "maximum_tolerance_fraction": 0.0031480200204402546,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Hip servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 6.938893903907228e-17,
+      "maximum_tolerance_fraction": 6.872688961309156e-10,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Worm servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 1.5346890425149695e-12,
+      "maximum_tolerance_fraction": 0.000014979799837580774,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Worm servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 6.774585059599048e-11,
+      "maximum_tolerance_fraction": 0.0006692605398575513,
+      "failures": 0
+    },
+    "physics.policy.observations.+X | Worm servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 2.0539125955565396e-15,
+      "maximum_tolerance_fraction": 2.0139435524379756e-8,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Foot servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 8.526013228760121e-12,
+      "maximum_tolerance_fraction": 0.00008292733800374207,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Foot servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 3.2167335461963376e-10,
+      "maximum_tolerance_fraction": 0.002915993987146102,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Foot servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 5.051514762044462e-15,
+      "maximum_tolerance_fraction": 4.968519306695594e-8,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Hip servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 2.3550380395809256e-12,
+      "maximum_tolerance_fraction": 0.0000235455142342219,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Hip servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 5.732103680600176e-11,
+      "maximum_tolerance_fraction": 0.0005641664847427798,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Hip servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 1.4137996329210978e-16,
+      "maximum_tolerance_fraction": 1.4128888371684643e-9,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Worm servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 1.6872878094709165e-11,
+      "maximum_tolerance_fraction": 0.00016744355649548815,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Worm servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 5.817677450892234e-10,
+      "maximum_tolerance_fraction": 0.00525333863124691,
+      "failures": 0
+    },
+    "physics.policy.observations.+Y | Worm servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 1.2709017865875083e-15,
+      "maximum_tolerance_fraction": 1.2708405955904501e-8,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Foot servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 4.242273199395186e-12,
+      "maximum_tolerance_fraction": 0.000041131610640950846,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Foot servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 2.0267007516672209e-10,
+      "maximum_tolerance_fraction": 0.002001937228168334,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Foot servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 7.66053886991358e-15,
+      "maximum_tolerance_fraction": 7.563385788932534e-8,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Hip servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 1.2032118357208077e-11,
+      "maximum_tolerance_fraction": 0.0001199819824312718,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Hip servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 4.304251399744885e-10,
+      "maximum_tolerance_fraction": 0.0041475749389060955,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Hip servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 6.938893903907228e-17,
+      "maximum_tolerance_fraction": 6.882367820407551e-10,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Worm servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 2.6586441381759585e-12,
+      "maximum_tolerance_fraction": 0.000026442479558711767,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Worm servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 1.0264847999374993e-10,
+      "maximum_tolerance_fraction": 0.001020983938157785,
+      "failures": 0
+    },
+    "physics.policy.observations.-X | Worm servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 1.582067810090848e-15,
+      "maximum_tolerance_fraction": 1.5488343841299397e-8,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Foot servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 1.0888956403221073e-11,
+      "maximum_tolerance_fraction": 0.00010489166226216371,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Foot servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 5.445411899174246e-10,
+      "maximum_tolerance_fraction": 0.005189670854154699,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Foot servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 1.7708057242771247e-14,
+      "maximum_tolerance_fraction": 1.7622900761330713e-7,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Hip servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 2.8096691639944993e-12,
+      "maximum_tolerance_fraction": 0.000027833416544955988,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Hip servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 6.643945116291405e-11,
+      "maximum_tolerance_fraction": 0.0006582145204986925,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Hip servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 1.6653345369377348e-16,
+      "maximum_tolerance_fraction": 1.6405617170500923e-9,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Worm servo output.angle": {
+      "samples": 1200,
+      "maximum_difference": 2.5804559877773414e-11,
+      "maximum_tolerance_fraction": 0.00025701400382588206,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Worm servo output.angular_velocity": {
+      "samples": 1200,
+      "maximum_difference": 1.2902403589976075e-9,
+      "maximum_tolerance_fraction": 0.01166306243628677,
+      "failures": 0
+    },
+    "physics.policy.observations.-Y | Worm servo output.reference": {
+      "samples": 1200,
+      "maximum_difference": 1.4918621893400541e-15,
+      "maximum_tolerance_fraction": 1.4887341509672879e-8,
+      "failures": 0
+    },
+    "physics.policy.observations.body.angular_velocity.x": {
+      "samples": 1200,
+      "maximum_difference": 1.6667344154147612e-11,
+      "maximum_tolerance_fraction": 0.00016665485746573407,
+      "failures": 0
+    },
+    "physics.policy.observations.body.angular_velocity.y": {
+      "samples": 1200,
+      "maximum_difference": 1.0203937955005626e-11,
+      "maximum_tolerance_fraction": 0.00010202785132909094,
+      "failures": 0
+    },
+    "physics.policy.observations.body.angular_velocity.z": {
+      "samples": 1200,
+      "maximum_difference": 2.7811093705754075e-11,
+      "maximum_tolerance_fraction": 0.00027744033374708845,
+      "failures": 0
+    },
+    "physics.policy.observations.body.gravity_direction.x": {
+      "samples": 1200,
+      "maximum_difference": 1.873408112668118e-13,
+      "maximum_tolerance_fraction": 0.0000018733357779351843,
+      "failures": 0
+    },
+    "physics.policy.observations.body.gravity_direction.y": {
+      "samples": 1200,
+      "maximum_difference": 4.5460900668925497e-13,
+      "maximum_tolerance_fraction": 0.000004544574329407176,
+      "failures": 0
+    },
+    "physics.policy.observations.body.gravity_direction.z": {
+      "samples": 1200,
+      "maximum_difference": 1.6653345369377348e-15,
+      "maximum_tolerance_fraction": 1.5139412701271656e-8,
+      "failures": 0
+    },
+    "physics.policy.observations.body.linear_velocity.x": {
+      "samples": 1200,
+      "maximum_difference": 4.7653322260421405e-12,
+      "maximum_tolerance_fraction": 0.00004763152981707014,
+      "failures": 0
+    },
+    "physics.policy.observations.body.linear_velocity.y": {
+      "samples": 1200,
+      "maximum_difference": 7.849727812203611e-11,
+      "maximum_tolerance_fraction": 0.0007779499392703892,
+      "failures": 0
+    },
+    "physics.policy.observations.body.linear_velocity.z": {
+      "samples": 1200,
+      "maximum_difference": 1.2364818370580455e-11,
+      "maximum_tolerance_fraction": 0.0001235740435653516,
+      "failures": 0
+    },
+    "physics.policy.observations.command.body_gain": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.command.forward_speed": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.command.lateral_speed": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.command.point_gain": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.command.tracking_gain": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.command.yaw_rate": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+X-foot-surface.position.x": {
+      "samples": 1200,
+      "maximum_difference": 1.4105383527862614e-13,
+      "maximum_tolerance_fraction": 0.0000013650460126875922,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+X-foot-surface.position.y": {
+      "samples": 1200,
+      "maximum_difference": 2.1065614530524357e-12,
+      "maximum_tolerance_fraction": 0.00002105043033526153,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+X-foot-surface.position.z": {
+      "samples": 1200,
+      "maximum_difference": 2.1371793224034263e-13,
+      "maximum_tolerance_fraction": 0.000002048808026847236,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+X-foot-surface.velocity.x": {
+      "samples": 1200,
+      "maximum_difference": 4.0210196283752e-12,
+      "maximum_tolerance_fraction": 0.000040182481397217685,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+X-foot-surface.velocity.y": {
+      "samples": 1200,
+      "maximum_difference": 7.580713834443031e-11,
+      "maximum_tolerance_fraction": 0.0007507315214436123,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+X-foot-surface.velocity.z": {
+      "samples": 1200,
+      "maximum_difference": 1.0607696145081835e-11,
+      "maximum_tolerance_fraction": 0.00010602099294413168,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+Y-foot-surface.position.x": {
+      "samples": 1200,
+      "maximum_difference": 5.526317251036694e-13,
+      "maximum_tolerance_fraction": 0.000005523987364974544,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+Y-foot-surface.position.y": {
+      "samples": 1200,
+      "maximum_difference": 1.447064690296429e-12,
+      "maximum_tolerance_fraction": 0.000014017391916313625,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+Y-foot-surface.position.z": {
+      "samples": 1200,
+      "maximum_difference": 3.554934124849751e-13,
+      "maximum_tolerance_fraction": 0.000003407911665472173,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+Y-foot-surface.velocity.x": {
+      "samples": 1200,
+      "maximum_difference": 1.3480015714772975e-11,
+      "maximum_tolerance_fraction": 0.00013429481269080368,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+Y-foot-surface.velocity.y": {
+      "samples": 1200,
+      "maximum_difference": 4.9569209847888374e-11,
+      "maximum_tolerance_fraction": 0.0004911929592375649,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.+Y-foot-surface.velocity.z": {
+      "samples": 1200,
+      "maximum_difference": 1.792836365477335e-11,
+      "maximum_tolerance_fraction": 0.00017919523804209818,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-X-foot-surface.position.x": {
+      "samples": 1200,
+      "maximum_difference": 2.1715962361668062e-13,
+      "maximum_tolerance_fraction": 0.0000021033504852371712,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-X-foot-surface.position.y": {
+      "samples": 1200,
+      "maximum_difference": 2.7265386129404767e-12,
+      "maximum_tolerance_fraction": 0.000027246781081802084,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-X-foot-surface.position.z": {
+      "samples": 1200,
+      "maximum_difference": 2.2409851752058785e-13,
+      "maximum_tolerance_fraction": 0.000002148292443259301,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-X-foot-surface.velocity.x": {
+      "samples": 1200,
+      "maximum_difference": 6.03297359985655e-12,
+      "maximum_tolerance_fraction": 0.00006029268213895485,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-X-foot-surface.velocity.y": {
+      "samples": 1200,
+      "maximum_difference": 9.762048114314581e-11,
+      "maximum_tolerance_fraction": 0.0009679353667356976,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-X-foot-surface.velocity.z": {
+      "samples": 1200,
+      "maximum_difference": 1.1149027014101254e-11,
+      "maximum_tolerance_fraction": 0.00011141691099491455,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-Y-foot-surface.position.x": {
+      "samples": 1200,
+      "maximum_difference": 6.824957266005072e-13,
+      "maximum_tolerance_fraction": 0.000006814629578436165,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-Y-foot-surface.position.y": {
+      "samples": 1200,
+      "maximum_difference": 2.1634916080870426e-12,
+      "maximum_tolerance_fraction": 0.00002097955077900509,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-Y-foot-surface.position.z": {
+      "samples": 1200,
+      "maximum_difference": 1.6825429938194247e-13,
+      "maximum_tolerance_fraction": 0.000001612957155156973,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-Y-foot-surface.velocity.x": {
+      "samples": 1200,
+      "maximum_difference": 2.3212888208834492e-11,
+      "maximum_tolerance_fraction": 0.0002318373995236078,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-Y-foot-surface.velocity.y": {
+      "samples": 1200,
+      "maximum_difference": 1.0804765415706186e-10,
+      "maximum_tolerance_fraction": 0.0010707358628238232,
+      "failures": 0
+    },
+    "physics.policy.observations.marker.-Y-foot-surface.velocity.z": {
+      "samples": 1200,
+      "maximum_difference": 7.323091785749192e-12,
+      "maximum_tolerance_fraction": 0.00007319582415550256,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.+X | Foot servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.+X | Hip servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.+X | Worm servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.+Y | Foot servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.+Y | Hip servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.+Y | Worm servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.-X | Foot servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.-X | Hip servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.-X | Worm servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.-Y | Foot servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.-Y | Hip servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.observations.residual.-Y | Worm servo output": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.coordinates": {
+      "samples": 14400,
+      "maximum_difference": 1.7708057242771247e-14,
+      "maximum_tolerance_fraction": 1.7622900761330713e-7,
+      "failures": 0
+    },
+    "physics.policy.step_reference.feedback_feet_world_m": {
+      "samples": 14400,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.maximum_marker_error_m": {
+      "samples": 1200,
+      "maximum_difference": 2.23656506969295e-16,
+      "maximum_tolerance_fraction": 2.236565069470584e-9,
+      "failures": 0
+    },
+    "physics.policy.step_reference.measured_support_force_n": {
+      "samples": 4800,
+      "maximum_difference": 1.5467231939680914e-8,
+      "maximum_tolerance_fraction": 0.08667330272735525,
+      "failures": 0
+    },
+    "physics.policy.step_reference.preload_extension_m": {
+      "samples": 4800,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.reference.body_world_m": {
+      "samples": 3600,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.reference.feet_world_m": {
+      "samples": 14400,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.reference.latched_twist": {
+      "samples": 3600,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.reference.progress": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.reference.sample": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.reference.step": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.reference.yaw_rad": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.targets.+X | Foot servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 5.9401372709544376e-12,
+      "maximum_tolerance_fraction": 0.000057256579733729205,
+      "failures": 0
+    },
+    "physics.policy.targets.+X | Hip servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 5.586614504338172e-12,
+      "maximum_tolerance_fraction": 0.00005559334742617713,
+      "failures": 0
+    },
+    "physics.policy.targets.+X | Worm servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 2.4767410344850305e-12,
+      "maximum_tolerance_fraction": 0.00002419478396741235,
+      "failures": 0
+    },
+    "physics.policy.targets.+Y | Foot servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 9.149070390179759e-12,
+      "maximum_tolerance_fraction": 0.00008918362119965816,
+      "failures": 0
+    },
+    "physics.policy.targets.+Y | Hip servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 2.841837876133013e-12,
+      "maximum_tolerance_fraction": 0.000028358506595816923,
+      "failures": 0
+    },
+    "physics.policy.targets.+Y | Worm servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 1.1953243950202364e-11,
+      "maximum_tolerance_fraction": 0.00011800162288876541,
+      "failures": 0
+    },
+    "physics.policy.targets.-X | Foot servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 8.741174450932476e-12,
+      "maximum_tolerance_fraction": 0.00008481691894890864,
+      "failures": 0
+    },
+    "physics.policy.targets.-X | Hip servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 8.772503556908617e-12,
+      "maximum_tolerance_fraction": 0.00008725398628731817,
+      "failures": 0
+    },
+    "physics.policy.targets.-X | Worm servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 2.967494305838869e-12,
+      "maximum_tolerance_fraction": 0.000029534792902471245,
+      "failures": 0
+    },
+    "physics.policy.targets.-Y | Foot servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 7.747136265834342e-12,
+      "maximum_tolerance_fraction": 0.00007416821364892018,
+      "failures": 0
+    },
+    "physics.policy.targets.-Y | Hip servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 1.408914651612747e-12,
+      "maximum_tolerance_fraction": 0.000013960214319156657,
+      "failures": 0
+    },
+    "physics.policy.targets.-Y | Worm servo output.target": {
+      "samples": 1200,
+      "maximum_difference": 2.229945395004762e-11,
+      "maximum_tolerance_fraction": 0.0002207929971973449,
+      "failures": 0
+    },
+    "physics.policy.time_s": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.heading.actual_rad": {
+      "samples": 1200,
+      "maximum_difference": 9.563239956877911e-13,
+      "maximum_tolerance_fraction": 0.00000956130276261336,
+      "failures": 0
+    },
+    "transition.walking.heading.error_rad": {
+      "samples": 1200,
+      "maximum_difference": 9.563239956877911e-13,
+      "maximum_tolerance_fraction": 0.00000956130276261336,
+      "failures": 0
+    },
+    "transition.walking.heading.reward": {
+      "samples": 1200,
+      "maximum_difference": 1.5865854637031607e-12,
+      "maximum_tolerance_fraction": 0.000015861945406762583,
+      "failures": 0
+    },
+    "transition.walking.heading.target_rad": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.reference_sample": {
+      "samples": 1200,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.reference.foot": {
+      "samples": 897,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.static_support.center_of_mass_world_m": {
+      "samples": 1482,
+      "maximum_difference": 2.7755575615628914e-17,
+      "maximum_tolerance_fraction": 2.754780713850281e-10,
+      "failures": 0
+    },
+    "physics.policy.step_reference.static_support.projected_margin.hull_m": {
+      "samples": 2964,
+      "maximum_difference": 2.220446049250313e-16,
+      "maximum_tolerance_fraction": 2.1523131285937496e-9,
+      "failures": 0
+    },
+    "physics.policy.step_reference.static_support.projected_margin.minimum_edge_margin_m": {
+      "samples": 494,
+      "maximum_difference": 2.6020852139652106e-17,
+      "maximum_tolerance_fraction": 2.599839428581777e-10,
+      "failures": 0
+    },
+    "physics.policy.step_reference.static_support.support_points_world_xy_m": {
+      "samples": 2964,
+      "maximum_difference": 2.220446049250313e-16,
+      "maximum_tolerance_fraction": 2.1523131285937496e-9,
+      "failures": 0
+    },
+    "physics.policy.step_reference.static_support.total_mass_kg": {
+      "samples": 494,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "physics.policy.step_reference.static_support.vertical_point_forces_n": {
+      "samples": 1482,
+      "maximum_difference": 1.4210854715202004e-14,
+      "maximum_tolerance_fraction": 1.1152948068157365e-7,
+      "failures": 0
+    },
+    "transition.walking.outcome.foot": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.outcome.lift.failed_clearance_samples": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.outcome.lift.failed_support_samples": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.outcome.lift.failed_unloading_samples": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.outcome.lift.longest_qualifying_span_s": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.outcome.lift.minimum_swing_force_n": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.outcome.lift.peak_clearance_m": {
+      "samples": 13,
+      "maximum_difference": 4.6407322429331543e-14,
+      "maximum_tolerance_fraction": 4.6392169475002316e-7,
+      "failures": 0
+    },
+    "transition.walking.outcome.lift.qualifying_start_s": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.outcome.lift.samples": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "transition.walking.outcome.step": {
+      "samples": 13,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.actions.initial": {
+      "samples": 18,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.actions.lower": {
+      "samples": 18,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.actions.upper": {
+      "samples": 18,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.period_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.survival_reward_per_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.termination_penalty": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.version": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.body_position_cost_cap": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.body_position_scale_m": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.body_position_weight_per_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.failed_step_penalty": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.heading.cost_cap": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.heading.reference_offset_rad": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.heading.scale_rad": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.heading.weight_per_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.maximum_swing_force_n": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.minimum_clearance_m": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.minimum_support_force_n": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.qualified_step_reward": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.qualifying_duration_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "contract.walking_task.config.version": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.completed_steps": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.applied_generalized_loads": {
+      "samples": 34,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.embedding.absolute_rank_tolerance": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.embedding.angle_scale_rad": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.embedding.length_scale_m": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.embedding.max_iterations": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.embedding.max_scaled_correction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.embedding.relative_rank_tolerance": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.embedding.scaled_closure_tolerance": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.embedding.scaled_position_tolerance": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.implicit.cached_mechanical_iteration_limit": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.implicit.contact_history_tolerance": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.implicit.newton.absolute_tolerance": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.implicit.newton.max_iterations": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.implicit.newton.min_line_search": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.implicit.newton.relative_tolerance": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.initial_base_translation_m": {
+      "samples": 3,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.initial_coordinates": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.mechanical_subdivision.maximum_events": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.mechanical_subdivision.maximum_halvings": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.mechanical_subdivision.maximum_segments": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.mechanical_subdivision.relative_event_tolerance": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.effective.components.parameters.damping": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.effective.components.parameters.no_load_speed": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.effective.components.parameters.stall_torque": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.effective.components.parameters.stiffness": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.effective.version": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.residual_scales": {
+      "samples": 3,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.servos.supply_voltage_v": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.servos.target_rad": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.motors.servos.winding_temperature_k": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.body_feedback.damping_m_per_rad": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.body_feedback.full_support_force_n": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.body_feedback.maximum_correction_rad": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.body_feedback.position_world_m.keyframes.time_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.body_feedback.position_world_m.keyframes.values": {
+      "samples": 3,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.body_feedback.support_markers.local_point_m": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.body_feedback.velocity_damping_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.neural_residual.features.center": {
+      "samples": 45,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.neural_residual.features.clip": {
+      "samples": 45,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.neural_residual.features.scale": {
+      "samples": 45,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.neural_residual.layers.biases": {
+      "samples": 76,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.neural_residual.layers.weights": {
+      "samples": 3648,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.neural_residual.outputs.scale": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.neural_residual.version": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.point_feedback.activation.keyframes.time_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.point_feedback.activation.keyframes.values": {
+      "samples": 4,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.point_feedback.damping_m_per_rad": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.point_feedback.markers.local_point_m": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.point_feedback.maximum_correction_rad": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.point_feedback.position_world_m.keyframes.time_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.point_feedback.position_world_m.keyframes.values": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.bounds.lower": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.bounds.max_step": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.bounds.upper": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.initial_yaw_rad": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.minimum_planned_support_force_n": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.minimum_support_force_n": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.placement.damping_m": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.placement.max_iterations": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.placement.tolerance_m": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.command_postures.forward_speed_m_s": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.command_postures.stance_offsets_m": {
+      "samples": 16,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.command_postures.support_offsets_m": {
+      "samples": 24,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.horizontal_swing_finish_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.initial_hold_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.lift_m": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.maximum_speed_m_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.maximum_wait_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.maximum_yaw_rate_rad_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.order": {
+      "samples": 4,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.period_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.phase_durations_s": {
+      "samples": 5,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.qualification_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.stance_offsets_m": {
+      "samples": 8,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.support_offsets_m": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.step_reference.sequence.swing_body_advance_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.+X | Foot servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.+X | Hip servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.+X | Worm servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.+Y | Foot servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.+Y | Hip servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.+Y | Worm servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.-X | Foot servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.-X | Hip servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.-X | Worm servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.-Y | Foot servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.-Y | Hip servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.target_bounds_rad.joint.-Y | Worm servo output": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.policy.task_observations.markers.local_point_m": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.report_every": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.step_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.steps": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.trace_trials": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.world_loads.maximum_force_n": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.world_loads.maximum_moment_nm": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.world_loads.pulses.duration_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.world_loads.pulses.force_world_n": {
+      "samples": 3,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.world_loads.pulses.moment_world_nm": {
+      "samples": 3,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.world_loads.pulses.start_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.config.world_loads.version": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.input_events.at_step": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.input_events.values": {
+      "samples": 36,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.controller.inputs.initial": {
+      "samples": 18,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.controller.inputs.lower": {
+      "samples": 18,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.controller.inputs.upper": {
+      "samples": 18,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.controller.parameters.full_support_force_n": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.controller.parameters.standing_gain_increment": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.duration_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.options.flex_modes": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.options.floor_friction.slip_speed_m_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.options.report": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.options.sample": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.options.seconds_hint": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.options.step": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.period_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.latency_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.period_s": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+X | Crank to curved link": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+X | Foot servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+X | Foot translation": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+X | Hip servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+X | Hip swing": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+X | Thigh elevation": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+X | Worm servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+Y | Crank to curved link": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+Y | Foot servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+Y | Foot translation": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+Y | Hip servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+Y | Hip swing": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+Y | Thigh elevation": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.+Y | Worm servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-X | Crank to curved link": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-X | Foot servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-X | Foot translation": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-X | Hip servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-X | Hip swing": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-X | Thigh elevation": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-X | Worm servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-Y | Crank to curved link": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-Y | Foot servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-Y | Foot translation": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-Y | Hip servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-Y | Hip swing": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-Y | Thigh elevation": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.control.targets.-Y | Worm servo output": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.gravity": {
+      "samples": 3,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.axis": {
+      "samples": 315,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.fastened.count": {
+      "samples": 73,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.fastened.pattern_radius": {
+      "samples": 73,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.fastened.preload": {
+      "samples": 73,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.fastened.shear_capacity": {
+      "samples": 73,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.fastened.stiffness": {
+      "samples": 73,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.home": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.origin": {
+      "samples": 315,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.backlash": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.bearing.allowable_pressure": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.clearance": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.contact_length": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.damping_ratio": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.friction.coulomb": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.friction.static_ratio": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.friction.stribeck": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.friction.stribeck_speed": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.friction.viscous": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.hole_radius": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.pin_radius": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.stiffness.axial": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.stiffness.bending": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.stiffness.radial": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.wobble": {
+      "samples": 105,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.physics.drive_backlash.width_rad": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.joints.limits": {
+      "samples": 2,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.bbox": {
+      "samples": 174,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.collision.hull": {
+      "samples": 65067,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.collision.sdf.cell": {
+      "samples": 29,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.collision.sdf.dims": {
+      "samples": 87,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.collision.sdf.origin": {
+      "samples": 87,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.collision.sdf.values": {
+      "samples": 545456,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.collision.triangles": {
+      "samples": 234519,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.collision.vertices": {
+      "samples": 92547,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.com": {
+      "samples": 87,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.inertia": {
+      "samples": 261,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.mass": {
+      "samples": 29,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.print.infill": {
+      "samples": 29,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.print.layer_height": {
+      "samples": 29,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.print.orientation": {
+      "samples": 87,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.links.print.walls": {
+      "samples": 29,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.density": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.abs.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.abs.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.al.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.al.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.asa.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.asa.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.brass.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.brass.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.carbon_tube_provisional.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.carbon_tube_provisional.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.glass.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.glass.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.nylon.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.nylon.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.pcb.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.pcb.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.petg.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.petg.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.pla.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.pla.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.resin.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.resin.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.rubber.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.rubber.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.steel.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.steel.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.tpu.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.tpu.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.world.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.friction.world.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.glass_transition_c": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.poisson": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.specific_heat": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.thermal_conductivity": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.thermal_expansion": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.ultimate_strength": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.yield_strength": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.carbon_tube_provisional.youngs_modulus": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.density": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.abs.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.abs.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.al.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.al.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.asa.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.asa.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.brass.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.brass.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.carbon_tube_provisional.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.carbon_tube_provisional.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.glass.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.glass.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.nylon.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.nylon.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.pcb.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.pcb.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.petg.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.petg.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.pla.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.pla.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.resin.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.resin.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.rubber.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.rubber.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.steel.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.steel.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.tpu.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.tpu.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.world.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.friction.world.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.glass_transition_c": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.poisson": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.print.anisotropy_z": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.print.layer_adhesion_factor": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.specific_heat": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.thermal_conductivity": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.thermal_expansion": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.ultimate_strength": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.yield_strength": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.nylon.youngs_modulus": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.density": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.abs.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.abs.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.al.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.al.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.asa.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.asa.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.brass.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.brass.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.carbon_tube_provisional.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.carbon_tube_provisional.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.glass.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.glass.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.nylon.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.nylon.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.pcb.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.pcb.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.petg.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.petg.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.pla.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.pla.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.resin.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.resin.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.rubber.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.rubber.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.steel.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.steel.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.tpu.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.tpu.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.world.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.friction.world.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.glass_transition_c": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.poisson": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.specific_heat": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.thermal_conductivity": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.thermal_expansion": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.ultimate_strength": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.yield_strength": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.rubber.youngs_modulus": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.density": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.abs.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.abs.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.al.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.al.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.asa.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.asa.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.brass.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.brass.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.carbon_tube_provisional.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.carbon_tube_provisional.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.glass.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.glass.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.nylon.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.nylon.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.pcb.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.pcb.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.petg.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.petg.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.pla.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.pla.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.resin.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.resin.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.rubber.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.rubber.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.steel.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.steel.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.tpu.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.tpu.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.world.kinetic": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.friction.world.static": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.glass_transition_c": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.poisson": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.specific_heat": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.thermal_conductivity": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.thermal_expansion": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.ultimate_strength": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.yield_strength": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.materials.steel.youngs_modulus": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.driver.current_limit": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.driver.on_resistance": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.driver.pwm_hz": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.back_emf_constant": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.current_limit": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.inductance": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.no_load_current": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.poles": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.resistance": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.rotor_inertia": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.supply_voltage": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.electrical.torque_constant": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.firmware.deadband_rad": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.firmware.kd": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.firmware.ki": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.firmware.kp": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.firmware.latency_s": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.firmware.loop_rate_hz": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.firmware.sensor_resolution_rad": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.gear_ratio": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.gearbox.backlash_rad": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.gearbox.efficiency": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.gearbox.inertia": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.gearbox.max_output_speed": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.gearbox.max_output_torque": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.gearbox.ratio": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.gearbox.stiffness": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.mount_point": {
+      "samples": 36,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.shaft_axis": {
+      "samples": 36,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.thermal.case_heat_capacity": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.thermal.max_winding_c": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.thermal.r_case_ambient": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.thermal.r_case_mount": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.thermal.r_winding_case": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.thermal.resistance_temp_coeff": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.thermal.torque_derating_per_c": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.motors.thermal.winding_heat_capacity": {
+      "samples": 12,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.source.cad_revision": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.source.collision_distance_experiment.recipe.tolerance_mm": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.transmissions.ratio": {
+      "samples": 8,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.backlash.sigma": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.backlash.sigma_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.com_m.sigma": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.com_m.sigma_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.dimension_m.sigma": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.dimension_m.sigma_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.friction.sigma": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.friction.sigma_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.mass.sigma": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.mass.sigma_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.motor_torque.sigma": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.motor_torque.sigma_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.seed": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.stiffness.sigma": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.uncertainty.stiffness.sigma_fraction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.version": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.world.ambient_c": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.world.floor_damping": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.world.floor_friction": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.world.floor_stiffness": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.robot.world.floor_z": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.scene.version": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.seed": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    },
+    "recording.version": {
+      "samples": 1,
+      "maximum_difference": 0,
+      "maximum_tolerance_fraction": 0,
+      "failures": 0
+    }
+  },
+  "difference_count": 0,
+  "host": {
+    "platform": "darwin",
+    "architecture": "x64",
+    "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+    "logical_cpus": 16,
+    "browser": "152.0.7977.76"
+  }
+}

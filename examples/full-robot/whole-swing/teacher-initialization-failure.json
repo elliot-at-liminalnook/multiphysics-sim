@@ -1,0 +1,44 @@
+{
+  "completed": false,
+  "stage": "initialization",
+  "error": "Error: \"unknown neural correction -Y | Hip servo output.target\"",
+  "reason": "The unchanged task expects named neural-correction observations. Removing the network removes those channels.",
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/teacher-invalid-plan.json",
+      "sha256": "49666da0d185b1edd65c76d4066a4b47f6dafc494189a1a799002ceed7030384"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-teacher/teacher-20ms.scene.json",
+      "sha256": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-teacher/teacher-20ms.config.json",
+      "sha256": "ed58426c15f580b0103d7437df96b6ceafa195288f034e009b826727ffb2b2f2"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-teacher/teacher-20ms.actions.json",
+      "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-teacher/teacher-5ms.scene.json",
+      "sha256": "126fb96dc1ca0e387ec3d8951d611b0a167bbe49c17151ef3034de25ee279e88"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-teacher/teacher-5ms.config.json",
+      "sha256": "ee873728c2cc36012f681ac6b69a09c6567dccad180d46818e2bac09c99eca4d"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-teacher/teacher-5ms.actions.json",
+      "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-teacher/teacher-20ms.log",
+      "sha256": "c8384ba843f0ff18ac9e2a6bd781dd6ceff9ca7c5c77b6c276659a5c53e6d8b6"
+    }
+  ]
+}

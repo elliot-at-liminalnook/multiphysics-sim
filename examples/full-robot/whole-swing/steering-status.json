@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "student-turn-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "step 10 Raise reference lacks static support: Some([19.306756583276655, 19.302339762752514, 0.3978090539018577])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 6.31954776,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-steering/student-turn-20ms.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/student-turn-20ms.config.json",
+          "sha256": "74a9f0f4bf29a4ef3e2c0b348cb64ca6159d8e5139ec829ef64314679208ce56"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/student-turn-20ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/student-turn-20ms.native.json",
+          "sha256": "a0cf7fedc53f8ba9ea46f65ae47a390ad5e2095740b027569548255e9b6c9acb"
+        }
+      ]
+    },
+    {
+      "name": "teacher-turn-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": false,
+      "error": "step 10 Raise reference lacks static support: Some([19.306756583276655, 19.302339762752514, 0.3978090539018577])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 15.857907274,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-steering/teacher-turn-5ms.scene.json",
+          "sha256": "905c9c1a7e69e1785a06f4451f27e9937691aaa7c3407881300f1e058931177a"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/teacher-turn-5ms.config.json",
+          "sha256": "e58f4fa580317e4576189960de5ac7ac8568eda6532d1e617c6a3a1a549c213d"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/teacher-turn-5ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/teacher-turn-5ms.native.json",
+          "sha256": "3266ece74d346cf64106096ff329a389d79983aac04c1fae3731537710919b6e"
+        }
+      ]
+    },
+    {
+      "name": "teacher-turn-2.5ms",
+      "duration_s": 24,
+      "step_s": 0.0025,
+      "completed": false,
+      "error": "step 10 Raise reference lacks static support: Some([19.306756583276655, 19.302339762752514, 0.3978090539018577])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 21.225876696,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-steering/teacher-turn-2.5ms.scene.json",
+          "sha256": "905c9c1a7e69e1785a06f4451f27e9937691aaa7c3407881300f1e058931177a"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/teacher-turn-2.5ms.config.json",
+          "sha256": "8bfd9a5745d543ef39c3071d52d3a10258a34123a1daa3f2cc88b843f4cdfb40"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/teacher-turn-2.5ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/teacher-turn-2.5ms.native.json",
+          "sha256": "67ef749c23738e63b1d57c7d774cea008c8fe253b438351354ce0c6b759454a5"
+        }
+      ]
+    },
+    {
+      "name": "student-forward-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 13,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0008536916512783087,
+        "final_yaw_error_rad": 0.0007375749349827277,
+        "maximum_body_tilt_rad": 0.004145771960106189,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06746312091795015,
+          -0.00022405455316350486,
+          -0.0008019972025503468
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/whole-steering/student-forward-20ms-acceptance/summary.json",
+          "sha256": "ffe80160b6cee7c97f12161bc84415fb5725733c492bdb2659caa2bf65d27d7d"
+        }
+      },
+      "wall_s": 9.229799766,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/whole-steering/student-forward-20ms.scene.json",
+          "sha256": "9d83f8b8ce495d755a4d2d3613d92c963beaf6098792d3ad8b2fc54e2378c42b"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/student-forward-20ms.config.json",
+          "sha256": "74a9f0f4bf29a4ef3e2c0b348cb64ca6159d8e5139ec829ef64314679208ce56"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/student-forward-20ms.actions.json",
+          "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+        },
+        {
+          "path": "runs/full-robot/learning/whole-steering/student-forward-20ms.native.json",
+          "sha256": "d62877e3380b77b7f10695e03bd8fa14ed765cc7313f53e7a5557c5c2c1af9c2"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-steering/plan.json",
+      "sha256": "88ed209b0514899e2400a42bf81359ee3e1d3a9ebaa2d739f4650b34ac63c3fd"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "978e284647ac7de61be25b3e482b34291b77f92143dbd76ea48a95d609dcca8c"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "b33276b1a3ab3dfa3b8680063e5055528f23f4052f7add8b5ae84efa0de44116"
+    }
+  ],
+  "scope": "Four development cases separating fast forward from pure-turn posture, with a declared slower reverse envelope and unchanged physical gates."
+}

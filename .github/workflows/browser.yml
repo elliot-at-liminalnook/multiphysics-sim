@@ -128,6 +128,21 @@ jobs:
           node web/build-viewer.mjs runs/interactive/teacher-viewer --environment-only
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/teacher-baseline/scene.json examples/full-robot/teacher-baseline/config.json examples/full-robot/teacher-environment.json > runs/interactive/robot-environment-native.json
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-teacher-environment runs/interactive/robot-environment-native.json runs/interactive/robot-environment-browser.json
+      - name: Controller leaderboard integrity, exact loading, replay and video
+        run: |
+          node --test web/tests/leaderboard-model.mjs
+          node web/tests/leaderboard.mjs runs/interactive/teacher-viewer runs/interactive/leaderboard-report.json
+      - name: Faster horizontal swing task, host parity and steering failure evidence
+        run: |
+          node examples/full-robot/whole-swing/prepare_asymmetric.mjs
+          node examples/full-robot/whole-swing/prepare_finish.mjs
+          target/release/examples/run_environment examples/full-robot/whole-swing/browser.scene.json examples/full-robot/whole-swing/browser.config.json examples/full-robot/heading-task/task.json runs/full-robot/learning/whole-finish/finish-0.85-20ms.actions.json > runs/interactive/whole-swing.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/whole-swing.json runs/interactive/whole-swing-acceptance
+          node web/tests/environment.mjs runs/interactive/teacher-viewer tested-whole-swing-short runs/interactive/whole-swing.json runs/interactive/whole-swing-parity.json
+          if node web/tests/live_performance.mjs runs/interactive/teacher-viewer tested-whole-swing-short runs/interactive/whole-swing-failed-turn.json turn-reverse; then
+            exit 1
+          fi
+          node --input-type=module -e 'import assert from "node:assert/strict"; import {readFileSync} from "node:fs"; const p=JSON.parse(readFileSync("runs/interactive/whole-swing-failed-turn.json")); assert.equal(p.completed,false); assert.match(p.simulation_error,/reference lacks static support/); assert(JSON.parse(readFileSync("runs/interactive/whole-swing-failed-turn.recording.json")).runtime.completed_steps>0);'
       - name: Effective-servo browser profile and replay
         run: |
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/browser-effective-servo/scene.json examples/full-robot/browser-effective-servo/config.json examples/full-robot/browser-effective-servo/task.json > runs/interactive/effective-servo-native.json

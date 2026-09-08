@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "teacher-20ms",
+      "speed": 0.00375,
+      "order": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "stance_shift_m": 0.0069,
+      "duration_s": 24,
+      "step_s": 0.02,
+      "scene": "runs/full-robot/learning/whole-teacher/teacher-20ms.scene.json",
+      "config": "runs/full-robot/learning/whole-teacher/teacher-20ms.config.json",
+      "actions": "runs/full-robot/learning/whole-teacher/teacher-20ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "horizontal_finish_fraction": 0.85
+    },
+    {
+      "name": "teacher-5ms",
+      "speed": 0.00375,
+      "order": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "stance_shift_m": 0.0069,
+      "duration_s": 24,
+      "step_s": 0.005,
+      "scene": "runs/full-robot/learning/whole-teacher/teacher-5ms.scene.json",
+      "config": "runs/full-robot/learning/whole-teacher/teacher-5ms.config.json",
+      "actions": "runs/full-robot/learning/whole-teacher/teacher-5ms.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "horizontal_finish_fraction": 0.85
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.scene.json",
+      "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.config.json",
+      "sha256": "3d9da35f0b6a1bd5f9ab1e74599d0410b244d1b47817df2d92278647501e77f6"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.actions.json",
+      "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-finish/finish-0.85-5ms.scene.json",
+      "sha256": "ecb0fe887886b4ac16c09b2a038c24f406f0cbeb4b3ed9029182cd3ff3ac28c2"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-finish/finish-0.85-5ms.config.json",
+      "sha256": "c793c2d0d31d21ee001e9a0addc51481e8a31f9a5f140c75d83f8aa900436b38"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-finish/finish-0.85-5ms.actions.json",
+      "sha256": "9ba41e1de815e99afe7b01ae27ed7ea28fb8f76f466a89cd9e98b165c827f700"
+    },
+    {
+      "path": "examples/full-robot/neural-teacher/scene.json",
+      "sha256": "f794d037a7912342dfcb486cf22c0ea1c93178c63e5bad936303c9f00facf2f8"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/finish-plan.json",
+      "sha256": "2420e71b4a1ea4a801a9f1533a32828e7769fd2adff603c90bef37bf2218de96"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/TEACHER-PLAN.md",
+      "sha256": "2544e43c681b22aecdf8846ff133e534f147aaa02f1d1d839533916c464e3bb1"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/prepare_teacher.mjs",
+      "sha256": "8551b02a3dc562c70d268602d023c7a78b0b264fdf2198bb4811547215d922ba"
+    },
+    {
+      "path": "crates/sim-domain-control/src/stepping.rs",
+      "sha256": "d77d7d30702088720951086ed54e19d11f70ea2ff514f96c94899ce87cb2c2e3"
+    }
+  ],
+  "scope": "Two predeclared privileged teacher diagnosis cases; no student promotion or hardware validity implied."
+}

@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "frames": 1201,
+  "maximum_absolute_differences": {
+    "joint_positions": 0,
+    "joint_velocities": 0,
+    "poses": 0,
+    "servo_targets_rad": 0,
+    "reference_targets_rad": 0,
+    "contacts": 0,
+    "planned_reference": 0
+  },
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/whole-finish/finish-0.85-20ms.native.json",
+      "sha256": "e98565847e4cbd3a59e551b935f5c06a70291eaea59dd32ed97248a8d50e17fa"
+    },
+    {
+      "path": "runs/full-robot/learning/whole-steering/student-forward-20ms.native.json",
+      "sha256": "d62877e3380b77b7f10695e03bd8fa14ed765cc7313f53e7a5557c5c2c1af9c2"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/check_forward_preservation.mjs",
+      "sha256": "f02cd0707ac605fdea9730cf8727ba00f557b811c59c101cd3e8545557ca743c"
+    }
+  ],
+  "scope": "Full-forward physical and planned frames with the explicit positive-speed posture knot. 1e-9 numeric preservation check, not physical accuracy."
+}

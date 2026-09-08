@@ -134,6 +134,7 @@ jobs:
           node web/tests/leaderboard.mjs runs/interactive/teacher-viewer runs/interactive/leaderboard-report.json
       - name: Faster horizontal swing task, host parity and steering failure evidence
         run: |
+          cargo build --locked --release -p sim-runtime --example evaluate_lift
           node examples/full-robot/whole-swing/prepare_asymmetric.mjs
           node examples/full-robot/whole-swing/prepare_finish.mjs
           target/release/examples/run_environment examples/full-robot/whole-swing/browser.scene.json examples/full-robot/whole-swing/browser.config.json examples/full-robot/heading-task/task.json runs/full-robot/learning/whole-finish/finish-0.85-20ms.actions.json > runs/interactive/whole-swing.json
@@ -149,13 +150,19 @@ jobs:
           target/release/examples/run_environment examples/full-robot/whole-swing/broyden-turn.scene.json examples/full-robot/whole-swing/broyden-turn.config.json examples/full-robot/heading-task/task.json runs/interactive/secant-actions.json > runs/interactive/secant-native.json
           node examples/full-robot/check_online_steps.mjs runs/interactive/secant-native.json runs/interactive/secant-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer tested-secant-steering-short runs/interactive/secant-native.json runs/interactive/secant-parity.json
+      - name: Tangent derivative probes preserve physical steering and host replay
+        run: |
+          target/release/examples/run_environment examples/full-robot/whole-swing/portable-tangent-turn.scene.json examples/full-robot/whole-swing/portable-tangent-turn.config.json examples/full-robot/heading-task/task.json runs/interactive/secant-actions.json > runs/interactive/tangent-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/tangent-native.json runs/interactive/tangent-acceptance
+          node examples/full-robot/compare_mechanical_reuse.mjs runs/interactive/secant-native.json runs/interactive/tangent-native.json runs/interactive/tangent-difference.json --linearized-probes
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const r=JSON.parse(readFileSync("runs/interactive/tangent-difference.json")); assert(r.metrics.foot_marker_position_m.maximum<=0.001); assert(r.metrics.body_position_m.maximum<=0.0005);'
+          node web/tests/environment.mjs runs/interactive/teacher-viewer tested-portable-tangent-steering runs/interactive/tangent-native.json runs/interactive/tangent-parity.json
       - name: Effective-servo browser profile and replay
         run: |
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/browser-effective-servo/scene.json examples/full-robot/browser-effective-servo/config.json examples/full-robot/browser-effective-servo/task.json > runs/interactive/effective-servo-native.json
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-effective-servo runs/interactive/effective-servo-native.json runs/interactive/effective-servo-browser.json
       - name: Eight supported crawl swings and native/WASM replay
         run: |
-          cargo build --locked --release -p sim-runtime --example evaluate_lift
           target/release/examples/run_environment examples/full-robot/browser-crawl-startup/scene.json examples/full-robot/browser-crawl-startup/config.json examples/full-robot/browser-crawl-startup/task.json > runs/interactive/crawl-native.json
           node examples/full-robot/check_crawl.mjs examples/full-robot/browser-crawl-startup runs/interactive/crawl-native.json runs/interactive/crawl-acceptance
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-crawl-startup runs/interactive/crawl-native.json runs/interactive/crawl-browser.json

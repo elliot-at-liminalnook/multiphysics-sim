@@ -239,3 +239,48 @@ The separate `walking-reference.yml` CI job reconstructs the exact 3,000
 actions and finer configuration, then enforces both minute task audits and
 the same trajectory budgets. Its inputs match the locally evaluated files;
 the remote workflow itself has not been run in this session.
+
+## Tangent derivative probes
+
+The optional shared implicit solver builds finite-difference derivatives from
+a local closure tangent, while retaining full closure for residuals, accepted
+endpoints and exact-derivative fallback. The initial 24-second native steering
+case passes all 15 swings and finishes at 0.958 mm position error. It takes
+6.077 seconds versus 8.261 seconds for the original derivative construction;
+maximum foot/body differences are 1.79/1.11 nanometres. A separate profile
+reduces closure mapping from 3.40 to 1.43 seconds, with six exact-derivative
+fallbacks. This changes solver work, not the retained physical model.
+
+The initial SIMD/WASM build fails the fixed host-portability screen at a
+force sample: maximum difference 1.45e-7 N. Same-host replay/reset and the
+ten-entry UI loading, replay, video and tamper checks pass. The failed parity
+is retained in `tangent-probes-initial-browser.json`; rendered timing is
+withheld for that candidate. Its coarse 20 ms timestep still misses the
+separate 1 mm foot / 0.5 mm body refinement screen (1.599 / 1.481 mm).
+
+`TANGENT-RADIUS-PLAN.md` declares three derivative radii without changing any
+acceptance threshold. All three pass 33 analytic/contact/rollback tests and
+the 15-swing native steering case. Body differences from the original solver
+remain below 1.7 nanometres. The default radius exactly preserves the prior
+1,201 physical/task frames and recording. Native runs overlap compilation;
+their times are observational. Separate sequential browser checks determine
+portability before any rendered performance evaluation.
+
+Both larger radii pass fixed host portability and exact replay/reset. The
+selected 1e-5 radius has maximum native/WASM difference 8.28e-9 and worker-only
+p95 15.26 ms. With actual WebGL rendering, the same-binary steering comparison
+reduces active p95 from **26.26 to 20.84 ms** (21%); forward/stop reaches
+**22.24 ms**. Both still miss 20 ms. Active rates are 1.000052 and 1.000346;
+steering overall rate is 0.998298, also a failure under the unchanged rule.
+Transport/dispatch p95 is about 7–8 ms across active phases, so browser drawing
+and delivery are a material remaining cost alongside the return-phase solver.
+
+The recorded forward walk independently passes 15 swings and ends at 0.933 mm
+position error. All 11 leaderboard entries pass exact loading, full selected
+replay, WebM export, narrow-screen and tamper tests. The selected entry remains
+unranked because timing, coarse timestep accuracy, sustained walking and
+held-out robustness/terrain are incomplete or failed. `tangent-browser-status.json`
+preserves the same-binary pair, all timings, inputs, hardware, parity and UI
+evidence. An initial attempt to measure the new config under the old pinned
+preset was rejected before physics; it is recorded as a packaging failure,
+not a walking failure. The new entry packages the exact selected recipe.

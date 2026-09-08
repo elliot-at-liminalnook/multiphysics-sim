@@ -14,6 +14,7 @@ const runtimeBuild={manifest_sha256:createHash('sha256').update(manifestBytes).d
  browser_module_sha256:createHash('sha256').update(await readFile(resolve(directory,'sim_web_bg.wasm'))).digest('hex'),
  compiler_profile:buildManifest.wasm?.build?.profile??'unrecorded compiler settings', settings:buildManifest.wasm?.build?.settings??null};
 const entry=catalog.presets.find(p=>p.id===preset);assert(entry?.task);
+assert(!configPath||!entry.asset_sha256,'Configuration overrides invalidate pinned leaderboard assets; package the selected recipe as its own tested entry.');
 const data=JSON.parse(await readFile(resolve(directory,entry.path)));
 let configOverride=null;
 if(configPath){

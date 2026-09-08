@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "selected": {
+    "name": "tangent-radius-0.00001",
+    "probe_relative_step": 0.00001,
+    "passed": true,
+    "worker_p95_s": 0.015264999985694885,
+    "physical_passed": true,
+    "host_passed": true,
+    "comparison": {
+      "path": "examples/full-robot/whole-swing/tangent-radius-0.00001-difference.json",
+      "sha256": "caab5f75e7dac1e44c72e0ca6f345516577bcfe1ef627a07efc5eda3bb1dbdff"
+    }
+  },
+  "candidates": [
+    {
+      "name": "tangent-radius-0.000001",
+      "probe_relative_step": 0.000001,
+      "passed": false,
+      "worker_p95_s": 0.014969999969005585,
+      "physical_passed": true,
+      "host_passed": false,
+      "comparison": {
+        "path": "examples/full-robot/whole-swing/tangent-radius-0.000001-difference.json",
+        "sha256": "0a7d635dfd717f4b48b4ab98b6b54f533e9fc3403caadaa4897c37647f281791"
+      }
+    },
+    {
+      "name": "tangent-radius-0.000004",
+      "probe_relative_step": 0.000004,
+      "passed": true,
+      "worker_p95_s": 0.01575,
+      "physical_passed": true,
+      "host_passed": true,
+      "comparison": {
+        "path": "examples/full-robot/whole-swing/tangent-radius-0.000004-difference.json",
+        "sha256": "72eabf2ecf864291530a445a01bd40ab9df6291d5682ff0c4b978e854399750f"
+      }
+    },
+    {
+      "name": "tangent-radius-0.00001",
+      "probe_relative_step": 0.00001,
+      "passed": true,
+      "worker_p95_s": 0.015264999985694885,
+      "physical_passed": true,
+      "host_passed": true,
+      "comparison": {
+        "path": "examples/full-robot/whole-swing/tangent-radius-0.00001-difference.json",
+        "sha256": "caab5f75e7dac1e44c72e0ca6f345516577bcfe1ef627a07efc5eda3bb1dbdff"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/tangent-radius-plan.json",
+      "sha256": "3cb39c4fa4d6334df4095454de443e955274077c26abcd38c7dcb1a333aea26d"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/tangent-radius-status.json",
+      "sha256": "4e26810ba5d7197a0a26062e246839bf07e501c8337d3b167e4d38ff24fd7951"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/tangent-radius-browser-parity.json",
+      "sha256": "b041f6e04f4055929556e3e2997c734a22a7494acf899d8b7c732c066383de84"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/select_tangent_radius.mjs",
+      "sha256": "af0b6bf853c2fc4d23f4673f84d61f235f4efc36f2caf0a3a55a9009dceb3a6b"
+    }
+  ],
+  "scope": "Development selection: lowest measured sequential worker-only p95 among radii passing unchanged native task, solver difference, host portability and exact replay/reset screens. One timing sample per radius; no statistical performance ranking. Rendered realtime, sustained walking, timestep accuracy and held-out robustness require separate evidence."
+}

@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "timestep_reference": false,
+  "numerical_precision": false,
+  "block_factorization": false,
+  "guarded_backtracking": false,
+  "broyden_updates": false,
+  "linearized_probes": true,
+  "baseline": {
+    "path": "runs/full-robot/learning/whole-tangent-probes/tangent-probes-reference.native.json",
+    "sha256": "8d4303eb1e1a444636e48c2bac2305e49187628712de48cd63b408d3585139a0"
+  },
+  "candidate": {
+    "path": "runs/full-robot/learning/whole-tangent-radius/tangent-radius-0.000004.native.json",
+    "sha256": "36e091783b4af0093b548c2f3f53f7b91b4d6ba509a94a9297385c71242c5b2d"
+  },
+  "markers": {
+    "path": "examples/full-robot/foot-markers.json",
+    "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+  },
+  "frames": 1201,
+  "metrics": {
+    "foot_marker_position_m": {
+      "maximum": 1.8731735153526785e-9,
+      "samples": 4804,
+      "worst": {
+        "time_s": 8,
+        "identity": "+Y-foot-surface"
+      },
+      "rms": 7.208381288946367e-10
+    },
+    "link_position_m": {
+      "maximum": 1.6415101757380113e-9,
+      "samples": 34829,
+      "worst": {
+        "time_s": 8,
+        "identity": "+Y | Sliding foot crosshead"
+      },
+      "rms": 7.097868308455275e-10
+    },
+    "link_velocity_m_s": {
+      "maximum": 7.779498704669541e-8,
+      "samples": 34829,
+      "worst": {
+        "time_s": 8,
+        "identity": "+Y | Sliding foot crosshead"
+      },
+      "rms": 3.34871502471187e-9
+    },
+    "link_angular_velocity_rad_s": {
+      "maximum": 7.364650187450933e-7,
+      "samples": 34829,
+      "worst": {
+        "time_s": 10.32,
+        "identity": "-X | Foot servo crank 9a9b"
+      },
+      "rms": 2.734063166735197e-8
+    },
+    "rotation_matrix_entry": {
+      "maximum": 2.1398037675091075e-8,
+      "samples": 34829,
+      "worst": {
+        "time_s": 10.36,
+        "identity": "-X | Foot servo crank 9a9b"
+      },
+      "rms": 1.4221301789366081e-9
+    },
+    "body_position_m": {
+      "maximum": 1.3663705109182907e-9,
+      "samples": 1201,
+      "worst": {
+        "time_s": 16.080000000000002,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 6.781286402073094e-10
+    },
+    "body_heading_rad": {
+      "maximum": 2.772903013974204e-9,
+      "samples": 1201,
+      "worst": {
+        "time_s": 16.04,
+        "identity": "Robot | Chassis and hip mounts"
+      },
+      "rms": 1.0557814453735183e-9
+    },
+    "joint_positions": {
+      "maximum": 4.07442450889306e-8,
+      "samples": 33628,
+      "worst": {
+        "time_s": 10.36,
+        "identity": 27
+      },
+      "rms": 1.7136123912107368e-9
+    },
+    "joint_velocities": {
+      "maximum": 0.0000013307779054283486,
+      "samples": 33628,
+      "worst": {
+        "time_s": 10.32,
+        "identity": 27
+      },
+      "rms": 4.0419136027954354e-8
+    },
+    "servo_targets_rad": {
+      "maximum": 3.090467237676364e-8,
+      "samples": 14412,
+      "worst": {
+        "time_s": 10.34,
+        "identity": 11
+      },
+      "rms": 1.6909588047667205e-9
+    },
+    "contact_pair_force_n": {
+      "maximum": 0.000039453767295735056,
+      "samples": 4482,
+      "worst": {
+        "time_s": 17.04,
+        "identity": "18:null"
+      },
+      "rms": 0.0000014756118979039097
+    }
+  },
+  "contact_pair_mismatches": 0,
+  "phase_mismatches": 0,
+  "scope": "Whole trajectories at common 50 Hz reporting times with identical scene, task and controls; configurations may differ only in derivative-reuse flags and, when explicitly requested, physics timestep/report stride, absolute/relative Newton tolerances independent-block factorization, guarded backtracking bounded Broyden updates or linearized derivative probes. Contact forces aggregated by physical link pair. Differences include any altered subdivision sequence. This report measures differences without declaring them acceptable; independent task gates, between-sample contact impulses and hardware accuracy remain separate."
+}

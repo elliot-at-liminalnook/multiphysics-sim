@@ -18,6 +18,12 @@ recorded explicitly. Evaluate 20 ms minute and mixed steering, plus a 5 ms
 minute reference. Compare 20/5 ms with the same unchanged accuracy screens.
 All failures remain artifacts; no endpoint or numerical threshold is adjusted.
 
+For the 20 ms steering case, compare feedback calculations enabled/disabled
+before omitting unused body/point suggestions and policy-side floor-force
+observations in browser timing. Require strict physical-frame and transition
+identity using the existing shared omission checker. The planner and physical
+contact retain their own required observations.
+
 If the browser candidate completes, package its exact recipe as an
 experimental leaderboard entry. Require full native/WASM fixed-tolerance
 parity, replay/reset, exact Load and run, and sequential rendered forward and

@@ -165,6 +165,12 @@ jobs:
           node --input-type=module -e 'import {readFileSync} from "node:fs"; import assert from "node:assert/strict"; const read=p=>JSON.parse(readFileSync(p)); const a=read("runs/interactive/tangent-native.json"),b=read("runs/interactive/exact-base-native.json"); const frames=c=>c.frames.map(({stepping_wall_s,...f})=>f); assert.deepEqual(frames(a),frames(b)); for(const k of ["transitions","task","contract"])assert.deepEqual(a[k],b[k]); delete b.recording.config.implicit.reuse_exact_probe_base; assert.deepEqual(a.recording,b.recording);'
           node examples/full-robot/check_online_steps.mjs runs/interactive/exact-base-native.json runs/interactive/exact-base-acceptance
           FRAME_ENCODING=json node web/tests/environment.mjs runs/interactive/teacher-viewer tested-exact-base-steering runs/interactive/exact-base-native.json runs/interactive/exact-base-parity.json
+      - name: Faster distilled motor policy executes its exact learned artifact
+        run: |
+          node web/leaderboard/materialize_actions.mjs fast-distilled-steering runs/interactive/fast-student-actions.json
+          target/release/examples/run_environment examples/full-robot/whole-swing/fast-distilled-turn.scene.json examples/full-robot/whole-swing/fast-distilled-turn.config.json examples/full-robot/heading-task/task.json runs/interactive/fast-student-actions.json > runs/interactive/fast-student-native.json
+          node examples/full-robot/check_online_steps.mjs runs/interactive/fast-student-native.json runs/interactive/fast-student-acceptance
+          FRAME_ENCODING=json node web/tests/environment.mjs runs/interactive/teacher-viewer tested-fast-distilled-steering runs/interactive/fast-student-native.json runs/interactive/fast-student-parity.json
       - name: Effective-servo browser profile and replay
         run: |
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/browser-effective-servo/scene.json examples/full-robot/browser-effective-servo/config.json examples/full-robot/browser-effective-servo/task.json > runs/interactive/effective-servo-native.json

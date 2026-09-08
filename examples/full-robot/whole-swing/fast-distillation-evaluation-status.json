@@ -1,0 +1,226 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "initial-turn",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0013702808175746065,
+        "final_yaw_error_rad": 0.00005873461040872656,
+        "maximum_body_tilt_rad": 0.004112206358756137,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027707633492308443,
+          0.0009740485858249581,
+          -0.0009226671387522426
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/initial-turn-acceptance/summary.json",
+          "sha256": "999751a5d02986dc9199ab8b997e4eb04ba78b0d678d18e277c3ec4344cf36b0"
+        }
+      },
+      "wall_s": 44.628833027,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/initial-turn.scene.json",
+          "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/initial-turn.config.json",
+          "sha256": "9a76327432e2a7f2795e21c8b3050f1d08be2fe8d564027680860d84df5175fa"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/initial-turn.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/initial-turn.native.json",
+          "sha256": "7f492bd65b31917d395f35b6199717423825d0447ca338108a4319c9463c1370"
+        }
+      ]
+    },
+    {
+      "name": "fitted-turn",
+      "duration_s": 24,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007871766320267367,
+        "final_yaw_error_rad": 0.00041594794063144064,
+        "maximum_body_tilt_rad": 0.004128219908832992,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.028159094221328233,
+          0.0001281994907575294,
+          -0.0005302358237026187
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-turn-acceptance/summary.json",
+          "sha256": "acf5ad3c2c41b8ef597514403b413f3d2de74b3379598a8b899826b3868842b0"
+        }
+      },
+      "wall_s": 45.644953966,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-turn.scene.json",
+          "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-turn.config.json",
+          "sha256": "211d15e0c83d0e07738105af7780e40789ee42c93ff173167ba540e1fc8d0648"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-turn.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-turn.native.json",
+          "sha256": "95404dc8296f793e4b8d8b7b2eef5f12f1c8c479ac5de074b402836b14542770"
+        }
+      ]
+    },
+    {
+      "name": "fitted-minute",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006701177055797539,
+        "final_yaw_error_rad": 0.00333902150988391,
+        "maximum_body_tilt_rad": 0.0044963657311979455,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21262818544982673,
+          0.00010059606353046588,
+          -0.0004832816150022387
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-minute-acceptance/summary.json",
+          "sha256": "1a23df3c7459da629208c0361a1809e79891c3809c425cd32b0b12f3e79a4b99"
+        }
+      },
+      "wall_s": 114.125182924,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-minute.scene.json",
+          "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-minute.config.json",
+          "sha256": "76e54ea5942e2422a43f856a99bbc4adbba9a586ee16d101c371135cb854bde8"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-minute.actions.json",
+          "sha256": "9ad858e8d75e2f8f31c873c2344aaa041ab067d2e1f1fb6aa7d7629a77a9bd79"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-minute.native.json",
+          "sha256": "0c4812aa10fe027685e1f46bb15ecdf4d681af19a3e020c405632426a75baabf"
+        }
+      ]
+    },
+    {
+      "name": "fitted-heldout",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": false,
+      "error": "step 10 Lower reference lacks static support: Some([19.261323140751717, 19.254121385350242, 0.4914608738290663])",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 29.794837944,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-heldout.scene.json",
+          "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-heldout.config.json",
+          "sha256": "606501d5803e74a3c173528e29f8b84d2ce96c447faeb6776f31656412d3c21f"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-heldout.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/fast-distillation-evaluation/fitted-heldout.native.json",
+          "sha256": "56520537f1857851cf0537ba20548102ab15ae82fe419c5826ce0138b225df47"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/fast-distillation-evaluation/plan.json",
+      "sha256": "6f76e48f9dce86986f32c881965693fc1f5a0dbbccf9af4fb35c6cb6ea0efa4e"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "eb7e7b0c9ec72727429a419cc94c4ef4a50eb717772b4ef220a7a9c7fde77e02"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "958986ba3fd2a1865944fcf92bc7ee5811ebec8efe931c339ab93b3b18d77332"
+    }
+  ],
+  "scope": "Initial and fitted motor-residual students use the same authored CAD scene, fine physics, bounds and complete teacher command schedules. No privileged body/point corrections are read by the motor script/network; upstream planner remains privileged. The held-out teacher schedule is retained in full despite its earlier failure. Original task gates remain unchanged."
+}

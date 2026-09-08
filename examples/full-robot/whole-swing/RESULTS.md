@@ -392,3 +392,67 @@ passes without lengthening the clip or timeout. The cause was not reproduced;
 the failed log and successful evidence are retained in
 `exact-probe-base-browser-integrity.json`. CI now checks strict off/on native
 steering identity and enabled host parity. Remote CI remains unrun.
+
+## Faster teacher-to-student learning improves fine steering and stopping
+
+The new reusable dataset preparation consumes pinned recipes, typed channels
+and complete accepted training captures. Labels subtract the recorded local
+tracking gain and are checked against applied servo targets; the runtime
+rejects out-of-bounds commands rather than clipping them. Dataset tests cover
+gain handling, mismatched labels, duplicate samples and reused validation
+inputs. The four shared Rust neural tests also pass.
+
+The fixed 64-unit network is trained on 4,200 samples from the 1.25 ms teacher
+minute and mixed-steering cases. Epoch 949 is selected by training loss only.
+Training loss falls 0.004911→0.00008280. The predeclared mirrored-turn episode
+fails planned static support at 14.84 s; its 742 accepted samples remain
+validation-only. Their loss falls 0.002734→0.0004837, with worst-joint RMS
+0.001866 rad and maximum 0.01063 rad. No post-failure labels or replacement
+passing validation episode are manufactured.
+
+At 1.25 ms, the initial student finishes steering with 1.370 mm body error,
+failing the 1 mm limit. The fitted student passes all 15 swings and finishes
+at **0.787 mm**. Its full minute passes 41 swings, final body error **0.670 mm**
+and yaw error **0.00334 rad**. Measured sustained travel is **3.75144 mm/s**,
+with **6.6795 J** sampled positive shaft work over the episode. The still-ideal
+encoder/IMU motor inputs exclude teacher body/foot/contact corrections; the
+upstream planner remains privileged and hardware deployment is unverified.
+
+The student fails the same reserved turn-to-forward transition as the teacher,
+at the same time and identical planned forces (weak support 0.49146 N below
+0.5 N). Inspection shows the new command is already latched when that shift
+starts. Planned support decreases during body advance in swing; this is a
+reference geometry limit, independent of learned motor feedback. The original
+held-out failure is retained. Any future tuning on it makes it development
+evidence and requires a fresh untouched evaluation episode.
+
+The 0.625 ms minute also passes 41 swings and ends at 0.705 mm body error, but
+1.25/0.625 ms body trajectory difference is **0.706 mm**, failing the 0.5 mm
+screen (foot difference 0.740 mm passes). At 20 ms, short steering passes and
+omitting unused feedback calculations preserves every physical frame and task
+transition exactly. Minute stopping fails at both 20 and 5 ms: 1.572 and
+2.195 mm final error. Their trajectory differences are **2.607 mm foot /
+2.639 mm body**, both failures. Thus neither fine nor coarse student physics
+has passed its full declared accuracy screen.
+
+`fast-distillation-summary.json` and `fast-student-fidelity-summary.json`
+retain complete/prefix metrics, labels, selected weights, gates and source
+identity. Full 1,200-transition JSON browser parity for the 20 ms student
+passes at the unchanged tolerance (maximum 2.143e-9), with exact replay/reset.
+
+In the same WASM rendered comparison, previous/student steering active p95
+is **19.97 / 19.52 ms**; new forward/stop is **20.69 ms**. All overall rates
+exceed one, but both new active rates are about **0.9995×**, narrowly failing
+the unchanged active pace gate. Forward also fails the latency gate. These
+single runs do not establish a significant speed advantage or realtime
+qualification. Native replay of the exact browser forward inputs passes all
+15 swings and stops with 0.909 mm body error.
+
+The 14-entry UI suite passes every exact Load and run, selected full replay,
+WebM video export, narrow layout and tampered-recipe rejection. The fine and
+browser learned recipes remain experimental and unranked; fine held-out
+control and both fidelity accuracy failures are visible. Browser results and
+recipe/native identity are retained in `fast-student-browser-status.json`
+and `fast-student-browser-integrity.json`. CI now includes the typed dataset
+guards and exact learned browser recipe's native acceptance/parity; remote
+CI has not been run here.

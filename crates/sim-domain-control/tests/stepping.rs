@@ -22,6 +22,7 @@ fn sequence() -> StepSequence {
             swing_body_advance_fraction: 0.,
             whole_swing_horizontal_motion: false,
             horizontal_swing_finish_fraction: 1.,
+            direct_support_transfer: false,
             maximum_speed_m_s: 0.01,
             maximum_yaw_rate_rad_s: 0.1,
         },
@@ -35,6 +36,137 @@ fn sequence() -> StepSequence {
         ],
     )
     .unwrap()
+}
+
+fn direct_sequence() -> StepSequence {
+    let mut s = sequence();
+    let mut config = s.config().clone();
+    config.direct_support_transfer = true;
+    config.swing_body_advance_fraction = 0.5;
+    config.update_command_before_lift = true;
+    let initial = s.sample(0., [0.; 3], true, true).unwrap();
+    StepSequence::new(config, initial.body_world_m, initial.yaw_rad, initial.feet_world_m).unwrap()
+}
+
+#[test]
+fn direct_transfer_preserves_landings_and_holds_until_the_next_support_shift() {
+    let mut direct = direct_sequence();
+    let mut config = direct.config().clone();
+    config.direct_support_transfer = false;
+    let first = sequence().sample(0., [0.; 3], true, true).unwrap();
+    let mut original = StepSequence::new(config, first.body_world_m, first.yaw_rad, first.feet_world_m).unwrap();
+    let command = [0.00125, 0., 0.02];
+    let mut last: Option<StepReference> = None;
+    for i in 0..700 {
+        let a = direct.sample(i as f64 * 0.02, command, true, true).unwrap();
+        let b = original.sample(i as f64 * 0.02, command, true, true).unwrap();
+        assert_eq!(a.feet_world_m, b.feet_world_m);
+        assert_eq!(a.step, b.step);
+        assert_eq!(a.phase, b.phase);
+        if let Some(p) = &last {
+            if matches!(p.phase, StepPhase::Return | StepPhase::Settle)
+                && (matches!(a.phase, StepPhase::Return | StepPhase::Settle)
+                    || a.phase == StepPhase::Shift && a.progress == 0.)
+            {
+                assert_eq!(a.body_world_m, p.body_world_m);
+                assert_eq!(a.yaw_rad, p.yaw_rad);
+            }
+            assert!(a.body_world_m.iter().zip(p.body_world_m).all(|(x, y)| (x - y).abs() < 0.005));
+            assert!((a.yaw_rad - p.yaw_rad).abs() < 0.01);
+        }
+        last = Some(a);
+    }
+}
+
+#[test]
+fn direct_transfer_stops_recenter_and_resume_without_moving_planted_references() {
+    for stop_at in [0.3, 0.8, 1.6] {
+        let mut s = direct_sequence();
+        let command = [0.00125, 0., 0.02];
+        let expected_steps = usize::from(stop_at >= 0.7);
+        let center = advance_planar([0.; 3], command, 2. * expected_steps as f64);
+        let mut planted = None;
+        let mut saw_idle = false;
+        let mut last: Option<StepReference> = None;
+        for i in 0..210 {
+            let time = i as f64 * 0.02;
+            let requested = if time < stop_at || time >= 3.4 { command } else { [0.; 3] };
+            let r = s.sample(time, requested, true, true).unwrap();
+            if r.phase == StepPhase::Recenter {
+                assert_eq!(r.step, expected_steps);
+                if let Some(feet) = &planted { assert_eq!(&r.feet_world_m, feet); }
+                else { planted = Some(r.feet_world_m.clone()); }
+            }
+            if r.phase == StepPhase::Idle {
+                saw_idle = true;
+                assert_eq!(r.step, expected_steps);
+                for j in 0..2 { assert!((r.body_world_m[j] - center[j]).abs() < 1e-12); }
+                assert_eq!(r.body_world_m[2], 0.);
+                assert!((r.yaw_rad - center[2]).abs() < 1e-12);
+                assert_eq!(r.latched_twist, [0.; 3]);
+            }
+            if let Some(p) = &last {
+                assert!(r.body_world_m.iter().zip(p.body_world_m).all(|(x, y)| (x - y).abs() < 0.005));
+                assert!((r.yaw_rad - p.yaw_rad).abs() < 0.01);
+            }
+            last = Some(r);
+        }
+        assert!(saw_idle && planted.is_some());
+    }
+}
+
+#[test]
+fn direct_recenter_readiness_failure_rolls_back_and_default_serialization_is_unchanged() {
+    let mut s = direct_sequence();
+    let mut saw_error = false;
+    for i in 0..200 {
+        let before = format!("{s:?}");
+        let command = if i < 15 { [0.00125, 0., 0.] } else { [0.; 3] };
+        match s.sample(i as f64 * 0.02, command, true, false) {
+            Ok(_) => {},
+            Err(e) => {
+                assert!(e.contains("Recenter readiness timed out"));
+                assert_eq!(format!("{s:?}"), before);
+                saw_error = true;
+                break;
+            }
+        }
+    }
+    assert!(saw_error);
+    let value = serde_json::to_value(sequence().config()).unwrap();
+    assert!(value.get("direct_support_transfer").is_none());
+    let parsed: StepSequenceConfig = serde_json::from_value(value).unwrap();
+    assert!(!parsed.direct_support_transfer);
+    assert_eq!(serde_json::to_value(direct_sequence().config()).unwrap()["direct_support_transfer"], true);
+}
+
+#[test]
+fn direct_transfer_reversal_restarts_order_from_the_held_support_pose() {
+    let mut template = direct_sequence();
+    let mut config = template.config().clone();
+    config.restart_order_on_translation_reversal = true;
+    let initial = template.sample(0., [0.; 3], true, true).unwrap();
+    let mut s = StepSequence::new(config, initial.body_world_m, initial.yaw_rad, initial.feet_world_m).unwrap();
+    let mut previous: Option<StepReference> = None;
+    let mut observed_reversal = false;
+    for i in 0..260 {
+        let time = i as f64 * 0.02;
+        let command = if time < 2.7 { [0.00125, 0., 0.02] } else { [-0.00125, 0., -0.02] };
+        let r = s.sample(time, command, true, true).unwrap();
+        if let Some(p) = &previous {
+            if p.latched_twist[0] > 0. && r.latched_twist[0] < 0. {
+                assert_eq!(r.phase, StepPhase::Shift);
+                assert_eq!(r.foot, Some(0));
+                assert_eq!(r.progress, 0.);
+                assert_eq!(r.body_world_m, p.body_world_m);
+                assert_eq!(r.yaw_rad, p.yaw_rad);
+                assert_eq!(r.feet_world_m, p.feet_world_m);
+                observed_reversal = true;
+            }
+        }
+        previous = Some(r);
+    }
+    assert!(observed_reversal);
 }
 #[test]
 fn constant_command_reproduces_crawl_geometry_and_keeps_stance_feet_planted() {
@@ -180,7 +312,7 @@ fn velocity_posture_interpolates_and_latches_without_moving_planted_feet() {
     let mut seq = StepSequence::new(config.clone(), [0.; 3], 0., feet.clone()).unwrap();
     let mut saw_landing = false;
     for i in 0..105 {
-        // Reverse is latched at t=.2. Changing the request at .4 must not
+        // Reverse is latched at t=0.2. Changing the request at 0.4 must not
         // change this transfer's landing or its support displacement.
         let command = if i < 20 { -0.005 } else { 0.005 };
         let r = seq

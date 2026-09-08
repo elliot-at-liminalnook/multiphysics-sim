@@ -31,6 +31,9 @@ const radius = read(radiusPath).cases.find(c => c.name === radiusSelection.selec
 const radiusParityPath = 'examples/full-robot/whole-swing/tangent-radius-browser-parity.json';
 const radiusParity = read(radiusParityPath).cases.find(c => c.name === radius.name).measurement;
 const tangentBrowserPath = 'examples/full-robot/whole-swing/tangent-browser-status.json', tangentBrowser = read(tangentBrowserPath);
+const transportPath = 'examples/full-robot/whole-swing/frame-transport-status.json', transport = read(transportPath);
+const transportIntegrityPath = 'examples/full-robot/whole-swing/frame-transport-integrity.json';
+assert(transport.complete && read(transportIntegrityPath).passed);
 const definitions = [
   {id: 'browser-crawl-minute', name: 'Browser crawl', description: 'The slower heading student. Its native minute passes walking and stopping; rendered minute processing still misses 20 ms.',
     scene: 'examples/full-robot/student-distillation/scene.json', config: 'examples/full-robot/browser-precision/guarded.config.json',
@@ -87,8 +90,8 @@ const definitions = [
     capture: radius.sources.find(s => s.path.endsWith('.native.json')).path, acceptance: read(radius.acceptance.source.path), evidence: radiusPath,
     commands: true, benchmark: 'flat-steering-24s-v1', numerical: 'examples/full-robot/whole-swing/tangent-radius-refinement.json',
     parity: radiusParity.passed && radiusParity.replay_exact && radiusParity.reset_exact,
-    performance: tangentBrowser.episodes['live-turn'],
-    extraEvidence: [radiusSelectionPath, radiusParityPath, radiusSelection.selected.comparison.path, tangentBrowserPath]},
+    performance: transport.cases.find(c => c.name === 'json-turn').measurement,
+    extraEvidence: [radiusSelectionPath, radiusParityPath, radiusSelection.selected.comparison.path, tangentBrowserPath, transportPath, transportIntegrityPath]},
 ];
 const taskPath = 'examples/full-robot/heading-task/task.json';
 mkdirSync('runs/leaderboard', {recursive: true});

@@ -1,0 +1,345 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "student-be-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007028089897926064,
+        "final_yaw_error_rad": 0.00012122055075906336,
+        "maximum_body_tilt_rad": 0.004146111350482572,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.0273886899360929,
+          -0.0004412306959257123,
+          -0.0005318219915835132
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms-acceptance/summary.json",
+          "sha256": "58df61e1d0823e5cdf1deac225e41333cd3274049c171031fb90d24cdfe75294"
+        }
+      },
+      "wall_s": 5.804767545,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.scene.json",
+          "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.config.json",
+          "sha256": "ef664725f6d98fff5fd72723bd07f49cd232d3ecc56af20a5f974d15e834b8dc"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.native.json",
+          "sha256": "b9fd028ba28c1aeb221f93a5ed9819cfaf64847ec31955061ee6852c42013022"
+        }
+      ]
+    },
+    {
+      "name": "teacher-sdirk2-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "policy output violates software/CAD command bounds at 1.32 s: -Y | Foot servo output.target requested 0.5434898156724169 rad; allowed [-0.6, -0.02] rad",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 1.773717667,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.config.json",
+          "sha256": "720ab3f6cf3b1356174cfe8955745b731468c0884d9a37e65e07b6559da13af4"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.native.json",
+          "sha256": "e19c6bf1736a64cd23b9e3757086541d8dfee10cafbe9b7c03d251bb5f3faea4"
+        }
+      ]
+    },
+    {
+      "name": "teacher-sdirk2-10ms",
+      "duration_s": 24,
+      "step_s": 0.01,
+      "completed": false,
+      "error": null,
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 3.176812902,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.config.json",
+          "sha256": "48eae55c586d89ff7a18d620e0265beac4771fbe2a0362619805cfc5afab6f63"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.native.json",
+          "sha256": "9335142bed3992f7f06e8f5e621acd67e1c4c27696a2c55a2f42c0bb5b34a99d"
+        }
+      ]
+    },
+    {
+      "name": "teacher-sdirk2-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006779703537234945,
+        "final_yaw_error_rad": 0.000427976634643789,
+        "maximum_body_tilt_rad": 0.0041946007882895505,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027897651572597035,
+          0.00032420553388540576,
+          -0.0004932686880835743
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms-acceptance/summary.json",
+          "sha256": "a6230b2b65cab4765393e05e0ab9e90b1c9a16bbd5dafe952265c8ee48d72107"
+        }
+      },
+      "wall_s": 53.028228209,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.scene.json",
+          "sha256": "46327d2080cd1e0fbd8deddf2ca1a5f75ad0d9958b0835cf8b4969aa992eca48"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.config.json",
+          "sha256": "a834b29819d1c09ceaa0ba4ad36dae23489dbb1f4fcab46b0d07be5c9b2905a0"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.native.json",
+          "sha256": "ac1c8228f7d15a65789da8451cf63fc123244cbf88ac3583753362eabfc090ed"
+        }
+      ]
+    },
+    {
+      "name": "student-sdirk2-20ms",
+      "duration_s": 24,
+      "step_s": 0.02,
+      "completed": false,
+      "error": "observed inter-link overlap outside reduced-contact operating envelope: -X | Rigid curved connecting link / -X | Thigh sector gear; penetration 0.107891 mm at world [-0.2962013484096255, 0.010832140762775472, 0.029989710749018288] m, time 1.320000 s",
+      "passed": false,
+      "acceptance": null,
+      "wall_s": 0.8541633,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.scene.json",
+          "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.config.json",
+          "sha256": "46a15fd8a835c686eb8433590beca8240f9c65fb49973bb3d136ad8d0fb9afbd"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.native.json",
+          "sha256": "f10a23fb1b05410b90f7c7dc834d658404254cfa805afd01aef6ec529481d07b"
+        }
+      ]
+    },
+    {
+      "name": "student-sdirk2-10ms",
+      "duration_s": 24,
+      "step_s": 0.01,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009055877214811636,
+        "final_yaw_error_rad": 0.000008036981515146396,
+        "maximum_body_tilt_rad": 0.004189543533970273,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.0268660088790934,
+          -0.00003511431152721672,
+          -0.0005301949029211765
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-10ms-acceptance/summary.json",
+          "sha256": "83e58824ac129401ec2b554d51a833d875fb18eef47e37d31aba63ae4948543e"
+        }
+      },
+      "wall_s": 19.501819588,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-10ms.scene.json",
+          "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-10ms.config.json",
+          "sha256": "1831cf9026881fd828a909c0e46ca22ff2ea17b6c1e55aae4999408f7b03a475"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-10ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-10ms.native.json",
+          "sha256": "fedfc7dbd194f2f4b61f3db236c820e59a411e9a52b5da9611061e05a4a8a6ba"
+        }
+      ]
+    },
+    {
+      "name": "student-sdirk2-5ms",
+      "duration_s": 24,
+      "step_s": 0.005,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0005855171249634653,
+        "final_yaw_error_rad": 0.0000689855739220615,
+        "maximum_body_tilt_rad": 0.004178111206633394,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027767217083012267,
+          0.00015083800316397677,
+          -0.0005300999911688163
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-5ms-acceptance/summary.json",
+          "sha256": "0cae132ea995d8ede4a77efaa564f42ce567e78f73f4012db20d324aea1da198"
+        }
+      },
+      "wall_s": 27.546578014,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-5ms.scene.json",
+          "sha256": "9e6224fb802a2ceb1ade30dfc1664c3bc699c8e862007fb9d4bfa1c7818b741e"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-5ms.config.json",
+          "sha256": "aa045e18b6742b962c9aabaa491d9fe24ea2cd9a954b2e8bb6e3c7e5c5296b46"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-5ms.actions.json",
+          "sha256": "1b18606adf557c8874a870eae4d1879a444c2523807f9112f42a78aeb9485ade"
+        },
+        {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-5ms.native.json",
+          "sha256": "a30614e8efc271f65f506c7b26d5694801e378d8bc393fee6d9ea78e411bf49e"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/sdirk-steering/plan.json",
+      "sha256": "6757187e1772ea36fd76b6d05f1b466742a6cc2b44e03d0a574ba5e2128e4c97"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "c0bd20f264a01278d40c5b862c49ccbc246cfd331c09e2fb301fd2386252704e"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "882ad4211ffc6ae34b39be5618cca21a408c59e0855db9b3a3547e05c7b6c5a6"
+    }
+  ],
+  "scope": "Predeclared fixed 24-second steering inputs and CAD model. Rebuilt default-off student identity reference; teacher/student SDIRK2 at 20/10/5 ms. Each source solver tolerance is preserved. No threshold changes, model calibration or browser qualification; failed stages and task outcomes retained."
+}

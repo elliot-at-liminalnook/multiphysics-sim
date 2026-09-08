@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "tests": {
+    "vector": 4,
+    "mechanical": 19,
+    "linkage": 22
+  },
+  "sources": [
+    {
+      "path": "crates/sim-dynamics/src/sdirk.rs",
+      "sha256": "5b4bf74543e92ffb86aa378148dc56a2f220c1e78fad9e708b6633c1c6db309a"
+    },
+    {
+      "path": "crates/sim-dynamics/examples/held_input_order.rs",
+      "sha256": "ee430df6de7f93d6d9be90b1d373fe905355c549aec0e0f9b734eef9f5c90655"
+    },
+    {
+      "path": "crates/sim-dynamics/tests/sdirk.rs",
+      "sha256": "99bf74c28244eaea2bdfd5551b5f764593af86674bf13d5235495d1a41a4aa84"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedded_step.rs",
+      "sha256": "25631bf5b69667ed02cb10ac9588f7593e84906b691c570c93787448ce84e65e"
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedding.rs",
+      "sha256": "6c9198ecd2ae55ce4f5a3131f9be84028dfaf392e7777ad46f8fd1e7fc291f1c"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/held-input-order.json",
+      "sha256": "840c7d0cc21367a02f9e6e57d2dfe1844a5f1c75f7619ff5987670bd53e309b8"
+    },
+    {
+      "path": "runs/sdirk-final-tests.log",
+      "sha256": "7ae422c0ee190fe3f5bf1e5b005b476e6b4f25d45277c3171717c1a23fab4f3c"
+    },
+    {
+      "path": "runs/sdirk-robot-final-tests.log",
+      "sha256": "8648f7b8afd5776d8c6cc0b753f0957506a7ea41d20d885e09c8e385590bb472"
+    },
+    {
+      "path": "runs/held-input-order-build.log",
+      "sha256": "82c1102860dfbec342ccc56e248c46118a20a97c2b17ff38c50235f540fce363"
+    },
+    {
+      "path": "runs/sdirk-native-build.log",
+      "sha256": "caba89c2b71ebfa503df91b34883fdc147ae9fcaff7140a10c52ef34ce73188b"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "c0bd20f264a01278d40c5b862c49ccbc246cfd331c09e2fb301fd2386252704e"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "882ad4211ffc6ae34b39be5618cca21a408c59e0855db9b3a3547e05c7b6c5a6"
+    }
+  ],
+  "scope": "Focused analytic and mechanical tests passed before robot evaluation. Native binary hashes frozen for the sequential study; no robot accuracy or browser claim follows from these checks."
+}

@@ -1,0 +1,419 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "student-be-20ms",
+      "step_s": 0.02,
+      "completed": true,
+      "task_passed": true,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "accepted_simulated_s": 24,
+      "accepted_transitions": 1200,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0007028089897926064,
+        "final_yaw_error_rad": 0.00012122055075906336,
+        "maximum_body_tilt_rad": 0.004146111350482572,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.0273886899360929,
+          -0.0004412306959257123,
+          -0.0005318219915835132
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms-acceptance/summary.json",
+          "sha256": "58df61e1d0823e5cdf1deac225e41333cd3274049c171031fb90d24cdfe75294"
+        }
+      },
+      "maximum_sampled_gear_speed_rad_s": {
+        "value": 2.2057920050974236,
+        "time_s": 15.200000000000001
+      },
+      "maximum_sampled_shaft_torque_nm": {
+        "value": 0.9694039813570912,
+        "time_s": 3.48
+      },
+      "native_compute": {
+        "wall_s": 5.804767545,
+        "simulation_per_wall": 4.134532487984409,
+        "transition_p95_s": 0.013173655
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-student-be-20ms-metrics.json",
+        "sha256": "6baac5dc0de55c724ee5b35323d898ceade422b0f30de73d1425da91f616af1c"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/student-be-20ms.native.json",
+        "sha256": "b9fd028ba28c1aeb221f93a5ed9819cfaf64847ec31955061ee6852c42013022"
+      }
+    },
+    {
+      "name": "teacher-sdirk2-20ms",
+      "step_s": 0.02,
+      "completed": false,
+      "task_passed": false,
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "policy output violates software/CAD command bounds at 1.32 s: -Y | Foot servo output.target requested 0.5434898156724169 rad; allowed [-0.6, -0.02] rad",
+        "termination_reasons": []
+      },
+      "accepted_simulated_s": 1.32,
+      "accepted_transitions": 66,
+      "acceptance": null,
+      "maximum_sampled_gear_speed_rad_s": {
+        "value": 247.62151423040962,
+        "time_s": 1.32
+      },
+      "maximum_sampled_shaft_torque_nm": {
+        "value": 2.941995,
+        "time_s": 1.32
+      },
+      "native_compute": {
+        "wall_s": 1.773717667,
+        "simulation_per_wall": 0.7441996122373855,
+        "transition_p95_s": 0.054847249
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-teacher-sdirk2-20ms-metrics.json",
+        "sha256": "7128160a1fbc4a5c3fa60e7ded66f1edffd902d36afcaa2b8b69fdb8c15a2e09"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-20ms.native.json",
+        "sha256": "e19c6bf1736a64cd23b9e3757086541d8dfee10cafbe9b7c03d251bb5f3faea4"
+      }
+    },
+    {
+      "name": "teacher-sdirk2-10ms",
+      "step_s": 0.01,
+      "completed": false,
+      "task_passed": false,
+      "outcome": {
+        "kind": "task_termination",
+        "error": null,
+        "termination_reasons": [
+          "body.up.z outside [0.95, 1.000000001]"
+        ],
+        "time_s": 1.32,
+        "completed_steps": 132
+      },
+      "accepted_simulated_s": 1.32,
+      "accepted_transitions": 66,
+      "acceptance": null,
+      "maximum_sampled_gear_speed_rad_s": {
+        "value": 444.15885705904327,
+        "time_s": 1.32
+      },
+      "maximum_sampled_shaft_torque_nm": {
+        "value": 2.941995,
+        "time_s": 1.32
+      },
+      "native_compute": {
+        "wall_s": 3.176812902,
+        "simulation_per_wall": 0.41551077785190893,
+        "transition_p95_s": 0.08354771
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-teacher-sdirk2-10ms-metrics.json",
+        "sha256": "c3ddab665c4f892681a9dffe242175c0dab0eba7b6e126aa5facedca047f22e0"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-10ms.native.json",
+        "sha256": "9335142bed3992f7f06e8f5e621acd67e1c4c27696a2c55a2f42c0bb5b34a99d"
+      }
+    },
+    {
+      "name": "teacher-sdirk2-5ms",
+      "step_s": 0.005,
+      "completed": true,
+      "task_passed": true,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "accepted_simulated_s": 24,
+      "accepted_transitions": 1200,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0006779703537234945,
+        "final_yaw_error_rad": 0.000427976634643789,
+        "maximum_body_tilt_rad": 0.0041946007882895505,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027897651572597035,
+          0.00032420553388540576,
+          -0.0004932686880835743
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms-acceptance/summary.json",
+          "sha256": "a6230b2b65cab4765393e05e0ab9e90b1c9a16bbd5dafe952265c8ee48d72107"
+        }
+      },
+      "maximum_sampled_gear_speed_rad_s": {
+        "value": 1.5970331901435604,
+        "time_s": 1.34
+      },
+      "maximum_sampled_shaft_torque_nm": {
+        "value": 1.001911418949614,
+        "time_s": 5.98
+      },
+      "native_compute": {
+        "wall_s": 53.028228209,
+        "simulation_per_wall": 0.4525891362126766,
+        "transition_p95_s": 0.084562073
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-teacher-sdirk2-5ms-metrics.json",
+        "sha256": "4e16277fa325c0318b2a042f9a61965242d5050ef6c4e1fe1f1573e9fea63d58"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/teacher-sdirk2-5ms.native.json",
+        "sha256": "ac1c8228f7d15a65789da8451cf63fc123244cbf88ac3583753362eabfc090ed"
+      }
+    },
+    {
+      "name": "student-sdirk2-20ms",
+      "step_s": 0.02,
+      "completed": false,
+      "task_passed": false,
+      "outcome": {
+        "kind": "runtime_error",
+        "error": "observed inter-link overlap outside reduced-contact operating envelope: -X | Rigid curved connecting link / -X | Thigh sector gear; penetration 0.107891 mm at world [-0.2962013484096255, 0.010832140762775472, 0.029989710749018288] m, time 1.320000 s",
+        "termination_reasons": []
+      },
+      "accepted_simulated_s": 1.32,
+      "accepted_transitions": 66,
+      "acceptance": null,
+      "maximum_sampled_gear_speed_rad_s": {
+        "value": 472.4089093462096,
+        "time_s": 1.32
+      },
+      "maximum_sampled_shaft_torque_nm": {
+        "value": 2.941995,
+        "time_s": 1.32
+      },
+      "native_compute": {
+        "wall_s": 0.8541633,
+        "simulation_per_wall": 1.5453719446855188,
+        "transition_p95_s": 0.021993003
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-student-sdirk2-20ms-metrics.json",
+        "sha256": "62f75d4b75eab2e7958e7a7eff933f53b72afd56a9f85b0efc2c904f63baf494"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-20ms.native.json",
+        "sha256": "f10a23fb1b05410b90f7c7dc834d658404254cfa805afd01aef6ec529481d07b"
+      }
+    },
+    {
+      "name": "student-sdirk2-10ms",
+      "step_s": 0.01,
+      "completed": true,
+      "task_passed": true,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "accepted_simulated_s": 24,
+      "accepted_transitions": 1200,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0009055877214811636,
+        "final_yaw_error_rad": 0.000008036981515146396,
+        "maximum_body_tilt_rad": 0.004189543533970273,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.0268660088790934,
+          -0.00003511431152721672,
+          -0.0005301949029211765
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-10ms-acceptance/summary.json",
+          "sha256": "83e58824ac129401ec2b554d51a833d875fb18eef47e37d31aba63ae4948543e"
+        }
+      },
+      "maximum_sampled_gear_speed_rad_s": {
+        "value": 1.7919371372263606,
+        "time_s": 4.16
+      },
+      "maximum_sampled_shaft_torque_nm": {
+        "value": 0.9774111601983457,
+        "time_s": 5.96
+      },
+      "native_compute": {
+        "wall_s": 19.501819588,
+        "simulation_per_wall": 1.2306543956938178,
+        "transition_p95_s": 0.033936921
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-student-sdirk2-10ms-metrics.json",
+        "sha256": "f73e2d2cf8e2c8b4205360c981c7ab0437f2fb37621efd4432b39909585d0b68"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-10ms.native.json",
+        "sha256": "fedfc7dbd194f2f4b61f3db236c820e59a411e9a52b5da9611061e05a4a8a6ba"
+      }
+    },
+    {
+      "name": "student-sdirk2-5ms",
+      "step_s": 0.005,
+      "completed": true,
+      "task_passed": true,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "accepted_simulated_s": 24,
+      "accepted_transitions": 1200,
+      "acceptance": {
+        "passed": true,
+        "lifts": 15,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0005855171249634653,
+        "final_yaw_error_rad": 0.0000689855739220615,
+        "maximum_body_tilt_rad": 0.004178111206633394,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.027767217083012267,
+          0.00015083800316397677,
+          -0.0005300999911688163
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-5ms-acceptance/summary.json",
+          "sha256": "0cae132ea995d8ede4a77efaa564f42ce567e78f73f4012db20d324aea1da198"
+        }
+      },
+      "maximum_sampled_gear_speed_rad_s": {
+        "value": 1.610626899243055,
+        "time_s": 4.16
+      },
+      "maximum_sampled_shaft_torque_nm": {
+        "value": 0.9977045104807385,
+        "time_s": 5.98
+      },
+      "native_compute": {
+        "wall_s": 27.546578014,
+        "simulation_per_wall": 0.8712515938568659,
+        "transition_p95_s": 0.040544955
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/sdirk-student-sdirk2-5ms-metrics.json",
+        "sha256": "c41a2430d35a7b9f629ff56f97615529e0d48d62e74422ec444d229e240b65dd"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/sdirk-steering/student-sdirk2-5ms.native.json",
+        "sha256": "a30614e8efc271f65f506c7b26d5694801e378d8bc393fee6d9ea78e411bf49e"
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "name": "sdirk-student-refinement",
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-student-refinement.json",
+        "sha256": "a67642efe2c4eb46d3c8219d1b5815a6ecb71143198b91fd4d81619e2a8a44fe"
+      },
+      "maximum_foot_difference_m": 0.001015945090004507,
+      "maximum_body_difference_m": 0.0010447588672306762,
+      "foot_passed": false,
+      "body_passed": false,
+      "passed": false
+    },
+    {
+      "name": "sdirk-teacher-reference",
+      "source": {
+        "path": "examples/full-robot/whole-swing/sdirk-teacher-reference.json",
+        "sha256": "63a0e40e4e470d0eba526be14a41bfa938a1a5b9dccf19345eb3e6478213a954"
+      },
+      "maximum_foot_difference_m": 0.0007621622932599,
+      "maximum_body_difference_m": 0.0005635747876602174,
+      "foot_passed": true,
+      "body_passed": false,
+      "passed": false
+    }
+  ],
+  "accuracy_budgets": {
+    "maximum_foot_difference_m": 0.001,
+    "maximum_body_difference_m": 0.0005
+  },
+  "default_off_identity_passed": true,
+  "focused_rust_tests": {
+    "vector": 4,
+    "mechanical": 19,
+    "linkage": 22
+  },
+  "browser_promoted": false,
+  "browser_tested": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-status.json",
+      "sha256": "b171f8afa4f8117938547f9d65199551f08d79ce1f5a09dec73710ace9ff6cbe"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-steering-integrity.json",
+      "sha256": "3b5c5da3c2b0293df807c8be45db9bf034f80aad70c3f069262e218e545b1269"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-validation-inputs.json",
+      "sha256": "feddb265e7d73ad6d94e63f1ce9998acc75011bc2c2c96ae538631b322737c0f"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/sdirk-default-identity.json",
+      "sha256": "2305a4a23089d25ebe853b90697747ddda2439e8ba08e6384981753b6bba24e1"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_sdirk_study.mjs",
+      "sha256": "8f117bdd132b4b74471b4528a631bcc16d3b648d2fa51f3a813325e4da74c843"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/full-robot/compare_mechanical_reuse.mjs",
+      "sha256": "d9293f382c35d444ebea797d71c94bd7de5f57582df1f8c5c9c8c9ea484c86c3"
+    }
+  ],
+  "scope": "Fixed 24-second development steering, seed 0, unchanged task and trajectory budgets. Failed runs contain only accepted-prefix measurements, never full-episode qualification. All three coarse failures occur at 1.32 s; their immediate guard reasons do not establish the underlying numerical cause. Teacher and student retain different source solver tolerances/optimizations, so their timings are not controlled integrator comparisons. Native stepping excludes capture serialization and is not browser throughput. No new controller, terrain, robustness or sim-to-real qualification."
+}

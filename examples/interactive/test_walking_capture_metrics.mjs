@@ -38,5 +38,25 @@ test('measures net travel separately from oscillation, sampled loading and mecha
     assert.equal(report.motors[0].maximum_tracking_error_rad, .005);
     assert.equal(report.phases.initial.duration_s, .02);
     assert.equal(report.native_compute.transition_p95_s, .02);
+    // A task guard can stop an otherwise valid physics step without a runtime error.
+    capture.completed = false;
+    capture.frames.forEach((f, i) => { f.completed_steps = i; });
+    capture.transitions = capture.frames.map((f, i) => ({time_s: f.time_s,
+      completed_steps: i, terminated: i === 600, truncated: false,
+      termination_reasons: i === 600 ? ['upright outside bounds'] : []}));
+    writeFileSync(input, JSON.stringify(capture));
+    const analyze = args => execFileSync(process.execPath,
+      ['examples/interactive/analyze_walking_capture.mjs', input, output, ...args], {stdio: 'pipe'});
+    assert.throws(() => analyze([]), /complete capture required/);
+    analyze(['--accepted-prefix']);
+    const prefix = JSON.parse(readFileSync(output));
+    assert.equal(prefix.accepted_prefix_only, true);
+    assert.equal(prefix.episode_completed, false);
+    assert.equal(prefix.episode_error, null);
+    assert.equal(prefix.outcome.kind, 'task_termination');
+    assert.deepEqual(prefix.outcome.termination_reasons, ['upright outside bounds']);
+    capture.transitions.at(-1).terminated = false;
+    writeFileSync(input, JSON.stringify(capture));
+    assert.throws(() => analyze(['--accepted-prefix']), /incomplete capture needs/);
   } finally { rmSync(directory, {recursive: true, force: true}); }
 });

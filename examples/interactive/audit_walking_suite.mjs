@@ -2,6 +2,7 @@
 import {readFileSync, writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
+import {captureOutcome} from './capture_outcome.mjs';
 const [planPath, statusPath, output] = process.argv.slice(2);
 const auditOptions = process.argv.slice(5);
 assert(auditOptions.length <= 1 && auditOptions.every(a => /^--seed=\d+$/.test(a)), 'expected optional --seed=N');
@@ -56,6 +57,7 @@ for (const [index, c] of plan.cases.entries()) {
     assert.deepEqual(e.values, actions[e.at_step / stride]);
   }
   assert.equal(r.completed, result.completed); assert.equal(r.error, result.error);
+  const outcome = captureOutcome(r);
   if (r.completed) {
     assert.equal(r.frames.length, actions.length + 1); assert.equal(event, r.recording.input_events.length);
     assert(result.acceptance);
@@ -63,13 +65,14 @@ for (const [index, c] of plan.cases.entries()) {
     assert.equal(source(result.acceptance.source.path).sha256, result.acceptance.source.sha256);
     assert.equal(a.capture.sha256, captured.sha256); assert.equal(a.passed, result.passed);
     assert.deepEqual(a.budgets, result.acceptance.budgets);
-  } else { assert(r.error); assert.equal(result.passed, false); assert.equal(result.acceptance, null); }
+  } else { assert.equal(result.passed, false); assert.equal(result.acceptance, null); }
   outcomes.push({name: c.name, completed: r.completed, passed: result.passed,
-    completed_transitions: r.frames.length - 1, input_identity_verified: true, verified_seed: declaredSeed});
+    completed_transitions: r.frames.length - 1, outcome, input_identity_verified: true, verified_seed: declaredSeed});
 }
 writeFileSync(output, JSON.stringify({version: 1, passed: true, outcomes,
   explicit_seed_default: declaredSeedDefault ?? null,
   identical_parsed_robot_and_physics_options: true,
   unretained_source_scene_fields: [...omitted].sort(),
-  sources: [source(planPath), source(statusPath), source(import.meta.filename)],
+  sources: [source(planPath), source(statusPath), source(import.meta.filename),
+    source('examples/interactive/capture_outcome.mjs')],
   scope: 'Every declared outcome matched to hashed inputs and captures, authored configuration, all retained scene fields, seed and sampled actions; completed captures require matching independent acceptance. Raw CAD exports retain additional fields absent from the Rust scene schema, listed explicitly. This integrity audit is not a controller acceptance or hardware certificate.'}, null, 2) + '\n');

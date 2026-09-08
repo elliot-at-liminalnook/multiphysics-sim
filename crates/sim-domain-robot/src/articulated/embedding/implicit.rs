@@ -80,6 +80,14 @@ pub struct ImplicitStepConfig {
     /// with exact numerical derivatives from the original state.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub linearized_jacobian_probes: bool,
+    /// Dimensionless finite-difference step times (1 + |unknown|) for the
+    /// approximate Jacobian only. Larger probes can reduce nested roundoff;
+    /// ordinary exact derivatives keep the original 1e-6 step.
+    #[serde(skip_serializing_if = "is_default_probe_step")]
+    pub linearized_probe_relative_step: f64,
+}
+fn is_default_probe_step(value: &f64) -> bool {
+    *value == 1e-6
 }
 impl Default for ImplicitStepConfig {
     fn default() -> Self {
@@ -103,6 +111,7 @@ impl Default for ImplicitStepConfig {
             color_auxiliary_jacobian: false,
             auxiliary_endpoint_correction_scale: false,
             linearized_jacobian_probes: false,
+            linearized_probe_relative_step: 1e-6,
         }
     }
 }
@@ -122,6 +131,7 @@ pub struct ImplicitSolverWorkspace {
     color_auxiliary_jacobian: Option<bool>,
     auxiliary_endpoint_correction_scale: Option<bool>,
     linearized_jacobian_probes: Option<bool>,
+    linearized_probe_relative_step: Option<f64>,
 }
 impl ImplicitSolverWorkspace {
     pub(super) fn has_jacobian(&self) -> bool {
@@ -331,6 +341,9 @@ impl RigidEmbedding<'_> {
             || nc.min_line_search > 1.0
             || nc.max_iterations == 0
             || nc.max_iterations > 1000
+            || !config.linearized_probe_relative_step.is_finite()
+            || config.linearized_probe_relative_step <= 0.0
+            || config.linearized_probe_relative_step > 1e-4
             || auxiliary_seed.iter().any(|v| !v.is_finite())
         {
             return Err("invalid implicit mechanical step configuration".into());
@@ -395,9 +408,9 @@ impl RigidEmbedding<'_> {
                 .collect();
             let mut motion = if let Some((base_u, base)) = probe_context.borrow().as_ref() {
                 let mut probe = (**base).clone();
-                // Only the ordinary FD radius is allowed. A future caller
-                // requesting a larger move automatically uses full closure.
-                let small = u.iter().zip(base_u).all(|(a,b)| (a-b).abs() <= 2e-6*(1.0+b.abs()));
+                // Only the configured FD radius is allowed, with roundoff
+                // headroom. Larger moves automatically use full closure.
+                let small = u.iter().zip(base_u).all(|(a,b)| (a-b).abs() <= 2.0*config.linearized_probe_relative_step*(1.0+b.abs()));
                 if small {
                     linearized_probes.set(linearized_probes.get()+1);
                     let delta = nalgebra::DVector::from_iterator(n, u.iter().zip(base_u).map(|(a,b)|step_s*(a-b)));
@@ -670,6 +683,7 @@ impl RigidEmbedding<'_> {
             || next_workspace.auxiliary_endpoint_correction_scale
                 != Some(config.auxiliary_endpoint_correction_scale)
             || next_workspace.linearized_jacobian_probes != Some(config.linearized_jacobian_probes)
+            || next_workspace.linearized_probe_relative_step != Some(config.linearized_probe_relative_step)
             || !next_workspace
                 .step_s
                 .is_some_and(|h| (h - step_s).abs() <= 1e-10 * step_s)
@@ -708,7 +722,7 @@ impl RigidEmbedding<'_> {
                     }
                     for column in 0..x.len() {
                         let original = x[column];
-                        let epsilon = 1e-6*(1.0+original.abs());
+                        let epsilon = config.linearized_probe_relative_step*(1.0+original.abs());
                         x[column] = original+epsilon;
                         residual(x,&mut perturbed);
                         x[column] = original;
@@ -785,6 +799,7 @@ impl RigidEmbedding<'_> {
         next_workspace.auxiliary_endpoint_correction_scale =
             Some(config.auxiliary_endpoint_correction_scale);
         next_workspace.linearized_jacobian_probes = Some(config.linearized_jacobian_probes);
+        next_workspace.linearized_probe_relative_step = Some(config.linearized_probe_relative_step);
         if !config.reuse_step_jacobian {
             next_workspace.clear();
         }

@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "reference",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0020520398422045065,
+        "final_yaw_error_rad": 0.0002968805731730262,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06225809880883483,
+          0.0006025427196751298,
+          -0.00048540941628911517
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-stance/reference-acceptance/summary.json",
+          "sha256": "9d4539fab5ffd721021bda8e18e72763c00b799a68047ebe14eebc03e35508f0"
+        }
+      },
+      "wall_s": 54.845062577,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/settled-stance/reference.scene.json",
+          "sha256": "bb71cd87b0ff4ee2e6df673065b2ee1f7418eae5acc15763129f1197b73fd670"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+          "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/settled-stance/reference.native.json",
+          "sha256": "30e28dac06420fc8b6f1761328f0980f4d758a257ec6230f08357296c80c0b8d"
+        }
+      ]
+    },
+    {
+      "name": "point-release",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0017764860197379024,
+        "final_yaw_error_rad": 0.00027192513752125665,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.061997584688150906,
+          0.0005164986576719731,
+          -0.00044640156411071726
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-stance/point-release-acceptance/summary.json",
+          "sha256": "222b3ff3c3a4d75bc10fb9b8f1bed72f1c5dac6ad530e8c3d5a8a502a30581d8"
+        }
+      },
+      "wall_s": 55.089507459,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/settled-stance/point-release.scene.json",
+          "sha256": "2096eb55c3402711c136193fb5deb122247cf74bc069929a352b23b0d95cbe7b"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+          "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/settled-stance/point-release.native.json",
+          "sha256": "dfc576a42c7450e28b5c4f249cec8d12133c643d789eb57901dd313f16f3c2f6"
+        }
+      ]
+    },
+    {
+      "name": "higher-body-gain",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.1939904671042464,
+        "final_yaw_error_rad": 0.0047722666187719875,
+        "maximum_body_tilt_rad": 0.004537067512191485,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.2543519795648638,
+          0.00208141153772179,
+          -0.0008072548503296351
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-stance/higher-body-gain-acceptance/summary.json",
+          "sha256": "d47152eeb4d57a57f77ee9f5c1c8ae5bfcb71823051c9e2a151d91ab7465e748"
+        }
+      },
+      "wall_s": 67.916356184,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/settled-stance/higher-body-gain.scene.json",
+          "sha256": "63934fc97a97018c9de9eaef1084c286de87ba9415d4741165fdc26d534c090a"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+          "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/settled-stance/higher-body-gain.native.json",
+          "sha256": "d7f2205af7add489e7dafbfc825e529e033c32bf1b2190e276ab050d0e32711f"
+        }
+      ]
+    },
+    {
+      "name": "combined",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": false,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.1265268225547589,
+        "final_yaw_error_rad": 0.005925245966841778,
+        "maximum_body_tilt_rad": 0.008447530431283436,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          -0.06614655512104586,
+          -0.0007408510773189432,
+          -0.0009365887875401446
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-stance/combined-acceptance/summary.json",
+          "sha256": "aead5cea7e679ae1ac711cf0db3be04508dd5b7e2b1e7f351c6b552fb284772b"
+        }
+      },
+      "wall_s": 71.917879775,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/settled-stance/combined.scene.json",
+          "sha256": "ccd00bf3030a5bcd3b280d5a56e0da8754a8f70946db45483c34e0d0a38da02f"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+          "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+          "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+        },
+        {
+          "path": "runs/full-robot/learning/settled-stance/combined.native.json",
+          "sha256": "7a50f90d4ebdcb60cbbb2171598b0c057bbbd3b5b551e19cc74a31410a6946e2"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/settled-stance/plan.json",
+      "sha256": "4fa5eee5e70c67465fb9422bd6bf2a707cb89d7938ec5e09be0f0530388c2492"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "1da23de7f6fde610f20d4cf8cc1c6a62e7db8715bb0a262e15ef306b5b4b988e"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "31e2fbd1c3bc7df53c6fac103141bbb332d2b581d9ed49981335f6087adca7e2"
+    }
+  ],
+  "scope": "Predeclared 2x2 settled stance feedback ablation. Same 32-second revealed development sequence, fine physics, CAD and task gates. Require original reference identity and unchanged pre-stop frames. No new held-out or browser qualification."
+}

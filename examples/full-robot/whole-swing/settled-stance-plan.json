@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "reference",
+      "scene": "runs/full-robot/learning/settled-stance/reference.scene.json",
+      "config": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "actions": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "seed": 0,
+      "scenario": "heldout-forward-mirrored-turn-forward-reverse-stop",
+      "forward_front_support_x_m": -0.024,
+      "split": "development-after-revealed-holdout-failure",
+      "settled_point_gain_scale": 1,
+      "maximum_settled_body_gain": 1.5
+    },
+    {
+      "name": "point-release",
+      "scene": "runs/full-robot/learning/settled-stance/point-release.scene.json",
+      "config": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "actions": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "seed": 0,
+      "scenario": "heldout-forward-mirrored-turn-forward-reverse-stop",
+      "forward_front_support_x_m": -0.024,
+      "split": "development-after-revealed-holdout-failure",
+      "settled_point_gain_scale": 0,
+      "maximum_settled_body_gain": 1.5
+    },
+    {
+      "name": "higher-body-gain",
+      "scene": "runs/full-robot/learning/settled-stance/higher-body-gain.scene.json",
+      "config": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "actions": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "seed": 0,
+      "scenario": "heldout-forward-mirrored-turn-forward-reverse-stop",
+      "forward_front_support_x_m": -0.024,
+      "split": "development-after-revealed-holdout-failure",
+      "settled_point_gain_scale": 1,
+      "maximum_settled_body_gain": 4.5
+    },
+    {
+      "name": "combined",
+      "scene": "runs/full-robot/learning/settled-stance/combined.scene.json",
+      "config": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "actions": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "duration_s": 32,
+      "step_s": 0.00125,
+      "seed": 0,
+      "scenario": "heldout-forward-mirrored-turn-forward-reverse-stop",
+      "forward_front_support_x_m": -0.024,
+      "split": "development-after-revealed-holdout-failure",
+      "settled_point_gain_scale": 0,
+      "maximum_settled_body_gain": 4.5
+    }
+  ],
+  "previous_capture": {
+    "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.native.json",
+    "sha256": "2cc646fde549dee29e8d823e8084777b6d23ab397f2df51d52fbb5f6426d0a47"
+  },
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/SETTLED-STANCE-PLAN.md",
+      "sha256": "1555f0788ebd572082440234c146aa58fdf79921ea25afbea8f8eb218ae27487"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/transition-support-plan.json",
+      "sha256": "f2f34948fbbcd9762301c8426ed4831743273c2709f806f4e3885b6804d69bc5"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/transition-support-status.json",
+      "sha256": "c806bbc0a1f525af183400177530fa90d36aeb9b21913ee7faba6e256d5cdeb2"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-stance-teacher.rhai",
+      "sha256": "a36fedc165ae141f918e0981fa4a11999b8b557e83c39eba0147247a64947761"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_settled_stance.mjs",
+      "sha256": "ddfc6648dc4c928ee51fa82f150b4171df5cca281b842f2ec2567af342c51210"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "1da23de7f6fde610f20d4cf8cc1c6a62e7db8715bb0a262e15ef306b5b4b988e"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "31e2fbd1c3bc7df53c6fac103141bbb332d2b581d9ed49981335f6087adca7e2"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-stance/reference.scene.json",
+      "sha256": "bb71cd87b0ff4ee2e6df673065b2ee1f7418eae5acc15763129f1197b73fd670"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-stance/point-release.scene.json",
+      "sha256": "2096eb55c3402711c136193fb5deb122247cf74bc069929a352b23b0d95cbe7b"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-stance/higher-body-gain.scene.json",
+      "sha256": "63934fc97a97018c9de9eaef1084c286de87ba9415d4741165fdc26d534c090a"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/settled-stance/combined.scene.json",
+      "sha256": "ccd00bf3030a5bcd3b280d5a56e0da8754a8f70946db45483c34e0d0a38da02f"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.config.json",
+      "sha256": "16d10c399086056fa60c7d0a690df3cfff83c882d4794133609daa421fad1307"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.actions.json",
+      "sha256": "2cffee56edc50746d0d80c0bcf157593b4a1d24af5e9053ef64c3cc1f03aacab"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/transition-support/teacher-forward-support-24mm.native.json",
+      "sha256": "2cc646fde549dee29e8d823e8084777b6d23ab397f2df51d52fbb5f6426d0a47"
+    }
+  ],
+  "scope": "Predeclared 2x2 settled stance feedback ablation. Same 32-second revealed development sequence, fine physics, CAD and task gates. Require original reference identity and unchanged pre-stop frames. No new held-out or browser qualification."
+}

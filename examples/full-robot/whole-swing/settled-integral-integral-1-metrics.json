@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "capture": {
+    "path": "runs/full-robot/learning/settled-integral-numeric/integral-1.native.json",
+    "sha256": "d7031e6ee794e4b29359fc1f52ea2a40b73e1ad2aa40f259ab488fbc778ad3d8"
+  },
+  "source": {
+    "path": "examples/interactive/analyze_walking_capture.mjs",
+    "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+  },
+  "outcome_source": {
+    "path": "examples/interactive/capture_outcome.mjs",
+    "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+  },
+  "simulated_s": 32,
+  "body_displacement_world_m": [
+    0.06077010250246458,
+    0.00005234436539404365,
+    -0.00011783600474056001
+  ],
+  "horizontal_body_path_m": 0.8345868290446408,
+  "net_horizontal_displacement_m": 0.060770125045886164,
+  "phases": {
+    "initial": {
+      "duration_s": 0.02,
+      "waiting_s": 0,
+      "body_displacement_world_m": [
+        0.00001488691498609902,
+        1.5344876717416148e-7,
+        -0.0008020994304165762
+      ],
+      "horizontal_body_path_m": 0.00001488770581142329,
+      "planned_body_path_m": 0
+    },
+    "hold": {
+      "duration_s": 0.2,
+      "waiting_s": 0,
+      "body_displacement_world_m": [
+        -0.000008915887597270604,
+        -3.3760730983175766e-8,
+        -0.0000011255911056291118
+      ],
+      "horizontal_body_path_m": 0.000018362763723536975,
+      "planned_body_path_m": 0
+    },
+    "shift": {
+      "duration_s": 5.319999999999997,
+      "waiting_s": 0,
+      "body_displacement_world_m": [
+        -0.09885145194419802,
+        0.02625018502604114,
+        -0.015272492305778453
+      ],
+      "horizontal_body_path_m": 0.34677803601010976,
+      "planned_body_path_m": 0.34269324340726415
+    },
+    "raise": {
+      "duration_s": 7.220000000000001,
+      "waiting_s": 0,
+      "body_displacement_world_m": [
+        0.01706042453848864,
+        -0.0018057250043029536,
+        -0.007512844961621886
+      ],
+      "horizontal_body_path_m": 0.06015074776891949,
+      "planned_body_path_m": 0.018543750000000022
+    },
+    "lower": {
+      "duration_s": 7.220000000000002,
+      "waiting_s": 0,
+      "body_displacement_world_m": [
+        0.011172158769146063,
+        0.0004940426022904388,
+        0.007586550793506433
+      ],
+      "horizontal_body_path_m": 0.04543375933031104,
+      "planned_body_path_m": 0.018543749999999994
+    },
+    "return": {
+      "duration_s": 4.559999999999996,
+      "waiting_s": 0,
+      "body_displacement_world_m": [
+        0.1356619771038268,
+        -0.02568370947570724,
+        0.015469964246353137
+      ],
+      "horizontal_body_path_m": 0.3700656891983913,
+      "planned_body_path_m": 0.34699173592413723
+    },
+    "settle": {
+      "duration_s": 1.9000000000000048,
+      "waiting_s": 0,
+      "body_displacement_world_m": [
+        -0.0021493469756258005,
+        0.0015951993171347246,
+        -0.0001236052215905243
+      ],
+      "horizontal_body_path_m": 0.008355581793639419,
+      "planned_body_path_m": 0
+    },
+    "idle": {
+      "duration_s": 5.559999999999999,
+      "waiting_s": 0,
+      "body_displacement_world_m": [
+        -0.0021296300165618842,
+        -0.0007977677880982321,
+        0.0005378164659129384
+      ],
+      "horizontal_body_path_m": 0.003769764473734909,
+      "planned_body_path_m": 0
+    }
+  },
+  "sustained_windows": [
+    {
+      "command_start_s": 0.02,
+      "start_s": 4.0200000000000005,
+      "end_s": 10,
+      "command": [
+        0.00375,
+        0,
+        0
+      ],
+      "samples": 300,
+      "measured_sustained_speed_m_s": 0.000974915868665188,
+      "net_projected_speed_m_s": 0.008496311798945767,
+      "axis_world": [
+        0.9999998145196206,
+        -0.0006090654515667041,
+        0
+      ]
+    },
+    {
+      "command_start_s": 14.02,
+      "start_s": 18.02,
+      "end_s": 20,
+      "command": [
+        0.00375,
+        0,
+        0
+      ],
+      "samples": 100,
+      "measured_sustained_speed_m_s": -0.0057051784444430405,
+      "net_projected_speed_m_s": -0.008904269505899624,
+      "axis_world": [
+        0.9999941628519619,
+        -0.003416761917949443,
+        0
+      ]
+    },
+    {
+      "command_start_s": 20.02,
+      "start_s": 24.02,
+      "end_s": 26,
+      "command": [
+        -0.00125,
+        0,
+        0
+      ],
+      "samples": 100,
+      "measured_sustained_speed_m_s": -0.022079578900302328,
+      "net_projected_speed_m_s": -0.015809251433581546,
+      "axis_world": [
+        -0.9999954877134309,
+        0.0030040893424429153,
+        0
+      ]
+    }
+  ],
+  "feet": [
+    {
+      "id": "-Y-foot-surface",
+      "sampled_loaded_tangential_path_m": 0.088757060114472,
+      "maximum_loaded_tangential_speed_m_s": 0.08053451744468346
+    },
+    {
+      "id": "+X-foot-surface",
+      "sampled_loaded_tangential_path_m": 0.07306828160356349,
+      "maximum_loaded_tangential_speed_m_s": 0.05924500655996471
+    },
+    {
+      "id": "+Y-foot-surface",
+      "sampled_loaded_tangential_path_m": 0.09125474776592826,
+      "maximum_loaded_tangential_speed_m_s": 0.05727565242716417
+    },
+    {
+      "id": "-X-foot-surface",
+      "sampled_loaded_tangential_path_m": 0.07743423916899653,
+      "maximum_loaded_tangential_speed_m_s": 0.06326657350152529
+    }
+  ],
+  "motors": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "maximum_tracking_error_rad": 0.023601802376548256,
+      "maximum_reference_error_rad": 0.015705884340262904,
+      "maximum_speed_rad_s": 0.8799409149857147,
+      "maximum_torque_nm": 0.4650927212441127,
+      "positive_mechanical_work_j": 0.11558615569504739,
+      "negative_mechanical_work_j": -0.06522654815029681
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "maximum_tracking_error_rad": 0.026370635784707816,
+      "maximum_reference_error_rad": 0.00758512129138357,
+      "maximum_speed_rad_s": 1.2730546330412775,
+      "maximum_torque_nm": 0.4057935886106766,
+      "positive_mechanical_work_j": 0.1294623769764856,
+      "negative_mechanical_work_j": -0.44771560438659336
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "maximum_tracking_error_rad": 0.0316608414373552,
+      "maximum_reference_error_rad": 0.016984956710720533,
+      "maximum_speed_rad_s": 1.6352283991985987,
+      "maximum_torque_nm": 0.9667688123074653,
+      "positive_mechanical_work_j": 0.6357624318142782,
+      "negative_mechanical_work_j": -0.9821129017319313
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "maximum_tracking_error_rad": 0.017967754242041396,
+      "maximum_reference_error_rad": 0.0072640504444092336,
+      "maximum_speed_rad_s": 0.6737752463998846,
+      "maximum_torque_nm": 0.394537826090977,
+      "positive_mechanical_work_j": 0.08310167567826365,
+      "negative_mechanical_work_j": -0.056767041534072936
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "maximum_tracking_error_rad": 0.030833498173321983,
+      "maximum_reference_error_rad": 0.0335798580843541,
+      "maximum_speed_rad_s": 1.5273570388886772,
+      "maximum_torque_nm": 0.4001663633852707,
+      "positive_mechanical_work_j": 0.1863945496180474,
+      "negative_mechanical_work_j": -0.2993087482531311
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "maximum_tracking_error_rad": 0.028279432504784596,
+      "maximum_reference_error_rad": 0.030119736001718744,
+      "maximum_speed_rad_s": 1.3664916514883176,
+      "maximum_torque_nm": 0.9584531119518618,
+      "positive_mechanical_work_j": 0.33302531852559103,
+      "negative_mechanical_work_j": -0.6188351593609519
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "maximum_tracking_error_rad": 0.023178180412026246,
+      "maximum_reference_error_rad": 0.014619336776363137,
+      "maximum_speed_rad_s": 0.8781062841078197,
+      "maximum_torque_nm": 0.463584086993327,
+      "positive_mechanical_work_j": 0.11130466670206159,
+      "negative_mechanical_work_j": -0.06551320643871685
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "maximum_tracking_error_rad": 0.023849632034690343,
+      "maximum_reference_error_rad": 0.021757794819926648,
+      "maximum_speed_rad_s": 1.4746468489834976,
+      "maximum_torque_nm": 0.4146083771066978,
+      "positive_mechanical_work_j": 0.08929842131331793,
+      "negative_mechanical_work_j": -0.4466960485069779
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "maximum_tracking_error_rad": 0.03423543072611496,
+      "maximum_reference_error_rad": 0.020389039610392345,
+      "maximum_speed_rad_s": 1.2261136650041247,
+      "maximum_torque_nm": 0.9869753585492814,
+      "positive_mechanical_work_j": 0.6823558435613589,
+      "negative_mechanical_work_j": -0.9718890057393043
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "maximum_tracking_error_rad": 0.018083889591662815,
+      "maximum_reference_error_rad": 0.008129861452066539,
+      "maximum_speed_rad_s": 0.6997667323357933,
+      "maximum_torque_nm": 0.44736938349959365,
+      "positive_mechanical_work_j": 0.08572795046140716,
+      "negative_mechanical_work_j": -0.07468042603539067
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "maximum_tracking_error_rad": 0.02444772390916594,
+      "maximum_reference_error_rad": 0.028998631909913565,
+      "maximum_speed_rad_s": 1.6824773645511713,
+      "maximum_torque_nm": 0.3544590537052722,
+      "positive_mechanical_work_j": 0.06559698108733912,
+      "negative_mechanical_work_j": -0.38580653098607187
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "maximum_tracking_error_rad": 0.04235212789704795,
+      "maximum_reference_error_rad": 0.017620082018202976,
+      "maximum_speed_rad_s": 1.749139062233642,
+      "maximum_torque_nm": 0.9278080929394876,
+      "positive_mechanical_work_j": 0.640480380192143,
+      "negative_mechanical_work_j": -0.7448668681456586
+    }
+  ],
+  "positive_mechanical_work_j": 3.158096751625341,
+  "positive_mechanical_work_per_net_horizontal_m": 51.967915965957495,
+  "native_compute": {
+    "wall_s": 56.75226436,
+    "simulation_per_wall": 0.5638541538538886,
+    "transition_p95_s": 0.079059508
+  },
+  "conventions": {
+    "steady_command_warmup_s": 4,
+    "loaded_marker_endpoint_force_n": 1,
+    "work_integration": "Trapezoidal samples of shaft torque times gear speed, positive/negative separated; no electrical efficiency or between-sample peak claim."
+  },
+  "scope": "Measurements from sampled shared Rust physics. Body travel is distinct from path length, commands and native compute throughput. Loaded-marker motion is a slip diagnostic, not a contact-patch certificate. No acceptance, calibration, browser-performance or hardware-energy claim."
+}

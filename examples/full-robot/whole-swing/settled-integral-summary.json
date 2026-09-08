@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "integral-0",
+      "integral_gain_per_s": 0,
+      "completed": true,
+      "task_passed": false,
+      "error": null,
+      "acceptance": {
+        "passed": false,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0017764860197379024,
+        "final_yaw_error_rad": 0.00027192513752125665,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.061997584688150906,
+          0.0005164986576719731,
+          -0.00044640156411071726
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-numeric/integral-0-acceptance/summary.json",
+          "sha256": "6978fb4475489e732dbc6af7506242436403b76176ef604092845b2ea2252c91"
+        }
+      },
+      "pre_stop_frames_exact": 1301,
+      "full_gain_zero_reference_exact": true,
+      "after_stop_maximum_target_jump_rad": 0.03631574503233276,
+      "after_stop_target_variation_rad": 1.5219938032991398,
+      "after_stop_target_delta_reversals_above_1e_minus5_rad": 152,
+      "positive_mechanical_work_j": 3.145941776448728,
+      "maximum_loaded_marker_path_m": 0.09101213968126208,
+      "native_compute": {
+        "wall_s": 55.089427242,
+        "simulation_per_wall": 0.5808737102934209,
+        "transition_p95_s": 0.077899958
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-integral-integral-0-metrics.json",
+        "sha256": "9d3ad700d6d972ba2319717c68fb7233e7c90912d2c00dd11152bf4c9931ca0a"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-numeric/integral-0.native.json",
+        "sha256": "bd6656d2069f26d5bccf103a4814a6be75caf56874068409da2cd8901dc72fba"
+      }
+    },
+    {
+      "name": "integral-0.5",
+      "integral_gain_per_s": 0.5,
+      "completed": true,
+      "task_passed": true,
+      "error": null,
+      "acceptance": {
+        "passed": true,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.000757818602050452,
+        "final_yaw_error_rad": 0.0002803314969193299,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.061070220938005876,
+          0.00018181653946674055,
+          -0.00018976989573135476
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-numeric/integral-0.5-acceptance/summary.json",
+          "sha256": "6ded8bd1a88b4d015e09f1947403891bdf9cef7dbab7494cae163b7e1ad98cae"
+        }
+      },
+      "pre_stop_frames_exact": 1301,
+      "full_gain_zero_reference_exact": null,
+      "after_stop_maximum_target_jump_rad": 0.036515745032332736,
+      "after_stop_target_variation_rad": 1.5894424444116755,
+      "after_stop_target_delta_reversals_above_1e_minus5_rad": 148,
+      "positive_mechanical_work_j": 3.1561093795011175,
+      "maximum_loaded_marker_path_m": 0.09102882396511029,
+      "native_compute": {
+        "wall_s": 56.557833775,
+        "simulation_per_wall": 0.5657925324244794,
+        "transition_p95_s": 0.078805537
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-integral-integral-0.5-metrics.json",
+        "sha256": "754d7d96cab38f586c980516ae2e5c4b5c4ff8d43c78cbeb5147b66fb654aea6"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-numeric/integral-0.5.native.json",
+        "sha256": "9dad33c6973141cff012d728ea61ce6c8c6ce9afb06872cb0f50209cefa66f76"
+      }
+    },
+    {
+      "name": "integral-1",
+      "integral_gain_per_s": 1,
+      "completed": true,
+      "task_passed": true,
+      "error": null,
+      "acceptance": {
+        "passed": true,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00042545707205170614,
+        "final_yaw_error_rad": 0.00028484334900806063,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.06077010250246458,
+          0.00005234436539404365,
+          -0.00011783600474056001
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-numeric/integral-1-acceptance/summary.json",
+          "sha256": "0f566a59f80bb874c5b82a81e2cf5bf22f3d4a0fc28d5bd0f567bf92bec867b5"
+        }
+      },
+      "pre_stop_frames_exact": 1301,
+      "full_gain_zero_reference_exact": null,
+      "after_stop_maximum_target_jump_rad": 0.036515745032332736,
+      "after_stop_target_variation_rad": 1.618488269178835,
+      "after_stop_target_delta_reversals_above_1e_minus5_rad": 150,
+      "positive_mechanical_work_j": 3.158096751625341,
+      "maximum_loaded_marker_path_m": 0.09125474776592826,
+      "native_compute": {
+        "wall_s": 56.75226436,
+        "simulation_per_wall": 0.5638541538538886,
+        "transition_p95_s": 0.079059508
+      },
+      "metrics": {
+        "path": "examples/full-robot/whole-swing/settled-integral-integral-1-metrics.json",
+        "sha256": "e93b222a6e76ddc2f80566e261bc4e7b83b489452c9fe50c2b4fc4ae96800706"
+      },
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-numeric/integral-1.native.json",
+        "sha256": "d7031e6ee794e4b29359fc1f52ea2a40b73e1ad2aa40f259ab488fbc778ad3d8"
+      }
+    }
+  ],
+  "focused_tests": {
+    "rust_kernel_and_registry": 4,
+    "rhai_binding_replay_and_numeric_boundary": 3
+  },
+  "promoted": false,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-numeric-plan.json",
+      "sha256": "827797d79e1965bd2916afb2458f084a2ba4e50a0cb73996a9249f98bc0d6d61"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-numeric-status.json",
+      "sha256": "99daa65ef4c8b6e3955656a235dd8feb096dbc60438f701a1701e670369138eb"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-numeric-integrity.json",
+      "sha256": "af1a7bb313f63ca18652e23e8f97fdd6bc52433566c1ae1c085bb01475f4f63b"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_settled_integral.mjs",
+      "sha256": "119598327cecf23d251d6391640d09a62206cdc1dd244064a48a5bee869f0e95"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    },
+    {
+      "path": "runs/angle-integral-final-tests.log",
+      "sha256": "9a9c0890f69c5d2ef796eca24e60dea69ab54fd6c573e0a8802d2fe47a88ece0"
+    },
+    {
+      "path": "runs/angle-integral-numeric-tests.log",
+      "sha256": "f76f0b1982cc4c54afb731cd53fed68aa676fa56f2c67bceb25702e3f981aa33"
+    }
+  ],
+  "scope": "Same revealed development case and original gates. Gain-zero reference and every pre-stop frame match exactly, so the changed stop follows the bounded integral policy. Target reversals use consecutive deltas above 1e-5 rad. Loaded-marker travel is a geometric proxy. Passing this task alone does not establish minute, fresh held-out, terrain, numerical accuracy, browser performance or hardware qualification."
+}

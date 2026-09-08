@@ -113,7 +113,16 @@ fn engine(sources: Sources, parameters: Map, seed: u64) -> Engine {
     // Same pure update and validation used by control.angle_integral's registry
     // adapter. Scripts retain ordinary numeric state, so reset/replay stays local.
     engine.register_fn("angle_integral_update", |bias: rhai::FLOAT, correction: rhai::FLOAT,
-        enabled: bool, parameters: Map| -> ScriptResult<rhai::FLOAT> {
+        enabled: bool, mut parameters: Map| -> ScriptResult<rhai::FLOAT> {
+        // JSON authors commonly write 0/1 rather than 0.0/1.0. Rhai's typed
+        // deserializer does not coerce integers to floats. Normalize only real
+        // numeric scalars; strings, booleans and unknown keys still fail schema
+        // validation, and the shared constructor checks bounds/finiteness.
+        for value in parameters.values_mut() {
+            if value.is::<rhai::INT>() {
+                *value = Dynamic::from_float(value.clone_cast::<rhai::INT>() as rhai::FLOAT);
+            }
+        }
         let config = rhai::serde::from_dynamic(&Dynamic::from(parameters))?;
         sim_domain_control::angle_integral::AngleIntegral::new(config).map_err(error)?
             .update(bias, correction, enabled).map_err(error)

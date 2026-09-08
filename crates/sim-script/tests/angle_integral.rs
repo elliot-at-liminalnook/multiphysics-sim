@@ -6,6 +6,9 @@ fn config() -> AngleIntegralConfig {
         maximum_bias_rad:0.04, maximum_rate_rad_s:0.01 }
 }
 fn controller() -> RhaiController {
+    controller_with_parameters(parameter_map(&serde_json::to_value(config()).unwrap()).unwrap())
+}
+fn controller_with_parameters(parameters: rhai::Map) -> RhaiController {
     let source=Sources::single("integral.rhai",r#"
 fn control(t,s,a,state) {
     let old=if state.contains("bias") { state.bias } else { 0.0 };
@@ -15,7 +18,7 @@ fn control(t,s,a,state) {
     a.bias=state.bias;
     #{commands:a,state:state}
 }"#);
-    let mut c=RhaiController::new(source,parameter_map(&serde_json::to_value(config()).unwrap()).unwrap()).unwrap();
+    let mut c=RhaiController::new(source,parameters).unwrap();
     c.open(&Contract {element:"test".into(),period:0.02,
         sensors:vec![Channel{name:"error".into(),kind:QuantityKind::Angle},Channel{name:"enabled".into(),kind:QuantityKind::Dimensionless}],
         actuators:vec![Channel{name:"bias".into(),kind:QuantityKind::Angle}]}).unwrap(); c
@@ -38,4 +41,21 @@ fn failed_native_update_does_not_commit_script_state_or_commands() {
     c.sample(0.02,&[0.1,1.],&mut out).unwrap();
     let expected=AngleIntegral::new(config()).unwrap().update(previous[0],0.1,true).unwrap();
     assert_eq!(out[0].to_bits(),expected.to_bits());
+}
+
+#[test]
+fn json_integer_parameters_work_but_invalid_schema_and_bounds_still_fail() {
+    let parameters=parameter_map(&serde_json::json!({"period_s":0.02,"integral_gain_per_s":1,
+        "leak_rate_per_s":0,"maximum_bias_rad":0.04,"maximum_rate_rad_s":0.01})).unwrap();
+    let mut c=controller_with_parameters(parameters.clone()); let mut out=[0.];
+    c.sample(0.,&[0.01,1.],&mut out).unwrap();
+    let mut p=config(); p.integral_gain_per_s=1.;
+    assert_eq!(out[0].to_bits(),AngleIntegral::new(p).unwrap().update(0.,0.01,true).unwrap().to_bits());
+    for (name,value) in [("leak_rate_per_s",rhai::Dynamic::from("0")),
+        ("integral_gain_per_s",rhai::Dynamic::from_int(-1)),
+        ("unknown",rhai::Dynamic::from_int(1))] {
+        let mut invalid=parameters.clone(); invalid.insert(name.into(),value);
+        let mut c=controller_with_parameters(invalid); let mut out=[0.123];
+        assert!(c.sample(0.,&[0.01,1.],&mut out).is_err()); assert_eq!(out,[0.123]);
+    }
 }

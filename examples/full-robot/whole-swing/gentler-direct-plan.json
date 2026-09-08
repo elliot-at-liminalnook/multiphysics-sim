@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "direct-slip-1mm-s",
+      "scene": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-1mm-s.scene.json",
+      "config": "runs/full-robot/learning/gentler-direct/direct-slip-1mm-s.config.json",
+      "actions": "runs/full-robot/learning/gentler-direct/reference-recipes/actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "slip_speed_m_s": 0.001,
+      "forward_speed_m_s": 0.0027236842105263157,
+      "nominal_stride_m": 0.005175,
+      "split": "development",
+      "direct_support_transfer": true,
+      "phase_durations_s": [
+        1.1,
+        0.38,
+        0.38,
+        0.02,
+        0.02
+      ],
+      "baseline_name": "slip-1mm-s",
+      "baseline": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-1mm-s.native.json",
+        "sha256": "a95509afeaeac23238c823524ff8702bd42d3c8266e50c681a715520d5f4b39f"
+      }
+    },
+    {
+      "name": "direct-slip-0.1mm-s",
+      "scene": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-0.1mm-s.scene.json",
+      "config": "runs/full-robot/learning/gentler-direct/direct-slip-0.1mm-s.config.json",
+      "actions": "runs/full-robot/learning/gentler-direct/reference-recipes/actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "slip_speed_m_s": 0.0001,
+      "forward_speed_m_s": 0.0027236842105263157,
+      "nominal_stride_m": 0.005175,
+      "split": "development",
+      "direct_support_transfer": true,
+      "phase_durations_s": [
+        1.1,
+        0.38,
+        0.38,
+        0.02,
+        0.02
+      ],
+      "baseline_name": "slip-0.1mm-s",
+      "baseline": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-0.1mm-s.native.json",
+        "sha256": "2b8c8074ce2c79c33a22ae1cdc510b2ca7aad47a5cac324a5356ae90ebbf25cc"
+      }
+    },
+    {
+      "name": "direct-slip-0.03mm-s",
+      "scene": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-0.030000000000000002mm-s.scene.json",
+      "config": "runs/full-robot/learning/gentler-direct/direct-slip-0.03mm-s.config.json",
+      "actions": "runs/full-robot/learning/gentler-direct/reference-recipes/actions.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "seed": 0,
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "slip_speed_m_s": 0.00003,
+      "forward_speed_m_s": 0.0027236842105263157,
+      "nominal_stride_m": 0.005175,
+      "split": "development",
+      "direct_support_transfer": true,
+      "phase_durations_s": [
+        1.1,
+        0.38,
+        0.38,
+        0.02,
+        0.02
+      ],
+      "baseline_name": "slip-0.030000000000000002mm-s",
+      "baseline": {
+        "path": "runs/full-robot/learning/gentler-contact/slip-0.030000000000000002mm-s.native.json",
+        "sha256": "5173d036ea152cfc160629e443fd13f625e497cd1ed08caafc359c9bc6c518fc"
+      }
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/GENTLER-DIRECT-PLAN.md",
+      "sha256": "43d8c25f7c565bc3149a25a6ed98d77cececceac805a8da6ac91924800a6b03e"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/prepare_gentler_contact.mjs",
+      "sha256": "9d8369ddd5cd5186a9835b3fff5b80b5065142bd34f5f6862e44a9edd1db2b68"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/reference-recipes/plan.json",
+      "sha256": "ebee2f4d487f6052265422f000e88c4bfd3775bb5b8c5612af1492e3690bd8ce"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-status.json",
+      "sha256": "6386ae77b9c215481c5bb65069958cdb03b4932b533e2c88853b207d245c151f"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/gentler-contact-summary.json",
+      "sha256": "8a04666540331de7a88d31443d86304a0027053a7a0bc652eeb690936be6ed21"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/GENTLER-CONTACT-PLAN.md",
+      "sha256": "6e64d6098ab64198d25dc7acf16dcad87bcf8694414c27dae4b4698598393980"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+      "sha256": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-regression-recipes.json",
+      "sha256": "49b69c3d2feefb27eeb353e7c987cc6c1e2bfe5cf4585bd6529d7004042a3043"
+    },
+    {
+      "path": "examples/full-robot/heading-task/task.json",
+      "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/reference-recipes/gentler.config.json",
+      "sha256": "5dc0fe582290a09e6e91146005e4dcf4019c4382473f0869313f67551c019a6f"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/reference-recipes/actions.json",
+      "sha256": "d085e74426e861cf037e0828d6df67a2ecb0b7e7b7e00e25bf6476be2b83aff8"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-1mm-s.scene.json",
+      "sha256": "35b31e54550d404cc16662a07ada4cbda5ac8b838898b974f14d5d58c1349ebc"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-0.1mm-s.scene.json",
+      "sha256": "b7230a1982890d99cbb43d68d2906bc8ed43a248413049babe6fec7f5d1a855e"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/reference-recipes/slip-0.030000000000000002mm-s.scene.json",
+      "sha256": "6e6d176fd230b6e592a5d895a68e7f924c28f71b868412a11125ced21d375f51"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "0abc13e18219d706bfbf578cfe62162fd87f87007ea2c6da8f18d9bd6b786539"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "762b13d40e0163d4e1512541528a70c9d552d773e18accf15083b9258e7953ce"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_gentler_contact.mjs",
+      "sha256": "9d8369ddd5cd5186a9835b3fff5b80b5065142bd34f5f6862e44a9edd1db2b68"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/direct-slip-1mm-s.config.json",
+      "sha256": "408d44c0c73a90f302a18324aa6e94cbef91ae1851870310184ee841bdcba80e"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.1mm-s.config.json",
+      "sha256": "408d44c0c73a90f302a18324aa6e94cbef91ae1851870310184ee841bdcba80e"
+    },
+    {
+      "path": "runs/full-robot/learning/gentler-direct/direct-slip-0.03mm-s.config.json",
+      "sha256": "408d44c0c73a90f302a18324aa6e94cbef91ae1851870310184ee841bdcba80e"
+    },
+    {
+      "path": "crates/sim-domain-control/src/stepping.rs",
+      "sha256": "e594e0b725b8db24dfd6abb45800b3a1a1b77d767bd02047de9c00e7e9a787b7"
+    },
+    {
+      "path": "examples/interactive/direct-support-transfer.md",
+      "sha256": "57186914bf6f3872a9deb5cfda244e85d79d11f2707fd5fb30b01b8b845a6cd5"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/prepare_gentler_direct.mjs",
+      "sha256": "6f14aff9e407bd9f78ec98ed5b2728584a4c3d66006d5bc8f7c71fa74e4aca21"
+    }
+  ],
+  "scope": "Three matched contact fidelity profiles with a gentler direct support path and unchanged nominal stride/period. Only direct_support_transfer and phase_durations_s change within each matched baseline. Original task and 5% contact screen retained; no timestep, held-out, terrain or browser qualification."
+}

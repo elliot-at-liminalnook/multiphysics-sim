@@ -14,7 +14,9 @@ test('rolling material contact is stationary despite COM motion; added slip diss
           config: {policy: {point_feedback: {markers: [{id: 'foot', link: 'rolling-foot'}]}}}},
         frames: [0, .02].map(time_s => {
           const x = (.01 + slip) * time_s;
-          return {time_s, poses: [{name: 'rolling-foot', position_m: [x, 0, .01],
+          return {time_s,
+            policy: {time_s: time_s - .02, step_reference: {reference: {phase: time_s === 0 ? 'hold' : 'shift', foot: 0}}},
+            poses: [{name: 'rolling-foot', position_m: [x, 0, .01],
             velocity_m_s: [.01 + slip, 0, 0], angular_velocity_rad_s: [0, 1, 0]}],
             contacts: [{link: 0, other: null, point_m: [x, 0, 0], force_n: [-2, 0, 10]},
               // Internal forces must not be counted as floor traction.
@@ -23,6 +25,11 @@ test('rolling material contact is stationary despite COM motion; added slip diss
       const input = join(dir, 'capture.json'), output = join(dir, 'report.json');
       writeFileSync(input, JSON.stringify(r));
       execFileSync(process.execPath, ['examples/interactive/analyze_floor_contact_motion.mjs', input, output], {stdio: 'pipe'});
+      const phasePath = join(dir, 'phases.json');
+      execFileSync(process.execPath, ['examples/interactive/analyze_contact_phases.mjs', input, phasePath, output], {stdio: 'pipe'});
+      const phases = JSON.parse(readFileSync(phasePath)).phases;
+      assert.deepEqual(Object.keys(phases), ['shift'], 'attribute to the held interval sample, not the previous frame policy');
+      assert(Math.abs(phases.shift.selected_foot_motion_m - slip * .02) < 1e-15);
       return JSON.parse(readFileSync(output)).feet[0];
     };
     const rolling = measure(0);

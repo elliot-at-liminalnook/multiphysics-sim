@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "complete": true,
+  "cases": [
+    {
+      "name": "shift-return-2x",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 30,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00028334297065847483,
+        "final_yaw_error_rad": 0.00039272067832859067,
+        "maximum_body_tilt_rad": 0.004171546285901135,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.1550509555238793,
+          0.000007684854181444207,
+          -0.0002015080111647926
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-2x-acceptance/summary.json",
+          "sha256": "cf958e263a2156a5d5349b82e5ab5d0d0b712b62622af82dcade5375b6860f3d"
+        }
+      },
+      "wall_s": 98.345440253,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-2x.scene.json",
+          "sha256": "35b31e54550d404cc16662a07ada4cbda5ac8b838898b974f14d5d58c1349ebc"
+        },
+        {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-2x.config.json",
+          "sha256": "5dc0fe582290a09e6e91146005e4dcf4019c4382473f0869313f67551c019a6f"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-2x.actions.json",
+          "sha256": "d085e74426e861cf037e0828d6df67a2ecb0b7e7b7e00e25bf6476be2b83aff8"
+        },
+        {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-2x.native.json",
+          "sha256": "33877129a4358e0de00fca91c6614be50748a979af507b3d91e0a4c2d01fad42"
+        }
+      ]
+    },
+    {
+      "name": "shift-return-4x",
+      "duration_s": 60,
+      "step_s": 0.00125,
+      "completed": true,
+      "error": null,
+      "passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0001311555276274733,
+        "final_yaw_error_rad": 0.00027238646506284994,
+        "maximum_body_tilt_rad": 0.004152001317952124,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.09828418300217985,
+          -0.00001489936941851674,
+          -0.0001237487531538066
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-4x-acceptance/summary.json",
+          "sha256": "74bfd01b89f60eaa42897bc371293126dba689b660b585da6d7f9459afaa282e"
+        }
+      },
+      "wall_s": 73.095954414,
+      "sources": [
+        {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-4x.scene.json",
+          "sha256": "64f636e3eae435f696a61d7e20918a71cc3c9f78c73e20d47abaf9b718e4ae66"
+        },
+        {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-4x.config.json",
+          "sha256": "b5760a56b34a48259c8c000579a907655d35b58a8e97440bc7f7ddf4c2f6ced6"
+        },
+        {
+          "path": "examples/full-robot/heading-task/task.json",
+          "sha256": "b390e78eed7474ad25481a8900bbef0affe0247a1005dd4ceeb9712ba314b94c"
+        },
+        {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-4x.actions.json",
+          "sha256": "da675e019682a81ec6dddd5ee5f2210d72cee86ba66f7083c5144dfb3e31c4ee"
+        },
+        {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-4x.native.json",
+          "sha256": "1e9515b6cb8f731bf40cd754c57d16408a31cae8addaa3729dadf271ce589df1"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "runs/full-robot/learning/shift-duration/plan.json",
+      "sha256": "37ae67a6bcda6bbad7fa83697624f8afff971dfa01846400648f629b534c0ab3"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/hybrid-speed/run.mjs",
+      "sha256": "a5ed36d8ad3961bf3a7c4db8e71149bd79e4d70ed272810045c9d226caf32f54"
+    },
+    {
+      "path": "target/release/examples/run_environment",
+      "sha256": "503c689e47157df669b8129aa6cdbc48489625a5c15ccfdbb3efc3e648a63ae2"
+    },
+    {
+      "path": "examples/full-robot/check_online_steps.mjs",
+      "sha256": "8b9b30555f3973be9d8daf185d828f170edbb85fb486fc5d3ec9b182d4476a8b"
+    },
+    {
+      "path": "target/release/examples/evaluate_lift",
+      "sha256": "c9a014ab5a5c45273acb0045f0ecf8f44471efcd7086fd11391de780328c3e90"
+    }
+  ],
+  "scope": "Two fixed-stride slower shift/return development gaits. Same CAD, physical equations, controller gains and fine solver. Original task gates plus the previously declared 5% contact screen; no browser, held-out, terrain or timestep qualification."
+}

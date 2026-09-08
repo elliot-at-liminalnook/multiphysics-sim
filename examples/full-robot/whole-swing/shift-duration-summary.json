@@ -1,0 +1,298 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "reference",
+      "time_factor": 1,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 41,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0005286096017170919,
+        "final_yaw_error_rad": 0.003375872552504301,
+        "maximum_body_tilt_rad": 0.004356816119918091,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.21266910229300054,
+          0.000024143587130046908,
+          -0.00018630116016761684
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms-acceptance/summary.json",
+          "sha256": "5a6913aaab60d209f15314f6677fc5859787dc0ed86346def4810c12ed34af89"
+        }
+      },
+      "verified_spatial_reference_endpoints": 41,
+      "maximum_spatial_reference_difference_m": 0,
+      "contact_motion_to_body_advance_ratio": 0.931381436906892,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.00375,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0037778909088736364,
+          "net_projected_speed_m_s": 0.0042571047999167754,
+          "axis_world": [
+            0.9999998145196206,
+            -0.0006090654515667041,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 112.568877624,
+        "simulation_per_wall": 0.5330070021699127,
+        "transition_p95_s": 0.080409157
+      },
+      "positive_mechanical_work_j": 6.867681858157539,
+      "capture": {
+        "path": "runs/full-robot/learning/settled-integral-regression/minute-1.25ms.native.json",
+        "sha256": "54ee76fc3a432003bdf7a3583a1a18d58dd3b5914801a758d48100bd0fe0b7db"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-reference-metrics.json",
+          "sha256": "b4936fcdd42a6b27f7f5822a7c12d9c4b0678595a532fd767b2a3b30e18d0b3b"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-reference-contact.json",
+          "sha256": "83ddffa37c65e382629a3d7a8c66762c223b72f712ac73a56ff738269b96fb83"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-reference-phases.json",
+          "sha256": "82b78ed805777b66308579b91dd2b7929b24b29b4e7c0e685e26f5edc0e65c2e"
+        }
+      ]
+    },
+    {
+      "name": "shift-return-2x",
+      "time_factor": 2,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 30,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.00028334297065847483,
+        "final_yaw_error_rad": 0.00039272067832859067,
+        "maximum_body_tilt_rad": 0.004171546285901135,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.1550509555238793,
+          0.000007684854181444207,
+          -0.0002015080111647926
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-2x-acceptance/summary.json",
+          "sha256": "cf958e263a2156a5d5349b82e5ab5d0d0b712b62622af82dcade5375b6860f3d"
+        }
+      },
+      "verified_spatial_reference_endpoints": 30,
+      "maximum_spatial_reference_difference_m": 6.938893903907228e-18,
+      "contact_motion_to_body_advance_ratio": 0.2919945213184757,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.0027236842105263157,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.002741240341577212,
+          "net_projected_speed_m_s": 0.0026315455975332745,
+          "axis_world": [
+            0.9999996947113247,
+            -0.0007813944314571731,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 98.345440253,
+        "simulation_per_wall": 0.6100943759634012,
+        "transition_p95_s": 0.065905731
+      },
+      "positive_mechanical_work_j": 5.293880207659334,
+      "capture": {
+        "path": "runs/full-robot/learning/shift-duration/shift-return-2x.native.json",
+        "sha256": "33877129a4358e0de00fca91c6614be50748a979af507b3d91e0a4c2d01fad42"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-shift-return-2x-metrics.json",
+          "sha256": "67cb373117f8a8d4eecafb4a96c9fef136fb7111f65d320abc1651940022315d"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-shift-return-2x-contact.json",
+          "sha256": "fcc4dd13216bd519b34e6d2477bea8657ef5d79085c83e9267fb1875dbfd6988"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-shift-return-2x-phases.json",
+          "sha256": "e48810817b78102ec2b3e291f2d3510f1fc63cef590a15f88c8cc5ada7bb1040"
+        }
+      ]
+    },
+    {
+      "name": "shift-return-4x",
+      "time_factor": 4,
+      "completed": true,
+      "error": null,
+      "outcome": {
+        "kind": "completed",
+        "error": null,
+        "termination_reasons": []
+      },
+      "original_task_passed": true,
+      "acceptance": {
+        "passed": true,
+        "lifts": 19,
+        "failed_lifts": 0,
+        "final_body_error_m": 0.0001311555276274733,
+        "final_yaw_error_rad": 0.00027238646506284994,
+        "maximum_body_tilt_rad": 0.004152001317952124,
+        "sampled_internal_contacts": 0,
+        "body_advance_world_m": [
+          0.09828418300217985,
+          -0.00001489936941851674,
+          -0.0001237487531538066
+        ],
+        "budgets": {
+          "minimum_transfers": 4,
+          "maximum_final_body_error_m": 0.001,
+          "maximum_body_tilt_rad": 0.01,
+          "maximum_final_yaw_error_rad": 0.005
+        },
+        "source": {
+          "path": "runs/full-robot/learning/shift-duration/shift-return-4x-acceptance/summary.json",
+          "sha256": "74bfd01b89f60eaa42897bc371293126dba689b660b585da6d7f9459afaa282e"
+        }
+      },
+      "verified_spatial_reference_endpoints": 19,
+      "maximum_spatial_reference_difference_m": 3.469446951953614e-18,
+      "contact_motion_to_body_advance_ratio": 0.24986233089393467,
+      "anti_sliding_screen_passed": false,
+      "sustained_windows": [
+        {
+          "command_start_s": 0.02,
+          "start_s": 4.0200000000000005,
+          "end_s": 56,
+          "command": [
+            0.0017602040816326531,
+            0,
+            0
+          ],
+          "samples": 2600,
+          "measured_sustained_speed_m_s": 0.0017255614268411332,
+          "net_projected_speed_m_s": 0.0018146138529896896,
+          "axis_world": [
+            0.9999996043591607,
+            -0.000889540062045085,
+            0
+          ]
+        }
+      ],
+      "native_compute": {
+        "wall_s": 73.095954414,
+        "simulation_per_wall": 0.8208388614802498,
+        "transition_p95_s": 0.043895094
+      },
+      "positive_mechanical_work_j": 4.192487201679001,
+      "capture": {
+        "path": "runs/full-robot/learning/shift-duration/shift-return-4x.native.json",
+        "sha256": "1e9515b6cb8f731bf40cd754c57d16408a31cae8addaa3729dadf271ce589df1"
+      },
+      "measurements": [
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-shift-return-4x-metrics.json",
+          "sha256": "bd7e7142067bc546f69098f9260a0ebb1a32fc9dffd51564d1c3e54b9e3581c5"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-shift-return-4x-contact.json",
+          "sha256": "13e4386e0f46693080f17d06ef1cdd23b2c21bfa2e7f4385baecabe273f2300f"
+        },
+        {
+          "path": "examples/full-robot/whole-swing/shift-duration-shift-return-4x-phases.json",
+          "sha256": "121608f872acb44dcdbb69213af4a926b74194f9c043594c011d379e3e5dfbb2"
+        }
+      ]
+    }
+  ],
+  "maximum_contact_motion_to_body_advance_ratio": 0.05,
+  "sources": [
+    {
+      "path": "examples/full-robot/whole-swing/shift-duration-plan.json",
+      "sha256": "37ae67a6bcda6bbad7fa83697624f8afff971dfa01846400648f629b534c0ab3"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/shift-duration-status.json",
+      "sha256": "d5027f1306d4149797151c3cde9524b9858d14d7dab1978df12f768a4af25fbc"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/shift-duration-integrity.json",
+      "sha256": "8998e9a89098b39baba9c4a8fedb1f37e663e49ff3f5c08f745a8906e0e85a12"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/examples/full-robot/whole-swing/collect_shift_duration.mjs",
+      "sha256": "812f3a5015d6be4d11108e528efc62d64f47f84265fcaed1a017c64ec68fb22d"
+    },
+    {
+      "path": "examples/interactive/analyze_walking_capture.mjs",
+      "sha256": "4062340d954ac6366c14f8906d3304630cf10d78750f47080ba783eb6321a6e9"
+    },
+    {
+      "path": "examples/interactive/analyze_floor_contact_motion.mjs",
+      "sha256": "e98363fd3a1e252f33c90df2957842eaf5a09bf4224996b498a9269fdec45f5d"
+    },
+    {
+      "path": "examples/interactive/analyze_contact_phases.mjs",
+      "sha256": "0a094eb67036b9e7aba658e5297f083c3e7d0a035c2c1311d649fea46c914732"
+    },
+    {
+      "path": "examples/interactive/recorded_contact_motion.mjs",
+      "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+    },
+    {
+      "path": "examples/interactive/capture_outcome.mjs",
+      "sha256": "e00226aa0586d4279658342a15c674235f87bc6917ccfbd5136d635790eb7a1c"
+    }
+  ],
+  "browser_promoted": false,
+  "scope": "Frozen timing and speed ablation at unchanged planned spatial steps, controller gains and physics. Original task and prospective contact-motion screens remain separate. Accepted prefixes do not qualify a minute. No fresh held-out, terrain, timestep or browser qualification."
+}

@@ -213,6 +213,44 @@ fn temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages() {
 }
 
 #[test]
+fn exact_probe_base_reuse_preserves_every_fixed_and_rotating_linkage_state() {
+    use sim_domain_robot::articulated::embedding::{ImplicitStepConfig,ImplicitSolverWorkspace};
+    use sim_dynamics::hybrid::HybridConfig;
+    for floating in [false,true] {
+        let (art,mut seed)=slider_crank(floating);
+        let dofs=art.audit_slider_cranks()[0].candidate.as_ref().unwrap().dof_indices;
+        let map=RigidEmbedding::new(&art,&["joint.motor".into()],EmbeddingConfig {direct_closure_jacobian:true,..Default::default()}).unwrap();
+        let mut velocity=vec![0.0;map.reduced_dimension()];*velocity.last_mut().unwrap()=0.7;
+        if floating {
+            let s=art.bases[0].state;
+            seed.states[s+3..s+7].copy_from_slice(&[0.9_f64.cos(),0.0,0.0,0.9_f64.sin()]);
+            velocity[..6].copy_from_slice(&[0.02,-0.01,0.03,0.1,-0.2,0.3]);
+        }
+        let mut original=map.solve(&seed,&[0.3],&velocity).unwrap().generalized;
+        let mut reused=original.clone();let mut a_workspace=ImplicitSolverWorkspace::default();let mut b_workspace=a_workspace.clone();
+        let reference=ImplicitStepConfig {reuse_step_jacobian:true,reuse_mechanical_endpoint:true,reuse_mechanical_dynamics:true,linearized_jacobian_probes:true,linearized_probe_relative_step:1e-5,..Default::default()};
+        let candidate=ImplicitStepConfig {reuse_exact_probe_base:true,..reference.clone()};
+        let nb=usize::from(floating)*6;let mut reused_bases=0;
+        let load=|_:f64,g:&Generalized| {let mut f=vec![0.0;nb+g.q.len()];f[nb+dofs[0]]=0.003-0.02*g.qd[dofs[0]];Ok(f)};
+        for i in 0..30 {
+            let a=map.advance_implicit_mechanics_cached(&original,i as f64*0.01,0.01,&reference,&HybridConfig::default(),&mut a_workspace,load).unwrap();
+            let b=map.advance_implicit_mechanics_cached(&reused,i as f64*0.01,0.01,&candidate,&HybridConfig::default(),&mut b_workspace,load).unwrap();
+            assert_eq!(a.segments.len(),1);assert_eq!(b.segments.len(),1);
+            assert_eq!(a.segments[0].diagnostics.nonlinear.iterations,b.segments[0].diagnostics.nonlinear.iterations);
+            reused_bases+=b.segments[0].diagnostics.reused_exact_probe_bases.unwrap();
+            original=a.endpoint.generalized;reused=b.endpoint.generalized;
+            for (a,b) in original.q.iter().chain(&original.qd).chain(&original.states).chain(&original.rates)
+                .zip(reused.q.iter().chain(&reused.qd).chain(&reused.states).chain(&reused.rates)) {assert_eq!(a.to_bits(),b.to_bits());}
+            for r in art.original_closure_values(&reused) {assert!(r.position.abs()<1e-9&&r.velocity.abs()<1e-9&&r.acceleration.abs()<1e-8);}
+        }
+        assert!(reused_bases>0,"the exact cache must actually supply a base");
+        for invalid in [ImplicitStepConfig {reuse_mechanical_endpoint:false,reuse_mechanical_dynamics:false,..candidate.clone()},ImplicitStepConfig {linearized_jacobian_probes:false,..candidate.clone()}] {
+            assert!(map.step_implicit(&reused,0.3,0.01,&invalid,load).is_err());
+        }
+    }
+}
+
+#[test]
 fn point_jacobians_match_closed_linkage_position_differences_with_rotated_base() {
     use sim_domain_robot::articulated::embedding::EmbeddedPoint;
     let (art, mut seed) = slider_crank(true);

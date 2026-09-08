@@ -91,6 +91,11 @@ pub struct ImplicitStepConfig {
     /// by 10%; failure retries original velocities with fresh exact derivatives.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub extrapolate_velocity_seed: bool,
+    /// Reuse a bitwise-matching exact endpoint as a tangent Jacobian's base.
+    /// Requires exact endpoint reuse and linearized Jacobian probes. Probe
+    /// geometry is still cleared before ordinary residuals resume.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub reuse_exact_probe_base: bool,
 }
 fn is_default_probe_step(value: &f64) -> bool {
     *value == 1e-6
@@ -119,6 +124,7 @@ impl Default for ImplicitStepConfig {
             linearized_jacobian_probes: false,
             linearized_probe_relative_step: 1e-6,
             extrapolate_velocity_seed: false,
+            reuse_exact_probe_base: false,
         }
     }
 }
@@ -141,6 +147,7 @@ pub struct ImplicitSolverWorkspace {
     linearized_jacobian_probes: Option<bool>,
     linearized_probe_relative_step: Option<f64>,
     extrapolate_velocity_seed: Option<bool>,
+    reuse_exact_probe_base: Option<bool>,
     // Accepted endpoint velocity and its increment, solely for the next guess.
     velocity_seed_history: Option<(Vec<f64>, Vec<f64>)>,
 }
@@ -181,6 +188,8 @@ pub struct ImplicitStepDiagnostics {
     pub exact_jacobian_fallback: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub predicted_velocity_seed: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reused_exact_probe_bases: Option<usize>,
 }
 
 #[derive(Debug)]
@@ -336,6 +345,9 @@ impl RigidEmbedding<'_> {
         if config.extrapolate_velocity_seed && !config.reuse_step_jacobian {
             return Err("velocity seed extrapolation requires cross-step Jacobian reuse".into());
         }
+        if config.reuse_exact_probe_base && !(config.reuse_mechanical_endpoint && config.linearized_jacobian_probes) {
+            return Err("exact probe base reuse requires endpoint reuse and linearized Jacobian probes".into());
+        }
         if config.reuse_mechanical_dynamics && !config.reuse_mechanical_endpoint {
             return Err("mechanical dynamics reuse requires exact endpoint reuse".into());
         }
@@ -392,9 +404,10 @@ impl RigidEmbedding<'_> {
         let cache: RefCell<Option<(Vec<u64>, Rc<EmbeddedMotion>)>> = RefCell::new(None);
         let dynamics_cache = RefCell::new(None);
         // Present only while a fresh Jacobian is assembled. Both endpoint
-        // caches are cleared on entry/exit, so probe geometry cannot escape.
+        // caches are cleared before/after probing, so probe geometry cannot escape.
         let probe_context: RefCell<Option<(Vec<f64>, Rc<EmbeddedMotion>)>> = RefCell::new(None);
         let linearized_probes = Cell::new(0usize);
+        let reused_exact_probe_bases = Cell::new(0usize);
         let prepare = |u: &[f64]| -> Result<Rc<EmbeddedMotion>, String> {
             if config.reuse_mechanical_endpoint {
                 if let Some((key, motion)) = cache.borrow().as_ref() {
@@ -701,6 +714,7 @@ impl RigidEmbedding<'_> {
             || next_workspace.linearized_jacobian_probes != Some(config.linearized_jacobian_probes)
             || next_workspace.linearized_probe_relative_step != Some(config.linearized_probe_relative_step)
             || next_workspace.extrapolate_velocity_seed != Some(config.extrapolate_velocity_seed)
+            || next_workspace.reuse_exact_probe_base != Some(config.reuse_exact_probe_base)
             || next_workspace.velocity_seed_history.as_ref().is_some_and(|(velocity, increment)| {
                 config.extrapolate_velocity_seed && (increment.len() != n || velocity.len() != n
                     || velocity.iter().zip(&old_u).any(|(a,b)|a.to_bits()!=b.to_bits()))
@@ -758,9 +772,12 @@ impl RigidEmbedding<'_> {
             let result = if config.linearized_jacobian_probes {
                 let mut perturbed = vec![0.0; u.len()];
                 solve_newton_cached_audited_with_reference(&mut u, nc, &residual, |x, base, jacobian| {
-                    *cache.borrow_mut() = None;
+                    debug_assert!(probe_context.borrow().is_none());
+                    if !config.reuse_exact_probe_base { *cache.borrow_mut() = None; }
                     *dynamics_cache.borrow_mut() = None;
+                    let before = cache_hits.get();
                     let motion = prepare(&x[..n]);
+                    if config.reuse_exact_probe_base { reused_exact_probe_bases.set(reused_exact_probe_bases.get()+cache_hits.get()-before); }
                     *cache.borrow_mut() = None;
                     *dynamics_cache.borrow_mut() = None;
                     match motion {
@@ -854,6 +871,7 @@ impl RigidEmbedding<'_> {
         next_workspace.linearized_jacobian_probes = Some(config.linearized_jacobian_probes);
         next_workspace.linearized_probe_relative_step = Some(config.linearized_probe_relative_step);
         next_workspace.extrapolate_velocity_seed = Some(config.extrapolate_velocity_seed);
+        next_workspace.reuse_exact_probe_base = Some(config.reuse_exact_probe_base);
         if !config.reuse_step_jacobian {
             next_workspace.clear();
         }
@@ -879,6 +897,7 @@ impl RigidEmbedding<'_> {
                 maximum_auxiliary_residual: auxiliary.iter().map(|v| v.abs()).fold(0.0, f64::max),
                 linearized_probe_evaluations: config.linearized_jacobian_probes.then_some(linearized_probes.get()),
                 predicted_velocity_seed: config.extrapolate_velocity_seed.then_some(predicted_velocity_seed),
+                reused_exact_probe_bases: config.reuse_exact_probe_base.then_some(reused_exact_probe_bases.get()),
                 exact_jacobian_fallback,
             },
             auxiliary: auxiliary_endpoint,

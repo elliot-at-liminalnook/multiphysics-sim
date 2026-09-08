@@ -33,6 +33,7 @@ let lastDraw = performance.now(), simulatedWork = 0, wallWork = 0, selectedName;
 let liveTimer, liveStartWall = 0, liveStartSim = 0;
 const videoCapture = installVideoExport(renderer.domElement, $('video'), () => current?.id || 'robot');
 let drawNeeded = true;
+let lastSubmittedAt = -Infinity;
 controls.addEventListener('change', () => { drawNeeded = true; });
 const driveKeys = new Set();
 const ray = new THREE.Raycaster();
@@ -326,9 +327,11 @@ renderer.setAnimationLoop(now => {
   if (playing && playback) { replayClock += elapsed * Number($('speed').value); replayAt(replayClock); if (replayClock >= playback.at(-1).time_s) setPlaying(false); }
   controls.update();
   if (arrows.visible !== $('contacts').checked) drawNeeded = true;
-  if (drawNeeded) {
+  const displayHz = Number($('display-rate').value);
+  if (drawNeeded && (!displayHz || now-lastSubmittedAt >= 1000/displayHz-.1)) {
     scene.updateMatrixWorld(true); selectionBox?.update(); arrows.visible = $('contacts').checked;
     renderer.render(scene,camera); drawNeeded = false;
+    lastSubmittedAt = now;
     const reference = frame?.policy?.step_reference?.reference;
     lastRenderedFrame = frame ? {
       frame: renderer.info.render.frame, time_s: frame.time_s, submitted_at_ms: performance.now(),

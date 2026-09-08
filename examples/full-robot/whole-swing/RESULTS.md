@@ -284,3 +284,23 @@ preserves the same-binary pair, all timings, inputs, hardware, parity and UI
 evidence. An initial attempt to measure the new config under the old pinned
 preset was rejected before physics; it is recorded as a packaging failure,
 not a walking failure. The new entry packages the exact selected recipe.
+
+## Display cadence does not close the latency gap
+
+The explicit 30 fps display option leaves 50 Hz physics/control and pacing
+unchanged. It reduces steering drawings from 43.48 to 29.63 per wall second,
+but active p95 is essentially unchanged: automatic **20.710 ms**, capped
+**20.715 ms**. Capped forward/stop is **22.240 ms**. Capped steering active
+pace is 0.999937 and forward pace 1.000641; the original gates still fail.
+Transport/dispatch p95 is 7.36 versus 7.30 ms. This experiment does not support
+drawing frequency as the main cause of that delivery delay. Automatic display
+stays the default; the optional cap is not a realtime qualification.
+
+All three recordings exactly match the previously audited physics recipes,
+seeds and inputs, and use the identical WASM module. The 11-entry UI suite
+passes at the capped display setting, including full replay and real WebM
+output. The control fits the narrow viewport, which was also visually
+inspected. `display-cadence-status.json` retains the sequential measurements;
+`display-cadence-integrity.json` binds them to the original captures and UI
+checks. The next isolated transport experiment should distinguish outgoing
+object cloning and message delivery from rendering and Rust stepping.

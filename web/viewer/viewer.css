@@ -11,3 +11,5 @@
 #stop-motion { width: 100%; }
 
 #walking-overlay{position:absolute;left:20px;bottom:70px;max-width:calc(100% - 40px);padding:7px 10px;border:1px solid #3a5965;border-radius:7px;background:#12212ee8;color:#d9eee8;font-size:12px;pointer-events:none}#walking-overlay[hidden]{display:none}
+
+.view-tools{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 32px)}.view-tools select{width:auto;margin:0;padding:7px;font-size:12px}

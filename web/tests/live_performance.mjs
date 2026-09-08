@@ -15,6 +15,8 @@ const runtimeBuild={manifest_sha256:createHash('sha256').update(manifestBytes).d
  compiler_profile:buildManifest.wasm?.build?.profile??'unrecorded compiler settings', settings:buildManifest.wasm?.build?.settings??null};
 const entry=catalog.presets.find(p=>p.id===preset);assert(entry?.task);
 assert(!configPath||!entry.asset_sha256,'Configuration overrides invalidate pinned leaderboard assets; package the selected recipe as its own tested entry.');
+const displayRate=process.env.DISPLAY_RATE;
+assert(displayRate===undefined||['0','30'].includes(displayRate),'DISPLAY_RATE must be 0 (automatic) or 30');
 const data=JSON.parse(await readFile(resolve(directory,entry.path)));
 let configOverride=null;
 if(configPath){
@@ -61,6 +63,8 @@ try{
  await page.goto(`${url}/?preset=${encodeURIComponent(preset)}`);
  await page.locator('#overlay').waitFor({state:'hidden',timeout:30000});
  assert.equal(await page.locator('#preset').inputValue(),preset);
+ if(displayRate!==undefined)await page.locator('#display-rate').selectOption(displayRate);
+ const displayRateHz=await page.locator('#display-rate').count()?Number(await page.locator('#display-rate').inputValue()):0;
  await page.evaluate(async()=>{
   const viewer=await import('./viewer.js');window.liveProbe.readRenderCount=viewer.renderedFrameCount;window.liveProbe.readRenderedFrame=viewer.renderedFrameInfo;
  });
@@ -140,7 +144,7 @@ try{
   return [k,{samples:values.length,mean:values.reduce((a,b)=>a+b,0)/values.length,p95:p95(values),maximum:Math.max(...values)}];
  }));
  performance.breakdown={all:summarize(result.transition_samples),by_phase:Object.fromEntries([...new Set(result.transition_samples.map(s=>s.phase))].map(phase=>[phase,summarize(result.transition_samples.filter(s=>s.phase===phase))])),scope:'WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive.'};
- const report={completed,preset,scenario,config_override:configOverride,runtime_build:runtimeBuild,performance,meets_speed_target:performance.simulation_per_wall_second>=1&&(!performance.active_motion||performance.active_motion.simulation_per_wall_second>=1),meets_transition_target:performance.transition_p95_s<=.02&&(!performance.active_motion||performance.active_motion.transition_p95_s<=.02),
+ const report={completed,preset,scenario,display_rate_hz:displayRateHz,config_override:configOverride,runtime_build:runtimeBuild,performance,meets_speed_target:performance.simulation_per_wall_second>=1&&(!performance.active_motion||performance.active_motion.simulation_per_wall_second>=1),meets_transition_target:performance.transition_p95_s<=.02&&(!performance.active_motion||performance.active_motion.transition_p95_s<=.02),
   host:{cpu:cpus()[0]?.model,logical_cpus:cpus().length,platform:platform(),architecture:arch(),browser:await browser.version(),gpu:result.gpu,headless:process.env.HEADED!=='1'},errors,status:result.status,simulation_error:result.simulation_error,phase_messages:result.phase_messages,
   scope:'One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. Command-reference delays are measured separately from physical response; no sustained terrain or physical stopping acceptance.'};
  try { if(steering&&completed){

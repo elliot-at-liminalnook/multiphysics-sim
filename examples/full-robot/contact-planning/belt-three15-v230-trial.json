@@ -1,0 +1,50 @@
+{
+  "prefix": "runs/contact-planning/belt-three15-v230",
+  "source": "runs/contact-planning/belt-three15-base",
+  "command_speed_m_s": 0.23,
+  "reference_nominal_speed_m_s": 0.211710264528351,
+  "clock_rate": 1.0863904048884685,
+  "physics_step_s": 0.000625,
+  "steady_reference_velocity_scale": 1.0863904048884685,
+  "steady_reference_acceleration_scale": 1.1802441118337306,
+  "windows_s": [
+    [
+      0.8,
+      3
+    ],
+    [
+      4.2,
+      6.4
+    ]
+  ],
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "sources": [
+    {
+      "path": "runs/contact-planning/belt-three15-base.scene.json",
+      "sha256": "16e7b3c23b74fe97bff374f20cd22f576558d4b4ef317d7cbfb0c3c1dab0bcc2"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-base.config.json",
+      "sha256": "5e50b8a9f14936c4f6b180d1100b6df24b10f520d183f76f1130644f38bd1e4a"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-base.actions.json",
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    }
+  ],
+  "files": [
+    {
+      "path": "runs/contact-planning/belt-three15-v230.scene.json",
+      "sha256": "4964303e5b3dca2223f7a5f08108613a53ea2c12aeb78823a10d23d812d4c15b"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.config.json",
+      "sha256": "5e50b8a9f14936c4f6b180d1100b6df24b10f520d183f76f1130644f38bd1e4a"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.actions.json",
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    }
+  ],
+  "scope": "Direct closed-loop speed experiment. Motion-command bounds and scheduled speed change, with optional explicit timestep refinement; CAD, world, actuator limits, joint bounds, controller code, reference and solver settings are preserved. Existing odd/even feedforward scales with clock rate; off-nominal loads and transitions remain approximate. Inherited failed reference audits remain explicit. No collision/slip or sustained qualification is implied."
+}

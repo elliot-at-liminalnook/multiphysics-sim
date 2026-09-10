@@ -1,0 +1,166 @@
+{
+  "base_commit": "6bb318fcf450da566f359383ca9b2ee597959874",
+  "recorded_at": "2026-09-09T15:19:09.055Z",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-warm-sources.tar.gz",
+    "bytes": 10557,
+    "sha256": "aa2af3a855d9a735a8c9df430358ac664869e51f076424b7431f0381a7313026"
+  },
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/ipopt.rs",
+      "bytes": 22351,
+      "sha256": "1a6aef75a48a081e206d7cb22bddc9e9a21f197108470307a2f82fc8cd1aeb00"
+    },
+    {
+      "path": "crates/sim-solve/examples/audit_ipopt.rs",
+      "bytes": 9270,
+      "sha256": "199f6f43f63ac112a3ab382d9ad2bde28d95ad24b3e73588abb63a8fcb5e1ae0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_joint_ipopt_warm.mjs",
+      "bytes": 1598,
+      "sha256": "415f8bfd13321d309128e26319711900ed506717cb08e5141d95d03cf7f902d6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_ipopt_warm.mjs",
+      "bytes": 3126,
+      "sha256": "195a963bb0b51e201c28a648a4f459dd1ff0f33391d71b41a280d9824fd4f326"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/record_joint_ipopt_warm.mjs",
+      "bytes": 3461,
+      "sha256": "9f31eff9de011011eeae6d26933352d83092c7ca2644f13fab42a390d55d5bc5"
+    }
+  ],
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt",
+    "bytes": 9150316,
+    "sha256": "1f6b6edc4dd491c30f9d791016f277b83f5484a1d0704fcf93498fe5385dc3fd"
+  },
+  "native_audit_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/audit_ipopt",
+    "bytes": 615576,
+    "sha256": "214cac64c3edaf4b79a70b3f441929d875634fb788f73acbb30c1138711dd1c6"
+  },
+  "unchanged_comparison_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt",
+    "bytes": 9137996,
+    "sha256": "64976375fd16c84f5a1d8f8dac0e0e7cd669225ad1da915f85b25f371bfcc439"
+  },
+  "default_pilot_binary": {
+    "path": "runs/joint-ipopt-warm/optimize_joint_ipopt-before",
+    "bytes": 9150140,
+    "sha256": "a0a9c743d6e9bcca33909612af762fc1f57bc7f7aafb08c302ad0cd60dddd773"
+  },
+  "default_pilot_build": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-projection-build.json",
+    "bytes": 6407,
+    "sha256": "347973542a07e4b3fed6ca408650057181aa6da15906c56a1e4a5032bdb146d8"
+  },
+  "native_library_manifest": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-native-library.json",
+    "bytes": 5450,
+    "sha256": "1d5bb98f34fdceb3384f730f61a41ef15be68ec9896837471403bc941a6583a4"
+  },
+  "build_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-contact-timing CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --release -p sim-solve -p sim-runtime --features native-ipopt --example audit_ipopt --example optimize_joint_ipopt",
+  "environment": {
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "cargo_lock": {
+    "path": "Cargo.lock",
+    "bytes": 163518,
+    "sha256": "2315b7fe8ba43e235355ffdcf823e018a6f17a0b828f83d8d0954a50216e47bf"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+      "bytes": 161647,
+      "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+    }
+  ],
+  "durable_scene": {
+    "index": "examples/full-robot/speed-ceiling/evidence-v8-index.json",
+    "entry": "validation/constrained-front165-scale1-human-fine.scene.json"
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-build.log",
+      "bytes": 581,
+      "sha256": "8c906c4f73018be1b9cbd9df22e31895c3b25c03fcb90c35549c9ea1f2f4ce93"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-solver-tests.log",
+      "bytes": 3781,
+      "sha256": "a3469cd82db33f4def826f05d220945ee881e91cfa9763f772a4072bf2f7211e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-planner-tests.log",
+      "bytes": 1214,
+      "sha256": "73628b5d6b88d25934ae796e94fefe91c7c43265a1cd961124f1719e5a2f7beb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-preparation.json",
+      "bytes": 1182,
+      "sha256": "7c7f0baa4f0b351f8a68dec34beb327eac96cf52260080e6c9745523a148927c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-one-step.result.json",
+      "bytes": 3104941,
+      "sha256": "9127e3923235827556948a04fea3efaef55190f36972e376241ca2762c4c682e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-one-step.log",
+      "bytes": 4341,
+      "sha256": "20ca3dde99934fa1d476a470e0c1d1030a4303a7b7c15004838a67510220f0ac"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-one-step.search.json",
+      "bytes": 212,
+      "sha256": "69910142e96e0b3c55ce5c7e4e91c6aee8186c6db0a66a0e3e37b1f6c0065144"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-close-one-step.result.json",
+      "bytes": 3107832,
+      "sha256": "0d40f2cc447dc4da1ca28c33ac5282e7c8ca0a8d5381fb2c98826b33d0e8b0c8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-close-one-step.log",
+      "bytes": 4341,
+      "sha256": "f8997abbaaf281848a084f8efacb0bb7400b2c7489b49b557cdf264271a66611"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-close-one-step.search.json",
+      "bytes": 280,
+      "sha256": "064cfcfd64a0d61e493c2a17e648f07613f8ce1d287ea087c7897f07a4c68c1a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-native-audit.result.json",
+      "bytes": 11068,
+      "sha256": "e017196c42c169b90644fe99c7b80465bcef9af486364d3fe0f7e69e6efdd046"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-native-audit.log",
+      "bytes": 200,
+      "sha256": "d5afe239e855d4fd6b7c5d6de6563b8577e6963b9f03366ae3dcd2d13eaf0d30"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-verification.json",
+      "bytes": 3254,
+      "sha256": "beb7844586cc5151e57b6cba2e5cf10abf3a2c3dd2b869b55c5513bfe8ffa8f3"
+    }
+  ],
+  "scope": "Primal initialization from the completed near-balanced AL motion, same .30 m/s speed objective and physical acceptance. Configurable initial interior distances checked against native scalar cases, unchanged native regressions and actual robot pilots. Not a global speed or runtime gait result."
+}

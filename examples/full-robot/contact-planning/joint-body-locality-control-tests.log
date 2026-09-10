@@ -1,0 +1,22 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control)
+    Finished `release` profile [optimized] target(s) in 3.79s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/sim_domain_control-d18e43abf29c12b3)
+
+running 14 tests
+test contact_slip::tests::invalid_units_loads_and_nonfinite_inputs_are_rejected ... ok
+test contact_phase::tests::derivatives_and_c2_phase_boundaries ... ok
+test contact_slip::tests::weighted_bound_includes_low_load_motion_and_handles_mixed_directions ... ok
+test contact_slip::tests::constant_slip_is_exact_and_unloaded_swing_contributes_zero ... ok
+test contact_phase::tests::retimed_derivatives_include_reversal_and_clock_acceleration ... ok
+test contact_phase::tests::periodic_progress_and_stationary_stance ... ok
+test periodic_drift::tests::translating_reference_closes_derivatives_and_matches_finite_differences ... ok
+test contact_slip::tests::mean_path_is_continuous_at_load_cutoff_and_exact_for_constant_slip ... ok
+test smooth_return::tests::registry_and_domain_validation ... ok
+test contact_phase::tests::smooth_return_keeps_stance_and_c2_derivatives ... ok
+test contact_phase::tests::intervals_expose_short_flight_and_preserve_coincident_events ... ok
+test smooth_return::tests::analytic_rates_area_and_c2_joins ... ok
+test periodic_drift::tests::periodic_knot_insertion_preserves_position_velocity_and_acceleration ... ok
+test trajectory::support_tests::periodic_support_covers_value_and_two_derivatives_across_wraps ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

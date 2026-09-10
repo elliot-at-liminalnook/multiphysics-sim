@@ -1,0 +1,34 @@
+{
+  "base_commit": "050c0a7cb31133a1ec173f01004fae889ed5e098",
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/equality_dogleg.rs",
+      "bytes": 30150,
+      "sha256": "0b29a68ef8401fc3e0ef557a26886ee41e1bde75fb78b865eacfca29a9263988"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_equalities.rs",
+      "bytes": 2350,
+      "sha256": "d03edf1c7f80d4e8328a1498fdc702424b60bfd2e497bf7f83c7d3444677bff8"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_equalities",
+      "bytes": 8763396,
+      "sha256": "c96089b26394748b704ef0fd5bb19996264232e49f53af6352af798804a887fe"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8607908,
+      "sha256": "063ac24a70353dab53462e1b3b9aacb255e9b078f97570c928bf5d57752c52f6"
+    }
+  ],
+  "control_binary": {
+    "path": "/tmp/optimize-contact-equalities-before-refinement",
+    "bytes": 8754404,
+    "sha256": "c41ce97a4349cfb5bfe4766de4029e30b1f7f19f21ce402103982f860c949159"
+  },
+  "control_source_commit": "050c0a7",
+  "scope": "Identical restart recipe run with preserved pre-refinement executable and the new residual-refinement executable. Current Rust sources accompany this evidence."
+}

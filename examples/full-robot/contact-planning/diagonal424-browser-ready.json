@@ -1,0 +1,139 @@
+{
+  "url": "http://127.0.0.1:62424/?preset=physics-diagonal424-5ms",
+  "tab_id": "291878577",
+  "root": "runs/speed-ceiling/viewer-diagonal424",
+  "archive": {
+    "path": "examples/full-robot/contact-planning/browser-evidence/diagonal424.tar.gz",
+    "sha256": "1231d6cc51509ea940ecc4578d5dddf15b982541a08d51584aa11314b67ca3e9",
+    "bytes": 9930526
+  },
+  "files": [
+    {
+      "path": "OPEN.txt",
+      "sha256": "47defd4bb09ab2fb9f83e9df4b26b92682bb01d635331ae044e9311828e83e40",
+      "bytes": 5209
+    },
+    {
+      "path": "build-manifest.json",
+      "sha256": "d4030908ae431935933cb1dcb432016c24b77ae4365ac7b1ae48e00247de81d3",
+      "bytes": 4100
+    },
+    {
+      "path": "catalog.json",
+      "sha256": "3dfdb6c8f4feff66639825af8635d005eb0b4f8dd46e66b3e672574920b0c8eb",
+      "bytes": 2086
+    },
+    {
+      "path": "data/physics-diagonal424-0p625ms.json",
+      "sha256": "7c27a82f32d82e6bc5bbaa3fa37092090b2f49dfc5ad867dd677be6acd8674bb",
+      "bytes": 12915789
+    },
+    {
+      "path": "data/physics-diagonal424-5ms.json",
+      "sha256": "df5a8ef43fc9f49376904aaf752fe9442e68af17967276c7b6448ebb26b4a6c5",
+      "bytes": 12915807
+    },
+    {
+      "path": "index.html",
+      "sha256": "aeb72a0df4dc717f8c0ea63112a454dcf8f3a1ed0d9ccaa37526896744cb9cac",
+      "bytes": 5780
+    },
+    {
+      "path": "leaderboard-model.mjs",
+      "sha256": "cc84b2eaec7618b9100d3f995e16111980a98b5fefa0bd1fc5a8a43263188d76",
+      "bytes": 3332
+    },
+    {
+      "path": "leaderboard.css",
+      "sha256": "358d83728bd0d39e1e73ce4b0f7ea85685a2565c9ba08eee3d72cc120049aae7",
+      "bytes": 3319
+    },
+    {
+      "path": "leaderboard.js",
+      "sha256": "3ed0f63771eaa9d06a52f028d03714fad04e1e7c7953d4022680b3af0928374b",
+      "bytes": 8716
+    },
+    {
+      "path": "leaderboard.json",
+      "sha256": "441af98fcd51d3e1e24514096e0bcfd5dc5100dfd59070b4ce2ff143d6ad1e24",
+      "bytes": 105
+    },
+    {
+      "path": "motion-commands.mjs",
+      "sha256": "f3854b84dc9ffb58c04d0656e4287ccd96c0b74076f33b6e39cce0a939f025c7",
+      "bytes": 2151
+    },
+    {
+      "path": "serve-viewer.mjs",
+      "sha256": "f4df0ed6bb95ecb6d26c4d0aaa934f30e66f18cc02d67e98c8006b70f8195cb5",
+      "bytes": 1068
+    },
+    {
+      "path": "sim_web.d.ts",
+      "sha256": "30882382f267def5865714212594019ca43221d6c2c82f7ab4cfb24e500ef03b",
+      "bytes": 6526
+    },
+    {
+      "path": "sim_web.js",
+      "sha256": "3d9c0b3963d58136e9d7d377aadf7bb70628b71af080dfb4c3b0e0457a561424",
+      "bytes": 28900
+    },
+    {
+      "path": "sim_web_bg.wasm",
+      "sha256": "9a6d3a5b3496b44b08ad158b64b49ef23dc80642a496a85a770e2457ceb066fd",
+      "bytes": 10250742
+    },
+    {
+      "path": "sim_web_bg.wasm.d.ts",
+      "sha256": "274e2499f2e96bd61e10f35da893450e75443ac3d42aac41541b8ae9db54cd92",
+      "bytes": 3577
+    },
+    {
+      "path": "vendor/addons/controls/OrbitControls.js",
+      "sha256": "faabb4e8dfd9235ee4a9fd7c9a3d75f90f1689dbd4944bd6fd32117dacec5f93",
+      "bytes": 40504
+    },
+    {
+      "path": "vendor/three-LICENSE",
+      "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc",
+      "bytes": 1081
+    },
+    {
+      "path": "vendor/three.core.js",
+      "sha256": "3718df126d69c125362a03340913204470d8c50238605150e57f808840fb7759",
+      "bytes": 1443056
+    },
+    {
+      "path": "vendor/three.module.js",
+      "sha256": "bbf5ed13fe4373f5bd38b14ea8e62e9f157327da5638edc6d3863e08b167c9c7",
+      "bytes": 650153
+    },
+    {
+      "path": "video-export.js",
+      "sha256": "72053261254e4266bda6511a3b9774a0240dfffaf4230d9311fdbef4289c15ad",
+      "bytes": 1801
+    },
+    {
+      "path": "viewer.css",
+      "sha256": "9d905c1be34fce7884382b1de2f7d5bdce86b3d8660b3688fea0af860f1318ce",
+      "bytes": 6267
+    },
+    {
+      "path": "viewer.js",
+      "sha256": "69b3ba8559f6e9541cfd499c99d98233eb79aba8102b36ef4fbd45032893d0cb",
+      "bytes": 37800
+    },
+    {
+      "path": "worker-message.mjs",
+      "sha256": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f",
+      "bytes": 761
+    },
+    {
+      "path": "worker.js",
+      "sha256": "56fcf9a7de4feddd05f24b6f13186376a6c332e0952acb4c4073e7a9ba5efdb9",
+      "bytes": 5784
+    }
+  ],
+  "verification": "Loaded Chrome tab shows live Rust/WASM, enabled Play and W/A/S/D buttons, preview and detailed presets. Static bundle round-trips byte-for-byte. User driving performance is not yet measured.",
+  "restore": "Extract archive into the named root and run node serve-viewer.mjs with root and port 62424."
+}

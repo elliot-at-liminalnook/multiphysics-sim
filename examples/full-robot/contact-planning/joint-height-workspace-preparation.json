@@ -1,0 +1,206 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-aligned-speed.recipe.json",
+      "bytes": 146687,
+      "sha256": "9fad3e976ba34a0de902cba47e51231fe91613c2b6ceee15703f455d5877890f"
+    },
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-summary.json",
+      "bytes": 17002,
+      "sha256": "dc2e9226daa57eff172eaf703813ad1ec0d5d29cb13925aa28361f012156f53e"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-provenance.json",
+      "bytes": 851,
+      "sha256": "c32f42f2d22dda798d2678faeed1b9b8f7b2caa120cdd3923a7813bd9378f5c4"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "bytes": 7741835,
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+      "bytes": 79630,
+      "sha256": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b"
+    }
+  ],
+  "output": {
+    "path": "examples/full-robot/contact-planning/joint-height-speed.recipe.json",
+    "bytes": 146911,
+    "sha256": "d80afde8b5b8b0c12d0349c6328631a1f845e3645c936fd13f3c9c7cc67738ac"
+  },
+  "rows": [
+    {
+      "foot": 0,
+      "marker": "-Y-foot-surface",
+      "sampled_foot_z_m": [
+        -0.42512901209735254,
+        -0.2427364249416779
+      ],
+      "target_foot_z_m": -0.4410181228863441,
+      "initial_base_translation_z_m": -0.06906212053309974,
+      "body_control_z_interval_m": [
+        -0.12921957741156648,
+        0.05317300974410816
+      ]
+    },
+    {
+      "foot": 1,
+      "marker": "+X-foot-surface",
+      "sampled_foot_z_m": [
+        -0.42514107733419837,
+        -0.24000494828804755
+      ],
+      "target_foot_z_m": -0.4410181228863441,
+      "initial_base_translation_z_m": -0.06906212053309974,
+      "body_control_z_interval_m": [
+        -0.13195105406519683,
+        0.053185074980953984
+      ]
+    },
+    {
+      "foot": 2,
+      "marker": "+Y-foot-surface",
+      "sampled_foot_z_m": [
+        -0.4462453940534304,
+        -0.24273642494064268
+      ],
+      "target_foot_z_m": -0.4410181228863441,
+      "initial_base_translation_z_m": -0.06906212053309974,
+      "body_control_z_interval_m": [
+        -0.1292195774126017,
+        0.074289391700186
+      ]
+    },
+    {
+      "foot": 3,
+      "marker": "-X-foot-surface",
+      "sampled_foot_z_m": [
+        -0.44747793210097,
+        -0.24150370956440181
+      ],
+      "target_foot_z_m": -0.4410181228863441,
+      "initial_base_translation_z_m": -0.06906212053309974,
+      "body_control_z_interval_m": [
+        -0.13045229278884257,
+        0.07552192974772559
+      ]
+    }
+  ],
+  "intersection": {
+    "lower": -0.12921957741156648,
+    "upper": 0.05317300974410816
+  },
+  "changes": [
+    {
+      "control": 0,
+      "previous": {
+        "lower": -0.015,
+        "upper": 0.015
+      },
+      "next": {
+        "lower": -0.12921957741156648,
+        "upper": 0.05317300974410816
+      }
+    },
+    {
+      "control": 1,
+      "previous": {
+        "lower": -0.015,
+        "upper": 0.015
+      },
+      "next": {
+        "lower": -0.12921957741156648,
+        "upper": 0.05317300974410816
+      }
+    },
+    {
+      "control": 2,
+      "previous": {
+        "lower": -0.015,
+        "upper": 0.015
+      },
+      "next": {
+        "lower": -0.12921957741156648,
+        "upper": 0.05317300974410816
+      }
+    },
+    {
+      "control": 3,
+      "previous": {
+        "lower": -0.015,
+        "upper": 0.015
+      },
+      "next": {
+        "lower": -0.12921957741156648,
+        "upper": 0.05317300974410816
+      }
+    },
+    {
+      "control": 4,
+      "previous": {
+        "lower": -0.015,
+        "upper": 0.015
+      },
+      "next": {
+        "lower": -0.12921957741156648,
+        "upper": 0.05317300974410816
+      }
+    },
+    {
+      "control": 5,
+      "previous": {
+        "lower": -0.015,
+        "upper": 0.015
+      },
+      "next": {
+        "lower": -0.12921957741156648,
+        "upper": 0.05317300974410816
+      }
+    },
+    {
+      "control": 6,
+      "previous": {
+        "lower": -0.015,
+        "upper": 0.015
+      },
+      "next": {
+        "lower": -0.12921957741156648,
+        "upper": 0.05317300974410816
+      }
+    },
+    {
+      "control": 7,
+      "previous": {
+        "lower": -0.015,
+        "upper": 0.015
+      },
+      "next": {
+        "lower": -0.12921957741156648,
+        "upper": 0.05317300974410816
+      }
+    }
+  ],
+  "checks": {
+    "cad_hashes_match": true,
+    "non_collision_link_definitions_identical": true,
+    "joint_definitions_identical": true,
+    "only_height_search_bounds_changed": true,
+    "initial_candidate_identical": true,
+    "physical_gates_identical": true
+  },
+  "formula": "For each foot, floor target = sampled foot Z + initial base translation Z + body control Z. Intersect [target - sampled maximum - initial, target - sampled minimum - initial] across all feet.",
+  "scope": "Experimental planning domain derived from fixed-base sampled CAD reach, not certified hardware limits or the entire reachable workspace. The original workspace omitted its initial base vertical offset; that offset is accounted for explicitly here. The interval contains untested combinations and is conditional on sampled body orientation; swing motion, changing orientation, collision and actuator feasibility still require the unchanged native checks. No robot/world/actuator property or initial motion/force curve is changed."
+}

@@ -1,0 +1,65 @@
+[
+  {
+    name: 'flat-return-hip0-v125-human-fine',
+    maximum_body_difference_m: 0.0014972210317456968,
+    maximum_steady_speed_fraction: 0.001217395824659451,
+    maximum_slip_ratio: 0.08639049777349396,
+    passed_existing_path_speed_screen: true
+  },
+  {
+    name: 'flat125-human-5ms',
+    maximum_body_difference_m: 0.01330827295272333,
+    maximum_steady_speed_fraction: 0.010324219064899083,
+    maximum_slip_ratio: 0.06834970509509078,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'flat125-human-1p25ms',
+    maximum_body_difference_m: 0.004301839498738171,
+    maximum_steady_speed_fraction: 0.0034572714382119524,
+    maximum_slip_ratio: 0.08301131353775704,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'flat125-be-10ms-tangent',
+    maximum_body_difference_m: 0.019565443679914158,
+    maximum_steady_speed_fraction: 0.010620116486027046,
+    maximum_slip_ratio: 0.05524567664326658,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'flat125-sdirk2-5ms-tangent',
+    maximum_body_difference_m: 0.003468212703969141,
+    maximum_steady_speed_fraction: 0.004024846816489814,
+    maximum_slip_ratio: 0.09093518891423526,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'flat125-sdirk2-10ms-tangent',
+    maximum_body_difference_m: 0.011165102338331376,
+    maximum_steady_speed_fraction: 0.009194101244833504,
+    maximum_slip_ratio: 0.08382780438825244,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'flat125-sdirk2-20ms-tangent',
+    maximum_body_difference_m: 0.02466542359945698,
+    maximum_steady_speed_fraction: 0.02923799188426695,
+    maximum_slip_ratio: 0.11474161712751321,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'flat125-sdirk2-2p5ms-tangent',
+    maximum_body_difference_m: 0.0006888345445906655,
+    maximum_steady_speed_fraction: 0.0012957468466879992,
+    maximum_slip_ratio: 0.08868494590033976,
+    passed_existing_path_speed_screen: true
+  },
+  {
+    name: 'flat125-sdirk2-1p25ms-tangent',
+    maximum_body_difference_m: 0.0019203483059984285,
+    maximum_steady_speed_fraction: 0.0037046885164488154,
+    maximum_slip_ratio: 0.08917225834637771,
+    passed_existing_path_speed_screen: true
+  }
+]

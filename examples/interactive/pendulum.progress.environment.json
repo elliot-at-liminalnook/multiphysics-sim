@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "observation_source": "ideal_runtime_teacher_only",
+  "period_s": 0.02,
+  "observations": [
+    {"name": "angle", "source": {"kind": "coordinate_position", "coordinate": "joint.pivot"}},
+    {"name": "speed", "source": {"kind": "coordinate_velocity", "coordinate": "joint.pivot"}}
+  ],
+  "rewards": [],
+  "termination_bounds": [],
+  "progress": {"link": "pendulum", "axes": "xz"}
+}

@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "scope": "Full-60s net displacement, startup included, with no sampled falls. Separate timestep and inter-link-contact checks. No hardware calibration or global maximum established.",
+  "baseline517": {
+    "speed_m_s": 0.5168687755290206,
+    "distance_m": 31.012126531741234,
+    "evidence": "runs/bayesian-sustained60-507/evaluation-033.evaluation.json"
+  },
+  "evaluations": [
+    {
+      "label": "learned_shuffled",
+      "path": "runs/ppo-update-shuffled/validation.json",
+      "duration_s": 60,
+      "distance_m": 30.696298657745768,
+      "speed_m_s": 0.5116049776290962,
+      "completed_actions": 3000,
+      "terminated": false
+    },
+    {
+      "label": "learned_fine",
+      "path": "runs/learned-speed-512-validation/fine60.json",
+      "duration_s": 60,
+      "distance_m": 30.608533770598612,
+      "speed_m_s": 0.5101422295099769,
+      "completed_actions": 3000,
+      "terminated": false
+    },
+    {
+      "label": "learned_contact",
+      "path": "runs/learned-speed-512-validation/contact60.json",
+      "duration_s": 60,
+      "distance_m": 30.696279152414935,
+      "speed_m_s": 0.5116046525402489,
+      "completed_actions": 3000,
+      "terminated": false
+    },
+    {
+      "label": "learned_v4_predictor",
+      "path": "runs/learned-speed-512-v4-predictor/result.json",
+      "duration_s": 60,
+      "distance_m": 30.63803331476918,
+      "speed_m_s": 0.5106338885794863,
+      "completed_actions": 3000,
+      "terminated": false
+    },
+    {
+      "label": "baseline517_fine",
+      "path": "runs/speed-517-validation/fine60.json",
+      "duration_s": 60,
+      "distance_m": 30.960053527421774,
+      "speed_m_s": 0.5160008921236963,
+      "completed_actions": 3000,
+      "terminated": false
+    },
+    {
+      "label": "baseline517_contact",
+      "path": "runs/speed-517-validation/contact60.json",
+      "duration_s": 60,
+      "distance_m": 31.012130551930582,
+      "speed_m_s": 0.5168688425321764,
+      "completed_actions": 3000,
+      "terminated": false
+    },
+    {
+      "label": "combined517_learned",
+      "path": "runs/speed-517-validation/combined.json",
+      "duration_s": 60,
+      "distance_m": 30.949490328290313,
+      "speed_m_s": 0.5158248388048385,
+      "completed_actions": 3000,
+      "terminated": false
+    },
+    {
+      "label": "legacy_iteration1",
+      "path": "runs/speed-ppo-predictive-v2/iteration-001-validation.json",
+      "duration_s": 60,
+      "distance_m": 30.63820974094531,
+      "speed_m_s": 0.5106368290157551,
+      "completed_actions": 3000,
+      "terminated": false
+    },
+    {
+      "label": "legacy_iteration2",
+      "path": "runs/speed-ppo-predictive-v2/iteration-002-validation.json",
+      "duration_s": 60,
+      "distance_m": 30.415138640788996,
+      "speed_m_s": 0.5069189773464833,
+      "completed_actions": 3000,
+      "terminated": false
+    }
+  ],
+  "interpretation": "Shuffled learned update improves over its .508847847 teacher. Better v4 forecast error does not improve this actor speed. Combined learned corrections do not improve the .516868776 physics-search baseline. Loss and KL are diagnostics, not speed acceptance rules."
+}

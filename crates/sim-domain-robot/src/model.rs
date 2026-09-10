@@ -87,6 +87,15 @@ pub struct World {
     pub ambient_c: f64,
 }
 impl World {
+    /// The same authored surface query used by articulated contact and observations.
+    pub fn floor_height(&self, x: f64, y: f64) -> f64 {
+        ground_height(self.floor_z, self.terrain.as_ref(), x, y)
+    }
+
+    pub fn validate_ground(&self) -> Result<(), String> {
+        validate_ground_surface(self.floor_z, self.terrain.as_ref())
+    }
+
     fn default_friction() -> f64 {
         0.8
     }
@@ -112,6 +121,25 @@ pub struct Terrain {
     pub cell: f64,
     pub dims: [usize; 2],
     pub heights: Vec<f64>,
+}
+pub fn ground_height(floor_z: f64, terrain: Option<&Terrain>, x: f64, y: f64) -> f64 {
+    terrain.map(|t| t.height(x, y)).unwrap_or(floor_z)
+}
+
+pub fn validate_ground_surface(floor_z: f64, terrain: Option<&Terrain>) -> Result<(), String> {
+    if !floor_z.is_finite() {
+        return Err("nonfinite floor height".into());
+    }
+    if let Some(t) = terrain {
+        if t.origin.iter().any(|v| !v.is_finite()) || !t.cell.is_finite() || t.cell <= 0.
+            || t.dims.iter().any(|n| *n == 0)
+            || t.dims[0].checked_mul(t.dims[1]) != Some(t.heights.len())
+            || t.heights.iter().any(|h| !h.is_finite())
+        {
+            return Err("invalid ground height field".into());
+        }
+    }
+    Ok(())
 }
 impl Terrain {
     /// Bilinear height at `(x, y)`, clamped to the grid.
@@ -224,6 +252,18 @@ pub struct Sdf {
     pub dims: [usize; 3],
     #[serde(default)]
     pub values: Vec<f64>,
+    /// Explicit CAD-derived local detail; coarse geometry remains elsewhere.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub refinements: Vec<SdfRefinement>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SdfRefinement {
+    pub grid: Sdf,
+    /// Smooth transition from the parent field at the patch boundary (metres).
+    /// The blended transition is an approximation, not exact CAD clearance.
+    pub blend_width_m: f64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
@@ -652,11 +692,13 @@ pub struct Gearbox {
     pub inertia: f64,
     #[serde(default = "Gearbox::default_stiffness")]
     pub stiffness: f64,
-    #[serde(default = "Gearbox::default_torque")]
+    #[serde(default = "Gearbox::default_torque", skip_serializing_if = "positive_infinity")]
     pub max_output_torque: f64,
-    #[serde(default = "Gearbox::default_speed")]
+    #[serde(default = "Gearbox::default_speed", skip_serializing_if = "positive_infinity")]
     pub max_output_speed: f64,
 }
+fn positive_infinity(value: &f64) -> bool { *value == f64::INFINITY }
+
 impl Gearbox {
     fn default_eff() -> f64 {
         0.8
@@ -1058,6 +1100,13 @@ pub struct PlanarHint {
 }
 
 impl PhysicalModel {
+    /// Preserve model numbers in JSON, rejecting values JSON would turn into null.
+    /// The legacy unbounded gearbox limits are represented by omitted fields,
+    /// whose deserialization defaults restore positive infinity. This checks
+    /// representability, not physical validity or original CAD field presence.
+    pub fn to_json_value_checked(&self) -> Result<serde_json::Value, String> {
+        crate::checked_json::to_value(self)
+    }
     pub fn load(path: &str) -> Result<Self, String> {
         let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
         Self::parse(&text).map_err(|e| format!("{path}: {e}"))

@@ -1,0 +1,31 @@
+{
+  passed: true,
+  results: [
+    {
+      name: 'zero-sample-period',
+      exit: 2,
+      error: 'window requires ordered in-horizon endpoints, positive dividing period and at most 10001 frames'
+    },
+    {
+      name: 'beyond-recorded-horizon',
+      exit: 2,
+      error: 'window requires ordered in-horizon endpoints, positive dividing period and at most 10001 frames'
+    },
+    {
+      name: 'duplicate-input-events',
+      exit: 2,
+      error: 'invalid embedded recording version, kind or step count'
+    },
+    {
+      name: 'incomplete-window',
+      exit: 1,
+      error: 'complete contact-enabled capture or completed bounded replay window with matching source/options and world -Z gravity required; gated captures require explicit --simulation-time for phase boundaries'
+    },
+    {
+      name: 'different-world',
+      exit: 1,
+      error: 'environment capture and supplied scene differ'
+    }
+  ],
+  scope: 'Rejection checks for bounded replay and lift audit. Positive evidence and exact common-endpoint comparisons are in the dense-summary report; these checks do not certify other trajectories.'
+}

@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+const d='examples/full-robot/contact-planning/';
+const identity=path=>{const bytes=fs.readFileSync(path);return {path,bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')};};
+const sources=['crates/sim-runtime/src/contact_planning/joint_ipopt.rs',d+'check_joint_ipopt_projection.mjs',d+'record_joint_ipopt_projection.mjs'];
+const archive=d+'joint-ipopt-projection-sources.tar.gz';
+assert(!fs.existsSync(archive),'Source archive already exists');
+execFileSync('tar',['-czf',archive,...sources]);
+const previous=identity('/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt');
+assert.equal(previous.sha256,'64976375fd16c84f5a1d8f8dac0e0e7cd669225ad1da915f85b25f371bfcc439');
+const timed=identity('/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_contact');
+assert.equal(timed.sha256,'4897bb89d52ceeeb81772b6499a3f0b6897948174ebcdf0f5ef1f62c88b231f8');
+const evidence={base_commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),recorded_at:new Date().toISOString(),source_archive:identity(archive),sources:sources.map(identity),binary:identity('/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt'),unchanged_original_ipopt:previous,unchanged_timed_optimizer:timed,native_library_manifest:identity(d+'joint-ipopt-native-library.json'),build_command:'CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-contact-timing CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --release -p sim-runtime --features native-ipopt --example optimize_joint_ipopt',test_command:'CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-contact-timing CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo test --release -p sim-runtime --features native-ipopt --lib contact_planning',environment:{VECLIB_MAXIMUM_THREADS:'1',OMP_NUM_THREADS:'1'},rustc:execFileSync('/Users/elliot/.cargo/bin/rustc',['-Vv']).toString(),cargo_lock:identity('Cargo.lock'),inputs:['runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json','examples/full-robot/gait-exploration/workspace-markers.json',d+'joint-timed-speed.recipe.json'].map(identity),durable_scene:{index:'examples/full-robot/speed-ceiling/evidence-v8-index.json',entry:'validation/constrained-front165-scale1-human-fine.scene.json'},artifacts:['joint-ipopt-projection-tests.log','joint-ipopt-projection-build.log','joint-ipopt-projection-verification.json','joint-ipopt-projected-one-step.search.json','joint-ipopt-projected-one-step.result.json','joint-ipopt-projected-one-step.log','joint-ipopt-one-step.search.json','joint-ipopt-projection-legacy.result.json','joint-ipopt-projection-legacy.log','joint-timed-speed.result.json','joint-timed-speed.log','joint-timed-speed.summary.json'].map(name=>identity(d+name)),scope:'Opt-in numerical projection with original physical acceptance retained. One-iteration projected pilot and unchanged legacy replay completed; contact-relative AL comparison completed 8000 attempts without a feasible gait. No new runtime/browser speed gain or physical maximum.'};
+fs.writeFileSync(d+'joint-ipopt-projection-build.json',JSON.stringify(evidence,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({binary_sha256:evidence.binary.sha256,base_commit:evidence.base_commit,artifacts:evidence.artifacts.length}));

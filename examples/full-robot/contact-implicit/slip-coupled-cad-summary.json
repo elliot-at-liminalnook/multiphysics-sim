@@ -1,0 +1,441 @@
+{
+  "time_s": 0.1516272424446593,
+  "point_world_m": [
+    -0.006128746569432547,
+    0.05920535260996415,
+    -0.046430040964249644
+  ],
+  "reported_grid_penetration_m": 0.000016649625151071923,
+  "source_link": "-X | Hip motor pulley and shaft 3090",
+  "source": {
+    "nearest_boundary": {
+      "member": "3090f621a4b8",
+      "name": "-X | Hip motor pulley and shaft 3090",
+      "solid_states": [
+        "outside",
+        "outside"
+      ],
+      "distance_mm": 0.00006802685735310717,
+      "surface_distance_mm": 0.00006802685735310717,
+      "nearest_world_mm": [
+        -6.128721817683584,
+        59.20528932112931,
+        -46.43003787756395
+      ]
+    },
+    "inside_members": [],
+    "boundary_members": [],
+    "unknown_members": []
+  },
+  "target_link": "Robot | Chassis and hip mounts",
+  "target": {
+    "nearest_boundary": {
+      "member": "8c1efc29fefd",
+      "name": "-X | Hip servo internal geometry",
+      "solid_states": [
+        "outside",
+        "outside",
+        "outside",
+        "outside",
+        "outside",
+        "outside",
+        "outside",
+        "outside",
+        "outside",
+        "outside",
+        "outside",
+        "inside",
+        "outside"
+      ],
+      "distance_mm": 0.0021392847521364416,
+      "surface_distance_mm": 0.0021392847521364416,
+      "nearest_world_mm": [
+        -6.127966220219026,
+        59.20336310078091,
+        -46.42994376566176
+      ]
+    },
+    "inside_members": [
+      "-X | Hip servo internal geometry"
+    ],
+    "boundary_members": [],
+    "unknown_members": []
+  },
+  "surrounding_grid_nodes": [
+    {
+      "index": [
+        10,
+        24,
+        21
+      ],
+      "weight": 0.1938705330566442,
+      "stored_distance_m": 0.000167,
+      "target": {
+        "nearest_boundary": {
+          "member": "8c1efc29fefd",
+          "name": "-X | Hip servo internal geometry",
+          "solid_states": [
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside"
+          ],
+          "distance_mm": 0.16255078931234124,
+          "surface_distance_mm": 0.16255078931234124,
+          "nearest_world_mm": [
+            -8.708224009788115,
+            57.159309902621274,
+            -48.19590249242489
+          ]
+        },
+        "inside_members": [],
+        "boundary_members": [],
+        "unknown_members": []
+      }
+    },
+    {
+      "index": [
+        10,
+        24,
+        22
+      ],
+      "weight": 0.09157533853694506,
+      "stored_distance_m": 0.000545,
+      "target": {
+        "nearest_boundary": {
+          "member": "93c3343067fe",
+          "name": "Robot | Chassis and hip mounts",
+          "solid_states": [
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside"
+          ],
+          "distance_mm": 0.5452431059166422,
+          "surface_distance_mm": 0.5452431059166422,
+          "nearest_world_mm": [
+            -8.999576901196058,
+            57.2256932950679,
+            -43.714976900235236
+          ]
+        },
+        "inside_members": [],
+        "boundary_members": [],
+        "unknown_members": []
+      }
+    },
+    {
+      "index": [
+        10,
+        25,
+        21
+      ],
+      "weight": 0.14183284120344505,
+      "stored_distance_m": -0.000187,
+      "target": {
+        "nearest_boundary": {
+          "member": "8c1efc29fefd",
+          "name": "-X | Hip servo internal geometry",
+          "solid_states": [
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "inside",
+            "outside"
+          ],
+          "distance_mm": 0.15928949778643722,
+          "surface_distance_mm": 0.15928949778643722,
+          "nearest_world_mm": [
+            -8.497860319869096,
+            62.09637553485291,
+            -48.4384071318797
+          ]
+        },
+        "inside_members": [
+          "-X | Hip servo internal geometry"
+        ],
+        "boundary_members": [],
+        "unknown_members": []
+      }
+    },
+    {
+      "index": [
+        10,
+        25,
+        22
+      ],
+      "weight": 0.0669951758221419,
+      "stored_distance_m": 0.000533,
+      "target": {
+        "nearest_boundary": {
+          "member": "93c3343067fe",
+          "name": "Robot | Chassis and hip mounts",
+          "solid_states": [
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside"
+          ],
+          "distance_mm": 0.5325047537507798,
+          "surface_distance_mm": 0.5325047537507798,
+          "nearest_world_mm": [
+            -8.840062026150006,
+            62.18866753293435,
+            -43.80199604914635
+          ]
+        },
+        "inside_members": [],
+        "boundary_members": [],
+        "unknown_members": []
+      }
+    },
+    {
+      "index": [
+        11,
+        24,
+        21
+      ],
+      "weight": 0.19836247281434943,
+      "stored_distance_m": -0.000225,
+      "target": {
+        "nearest_boundary": {
+          "member": "8c1efc29fefd",
+          "name": "-X | Hip servo internal geometry",
+          "solid_states": [
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "inside",
+            "outside",
+            "outside"
+          ],
+          "distance_mm": 0.2245694731103355,
+          "surface_distance_mm": 0.2245694731103355,
+          "nearest_world_mm": [
+            -3.73580123923473,
+            57.16380781438467,
+            -47.82893118221199
+          ]
+        },
+        "inside_members": [
+          "-X | Hip servo internal geometry"
+        ],
+        "boundary_members": [],
+        "unknown_members": []
+      }
+    },
+    {
+      "index": [
+        11,
+        24,
+        22
+      ],
+      "weight": 0.09369712000375123,
+      "stored_distance_m": -0.000781,
+      "target": {
+        "nearest_boundary": {
+          "member": "8c1efc29fefd",
+          "name": "-X | Hip servo internal geometry",
+          "solid_states": [
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "inside",
+            "outside",
+            "outside"
+          ],
+          "distance_mm": 0.7829892229652192,
+          "surface_distance_mm": 0.7829892229652192,
+          "nearest_world_mm": [
+            -3.778430681492016,
+            57.5175980928397,
+            -43.465798067978575
+          ]
+        },
+        "inside_members": [
+          "-X | Hip servo internal geometry"
+        ],
+        "boundary_members": [],
+        "unknown_members": []
+      }
+    },
+    {
+      "index": [
+        11,
+        25,
+        21
+      ],
+      "weight": 0.1451190785098845,
+      "stored_distance_m": -0.000185,
+      "target": {
+        "nearest_boundary": {
+          "member": "8c1efc29fefd",
+          "name": "-X | Hip servo internal geometry",
+          "solid_states": [
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "inside",
+            "outside"
+          ],
+          "distance_mm": 0.15928949778643015,
+          "surface_distance_mm": 0.15928949778643015,
+          "nearest_world_mm": [
+            -3.488670369830883,
+            62.044975628224755,
+            -48.06766840371266
+          ]
+        },
+        "inside_members": [
+          "-X | Hip servo internal geometry"
+        ],
+        "boundary_members": [],
+        "unknown_members": []
+      }
+    },
+    {
+      "index": [
+        11,
+        25,
+        22
+      ],
+      "weight": 0.06854744005283861,
+      "stored_distance_m": 0.000533,
+      "target": {
+        "nearest_boundary": {
+          "member": "93c3343067fe",
+          "name": "Robot | Chassis and hip mounts",
+          "solid_states": [
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside",
+            "outside"
+          ],
+          "distance_mm": 0.5325047537507727,
+          "surface_distance_mm": 0.5325047537507727,
+          "nearest_world_mm": [
+            -3.830872076111795,
+            62.1372676263062,
+            -43.431257320979306
+          ]
+        },
+        "inside_members": [],
+        "boundary_members": [],
+        "unknown_members": []
+      }
+    }
+  ],
+  "target_results_identical": true,
+  "scope": "Exact B-rep solid classification and nearest member-boundary distance for one Rust planned-pose witness and eight grid nodes. Whole-part distances are unmeasured. A sampled source point is not necessarily on the exact source boundary; neither a single witness nor grid interpolation proves continuous pair clearance, speed optimality or hardware accuracy."
+}

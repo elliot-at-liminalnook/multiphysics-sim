@@ -1,0 +1,21 @@
+{
+  "name": "phase-pairs",
+  "exit_code": 0,
+  "elapsed_s": 61.453428721,
+  "report": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.059272028222898177,
+    "sampled_feasible": true,
+    "maximum_force_error_n": 0.0023936353702237456,
+    "maximum_moment_error_nm": 0.0007613044057979135,
+    "minimum_torque_margin_nm": 0.9698683213303938,
+    "maximum_penetration_m": 1.6400221958257077e-8
+  },
+  "search": {
+    "cost": 0.0011013790194133847,
+    "initial_cost": 123.22399159627821,
+    "termination": "iteration_limit",
+    "evaluations": 1277,
+    "rejected": 0
+  }
+}

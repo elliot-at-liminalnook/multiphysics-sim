@@ -1,0 +1,2633 @@
+{
+  "version": 1,
+  "scope": "Completed single-seed matched-count pilot; all 29 compact trial records and final result preserved here. Full runtime captures remain in the referenced run directory; only the earlier six-trial snapshot is currently archived. No feasible gait or algorithm superiority established.",
+  "result_path": "runs/bayesian-controller-pilot-v2/result.json",
+  "result_sha256": "84e4d8518426374d203a83b59da64570cfe638e4f38253c3742743b75dcb6556",
+  "result": {
+    "problem": {
+      "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+      "parameters": [
+        {
+          "name": "command_speed",
+          "unit": "m/s",
+          "bounds": [
+            0.1,
+            0.32
+          ]
+        },
+        {
+          "name": "tracking_gain",
+          "unit": "1",
+          "bounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "velocity_lead_factor",
+          "unit": "1",
+          "bounds": [
+            0.5,
+            1.5
+          ]
+        }
+      ],
+      "objective_name": "negative minimum measured forward/reverse speed",
+      "objective_unit": "m/s",
+      "constraints": [
+        {
+          "name": "slip ratio / 0.05 - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "speed tracking relative error / 0.05 - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "heading error / 0.1 rad - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "tilt / 0.1 rad - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "settling duration / (0.8 s + existing 1e-9 s roundoff guard) - 1; unsettled gate failure = 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "late drift / 0.003 m - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "failed fraction of all complete planned swing checks",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "sampled interlink overlap / 0.0001 m; exact zero required",
+          "unit": "1",
+          "scale": 1
+        }
+      ]
+    },
+    "common": [
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.25,
+          0.5,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.24922912777101194,
+          "residuals": [
+            2.275818602421885,
+            -0.12423434589612725,
+            -0.546370810588436,
+            -0.1395018444662437,
+            -0.5500000005625001,
+            -0.9361707706957858,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-000.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.10157218591375013,
+          0.6182873570271589,
+          1.4099168133440918
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.0949361232384309,
+          "residuals": [
+            1.9215659536645022,
+            0.3066692649411382,
+            -0.42980444764568404,
+            -0.11974388509389133,
+            -0.5000000006250007,
+            -0.9828445275711725,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-001.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.21160617613573496,
+          0.2793038275669038,
+          1.1103573441869343
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.20474684483542185,
+          "residuals": [
+            0.6976076195779262,
+            -0.35168893218757624,
+            -0.49189432396482535,
+            -0.13750488885773138,
+            -0.6000000005000008,
+            -0.933207124210146,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-002.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.3166963504694018,
+          0.6902410253030458,
+          0.8217371770648858
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.32196018638655366,
+          "residuals": [
+            4.138953083454717,
+            0.6419680348187216,
+            -0.047868913427282944,
+            -0.2372092478614768,
+            -0.35000000081250005,
+            -0.962262703173144,
+            0.26315789473684215,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-003.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.160618457581984,
+          0.426409228931391,
+          1.0688525004080054
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.15044566713166765,
+          "residuals": [
+            1.2063322540607073,
+            0.26670254508251423,
+            -0.31957006437005187,
+            -0.13734841108619567,
+            -0.5000000006250007,
+            -0.9689326382165783,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-004.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.12402420892166359,
+          0.8257201301809396,
+          0.9444879780284072
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.11617353883640137,
+          "residuals": [
+            1.1728606201306113,
+            0.26598994720794833,
+            -0.2519916498517537,
+            -0.122801907426758,
+            -0.5750000005312501,
+            -0.9897249878845318,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-005.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.26248458356400645,
+          0.15490529408800172,
+          1.4621136967324202
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2743894812518832,
+          "residuals": [
+            3.5579509049878126,
+            1.696834863743991,
+            -0.36199338300017825,
+            -0.1189548490850435,
+            -0.6250000004687497,
+            -0.9207284001306244,
+            0.10204081632653061,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-006.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.23249561854332043,
+          0.5486804571371274,
+          0.6638196781772892
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.22543423186467365,
+          "residuals": [
+            1.5950884778023808,
+            -0.3925574406185164,
+            -0.6048761687823017,
+            -0.2322974927429582,
+            -0.5500000005625001,
+            -0.9411787923513496,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-007.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.28720136378352035,
+          0.3409514362856373,
+          0.582349874850368
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2757728592434604,
+          "residuals": [
+            3.0952231052206454,
+            -0.20414691702688081,
+            -0.4620006478021522,
+            -0.2398063991866035,
+            -0.5500000005625001,
+            -0.9288167065842704,
+            0.09615384615384615,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-008.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.13781377932865893,
+          0.9845844938443556,
+          0.6710109311964589
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.12898766064975895,
+          "residuals": [
+            1.0857848628393025,
+            0.2808760810269071,
+            -0.2972293113024437,
+            -0.16059916085030423,
+            -0.3500000008125006,
+            -0.9877750489616494,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-009.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.2745929891081762,
+          0.055057405748898516,
+          1.2621067481817283
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2774252364074511,
+          "residuals": [
+            2.7381270438904846,
+            0.12316845216588135,
+            -0.5595995897063468,
+            -0.2304258611901595,
+            -0.4250000007187501,
+            -0.9046220443475159,
+            0.07999999999999996,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-010.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.17333412091241934,
+          0.8377469071381747,
+          1.2249898898696578
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.16365460333236542,
+          "residuals": [
+            0.35189823919987595,
+            0.11686233836726156,
+            -0.2303343754999042,
+            -0.1973799625581426,
+            -0.37500000078125006,
+            -0.9649572653133341,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-011.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.19722286404059142,
+          0.1786859029583815,
+          0.853940975856992
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.18615883293223845,
+          "residuals": [
+            1.0076318366919086,
+            0.12198260198430377,
+            -0.43575616155661623,
+            -0.133708059714977,
+            -0.47500000065625014,
+            -0.9328440961270396,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-012.evaluation.json"
+      }
+    ],
+    "adaptive": [
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.25,
+          0.5,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.24922912777101194,
+          "residuals": [
+            2.275818602421885,
+            -0.12423434589612725,
+            -0.546370810588436,
+            -0.1395018444662437,
+            -0.5500000005625001,
+            -0.9361707706957858,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-000.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.10157218591375013,
+          0.6182873570271589,
+          1.4099168133440918
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.0949361232384309,
+          "residuals": [
+            1.9215659536645022,
+            0.3066692649411382,
+            -0.42980444764568404,
+            -0.11974388509389133,
+            -0.5000000006250007,
+            -0.9828445275711725,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-001.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.21160617613573496,
+          0.2793038275669038,
+          1.1103573441869343
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.20474684483542185,
+          "residuals": [
+            0.6976076195779262,
+            -0.35168893218757624,
+            -0.49189432396482535,
+            -0.13750488885773138,
+            -0.6000000005000008,
+            -0.933207124210146,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-002.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.3166963504694018,
+          0.6902410253030458,
+          0.8217371770648858
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.32196018638655366,
+          "residuals": [
+            4.138953083454717,
+            0.6419680348187216,
+            -0.047868913427282944,
+            -0.2372092478614768,
+            -0.35000000081250005,
+            -0.962262703173144,
+            0.26315789473684215,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-003.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.160618457581984,
+          0.426409228931391,
+          1.0688525004080054
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.15044566713166765,
+          "residuals": [
+            1.2063322540607073,
+            0.26670254508251423,
+            -0.31957006437005187,
+            -0.13734841108619567,
+            -0.5000000006250007,
+            -0.9689326382165783,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-004.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.12402420892166359,
+          0.8257201301809396,
+          0.9444879780284072
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.11617353883640137,
+          "residuals": [
+            1.1728606201306113,
+            0.26598994720794833,
+            -0.2519916498517537,
+            -0.122801907426758,
+            -0.5750000005312501,
+            -0.9897249878845318,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-005.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.26248458356400645,
+          0.15490529408800172,
+          1.4621136967324202
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2743894812518832,
+          "residuals": [
+            3.5579509049878126,
+            1.696834863743991,
+            -0.36199338300017825,
+            -0.1189548490850435,
+            -0.6250000004687497,
+            -0.9207284001306244,
+            0.10204081632653061,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-006.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.23249561854332043,
+          0.5486804571371274,
+          0.6638196781772892
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.22543423186467365,
+          "residuals": [
+            1.5950884778023808,
+            -0.3925574406185164,
+            -0.6048761687823017,
+            -0.2322974927429582,
+            -0.5500000005625001,
+            -0.9411787923513496,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-007.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.28720136378352035,
+          0.3409514362856373,
+          0.582349874850368
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2757728592434604,
+          "residuals": [
+            3.0952231052206454,
+            -0.20414691702688081,
+            -0.4620006478021522,
+            -0.2398063991866035,
+            -0.5500000005625001,
+            -0.9288167065842704,
+            0.09615384615384615,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-008.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.13781377932865893,
+          0.9845844938443556,
+          0.6710109311964589
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.12898766064975895,
+          "residuals": [
+            1.0857848628393025,
+            0.2808760810269071,
+            -0.2972293113024437,
+            -0.16059916085030423,
+            -0.3500000008125006,
+            -0.9877750489616494,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-009.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.2745929891081762,
+          0.055057405748898516,
+          1.2621067481817283
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2774252364074511,
+          "residuals": [
+            2.7381270438904846,
+            0.12316845216588135,
+            -0.5595995897063468,
+            -0.2304258611901595,
+            -0.4250000007187501,
+            -0.9046220443475159,
+            0.07999999999999996,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-010.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.17333412091241934,
+          0.8377469071381747,
+          1.2249898898696578
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.16365460333236542,
+          "residuals": [
+            0.35189823919987595,
+            0.11686233836726156,
+            -0.2303343754999042,
+            -0.1973799625581426,
+            -0.37500000078125006,
+            -0.9649572653133341,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-011.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.19722286404059142,
+          0.1786859029583815,
+          0.853940975856992
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.18615883293223845,
+          "residuals": [
+            1.0076318366919086,
+            0.12198260198430377,
+            -0.43575616155661623,
+            -0.133708059714977,
+            -0.47500000065625014,
+            -0.9328440961270396,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-012.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.19459202740362347,
+          0.9223563592003254,
+          1.0993811419956485
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.18491732374644998,
+          "residuals": [
+            0.8400635923595481,
+            -0.005642339384625217,
+            -0.47396719539013654,
+            -0.22733964253519034,
+            -0.6000000005000008,
+            -0.9566794739918394,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-013.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.19262660421115813,
+          6.202550230852528e-11,
+          1.222372588292171
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.1841239908040319,
+          "residuals": [
+            0.4751024571743516,
+            -0.11719220281684395,
+            -0.42651938238002063,
+            -0.21235449896181358,
+            -0.5750000005312501,
+            -0.9462337126606067,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-014.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.14323375445238257,
+          0,
+          1.2512207014932477
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.1337356979289142,
+          "residuals": [
+            0.7924733907652661,
+            0.3262315939118863,
+            -0.22888827976604142,
+            -0.16257374709989358,
+            -0.4250000007187501,
+            -0.9745988475155396,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-015.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.18436715935188028,
+          0,
+          0.5309415521086089
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.1677084629174464,
+          "residuals": [
+            0.9920171873523034,
+            0.8071218858060667,
+            -0.10436112646262585,
+            -0.2259701099851914,
+            -0.47500000065625014,
+            -0.9424487079097656,
+            0.02941176470588236,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-016.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.10000000000001343,
+          1,
+          0.5
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.09209449385172629,
+          "residuals": [
+            3.160063087770176,
+            0.5811012296572158,
+            -0.40773331933992907,
+            -0.12756575312598428,
+            -0.47500000065625014,
+            -0.9858308254538801,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-017.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.17206292087545197,
+          0,
+          1.3081477916367297
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.1636176752689673,
+          "residuals": [
+            0.7069278383042841,
+            -0.018353801793499436,
+            -0.14390345202852395,
+            -0.1272877928400452,
+            -0.6250000004687501,
+            -0.9561109467436629,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-018.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.1501381347011438,
+          1.0760287745624207e-16,
+          0.7988271308674474
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13412801366032226,
+          "residuals": [
+            1.0567654694876394,
+            1.1327187889592936,
+            -0.23969265641610116,
+            -0.18071990681149086,
+            -0.5750000005312501,
+            -0.9651078676187447,
+            0.0357142857142857,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-019.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.10818426420457698,
+          0.9999999999999997,
+          1.1693695883806052
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.09915091245196037,
+          "residuals": [
+            2.1832083253734456,
+            0.6699936574018759,
+            -0.28396868914760753,
+            -0.13261383239135183,
+            -0.7250000003437498,
+            -0.9885988270327668,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-020.evaluation.json"
+      }
+    ],
+    "control": [
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.25,
+          0.5,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.24922912777101194,
+          "residuals": [
+            2.275818602421885,
+            -0.12423434589612725,
+            -0.546370810588436,
+            -0.1395018444662437,
+            -0.5500000005625001,
+            -0.9361707706957858,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-000.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.10157218591375013,
+          0.6182873570271589,
+          1.4099168133440918
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.0949361232384309,
+          "residuals": [
+            1.9215659536645022,
+            0.3066692649411382,
+            -0.42980444764568404,
+            -0.11974388509389133,
+            -0.5000000006250007,
+            -0.9828445275711725,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-001.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.21160617613573496,
+          0.2793038275669038,
+          1.1103573441869343
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.20474684483542185,
+          "residuals": [
+            0.6976076195779262,
+            -0.35168893218757624,
+            -0.49189432396482535,
+            -0.13750488885773138,
+            -0.6000000005000008,
+            -0.933207124210146,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-002.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.3166963504694018,
+          0.6902410253030458,
+          0.8217371770648858
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.32196018638655366,
+          "residuals": [
+            4.138953083454717,
+            0.6419680348187216,
+            -0.047868913427282944,
+            -0.2372092478614768,
+            -0.35000000081250005,
+            -0.962262703173144,
+            0.26315789473684215,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-003.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.160618457581984,
+          0.426409228931391,
+          1.0688525004080054
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.15044566713166765,
+          "residuals": [
+            1.2063322540607073,
+            0.26670254508251423,
+            -0.31957006437005187,
+            -0.13734841108619567,
+            -0.5000000006250007,
+            -0.9689326382165783,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-004.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.12402420892166359,
+          0.8257201301809396,
+          0.9444879780284072
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.11617353883640137,
+          "residuals": [
+            1.1728606201306113,
+            0.26598994720794833,
+            -0.2519916498517537,
+            -0.122801907426758,
+            -0.5750000005312501,
+            -0.9897249878845318,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-005.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.26248458356400645,
+          0.15490529408800172,
+          1.4621136967324202
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2743894812518832,
+          "residuals": [
+            3.5579509049878126,
+            1.696834863743991,
+            -0.36199338300017825,
+            -0.1189548490850435,
+            -0.6250000004687497,
+            -0.9207284001306244,
+            0.10204081632653061,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-006.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.23249561854332043,
+          0.5486804571371274,
+          0.6638196781772892
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.22543423186467365,
+          "residuals": [
+            1.5950884778023808,
+            -0.3925574406185164,
+            -0.6048761687823017,
+            -0.2322974927429582,
+            -0.5500000005625001,
+            -0.9411787923513496,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-007.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.28720136378352035,
+          0.3409514362856373,
+          0.582349874850368
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2757728592434604,
+          "residuals": [
+            3.0952231052206454,
+            -0.20414691702688081,
+            -0.4620006478021522,
+            -0.2398063991866035,
+            -0.5500000005625001,
+            -0.9288167065842704,
+            0.09615384615384615,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-008.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.13781377932865893,
+          0.9845844938443556,
+          0.6710109311964589
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.12898766064975895,
+          "residuals": [
+            1.0857848628393025,
+            0.2808760810269071,
+            -0.2972293113024437,
+            -0.16059916085030423,
+            -0.3500000008125006,
+            -0.9877750489616494,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-009.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.2745929891081762,
+          0.055057405748898516,
+          1.2621067481817283
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2774252364074511,
+          "residuals": [
+            2.7381270438904846,
+            0.12316845216588135,
+            -0.5595995897063468,
+            -0.2304258611901595,
+            -0.4250000007187501,
+            -0.9046220443475159,
+            0.07999999999999996,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-010.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.17333412091241934,
+          0.8377469071381747,
+          1.2249898898696578
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.16365460333236542,
+          "residuals": [
+            0.35189823919987595,
+            0.11686233836726156,
+            -0.2303343754999042,
+            -0.1973799625581426,
+            -0.37500000078125006,
+            -0.9649572653133341,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-011.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.19722286404059142,
+          0.1786859029583815,
+          0.853940975856992
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.18615883293223845,
+          "residuals": [
+            1.0076318366919086,
+            0.12198260198430377,
+            -0.43575616155661623,
+            -0.133708059714977,
+            -0.47500000065625014,
+            -0.9328440961270396,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-012.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.2800278323420579,
+          0.9658948308608711,
+          1.2383281363272156
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.28059740708739045,
+          "residuals": [
+            3.444191441920694,
+            1.3370789490545851,
+            -0.2191668731937978,
+            -0.2274994240825291,
+            -0.47500000065625014,
+            -0.9602550349579362,
+            0.21999999999999997,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-021.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.10255395802895749,
+          0.28962125381981263,
+          1.036811488211423
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.09557494964334091,
+          "residuals": [
+            3.044533870921452,
+            0.36104125472094495,
+            -0.38636871516169125,
+            -0.11973620945493757,
+            -0.47500000065625014,
+            -0.982259607833687,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-022.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.2504186356683673,
+          0.08144986576869287,
+          0.5105962245320638
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.23481514635418282,
+          "residuals": [
+            2.328152856708373,
+            0.24619234287725922,
+            -0.41975690876755833,
+            -0.13654071550645075,
+            -0.500000000625,
+            -0.9093469631657332,
+            0.021739130434782594,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-023.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.20980099909479952,
+          0.41891533665452163,
+          1.492705194743602
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.20500100556695308,
+          "residuals": [
+            1.3982266869277664,
+            -0.29875782172153276,
+            -0.5467441708614306,
+            -0.11976693308300945,
+            -0.6000000005000008,
+            -0.9398467561288845,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-024.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.13911651488214316,
+          0.8232345059742177,
+          0.7868099945488141
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13036529510504394,
+          "residuals": [
+            0.8685938654263057,
+            0.258113716335274,
+            -0.2460576304797525,
+            -0.16271350515826244,
+            -0.4500000006875007,
+            -0.9915332091646292,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-025.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.15655752002535941,
+          0.6079938728139763,
+          0.9011972231205084
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.14642218367134066,
+          "residuals": [
+            0.7432046860145596,
+            0.2947747706244983,
+            -0.37361932353782334,
+            -0.13799278187812414,
+            -0.3500000008125006,
+            -0.9634657801277984,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-026.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.29960430537275123,
+          0.1932220174945259,
+          1.3254316897741099
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.3059830846450654,
+          "residuals": [
+            3.8189764946147085,
+            1.0229940577827143,
+            -0.4359805493434,
+            -0.12634728903097603,
+            -0.5250000005937501,
+            -0.9152408807510604,
+            0.11111111111111116,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-027.evaluation.json"
+      },
+      {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.23263876418877438,
+          0.711987305902712,
+          0.7175747839193675
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.22690873626369804,
+          "residuals": [
+            1.6536885977105418,
+            -0.5073883800013026,
+            -0.6370849584309044,
+            -0.23249360240035932,
+            -0.5500000005625001,
+            -0.947667893416973,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-028.evaluation.json"
+      }
+    ],
+    "best_adaptive": null,
+    "best_control": null,
+    "scope": "One seeded matched-count comparison on a fixed motion family. Full cost must include selector and runtime/audit wall time. Passing these short sampled gates is not timestep/sustained/steering/browser or hardware qualification; no global speed claim."
+  },
+  "evaluations": [
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-000.evaluation.json",
+      "sha256": "54c24162e14450c9f61250db040122e41511645e5f285b18544035aac55195b2",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.25,
+            0.5,
+            1
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.24922912777101194,
+            "residuals": [
+              2.275818602421885,
+              -0.12423434589612725,
+              -0.546370810588436,
+              -0.1395018444662437,
+              -0.5500000005625001,
+              -0.9361707706957858,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-000.evaluation.json"
+        },
+        "method": "baseline-replay",
+        "metrics": {
+          "speeds_m_s": [
+            0.2609470706762984,
+            0.24922912777101194
+          ],
+          "slip": 0.16379093012109425,
+          "control": true,
+          "planned_lifts": 46,
+          "passed_lifts": 46,
+          "overlap_m": 0
+        },
+        "wall_s": 31.903622633999998,
+        "native_exit_code": 0,
+        "capture_sha256": "3fb69dac9af19f749de228e25c458f68afedd2e6798290b062becaba272cdc5a"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-001.evaluation.json",
+      "sha256": "02acf7e455d52068073a21ab29604946926329d05645293fbd05affe5b5cf3ea",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.10157218591375013,
+            0.6182873570271589,
+            1.4099168133440918
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.0949361232384309,
+            "residuals": [
+              1.9215659536645022,
+              0.3066692649411382,
+              -0.42980444764568404,
+              -0.11974388509389133,
+              -0.5000000006250007,
+              -0.9828445275711725,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-001.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.10257749697939395,
+            0.0949361232384309
+          ],
+          "slip": 0.1460782976832251,
+          "control": false,
+          "planned_lifts": 18,
+          "passed_lifts": 18,
+          "overlap_m": 0
+        },
+        "wall_s": 28.399221029,
+        "native_exit_code": 0,
+        "capture_sha256": "e68dd95c12ab3a0087938e3a262e34b300bf86ca09b0d68d05a72d155c0730f3"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-002.evaluation.json",
+      "sha256": "a60f625b062ca8b66e95503b0e36db0557ff21ae7ec6fe0c3cb298d8db3ed232",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.21160617613573496,
+            0.2793038275669038,
+            1.1103573441869343
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.20474684483542185,
+            "residuals": [
+              0.6976076195779262,
+              -0.35168893218757624,
+              -0.49189432396482535,
+              -0.13750488885773138,
+              -0.6000000005000008,
+              -0.933207124210146,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-002.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.215161482850621,
+            0.20474684483542185
+          ],
+          "slip": 0.08488038097889632,
+          "control": true,
+          "planned_lifts": 38,
+          "passed_lifts": 38,
+          "overlap_m": 0
+        },
+        "wall_s": 32.05417602,
+        "native_exit_code": 0,
+        "capture_sha256": "fec337e275e617de8eef4c9ec37cd49e5771719f35204cec0806840bb4724323"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-003.evaluation.json",
+      "sha256": "88dc0c0f52777983642986ed4d7f3cfb2ac59ac4599cf923ae20c2bafc10c0c1",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.3166963504694018,
+            0.6902410253030458,
+            0.8217371770648858
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.32196018638655366,
+            "residuals": [
+              4.138953083454717,
+              0.6419680348187216,
+              -0.047868913427282944,
+              -0.2372092478614768,
+              -0.35000000081250005,
+              -0.962262703173144,
+              0.26315789473684215,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-003.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.3426966146801271,
+            0.32196018638655366
+          ],
+          "slip": 0.25694765417273585,
+          "control": false,
+          "planned_lifts": 57,
+          "passed_lifts": 42,
+          "overlap_m": 0
+        },
+        "wall_s": 29.501720260000003,
+        "native_exit_code": 0,
+        "capture_sha256": "6a9aaaeedf2c42e71266008a1f6f845a1b7e4ce73f7e1d11c0f23c11b71a8bf1"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-004.evaluation.json",
+      "sha256": "dd06d0ed7c3d715dcceec7a2336b4e08a2bfb734b05ae9441f486dbdc16aaf6e",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.160618457581984,
+            0.426409228931391,
+            1.0688525004080054
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.15044566713166765,
+            "residuals": [
+              1.2063322540607073,
+              0.26670254508251423,
+              -0.31957006437005187,
+              -0.13734841108619567,
+              -0.5000000006250007,
+              -0.9689326382165783,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-004.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.16301096221136355,
+            0.15044566713166765
+          ],
+          "slip": 0.11031661270303537,
+          "control": false,
+          "planned_lifts": 30,
+          "passed_lifts": 30,
+          "overlap_m": 0
+        },
+        "wall_s": 31.953280962000004,
+        "native_exit_code": 0,
+        "capture_sha256": "42c0e743773b0acdaad36b76ce04ff51c053ff96ebbd99e000ab5a6beb88ad88"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-005.evaluation.json",
+      "sha256": "6db963472010ff21896bfcd432ff0d0a88affc011c658513708209898901f502",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.12402420892166359,
+            0.8257201301809396,
+            0.9444879780284072
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.11617353883640137,
+            "residuals": [
+              1.1728606201306113,
+              0.26598994720794833,
+              -0.2519916498517537,
+              -0.122801907426758,
+              -0.5750000005312501,
+              -0.9897249878845318,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-005.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.12843817089626144,
+            0.11617353883640137
+          ],
+          "slip": 0.10864303100653058,
+          "control": false,
+          "planned_lifts": 22,
+          "passed_lifts": 22,
+          "overlap_m": 0
+        },
+        "wall_s": 30.404600835000018,
+        "native_exit_code": 0,
+        "capture_sha256": "5a1c61daa5f398a30444bc069dfa63279a0d9e44ca9c291de615a02ec7c9ec34"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-006.evaluation.json",
+      "sha256": "5e50f51e9475be2b5338b2d89de452092ebb1308fd7771aafdb0761bffc86a43",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.26248458356400645,
+            0.15490529408800172,
+            1.4621136967324202
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.2743894812518832,
+            "residuals": [
+              3.5579509049878126,
+              1.696834863743991,
+              -0.36199338300017825,
+              -0.1189548490850435,
+              -0.6250000004687497,
+              -0.9207284001306244,
+              0.10204081632653061,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-006.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.29787846237154325,
+            0.2743894812518832
+          ],
+          "slip": 0.22789754524939065,
+          "control": false,
+          "planned_lifts": 49,
+          "passed_lifts": 44,
+          "overlap_m": 0
+        },
+        "wall_s": 29.439546793999995,
+        "native_exit_code": 0,
+        "capture_sha256": "4a93cb50d325f853fe7610b36faaca0649aa04e24d4bd52b9fd0d2169dfa927f"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-007.evaluation.json",
+      "sha256": "0d631bca758d35434fe03fb019807b2d06324fa152d7bba8158aaead36b6728b",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.23249561854332043,
+            0.5486804571371274,
+            0.6638196781772892
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.22543423186467365,
+            "residuals": [
+              1.5950884778023808,
+              -0.3925574406185164,
+              -0.6048761687823017,
+              -0.2322974927429582,
+              -0.5500000005625001,
+              -0.9411787923513496,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-007.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.2321239256327193,
+            0.22543423186467365
+          ],
+          "slip": 0.12975442389011904,
+          "control": true,
+          "planned_lifts": 42,
+          "passed_lifts": 42,
+          "overlap_m": 0
+        },
+        "wall_s": 31.682313616,
+        "native_exit_code": 0,
+        "capture_sha256": "8488896e9dc3ac5c75f9ae70c712d2d10c7e146f73faa0898c7597c297eb318a"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-008.evaluation.json",
+      "sha256": "031180c4feb8bc64cea2a5faaf958abf8fc05038c57e77de6c76ee248fe9af66",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.28720136378352035,
+            0.3409514362856373,
+            0.582349874850368
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.2757728592434604,
+            "residuals": [
+              3.0952231052206454,
+              -0.20414691702688081,
+              -0.4620006478021522,
+              -0.2398063991866035,
+              -0.5500000005625001,
+              -0.9288167065842704,
+              0.09615384615384615,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-008.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.29333815815698616,
+            0.2757728592434604
+          ],
+          "slip": 0.20476115526103228,
+          "control": true,
+          "planned_lifts": 52,
+          "passed_lifts": 47,
+          "overlap_m": 0
+        },
+        "wall_s": 30.217259493000018,
+        "native_exit_code": 0,
+        "capture_sha256": "89e86b3c91eb5c6de22fe7ca84490f457d005ff9e4208c63f930e933e6e9a4fe"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-009.evaluation.json",
+      "sha256": "db0e0af7937bf67bfc739681e359e9180ddf0ab95bdcd3e75e29c1211bb9a241",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.13781377932865893,
+            0.9845844938443556,
+            0.6710109311964589
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.12898766064975895,
+            "residuals": [
+              1.0857848628393025,
+              0.2808760810269071,
+              -0.2972293113024437,
+              -0.16059916085030423,
+              -0.3500000008125006,
+              -0.9877750489616494,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-009.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.1404234509268949,
+            0.12898766064975895
+          ],
+          "slip": 0.10428924314196512,
+          "control": false,
+          "planned_lifts": 26,
+          "passed_lifts": 26,
+          "overlap_m": 0
+        },
+        "wall_s": 31.630259518000006,
+        "native_exit_code": 0,
+        "capture_sha256": "9d07a9ba25b7c10719b935ecb1dceb519b564173d7dc674616aa322842676d45"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-010.evaluation.json",
+      "sha256": "3e9c2f8232a4d0d90f54beca7ce78223e315bf6f75097fac9ea2b78de092ec49",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.2745929891081762,
+            0.055057405748898516,
+            1.2621067481817283
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.2774252364074511,
+            "residuals": [
+              2.7381270438904846,
+              0.12316845216588135,
+              -0.5595995897063468,
+              -0.2304258611901595,
+              -0.4250000007187501,
+              -0.9046220443475159,
+              0.07999999999999996,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-010.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.2900136982357878,
+            0.2774252364074511
+          ],
+          "slip": 0.18690635219452423,
+          "control": false,
+          "planned_lifts": 50,
+          "passed_lifts": 46,
+          "overlap_m": 0
+        },
+        "wall_s": 30.574022409000026,
+        "native_exit_code": 0,
+        "capture_sha256": "6dc5ad3cd986bd45138eeac0249701c45b81bd8b2f7169d715b4f2e4413918fe"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-011.evaluation.json",
+      "sha256": "ce9efaf3385e8aeada30cd79e28cb5cf3ad272cc2e7ab678c576d32afb2afab2",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.17333412091241934,
+            0.8377469071381747,
+            1.2249898898696578
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.16365460333236542,
+            "residuals": [
+              0.35189823919987595,
+              0.11686233836726156,
+              -0.2303343754999042,
+              -0.1973799625581426,
+              -0.37500000078125006,
+              -0.9649572653133341,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-011.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.17511850300748028,
+            0.16365460333236542
+          ],
+          "slip": 0.0675949119599938,
+          "control": false,
+          "planned_lifts": 32,
+          "passed_lifts": 32,
+          "overlap_m": 0
+        },
+        "wall_s": 32.935071781000005,
+        "native_exit_code": 0,
+        "capture_sha256": "b65ec0dbea184e42d5a9bba2421f8e67f82ca6e51e425e35ca6c7711ec1b897c"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-012.evaluation.json",
+      "sha256": "23f15acaf54906696bb1946000207ffca77d3270880163776ce322fcd74dbf1b",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.19722286404059142,
+            0.1786859029583815,
+            0.853940975856992
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.18615883293223845,
+            "residuals": [
+              1.0076318366919086,
+              0.12198260198430377,
+              -0.43575616155661623,
+              -0.133708059714977,
+              -0.47500000065625014,
+              -0.9328440961270396,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-012.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.19684792855990196,
+            0.18615883293223845
+          ],
+          "slip": 0.10038159183459544,
+          "control": false,
+          "planned_lifts": 38,
+          "passed_lifts": 38,
+          "overlap_m": 0
+        },
+        "wall_s": 32.282447713,
+        "native_exit_code": 0,
+        "capture_sha256": "70ccc9edb195f6bbfa3af4a4e57301c2a1ae443a88a16b6753147e90a78130a7"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-013.evaluation.json",
+      "sha256": "bbbc0999b2cf874a1768d31c60289b8ebd5292c2f26121fa4360d7299b923d41",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.19459202740362347,
+            0.9223563592003254,
+            1.0993811419956485
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.18491732374644998,
+            "residuals": [
+              0.8400635923595481,
+              -0.005642339384625217,
+              -0.47396719539013654,
+              -0.22733964253519034,
+              -0.6000000005000008,
+              -0.9566794739918394,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-013.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.19328424206645187,
+            0.18491732374644998
+          ],
+          "slip": 0.09200317961797741,
+          "control": true,
+          "planned_lifts": 36,
+          "passed_lifts": 36,
+          "overlap_m": 0
+        },
+        "wall_s": 32.37483158,
+        "native_exit_code": 0,
+        "capture_sha256": "5ffd4e1b8c06728634a33cdd4805bdb828e317b80017b95106c27277763c7068"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-014.evaluation.json",
+      "sha256": "4bf20c331efd415dbccdb6a63813e8537c8497b3b84c24f985bd4f5d9f8e6a75",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.19262660421115813,
+            6.202550230852528e-11,
+            1.222372588292171
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.1841239908040319,
+            "residuals": [
+              0.4751024571743516,
+              -0.11719220281684395,
+              -0.42651938238002063,
+              -0.21235449896181358,
+              -0.5750000005312501,
+              -0.9462337126606067,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-014.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.19590912912631897,
+            0.1841239908040319
+          ],
+          "slip": 0.07375512285871759,
+          "control": true,
+          "planned_lifts": 36,
+          "passed_lifts": 36,
+          "overlap_m": 0
+        },
+        "wall_s": 33.54863248600002,
+        "native_exit_code": 0,
+        "capture_sha256": "5a737c19a0a85e798382c576c1b10e256f660f230eccaa83c4e494c89edd459a"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-015.evaluation.json",
+      "sha256": "ab8ed9566155e63c694d3e7e9d5d72e8e2854de723fe84b89aaf251706bf9807",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.14323375445238257,
+            0,
+            1.2512207014932477
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.1337356979289142,
+            "residuals": [
+              0.7924733907652661,
+              0.3262315939118863,
+              -0.22888827976604142,
+              -0.16257374709989358,
+              -0.4250000007187501,
+              -0.9745988475155396,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-015.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.14722533587403897,
+            0.1337356979289142
+          ],
+          "slip": 0.08962366953826331,
+          "control": false,
+          "planned_lifts": 26,
+          "passed_lifts": 26,
+          "overlap_m": 0
+        },
+        "wall_s": 30.976394100999983,
+        "native_exit_code": 0,
+        "capture_sha256": "b2d9e21058f6448af473b1317a15c06e29dba081d9ad255be8e939c045d6611b"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-016.evaluation.json",
+      "sha256": "7737a4b64f4d63c3649d9ac2862274d5f45d699670e2514de5a25b818a365e61",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.18436715935188028,
+            0,
+            0.5309415521086089
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.1677084629174464,
+            "residuals": [
+              0.9920171873523034,
+              0.8071218858060667,
+              -0.10436112646262585,
+              -0.2259701099851914,
+              -0.47500000065625014,
+              -0.9424487079097656,
+              0.02941176470588236,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-016.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.18400296201860702,
+            0.1677084629174464
+          ],
+          "slip": 0.09960085936761517,
+          "control": false,
+          "planned_lifts": 34,
+          "passed_lifts": 33,
+          "overlap_m": 0
+        },
+        "wall_s": 31.454359795999945,
+        "native_exit_code": 0,
+        "capture_sha256": "ec44625ef1e616177d90c15f1184668b04db90eb60d236390fc64803b5c38617"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-017.evaluation.json",
+      "sha256": "87f21287c386afdca2f331cbd8e3900836335bc1fc0b6c38d5feec3d07b30e50",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.10000000000001343,
+            1,
+            0.5
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.09209449385172629,
+            "residuals": [
+              3.160063087770176,
+              0.5811012296572158,
+              -0.40773331933992907,
+              -0.12756575312598428,
+              -0.47500000065625014,
+              -0.9858308254538801,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-017.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.10220682712002463,
+            0.09209449385172629
+          ],
+          "slip": 0.20800315438850883,
+          "control": false,
+          "planned_lifts": 17,
+          "passed_lifts": 17,
+          "overlap_m": 0
+        },
+        "wall_s": 28.319796785000012,
+        "native_exit_code": 0,
+        "capture_sha256": "45b2e2e8c431a030eac4d44545d1df3d408e9abbf94a98508fc129fd7b412543"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-018.evaluation.json",
+      "sha256": "af7a02aa4412b4df06cc7fe3e0e41458df1bcfb9aa92006f97c9c8d762aca3d9",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.17206292087545197,
+            0,
+            1.3081477916367297
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.1636176752689673,
+            "residuals": [
+              0.7069278383042841,
+              -0.018353801793499436,
+              -0.14390345202852395,
+              -0.1272877928400452,
+              -0.6250000004687501,
+              -0.9561109467436629,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-018.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.1781957138695158,
+            0.1636176752689673
+          ],
+          "slip": 0.0853463919152142,
+          "control": true,
+          "planned_lifts": 34,
+          "passed_lifts": 34,
+          "overlap_m": 0
+        },
+        "wall_s": 33.118792619000075,
+        "native_exit_code": 0,
+        "capture_sha256": "8bc68125e0247eee95786be672e9f4d3e7d56e6937e872e1c2858adb3de38391"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-019.evaluation.json",
+      "sha256": "565b7c7d082b0b9f1d0c4ce14257aa4e98f5c26fde2c66755faf40b17b0d21c2",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.1501381347011438,
+            1.0760287745624207e-16,
+            0.7988271308674474
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.13412801366032226,
+            "residuals": [
+              1.0567654694876394,
+              1.1327187889592936,
+              -0.23969265641610116,
+              -0.18071990681149086,
+              -0.5750000005312501,
+              -0.9651078676187447,
+              0.0357142857142857,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-019.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.15303071684353053,
+            0.13412801366032226
+          ],
+          "slip": 0.10283827347438199,
+          "control": false,
+          "planned_lifts": 28,
+          "passed_lifts": 27,
+          "overlap_m": 0
+        },
+        "wall_s": 30.230785998999956,
+        "native_exit_code": 0,
+        "capture_sha256": "f162176de9d6d37515e2862b555deb73ccfde6a86f3d8dcf6256148a8d890e02"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-020.evaluation.json",
+      "sha256": "5e6723a9bbdc4413714a7cf317762260b98d55a2fc6cb212b190b34df14be6e5",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.10818426420457698,
+            0.9999999999999997,
+            1.1693695883806052
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.09915091245196037,
+            "residuals": [
+              2.1832083253734456,
+              0.6699936574018759,
+              -0.28396868914760753,
+              -0.13261383239135183,
+              -0.7250000003437498,
+              -0.9885988270327668,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-020.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.11070601003811383,
+            0.09915091245196037
+          ],
+          "slip": 0.15916041626867228,
+          "control": false,
+          "planned_lifts": 18,
+          "passed_lifts": 18,
+          "overlap_m": 0
+        },
+        "wall_s": 27.239961157000042,
+        "native_exit_code": 0,
+        "capture_sha256": "533599ebe313e9066de01db70dbedd474f3608f49f6e0dafe5aa0bbb3ec52ae1"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-021.evaluation.json",
+      "sha256": "55f76f44eda9c23be86faf3e1d04d583920b2bf2c58258c4e5951eb05e337cb7",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.2800278323420579,
+            0.9658948308608711,
+            1.2383281363272156
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.28059740708739045,
+            "residuals": [
+              3.444191441920694,
+              1.3370789490545851,
+              -0.2191668731937978,
+              -0.2274994240825291,
+              -0.47500000065625014,
+              -0.9602550349579362,
+              0.21999999999999997,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-021.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.3127501899478584,
+            0.28059740708739045
+          ],
+          "slip": 0.2222095720960347,
+          "control": false,
+          "planned_lifts": 50,
+          "passed_lifts": 39,
+          "overlap_m": 0
+        },
+        "wall_s": 28.967543120000045,
+        "native_exit_code": 0,
+        "capture_sha256": "36b0d1261bc11fca45f2c06b0a5bba90b2c8be0cb96c1318aca07666f0e898c2"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-022.evaluation.json",
+      "sha256": "42de4fe66944dd894fce833fbf234c37e2572adcf57b148abd02f8529807337e",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.10255395802895749,
+            0.28962125381981263,
+            1.036811488211423
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.09557494964334091,
+            "residuals": [
+              3.044533870921452,
+              0.36104125472094495,
+              -0.38636871516169125,
+              -0.11973620945493757,
+              -0.47500000065625014,
+              -0.982259607833687,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-022.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.10386666047398273,
+            0.09557494964334091
+          ],
+          "slip": 0.2022266935460726,
+          "control": false,
+          "planned_lifts": 17,
+          "passed_lifts": 17,
+          "overlap_m": 0
+        },
+        "wall_s": 27.511365793999982,
+        "native_exit_code": 0,
+        "capture_sha256": "31106571d39caf5f8f6c0933caaca43732459f312203b5b64632471f5d765fe8"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-023.evaluation.json",
+      "sha256": "ad18be49f653d85ef946ccf29d2eea2087dd2189a1d1275c2949f97b4e2e47a6",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.2504186356683673,
+            0.08144986576869287,
+            0.5105962245320638
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.23481514635418282,
+            "residuals": [
+              2.328152856708373,
+              0.24619234287725922,
+              -0.41975690876755833,
+              -0.13654071550645075,
+              -0.500000000625,
+              -0.9093469631657332,
+              0.021739130434782594,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-023.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.2476876072063808,
+            0.23481514635418282
+          ],
+          "slip": 0.16640764283541865,
+          "control": false,
+          "planned_lifts": 46,
+          "passed_lifts": 45,
+          "overlap_m": 0
+        },
+        "wall_s": 31.19980593999999,
+        "native_exit_code": 0,
+        "capture_sha256": "fc812b69aa66d67bc57c50a4798c75747d9719c3384fa8d9cdf7a70a46f2f74e"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-024.evaluation.json",
+      "sha256": "959b90979869fc14d9a447686f14025c813a19887fd6f3c50c015e3c18ccec64",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.20980099909479952,
+            0.41891533665452163,
+            1.492705194743602
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.20500100556695308,
+            "residuals": [
+              1.3982266869277664,
+              -0.29875782172153276,
+              -0.5467441708614306,
+              -0.11976693308300945,
+              -0.6000000005000008,
+              -0.9398467561288845,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-024.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.2171570645753113,
+            0.20500100556695308
+          ],
+          "slip": 0.11991133434638833,
+          "control": true,
+          "planned_lifts": 38,
+          "passed_lifts": 38,
+          "overlap_m": 0
+        },
+        "wall_s": 32.35853849499998,
+        "native_exit_code": 0,
+        "capture_sha256": "52ca487eff7c5a188381da8e6232fa6d79d872a3bcb20fd0fbfa68e7e52116b4"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-025.evaluation.json",
+      "sha256": "cde512507f3239f5102394555970599cf4195797387e41e7d34843d9e0fe6937",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.13911651488214316,
+            0.8232345059742177,
+            0.7868099945488141
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.13036529510504394,
+            "residuals": [
+              0.8685938654263057,
+              0.258113716335274,
+              -0.2460576304797525,
+              -0.16271350515826244,
+              -0.4500000006875007,
+              -0.9915332091646292,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-025.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.14191897752818036,
+            0.13036529510504394
+          ],
+          "slip": 0.09342969327131528,
+          "control": false,
+          "planned_lifts": 26,
+          "passed_lifts": 26,
+          "overlap_m": 0
+        },
+        "wall_s": 31.484188272000058,
+        "native_exit_code": 0,
+        "capture_sha256": "cb276477b2b39881011611e7dfafe796f22d1ed3118e782ec61c6d66afb4ec23"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-026.evaluation.json",
+      "sha256": "3e1cbb0e67c6aa219cbd11e462330b9d77a5929408b2c635f5ceaa60e82da33f",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.15655752002535941,
+            0.6079938728139763,
+            0.9011972231205084
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.14642218367134066,
+            "residuals": [
+              0.7432046860145596,
+              0.2947747706244983,
+              -0.37361932353782334,
+              -0.13799278187812414,
+              -0.3500000008125006,
+              -0.9634657801277984,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-026.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.15873984358233584,
+            0.14642218367134066
+          ],
+          "slip": 0.08716023430072799,
+          "control": false,
+          "planned_lifts": 30,
+          "passed_lifts": 30,
+          "overlap_m": 0
+        },
+        "wall_s": 32.73232792099996,
+        "native_exit_code": 0,
+        "capture_sha256": "b084fee320e6a0b52cfc9e9d3b9eef23e53622cf33d98d8a021436f0f9b17284"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-027.evaluation.json",
+      "sha256": "fc6d3efe94f586b76c865ce8fab0a527851b16f2f4d1cc96c26460704695b639",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.29960430537275123,
+            0.1932220174945259,
+            1.3254316897741099
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.3059830846450654,
+            "residuals": [
+              3.8189764946147085,
+              1.0229940577827143,
+              -0.4359805493434,
+              -0.12634728903097603,
+              -0.5250000005937501,
+              -0.9152408807510604,
+              0.11111111111111116,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-027.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.32990919184551093,
+            0.3059830846450654
+          ],
+          "slip": 0.24094882473073545,
+          "control": false,
+          "planned_lifts": 54,
+          "passed_lifts": 48,
+          "overlap_m": 0
+        },
+        "wall_s": 30.724778602999983,
+        "native_exit_code": 0,
+        "capture_sha256": "fa55e2eec2391a0d5ccdc74783d7fb380f235c312d4fc9ec7f5b4a3139bd2747"
+      }
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-028.evaluation.json",
+      "sha256": "8426350d2c8f100bb3923501b533e9b5a5258cf469bed8c40aa0afe1e4c3a529",
+      "record": {
+        "observation": {
+          "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+          "values": [
+            0.23263876418877438,
+            0.711987305902712,
+            0.7175747839193675
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.22690873626369804,
+            "residuals": [
+              1.6536885977105418,
+              -0.5073883800013026,
+              -0.6370849584309044,
+              -0.23249360240035932,
+              -0.5500000005625001,
+              -0.947667893416973,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-controller-pilot-v2/evaluation-028.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.23317639494817774,
+            0.22690873626369804
+          ],
+          "slip": 0.1326844298855271,
+          "control": true,
+          "planned_lifts": 42,
+          "passed_lifts": 42,
+          "overlap_m": 0
+        },
+        "wall_s": 32.29674533399998,
+        "native_exit_code": 0,
+        "capture_sha256": "2006deb238f85fd67153e5308086f727b825e39bd581be330a8e112294aa45be"
+      }
+    }
+  ]
+}

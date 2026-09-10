@@ -28,6 +28,25 @@ pub struct PointTarget {
     pub position_world_m: [f64; 3],
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PointMotionTarget {
+    pub point: EmbeddedPoint,
+    pub position_world_m: [f64; 3],
+    pub velocity_world_m_s: [f64; 3],
+    pub acceleration_world_m_s2: [f64; 3],
+}
+
+pub struct PointMotionPlacement {
+    pub motion: EmbeddedMotion,
+    pub coordinates: Vec<f64>,
+    pub reduced_velocity: Vec<f64>,
+    pub reduced_acceleration: Vec<f64>,
+    pub maximum_position_error_m: f64,
+    pub maximum_velocity_error_m_s: f64,
+    pub maximum_acceleration_error_m_s2: f64,
+}
+
 #[derive(Debug)]
 pub struct PointPlacement {
     pub motion: EmbeddedMotion,
@@ -73,6 +92,142 @@ pub struct PlanePlacement {
 }
 
 impl RigidEmbedding<'_> {
+    /// Local position/velocity/acceleration inverse kinematics with a prescribed
+    /// base pose (in seed) and world base linear/angular motion. Uses the exact
+    /// closure tangent and acceleration curvature, not time-difference probes.
+    /// Underdetermined velocity tasks use minimum-norm joint rates. This solves
+    /// kinematics only; required actuator/contact forces remain a separate test.
+    pub fn follow_points(
+        &self,
+        seed: &Generalized,
+        targets: &[PointMotionTarget],
+        base_velocity: &[f64],
+        base_acceleration: &[f64],
+        bounds: &[CoordinateInterval],
+        config: &PlanePlacementConfig,
+        velocity_tolerance_m_s: f64,
+        acceleration_tolerance_m_s2: f64,
+    ) -> Result<PointMotionPlacement, String> {
+        if base_velocity.len() != self.base_columns
+            || base_acceleration.len() != self.base_columns
+            || base_velocity
+                .iter()
+                .chain(base_acceleration)
+                .any(|v| !v.is_finite())
+            || targets.iter().any(|t| {
+                t.velocity_world_m_s
+                    .iter()
+                    .chain(&t.acceleration_world_m_s2)
+                    .any(|v| !v.is_finite())
+            })
+            || !velocity_tolerance_m_s.is_finite()
+            || velocity_tolerance_m_s <= 0.0
+            || !acceleration_tolerance_m_s2.is_finite()
+            || acceleration_tolerance_m_s2 <= 0.0
+        {
+            return Err(
+                "finite base/point motion and positive derivative tolerances required".into(),
+            );
+        }
+        let position_targets = targets
+            .iter()
+            .map(|t| PointTarget {
+                point: t.point.clone(),
+                position_world_m: t.position_world_m,
+            })
+            .collect::<Vec<_>>();
+        let placed = self.place_points(seed, &position_targets, bounds, config)?;
+        let points = targets.iter().map(|t| t.point.clone()).collect::<Vec<_>>();
+        let (_, values) =
+            self.point_jacobians(&placed.motion.generalized, &placed.coordinates, &points)?;
+        let n = self.independent.len();
+        let jac = DMatrix::from_fn(3 * points.len(), n, |r, c| values[r / 3].1[(r % 3, c)]);
+        let svd = jac.svd(true, true);
+        let threshold = self
+            .config
+            .absolute_rank_tolerance
+            .max(self.config.relative_rank_tolerance * svd.singular_values.amax());
+        let mut velocity = vec![0.0; self.reduced_dimension()];
+        velocity[..self.base_columns].copy_from_slice(base_velocity);
+        let base_motion = self.solve(&placed.motion.generalized, &placed.coordinates, &velocity)?;
+        let evaluate_points = |motion: &EmbeddedMotion, acceleration: &[f64]| {
+            let mut g = motion.generalized.clone();
+            let full_acc = &motion.tangent * DVector::from_column_slice(acceleration)
+                + &motion.acceleration_bias;
+            let full_vel = self
+                .art
+                .bases
+                .iter()
+                .filter(|b| !b.grounded)
+                .flat_map(|b| g.states[b.state + 7..b.state + 13].iter().copied())
+                .chain(g.qd.iter().copied())
+                .collect::<Vec<_>>();
+            self.set_motion(&mut g, &full_vel, full_acc.as_slice());
+            let (kin, _, _) = self.art.kinematics(&g);
+            points
+                .iter()
+                .map(|p| {
+                    let k = &kin[p.link];
+                    let r = k.r * V::from(p.local_point_m);
+                    (
+                        k.vel + k.w.cross(&r),
+                        k.acc + k.alpha.cross(&r) + k.w.cross(&k.w.cross(&r)),
+                    )
+                })
+                .collect::<Vec<_>>()
+        };
+        let zero = vec![0.0; self.reduced_dimension()];
+        let bias = evaluate_points(&base_motion, &zero);
+        let rhs = DVector::from_iterator(
+            3 * points.len(),
+            targets
+                .iter()
+                .zip(&bias)
+                .flat_map(|(t, (v, _))| (0..3).map(move |i| t.velocity_world_m_s[i] - v[i])),
+        );
+        let joint_rates = svd.solve(&rhs, threshold).map_err(|e| e.to_string())?;
+        velocity[self.base_columns..].copy_from_slice(joint_rates.as_slice());
+        let motion = self.solve(&placed.motion.generalized, &placed.coordinates, &velocity)?;
+        let mut acceleration = zero;
+        acceleration[..self.base_columns].copy_from_slice(base_acceleration);
+        let bias = evaluate_points(&motion, &acceleration);
+        let rhs = DVector::from_iterator(
+            3 * points.len(),
+            targets
+                .iter()
+                .zip(&bias)
+                .flat_map(|(t, (_, a))| (0..3).map(move |i| t.acceleration_world_m_s2[i] - a[i])),
+        );
+        let joint_acc = svd.solve(&rhs, threshold).map_err(|e| e.to_string())?;
+        acceleration[self.base_columns..].copy_from_slice(joint_acc.as_slice());
+        let actual = evaluate_points(&motion, &acceleration);
+        let velocity_error = actual
+            .iter()
+            .zip(targets)
+            .map(|((v, _), t)| (v - V::from(t.velocity_world_m_s)).norm())
+            .fold(0.0_f64, f64::max);
+        let acceleration_error = actual
+            .iter()
+            .zip(targets)
+            .map(|((_, a), t)| (a - V::from(t.acceleration_world_m_s2)).norm())
+            .fold(0.0_f64, f64::max);
+        if !velocity_error.is_finite()
+            || !acceleration_error.is_finite()
+            || velocity_error > velocity_tolerance_m_s
+            || acceleration_error > acceleration_tolerance_m_s2
+        {
+            return Err(format!("point derivative fit exceeded tolerance: velocity {velocity_error}, acceleration {acceleration_error}"));
+        }
+        Ok(PointMotionPlacement {
+            motion,
+            coordinates: placed.coordinates,
+            reduced_velocity: velocity,
+            reduced_acceleration: acceleration,
+            maximum_position_error_m: placed.maximum_position_error_m,
+            maximum_velocity_error_m_s: velocity_error,
+            maximum_acceleration_error_m_s2: acceleration_error,
+        })
+    }
     /// Fit full world-space point positions through the same bounded closure
     /// solver as plane placement. Base pose stays fixed. The configured metre
     /// tolerance bounds each point's Euclidean error, not just each axis.

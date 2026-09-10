@@ -1,0 +1,78 @@
+{
+  "bounds_match_actual_runtime": true,
+  "only_explicit_command_limits_added": true,
+  "legacy_compiler_byte_identical": true,
+  "force_derivative_cases": [
+    {
+      "analytic_seconds_including_geometry": 0.823330746,
+      "case": "shifted_reference",
+      "checked_force_columns": 366,
+      "fallback_columns": 0,
+      "independent_uncached_probe_matches": 2,
+      "max_absolute_error": 2.39929486056667e-7,
+      "max_scaled_error": 2.1831603355276488e-8,
+      "physical_rows": 13976,
+      "worst_variable_row": [
+        128,
+        6856
+      ]
+    },
+    {
+      "analytic_seconds_including_geometry": 0.824104355,
+      "case": "alternate_interpolation",
+      "checked_force_columns": 366,
+      "fallback_columns": 0,
+      "independent_uncached_probe_matches": 2,
+      "max_absolute_error": 2.39929486056667e-7,
+      "max_scaled_error": 2.1831603355276488e-8,
+      "physical_rows": 13976,
+      "worst_variable_row": [
+        128,
+        6856
+      ]
+    }
+  ],
+  "worst_nominal_command": {
+    "time_s": 0.6230479336569856,
+    "phase": 0.78125,
+    "clock": {
+      "phase_acceleration_per_s": 0,
+      "phase_rate": -1
+    },
+    "coordinate": "joint.+X | Foot servo output",
+    "target_rad": -0.01584222310833773,
+    "bounds_rad": [
+      -2.5,
+      -0.02
+    ],
+    "violation_rad": 0.00415777689166227
+  },
+  "initial": {
+    "speed_m_s": 0.02522439329306118,
+    "force_error_n": 0.03624013724451225,
+    "moment_error_nm": 0.012868266185683375,
+    "torque_margin_nm": 1.260753347823659,
+    "cone_violation_n": 0,
+    "servo_command_violation_rad": 0.00415777689166227,
+    "maximum_inequality": 0.41577768916622704,
+    "sampled_feasible": false
+  },
+  "native_pilot": {
+    "status": -13,
+    "models": 600,
+    "model_budget_exhausted": true,
+    "native_final_constraints_available": false,
+    "native_final_constraints_equal": null,
+    "grouped_body_probes": 76,
+    "body_group_fallbacks": 32,
+    "speed_m_s": 0.02520746031308306,
+    "force_error_n": 0.036223382633797874,
+    "moment_error_nm": 0.012871262659198468,
+    "torque_margin_nm": 1.261061366756933,
+    "cone_violation_n": 0,
+    "servo_command_violation_rad": 0.004071761032218662,
+    "maximum_inequality": 0.4071761032218662,
+    "sampled_feasible": false
+  },
+  "scope": "Explicit nominal actuator-command limits are jointly differentiated and optimized. Runtime feedback/transition limits, full gait validation and greater measured speed remain unproven."
+}

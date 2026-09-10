@@ -1,0 +1,79 @@
+{
+  "completed": true,
+  "physics_step_s": 0.000625,
+  "frames": 401,
+  "wall_s": 32.641043339,
+  "travel_heading_offset_rad": 0.7853981633974482,
+  "command_speed_m_s": 0.211710264528351,
+  "segments": [
+    {
+      "window_s": [
+        1.4,
+        3
+      ],
+      "command_sign": 1,
+      "speed_along_heading_m_s": 0.2100571743965932,
+      "lateral_speed_m_s": 0.005830639013204281,
+      "direction_error_rad": 0.027750265004606416
+    },
+    {
+      "window_s": [
+        4.8,
+        6.4
+      ],
+      "command_sign": -1,
+      "speed_along_heading_m_s": 0.20695756584673347,
+      "lateral_speed_m_s": 0.012604481179232064,
+      "direction_error_rad": 0.06082856302200705
+    }
+  ],
+  "stops": [
+    {
+      "window_s": [
+        3,
+        4
+      ],
+      "settled_after_s": 0.33999999999999986,
+      "release_travel_m": 0.013350447703230057,
+      "late_drift_m": 0.00004701210167800758
+    },
+    {
+      "window_s": [
+        6.4,
+        8
+      ],
+      "settled_after_s": 0.2999999999999998,
+      "release_travel_m": 0.019453677020443184,
+      "late_drift_m": 0.00019157621436630666
+    }
+  ],
+  "maximum_tilt_rad": 0.08090955027818163,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_path_m": 0.07286856981694716,
+      "ratio_to_total_body_path": 0.07732274750321862
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_path_m": 0.0383464856670805,
+      "ratio_to_total_body_path": 0.040690460047726494
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_path_m": 0.03984032780772847,
+      "ratio_to_total_body_path": 0.0422756150595671
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_path_m": 0.044895047425968615,
+      "ratio_to_total_body_path": 0.047639310404797394
+    }
+  ],
+  "total_body_path_m": 0.9423949894423236,
+  "maximum_slip_ratio": 0.07732274750321862,
+  "passed_control_checks": true,
+  "passed_contact_quality": false,
+  "capture_sha256": "ecb04750126aaf4fea18cde58358f9af435e0bc14d8523e41812e9ff05c19774",
+  "scope": "Standard eight-second forward/stop/reverse/stop screen. Signed travel is projected onto chassis yaw plus the explicitly declared travel offset; orthogonal drift is reported. Control gates: speed ±5%, travel-heading error <=0.1 rad, tilt <=0.1 rad, stops below 1 mm/s within 0.8 s and <=3 mm late drift. Contact quality separately requires <=5% loaded material slip. No clearance, collision, sustained, steering, timestep or hardware-transfer certificate."
+}

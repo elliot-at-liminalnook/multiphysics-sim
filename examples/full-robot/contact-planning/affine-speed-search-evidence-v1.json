@@ -1,0 +1,4239 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": "Cargo.lock",
+        "bytes": 183127,
+        "sha256": "a38a0fb773d040af5c4edcfa973b183c48e877d0e56e2150969d02e7aff562b4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a38a0fb773d040af5c4edcfa973b183c48e877d0e56e2150969d02e7aff562b4.gz",
+        "bytes": 41935,
+        "sha256": "326bec3aece9217e12c994e84ee9ac6dc36918e65fe0f0e7964268a899f67063"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-domain-control/src/trajectory.rs",
+        "bytes": 27389,
+        "sha256": "39731047467feaeac8469d85726e271bce65749567b3f4a5592397aff240b8b1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/39731047467feaeac8469d85726e271bce65749567b3f4a5592397aff240b8b1.gz",
+        "bytes": 6874,
+        "sha256": "7c6df4d9c214043f5ff872a53c59b9b4a3a1de9192f65335794e24a0fc603732"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-domain-control/tests/trajectory_affine.rs",
+        "bytes": 2090,
+        "sha256": "3d86bf11ff4b431e1023ee47c4df186bc11ca432a3cb20e974f362bfc968d31c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3d86bf11ff4b431e1023ee47c4df186bc11ca432a3cb20e974f362bfc968d31c.gz",
+        "bytes": 730,
+        "sha256": "a3532839a40a5636e6996f13d61392a08903dca91d6d0afe44f043062d8e556b"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/examples/affine_trajectory.rs",
+        "bytes": 1011,
+        "sha256": "a15f60fb660a6fd37e7d73c145d7b9b2a220fed9dac5295af16e8ed69da1acfe"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a15f60fb660a6fd37e7d73c145d7b9b2a220fed9dac5295af16e8ed69da1acfe.gz",
+        "bytes": 523,
+        "sha256": "9f9a34d84eb2d4b330adbb6e7bc884e8575958124acee499c542947bf940e6c5"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-solve/examples/suggest_black_box.rs",
+        "bytes": 2087,
+        "sha256": "0720285666ad63e88469cf3011fe4442c9d56fe5444aa368ba5c1d99d135f731"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0720285666ad63e88469cf3011fe4442c9d56fe5444aa368ba5c1d99d135f731.gz",
+        "bytes": 838,
+        "sha256": "578bb4c9f2fb57b01775a10c3ffcba4786d3075566f8e268cc9a0bb0e316af9e"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-solve/src/bayesian.rs",
+        "bytes": 17415,
+        "sha256": "fd959c03cb4b4922901b0ab8d79ef22a92f95f67cea943d54bae702a5afdb0c9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fd959c03cb4b4922901b0ab8d79ef22a92f95f67cea943d54bae702a5afdb0c9.gz",
+        "bytes": 4988,
+        "sha256": "b53e324a3927deb419f8606a7efdf618b2f59793fef978324016f609c534445c"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/AFFINE_SPEED_SEARCH.md",
+        "bytes": 5554,
+        "sha256": "414943b3c81382c378f2be2369aa6f4f20cfba33f1ecd2e4ef97777bc6eb0d79"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/414943b3c81382c378f2be2369aa6f4f20cfba33f1ecd2e4ef97777bc6eb0d79.gz",
+        "bytes": 2550,
+        "sha256": "0582c1981436ab150f4310514202d57fa694301b51f5c508003051160f3f8725"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/SPEED_OBJECTIVE.md",
+        "bytes": 13291,
+        "sha256": "0bdc27ad7d81c9c7a97929c37847d4e62f3ed05c88df6c30869c5338999df0e2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0bdc27ad7d81c9c7a97929c37847d4e62f3ed05c88df6c30869c5338999df0e2.gz",
+        "bytes": 5547,
+        "sha256": "031cdc6b7089df90d6609430e85421d7a9c86e19efcca9534b7cd70a215b912a"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/affine-speed-search-v1.json",
+        "bytes": 5021,
+        "sha256": "72a4d3da080ed8facd3cd2c24c4cb69796103ac687e6f4b5b31b0e6dec84c118"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/72a4d3da080ed8facd3cd2c24c4cb69796103ac687e6f4b5b31b0e6dec84c118.gz",
+        "bytes": 1769,
+        "sha256": "ff2e09513eac11b9b0d73361e6e81009e1276b639373bb6b3aa132c23509de30"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/run_affine_speed_search.mjs",
+        "bytes": 10700,
+        "sha256": "bf8ff4f4eec18c96c5ddc033cbb5aa153043b59ed2be750c9e67b6e6b773d340"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bf8ff4f4eec18c96c5ddc033cbb5aa153043b59ed2be750c9e67b6e6b773d340.gz",
+        "bytes": 3650,
+        "sha256": "6e5d9f25832ba3c662acb809da12b02d70dc0c3767da2a8edfaf0968301822a4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/actuator-excitation-v1-baseline2/native.json",
+        "bytes": 17091042,
+        "sha256": "a9529a8f6708643b5275ef8053f46528765735424dff37c9e936270341669b79"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a9529a8f6708643b5275ef8053f46528765735424dff37c9e936270341669b79.gz",
+        "bytes": 4734911,
+        "sha256": "c7607b8290b4348cf0ae5b03236fe1e6c7ca371d3653e8dc3d6b8f7fb7032cbf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1.stdout.log",
+        "bytes": 2799,
+        "sha256": "142b97b061537dbfc3841c3810494e964ccaab46ab9dcbd13ef108ac9c769995"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/142b97b061537dbfc3841c3810494e964ccaab46ab9dcbd13ef108ac9c769995.gz",
+        "bytes": 1056,
+        "sha256": "0eccde6eaa169489cdd921720335db766e1481b1653b2c21a5f10aa665197275"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/adaptive-0.execution.json",
+        "bytes": 58,
+        "sha256": "7a70a5c94ae94111510b5c96d123cacd09bf3174c332cd04e9710873d28ee8af"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7a70a5c94ae94111510b5c96d123cacd09bf3174c332cd04e9710873d28ee8af.gz",
+        "bytes": 71,
+        "sha256": "7517090980fbcea50c4f1974728d0ac9a7f8679195f6b8c620381ca1ecae0b62"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/adaptive-0.launch.json",
+        "bytes": 234,
+        "sha256": "91c9248bd1f6c860c7f1be65201d30c506c223f48b9a6dfe071c21cf637f0027"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/91c9248bd1f6c860c7f1be65201d30c506c223f48b9a6dfe071c21cf637f0027.gz",
+        "bytes": 173,
+        "sha256": "8302585d95f9c498fe3f8783669cc1f70240c421a444e310eb8656648d7a5efc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/adaptive-0.observations.json",
+        "bytes": 4121,
+        "sha256": "21c91066ac4f298be66698a7d00241e15b956dc418dc90b8f7a52a355bdc9e07"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/21c91066ac4f298be66698a7d00241e15b956dc418dc90b8f7a52a355bdc9e07.gz",
+        "bytes": 1166,
+        "sha256": "7df4296deb5c894a1b552919e1a1ad2c7c17f046524421324bf48ded9a4c3b1c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/adaptive-0.proposal.json",
+        "bytes": 1012,
+        "sha256": "5a11912dc22dc6a1f5db4ee0a090fa60bd7d19cc77100713617669d3800b6a60"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5a11912dc22dc6a1f5db4ee0a090fa60bd7d19cc77100713617669d3800b6a60.gz",
+        "bytes": 509,
+        "sha256": "74ab52f4cf6b961c6d0d630a714d09760ec490a3f4bf910a03da4a19c8937ac4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/adaptive-0.request.json",
+        "bytes": 731,
+        "sha256": "49e7035651f010bd38ad3133e726b939c6eb8d3949fbbd55f0c9581b16e85019"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/49e7035651f010bd38ad3133e726b939c6eb8d3949fbbd55f0c9581b16e85019.gz",
+        "bytes": 332,
+        "sha256": "31e121a4ee9eea8afc6a7779dbe0b8d0fcf32994be810513865b17f69d90d3db"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/adaptive-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/adaptive-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/context.json",
+        "bytes": 3132,
+        "sha256": "39956b6bcadce1c0161fad25144b682da1177e5a9af226b40e78c7966348510a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/39956b6bcadce1c0161fad25144b682da1177e5a9af226b40e78c7966348510a.gz",
+        "bytes": 1405,
+        "sha256": "22384df4cf2132661b9d739a9caeaddee74c77e8752f67d2dd2b2972d9c45bac"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/actions.json",
+        "bytes": 8294,
+        "sha256": "8d4d179282c1c65e486af1c445ec94f654b42dfcf1bf498b35ae07ef59fe3317"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8d4d179282c1c65e486af1c445ec94f654b42dfcf1bf498b35ae07ef59fe3317.gz",
+        "bytes": 321,
+        "sha256": "c2d11c0b6ccd33655843a249309086d46d95ad3eb98b1986e4594f361428cb5e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "34c18ee47d4b2bc94f98c02ea7665c605b3531332d353360a93037297624307d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/34c18ee47d4b2bc94f98c02ea7665c605b3531332d353360a93037297624307d.gz",
+        "bytes": 71,
+        "sha256": "f38c36e3599161dded0d0d3d7cebc77925fc8e7490fea4a2f16d63eaee950424"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "e2d0bc45a2a3c950293fc3e13459f48ab97c3266abcc545e310c98bc8a110415"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e2d0bc45a2a3c950293fc3e13459f48ab97c3266abcc545e310c98bc8a110415.gz",
+        "bytes": 208,
+        "sha256": "e51bb56c27c745d8939961c379d3cb093cf81381cfe08850b3db6a2e3fb0de82"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/evaluate.stderr.log",
+        "bytes": 60,
+        "sha256": "6529cd85545e883ee9c36ada14d7ef5ee2dd157ad5bba10bda1fa38d13edadb7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6529cd85545e883ee9c36ada14d7ef5ee2dd157ad5bba10bda1fa38d13edadb7.gz",
+        "bytes": 80,
+        "sha256": "b8622850017c67e1ae2b9ab34d2d8aac99e6dd9abc8b5e741a5b8f13b6befe66"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/inputs.json",
+        "bytes": 990,
+        "sha256": "2bfe0864b3982cfd7ba0bddf5a7d7f73ff60150dd6c425c73a6269f84e0b23a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2bfe0864b3982cfd7ba0bddf5a7d7f73ff60150dd6c425c73a6269f84e0b23a9.gz",
+        "bytes": 473,
+        "sha256": "aa6d614f9654c3b93bb2552853d385849d17b4ad4b5204c747e173e1c73b0c37"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/observation.json",
+        "bytes": 779,
+        "sha256": "bb08680dc4d1984b5f9056a1cbe4b32c3dd50bea6d702d468e23e72b98549eba"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bb08680dc4d1984b5f9056a1cbe4b32c3dd50bea6d702d468e23e72b98549eba.gz",
+        "bytes": 508,
+        "sha256": "e6a81f97affa2f71ba861200fdbb6a89d9dadd9926510e5f9f44ff610740ae74"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/result.json",
+        "bytes": 1814,
+        "sha256": "015e89daaad17cdb56b6de2c5f3953946156f10315f2244e0c881262f0fe5243"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/015e89daaad17cdb56b6de2c5f3953946156f10315f2244e0c881262f0fe5243.gz",
+        "bytes": 973,
+        "sha256": "97b13667b681e45f0c660199c6ad8ac8a5081d27dd14749647e9fbe03d7b2a29"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/scene.json",
+        "bytes": 12745305,
+        "sha256": "f8ea2b2c49ee7b883f3b9e8ab884f0319232d7ab84540388600269d04fd59cec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f8ea2b2c49ee7b883f3b9e8ab884f0319232d7ab84540388600269d04fd59cec.gz",
+        "bytes": 3639735,
+        "sha256": "6b2dec485a7b1ab6dc3019f4ca59978631a2f9e4af18682fff1dea4e65dc6da5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/trajectory.json",
+        "bytes": 1139256,
+        "sha256": "464cc1190a750e3a34a1dce91eae2e4045abb52ef5eff8b11fdbdc3ba681541c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/464cc1190a750e3a34a1dce91eae2e4045abb52ef5eff8b11fdbdc3ba681541c.gz",
+        "bytes": 463728,
+        "sha256": "26746f13909fac823cb02f80a1738732b14928d8fdbf7325ec074b8ed59ca0f3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/transform.json",
+        "bytes": 292,
+        "sha256": "af46829c668cd17e653cc028b7efb7f26ff78dd6d3f6ae97a35949b3142c4539"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/af46829c668cd17e653cc028b7efb7f26ff78dd6d3f6ae97a35949b3142c4539.gz",
+        "bytes": 188,
+        "sha256": "3cb53cc6507ed32dd8edaba725f2eeb4bca0be4c9fb9d7630bed45e384d2c601"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-000/values.json",
+        "bytes": 54,
+        "sha256": "4bde6f437eaf3951c9d5cda76f70e566896eca98f90e0608cbc867c4f571d83b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4bde6f437eaf3951c9d5cda76f70e566896eca98f90e0608cbc867c4f571d83b.gz",
+        "bytes": 64,
+        "sha256": "324a2b1519f7c972c27924b18bbd4b17f0104a21efddb633b7751112f1ea28cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/actions.json",
+        "bytes": 8294,
+        "sha256": "c7094af43016395436b089852ad48707c9fc6236707c7cc56181f508a352f5ea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c7094af43016395436b089852ad48707c9fc6236707c7cc56181f508a352f5ea.gz",
+        "bytes": 324,
+        "sha256": "6db56a8efe52c86e9a0724cf8b291347bfd3f47818da9385004e04be46758e36"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "7ade1d5ed499f2186809b58e598147ce425291f5a42b2d01d49a28ecd6553296"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7ade1d5ed499f2186809b58e598147ce425291f5a42b2d01d49a28ecd6553296.gz",
+        "bytes": 71,
+        "sha256": "99be4b61d697d5cbb1b09b4afe2bfab326aaa38959670a77fbd3bfbb39c824d2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "5f0259a1794f1f7e6662a7e5be643a23baa5906652685d872cb8531637dd4741"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5f0259a1794f1f7e6662a7e5be643a23baa5906652685d872cb8531637dd4741.gz",
+        "bytes": 208,
+        "sha256": "be3c0c7b223c084513f3cafa811272e342a01f0d2f08baf3c2018a85077609c9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/evaluate.stderr.log",
+        "bytes": 200,
+        "sha256": "7a76bdc4a31309769a996edb5d4165cec72ed632e47eafaa865c95481a72926d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7a76bdc4a31309769a996edb5d4165cec72ed632e47eafaa865c95481a72926d.gz",
+        "bytes": 163,
+        "sha256": "078c3e73d7ea73c5be37cd7913df2383f64ff36b67cc0e1dcc44e6c6eb6cea64"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/inputs.json",
+        "bytes": 990,
+        "sha256": "6b54ebdd4b49ef226fb52b9c33559315523ef4a47bfe85cceaa2a482dae43fb5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6b54ebdd4b49ef226fb52b9c33559315523ef4a47bfe85cceaa2a482dae43fb5.gz",
+        "bytes": 470,
+        "sha256": "a55563d29724d1ffcf0ee8649252f1c0764edf6a0edf4f4e72e09f8db1f4d0a0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/observation.json",
+        "bytes": 953,
+        "sha256": "d64e96148d03ab17871dca297eea2a43bfd3e36096bafc0a3715d596ef2a1069"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d64e96148d03ab17871dca297eea2a43bfd3e36096bafc0a3715d596ef2a1069.gz",
+        "bytes": 615,
+        "sha256": "c2419090215879096a8d8744562acc905f9d1c8e4f6791ccf2cd8051c55b3cba"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/result.json",
+        "bytes": 1881,
+        "sha256": "9c1a31bbbc6f1d06a773a8fca76a2bc7c368b85096080eb1091bf5b5d6855aa9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9c1a31bbbc6f1d06a773a8fca76a2bc7c368b85096080eb1091bf5b5d6855aa9.gz",
+        "bytes": 991,
+        "sha256": "c0d7687b37430035104c280aab1cc83417cbaba1c4e96ff8b038fa5c70b72120"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/scene.json",
+        "bytes": 12735265,
+        "sha256": "142f8c73c0bf2ec08bfc145978b6d1a5ad71ec0c4dc32709c6331aac76710a59"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/142f8c73c0bf2ec08bfc145978b6d1a5ad71ec0c4dc32709c6331aac76710a59.gz",
+        "bytes": 3637215,
+        "sha256": "c6aae3ab21cede627a659e861b44f73375587b73825383e83b49e242793fa98d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/trajectory.json",
+        "bytes": 1129226,
+        "sha256": "4a29d501c107189a40347334f08ce221c5906c2d5f44d454c22f786751aae67b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4a29d501c107189a40347334f08ce221c5906c2d5f44d454c22f786751aae67b.gz",
+        "bytes": 460312,
+        "sha256": "03383250b632999f625691233f4187f2f315cd912b13a8a6c19aaa93f3af2e38"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/transform.json",
+        "bytes": 500,
+        "sha256": "20538d64ae4a0c57607c1dc7c4f6a4f121a2f4c4c651accbe55aadab69650c89"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/20538d64ae4a0c57607c1dc7c4f6a4f121a2f4c4c651accbe55aadab69650c89.gz",
+        "bytes": 216,
+        "sha256": "56aeb2fc745af2e70cb6cf7c9ebf8d30aeda1f91cb329f0563a35de0f5a73ecf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-001/values.json",
+        "bytes": 158,
+        "sha256": "3104702852f37d047b2ae6f0b9750210e5d24d006b848cdf9228b10b6496affb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3104702852f37d047b2ae6f0b9750210e5d24d006b848cdf9228b10b6496affb.gz",
+        "bytes": 114,
+        "sha256": "05da999ff24d458e5150dde1e8571c18463d08054b8dff42c9989f4a93941949"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/actions.json",
+        "bytes": 8194,
+        "sha256": "7a806e71c73ab1f5ea16d7174a39925a6961f947985349be474e50c36cd35849"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7a806e71c73ab1f5ea16d7174a39925a6961f947985349be474e50c36cd35849.gz",
+        "bytes": 319,
+        "sha256": "4fb932bebcae465f1413c443fa21679263a6760ea18e92f8d798af581cbe3733"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "4a7e65f0f760efb6cbc1f93b9ac374adb54d5266036284a04fc7b011223a5013"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4a7e65f0f760efb6cbc1f93b9ac374adb54d5266036284a04fc7b011223a5013.gz",
+        "bytes": 71,
+        "sha256": "596e0f0e192a1caa7f70df02668b4a6d1a357ce9bfc59657d87cbbbae234bcfe"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "7ca4de8373e153770bd8836f9c30c1b41887e4c15f32133a4104e1770045d69d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7ca4de8373e153770bd8836f9c30c1b41887e4c15f32133a4104e1770045d69d.gz",
+        "bytes": 208,
+        "sha256": "5c762a57587a4d663c8e300e2fc818ee2710e262411541cb18a990487cc77aae"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/evaluate.stderr.log",
+        "bytes": 61,
+        "sha256": "d6826efca99708607552162aef7e82dadc48a9a87b53c6c6d0557a81c43ef196"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d6826efca99708607552162aef7e82dadc48a9a87b53c6c6d0557a81c43ef196.gz",
+        "bytes": 81,
+        "sha256": "bca5f298f10b0330dce1d27ea5f0b54da5dc22235cd011e6be075a8a3f1ba368"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/inputs.json",
+        "bytes": 990,
+        "sha256": "034719406d3cb4eebffeeea48c0a725545d9e1117e9a8ba1cf17f7a008269383"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/034719406d3cb4eebffeeea48c0a725545d9e1117e9a8ba1cf17f7a008269383.gz",
+        "bytes": 472,
+        "sha256": "54937160d018feaa541828c9404f51e544397f35de86da839b5e5f495c0ceb9d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/observation.json",
+        "bytes": 895,
+        "sha256": "6570172e863eb5b82172f29e12dd44cdddd9a0683d190fcd70a2cf2cf31d6bc4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6570172e863eb5b82172f29e12dd44cdddd9a0683d190fcd70a2cf2cf31d6bc4.gz",
+        "bytes": 587,
+        "sha256": "633cecd7d709ce1a401c1cb4395669ff4d91d54bbdb8630b22370c7d8f366b48"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/result.json",
+        "bytes": 1909,
+        "sha256": "8c74729ffbe98373e0111ac11ae19cd2cd988d32d5cb6db64c1ca18d3b7ea4b8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8c74729ffbe98373e0111ac11ae19cd2cd988d32d5cb6db64c1ca18d3b7ea4b8.gz",
+        "bytes": 1015,
+        "sha256": "cf1ed0aeccba022248bd78f1c39eb1570e56ee3c28ae374a1ab4ca53ffb0220a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/scene.json",
+        "bytes": 12738605,
+        "sha256": "52cba5afea23cb34b137a62086c0be8f32d2a7ba5274a507e4993ab8ec7ec6c2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/52cba5afea23cb34b137a62086c0be8f32d2a7ba5274a507e4993ab8ec7ec6c2.gz",
+        "bytes": 3640543,
+        "sha256": "53ab50159cd75c62a89f0dbd4120893973fd2e63f7d65947f909f001c5a12172"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/trajectory.json",
+        "bytes": 1132563,
+        "sha256": "071ad1a9e9cb95adc02c8506d37bba3fa19088d8b739c62889005874e1710064"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/071ad1a9e9cb95adc02c8506d37bba3fa19088d8b739c62889005874e1710064.gz",
+        "bytes": 464452,
+        "sha256": "895e0f70ea76eee0cd20b92da739ac014c8d4000add3691bc7606f225eaec5c9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/transform.json",
+        "bytes": 492,
+        "sha256": "5ba49dce1ec5c180a1c70ea8c1cbdfb5f0622ffe5dd8622b03f1882af297505d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5ba49dce1ec5c180a1c70ea8c1cbdfb5f0622ffe5dd8622b03f1882af297505d.gz",
+        "bytes": 215,
+        "sha256": "c564298d05bb6671145d4be3edb67c923736e2eb4d52d5283bc1a2b349f7146f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-002/values.json",
+        "bytes": 156,
+        "sha256": "6849f701d50eaab70dc922a78565d06bd8fdd20a3f9786a938b4fdc5f0b09615"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6849f701d50eaab70dc922a78565d06bd8fdd20a3f9786a938b4fdc5f0b09615.gz",
+        "bytes": 115,
+        "sha256": "8f0d7ea19bcba19917ae474fc194ed6128225d93d3a61b60897d78eb469a214c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/actions.json",
+        "bytes": 8194,
+        "sha256": "44ce7803b0cf2c6324c4b0115f8bbf3cd181e9bd24b2b40e58afa4af7ece247a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/44ce7803b0cf2c6324c4b0115f8bbf3cd181e9bd24b2b40e58afa4af7ece247a.gz",
+        "bytes": 317,
+        "sha256": "5ff00f826252279023d5c58fcc835595130b0f893985d7be30cd86165439e2b2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "5e636f7c583074da36bc9717a8f0a221aa825f628c00a181a7e5b8e30394a328"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5e636f7c583074da36bc9717a8f0a221aa825f628c00a181a7e5b8e30394a328.gz",
+        "bytes": 71,
+        "sha256": "7ab7ae9dfca590d0e77758a4765f9ed749f842b9938e13c5f3b8b9ba4790128b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "e335c948e45a32de8c5cb381079bef9c1859d18b734cc880624dc2ae06f4cb3c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e335c948e45a32de8c5cb381079bef9c1859d18b734cc880624dc2ae06f4cb3c.gz",
+        "bytes": 208,
+        "sha256": "f7a8c01003473406d431a84ba496f5f3489e89d37132ad0719612f3025e4c5e6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/evaluate.stderr.log",
+        "bytes": 201,
+        "sha256": "f5bdaf96e215a4fc9786fe11ee0e39f49b206ee0085b04357e5e996446b88bb3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f5bdaf96e215a4fc9786fe11ee0e39f49b206ee0085b04357e5e996446b88bb3.gz",
+        "bytes": 163,
+        "sha256": "ddd20f15561702df4290112a19cd647fdda92ed156b701ef9beccda714819ec6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/inputs.json",
+        "bytes": 990,
+        "sha256": "50aaa9824ce2fe3d75dc900ab3b9cc9ac3566226ed24d795da8945204719b33f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/50aaa9824ce2fe3d75dc900ab3b9cc9ac3566226ed24d795da8945204719b33f.gz",
+        "bytes": 469,
+        "sha256": "252e5a65d4c33ecf103439260de052081e661c5bcaaf88a2e2103da0f034e4fc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/observation.json",
+        "bytes": 951,
+        "sha256": "2d00670a72896a4afec09e380be8c1c59922630e92807388e59a9a84c737cd26"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2d00670a72896a4afec09e380be8c1c59922630e92807388e59a9a84c737cd26.gz",
+        "bytes": 615,
+        "sha256": "7089c5ab0e3df51d60e8fb023d4ddce02bafafb33015de75d2e50dd3d5006173"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/result.json",
+        "bytes": 1876,
+        "sha256": "f8eb160ef4384c942e454903ee22cb4e8a9aecf98b4f402c0529b3b06125a6d8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f8eb160ef4384c942e454903ee22cb4e8a9aecf98b4f402c0529b3b06125a6d8.gz",
+        "bytes": 989,
+        "sha256": "ebc5ac3d7a703e633bc65dac3db14f1191df78232e2a929a34dd90a2966c49e1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/scene.json",
+        "bytes": 12748120,
+        "sha256": "69a7afd9ce20ea46c52ceb404b956970f8bedb7835fba8d6a80ad08c7f076fa3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/69a7afd9ce20ea46c52ceb404b956970f8bedb7835fba8d6a80ad08c7f076fa3.gz",
+        "bytes": 3639922,
+        "sha256": "4f3967f7124da68f0bb8d810fca80a72783cb8c9281c61f66538d0e506b8e7ed"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/trajectory.json",
+        "bytes": 1142081,
+        "sha256": "25ab8996f2256879497a837fde02b029acee38820ceed62a737e5783bb804241"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/25ab8996f2256879497a837fde02b029acee38820ceed62a737e5783bb804241.gz",
+        "bytes": 463901,
+        "sha256": "c6a91fbd861c52f5672743ea80d7d2ed848de38e1e38248e9e4eef22952ba56a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/transform.json",
+        "bytes": 496,
+        "sha256": "00fe106e9438c9d393a144c5e3c1b101f8c503fc2fd87a2c24f93832523f2671"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/00fe106e9438c9d393a144c5e3c1b101f8c503fc2fd87a2c24f93832523f2671.gz",
+        "bytes": 216,
+        "sha256": "15244b228b4789cba4d76b6423a61b1bc2a7539ceaab6e34d9733ef40c475810"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-003/values.json",
+        "bytes": 154,
+        "sha256": "d13fb90588663287e740395ecdd54db6c039b9098590237f9646215536ecaa88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d13fb90588663287e740395ecdd54db6c039b9098590237f9646215536ecaa88.gz",
+        "bytes": 114,
+        "sha256": "9ec55d13241d575cc2d89b82bb3ad0e3262257a199357c7f7fc3ddd98cb35ecf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/actions.json",
+        "bytes": 7994,
+        "sha256": "60bc024a4f904293a3b83a9ea00a1e03ef3511297fb97049a296cd9504692bfb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/60bc024a4f904293a3b83a9ea00a1e03ef3511297fb97049a296cd9504692bfb.gz",
+        "bytes": 314,
+        "sha256": "31480213b039c77f460d77186971abfc5b2d053891bbdf045bf2fa0ef319d9fe"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "a8e9cd2eb88936f5570bda935ecf089aadb4de0c3ca448695284eba304cb7c6a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a8e9cd2eb88936f5570bda935ecf089aadb4de0c3ca448695284eba304cb7c6a.gz",
+        "bytes": 71,
+        "sha256": "cd66abf955d9ec2d778b4e4de60bfb1e50528c8df42fb993307efe6832e46182"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "ae657008ba143e1680f68ac0bfadd3d689128b9d6e06e15d9b32dad357f7e44f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ae657008ba143e1680f68ac0bfadd3d689128b9d6e06e15d9b32dad357f7e44f.gz",
+        "bytes": 208,
+        "sha256": "bd60ea43e7de25a2b441a68c069e9ab9a63d1c5820e96ef70322ad76ede62b7a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/evaluate.stderr.log",
+        "bytes": 61,
+        "sha256": "121dd70a238dd93093401a3af41e527689fa64bb4bd8e406f7fab9843fb8c846"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/121dd70a238dd93093401a3af41e527689fa64bb4bd8e406f7fab9843fb8c846.gz",
+        "bytes": 81,
+        "sha256": "931b77fc23e809355f415de9dc07cd542a8ae54f44ccdc3f3f143d3cf7e21ac9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/inputs.json",
+        "bytes": 990,
+        "sha256": "e263b3cc7b80bfbeb612f310d6de1ecdbcbb1e9947a8bbd7632382079f6f01c4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e263b3cc7b80bfbeb612f310d6de1ecdbcbb1e9947a8bbd7632382079f6f01c4.gz",
+        "bytes": 473,
+        "sha256": "9ba02a1c97b53a44c310883993ab93768ac9a75d68f500a11a4cf40dc7d2b96a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/observation.json",
+        "bytes": 891,
+        "sha256": "4ded096dc9480f7a4624728858790f208976985480d490467caa4a660bb1c4f5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4ded096dc9480f7a4624728858790f208976985480d490467caa4a660bb1c4f5.gz",
+        "bytes": 585,
+        "sha256": "2d65fe61086ddfda12b2f05b79681bd29bcb43b5281282c1ec4cea813fcd9c1b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/result.json",
+        "bytes": 1947,
+        "sha256": "587ac0b128a6af7710eff8dad35653545ee3139a89e25d500c06b1d4e18781f0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/587ac0b128a6af7710eff8dad35653545ee3139a89e25d500c06b1d4e18781f0.gz",
+        "bytes": 1039,
+        "sha256": "e3d90bdf40fc3323cac0949fd5d0099753456562928b7358c0500dbad51817c2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/scene.json",
+        "bytes": 12738331,
+        "sha256": "da0e2bcd8558cbb1630f00496f552977d7a0b8edce606488e2b28f5cb8e1b322"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/da0e2bcd8558cbb1630f00496f552977d7a0b8edce606488e2b28f5cb8e1b322.gz",
+        "bytes": 3640233,
+        "sha256": "3d2cd70e7d3d3e9a70b99e3affa544176d47c34f6f5e6813d55975de0ec7666c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/trajectory.json",
+        "bytes": 1132298,
+        "sha256": "e00b6a96747d9c2a0557ec358c698051c1858cd01d5b8e50b628809c38017f17"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e00b6a96747d9c2a0557ec358c698051c1858cd01d5b8e50b628809c38017f17.gz",
+        "bytes": 464162,
+        "sha256": "2c083d0e107b61ceecba2631182b3b40a8cd6a52f95db82abbb0d64eab016e5a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/transform.json",
+        "bytes": 492,
+        "sha256": "36bb1895097bc7aced8f11b99b0895c90cf5d268ce547c7cfdbe38bfa5d61632"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/36bb1895097bc7aced8f11b99b0895c90cf5d268ce547c7cfdbe38bfa5d61632.gz",
+        "bytes": 216,
+        "sha256": "067d0e24dbc5354a6a6f56bb7914f2f5c789a8619b5de054f20f432c82626f41"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-004/values.json",
+        "bytes": 152,
+        "sha256": "33b5f7146e8519dff022d04bf9d0226d71cb0e982850fac85f8d4840f3bcf652"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33b5f7146e8519dff022d04bf9d0226d71cb0e982850fac85f8d4840f3bcf652.gz",
+        "bytes": 113,
+        "sha256": "ac32176df2b5d38bfbc938a29fbdf08a57845d758a0bfcb5a5866c9efaaa7c48"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/actions.json",
+        "bytes": 8394,
+        "sha256": "8734bb01d13c30accd22bea054b762918762c374e95557657e0fa19ca399c747"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8734bb01d13c30accd22bea054b762918762c374e95557657e0fa19ca399c747.gz",
+        "bytes": 323,
+        "sha256": "2a97fa31863551ff29dc7f12f57066633e0a209e736becd928505350588c87a8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "abe5c86e8550e76b61a256651eb2c62e76ea1521ab835104da2e3693cc7172d5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/abe5c86e8550e76b61a256651eb2c62e76ea1521ab835104da2e3693cc7172d5.gz",
+        "bytes": 71,
+        "sha256": "42f7011eb8aba56a96cbf68f7bb4be448f3843fc1cee0cc9742c961a86c70f71"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "2dc99239736ffefa693df5f9aaeb3a68dd6c569a978b0de7b42b8baa5a6efbb9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2dc99239736ffefa693df5f9aaeb3a68dd6c569a978b0de7b42b8baa5a6efbb9.gz",
+        "bytes": 207,
+        "sha256": "6740eeb9a7fd6e8bcba7a6b2095953606ecf97ff56d83f189b6ae3a0fbafdecf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/evaluate.stderr.log",
+        "bytes": 201,
+        "sha256": "58466a8da52aadb3ddd3c8fbad8e83ca3b87314bb0bfef155e146484cfb615ac"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/58466a8da52aadb3ddd3c8fbad8e83ca3b87314bb0bfef155e146484cfb615ac.gz",
+        "bytes": 164,
+        "sha256": "bb2d7d7c9434314c77bf82f781f368dece5316f576cf7fcac64287f899bdeb0a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/inputs.json",
+        "bytes": 990,
+        "sha256": "2a525273b9f8d5b51f08214ec38e3b14ed0f6c7e33bfe0ddeec4a89a7b6488e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2a525273b9f8d5b51f08214ec38e3b14ed0f6c7e33bfe0ddeec4a89a7b6488e0.gz",
+        "bytes": 474,
+        "sha256": "aef3e2ec844ad75af43366671d81822adec50d1f706b3e8284aa5a4c3365fea4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/observation.json",
+        "bytes": 955,
+        "sha256": "48b6a84fa11d4580ecda03d995aefeabdfa3c67170a46d1f376864033538b56a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/48b6a84fa11d4580ecda03d995aefeabdfa3c67170a46d1f376864033538b56a.gz",
+        "bytes": 617,
+        "sha256": "0398ded7776e67a00d6aec21f48646986659a0d04a4c66e891c5f9c853f9c486"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/result.json",
+        "bytes": 1954,
+        "sha256": "afa4b95e52eb560b988228a43d869110a66dad0e5ded21ffa15361ba679ac0b6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/afa4b95e52eb560b988228a43d869110a66dad0e5ded21ffa15361ba679ac0b6.gz",
+        "bytes": 1033,
+        "sha256": "3bd79c2a7b590fa718cec40d535685a8eade6adf69d0b5d51c0d377e689c722c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/scene.json",
+        "bytes": 12750574,
+        "sha256": "7cdfc7f9e88915ac769d8f8b5af240f985cf3dc790befd879f0dfc9b8de11e31"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7cdfc7f9e88915ac769d8f8b5af240f985cf3dc790befd879f0dfc9b8de11e31.gz",
+        "bytes": 3636046,
+        "sha256": "f166ea59a6644413853e18ab3e109c9ff66f36d4ddea37537002a6b6e5e200b8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/trajectory.json",
+        "bytes": 1144528,
+        "sha256": "05e87fb535fb4dab927355a2612d5575c8b89882f3c42a177fd0fd99a633e2d1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/05e87fb535fb4dab927355a2612d5575c8b89882f3c42a177fd0fd99a633e2d1.gz",
+        "bytes": 458856,
+        "sha256": "2a011ae48b98ee79b58e1beb4c93a2f42c55793d72d90b1061984119f05d9e0b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/transform.json",
+        "bytes": 500,
+        "sha256": "024bf47f1083f8c1d0a91ebabc669727ee4f0de46fe1853e5961dd4a11f12b07"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/024bf47f1083f8c1d0a91ebabc669727ee4f0de46fe1853e5961dd4a11f12b07.gz",
+        "bytes": 216,
+        "sha256": "c656115232565872d6dd50e4c8c6baed4fb18aa7eedb7b94c6935f8c655ef069"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-005/values.json",
+        "bytes": 158,
+        "sha256": "8118c93902a2b92b956d75485e7e5d6506028ff20d4a588582d1068876c9452a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8118c93902a2b92b956d75485e7e5d6506028ff20d4a588582d1068876c9452a.gz",
+        "bytes": 116,
+        "sha256": "30ecf153b735bf3dd8d7099293b9a533855f8de165de703c3380d16da1fc6a18"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/actions.json",
+        "bytes": 8294,
+        "sha256": "9cfcd03ae96e6e5ecb9758eff1150e116d3d39319fd831cdb4cce8977769425a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9cfcd03ae96e6e5ecb9758eff1150e116d3d39319fd831cdb4cce8977769425a.gz",
+        "bytes": 321,
+        "sha256": "001fa7b2b717a9d536db9907eec0b464966a6c5c6e55427c78b868de37637e8e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "3a8c2141d04a9c531bf291326b9e931613f2994093e54efc300c3947d76c1a36"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3a8c2141d04a9c531bf291326b9e931613f2994093e54efc300c3947d76c1a36.gz",
+        "bytes": 71,
+        "sha256": "28fbdd279475b82b8198e81d5ceb6f2c5af236101082e5d489f1bcff9328dd24"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "cf3cb127ad6ddc568146bca2ea90da693abd844c685ca96a076d3fae714f25a3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/cf3cb127ad6ddc568146bca2ea90da693abd844c685ca96a076d3fae714f25a3.gz",
+        "bytes": 208,
+        "sha256": "c21eaaa666e5fe1ff54bcb4ec7ef985622c95f3f006c830dc7367972c7e601ab"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/evaluate.stderr.log",
+        "bytes": 61,
+        "sha256": "25b8d7e3a2d04e631541de18637daa48b0283496dbe1666cd1d0774a1e1310a3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/25b8d7e3a2d04e631541de18637daa48b0283496dbe1666cd1d0774a1e1310a3.gz",
+        "bytes": 81,
+        "sha256": "e6ef5839443f8e34de6cce1798d0215a010990d87ff2b3301540bfa0d367a887"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/inputs.json",
+        "bytes": 990,
+        "sha256": "679a6cfc942627a3242acc563335dd68234ee2c44aca0b2b166eb0b0ec5d5046"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/679a6cfc942627a3242acc563335dd68234ee2c44aca0b2b166eb0b0ec5d5046.gz",
+        "bytes": 469,
+        "sha256": "7809d50f46c92737e10c7d139618b3498760e36b98bc97ced17390addc1f626c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/observation.json",
+        "bytes": 898,
+        "sha256": "633b4c2c765ec5cebf371acc412bc87b616cb7da3d1d744ff38f74a2a64a0dae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/633b4c2c765ec5cebf371acc412bc87b616cb7da3d1d744ff38f74a2a64a0dae.gz",
+        "bytes": 587,
+        "sha256": "cad56dc02643f4357ab615ceb7899292e048ac86117aadf854ea1cb1c1cba51d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/result.json",
+        "bytes": 1916,
+        "sha256": "bfabc4433a922176d1de3960d05437d5f447187e65f7071a49b9036459e58cda"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bfabc4433a922176d1de3960d05437d5f447187e65f7071a49b9036459e58cda.gz",
+        "bytes": 1016,
+        "sha256": "79862a946fe487f964b5d7608d4709841d1073a70631632419b6bf6f588e1d3a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/scene.json",
+        "bytes": 12747519,
+        "sha256": "c2a9556d53ef1b49d22a43e07c1d8095a974a0756353d3fb06e1b6efc07332ea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c2a9556d53ef1b49d22a43e07c1d8095a974a0756353d3fb06e1b6efc07332ea.gz",
+        "bytes": 3635401,
+        "sha256": "0a8b99bafa32386496b31328b2457d2394f079e5df3af254674adfe38413e07c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/trajectory.json",
+        "bytes": 1141473,
+        "sha256": "c84b290062c619a2ca7fa53dec6ce35f6fcd09fab9f172fc5d20ccc53ba766b0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c84b290062c619a2ca7fa53dec6ce35f6fcd09fab9f172fc5d20ccc53ba766b0.gz",
+        "bytes": 457683,
+        "sha256": "c7ff4d3ac6595ddbdb17c34202e163f3581264d654093abf679f46840db43c95"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/transform.json",
+        "bytes": 500,
+        "sha256": "c3a33d6177698e1c90f503972d64f6127f101c905d91bb4a977f527f326484a8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c3a33d6177698e1c90f503972d64f6127f101c905d91bb4a977f527f326484a8.gz",
+        "bytes": 216,
+        "sha256": "58dac1e4786fc955cefee90d4c6774a349cfb84b1d8dcf107a66df965737f310"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-006/values.json",
+        "bytes": 159,
+        "sha256": "b08cb261abf2d8c546043b1673fbcddda3dddd3c3ab4aee012c25299a1dac005"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b08cb261abf2d8c546043b1673fbcddda3dddd3c3ab4aee012c25299a1dac005.gz",
+        "bytes": 115,
+        "sha256": "d11b746d806a7652922e1195ba9937416480bb25861919057be878a8cc92884f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/actions.json",
+        "bytes": 8194,
+        "sha256": "93c5b0ae92e31b49fba5eff6a90af99ae6e6fac6542b6c588300ecb6cfa3e7b7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/93c5b0ae92e31b49fba5eff6a90af99ae6e6fac6542b6c588300ecb6cfa3e7b7.gz",
+        "bytes": 318,
+        "sha256": "507601b97019b42d3b564f740856eb760339f106760e41dedc85a41b716856d4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/evaluate.execution.json",
+        "bytes": 57,
+        "sha256": "7819fd50318750002831080ba77f214ed0d395c0e2ec77ea96f8c10399f7f5c6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7819fd50318750002831080ba77f214ed0d395c0e2ec77ea96f8c10399f7f5c6.gz",
+        "bytes": 70,
+        "sha256": "0115b418d1480764aab3e0d1cd8220041f868af7b885473cabebc9750aa06cbd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "9a32022d5d49d8755fd784562111c97d5091dde9e1851bc4bcdc0a4a2caa72e4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9a32022d5d49d8755fd784562111c97d5091dde9e1851bc4bcdc0a4a2caa72e4.gz",
+        "bytes": 208,
+        "sha256": "b524193f9068114b59d9c26ae6627dc8e64909e68a3b8d5299c616038a1b851b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/evaluate.stderr.log",
+        "bytes": 61,
+        "sha256": "91669a44de12190eb0046bcd9016fa13f3414d54d79d28fcdc3d6d230330d6d2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/91669a44de12190eb0046bcd9016fa13f3414d54d79d28fcdc3d6d230330d6d2.gz",
+        "bytes": 81,
+        "sha256": "ead7dc38cc47afd95d43a587f209a98b2b4bd76382675efedf88caf8381cde46"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/inputs.json",
+        "bytes": 990,
+        "sha256": "aca40ddf1d40b35de45cec408c6480e417782091a5743e4a244135ee95f073e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/aca40ddf1d40b35de45cec408c6480e417782091a5743e4a244135ee95f073e0.gz",
+        "bytes": 470,
+        "sha256": "9d7747deea52970f1d92a196b842a925b70b9f8ee7d779a8a7b0c6d176b49ecf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/observation.json",
+        "bytes": 896,
+        "sha256": "ebdc4c3a96cd8d3cb58afb1512b9c339566c57556064a7acf64238402fae7323"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ebdc4c3a96cd8d3cb58afb1512b9c339566c57556064a7acf64238402fae7323.gz",
+        "bytes": 587,
+        "sha256": "26f75b802fce9e0e721370f0e8b2d34e6b4bae865ca5b32c906ebca590c9648c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/result.json",
+        "bytes": 1883,
+        "sha256": "d4d055cb462f96c715cb5207cf72046ed4dcc91557f5eb3918b02fb2d51571ce"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d4d055cb462f96c715cb5207cf72046ed4dcc91557f5eb3918b02fb2d51571ce.gz",
+        "bytes": 1008,
+        "sha256": "8282e91a9846f7580089cf25de27d0b6ed4f714a173785438bc5ac896c6705da"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/scene.json",
+        "bytes": 12750482,
+        "sha256": "0e65938cbbc62fd35fa7c5296d6e564415e38a53b85720b4d50eb1c539f05a72"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0e65938cbbc62fd35fa7c5296d6e564415e38a53b85720b4d50eb1c539f05a72.gz",
+        "bytes": 3635227,
+        "sha256": "2549db8ec6e218363a4285b48338af891c69de8842d153e208e8998a257bd979"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/trajectory.json",
+        "bytes": 1144449,
+        "sha256": "93b47e06b22643e3b8e95d61a301f094b5b1ae4a3ea7b2d08593aa2e395fcd6e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/93b47e06b22643e3b8e95d61a301f094b5b1ae4a3ea7b2d08593aa2e395fcd6e.gz",
+        "bytes": 457809,
+        "sha256": "338405758dc61499512b66a1183e468821725ac15073dd387e071bd578271dbb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/transform.json",
+        "bytes": 504,
+        "sha256": "265cf484b8e8535de2e57ef44266f771e7cda6b490221444b2d11c0bd5121cf0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/265cf484b8e8535de2e57ef44266f771e7cda6b490221444b2d11c0bd5121cf0.gz",
+        "bytes": 215,
+        "sha256": "1e50ce67c6e6b7a50183477698bb70c6795cd311df66ae8e50927e2b7178077b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-007/values.json",
+        "bytes": 157,
+        "sha256": "c96fcd20711cd898cc762948cc1ddf2eb61cfa3156f401ad736bb339bbd4033d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c96fcd20711cd898cc762948cc1ddf2eb61cfa3156f401ad736bb339bbd4033d.gz",
+        "bytes": 116,
+        "sha256": "21b1518253535dd050b3d00089904e7b89ef3823e092510f5df1556efdbc9387"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/actions.json",
+        "bytes": 8294,
+        "sha256": "775bb396768360fbf4af6d97bfea07b18af8db80376876707e42c35400729722"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/775bb396768360fbf4af6d97bfea07b18af8db80376876707e42c35400729722.gz",
+        "bytes": 323,
+        "sha256": "d540c28d3a9ffd59458fdb39f6ac84d7c93db3dea3b05ea15abaf1d5beadc9f9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "53609a05a9cf2cd565fcefbd73dce852d3ed320ca0700253e684c79ca790ad96"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/53609a05a9cf2cd565fcefbd73dce852d3ed320ca0700253e684c79ca790ad96.gz",
+        "bytes": 71,
+        "sha256": "f31b8b5270c82f29ea68e6107c7373cb9c5af9f33b94932b1d89a9df7d50942c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "1bbadb6a8f2ff8c1ed6dd0cfde1bd301abe57ea6a69d218425ad0cdbfecc84b7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1bbadb6a8f2ff8c1ed6dd0cfde1bd301abe57ea6a69d218425ad0cdbfecc84b7.gz",
+        "bytes": 208,
+        "sha256": "1f1c7916de6cec5a31ab8561c16bc7acb402a18d8b4e843a7719808dc06cb324"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/evaluate.stderr.log",
+        "bytes": 61,
+        "sha256": "44339380d584a08473365e504009ea89e6348753e14cd7fe01800c5c127a3307"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/44339380d584a08473365e504009ea89e6348753e14cd7fe01800c5c127a3307.gz",
+        "bytes": 81,
+        "sha256": "327730baadac2a34df470c98411e5c31d4f8d49e804bea80be2cf1b5b5df63eb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/inputs.json",
+        "bytes": 990,
+        "sha256": "acd1b57c33606a33ede831b4305ed1e9f89c40950a33b066936261ac43149916"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/acd1b57c33606a33ede831b4305ed1e9f89c40950a33b066936261ac43149916.gz",
+        "bytes": 470,
+        "sha256": "663c54ee37fe557f6de7c163ed1835aa96ecea968fe20d0e0e91e47c416dbd26"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/observation.json",
+        "bytes": 897,
+        "sha256": "88f7e18756af77d73c7fecabf2e4024724ab9a373ffb2e19574857907d1c44a4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/88f7e18756af77d73c7fecabf2e4024724ab9a373ffb2e19574857907d1c44a4.gz",
+        "bytes": 589,
+        "sha256": "d7d712f4b5e7e2a8ffa10c9ac27a9eb6cebdd672f6a587b50e61813ae2293b37"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/result.json",
+        "bytes": 1785,
+        "sha256": "d377c8a00c24ba01a2ef36966b5bd0243d457b69097cff4c046d61b9088a517f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d377c8a00c24ba01a2ef36966b5bd0243d457b69097cff4c046d61b9088a517f.gz",
+        "bytes": 946,
+        "sha256": "09028231b56360e70b67efef5c9f702e5719803a3318e215c1870faf8c06b544"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/scene.json",
+        "bytes": 12747625,
+        "sha256": "7335746320bd719b6ebe461bd5f41c7952f097ed70ff70d5e5a7efad5c96c789"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7335746320bd719b6ebe461bd5f41c7952f097ed70ff70d5e5a7efad5c96c789.gz",
+        "bytes": 3641390,
+        "sha256": "fca63498599639b4fbf6870d13cf689c77fa0ac3d1ce0c9dfbe268ac37a56d4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/trajectory.json",
+        "bytes": 1141579,
+        "sha256": "1fd39e2e9c0d64479b36295e04538ff938ee0df63dfb449f63cc563d4ccc46ee"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1fd39e2e9c0d64479b36295e04538ff938ee0df63dfb449f63cc563d4ccc46ee.gz",
+        "bytes": 465283,
+        "sha256": "faaeccae1bf7c42d5791aa15690ffc27f4b541e76bd17378d419cdf2ac1245d7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/transform.json",
+        "bytes": 496,
+        "sha256": "3790068058dbc7e74ee775170c88c5c62d1428ed06c41351333ea2aa6f4ced45"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3790068058dbc7e74ee775170c88c5c62d1428ed06c41351333ea2aa6f4ced45.gz",
+        "bytes": 216,
+        "sha256": "87d658673cf3ef81fbeb064c0185039b866a4aa8dd08a9175c479e404b6884cb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-008/values.json",
+        "bytes": 158,
+        "sha256": "c997bd3a812ff0097ea4b40457acc5dfc0044581941b006a022025907827606d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c997bd3a812ff0097ea4b40457acc5dfc0044581941b006a022025907827606d.gz",
+        "bytes": 117,
+        "sha256": "f71b748d8fae6e4cca0d53bd88da294f00f3f5531c8db7e3176f7da326dc4afa"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/actions.json",
+        "bytes": 8094,
+        "sha256": "84d4bee5ebeaf0469ecb2a8030e63cce67ff1eacc675f29d4038ddf4cfca7ccd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/84d4bee5ebeaf0469ecb2a8030e63cce67ff1eacc675f29d4038ddf4cfca7ccd.gz",
+        "bytes": 316,
+        "sha256": "b0253690e822463a5ec0bda34d3bdd36ae5af549f1921a6157b57442bedeea0c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "90aa94b216dcdf2422f002a314ebd2ab261c56081f2232a19992ad1a70d1c098"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/90aa94b216dcdf2422f002a314ebd2ab261c56081f2232a19992ad1a70d1c098.gz",
+        "bytes": 71,
+        "sha256": "e95bddcab7d9d6ab22a111932ca676488e405dc15e3c3db646bbf62e58b5c58f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/evaluate.launch.json",
+        "bytes": 384,
+        "sha256": "f746400cb42aa528ded6ba3c3401e51b63a6ba9580ba9e79701523fbc59c14f9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f746400cb42aa528ded6ba3c3401e51b63a6ba9580ba9e79701523fbc59c14f9.gz",
+        "bytes": 208,
+        "sha256": "12d621e982309d885fac7e444d09f8306313910e987fbb2bf1739df20c9f80ff"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/evaluate.stderr.log",
+        "bytes": 60,
+        "sha256": "69a5df45abcf89cb63c21273d4253fbe622d10d7b95ec69f43a22ff0e7c4e873"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/69a5df45abcf89cb63c21273d4253fbe622d10d7b95ec69f43a22ff0e7c4e873.gz",
+        "bytes": 80,
+        "sha256": "9853fdca2c4a21d02a3461a2786c3fb91429f54ea876cf4d07cccd3716ce9d05"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/inputs.json",
+        "bytes": 990,
+        "sha256": "53555a1a24c13fa9e9c55fc39a18d1577dac64faf95d91a8463d8caa8059b84a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/53555a1a24c13fa9e9c55fc39a18d1577dac64faf95d91a8463d8caa8059b84a.gz",
+        "bytes": 471,
+        "sha256": "101379810976b570e5fee3df7adfcaa49142cb76502a10ba92d80e667f921ad6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/observation.json",
+        "bytes": 915,
+        "sha256": "7ef7763446a38cdfe86f0cc591d0e802e01d9b6186f017cbf9fc8c663cbd42b7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7ef7763446a38cdfe86f0cc591d0e802e01d9b6186f017cbf9fc8c663cbd42b7.gz",
+        "bytes": 594,
+        "sha256": "b3f5b7c43553252fc45d1909eeef20b8559d4188adc74a0d7655c50153cb843e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/result.json",
+        "bytes": 1903,
+        "sha256": "8fd2de46daf225cd6dac0d47ea8d5fa3158df8e41371fe4ce0f40e16e2277a74"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8fd2de46daf225cd6dac0d47ea8d5fa3158df8e41371fe4ce0f40e16e2277a74.gz",
+        "bytes": 1021,
+        "sha256": "b477f14c57e9b6e0299295e744bc6707935e73991e9be2814c972211158814b1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/scene.json",
+        "bytes": 12748747,
+        "sha256": "08776a8fc8097dacfe9b4842c0fb309a7d91b76a72f353ca5e15ca4c07d19fe3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/08776a8fc8097dacfe9b4842c0fb309a7d91b76a72f353ca5e15ca4c07d19fe3.gz",
+        "bytes": 3639493,
+        "sha256": "a1a75a7efaac7975af0b7142bc243bd8a8cc15b8e115a94821af4c7db2d83f61"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/trajectory.json",
+        "bytes": 1142713,
+        "sha256": "f964bf24276cdca3a7a6c06414e31c0d7b020d10656ac663bed8e758af6087a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f964bf24276cdca3a7a6c06414e31c0d7b020d10656ac663bed8e758af6087a9.gz",
+        "bytes": 463304,
+        "sha256": "a722e91fda74f0d204626714b48f9be6111e16ef9907453a10d2be148d44473c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/transform.json",
+        "bytes": 496,
+        "sha256": "5782faa32bc0838cd1b9e388217c884867da91626b6534f9646e3a16b5a1f8d5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5782faa32bc0838cd1b9e388217c884867da91626b6534f9646e3a16b5a1f8d5.gz",
+        "bytes": 215,
+        "sha256": "18ca0738a3c3ba648992d1932ee3c7bb0fbc9ca593938cd96cdf047e0424f71c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/evaluation-009/values.json",
+        "bytes": 156,
+        "sha256": "f955b3e6d3cb3e71f0292512a837f3b48c61de3e9f48628465bc4e1fafb7ed83"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f955b3e6d3cb3e71f0292512a837f3b48c61de3e9f48628465bc4e1fafb7ed83.gz",
+        "bytes": 115,
+        "sha256": "c5830e434bd5a9dc22ec3af070bd17786ec2d823f6b8e71da1f4113f1c4aafab"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial-batch-0.observations.json",
+        "bytes": 1172,
+        "sha256": "a965413cc1a0b10094dc2738935364e46d47e19163dd0711567bbb55bdaf00da"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a965413cc1a0b10094dc2738935364e46d47e19163dd0711567bbb55bdaf00da.gz",
+        "bytes": 528,
+        "sha256": "c97cbdbe553b324fe7fce2021130f0de957cb4a5ac8887a402a455b57705fec4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial-batch-2.observations.json",
+        "bytes": 2032,
+        "sha256": "bbda5d851aaa3f3ff147a3bee133e6e07e1bac1e0de29832f2eb620ac31c4345"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bbda5d851aaa3f3ff147a3bee133e6e07e1bac1e0de29832f2eb620ac31c4345.gz",
+        "bytes": 706,
+        "sha256": "add6c22e90b02e12b179ccfa1fe9973baaed5231021cd8686d9a34a1871d8b93"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial-batch-4.observations.json",
+        "bytes": 2903,
+        "sha256": "eebf41a13be1637eb75b539799b54c81b6fbf57b91065dfb98b4fdae3420b29a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/eebf41a13be1637eb75b539799b54c81b6fbf57b91065dfb98b4fdae3420b29a.gz",
+        "bytes": 892,
+        "sha256": "26fecfa3c0247dd0211ab058f1e938f5a1403bb8aadc2d56a3c04d72f9fd1077"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial-batch-6.observations.json",
+        "bytes": 3716,
+        "sha256": "95c2822e88cb6f023da220d6998519ff8d37a86dee7eca6ecde74e2361582312"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/95c2822e88cb6f023da220d6998519ff8d37a86dee7eca6ecde74e2361582312.gz",
+        "bytes": 1078,
+        "sha256": "c7ce8c83fc70a51d992ea105c9d3cb160f6625900cf4902cb269889736a11b5a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial-design.execution.json",
+        "bytes": 58,
+        "sha256": "5c2ff0abc517515d3c4f3770c6213b048f4e17da89dbcb7b63a10801f5cf5af1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5c2ff0abc517515d3c4f3770c6213b048f4e17da89dbcb7b63a10801f5cf5af1.gz",
+        "bytes": 71,
+        "sha256": "33542c1c8750d14b29df4b70e4be5656414ab1a757998728ca68da0c7b519292"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial-design.launch.json",
+        "bytes": 226,
+        "sha256": "015d18a8dd120fa32984182c83c906b65d6fb4a24e54832ede064e5eef9063a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/015d18a8dd120fa32984182c83c906b65d6fb4a24e54832ede064e5eef9063a9.gz",
+        "bytes": 168,
+        "sha256": "9ce53bb29facf527aad9f8e9a1262d7fad2a2af2524c9dfa1a790f633aa51e2b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial-design.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial-design.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial.design.json",
+        "bytes": 2105,
+        "sha256": "32c61579051db300f093a8a554fdb92ac202440ffb73b91fef7b5e95b93afe23"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/32c61579051db300f093a8a554fdb92ac202440ffb73b91fef7b5e95b93afe23.gz",
+        "bytes": 1068,
+        "sha256": "9a4a7156f50abd2d0d6764225b8d5dde7a5aaa471099c5ccd145902a51283949"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/initial.request.json",
+        "bytes": 728,
+        "sha256": "3b19b74e02e2d86ec1f171e0b142d6b040f990bfbfc36c5d7e89d8ae2723cdf0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3b19b74e02e2d86ec1f171e0b142d6b040f990bfbfc36c5d7e89d8ae2723cdf0.gz",
+        "bytes": 330,
+        "sha256": "b41edc28ac4f04b779b833b5939668996a4add9e8438cc95dec2aaa0a5c1dd74"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/result.json",
+        "bytes": 5456,
+        "sha256": "15a6948bde518b3716925b7327aff6142190de994e6d46ea423020f726cfb71b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/15a6948bde518b3716925b7327aff6142190de994e6d46ea423020f726cfb71b.gz",
+        "bytes": 1638,
+        "sha256": "cb86cefd596e1a297ab2a643d339b5138bca7ab7493e0a1bdf101fb7898bf3d8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-gp-smoke-v1/spec.json",
+        "bytes": 3043,
+        "sha256": "240ef734348fb5313b176ac0448f26c3596722fa3c59f49ef6cfcfda6b2306c0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/240ef734348fb5313b176ac0448f26c3596722fa3c59f49ef6cfcfda6b2306c0.gz",
+        "bytes": 1360,
+        "sha256": "c26deec8adfeae088186b6fa7629876a55cf2db97b4a933d4a3ab3babffc302e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/actions.json",
+        "bytes": 8294,
+        "sha256": "8d4d179282c1c65e486af1c445ec94f654b42dfcf1bf498b35ae07ef59fe3317"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8d4d179282c1c65e486af1c445ec94f654b42dfcf1bf498b35ae07ef59fe3317.gz",
+        "bytes": 321,
+        "sha256": "c2d11c0b6ccd33655843a249309086d46d95ad3eb98b1986e4594f361428cb5e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/check.cjs",
+        "bytes": 1494,
+        "sha256": "e3bd9826cb93167d958524928fb0d488be73f1b551e2f0db6e8caa70c9b257e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3bd9826cb93167d958524928fb0d488be73f1b551e2f0db6e8caa70c9b257e0.gz",
+        "bytes": 797,
+        "sha256": "a55ffe2bbf03937471b8eab5b9c04536db5a94554c32faad80a79e52b6a38e5f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/check.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/check.stdout.log",
+        "bytes": 327,
+        "sha256": "5228bfb1ffdcc2a9c63214792171bf8dcc68b1fc3f8d18c593a5a610a1576b19"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5228bfb1ffdcc2a9c63214792171bf8dcc68b1fc3f8d18c593a5a610a1576b19.gz",
+        "bytes": 232,
+        "sha256": "7facf0e91a138951891270f52edce525226898d8efdf29f1f5e789c7d691e097"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/inputs.json",
+        "bytes": 910,
+        "sha256": "b6a8f230a8151a98f0598207755a68139a8718cb467b44bb26773349b656d184"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b6a8f230a8151a98f0598207755a68139a8718cb467b44bb26773349b656d184.gz",
+        "bytes": 458,
+        "sha256": "811dc22657bec34f53403feb07f882e557a24ed1061372b053cd5787c9ecd4d1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/native.json",
+        "bytes": 16280013,
+        "sha256": "554e01e2ce369abdac7efc72970b31f3b9f3b5ffba83bc0f6d8bbd83663ca687"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/554e01e2ce369abdac7efc72970b31f3b9f3b5ffba83bc0f6d8bbd83663ca687.gz",
+        "bytes": 4393569,
+        "sha256": "01859b86c0dfcf56d62d4a98daa459730430e40681962897c30c197e8ce5e8df"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/report.json",
+        "bytes": 942,
+        "sha256": "5d348669e3028dac155f18aad38da49c43cc5405da47cb5a9e0bf2c48e801c0e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5d348669e3028dac155f18aad38da49c43cc5405da47cb5a9e0bf2c48e801c0e.gz",
+        "bytes": 554,
+        "sha256": "c9de2c8cf772f9383b287d97f16bd3445f17a7db93be7246445005e9daf6e4a6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/scene.json",
+        "bytes": 12745305,
+        "sha256": "f8ea2b2c49ee7b883f3b9e8ab884f0319232d7ab84540388600269d04fd59cec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f8ea2b2c49ee7b883f3b9e8ab884f0319232d7ab84540388600269d04fd59cec.gz",
+        "bytes": 3639735,
+        "sha256": "6b2dec485a7b1ab6dc3019f4ca59978631a2f9e4af18682fff1dea4e65dc6da5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/trajectory.json",
+        "bytes": 1139256,
+        "sha256": "464cc1190a750e3a34a1dce91eae2e4045abb52ef5eff8b11fdbdc3ba681541c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/464cc1190a750e3a34a1dce91eae2e4045abb52ef5eff8b11fdbdc3ba681541c.gz",
+        "bytes": 463728,
+        "sha256": "26746f13909fac823cb02f80a1738732b14928d8fdbf7325ec074b8ed59ca0f3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/transform.json",
+        "bytes": 292,
+        "sha256": "af46829c668cd17e653cc028b7efb7f26ff78dd6d3f6ae97a35949b3142c4539"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/af46829c668cd17e653cc028b7efb7f26ff78dd6d3f6ae97a35949b3142c4539.gz",
+        "bytes": 188,
+        "sha256": "3cb53cc6507ed32dd8edaba725f2eeb4bca0be4c9fb9d7630bed45e384d2c601"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-parity/values.json",
+        "bytes": 54,
+        "sha256": "4bde6f437eaf3951c9d5cda76f70e566896eca98f90e0608cbc867c4f571d83b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4bde6f437eaf3951c9d5cda76f70e566896eca98f90e0608cbc867c4f571d83b.gz",
+        "bytes": 64,
+        "sha256": "324a2b1519f7c972c27924b18bbd4b17f0104a21efddb633b7751112f1ea28cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/continue.mjs",
+        "bytes": 3354,
+        "sha256": "f4b631519221ca4fe04de2b24dc71096881310175e9c4fbc8daa19db21d563c4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f4b631519221ca4fe04de2b24dc71096881310175e9c4fbc8daa19db21d563c4.gz",
+        "bytes": 1535,
+        "sha256": "d1b981dda494c1b23f67d06dc249172ca829abb805dc572c9b4daab74b3f9f56"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/continue.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/continue.stdout.log",
+        "bytes": 68,
+        "sha256": "b33a0592bc81f5a5e7bf209002fb81ee129a0d08cd02ee3c76f19975065bc138"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b33a0592bc81f5a5e7bf209002fb81ee129a0d08cd02ee3c76f19975065bc138.gz",
+        "bytes": 85,
+        "sha256": "f6d97f487945f6c9ffb98ccc07dd84b6780ff14edc0eb9fb5ced84216f295fdf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected.execution.json",
+        "bytes": 396,
+        "sha256": "ed8778297ebc2fff3206023e4b74ba2db707cf8ed22c4294c4a082976572976f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ed8778297ebc2fff3206023e4b74ba2db707cf8ed22c4294c4a082976572976f.gz",
+        "bytes": 199,
+        "sha256": "aa7d7ae53ecbc18e62ba2a55d968092f7a144c4812058aa8c31c919f891e91e4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected.stderr.log",
+        "bytes": 60,
+        "sha256": "5ded607cedb36a25c6b6e436b5b66bca28dbe576f2be86c6dc0c3cf4813e973f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5ded607cedb36a25c6b6e436b5b66bca28dbe576f2be86c6dc0c3cf4813e973f.gz",
+        "bytes": 80,
+        "sha256": "14a58680eaebbc8c3480aabf87a73737eeae29b05a2bbfc6cf566ac2db2a7756"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/actions.json",
+        "bytes": 8194,
+        "sha256": "1fe3018214b2d1671c0f964ab0baaedf80597b463c95ea56d457672d75026f8f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1fe3018214b2d1671c0f964ab0baaedf80597b463c95ea56d457672d75026f8f.gz",
+        "bytes": 318,
+        "sha256": "6467a6644da6bd4f658339f4ab8402a1fa40a0bd9c63b0269e037c33efbca766"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/inputs.json",
+        "bytes": 990,
+        "sha256": "d86dbc7b7be40af8016103077ee150a6eed4e15994ccfcd284a1ae3694a2c7a1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d86dbc7b7be40af8016103077ee150a6eed4e15994ccfcd284a1ae3694a2c7a1.gz",
+        "bytes": 471,
+        "sha256": "788eb65bfd34617829b9330f8bca6b103678785d10f0d76c00f2a1f1cac5d20e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/observation.json",
+        "bytes": 550,
+        "sha256": "e08c8174a88d61f7fbf648bdeabc92c7ec425b1d3069f6ec67deedf370b52e9a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e08c8174a88d61f7fbf648bdeabc92c7ec425b1d3069f6ec67deedf370b52e9a.gz",
+        "bytes": 398,
+        "sha256": "2a69494779f7e7c0bda46e76902037353b5232ae63b3ead17a070fdfdaa1d962"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/result.json",
+        "bytes": 1950,
+        "sha256": "0205ccbd81567e1b30ce7353a1726f7fb459e8c3e414396ac595d521c4a5600d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0205ccbd81567e1b30ce7353a1726f7fb459e8c3e414396ac595d521c4a5600d.gz",
+        "bytes": 1044,
+        "sha256": "8a54cfc92321c83071ac23b17165a47501aff87ea62d1097074ab8d5d32311cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/scene.json",
+        "bytes": 12742060,
+        "sha256": "37aa1c0063bd3f256d691648e730c4d00e2471ba6dd546132500efd047957405"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/37aa1c0063bd3f256d691648e730c4d00e2471ba6dd546132500efd047957405.gz",
+        "bytes": 3639679,
+        "sha256": "93f718c49dc7262d4047302ac18198eac6b5044e29d8a0f0c5b88ebbe42bf7d5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/trajectory.json",
+        "bytes": 1136021,
+        "sha256": "4e0d646a8d8f91210f7eeca68bf1dfdf550d7a2fe9305cd633bf72635a010e35"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4e0d646a8d8f91210f7eeca68bf1dfdf550d7a2fe9305cd633bf72635a010e35.gz",
+        "bytes": 463398,
+        "sha256": "f4edea198a5b395c5c2ffa6ca6fcf9eb9b41561059717e15250b0ec41755dc07"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/transform.json",
+        "bytes": 496,
+        "sha256": "784564033f4559fc091575bb69d1ec26e8143259d57be1fdc95ba5e11e375f8a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/784564033f4559fc091575bb69d1ec26e8143259d57be1fdc95ba5e11e375f8a.gz",
+        "bytes": 216,
+        "sha256": "38020318a72115fb6cf9c1d380c953b69d8dac4caf8398a9cf78185f66e4a4ca"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/model-selected/values.json",
+        "bytes": 156,
+        "sha256": "0e267ad7c0f6d0cb1f37fbfc26a0c7bd6ef56a0a0b24b3f7d8ccf9467d101d13"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0e267ad7c0f6d0cb1f37fbfc26a0c7bd6ef56a0a0b24b3f7d8ccf9467d101d13.gz",
+        "bytes": 114,
+        "sha256": "477f3265502cf230b1c77e5b8ef28a843c91fad1e606e212e283a23e1654d8ae"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0-design.execution.json",
+        "bytes": 241,
+        "sha256": "668dc7b7ec2c47d0d8d32620e6fe95a0973b5ff0ed0bf1d614b19968bf26d446"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/668dc7b7ec2c47d0d8d32620e6fe95a0973b5ff0ed0bf1d614b19968bf26d446.gz",
+        "bytes": 160,
+        "sha256": "2950eabbe61aa1158264cd6694ffaf2d393c4bc4ac43b9459a9e52ca41b687c1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0-design.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0-design.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0.design.json",
+        "bytes": 1016,
+        "sha256": "566a14450e3a18093058a3398e29dc3a86ba9e327516ac8f99451e77180b97d2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/566a14450e3a18093058a3398e29dc3a86ba9e327516ac8f99451e77180b97d2.gz",
+        "bytes": 513,
+        "sha256": "961d95642315e8c5f67ab0450d4ced14777754db0e3209435ca7bcc4f53c3b40"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0.execution.json",
+        "bytes": 372,
+        "sha256": "e4c809e1347e7b3b4062f91adc9baa34d329f3b747708259ecc8d71b98dde0f6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e4c809e1347e7b3b4062f91adc9baa34d329f3b747708259ecc8d71b98dde0f6.gz",
+        "bytes": 196,
+        "sha256": "1e47e8c1d6a7d77be51a5d663a44b0d9abbe8f9aa4015e3bf41ed4b1e78b2a19"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0.request.json",
+        "bytes": 731,
+        "sha256": "a29b5f12014861a3590d4f6cc0775552006e75ee88ad62dad1e4c1619f41b96b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a29b5f12014861a3590d4f6cc0775552006e75ee88ad62dad1e4c1619f41b96b.gz",
+        "bytes": 332,
+        "sha256": "61cb583c62310c32b60a3dd9378de20ebc5abff191129cd4c1522359bd567f30"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0.stderr.log",
+        "bytes": 61,
+        "sha256": "5a006bd7e7201476448e8bed0623fabc22885e75bc18ac7da33145b1ec44c111"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5a006bd7e7201476448e8bed0623fabc22885e75bc18ac7da33145b1ec44c111.gz",
+        "bytes": 81,
+        "sha256": "064af323c53df866462e87db9bea281d1a824928e980eddce2dcc1ab9184ef91"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/actions.json",
+        "bytes": 8194,
+        "sha256": "d39ea0fe66aab916dfa024cd21d0a834a64054d5c3da2837c9b336d64bf6b34b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d39ea0fe66aab916dfa024cd21d0a834a64054d5c3da2837c9b336d64bf6b34b.gz",
+        "bytes": 317,
+        "sha256": "52537504ef4e65fc66844a907383ba0d5ef99fd6fd67188113c0d1190bccd950"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/inputs.json",
+        "bytes": 966,
+        "sha256": "c98ff9593a2001ea6bf0393da1146d6771356503ba3d90b844020c8071fe04c8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c98ff9593a2001ea6bf0393da1146d6771356503ba3d90b844020c8071fe04c8.gz",
+        "bytes": 464,
+        "sha256": "77840a3112ff24bc9f88cc99dffc48295bea99b238c413b1e06645958a985481"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/observation.json",
+        "bytes": 558,
+        "sha256": "42890fb2282db8e8e4b8f5d408ce83dbfd637732944af06aa6da1e0d186b8aed"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/42890fb2282db8e8e4b8f5d408ce83dbfd637732944af06aa6da1e0d186b8aed.gz",
+        "bytes": 409,
+        "sha256": "3c46628abc045c229fe6f5a1f85941531be09ba50468c0b47152990611f87a71"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/result.json",
+        "bytes": 1925,
+        "sha256": "adce2c33be6a0a43c82dd6c147f93762e9e9f17a581631ceab9a9b48800bb5b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/adce2c33be6a0a43c82dd6c147f93762e9e9f17a581631ceab9a9b48800bb5b5.gz",
+        "bytes": 1026,
+        "sha256": "b7337a46a39b3b82bb565757c518d0425d503e452f103ec4a8462998792769c5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/scene.json",
+        "bytes": 12747383,
+        "sha256": "ef371d360d7697f25024240d1fe73cc816412cc1177c359cbdef6af80770b6cb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ef371d360d7697f25024240d1fe73cc816412cc1177c359cbdef6af80770b6cb.gz",
+        "bytes": 3641498,
+        "sha256": "ae16e9ab053d044d8780907626c98eae0e857251f6ecad8b538ef93615b459e0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/trajectory.json",
+        "bytes": 1141323,
+        "sha256": "999810fd11f9747c8ed57beb72bbf300b17944d3c9370c20a67c5cc2a7072117"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/999810fd11f9747c8ed57beb72bbf300b17944d3c9370c20a67c5cc2a7072117.gz",
+        "bytes": 465324,
+        "sha256": "583720352f8c74b0ee376d06c5bd3a26c22634adc6ff9d5a5007f35b7037b0ca"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/transform.json",
+        "bytes": 504,
+        "sha256": "4587c637fe1cccb70b409d4dd4d1046a80d2e3e437014ee74b5971c8d461c746"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4587c637fe1cccb70b409d4dd4d1046a80d2e3e437014ee74b5971c8d461c746.gz",
+        "bytes": 218,
+        "sha256": "688e4d79d190701d2068f766e451022ccfcadba1298142302305bead5c3317dc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-0/values.json",
+        "bytes": 160,
+        "sha256": "77b5e06c071122a49125788364e12d71de404bcdec6c78c630ee8b9447c7b2d0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/77b5e06c071122a49125788364e12d71de404bcdec6c78c630ee8b9447c7b2d0.gz",
+        "bytes": 117,
+        "sha256": "aeceb521cfff16854b9d11bb9c98a857312ec8058989cf860e6c2d17cf9d2385"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1-design.execution.json",
+        "bytes": 241,
+        "sha256": "15781061fb53093afb53c765fc9bf650ce6e483d4d5fd693f32e305c432d5fa2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/15781061fb53093afb53c765fc9bf650ce6e483d4d5fd693f32e305c432d5fa2.gz",
+        "bytes": 160,
+        "sha256": "c5a88ef58bb6de12f618b2e792d4a6ccab39e518d0b8eb706accbc2710aca287"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1-design.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1-design.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1.design.json",
+        "bytes": 1014,
+        "sha256": "6063eb5931de3c2174eebed8a557841d32a605b676216670ae4dcfdae5739e6b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6063eb5931de3c2174eebed8a557841d32a605b676216670ae4dcfdae5739e6b.gz",
+        "bytes": 511,
+        "sha256": "19079b1172f5b8ec74da8802bb8025924e4c5952580faf8d8c8362f4055ae8d3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1.execution.json",
+        "bytes": 372,
+        "sha256": "838bc866a6f313b5ffbcc471b0a9b643c2bb11cd08918b91728b0b31dacffdfa"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/838bc866a6f313b5ffbcc471b0a9b643c2bb11cd08918b91728b0b31dacffdfa.gz",
+        "bytes": 196,
+        "sha256": "1d6c0282ee2adb51ef14268f5b04b46308f1901c9e70b4c6f7e66a0aa06cc07e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1.request.json",
+        "bytes": 731,
+        "sha256": "f526de030cc0d57b04350e244f9a06bd8e9cb34c810be8d5ed764e8cb2addee3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f526de030cc0d57b04350e244f9a06bd8e9cb34c810be8d5ed764e8cb2addee3.gz",
+        "bytes": 333,
+        "sha256": "786e0bf3fa88bcd1d4b2cb1ea564a1e76227b6da1959072caac8ed2c5b76aaf6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1.stderr.log",
+        "bytes": 201,
+        "sha256": "3c979d1015b89f00d1ee89099af6a5199e1595ca4334268aed852ed17bc51619"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3c979d1015b89f00d1ee89099af6a5199e1595ca4334268aed852ed17bc51619.gz",
+        "bytes": 164,
+        "sha256": "b9380e507f5f9bf33a1f8af883d10708c67e7b6427921ed16f1245b544935e2a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/actions.json",
+        "bytes": 8294,
+        "sha256": "5a6e6ccdee1be5def49b0aa3e11d18f825a59c51530cdb4926625b9aecdc9cd0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5a6e6ccdee1be5def49b0aa3e11d18f825a59c51530cdb4926625b9aecdc9cd0.gz",
+        "bytes": 323,
+        "sha256": "b64ee9aca3db35040bd7e99ee12176d194ebf7eca705659f9e283729fdd21d4e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/inputs.json",
+        "bytes": 966,
+        "sha256": "ffc5805ad77ca330881a01230dad60d737cd38328024542e6258fa14903c56b2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ffc5805ad77ca330881a01230dad60d737cd38328024542e6258fa14903c56b2.gz",
+        "bytes": 467,
+        "sha256": "4c29f42ad3baf365dcf540014ec7f134e2aae14323442e2010f29404bd540a0c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/observation.json",
+        "bytes": 612,
+        "sha256": "d0e4cbf98f8f423794611b83bdc4acca49e9590f2b41c11cda7e2926ac44199c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d0e4cbf98f8f423794611b83bdc4acca49e9590f2b41c11cda7e2926ac44199c.gz",
+        "bytes": 442,
+        "sha256": "5f41f3bbf9c7874ff996f6f23f2a278b78054284e64753070947731b02c0b8d9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/result.json",
+        "bytes": 1924,
+        "sha256": "006feff607ed9ad1cdcdb95a7059371b988a229e4a3093de40eb8b545555176a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/006feff607ed9ad1cdcdb95a7059371b988a229e4a3093de40eb8b545555176a.gz",
+        "bytes": 1007,
+        "sha256": "53eb01690796ef7c12355fb38a6206a6aa1bb96831b73494e3c93f137e15ad94"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/scene.json",
+        "bytes": 12744899,
+        "sha256": "5c4fbf765b7a57c86c2f45b252edf29bce09d30ae4e752263dcc8efa7fffcaed"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5c4fbf765b7a57c86c2f45b252edf29bce09d30ae4e752263dcc8efa7fffcaed.gz",
+        "bytes": 3636900,
+        "sha256": "278b48e4940c6baacc58e1e6c39f28a393de6487613961d8750217a14764c6a2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/trajectory.json",
+        "bytes": 1138842,
+        "sha256": "d06f8db9b0d1355fb851b18daebe4a6ad3973c0f1c4c9b061e33a2c5456866fe"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d06f8db9b0d1355fb851b18daebe4a6ad3973c0f1c4c9b061e33a2c5456866fe.gz",
+        "bytes": 460410,
+        "sha256": "696357d1ee66c1106759620cf3572da539b26ca526a84fca501c55d3afe39d4c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/transform.json",
+        "bytes": 500,
+        "sha256": "ed742aba5600094e855ff7e91f893764835d424c384d7139f35f562c674fdb9b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ed742aba5600094e855ff7e91f893764835d424c384d7139f35f562c674fdb9b.gz",
+        "bytes": 217,
+        "sha256": "7485972b063992276ec6526b587b6fa2a594cef335afd2e6bac69b2a35e53c00"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-1/values.json",
+        "bytes": 158,
+        "sha256": "929dba728a483f6b7fec7df0514c9ff68cbd2926c2252b6945dc784a427c7c75"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/929dba728a483f6b7fec7df0514c9ff68cbd2926c2252b6945dc784a427c7c75.gz",
+        "bytes": 118,
+        "sha256": "93a5b63cefbeacf23f55eb6858ac5aac4b63df3058b0b161302a034f253a0c05"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2-design.execution.json",
+        "bytes": 241,
+        "sha256": "b25ae0767b71aa050c3f9a7cbda7ee420d53ff0df362278ff7074652b1febd92"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b25ae0767b71aa050c3f9a7cbda7ee420d53ff0df362278ff7074652b1febd92.gz",
+        "bytes": 160,
+        "sha256": "e8b4c8fe6cbdd47c06dcd1ba090b01896dfc80423a6a85cbecf4b61bb19c8a5c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2-design.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2-design.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2.design.json",
+        "bytes": 1010,
+        "sha256": "ad3f796bc32909013844fc9ac1b222fdd4b1f5959af6bf3d0432fb8504d83459"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ad3f796bc32909013844fc9ac1b222fdd4b1f5959af6bf3d0432fb8504d83459.gz",
+        "bytes": 510,
+        "sha256": "678482ee9ea3bcc0c6bcf283c38df51927fa0d451f3ab844d1799dd11ed3ae38"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2.execution.json",
+        "bytes": 372,
+        "sha256": "776b93ada0b892445d676f8fb1ce2cd6d5b9d55c68becbc3dda639e960a1f53a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/776b93ada0b892445d676f8fb1ce2cd6d5b9d55c68becbc3dda639e960a1f53a.gz",
+        "bytes": 196,
+        "sha256": "2b0e9d869895d32e605a4a1f0818e41c9eaafc1b24d3944ede708ed24ec85054"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2.request.json",
+        "bytes": 731,
+        "sha256": "5c5eafbdd5dd753f37c7efbecf623931d4d0f2a3cf5843d4e84c568b8a77d381"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5c5eafbdd5dd753f37c7efbecf623931d4d0f2a3cf5843d4e84c568b8a77d381.gz",
+        "bytes": 332,
+        "sha256": "70edfafb13d2e7b1465243ec603fdf4b5e2b176930b1d45b3b654a3771ef72cb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2.stderr.log",
+        "bytes": 61,
+        "sha256": "242a0372964b88df1814cff3f2f00e59952c8c239f9cb73d1bb58b528035b9eb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/242a0372964b88df1814cff3f2f00e59952c8c239f9cb73d1bb58b528035b9eb.gz",
+        "bytes": 81,
+        "sha256": "83365015b59ed4fae8061c346dbd8145e16ad2115fc06e435aa1c28b2a2a54e7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/actions.json",
+        "bytes": 8294,
+        "sha256": "30bbe523e4a27afbf0b2c607063959304902be3b4a4855744ee011d2594dc556"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/30bbe523e4a27afbf0b2c607063959304902be3b4a4855744ee011d2594dc556.gz",
+        "bytes": 321,
+        "sha256": "f50a0efdf96f5733a4644c3da236e215230b2a8da1c364254054581323b23494"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/inputs.json",
+        "bytes": 966,
+        "sha256": "fc764f571776f7aa7db0ed8f29cad6926b62ab4ef2afe930a21c7d405211f884"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fc764f571776f7aa7db0ed8f29cad6926b62ab4ef2afe930a21c7d405211f884.gz",
+        "bytes": 467,
+        "sha256": "9144738ad5a60709408835275f65b7dd6e259bba0a9fcb2bb44d46f1c2ccee43"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/observation.json",
+        "bytes": 552,
+        "sha256": "eb924fae1002cf17edaf9b939373a2f2d7fdeb31e66a261dc4ec72c779bf87c8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/eb924fae1002cf17edaf9b939373a2f2d7fdeb31e66a261dc4ec72c779bf87c8.gz",
+        "bytes": 408,
+        "sha256": "d476689dc253e12ea4c853df2c7652f4cbaaebda0ecf0b20419acbccff855d8f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/result.json",
+        "bytes": 1954,
+        "sha256": "c698a703f692f9aca53438a0cdd28f4788c7ff976ec595cda4e12ae055bfcfe2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c698a703f692f9aca53438a0cdd28f4788c7ff976ec595cda4e12ae055bfcfe2.gz",
+        "bytes": 1023,
+        "sha256": "d699a9d0270d46e0309b5828fb18901764ad3eb5ba2d71357394afc62f81af28"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/scene.json",
+        "bytes": 12736528,
+        "sha256": "6e5aee1cc82c01ea0157e4aa850487b0a50139d757d498db2ca41375527d0277"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6e5aee1cc82c01ea0157e4aa850487b0a50139d757d498db2ca41375527d0277.gz",
+        "bytes": 3636752,
+        "sha256": "48a0d83e58def2bdfdfe6aa02905938395b30275a9a086d559357e4485e7863b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/trajectory.json",
+        "bytes": 1130490,
+        "sha256": "ff03e644e53e0a3f567601b11877fbd262fafa2b88283930d98ae0dca9bdff78"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ff03e644e53e0a3f567601b11877fbd262fafa2b88283930d98ae0dca9bdff78.gz",
+        "bytes": 459556,
+        "sha256": "58069420e85e938b551b04548e260e1b30e3b470450b8aa364833a4a90d3cf6f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/transform.json",
+        "bytes": 488,
+        "sha256": "71f4ef2a137cd48c99f7f8a742c09e8fbf553efd04930b096e65e566057890d8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/71f4ef2a137cd48c99f7f8a742c09e8fbf553efd04930b096e65e566057890d8.gz",
+        "bytes": 216,
+        "sha256": "cdc9fda17c71e860edcaa24120bcbe96d0880c93151fff7f2668cdf8911f8a93"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/refill-2/values.json",
+        "bytes": 154,
+        "sha256": "8ea73ebd14eac5809079060497f236beb5fc7871dee5a6ef06cca41cd2f0d7a1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8ea73ebd14eac5809079060497f236beb5fc7871dee5a6ef06cca41cd2f0d7a1.gz",
+        "bytes": 112,
+        "sha256": "b50b2735ce0a50295dfd4f52f6cc516b7d24da1b726febb9e92525e7c90f4793"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/report.json",
+        "bytes": 8659,
+        "sha256": "fd70001610ff9b08791a56702073238d5953eda403990b2b86e571c26923e73a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fd70001610ff9b08791a56702073238d5953eda403990b2b86e571c26923e73a.gz",
+        "bytes": 2115,
+        "sha256": "3f3ae87cc9e0a976d2ab8d79f027b397bc665c0c842fd9d9ee0353650773d8e4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/request.json",
+        "bytes": 4916,
+        "sha256": "1ec8abadc6cd25cdef4dd3063c8a65561a3babc99f3175381e19d19d9b019fb1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1ec8abadc6cd25cdef4dd3063c8a65561a3babc99f3175381e19d19d9b019fb1.gz",
+        "bytes": 1450,
+        "sha256": "d25adf3c549145cee55a94d121a50c56246a82c4ec2716da0a36dedd6712402c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/selector.stderr.log",
+        "bytes": 113,
+        "sha256": "c120c9cea2ef9d2ad27748e84ce06768463fe567795ec70387e318c90d2f5de3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c120c9cea2ef9d2ad27748e84ce06768463fe567795ec70387e318c90d2f5de3.gz",
+        "bytes": 113,
+        "sha256": "c8d8e486d3830b9bf04e48ba2515c0d3fd3ca2b9d0049695b99ab3b0ac79ccff"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/selector.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/valid-selector.execution.json",
+        "bytes": 225,
+        "sha256": "99d93cb0f360871b4a88eb942c645696dbaaaab8704886107df68f3d8ca243d9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/99d93cb0f360871b4a88eb942c645696dbaaaab8704886107df68f3d8ca243d9.gz",
+        "bytes": 160,
+        "sha256": "70da797d221a103efb57e02a17a4b13d968c8fa979ad47bff972c80c4f1b499c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/valid-selector.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/valid-selector.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/valid.proposal.json",
+        "bytes": 6912,
+        "sha256": "31efb6a8926494519d27523764ee939af923406d074c74a514a620d1a1cb71f9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/31efb6a8926494519d27523764ee939af923406d074c74a514a620d1a1cb71f9.gz",
+        "bytes": 2202,
+        "sha256": "30d31c4a0f4a66001bec6af59159da95da29cdd75962302184b0ff7e1049f909"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-selected-v1/valid.request.json",
+        "bytes": 6173,
+        "sha256": "0a0df6235c642cea7f7ba580b9dfb94dd475a3e17946efd271de5a3717596dc3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0a0df6235c642cea7f7ba580b9dfb94dd475a3e17946efd271de5a3717596dc3.gz",
+        "bytes": 1736,
+        "sha256": "6c3ec0a924d54cc5a8275fd39e4c3338098ac379e51b227c88af46c422395e2a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1.stdout.log",
+        "bytes": 716,
+        "sha256": "037b79393e20401cf5a2ff8a62c6f24b8d1fa79ff667ad4613fad74c328c54be"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/037b79393e20401cf5a2ff8a62c6f24b8d1fa79ff667ad4613fad74c328c54be.gz",
+        "bytes": 350,
+        "sha256": "d5eb8c24bb1cdee7566770760f15a45feefc2dbe1aac3d1456825852e216b99d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/adaptive-0.execution.json",
+        "bytes": 58,
+        "sha256": "5c2ff0abc517515d3c4f3770c6213b048f4e17da89dbcb7b63a10801f5cf5af1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5c2ff0abc517515d3c4f3770c6213b048f4e17da89dbcb7b63a10801f5cf5af1.gz",
+        "bytes": 71,
+        "sha256": "33542c1c8750d14b29df4b70e4be5656414ab1a757998728ca68da0c7b519292"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/adaptive-0.launch.json",
+        "bytes": 228,
+        "sha256": "ca3d136e0fffe263626c7de265f8b2e0f85e2d29f2eebb8bf7ecc05d58c1ad0b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ca3d136e0fffe263626c7de265f8b2e0f85e2d29f2eebb8bf7ecc05d58c1ad0b.gz",
+        "bytes": 171,
+        "sha256": "4cdbfdffdb3463d8137309a07a9237e0c05968b7f4f7ada34e42ead77ac2f867"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/adaptive-0.observations.json",
+        "bytes": 1105,
+        "sha256": "96284fb7df310c0b3553da61fab92dbb3ad69afb7cea47f342a4d068762cd8f1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/96284fb7df310c0b3553da61fab92dbb3ad69afb7cea47f342a4d068762cd8f1.gz",
+        "bytes": 450,
+        "sha256": "4a5d52039949bf966a7743d8fe1fe1df5bf41788ffcd5de3b33ef2e774e17bd8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/adaptive-0.proposal.json",
+        "bytes": 1012,
+        "sha256": "039e00d86b783a0eee733114955dc8fb5723ba2d7da927570be1936be70da59e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/039e00d86b783a0eee733114955dc8fb5723ba2d7da927570be1936be70da59e.gz",
+        "bytes": 509,
+        "sha256": "b587860d330c1999c355c04f467309d10c39d3c9db0df01a233361e60b309ad6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/adaptive-0.request.json",
+        "bytes": 731,
+        "sha256": "da434e77ecdd189053b062242665147308dc32c0afaec7281ec499bb41fb513f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/da434e77ecdd189053b062242665147308dc32c0afaec7281ec499bb41fb513f.gz",
+        "bytes": 331,
+        "sha256": "530baa59119f5e8f71f80442f72be88571faff3850d69b773dcb4da9f053f1fa"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/adaptive-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/adaptive-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/context.json",
+        "bytes": 3129,
+        "sha256": "ded1108fa402ab833d4fe41e70977588d3ed15d1e4aa1d35841c3442f167a4c0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ded1108fa402ab833d4fe41e70977588d3ed15d1e4aa1d35841c3442f167a4c0.gz",
+        "bytes": 1402,
+        "sha256": "60fd9d5781bd00c95f5b89bc7945cfeff8d2c0cb84e3e8dcfc3f48dabee54230"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/actions.json",
+        "bytes": 8294,
+        "sha256": "8d4d179282c1c65e486af1c445ec94f654b42dfcf1bf498b35ae07ef59fe3317"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8d4d179282c1c65e486af1c445ec94f654b42dfcf1bf498b35ae07ef59fe3317.gz",
+        "bytes": 321,
+        "sha256": "c2d11c0b6ccd33655843a249309086d46d95ad3eb98b1986e4594f361428cb5e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "9295287b3dc427ae5c418ba3549dc69fced80c4be498f9c7b4c4259455336202"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9295287b3dc427ae5c418ba3549dc69fced80c4be498f9c7b4c4259455336202.gz",
+        "bytes": 71,
+        "sha256": "30b3402fdcec198f46902e91c3817eddef044c0eebcea49dd611f5bb1f0431d1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/evaluate.launch.json",
+        "bytes": 375,
+        "sha256": "103a3d9de982c41d63a0d2c5495ef60da56478d4c826a485fa581dba3bf3d12e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/103a3d9de982c41d63a0d2c5495ef60da56478d4c826a485fa581dba3bf3d12e.gz",
+        "bytes": 202,
+        "sha256": "70f91d21841dab665f37e09b81aeb3528f537d8b6520b34d78956b539cc38306"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/evaluate.stderr.log",
+        "bytes": 60,
+        "sha256": "d551d20581a92e7f91247c11d2dc80df1476e531b8e17517716a21784ea8170f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d551d20581a92e7f91247c11d2dc80df1476e531b8e17517716a21784ea8170f.gz",
+        "bytes": 80,
+        "sha256": "3d02eceb88ab22180019ee36400fd61cd4a94378bbc35aa052c0532cc9eb961c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/inputs.json",
+        "bytes": 978,
+        "sha256": "c2763fb9c891f0f559a01114bb9ada2c345edda11989b86932111a99f797bc5b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c2763fb9c891f0f559a01114bb9ada2c345edda11989b86932111a99f797bc5b.gz",
+        "bytes": 470,
+        "sha256": "8dc0178b93e9088f57e3066af6cccde13a26105c937009bdc1abf9d818ce7d6a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/observation.json",
+        "bytes": 773,
+        "sha256": "8bb03e59896e4aa5c2955eb4b96c88827e6c3adb7d73147cf46471ec9067b3d7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8bb03e59896e4aa5c2955eb4b96c88827e6c3adb7d73147cf46471ec9067b3d7.gz",
+        "bytes": 505,
+        "sha256": "019294da740559d1ea27554f4bbd7929ef00691e2630929b94eced2a78211371"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/result.json",
+        "bytes": 1814,
+        "sha256": "015e89daaad17cdb56b6de2c5f3953946156f10315f2244e0c881262f0fe5243"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/015e89daaad17cdb56b6de2c5f3953946156f10315f2244e0c881262f0fe5243.gz",
+        "bytes": 973,
+        "sha256": "97b13667b681e45f0c660199c6ad8ac8a5081d27dd14749647e9fbe03d7b2a29"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/scene.json",
+        "bytes": 12745305,
+        "sha256": "f8ea2b2c49ee7b883f3b9e8ab884f0319232d7ab84540388600269d04fd59cec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f8ea2b2c49ee7b883f3b9e8ab884f0319232d7ab84540388600269d04fd59cec.gz",
+        "bytes": 3639735,
+        "sha256": "6b2dec485a7b1ab6dc3019f4ca59978631a2f9e4af18682fff1dea4e65dc6da5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/trajectory.json",
+        "bytes": 1139256,
+        "sha256": "464cc1190a750e3a34a1dce91eae2e4045abb52ef5eff8b11fdbdc3ba681541c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/464cc1190a750e3a34a1dce91eae2e4045abb52ef5eff8b11fdbdc3ba681541c.gz",
+        "bytes": 463728,
+        "sha256": "26746f13909fac823cb02f80a1738732b14928d8fdbf7325ec074b8ed59ca0f3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/transform.json",
+        "bytes": 292,
+        "sha256": "af46829c668cd17e653cc028b7efb7f26ff78dd6d3f6ae97a35949b3142c4539"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/af46829c668cd17e653cc028b7efb7f26ff78dd6d3f6ae97a35949b3142c4539.gz",
+        "bytes": 188,
+        "sha256": "3cb53cc6507ed32dd8edaba725f2eeb4bca0be4c9fb9d7630bed45e384d2c601"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-000/values.json",
+        "bytes": 54,
+        "sha256": "4bde6f437eaf3951c9d5cda76f70e566896eca98f90e0608cbc867c4f571d83b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4bde6f437eaf3951c9d5cda76f70e566896eca98f90e0608cbc867c4f571d83b.gz",
+        "bytes": 64,
+        "sha256": "324a2b1519f7c972c27924b18bbd4b17f0104a21efddb633b7751112f1ea28cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/actions.json",
+        "bytes": 8294,
+        "sha256": "307c1a44c02c22ddcdffb43dd922fd6aa99c4352bfb889e55d81848b71aba8df"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/307c1a44c02c22ddcdffb43dd922fd6aa99c4352bfb889e55d81848b71aba8df.gz",
+        "bytes": 323,
+        "sha256": "097f25560b85660584aea8e3d9f318356a274557267641c8ec0c8360cf981720"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "4c490f1b898bc8db12d51435ec5c767fb9e3dc9eb796e80915449e9ff3f501e2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4c490f1b898bc8db12d51435ec5c767fb9e3dc9eb796e80915449e9ff3f501e2.gz",
+        "bytes": 71,
+        "sha256": "81119ad0dd44569a1ed93b2d32ee9a0f031ef35ed269ea3ecf90b62773fd746c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/evaluate.launch.json",
+        "bytes": 375,
+        "sha256": "bc90bae356ed422a7a3650edc36a2491b38860f61ed48a4f278ecea186c658c8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bc90bae356ed422a7a3650edc36a2491b38860f61ed48a4f278ecea186c658c8.gz",
+        "bytes": 204,
+        "sha256": "0a594c690c7798d521aa7536ed787b2deddbad39f7064ea63c23ac3c555f8473"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/evaluate.stderr.log",
+        "bytes": 59,
+        "sha256": "b0bcf4380ee1d4052b6aecea6e88a0869eafdbed912d5e30225f789271c8df0c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b0bcf4380ee1d4052b6aecea6e88a0869eafdbed912d5e30225f789271c8df0c.gz",
+        "bytes": 79,
+        "sha256": "58d913556d62cff3c30f56a57951546ad005df8f777139e621a389df50223667"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/inputs.json",
+        "bytes": 978,
+        "sha256": "6c59fcfa148c7f11202332f59856a6e3c45bfe6fbe0ac68553ae6903b1ff542a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6c59fcfa148c7f11202332f59856a6e3c45bfe6fbe0ac68553ae6903b1ff542a.gz",
+        "bytes": 470,
+        "sha256": "bf08b475812e11f84db45ab2e9f66be2a809ae9b130530b276e9c02e83657dcb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/observation.json",
+        "bytes": 888,
+        "sha256": "247250ca9c9ee6226efcbe5e346212af42b1fd93e40d2a0cc5980cd149dd8bed"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/247250ca9c9ee6226efcbe5e346212af42b1fd93e40d2a0cc5980cd149dd8bed.gz",
+        "bytes": 583,
+        "sha256": "481086fd6fd92671116d3a57303da5dad37a1933a38e69b79c0671fe1e839143"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/result.json",
+        "bytes": 1891,
+        "sha256": "810b07f97e7a078d6f8d6a90e19033c409a57cd63df91b62bf1514e9d968f357"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/810b07f97e7a078d6f8d6a90e19033c409a57cd63df91b62bf1514e9d968f357.gz",
+        "bytes": 1012,
+        "sha256": "eac9bb65d2e68e6fa7735fd4ca419e17775ffc4e3e7b5d0f18f7a917ac3c8aea"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/scene.json",
+        "bytes": 12747172,
+        "sha256": "8eb251d91b32a389c76a0b76316534055ce67b780388962ff21e4bfdc585acca"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8eb251d91b32a389c76a0b76316534055ce67b780388962ff21e4bfdc585acca.gz",
+        "bytes": 3640255,
+        "sha256": "1a8f26371bbaadd870a6e967d30fb3b10ea3bf33a2dd4d581accdbe5946b7589"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/trajectory.json",
+        "bytes": 1141134,
+        "sha256": "067d9b762eb50510e9c21933413bfaec132f3b9fd0190c29da25f834954df76a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/067d9b762eb50510e9c21933413bfaec132f3b9fd0190c29da25f834954df76a.gz",
+        "bytes": 464210,
+        "sha256": "abb8ecc2040744ad05dba4857dfc1174548c85c3710e23c4ee78f0df826c82a0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/transform.json",
+        "bytes": 496,
+        "sha256": "b1eb5e5d6ad4e92f5b9a0e187099ea65ffcd53c956f06d7ec6cf05f666811246"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b1eb5e5d6ad4e92f5b9a0e187099ea65ffcd53c956f06d7ec6cf05f666811246.gz",
+        "bytes": 216,
+        "sha256": "d36b0327da3849998be3c634a5e7bc7bb0c7741de739f59e718005309d5b54e1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-001/values.json",
+        "bytes": 156,
+        "sha256": "37f0ba2e9d5a56cbb42b8729d5fc73c72570a302a7469bc050894a19daa1fdff"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/37f0ba2e9d5a56cbb42b8729d5fc73c72570a302a7469bc050894a19daa1fdff.gz",
+        "bytes": 115,
+        "sha256": "48026784b00e0f2eccfb6c01e35343a0427187b321dbdcaa36033b6df4b9f742"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/actions.json",
+        "bytes": 8094,
+        "sha256": "84d4bee5ebeaf0469ecb2a8030e63cce67ff1eacc675f29d4038ddf4cfca7ccd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/84d4bee5ebeaf0469ecb2a8030e63cce67ff1eacc675f29d4038ddf4cfca7ccd.gz",
+        "bytes": 316,
+        "sha256": "b0253690e822463a5ec0bda34d3bdd36ae5af549f1921a6157b57442bedeea0c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/evaluate.execution.json",
+        "bytes": 58,
+        "sha256": "ae19b6ba22d1d6f2125da689327283c95dd175c90fc710918061091801e8f248"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ae19b6ba22d1d6f2125da689327283c95dd175c90fc710918061091801e8f248.gz",
+        "bytes": 71,
+        "sha256": "e3083d1cd735225ac8639b4d70dfd942276d68865e2a8c389d4ba2be6ae9316d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/evaluate.launch.json",
+        "bytes": 375,
+        "sha256": "b41feaa1d2caab52dd6d56418b3bb9109a11e934e2a8ee35080ca7a0e3b0acab"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b41feaa1d2caab52dd6d56418b3bb9109a11e934e2a8ee35080ca7a0e3b0acab.gz",
+        "bytes": 206,
+        "sha256": "5538911152ea19e36d9694b5f772aa6c060191e11b7ecf99cf440cfeb7d2b87e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/evaluate.stderr.log",
+        "bytes": 60,
+        "sha256": "9c3d87133b0243de20bacf2f94bacfbcbb7b2813ce219791c5017fdd6f6b6b61"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9c3d87133b0243de20bacf2f94bacfbcbb7b2813ce219791c5017fdd6f6b6b61.gz",
+        "bytes": 80,
+        "sha256": "b52cc31b9dccbdfedea8375fd9d3d8a4497936ee808296030f316f5455237e7b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/evaluate.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/inputs.json",
+        "bytes": 978,
+        "sha256": "a820e04865af342748e4a5f39ec2273a4cd719b7c8cb9f1cfd5e431c1300b0b8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a820e04865af342748e4a5f39ec2273a4cd719b7c8cb9f1cfd5e431c1300b0b8.gz",
+        "bytes": 467,
+        "sha256": "b8547cd7828e775e339139f846efaf223caafb7b87aa86541bf4380ee4d131be"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/observation.json",
+        "bytes": 909,
+        "sha256": "ef669f640f2e94e1005407a3c37d4d40e80124f7503ee88c895bc16f08c32940"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ef669f640f2e94e1005407a3c37d4d40e80124f7503ee88c895bc16f08c32940.gz",
+        "bytes": 590,
+        "sha256": "7ec5a9a1047030623c4c7143d0237582b1463ead016a47a40ec9661e6730e0e2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/result.json",
+        "bytes": 1903,
+        "sha256": "8fd2de46daf225cd6dac0d47ea8d5fa3158df8e41371fe4ce0f40e16e2277a74"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8fd2de46daf225cd6dac0d47ea8d5fa3158df8e41371fe4ce0f40e16e2277a74.gz",
+        "bytes": 1021,
+        "sha256": "b477f14c57e9b6e0299295e744bc6707935e73991e9be2814c972211158814b1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/scene.json",
+        "bytes": 12748747,
+        "sha256": "08776a8fc8097dacfe9b4842c0fb309a7d91b76a72f353ca5e15ca4c07d19fe3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/08776a8fc8097dacfe9b4842c0fb309a7d91b76a72f353ca5e15ca4c07d19fe3.gz",
+        "bytes": 3639493,
+        "sha256": "a1a75a7efaac7975af0b7142bc243bd8a8cc15b8e115a94821af4c7db2d83f61"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/trajectory.json",
+        "bytes": 1142713,
+        "sha256": "f964bf24276cdca3a7a6c06414e31c0d7b020d10656ac663bed8e758af6087a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f964bf24276cdca3a7a6c06414e31c0d7b020d10656ac663bed8e758af6087a9.gz",
+        "bytes": 463304,
+        "sha256": "a722e91fda74f0d204626714b48f9be6111e16ef9907453a10d2be148d44473c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/transform.json",
+        "bytes": 496,
+        "sha256": "5782faa32bc0838cd1b9e388217c884867da91626b6534f9646e3a16b5a1f8d5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5782faa32bc0838cd1b9e388217c884867da91626b6534f9646e3a16b5a1f8d5.gz",
+        "bytes": 215,
+        "sha256": "18ca0738a3c3ba648992d1932ee3c7bb0fbc9ca593938cd96cdf047e0424f71c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/evaluation-002/values.json",
+        "bytes": 156,
+        "sha256": "f955b3e6d3cb3e71f0292512a837f3b48c61de3e9f48628465bc4e1fafb7ed83"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f955b3e6d3cb3e71f0292512a837f3b48c61de3e9f48628465bc4e1fafb7ed83.gz",
+        "bytes": 115,
+        "sha256": "c5830e434bd5a9dc22ec3af070bd17786ec2d823f6b8e71da1f4113f1c4aafab"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/initial-batch-0.observations.json",
+        "bytes": 703,
+        "sha256": "5f15229a3c1a780155fad4767f60cdf2516d96de6dec4848b165ba719040e5ed"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5f15229a3c1a780155fad4767f60cdf2516d96de6dec4848b165ba719040e5ed.gz",
+        "bytes": 357,
+        "sha256": "0b9027062fe731e808f4bc4fb2bb3286fe8c824735428d6b3febd3ef7a0f317d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/initial-design.execution.json",
+        "bytes": 58,
+        "sha256": "8acb282018a4cbad680b3084eada9ec631ee649a88b22eff91a56e4511120700"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8acb282018a4cbad680b3084eada9ec631ee649a88b22eff91a56e4511120700.gz",
+        "bytes": 71,
+        "sha256": "c3051570a3ed8f028e8181d5c7edebbad00e0e35166acb71ce406c7744852a10"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/initial-design.launch.json",
+        "bytes": 220,
+        "sha256": "b79ffcecab95b7cd23f84ae51e6ee33db693def12b2421e986368cf57aa9e9af"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b79ffcecab95b7cd23f84ae51e6ee33db693def12b2421e986368cf57aa9e9af.gz",
+        "bytes": 166,
+        "sha256": "df9875eb76b4bf608b72b0ac8d627c4d72a42d0195571d44a1f7c701fb36a101"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/initial-design.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/initial-design.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/initial.design.json",
+        "bytes": 1009,
+        "sha256": "ebb3f7e23cdca4509f84bfae22f33176b7823c81ed4c3f4cd7bcd09aa188123b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ebb3f7e23cdca4509f84bfae22f33176b7823c81ed4c3f4cd7bcd09aa188123b.gz",
+        "bytes": 507,
+        "sha256": "51de147f94178a02a2493e8137a67fd70d9b7d8578b6c7e24cbd23ff65f51571"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/initial.request.json",
+        "bytes": 728,
+        "sha256": "a4658ac794ce8abd6d7bcdfb0571e52585535298d8eceb81d3bd9fd6cd5442e9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a4658ac794ce8abd6d7bcdfb0571e52585535298d8eceb81d3bd9fd6cd5442e9.gz",
+        "bytes": 329,
+        "sha256": "89da64b83f6f6b17e8b106b3619041988ae9a1f84df7f7e5e04b715f5d678a91"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/result.json",
+        "bytes": 2437,
+        "sha256": "9f73757086a46b57aa7345b35a575ba76550c4483a62abce4214ee34ecbf2428"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9f73757086a46b57aa7345b35a575ba76550c4483a62abce4214ee34ecbf2428.gz",
+        "bytes": 887,
+        "sha256": "03a5e2cc3a38a00294a517447b6120c8c00d79b76ceefa41ccddd4b4c2991a11"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed2-smoke-v1/spec.json",
+        "bytes": 3040,
+        "sha256": "6989991af807787e24b16cfcd82d4c8576dff6c9d5a1284a9f16c8b3141653ca"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6989991af807787e24b16cfcd82d4c8576dff6c9d5a1284a9f16c8b3141653ca.gz",
+        "bytes": 1353,
+        "sha256": "837e39c8186fb739304b4ab8dc7d048ae0b8e309e11defafb77fef2e974d1a99"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/actions.json",
+        "bytes": 1278896,
+        "sha256": "24a49e544cfc9400cd1bf266ea4ecc6be23b89add2346683ecc305ab3a913cf0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/24a49e544cfc9400cd1bf266ea4ecc6be23b89add2346683ecc305ab3a913cf0.gz",
+        "bytes": 42955,
+        "sha256": "9c1c1ee562cd492d52b376b51f7fd771f14fd5a99cbecf01fe3d587df1362de0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/config.json",
+        "bytes": 130204,
+        "sha256": "67c2d0b8ef206433d1119c47c2188a626189b6cf6219c1cceb61a2f7f3ee9c34"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/67c2d0b8ef206433d1119c47c2188a626189b6cf6219c1cceb61a2f7f3ee9c34.gz",
+        "bytes": 8851,
+        "sha256": "c85459fd7c063d4b495d3fe4281c6675b65f08a42166444303e18dd0b28c6954"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/contact.scene.json",
+        "bytes": 12745308,
+        "sha256": "974d6eb46eba4e803fa5e9f65905a5426c932691091849c04c5094599d45edb8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/974d6eb46eba4e803fa5e9f65905a5426c932691091849c04c5094599d45edb8.gz",
+        "bytes": 3639731,
+        "sha256": "42649bcd575e6dcbac42cf29e7928a2dbbf5472db0766c08573db848de6d1c9c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/fine.config.json",
+        "bytes": 130205,
+        "sha256": "00750c94af3df62decb34ad9f9eb63c12d1b45aa0117dd0e76d0cc2a12353084"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/00750c94af3df62decb34ad9f9eb63c12d1b45aa0117dd0e76d0cc2a12353084.gz",
+        "bytes": 8852,
+        "sha256": "3e3f865c0c56a0f53d1a78a35a936a2295b214ede474faedb00987203f8642b0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/inputs.json",
+        "bytes": 1868,
+        "sha256": "6f4b2be5d731baa618ca939304bcae258830314187feb9850193039b2a1c60f4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6f4b2be5d731baa618ca939304bcae258830314187feb9850193039b2a1c60f4.gz",
+        "bytes": 749,
+        "sha256": "619f9a80ed5cf2d012954dfd31fc7f6c08403708f014394ed15f0bf72557d582"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/prepare.cjs",
+        "bytes": 1710,
+        "sha256": "b336c856a089b88affa38a6fe663db3fc893b2494258a6e6f3ca37bf48ee5a19"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b336c856a089b88affa38a6fe663db3fc893b2494258a6e6f3ca37bf48ee5a19.gz",
+        "bytes": 781,
+        "sha256": "6ac3819b53b5ac6b06fde93ada37371aa724a98d9053a0318f02512088e6b3e6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/scene.json",
+        "bytes": 12745307,
+        "sha256": "c5528f154220db34d4c00017fc6b5e27ffee0df6307130451b7c49dda2a43a22"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c5528f154220db34d4c00017fc6b5e27ffee0df6307130451b7c49dda2a43a22.gz",
+        "bytes": 3639731,
+        "sha256": "7353328d6a9789bebe35d24fb60b2257bcd242be61cdcf2f58fcd5872adc0acf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/task.json",
+        "bytes": 7519,
+        "sha256": "fca343a1981bd8492fd4e7c656394f0f35e62f1cbc4aee846312f2c738dc862f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fca343a1981bd8492fd4e7c656394f0f35e62f1cbc4aee846312f2c738dc862f.gz",
+        "bytes": 866,
+        "sha256": "29758f3447f7624cdad1835518fb8d2485f60406cc85987e7960928808d94311"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/actions.json",
+        "bytes": 1278896,
+        "sha256": "24a49e544cfc9400cd1bf266ea4ecc6be23b89add2346683ecc305ab3a913cf0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/24a49e544cfc9400cd1bf266ea4ecc6be23b89add2346683ecc305ab3a913cf0.gz",
+        "bytes": 42955,
+        "sha256": "9c1c1ee562cd492d52b376b51f7fd771f14fd5a99cbecf01fe3d587df1362de0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/archive.cjs",
+        "bytes": 3348,
+        "sha256": "c0d603a1b02642e87224f2e45371855388ac7ec5654c8c7001e633e9a25f7d3f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c0d603a1b02642e87224f2e45371855388ac7ec5654c8c7001e633e9a25f7d3f.gz",
+        "bytes": 1482,
+        "sha256": "c540d57971f66ebe15794ac46e329141661edc1774f10c489367b7858a1374a7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/config.json",
+        "bytes": 130204,
+        "sha256": "67c2d0b8ef206433d1119c47c2188a626189b6cf6219c1cceb61a2f7f3ee9c34"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/67c2d0b8ef206433d1119c47c2188a626189b6cf6219c1cceb61a2f7f3ee9c34.gz",
+        "bytes": 8851,
+        "sha256": "c85459fd7c063d4b495d3fe4281c6675b65f08a42166444303e18dd0b28c6954"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/experiment.json",
+        "bytes": 3020,
+        "sha256": "632a141ae9b156579afcb52dff60222bcbb088bf7798c0c0b6fe70d1f26ef5c4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/632a141ae9b156579afcb52dff60222bcbb088bf7798c0c0b6fe70d1f26ef5c4.gz",
+        "bytes": 1348,
+        "sha256": "c63c9b2743acd734e280131f720add37e0554ee876faef6ba8ad769c6c9b4619"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/gp-smoke.spec.json",
+        "bytes": 3043,
+        "sha256": "240ef734348fb5313b176ac0448f26c3596722fa3c59f49ef6cfcfda6b2306c0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/240ef734348fb5313b176ac0448f26c3596722fa3c59f49ef6cfcfda6b2306c0.gz",
+        "bytes": 1360,
+        "sha256": "c26deec8adfeae088186b6fa7629876a55cf2db97b4a933d4a3ab3babffc302e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/inputs.json",
+        "bytes": 3591,
+        "sha256": "3a0385d63cf4d559c33b51e1d6ddfd01344ce45f9dc8d922418bff0293062aca"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3a0385d63cf4d559c33b51e1d6ddfd01344ce45f9dc8d922418bff0293062aca.gz",
+        "bytes": 1635,
+        "sha256": "68b8cde0c88ccc36d98b814910f2552ca98f24eeca7445ff959818d7c36e2cce"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/prepare.cjs",
+        "bytes": 5489,
+        "sha256": "acc310aef1f8842aad3fb48edfc066cbe1d60d70f2fd2425249eedcf35412dc6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/acc310aef1f8842aad3fb48edfc066cbe1d60d70f2fd2425249eedcf35412dc6.gz",
+        "bytes": 2250,
+        "sha256": "4dbc35b60f50e94bc4a121a763fdec3c7faac306b7b050935e785679ac0ac3a9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/reference.json",
+        "bytes": 1139264,
+        "sha256": "70bafb16e2dcf0bc481f725939d275be60a06dbb26df716626232935b5ff0791"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/70bafb16e2dcf0bc481f725939d275be60a06dbb26df716626232935b5ff0791.gz",
+        "bytes": 463715,
+        "sha256": "c1fff3683358201f2b2ea579e4f49a6bbd3ca0cef4089ee8f5d36a0910fabbfa"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/scene.json",
+        "bytes": 12745307,
+        "sha256": "1609fd1edd63cc12eebe9c9ce42774877e868b5bd55c36b1da9bb2148d099dae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1609fd1edd63cc12eebe9c9ce42774877e868b5bd55c36b1da9bb2148d099dae.gz",
+        "bytes": 3639731,
+        "sha256": "55b852284625634f69287ded2cea9179821e90fdb843f55bed3ee4f754ada924"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/short.actions.json",
+        "bytes": 8294,
+        "sha256": "8d4d179282c1c65e486af1c445ec94f654b42dfcf1bf498b35ae07ef59fe3317"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8d4d179282c1c65e486af1c445ec94f654b42dfcf1bf498b35ae07ef59fe3317.gz",
+        "bytes": 321,
+        "sha256": "c2d11c0b6ccd33655843a249309086d46d95ad3eb98b1986e4594f361428cb5e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/short.config.json",
+        "bytes": 130202,
+        "sha256": "1c6c2c34aded67cb3f261edb09494d5613e1b7984311cae433d0a3fe4f3a29c1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1c6c2c34aded67cb3f261edb09494d5613e1b7984311cae433d0a3fe4f3a29c1.gz",
+        "bytes": 8850,
+        "sha256": "d7cf506c4222d98ee2faff148cec53da4c5101a0fe21d7d090473b779c9b18c8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/short.scene.json",
+        "bytes": 12745305,
+        "sha256": "49ea808b769211365e8f3b4019422a985211df2667b8c8ba4de5d5deff83a202"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/49ea808b769211365e8f3b4019422a985211df2667b8c8ba4de5d5deff83a202.gz",
+        "bytes": 3639737,
+        "sha256": "6d4c6c8f43c7ce070629735d75748df133dbe2aaaa5266998d9fa7a0c4e01144"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/smoke.spec.json",
+        "bytes": 3040,
+        "sha256": "6989991af807787e24b16cfcd82d4c8576dff6c9d5a1284a9f16c8b3141653ca"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6989991af807787e24b16cfcd82d4c8576dff6c9d5a1284a9f16c8b3141653ca.gz",
+        "bytes": 1353,
+        "sha256": "837e39c8186fb739304b4ab8dc7d048ae0b8e309e11defafb77fef2e974d1a99"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/summarize.cjs",
+        "bytes": 2869,
+        "sha256": "2b2e1082ddb0df3115b017387328f3fa4fc460e72de44af5c6fcae2a5113a1eb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2b2e1082ddb0df3115b017387328f3fa4fc460e72de44af5c6fcae2a5113a1eb.gz",
+        "bytes": 1243,
+        "sha256": "dc59250dc0a19ffb7cb76bd0e0e03697c2935312ab50c701b856d322c3241967"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-inputs/task.json",
+        "bytes": 7519,
+        "sha256": "fca343a1981bd8492fd4e7c656394f0f35e62f1cbc4aee846312f2c738dc862f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fca343a1981bd8492fd4e7c656394f0f35e62f1cbc4aee846312f2c738dc862f.gz",
+        "bytes": 866,
+        "sha256": "29758f3447f7624cdad1835518fb8d2485f60406cc85987e7960928808d94311"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/context.json",
+        "bytes": 3113,
+        "sha256": "f94d661b31859ea7b87c94899b1fe9c1c2a327857dd7f303ef2aba577045e0ea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f94d661b31859ea7b87c94899b1fe9c1c2a327857dd7f303ef2aba577045e0ea.gz",
+        "bytes": 1395,
+        "sha256": "9957f0f83c2bd66b4408cefc1f293478c0ce52e5d3ff65cd98f03a24338315c2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/evaluation-000/actions.json",
+        "bytes": 1278896,
+        "sha256": "24a49e544cfc9400cd1bf266ea4ecc6be23b89add2346683ecc305ab3a913cf0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/24a49e544cfc9400cd1bf266ea4ecc6be23b89add2346683ecc305ab3a913cf0.gz",
+        "bytes": 42955,
+        "sha256": "9c1c1ee562cd492d52b376b51f7fd771f14fd5a99cbecf01fe3d587df1362de0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/evaluation-000/evaluate.launch.json",
+        "bytes": 357,
+        "sha256": "ddc7698a0489549b460bf6f77702ffb3777d70f04089ac3d071f64a040f96e36"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ddc7698a0489549b460bf6f77702ffb3777d70f04089ac3d071f64a040f96e36.gz",
+        "bytes": 194,
+        "sha256": "ff49e16784990e1e0982e9e2bcc185c46d75fd5db5adef02635d32e1d655cd98"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/evaluation-000/inputs.json",
+        "bytes": 956,
+        "sha256": "aba90b44e16ab916c4ee521b7022987fc0c8b920a1ea79c2cd99c40aae6a6a9c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/aba90b44e16ab916c4ee521b7022987fc0c8b920a1ea79c2cd99c40aae6a6a9c.gz",
+        "bytes": 454,
+        "sha256": "f4112159fe4b39cce201cf7406ee75749e2b7d88de801889786534d884becbd7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/evaluation-000/scene.json",
+        "bytes": 12745307,
+        "sha256": "c5528f154220db34d4c00017fc6b5e27ffee0df6307130451b7c49dda2a43a22"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c5528f154220db34d4c00017fc6b5e27ffee0df6307130451b7c49dda2a43a22.gz",
+        "bytes": 3639731,
+        "sha256": "7353328d6a9789bebe35d24fb60b2257bcd242be61cdcf2f58fcd5872adc0acf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/evaluation-000/trajectory.json",
+        "bytes": 1139256,
+        "sha256": "464cc1190a750e3a34a1dce91eae2e4045abb52ef5eff8b11fdbdc3ba681541c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/464cc1190a750e3a34a1dce91eae2e4045abb52ef5eff8b11fdbdc3ba681541c.gz",
+        "bytes": 463728,
+        "sha256": "26746f13909fac823cb02f80a1738732b14928d8fdbf7325ec074b8ed59ca0f3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/evaluation-000/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/evaluation-000/transform.json",
+        "bytes": 292,
+        "sha256": "af46829c668cd17e653cc028b7efb7f26ff78dd6d3f6ae97a35949b3142c4539"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/af46829c668cd17e653cc028b7efb7f26ff78dd6d3f6ae97a35949b3142c4539.gz",
+        "bytes": 188,
+        "sha256": "3cb53cc6507ed32dd8edaba725f2eeb4bca0be4c9fb9d7630bed45e384d2c601"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/evaluation-000/values.json",
+        "bytes": 54,
+        "sha256": "4bde6f437eaf3951c9d5cda76f70e566896eca98f90e0608cbc867c4f571d83b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4bde6f437eaf3951c9d5cda76f70e566896eca98f90e0608cbc867c4f571d83b.gz",
+        "bytes": 64,
+        "sha256": "324a2b1519f7c972c27924b18bbd4b17f0104a21efddb633b7751112f1ea28cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine-speed300-v1/spec.json",
+        "bytes": 3020,
+        "sha256": "632a141ae9b156579afcb52dff60222bcbb088bf7798c0c0b6fe70d1f26ef5c4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/632a141ae9b156579afcb52dff60222bcbb088bf7798c0c0b6fe70d1f26ef5c4.gz",
+        "bytes": 1348,
+        "sha256": "c63c9b2743acd734e280131f720add37e0554ee876faef6ba8ad769c6c9b4619"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine_trajectory-v1",
+        "bytes": 593432,
+        "sha256": "a1b0ae92d09887479ed092da37211dfff51b9afc294d69c0d78df6f07f5e61c1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a1b0ae92d09887479ed092da37211dfff51b9afc294d69c0d78df6f07f5e61c1.gz",
+        "bytes": 259145,
+        "sha256": "a573f27aea579be9f8568e03ffaa10b5bfc2def1681ccd6d993287762917bee0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/evaluate_policy-reference-v1",
+        "bytes": 15128096,
+        "sha256": "fee26f0ba05def1b0b317f273b562d61123fefe080cd2cede11dec33fe085630"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fee26f0ba05def1b0b317f273b562d61123fefe080cd2cede11dec33fe085630.gz",
+        "bytes": 4551041,
+        "sha256": "45bc3e38f040da168c0fad03459699f1e6a528e65fdc9d7c957595929e61f081"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/run_environment-reference-v1",
+        "bytes": 15876664,
+        "sha256": "307674c968de6e9f6f4d6b85ca96aa05e7fcc64e0d1dbf53295bd376f6f01078"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/307674c968de6e9f6f4d6b85ca96aa05e7fcc64e0d1dbf53295bd376f6f01078.gz",
+        "bytes": 4725421,
+        "sha256": "88bcf885dfbc6842432ae5baf41ed599830b0f5749e35eb703b70f4632d394b2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/suggest_black_box-affine-v1",
+        "bytes": 12473768,
+        "sha256": "5d0fcb5263d8053c2ba951dba7fc3b6a80e6a6c1bb5badfe206fe3ae60c812ec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5d0fcb5263d8053c2ba951dba7fc3b6a80e6a6c1bb5badfe206fe3ae60c812ec.gz",
+        "bytes": 3015317,
+        "sha256": "cca80ccd1981082caeb92260e4881ad29110315ec74c20c0a7572debdf34adde"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/sustained300-speed518/scene.json",
+        "bytes": 12745307,
+        "sha256": "1609fd1edd63cc12eebe9c9ce42774877e868b5bd55c36b1da9bb2148d099dae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1609fd1edd63cc12eebe9c9ce42774877e868b5bd55c36b1da9bb2148d099dae.gz",
+        "bytes": 3639731,
+        "sha256": "55b852284625634f69287ded2cea9179821e90fdb843f55bed3ee4f754ada924"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/sustained300-speed518/teacher.config.json",
+        "bytes": 913077,
+        "sha256": "2ea91a57afa7d097d120c53e09942dbfc67e227e4308958bc2b5dd86a76d9a21"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2ea91a57afa7d097d120c53e09942dbfc67e227e4308958bc2b5dd86a76d9a21.gz",
+        "bytes": 301112,
+        "sha256": "84266cd40bf1249e9cd3b2ab3a153dc1604b1f61c79d7c25043e9de3161a33ec"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/sustained300-speed518/teacher.json",
+        "bytes": 1821,
+        "sha256": "5e44a04427c2e149de175dadd729397b16ac5f44a41c0f4c082c16c6108cb91c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5e44a04427c2e149de175dadd729397b16ac5f44a41c0f4c082c16c6108cb91c.gz",
+        "bytes": 983,
+        "sha256": "bd42763aab12ea1c1d24bf15ae1c0d493917293810fa53433154e1471a557560"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/trajectory-affine-build.log",
+        "bytes": 822,
+        "sha256": "f0340faa3123e2f3340e00dda0287b5d46833a2b19cf69ae313facac800a3505"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f0340faa3123e2f3340e00dda0287b5d46833a2b19cf69ae313facac800a3505.gz",
+        "bytes": 414,
+        "sha256": "dbc8976449dcbc75ca732791b648df0bdc7932aaa89825ebff02c6b837125733"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/trajectory-affine-regression-tests.log",
+        "bytes": 1376,
+        "sha256": "5175af204fd55e62869ae2718b3d3b889e6d43d2734e68e066f05427d93c7948"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5175af204fd55e62869ae2718b3d3b889e6d43d2734e68e066f05427d93c7948.gz",
+        "bytes": 664,
+        "sha256": "f7ca086d82591ffc27d6e692a02349b9751e1ec617ed7afb627db5bf63ca5ec6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/trajectory-affine-tests.log",
+        "bytes": 520,
+        "sha256": "12aebd4424f55f8d76727f9b47b1f1e454384bd05c4d69674f4693aafb734c84"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/12aebd4424f55f8d76727f9b47b1f1e454384bd05c4d69674f4693aafb734c84.gz",
+        "bytes": 332,
+        "sha256": "fa957bdd388d55b2d5340f21b37b1f1310c2347fc590891c5ba6d4d4d720ca57"
+      }
+    }
+  ],
+  "scope": "Shared affine trajectory component, expanded eight-parameter search driver, completed analytic/regression and short physical/workflow checks. Includes immutable300s experiment inputs and launch/context files only; live stdout, stderr and unfinished results are excluded. CAD/runtime physics and final actuator bounds unchanged. No new sustained speed, hardware accuracy or physical maximum claimed.",
+  "terminal_evidence": "Rust affine test and13 existing trajectory tests pass; release affine CLI build succeeds. Two short workflow processes, exact101-frame parity check and subsequent valid eight-dimensional Bayesian selection/execution all verified terminal exit0. Four physically fallen short rows are retained as failures. An earlier direct selector request correctly rejected insufficient complete rows; its rejection log is retained. The production search/baseline plus two fidelity evaluations were confirmed live by exact PID/command snapshot, so only their closed inputs are archived.",
+  "specification": {
+    "path": "runs/affine-speed-search-archive.spec.json",
+    "sha256": "32ad923ccb1f22f39ef553bacdcc365856f8713e45d8e9efb3af38ad13dedfcd"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/archive_evidence_files.mjs",
+    "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+  }
+}

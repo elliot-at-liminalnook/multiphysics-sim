@@ -1,0 +1,40 @@
+{
+  "source": "runs/bayesian-controller-pilot-v2/evaluation-003",
+  "source_inputs": [
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-003.scene.json",
+      "sha256": "b9de5eff1e0b2c34a3346166e58cf99d884be7cff4e97730a018326de325b07c"
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-003.config.json",
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/bayesian-controller-pilot-v2/evaluation-003.actions.json",
+      "sha256": "925cc74fa85a934e070ecd1edf409d08868608834e04bb690dfc4f649f837da9"
+    }
+  ],
+  "prepared_inputs": [
+    {
+      "path": "runs/contact-planning/speed-discovery-fast-short-trial.scene.json",
+      "sha256": "19b3993083f28b0696da73fbc803bd1be66d6ec3bf38934a07ff423f32f827f1"
+    },
+    {
+      "path": "runs/contact-planning/speed-discovery-fast-short-trial.config.json",
+      "sha256": "fee99311db76dbac7c4af73e4de2c2dcb953628fab597b04c51e5c2bd56e02e7"
+    },
+    {
+      "path": "runs/contact-planning/speed-discovery-fast-short-trial.actions.json",
+      "sha256": "1f31802ba54b8fdcc29d14ca1b6380e8ea3370630fd2016abd97ae98f39aaf37"
+    }
+  ],
+  "task": {
+    "path": "examples/full-robot/contact-planning/speed-discovery-task.json",
+    "sha256": "684cbdd9c1ad95996122c58aeffa5cd6fe4c0a7a230de9260ee34da979146d48"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/prepare_speed_discovery.mjs",
+    "sha256": "9092a53dbbc742815b430c4329234baac44282b357b3bb6087ab8f39d40a11a3"
+  },
+  "changes": "Only duration, step count and action schedule changed in source simulation inputs. Task rewards removed and task bounds replaced by overturn/chassis-floor-contact detection. CAD physical model and actuator values unchanged."
+}

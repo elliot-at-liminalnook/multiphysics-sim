@@ -18,6 +18,32 @@ pub struct EpisodeEvaluation {
     pub error: Option<String>,
 }
 
+/// Experiment setup check against a previously measured complete-episode
+/// score. Applies to the starting baseline only, never to learned candidates.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BaselineExpectation {
+    pub score: f64,
+    pub absolute_tolerance: f64,
+}
+impl BaselineExpectation {
+    pub fn validate(&self) -> Result<(), String> {
+        if !self.score.is_finite() || !self.absolute_tolerance.is_finite() || self.absolute_tolerance < 0. {
+            return Err("invalid baseline score expectation".into());
+        }
+        Ok(())
+    }
+    pub fn verify(&self, report: &EpisodeEvaluation) -> Result<(), String> {
+        self.validate()?;
+        let score = report.score.ok_or("baseline has no completed score")?;
+        if report.error.is_some() || !report.final_transition.as_ref().is_some_and(|t|t.truncated && !t.terminated)
+            || !score.is_finite() || (score-self.score).abs() > self.absolute_tolerance {
+            return Err(format!("baseline replay mismatch: expected {} +/- {}, observed {score}; inspect inputs before training",self.score,self.absolute_tolerance));
+        }
+        Ok(())
+    }
+}
+
 pub fn evaluate_episode(
     scene: Scene,
     config: Config,

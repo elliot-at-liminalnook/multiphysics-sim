@@ -1,0 +1,763 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": ".github/workflows/browser.yml",
+        "bytes": 55836,
+        "sha256": "4aa0523a1b2a3420b6e158bff4cfc15ed25b4ad321812a877cd3166a6fff88fd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4aa0523a1b2a3420b6e158bff4cfc15ed25b4ad321812a877cd3166a6fff88fd.gz",
+        "bytes": 7059,
+        "sha256": "b3e2ea1c0e802ae9488a4d6b7d972763f0e8c2852b95b2de9d23e4f4fd68fe62"
+      }
+    },
+    {
+      "original": {
+        "path": "Cargo.lock",
+        "bytes": 183174,
+        "sha256": "3f6f31f145fe7d7b0bbf1abd7bac619922f0dd7c68b19388f31997157d156c18"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3f6f31f145fe7d7b0bbf1abd7bac619922f0dd7c68b19388f31997157d156c18.gz",
+        "bytes": 41946,
+        "sha256": "139186b8c7e77275b64a01d1060f113b1b066ae59f526ca3808c24f98d90763c"
+      }
+    },
+    {
+      "original": {
+        "path": "Cargo.toml",
+        "bytes": 1528,
+        "sha256": "ac9ab0b4a69abf9d340f7ee670b7ced698bad9cc4c138bc41ee652a4be6f1281"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ac9ab0b4a69abf9d340f7ee670b7ced698bad9cc4c138bc41ee652a4be6f1281.gz",
+        "bytes": 548,
+        "sha256": "cbf12abab97919039c72c2310f89292b756e9cbd161082c168c0445686d3bd82"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/embedded.rs",
+        "bytes": 66659,
+        "sha256": "74badd30c46200ec56203238a0a4a3c4232716a60455b262aa591a8fa304177c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/74badd30c46200ec56203238a0a4a3c4232716a60455b262aa591a8fa304177c.gz",
+        "bytes": 15028,
+        "sha256": "f59634dbb12746dc056999003690a71fc89a601dda744b5f2864a27bd8f08373"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/embedded_policy.rs",
+        "bytes": 30387,
+        "sha256": "e3bb6dd217090c437c67b3394a9722f4f4ac9c2fad934891ba408033b61167cc"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3bb6dd217090c437c67b3394a9722f4f4ac9c2fad934891ba408033b61167cc.gz",
+        "bytes": 7896,
+        "sha256": "c053cff8632cf90999d08b38d7fc00999bd2d4264329f2af1356b2cb2e42893e"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/environment.rs",
+        "bytes": 35631,
+        "sha256": "26d489ffe4e28a33071e6aaf0d47927a857692e97713be77a807ebf7fcf0f15e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/26d489ffe4e28a33071e6aaf0d47927a857692e97713be77a807ebf7fcf0f15e.gz",
+        "bytes": 9081,
+        "sha256": "5f2df47d709c8252af502f5bf13eee05578ac9d38883918d84a2775cd3e77b86"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/imu_observation.rs",
+        "bytes": 7514,
+        "sha256": "1b987ab43a655ae4b32b03ec49322e32ec75da505f4ee930cf8fd8c62219a3a6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1b987ab43a655ae4b32b03ec49322e32ec75da505f4ee930cf8fd8c62219a3a6.gz",
+        "bytes": 2478,
+        "sha256": "2f243dd074a810d677197683886b1d15b5acedfd0d577c1326205bbc233ef14d"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/lib.rs",
+        "bytes": 2650,
+        "sha256": "cbddc1d485757a1cbdde6c3ac52c5f8cce43f084a171716c20ce5a9cea31e7ca"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/cbddc1d485757a1cbdde6c3ac52c5f8cce43f084a171716c20ce5a9cea31e7ca.gz",
+        "bytes": 730,
+        "sha256": "e0ad029aa6d630dab514b034bf60ef6dca0309ae005ba339194c9c56b26f3bdc"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/motion_data.rs",
+        "bytes": 5458,
+        "sha256": "6ab670bf9a0bc04e9d17bae838735330461bfb0e0515ffa508a1fc5dd4896b8a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6ab670bf9a0bc04e9d17bae838735330461bfb0e0515ffa508a1fc5dd4896b8a.gz",
+        "bytes": 1870,
+        "sha256": "9d964d82a2b5961c39c1b530470fc408dacd1448e476564f24644cc2934fb60f"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/motion_forecast.rs",
+        "bytes": 21405,
+        "sha256": "075f826c59f8ce521b3c86ba6e7762640c287f08cac9d95be9752de3072cf637"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/075f826c59f8ce521b3c86ba6e7762640c287f08cac9d95be9752de3072cf637.gz",
+        "bytes": 6306,
+        "sha256": "4766bb13e393c483dd50845ed17c9e6a5be38ebe5c31fa4e6f4e8a29320e6549"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/predictive_policy.rs",
+        "bytes": 11398,
+        "sha256": "668201ab2422aac8139e11672ed6ecf0ba962fe9afe84d8dfbbf02c84f805371"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/668201ab2422aac8139e11672ed6ecf0ba962fe9afe84d8dfbbf02c84f805371.gz",
+        "bytes": 3110,
+        "sha256": "6f1fb7925cc68b9bf53928ba7f1007e413b4484d78d481050e47da74dd628aa7"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/forecast_observability.rs",
+        "bytes": 4104,
+        "sha256": "ab3e5fc8aca2b2e2ae0c785b176551f905fd545252ca5d07481bd6752eb5d81b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ab3e5fc8aca2b2e2ae0c785b176551f905fd545252ca5d07481bd6752eb5d81b.gz",
+        "bytes": 1383,
+        "sha256": "85b24cd25f0c5631d88c5993930c196a819385ac0378c89c6d2d5d9fa8901922"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/imu_policy.rs",
+        "bytes": 15214,
+        "sha256": "432a3be9ce5c5217bbdc49637e595677719b1fbc61ec5edbada94d7a336ff090"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/432a3be9ce5c5217bbdc49637e595677719b1fbc61ec5edbada94d7a336ff090.gz",
+        "bytes": 4123,
+        "sha256": "ebaaf86c5644984df04ee73d1ff36819b656b38bddffdcd0c21f5b6cb10c01a1"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/motion_forecast.rs",
+        "bytes": 5789,
+        "sha256": "63a7053e32b5dbdcd2a15a657566518c65e473aba2e4d1d7801129fb1a3c0880"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/63a7053e32b5dbdcd2a15a657566518c65e473aba2e4d1d7801129fb1a3c0880.gz",
+        "bytes": 2093,
+        "sha256": "e56315472ef9a03832d2ca93bfe44325995a6dc14fdf7a7860fd7717087ea368"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/ppo_training.rs",
+        "bytes": 7783,
+        "sha256": "10fefb86ef8226e2aa0a9173a2a5405561228828b10242236bdf13a8bbb89cb3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/10fefb86ef8226e2aa0a9173a2a5405561228828b10242236bdf13a8bbb89cb3.gz",
+        "bytes": 2513,
+        "sha256": "171612264c4d21bbc91ea59c5829a3471c1591d95d20b63bbc8d6038204b1edd"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/predictive_policy.rs",
+        "bytes": 27729,
+        "sha256": "76f08d88d3cf116a18b93d2d9a4d1af93a6f72a19dfb37d5cdf94ce6e1bca1b7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/76f08d88d3cf116a18b93d2d9a4d1af93a6f72a19dfb37d5cdf94ce6e1bca1b7.gz",
+        "bytes": 5827,
+        "sha256": "1ea385aa56ddd8de32175cdd86b49b2bce9c0ea7b71063389391835579791b93"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/imu-policy-observations.md",
+        "bytes": 4169,
+        "sha256": "0de9c986ddef0fab60ef7dc785af738c6d69c2d84d984010ae82df68302bda8e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0de9c986ddef0fab60ef7dc785af738c6d69c2d84d984010ae82df68302bda8e.gz",
+        "bytes": 2030,
+        "sha256": "b4824eefba18f3692fcec714b5e422fb791ef020e42bc3a68e10c7807db2d8b0"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/passive-coordinates-and-sensors.md",
+        "bytes": 3185,
+        "sha256": "869b56c1e54b81481a8a4604f553b068186e0df7260cbfaed7c6d58f69fa00b8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/869b56c1e54b81481a8a4604f553b068186e0df7260cbfaed7c6d58f69fa00b8.gz",
+        "bytes": 1566,
+        "sha256": "821b1d6f9e99272044563168ee62a6e2d3acb8df495b804581ca1d806a289a1f"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/shared-robot-learning-plan.md",
+        "bytes": 6499,
+        "sha256": "ca086db67684840236be4e97666c18de4419aac14406b18b3594bcfecca5515a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ca086db67684840236be4e97666c18de4419aac14406b18b3594bcfecca5515a.gz",
+        "bytes": 2779,
+        "sha256": "c91aff139d234b757ac1842c3e7e5d3ebe34637a59180cbe799eab43f553059e"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/README.md",
+        "bytes": 2437,
+        "sha256": "ba1e50c0399a7518e977f209a17ac76c98fae2f9988844e44dcde05011889722"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ba1e50c0399a7518e977f209a17ac76c98fae2f9988844e44dcde05011889722.gz",
+        "bytes": 1233,
+        "sha256": "c8183092a6248894e2952233502fd3ed37edfca5ea11444f3d8983c9fc554a69"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/baseline/robot.rcad",
+        "bytes": 7178,
+        "sha256": "9cd32aa97d620cf7e342fe994eccd5904cd0a2b235e60092e877d516d8a17a7a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9cd32aa97d620cf7e342fe994eccd5904cd0a2b235e60092e877d516d8a17a7a.gz",
+        "bytes": 6720,
+        "sha256": "a9dc01562345e325441c407e26c793193d290d03d5659f344aa5a74c3ec7e5ac"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/baseline/robot.simrobot.json",
+        "bytes": 1265289,
+        "sha256": "2acaaae1980b533665be97ddaa19400cb7a9900b673642f4bdba06a35deb8ea9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2acaaae1980b533665be97ddaa19400cb7a9900b673642f4bdba06a35deb8ea9.gz",
+        "bytes": 84023,
+        "sha256": "a89714b25dc72f85c9fe3e4cd3d6b311200274ac16af536e9eea2a9be885e36e"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/imu-controller.rhai",
+        "bytes": 403,
+        "sha256": "f6b7c2f5ce16c016062974a682ce7b1ad1238f9492e12b2bf816c8d210d10892"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f6b7c2f5ce16c016062974a682ce7b1ad1238f9492e12b2bf816c8d210d10892.gz",
+        "bytes": 231,
+        "sha256": "530f212933ceb9f6541fed784a2aeb3f754389d857be49943b44ea72c6cb9406"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/imu-policy.config.json",
+        "bytes": 993,
+        "sha256": "73b45cdc2cfefa4a87067245c88d8bac5d7ca623a9f54ddcc64d034a2b923102"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/73b45cdc2cfefa4a87067245c88d8bac5d7ca623a9f54ddcc64d034a2b923102.gz",
+        "bytes": 471,
+        "sha256": "76e2f9b7fe435e8a78fd66b90b2975521a6d7db8a5217c8812b8465571a57c8a"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/imu-policy.task.json",
+        "bytes": 800,
+        "sha256": "e17874352fe036f74c7636d16b3a25297cfe0facf234b3633637754cfe361476"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e17874352fe036f74c7636d16b3a25297cfe0facf234b3633637754cfe361476.gz",
+        "bytes": 281,
+        "sha256": "66246965a6f021751b7f6d8a1c808427e3722d5be8659cd18d870430d741c402"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/prepare_imu_policy.mjs",
+        "bytes": 1899,
+        "sha256": "aa20b05060ccc7adb5f6b5fadf74c8564b40ac80e5e8df224e22e0e207e45419"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/aa20b05060ccc7adb5f6b5fadf74c8564b40ac80e5e8df224e22e0e207e45419.gz",
+        "bytes": 952,
+        "sha256": "31a8ae10b3c0a5578643ff16fb265258cf107d818ca675fb40d9f203ea227e33"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/final-browser-environment.json",
+        "bytes": 54674,
+        "sha256": "5ebfc42e624d5e797a36eca45e224fe45f2e1e1320c124ba05128528aa644806"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5ebfc42e624d5e797a36eca45e224fe45f2e1e1320c124ba05128528aa644806.gz",
+        "bytes": 3854,
+        "sha256": "8d52e76e9e0196816efc816646776dc7ec3129f6e982f2e88f9756ba3a003ea4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/final-browser-environment.log",
+        "bytes": 54675,
+        "sha256": "18a7c35284fed1cd2a4b2f1ac65bb89faa0e06f7a0a9a05bd02ed6e34366bfc2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/18a7c35284fed1cd2a4b2f1ac65bb89faa0e06f7a0a9a05bd02ed6e34366bfc2.gz",
+        "bytes": 3855,
+        "sha256": "94bc7ee551473e9feebb93a0722b7cea5d2e7b6bebddc4f426332eee1bcf377d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/final-browser-frames.json",
+        "bytes": 1174606,
+        "sha256": "8a2dc29eb48c60117269e5ec8f1a48ec9c2a27900684af38557ad74fa83edc62"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8a2dc29eb48c60117269e5ec8f1a48ec9c2a27900684af38557ad74fa83edc62.gz",
+        "bytes": 90365,
+        "sha256": "8086bea5734b89e214afcec3529085223a1b8856c7c8c649b4fbca24da0ef519"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/final-build-inputs.json",
+        "bytes": 6879,
+        "sha256": "be8d5f0f0442549677e23c39ef41dee0a9c412196c9ad840c1a54614fcaf942b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/be8d5f0f0442549677e23c39ef41dee0a9c412196c9ad840c1a54614fcaf942b.gz",
+        "bytes": 2495,
+        "sha256": "79dba066763bca3c0417bc8cc618bb856679aeb7918ed78955692d8afdedb07b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/final-native-build.log",
+        "bytes": 606,
+        "sha256": "98757c0b0fe0e772c3c5b7788c83cd82cc7d2b624c1a4d8b54805913b1a1625b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/98757c0b0fe0e772c3c5b7788c83cd82cc7d2b624c1a4d8b54805913b1a1625b.gz",
+        "bytes": 387,
+        "sha256": "4c50285a1397cefe3ba4bc3ed3ed48c11a1ea77c7beaa7ab9a626d04dd106d0c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/final-quadruped-parity.json",
+        "bytes": 234,
+        "sha256": "d9110bb239045018f73adb5b7c35643e786c6f08ad669291b429f5ac26868d4e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d9110bb239045018f73adb5b7c35643e786c6f08ad669291b429f5ac26868d4e.gz",
+        "bytes": 190,
+        "sha256": "56644bcab7217c299dbac28a1aca0735273370f917e264107d39b53e432f9183"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/final-sensor-tests.log",
+        "bytes": 1312,
+        "sha256": "9793580a69228604792ae83610cc8370aa8f3acd86aa88ce1889a2fd389da5ac"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9793580a69228604792ae83610cc8370aa8f3acd86aa88ce1889a2fd389da5ac.gz",
+        "bytes": 747,
+        "sha256": "3c37d51a8f0171d2a1f14a1cfae4c429fb3cfc7c1e1bd4a8dd14c0477176d049"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/final-wasm-build.log",
+        "bytes": 924,
+        "sha256": "2061ef6688f8c4dcbc19525e3278693e529a26558395b640c2caac6b3446f3ec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2061ef6688f8c4dcbc19525e3278693e529a26558395b640c2caac6b3446f3ec.gz",
+        "bytes": 484,
+        "sha256": "f0d96c16fe156d47c0ea223cbec8b303135083bc342538eddf440fefd7debd67"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/fixture-identity.json",
+        "bytes": 321,
+        "sha256": "9dd698a5377bd9303f2a7fffce944c5e242fcbf5c083b048f87c0bbd3ef5a994"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9dd698a5377bd9303f2a7fffce944c5e242fcbf5c083b048f87c0bbd3ef5a994.gz",
+        "bytes": 238,
+        "sha256": "40ef333277efdddc48982714f96bf81caaae470ee311645876cf1d99e2e36803"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/quadruped-final-native.json",
+        "bytes": 13119683,
+        "sha256": "db6e63764c0e61b7f84163c8cbf2bf4db326ccf5f2260d26ce080f29813a3ea8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/db6e63764c0e61b7f84163c8cbf2bf4db326ccf5f2260d26ce080f29813a3ea8.gz",
+        "bytes": 3698843,
+        "sha256": "8427b0b578880176378e28140e88e6753041c2df42482521b255c2c002b0f9f7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/quadruped-final.execution.json",
+        "bytes": 54,
+        "sha256": "19c9b5a8d55d19640d335aa8e3bc6d72551600c4aef85790bb075813b13c2f59"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/19c9b5a8d55d19640d335aa8e3bc6d72551600c4aef85790bb075813b13c2f59.gz",
+        "bytes": 74,
+        "sha256": "75198dc34f42b17aa39c63911e6ed231ee8500d09aae8e58d9a7b005c061540e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/quadruped-final.launch.json",
+        "bytes": 190,
+        "sha256": "8e6118e44b2c6f77c07cccf077129d421393dd339f7cb9aae8362d921e918c90"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8e6118e44b2c6f77c07cccf077129d421393dd339f7cb9aae8362d921e918c90.gz",
+        "bytes": 170,
+        "sha256": "7d4e8a33b208654d185daa9d7a690432400486528b9c065551b751df5184f7e3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/quadruped-final.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/run_environment-final",
+        "bytes": 16073100,
+        "sha256": "717af2b6f869a5d5d299c43b39b5af8e458c34412b66973f7e142b216850ef3b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/717af2b6f869a5d5d299c43b39b5af8e458c34412b66973f7e142b216850ef3b.gz",
+        "bytes": 4774529,
+        "sha256": "1b302c4c9f4c25caa934f5800bf0f47d1d845da4f578dacb328958a3e38825f9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/runtime-tests.log",
+        "bytes": 5972,
+        "sha256": "05d277c3ecee7f3a5410e8552ab557a1a09f50e9ebd3689a9fb41a82ded14f44"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/05d277c3ecee7f3a5410e8552ab557a1a09f50e9ebd3689a9fb41a82ded14f44.gz",
+        "bytes": 2191,
+        "sha256": "d4fcd6872249d4f8cca202e8efa6674727eae3c0ec4434447e6068a0408dfd9d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/sim_web-final.wasm",
+        "bytes": 11506300,
+        "sha256": "e8036992dc98d11ba87e625914cf6399355024ba9cbf465ea7b143e1d4f7221d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e8036992dc98d11ba87e625914cf6399355024ba9cbf465ea7b143e1d4f7221d.gz",
+        "bytes": 2407891,
+        "sha256": "2863c371b4a8c04bff10f4d199b50ed1a533bdb1452eb381c9831510375a7919"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/viewer/OPEN.txt",
+        "bytes": 46,
+        "sha256": "54dc75848068f67de4d2d6c109fd7b7749124305807689c7c0dd6ea8d1beb620"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/54dc75848068f67de4d2d6c109fd7b7749124305807689c7c0dd6ea8d1beb620.gz",
+        "bytes": 63,
+        "sha256": "1b895e8384976a3103b76b08b3db9e6b1514d56480f475e279eac88002d7a712"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/viewer/catalog.json",
+        "bytes": 148,
+        "sha256": "ba4f0c3452c87535a96050a6db21aca94279f94d8533fe77227e7a7cbb7a5f41"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ba4f0c3452c87535a96050a6db21aca94279f94d8533fe77227e7a7cbb7a5f41.gz",
+        "bytes": 132,
+        "sha256": "4ae3e0f3cab3352c177dd9e2a7da1d3c8eeb04ec6d6ad9956a6125fb6ca6612d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/viewer/data/wheeled-imu-policy.json",
+        "bytes": 1123690,
+        "sha256": "dc261095b71f952b21cc9dabafb80812b26ed68e0e46c56db3354df47d92d919"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/dc261095b71f952b21cc9dabafb80812b26ed68e0e46c56db3354df47d92d919.gz",
+        "bytes": 81598,
+        "sha256": "8036e6d508dc8365f0751dfb99c2fb4c940ce62aaa172481f5cc04242ebd50f6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/viewer/sim_web.js",
+        "bytes": 29782,
+        "sha256": "2f72760b210924535dfc9f8f43e1d7b1c2dfbe96ee4b9aa82ccd47776214e787"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2f72760b210924535dfc9f8f43e1d7b1c2dfbe96ee4b9aa82ccd47776214e787.gz",
+        "bytes": 4316,
+        "sha256": "754df7d97f54397d9e561ee95013d9761e137f8ac20bebce41bad37f446e608a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/viewer/sim_web_bg.wasm",
+        "bytes": 11122026,
+        "sha256": "1055dce8cf8dcafd457dc142066ed6579ff6be9b59971cbd2a13b8281f7d4d84"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1055dce8cf8dcafd457dc142066ed6579ff6be9b59971cbd2a13b8281f7d4d84.gz",
+        "bytes": 2318225,
+        "sha256": "e6646e9576c47c18b17ddda2c43be2bf67fce1b0081a79c43c29e53873021211"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/viewer/worker-message.mjs",
+        "bytes": 761,
+        "sha256": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f.gz",
+        "bytes": 385,
+        "sha256": "45c03b136b87c5aa8e1b34ebbb6358ddac6e965d93ae445b22d1a3fe5863fbe8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/viewer/worker.js",
+        "bytes": 5953,
+        "sha256": "be70cae37c0864b58072b0fa9539023705a832aa844bacfd334f2eeebe06e1de"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/be70cae37c0864b58072b0fa9539023705a832aa844bacfd334f2eeebe06e1de.gz",
+        "bytes": 1731,
+        "sha256": "b1ff1e95a51d0dc433244a717c6203dfb5c96df9999dcebbe29966303388649e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled-final-native.json",
+        "bytes": 1192814,
+        "sha256": "2069a547f362caaec81585f540efde20c7f2f24ba03a04a84752ae2663c86e3d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2069a547f362caaec81585f540efde20c7f2f24ba03a04a84752ae2663c86e3d.gz",
+        "bytes": 94494,
+        "sha256": "7af2dc1e56a23cfb700870091194dc78fdf307d474fb15e359ae23768c12e642"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled-final.execution.json",
+        "bytes": 54,
+        "sha256": "2559cf43b6eb3cdb01881b55b6f058cf035b9aec530b520cd82376f9c2b3e369"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2559cf43b6eb3cdb01881b55b6f058cf035b9aec530b520cd82376f9c2b3e369.gz",
+        "bytes": 74,
+        "sha256": "ac98dd40ea6e46a94b3734b7cd68afe2c8f5e1511a56210f893ed4051ecef339"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled-final.launch.json",
+        "bytes": 260,
+        "sha256": "86d5b3f00977b4de183285b22fe2c8cbf54d7e19d9057fbc00d2a4fa87bb045c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/86d5b3f00977b4de183285b22fe2c8cbf54d7e19d9057fbc00d2a4fa87bb045c.gz",
+        "bytes": 160,
+        "sha256": "4879db859e4f52c3a616b1f98fe226b3d9798f21df1f160111593a88c70bd2ad"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled-final.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled/config.json",
+        "bytes": 825,
+        "sha256": "0e26740b69e905f81eac20c6dc0dc95a4d2571e8ed9fe71196e675b88752911a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0e26740b69e905f81eac20c6dc0dc95a4d2571e8ed9fe71196e675b88752911a.gz",
+        "bytes": 441,
+        "sha256": "a5cda459e5ec58cd5a8ffaf224393dc13ce44f03045bb66a77dcedaec63472be"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled/data.json",
+        "bytes": 1123690,
+        "sha256": "dc261095b71f952b21cc9dabafb80812b26ed68e0e46c56db3354df47d92d919"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/dc261095b71f952b21cc9dabafb80812b26ed68e0e46c56db3354df47d92d919.gz",
+        "bytes": 81598,
+        "sha256": "8036e6d508dc8365f0751dfb99c2fb4c940ce62aaa172481f5cc04242ebd50f6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled/scene.json",
+        "bytes": 1122134,
+        "sha256": "374c4c0dc38d3ca65a501c2bbfe77b3d127bca19fd23d0a062722d1b54f4c75d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/374c4c0dc38d3ca65a501c2bbfe77b3d127bca19fd23d0a062722d1b54f4c75d.gz",
+        "bytes": 81097,
+        "sha256": "ff730110ab7b227d3fe39f1ead0e13ae2279fd4230c7b71068a941c5e754f727"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled/scope.json",
+        "bytes": 189,
+        "sha256": "bda9c6582fb7798b6bde58781383d9d1ef8d3498a785f252c1c6dbd8afe68004"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bda9c6582fb7798b6bde58781383d9d1ef8d3498a785f252c1c6dbd8afe68004.gz",
+        "bytes": 171,
+        "sha256": "9862cdcc3039000ceea65381fcd4e53211cbf539556b3f483f73ba2f9849357d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-imu-policy-v1/wheeled/task.json",
+        "bytes": 705,
+        "sha256": "a01d25c146bff1a236633f15d8f8f70883a711cdbe007f140639e234ff710481"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a01d25c146bff1a236633f15d8f8f70883a711cdbe007f140639e234ff710481.gz",
+        "bytes": 260,
+        "sha256": "acd2aa1bd2116ba6e809d90247bb871e76cd67e220fb1c3aaf0b8993f04134b1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-passive-coordinates-v1/quadruped-native.json",
+        "bytes": 13119693,
+        "sha256": "d64bfd8a52b7c8b5c93fa3e9a76e9ef291d39173f6e3114b86c07c2c57d9fc78"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d64bfd8a52b7c8b5c93fa3e9a76e9ef291d39173f6e3114b86c07c2c57d9fc78.gz",
+        "bytes": 3698853,
+        "sha256": "a6dd6b2c997d90760df0ffe8b41a7645a2e494f25cd0aa82ab090843f0f2449d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-robot-learning-v1/quadruped-legacy-input.json",
+        "bytes": 12882866,
+        "sha256": "c855295bc2920e983745415e245347d62fc3fadde70f338c369c43fdd0a46847"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c855295bc2920e983745415e245347d62fc3fadde70f338c369c43fdd0a46847.gz",
+        "bytes": 3651132,
+        "sha256": "d08648ed405cdf904d66afaaf6dfe93dd3fbb31c9c400c5178335b446ed82608"
+      }
+    },
+    {
+      "original": {
+        "path": "web/serve-viewer.mjs",
+        "bytes": 1068,
+        "sha256": "f4df0ed6bb95ecb6d26c4d0aaa934f30e66f18cc02d67e98c8006b70f8195cb5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f4df0ed6bb95ecb6d26c4d0aaa934f30e66f18cc02d67e98c8006b70f8195cb5.gz",
+        "bytes": 589,
+        "sha256": "de38ec7c081065183af215dbc1792c20226596855b3c83b982a50387e5060373"
+      }
+    },
+    {
+      "original": {
+        "path": "web/tests/environment.mjs",
+        "bytes": 10099,
+        "sha256": "a379e369ffd8b491bd14d18c6f3225eee1df4de0b7dc937dc7d5b71e27c04efa"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a379e369ffd8b491bd14d18c6f3225eee1df4de0b7dc937dc7d5b71e27c04efa.gz",
+        "bytes": 3929,
+        "sha256": "4f1753345adcd6bd537aea303ffa603a402339f8097e734092aefc013513a8a3"
+      }
+    }
+  ],
+  "scope": "Authored sensor observation, Rhai/neural inference and causal forecast input support with passive coordinate binding fixes. Original wheeled CAD retained; JSON transport normalizes eight signed-zero geometry entries. Registry units checked against robot.articulated. Learned prediction accuracy, locomotion, sustained speed, real-time rendering, contact convergence and hardware transfer are not established. Full objective remains active.",
+  "terminal_evidence": {
+    "tests": "Session 78267 exit 0: 46 targeted tests. Session 24616 exit 0: 6 IMU tests repeated after metadata provenance clarification, then final native and WASM builds completed.",
+    "native_and_browser": "Session 78000 exit 0: both final native captures, wasm-bindgen and final browser environment test completed; per-run execution records archived.",
+    "comparison": "Final quadruped physical frames, transitions, recording, task, contract and metadata exactly match prior 0.1 s prefix except stepping_wall_s. Wheeled 30 ms native/WASM maximum difference 4.336808689942018e-19; reset/replay exact."
+  },
+  "specification": {
+    "path": "runs/shared-imu-policy-v1/archive.spec.json",
+    "sha256": "56430e48b05803a094befaa67dc80e1e410f3c048728ff009ea840df050df139"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/archive_evidence_files.mjs",
+    "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+  }
+}

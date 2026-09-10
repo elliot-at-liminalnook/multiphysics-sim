@@ -1,0 +1,64 @@
+{
+  "peak_phase_acceleration": 8.0,
+  "peak_phase_rate": 1.3333333333333333,
+  "ramp_fraction": 0.25,
+  "samples": [
+    {
+      "phase": 0.0,
+      "progress_and_phase_derivatives": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "phase": 0.125,
+      "progress_and_phase_derivatives": [
+        0.03125,
+        0.6666666666666666,
+        8.0
+      ]
+    },
+    {
+      "phase": 0.25,
+      "progress_and_phase_derivatives": [
+        0.16666666666666666,
+        1.3333333333333333,
+        0.0
+      ]
+    },
+    {
+      "phase": 0.5,
+      "progress_and_phase_derivatives": [
+        0.5,
+        1.3333333333333333,
+        0.0
+      ]
+    },
+    {
+      "phase": 0.75,
+      "progress_and_phase_derivatives": [
+        0.8333333333333333,
+        1.3333333333333333,
+        0.0
+      ]
+    },
+    {
+      "phase": 0.875,
+      "progress_and_phase_derivatives": [
+        0.96875,
+        0.6666666666666666,
+        -8.0
+      ]
+    },
+    {
+      "phase": 1.0,
+      "progress_and_phase_derivatives": [
+        1.0,
+        0.0,
+        -0.0
+      ]
+    }
+  ],
+  "scope": "Normalized geometric C2 return. Actual displacement/duration and actuator/contact constraints belong to the caller."
+}

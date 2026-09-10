@@ -1,0 +1,95 @@
+{
+  "source_prefix": "runs/contact-planning/diagonal68-human-0p625ms",
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "output_directory": "runs/bayesian-human20-pilot-v2",
+  "selector": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+  "runtime_examples": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples",
+  "seed": 42,
+  "initial_design_count": 12,
+  "comparison_evaluations": 8,
+  "baseline_values": [
+    0.06780678488063342,
+    0.5,
+    1
+  ],
+  "problem": {
+    "context_id": "computed-from-exact-artifacts-by-runner",
+    "parameters": [
+      {
+        "name": "command_speed",
+        "unit": "m/s",
+        "bounds": [
+          0.06,
+          0.12
+        ]
+      },
+      {
+        "name": "tracking_gain",
+        "unit": "1",
+        "bounds": [
+          0,
+          1.5
+        ]
+      },
+      {
+        "name": "velocity_lead_factor",
+        "unit": "1",
+        "bounds": [
+          0.5,
+          1.5
+        ]
+      }
+    ],
+    "objective_name": "negative minimum measured forward/reverse speed",
+    "objective_unit": "m/s",
+    "constraints": [
+      {
+        "name": "slip ratio / 0.05 - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "speed tracking relative error / 0.05 - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "heading error / 0.1 rad - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "tilt / 0.1 rad - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "settling duration / (0.8 s + existing 1e-9 s roundoff guard) - 1; unsettled gate failure = 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "late drift / 0.003 m - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "failed fraction of all complete planned swing checks",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "sampled interlink overlap / 0.0001 m; exact zero required",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "absolute turn error from 0.24 rad / 0.06 rad - 1",
+        "unit": "1",
+        "scale": 1
+      }
+    ]
+  },
+  "scope": "Full twenty-second forward/turn/reverse/stop schedule as the adaptive measurement, with identical physical properties and existing human-schedule gates. Requested speed [0.06,0.12] and gain [0,1.5] are explicit experimental boxes, not physical limits. Complements coupled contact-family search. Timestep refinement, sustained motion, dropout and browser checks remain separate. Lift windows match the historical human audit: [1.4,9.8] and [11,15.8], including the turn. The earlier pilot was cancelled for incorrect audit windows before selector fitting.",
+  "evaluation_profile": "human20"
+}

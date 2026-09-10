@@ -126,68 +126,103 @@ impl BoundNetwork {
         Ok(SupervisedSample {inputs:self.normalize(sensors)?,targets})
     }
     pub fn sample(&self, sensors: &[f64]) -> Result<Vec<f64>, String> {
-        let mut values=self.normalize(sensors)?;
-        for layer in &self.network.layers {
-            let mut next = Vec::with_capacity(layer.biases.len());
-            for (row,bias) in layer.weights.iter().zip(&layer.biases) {
-                let value = row.iter().zip(&values).fold(*bias, |s,(w,x)| s+w*x);
-                if !value.is_finite() { return Err("nonfinite neural activation".into()); }
-                next.push(value.tanh());
-            }
-            values = next;
+        let values=self.network.normalized_output(&self.normalize(sensors)?, false)?;
+        self.scale_outputs(&values)
+    }
+    /// Convert normalized neural actions, including unbounded Gaussian samples,
+    /// into the same typed actuator correction slots as deterministic inference.
+    pub fn scale_outputs(&self, values: &[f64]) -> Result<Vec<f64>, String> {
+        if values.len()!=self.network.outputs.len() || values.iter().any(|x|!x.is_finite()) {
+            return Err("invalid normalized neural action".into());
         }
         let mut output = vec![0.0; self.actuator_count];
         for ((o,&i),value) in self.network.outputs.iter().zip(&self.outputs).zip(values) { output[i] = value * o.scale; }
+        if output.iter().any(|x|!x.is_finite()) { return Err("nonfinite scaled neural action".into()); }
         Ok(output)
     }
     pub fn definition(&self) -> &Network { &self.network }
 }
 
 impl Network {
-    /// Mean squared normalized-output error and exact parameter gradient.
-    /// Ordering matches parameters(): output-major weights then biases per layer.
-    pub fn supervised_gradient(&self, samples: &[SupervisedSample]) -> Result<(f64,Vec<f64>),String> {
+    fn activations(&self, inputs: &[f64], linear_output: bool) -> Result<Vec<Vec<f64>>,String> {
         self.validate()?;
-        if samples.is_empty() { return Err("supervised batch must not be empty".into()); }
+        if inputs.len()!=self.features.len() || inputs.iter().any(|x|!x.is_finite()) {
+            return Err("invalid normalized neural inputs".into());
+        }
+        let mut activations=vec![inputs.to_vec()];
+        for (i,layer) in self.layers.iter().enumerate() {
+            let previous=activations.last().unwrap();
+            let mut next=Vec::with_capacity(layer.biases.len());
+            for (row,bias) in layer.weights.iter().zip(&layer.biases) {
+                let z=row.iter().zip(previous).fold(*bias,|s,(w,x)|s+w*x);
+                if !z.is_finite() { return Err("nonfinite neural activation".into()); }
+                next.push(if linear_output && i+1==self.layers.len() {z} else {z.tanh()});
+            }
+            activations.push(next);
+        }
+        Ok(activations)
+    }
+    /// Normalized forward pass. Linear output is for value-function fitting;
+    /// actuator policies always use the artifact's existing tanh output.
+    pub fn normalized_output(&self, inputs: &[f64], linear_output: bool) -> Result<Vec<f64>,String> {
+        Ok(self.activations(inputs,linear_output)?.pop().unwrap())
+    }
+    /// Vector-Jacobian product with respect to parameters(), for arbitrary losses.
+    pub fn output_gradient(&self, inputs: &[f64], derivative: &[f64], linear_output: bool) -> Result<Vec<f64>,String> {
+        let activations=self.activations(inputs,linear_output)?;
+        if derivative.len()!=self.outputs.len() || derivative.iter().any(|x|!x.is_finite()) {
+            return Err("invalid neural output derivative".into());
+        }
         let mut gradient=self.layers.iter().map(|l| Layer {weights:l.weights.iter().map(|r|vec![0.;r.len()]).collect(),biases:vec![0.;l.biases.len()]}).collect::<Vec<_>>();
-        let mut loss=0.0;
-        let denominator=(samples.len()*self.outputs.len()) as f64;
-        for sample in samples {
-            if sample.inputs.len()!=self.features.len() || sample.targets.len()!=self.outputs.len()
-                || sample.inputs.iter().chain(&sample.targets).any(|v|!v.is_finite())
-                || sample.targets.iter().any(|v|v.abs()>1.0) { return Err("invalid supervised sample shape/values".into()); }
-            let mut activations=vec![sample.inputs.clone()];
-            for layer in &self.layers {
-                let previous=activations.last().unwrap();
-                let mut next=Vec::with_capacity(layer.biases.len());
-                for (row,bias) in layer.weights.iter().zip(&layer.biases) {
-                    let z=row.iter().zip(previous).fold(*bias,|s,(w,x)|s+w*x);
-                    if !z.is_finite() { return Err("nonfinite supervised activation".into()); }
-                    next.push(z.tanh());
-                }
-                activations.push(next);
+        let mut delta=derivative.iter().zip(activations.last().unwrap())
+            .map(|(d,y)|d*if linear_output {1.} else {1.-y*y}).collect::<Vec<_>>();
+        for l in (0..self.layers.len()).rev() {
+            for (j,&d) in delta.iter().enumerate() {
+                gradient[l].biases[j]=d;
+                for (k,&x) in activations[l].iter().enumerate() {gradient[l].weights[j][k]=d*x;}
             }
-            let output=activations.last().unwrap();
-            let mut delta=Vec::with_capacity(output.len());
-            for (&y,&target) in output.iter().zip(&sample.targets) {
-                loss+=(y-target).powi(2)/denominator;
-                delta.push(2.0*(y-target)*(1.0-y*y)/denominator);
-            }
-            for l in (0..self.layers.len()).rev() {
-                for (j,&d) in delta.iter().enumerate() {
-                    gradient[l].biases[j]+=d;
-                    for (k,&x) in activations[l].iter().enumerate() {gradient[l].weights[j][k]+=d*x;}
-                }
-                if l>0 {
-                    let mut previous=vec![0.0;activations[l].len()];
-                    for (k,d) in previous.iter_mut().enumerate() {
-                        *d=delta.iter().enumerate().map(|(j,v)|self.layers[l].weights[j][k]*v).sum::<f64>()*(1.0-activations[l][k].powi(2));
-                    }
-                    delta=previous;
-                }
+            if l>0 {
+                delta=(0..activations[l].len()).map(|k|
+                    delta.iter().enumerate().map(|(j,v)|self.layers[l].weights[j][k]*v).sum::<f64>()
+                        *(1.-activations[l][k].powi(2))).collect();
             }
         }
-        let gradient=gradient.iter().flat_map(|l|l.weights.iter().flatten().chain(&l.biases)).copied().collect::<Vec<_>>();
+        let flat=gradient.iter().flat_map(|l|l.weights.iter().flatten().chain(&l.biases)).copied().collect::<Vec<_>>();
+        if flat.iter().any(|x|!x.is_finite()) {return Err("nonfinite neural gradient".into());}
+        Ok(flat)
+    }
+    /// Vector-Jacobian product with respect to normalized inputs. This does not
+    /// include feature normalization/clipping or physical output scaling.
+    pub fn input_gradient(&self, inputs: &[f64], derivative: &[f64], linear_output: bool) -> Result<Vec<f64>,String> {
+        let activations=self.activations(inputs,linear_output)?;
+        if derivative.len()!=self.outputs.len()||derivative.iter().any(|x|!x.is_finite()) {
+            return Err("invalid neural input-gradient derivative".into());
+        }
+        let mut delta=derivative.to_vec();
+        for l in (0..self.layers.len()).rev() {
+            if !(linear_output&&l+1==self.layers.len()) {
+                for(d,y)in delta.iter_mut().zip(&activations[l+1]){*d*=1.-y*y;}
+            }
+            delta=(0..activations[l].len()).map(|k|self.layers[l].weights.iter().zip(&delta).map(|(row,d)|row[k]*d).sum()).collect();
+        }
+        if delta.iter().any(|x|!x.is_finite()){return Err("nonfinite neural input gradient".into());}Ok(delta)
+    }
+    /// Mean squared normalized-output error and exact parameter gradient.
+    pub fn supervised_gradient(&self, samples: &[SupervisedSample]) -> Result<(f64,Vec<f64>),String> {
+        self.validate()?;
+        if samples.is_empty() {return Err("supervised batch must not be empty".into());}
+        let mut gradient=vec![0.;self.parameters().len()];
+        let mut loss=0.;
+        let denominator=(samples.len()*self.outputs.len()) as f64;
+        for sample in samples {
+            if sample.targets.len()!=self.outputs.len() || sample.targets.iter().any(|v|!v.is_finite()||v.abs()>1.) {
+                return Err("invalid supervised targets".into());
+            }
+            let output=self.normalized_output(&sample.inputs,false)?;
+            let derivative=output.iter().zip(&sample.targets).map(|(y,t)|2.*(y-t)/denominator).collect::<Vec<_>>();
+            loss+=output.iter().zip(&sample.targets).map(|(y,t)|(y-t).powi(2)/denominator).sum::<f64>();
+            for (total,value) in gradient.iter_mut().zip(self.output_gradient(&sample.inputs,&derivative,false)?) {*total+=value;}
+        }
         if !loss.is_finite() || gradient.iter().any(|v|!v.is_finite()) {return Err("nonfinite supervised loss/gradient".into());}
         Ok((loss,gradient))
     }

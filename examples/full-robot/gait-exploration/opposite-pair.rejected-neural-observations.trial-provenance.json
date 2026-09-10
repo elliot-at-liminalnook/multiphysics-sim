@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "definition": {
+    "name": "opposite-pair",
+    "family": "alternating opposite pairs; dynamic line support",
+    "stride_m": 0.02,
+    "transfer_s": 0.4,
+    "swing_s": 0.24,
+    "lift_m": 0.01,
+    "continuous": true,
+    "groups": [
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        3
+      ]
+    ],
+    "cycles": 6,
+    "duration_s": 6.000000000000001,
+    "predicted_schedule_speed_mm_s": 25,
+    "initial_coordinates": [
+      0,
+      -0.00008346418847292681,
+      -1.0471975511965976,
+      0,
+      -0.27612813350949833,
+      -1.0471975511965976,
+      0,
+      -0.00008346425388696227,
+      -1.0471975511965976,
+      0,
+      -0.00007650604473797781,
+      -1.0471975511965976
+    ],
+    "initial_base_translation_m": [
+      0,
+      0,
+      -0.06906212053309974
+    ],
+    "planning": "examples/full-robot/gait-exploration/opposite-pair.planning.json",
+    "acceptance": {
+      "screen_only": true,
+      "minimum_actual_speed_mm_s": 12.5,
+      "maximum_heading_error_rad": 0.02,
+      "maximum_tilt_rad": 0.1,
+      "maximum_sampled_inter_link_penetration_m": 0,
+      "maximum_loaded_material_motion_to_body_advance_ratio": 0.05,
+      "maximum_stop_drift_m": 0.003
+    }
+  },
+  "paths": {
+    "scene": "examples/full-robot/gait-exploration/opposite-pair.scene.json",
+    "config": "examples/full-robot/gait-exploration/opposite-pair.config.json",
+    "task": "examples/full-robot/gait-exploration/opposite-pair.task.json"
+  },
+  "sha256": {
+    "examples/full-robot/gait-exploration/opposite-pair.scene.json": "2f4b7e2295be6154932c3252b224492c04ef643c2597ecd57735c39e625588fb",
+    "examples/full-robot/gait-exploration/opposite-pair.config.json": "e37b96c59d4473d0a8ddc95565a0afa3e9fddc7d40c378af2e6d736ed6d9d92a",
+    "examples/full-robot/gait-exploration/opposite-pair.task.json": "68fc0cd741effaf20e42fb57d8a31a12cbdce378f512667d5820a1de3d5c945d",
+    "examples/full-robot/gait-exploration/opposite-pair.plan.json": "ee60d2345ad6492f6485c4e9fffbbf31a1103f7b3b48c5cc89fed5284d7a503d",
+    "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment": "53771008a7df170fd225a19291a7f31541785e9662ef7944cb7bb588ca1a1b2e"
+  },
+  "notes": [
+    "CAD robot and effective actuators unchanged. Explicit crouched initial state and wider policy bounds.",
+    "No online stepping or step-qualified reward: offline joint/body/foot references through shared Rust runtime and Rhai feedback.",
+    "No neural residual; this is a physics-reference teacher candidate, not a trained controller.",
+    "Original minute task body-Z termination translated for lower posture; prospective tilt/speed/slip/stop screening is in candidates.json."
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "base_commit": "acd7e46",
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-solve/Cargo.toml",
+      "bytes": 477,
+      "sha256": "205e625b8521d6c766fad99ba80e7856b679ef766addc9002a19b076f1fd080f"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_augmented_lagrangian.rs",
+      "bytes": 18097,
+      "sha256": "899eb7acf8a5ecff813ed67392472a9b240c971d3a3e49d4f042e3d839070679"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 60011,
+      "sha256": "6593d8200df55b564d7dbe8808f15796df54da4487fd85bba6e04174d38838ca"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 49959,
+      "sha256": "e6310f359c6e8cc173d66718b9a642bf8d3ef396243a090e8181ea7a66b273b6"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_inequalities.rs",
+      "bytes": 2721,
+      "sha256": "3ff223c0304acecf5175991ee6a163274a6dd6ecbd966bf1d8ea378500683a2c"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 3957,
+      "sha256": "ba6d708c03545c223e30dbc848fcaf4e6f19979c97e1a95553df5f714cae64f4"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47237,
+      "sha256": "2b9c7009ca093276bc4d8002c887869807e826e14d0262aa79a02fb24765ef44"
+    },
+    {
+      "path": "crates/sim-solve/src/least_squares.rs",
+      "bytes": 20070,
+      "sha256": "bee77d4fcce86e2afbf9c9fed1efeb9a1bae333948076042ade54b8be120db50"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_barrier.rs",
+      "bytes": 2779,
+      "sha256": "3a7612ead0a1133aeaccd37f056127cfb0f7612fc6f7bade12b955c47ad5d1db"
+    },
+    {
+      "path": "crates/sim-domain-control/src/contact_slip.rs",
+      "bytes": 10262,
+      "sha256": "7fd9ddecffe04c081dbeb863c82d7803f124b6e4ab653576fa9fdf7f8705728e"
+    },
+    {
+      "path": "crates/sim-domain-control/examples/contact_slip.rs",
+      "bytes": 1534,
+      "sha256": "8876c59982c22c8fd66eaa275b6a8941256230f6e5776eed7259de86dc70b490"
+    },
+    {
+      "path": "crates/sim-runtime/examples/refine_contact_periodic.rs",
+      "bytes": 1646,
+      "sha256": "7723dbdc34c8319a80787937580dc60cd00f30afec94a450692c6979df1e8b92"
+    },
+    {
+      "path": "crates/sim-domain-control/src/trajectory.rs",
+      "bytes": 23624,
+      "sha256": "e63f71f67145682719dbf289497dcd3ec15ad7d0eb6e823eb9a5998a3d1767a1"
+    },
+    {
+      "path": "crates/sim-domain-control/src/periodic_drift.rs",
+      "bytes": 5648,
+      "sha256": "941071f790ab5819a2bad963036ea87df6e893f00e3f948a03dab377ae8f9ffe"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_inequalities",
+      "bytes": 8755772,
+      "sha256": "20b941ca9034b3084c7951c8b001709bce31d74e61657d17799fde9aaba0a10a"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8716884,
+      "sha256": "1d0aadffa82d5489441e8191f10410fa1733c15502b4d8a5df8802f272c3e8f4"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/debug/examples/contact_slip",
+      "bytes": 579368,
+      "sha256": "8e70367c246f1f7599d2610b3a2280b8a23a60a54723b23c31b320d010acf33a"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/refine_contact_periodic",
+      "bytes": 8307724,
+      "sha256": "54d8091d947f5b63a9bfe5fb913ddeed5e9ba0bb299340faa22dea0d08e1e2b1"
+    }
+  ],
+  "scope": "Unchanged native optimizer, optional inspector, refiner, shared physics and solver. Grid refinement and checkpoint mapping use existing native APIs."
+}

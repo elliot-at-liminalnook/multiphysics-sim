@@ -368,7 +368,7 @@ mod exclusion_tests {
             art.links[1].hi = V::repeat(0.1);
             // Exact signed distance to the plane z=0.01 over the query box.
             art.links[1].sdf = Some(Sdf { origin:[-0.1;3], cell:0.2,
-                dims:[2;3], values:vec![-0.11,0.09,-0.11,0.09,-0.11,0.09,-0.11,0.09] });
+                dims:[2;3], values:vec![-0.11,0.09,-0.11,0.09,-0.11,0.09,-0.11,0.09], refinements:vec![] });
             let pose = |r, p| LinkKin {r,p,w:V::zeros(),vel:V::zeros(),alpha:V::zeros(),acc:V::zeros()};
             let mut original = vec![pose(M::identity(),V::zeros());2];
             let first = ContactGeometry::new(&art, &original);

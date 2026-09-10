@@ -1,0 +1,66 @@
+{
+  "scope": "Central differences of neighboring independently solved periodic CAD configurations and velocities compared with analytic local derivatives; numerical diagnostic, not a dynamic trajectory certificate.",
+  "spacing_s": 0.0012292365316435724,
+  "joints": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "max_velocity_difference_rad_s": 0.00019970529845644847,
+      "max_acceleration_difference_rad_s2": 0.07969855186696773
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "max_velocity_difference_rad_s": 0.000053351149969210754,
+      "max_acceleration_difference_rad_s2": 0.01403068389000034
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "max_velocity_difference_rad_s": 0.000544747825475006,
+      "max_acceleration_difference_rad_s2": 0.2592953538556839
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "max_velocity_difference_rad_s": 0.00000615516318774878,
+      "max_acceleration_difference_rad_s2": 0.003330682750543712
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "max_velocity_difference_rad_s": 0.0011884663951370888,
+      "max_acceleration_difference_rad_s2": 1.160170501600644
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "max_velocity_difference_rad_s": 0.00035660223705669125,
+      "max_acceleration_difference_rad_s2": 0.3065090346733035
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "max_velocity_difference_rad_s": 0.0002237381851689646,
+      "max_acceleration_difference_rad_s2": 0.09763093450152471
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "max_velocity_difference_rad_s": 0.00006654011619949829,
+      "max_acceleration_difference_rad_s2": 0.02980537034599262
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "max_velocity_difference_rad_s": 0.0005916396614228381,
+      "max_acceleration_difference_rad_s2": 0.29143607901975876
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "max_velocity_difference_rad_s": 0.00008854218881711173,
+      "max_acceleration_difference_rad_s2": 0.08641032702398976
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "max_velocity_difference_rad_s": 0.0006759001569905387,
+      "max_acceleration_difference_rad_s2": 0.6506010695960853
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "max_velocity_difference_rad_s": 0.000997532915210285,
+      "max_acceleration_difference_rad_s2": 0.9856338429858358
+    }
+  ]
+}

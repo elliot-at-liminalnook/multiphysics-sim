@@ -1,0 +1,408 @@
+{
+  "cases": 258,
+  "experimental_cases": 256,
+  "errors": [],
+  "missing_primal_candidates": 0,
+  "fast_sampled_feasible": [],
+  "statuses": {
+    "Solved": 256
+  },
+  "maximum_independent_affine_error": 4.547473508864641e-13,
+  "best_by_maximum_physical_inequality": [
+    {
+      "id": "original-d0.6-p0202",
+      "conic": {
+        "dual_objective": 56.51480247254573,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 11,
+        "minimax_balance": 56.514802474310805,
+        "primal_dual_gap": 1.7653505324233265e-9,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 1.6458168161648246e-11,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 2.825740123710096,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.000051823451327481784,
+        "maximum_inequality": 55.51480247420192,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 0.7433216964992261,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.17098029054015584
+      }
+    },
+    {
+      "id": "mean-d0.6-p0202",
+      "conic": {
+        "dual_objective": 58.20111043228808,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 11,
+        "minimax_balance": 58.20111043475582,
+        "primal_dual_gap": 2.467714921294828e-9,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 2.2993829063011617e-11,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 2.91005552173014,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00008626132307570922,
+        "maximum_inequality": 57.201110434602796,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 0.9509472179871068,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.1398119182782156
+      }
+    },
+    {
+      "id": "mean-d0.6-p0312",
+      "conic": {
+        "dual_objective": 138.7162198695512,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 11,
+        "minimax_balance": 138.71621991272724,
+        "primal_dual_gap": 4.317553248256445e-8,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 3.8429837090347974e-10,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 6.935810995400333,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00008550537766605082,
+        "maximum_inequality": 137.71621991040823,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 2.7743243982081647,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.13981191827821593
+      }
+    },
+    {
+      "id": "original-d0.6-p0231",
+      "conic": {
+        "dual_objective": 146.86348302238662,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 15,
+        "minimax_balance": 146.86348307392086,
+        "primal_dual_gap": 5.1534783551687724e-8,
+        "primal_violation": 6.714095945881127e-11,
+        "solved": true,
+        "stationarity_residual": 4.582147994369734e-10,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 6.714095945881127e-11,
+        "force_error_n": 7.34317415368334,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00016063695275270184,
+        "maximum_inequality": 145.8634830736668,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 2.9372696614359706,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.32027208307007077
+      }
+    },
+    {
+      "id": "original-d0.6-p0312",
+      "conic": {
+        "dual_objective": 146.88262883310767,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 12,
+        "minimax_balance": 146.88262884707902,
+        "primal_dual_gap": 1.3971572343507432e-8,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 1.243154468255625e-10,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 7.3441314423415065,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.0000770914202437023,
+        "maximum_inequality": 145.88262884683013,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 2.937652576934507,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.12391614096774572
+      }
+    },
+    {
+      "id": "mean-d0.6-p0231",
+      "conic": {
+        "dual_objective": 148.32348422320865,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 14,
+        "minimax_balance": 148.32348424027634,
+        "primal_dual_gap": 1.7067975477402797e-8,
+        "primal_violation": 1.9047430299679036e-10,
+        "solved": true,
+        "stationarity_residual": 1.5034617995013377e-10,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 1.9047430299679036e-10,
+        "force_error_n": 7.416174211944115,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00008550541501151088,
+        "maximum_inequality": 147.32348423979295,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 2.966469684795859,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.1398119182782159
+      }
+    },
+    {
+      "id": "mean-d0.6-p0213",
+      "conic": {
+        "dual_objective": 163.2133035194442,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 14,
+        "minimax_balance": 163.21330365854945,
+        "primal_dual_gap": 1.3910485563428665e-7,
+        "primal_violation": 6.80770995131752e-11,
+        "solved": true,
+        "stationarity_residual": 1.2372078916911278e-9,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 6.80770995131752e-11,
+        "force_error_n": 8.160665182815968,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00008550545235763707,
+        "maximum_inequality": 162.2133036578179,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 3.264266073156358,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.1398119182782155
+      }
+    },
+    {
+      "id": "mean-d0.6-p0321",
+      "conic": {
+        "dual_objective": 167.1602134304243,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 14,
+        "minimax_balance": 167.16021343501,
+        "primal_dual_gap": 4.586269142237143e-9,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 4.075939585845845e-11,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 8.358010671747873,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00008550537766549571,
+        "maximum_inequality": 166.1602134349656,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 3.343204268699312,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.13981191827821554
+      }
+    },
+    {
+      "id": "mean-d0.6-p0022",
+      "conic": {
+        "dual_objective": 167.62678931172422,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 15,
+        "minimax_balance": 167.62678936140537,
+        "primal_dual_gap": 4.9681091240927344e-8,
+        "primal_violation": 1.076495337315464e-9,
+        "solved": true,
+        "stationarity_residual": 4.5350767585716767e-10,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 1.076495337315464e-9,
+        "force_error_n": 8.381339467891353,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.0000858961066227959,
+        "maximum_inequality": 166.62678935873066,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 3.352535787174613,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.13981191827821562
+      }
+    },
+    {
+      "id": "mean-d0.6-p0123",
+      "conic": {
+        "dual_objective": 171.20494292317062,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 12,
+        "minimax_balance": 171.2049429386215,
+        "primal_dual_gap": 1.5451007584488252e-8,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 1.4705756704646057e-10,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 8.560247146922205,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00008550545235763707,
+        "maximum_inequality": 170.20494293844408,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 3.4240988587654706,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.13981191827821593
+      }
+    },
+    {
+      "id": "mean-d0.6-p0132",
+      "conic": {
+        "dual_objective": 171.91478880560732,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 13,
+        "minimax_balance": 171.914788849724,
+        "primal_dual_gap": 4.4117257402831456e-8,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 3.930393788209585e-10,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 8.59573944246441,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00008550541501217701,
+        "maximum_inequality": 170.9147888492882,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 3.4382957769805746,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.1398119182782156
+      }
+    },
+    {
+      "id": "original-d0.6-p0123",
+      "conic": {
+        "dual_objective": 172.2702853141122,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 14,
+        "minimax_balance": 172.2702853182835,
+        "primal_dual_gap": 4.171880618741852e-9,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 3.7232217309224325e-11,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 8.613514265913246,
+        "frames": 212,
+        "maximum_floor_penetration_m": 0.00011205652446527603,
+        "maximum_inequality": 171.2702853182649,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 3.445405706365213,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.2875808025700862
+      }
+    }
+  ],
+  "controls": [
+    {
+      "id": "control-fast-original-basis",
+      "conic": {
+        "dual_objective": 34.31105471570305,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 12,
+        "minimax_balance": 34.3110547299451,
+        "primal_dual_gap": 1.4242175438994309e-8,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 1.0324430199659673e-10,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 1.7155527364269858,
+        "frames": 250,
+        "maximum_floor_penetration_m": 0.000057226250667175016,
+        "maximum_inequality": 33.311054728539716,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 0.5319207725157925,
+        "sampled_feasible": false,
+        "speed_m_s": 0.211710264528351,
+        "torque_margin_nm": -0.2695338587272766
+      }
+    },
+    {
+      "id": "control-warm-feasible",
+      "conic": {
+        "dual_objective": 0.7161083221139684,
+        "dual_violation": 0,
+        "has_primal_candidate": true,
+        "iterations": 15,
+        "minimax_balance": 0.7161083223158552,
+        "primal_dual_gap": 2.014308719822111e-10,
+        "primal_violation": 0,
+        "solved": true,
+        "stationarity_residual": 1.4561685190983553e-12,
+        "status": "Solved"
+      },
+      "physical": {
+        "cone_violation_n": 0,
+        "force_error_n": 0.03580541611503918,
+        "frames": 250,
+        "maximum_floor_penetration_m": 0.000013626347500517166,
+        "maximum_inequality": 0,
+        "maximum_interlink_penetration_m": 0,
+        "moment_error_nm": 0.013715419551961316,
+        "sampled_feasible": true,
+        "speed_m_s": 0.02515190739040914,
+        "torque_margin_nm": 1.0912870043136882
+      }
+    }
+  ],
+  "input": {
+    "path": "examples/full-robot/contact-planning/joint-conic-patterns.batch.json",
+    "bytes": 2959937,
+    "sha256": "3d4cdaee2037d5d68154eb5f60ad6ca5a431f3e6c9feb073809b356c693b7723"
+  },
+  "compressed_output": {
+    "path": "examples/full-robot/contact-planning/joint-conic-patterns.result.jsonl.gz",
+    "bytes": 1303235,
+    "sha256": "cf4f1513ec8f289cde1c1285c18f09886bbb28464e6f66cea9eb1b579aa8fe0a"
+  },
+  "uncompressed_output": {
+    "bytes": 13198548,
+    "sha256": "c1c27467c9f4157ec86cf06d00294fa05c049cc4f48b050292ddd24aff9a8ee4"
+  },
+  "scope": "Completed fixed-motion contact-pattern initialization screen at 0.211710 m/s. A failed starting motion does not exclude its optimized gait family. No new runtime gait or physical speed maximum."
+}

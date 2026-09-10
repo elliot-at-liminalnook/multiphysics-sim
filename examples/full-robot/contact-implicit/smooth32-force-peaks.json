@@ -1,0 +1,287 @@
+{
+  "scope": "Exact physics agreement at shared times for unchanged analytic motion. Fine-grid localization of missed force peaks, not a new optimized or measured gait.",
+  "grids": [
+    {
+      "samples": 64,
+      "force_error_n": 0.1311716608944126,
+      "moment_error_nm": 0.037660872769166076,
+      "minimum_torque_margin_nm": -0.000017475687447809918
+    },
+    {
+      "samples": 128,
+      "force_error_n": 1.6162769334298455,
+      "moment_error_nm": 0.58853292515166,
+      "minimum_torque_margin_nm": -0.0064940017492434166
+    },
+    {
+      "samples": 512,
+      "force_error_n": 3.345274279362393,
+      "moment_error_nm": 1.2479553522597302,
+      "minimum_torque_margin_nm": -0.006545573066413679
+    }
+  ],
+  "peaks": [
+    {
+      "kind": "force",
+      "index": 0,
+      "maximum": 3.345274279362393,
+      "component": 1,
+      "neighborhood": [
+        {
+          "time_s": 0.0007736083798196903,
+          "unactuated_wrench": [
+            0.991289006755428,
+            -3.345274279362393,
+            -0.21038709268524852,
+            -1.2479553522597302,
+            -0.33549490291617345,
+            0.21345014815887906
+          ],
+          "per_foot": [
+            {
+              "link": "-Y | Sliding foot crosshead",
+              "normal_force_n": 22.266701345108572,
+              "minimum_gap_m": -0.00009651070532767925,
+              "minimum_normal_velocity_m_s": -0.005900343597071402,
+              "maximum_normal_velocity_m_s": 0.0018920460805274888
+            },
+            {
+              "link": "+X | Sliding foot crosshead",
+              "normal_force_n": 3.3188275500544555,
+              "minimum_gap_m": -0.000014461675196142387,
+              "minimum_normal_velocity_m_s": -0.008885302775806868,
+              "maximum_normal_velocity_m_s": 0.002027930060654497
+            },
+            {
+              "link": "+Y | Sliding foot crosshead",
+              "normal_force_n": 21.870330444288992,
+              "minimum_gap_m": -0.00010746888585433378,
+              "minimum_normal_velocity_m_s": -0.00195038346759447,
+              "maximum_normal_velocity_m_s": 0.00686980039406624
+            },
+            {
+              "link": "-X | Sliding foot crosshead",
+              "normal_force_n": 3.2739391842469616e-9,
+              "minimum_gap_m": 0.00020224068680319007,
+              "minimum_normal_velocity_m_s": 0.03359980223934883,
+              "maximum_normal_velocity_m_s": 0.050084011109858925
+            }
+          ]
+        },
+        {
+          "time_s": 0.0015472167596393806,
+          "unactuated_wrench": [
+            1.5477732175580539,
+            -2.1338993381596447,
+            -0.3437553757402912,
+            -0.7948819774915354,
+            -0.5149345765456488,
+            0.407644322737476
+          ],
+          "per_foot": [
+            {
+              "link": "-Y | Sliding foot crosshead",
+              "normal_force_n": 22.22340123615048,
+              "minimum_gap_m": -0.00009595253162680839,
+              "minimum_normal_velocity_m_s": -0.005736860551037726,
+              "maximum_normal_velocity_m_s": 0.0019264925362232344
+            },
+            {
+              "link": "+X | Sliding foot crosshead",
+              "normal_force_n": 3.220254070272138,
+              "minimum_gap_m": -0.000013845918735544416,
+              "minimum_normal_velocity_m_s": -0.009600690975225961,
+              "maximum_normal_velocity_m_s": 0.0025607490806928684
+            },
+            {
+              "link": "+Y | Sliding foot crosshead",
+              "normal_force_n": 21.832815663394626,
+              "minimum_gap_m": -0.0001074446031231191,
+              "minimum_normal_velocity_m_s": -0.0018944070783862843,
+              "maximum_normal_velocity_m_s": 0.007075867007697148
+            },
+            {
+              "link": "-X | Sliding foot crosshead",
+              "normal_force_n": 8.275780759891197e-11,
+              "minimum_gap_m": 0.0002390055549693626,
+              "minimum_normal_velocity_m_s": 0.0385638081585539,
+              "maximum_normal_velocity_m_s": 0.055061546360827246
+            }
+          ]
+        },
+        {
+          "time_s": 0.002320825139459071,
+          "unactuated_wrench": [
+            1.6934687467631022,
+            -1.4097313477781914,
+            -0.40244860419814243,
+            -0.5246205233394295,
+            -0.556074117852855,
+            0.4755503638780661
+          ],
+          "per_foot": [
+            {
+              "link": "-Y | Sliding foot crosshead",
+              "normal_force_n": 22.16998134362425,
+              "minimum_gap_m": -0.00009539141888642577,
+              "minimum_normal_velocity_m_s": -0.0056822292101671446,
+              "maximum_normal_velocity_m_s": 0.001953762325980088
+            },
+            {
+              "link": "+X | Sliding foot crosshead",
+              "normal_force_n": 3.0730661767875915,
+              "minimum_gap_m": -0.000012912621865091012,
+              "minimum_normal_velocity_m_s": -0.010329402060255989,
+              "maximum_normal_velocity_m_s": 0.003044409514407105
+            },
+            {
+              "link": "+Y | Sliding foot crosshead",
+              "normal_force_n": 21.77889268095589,
+              "minimum_gap_m": -0.00010733760184422625,
+              "minimum_normal_velocity_m_s": -0.0018497833709794492,
+              "maximum_normal_velocity_m_s": 0.007262118541198619
+            },
+            {
+              "link": "-X | Sliding foot crosshead",
+              "normal_force_n": 1.4429382050947056e-12,
+              "minimum_gap_m": 0.00027948588169968147,
+              "minimum_normal_velocity_m_s": 0.043111293128397954,
+              "maximum_normal_velocity_m_s": 0.059578178836545904
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "moment",
+      "index": 0,
+      "maximum": 1.2479553522597302,
+      "component": 3,
+      "neighborhood": [
+        {
+          "time_s": 0.0007736083798196903,
+          "unactuated_wrench": [
+            0.991289006755428,
+            -3.345274279362393,
+            -0.21038709268524852,
+            -1.2479553522597302,
+            -0.33549490291617345,
+            0.21345014815887906
+          ],
+          "per_foot": [
+            {
+              "link": "-Y | Sliding foot crosshead",
+              "normal_force_n": 22.266701345108572,
+              "minimum_gap_m": -0.00009651070532767925,
+              "minimum_normal_velocity_m_s": -0.005900343597071402,
+              "maximum_normal_velocity_m_s": 0.0018920460805274888
+            },
+            {
+              "link": "+X | Sliding foot crosshead",
+              "normal_force_n": 3.3188275500544555,
+              "minimum_gap_m": -0.000014461675196142387,
+              "minimum_normal_velocity_m_s": -0.008885302775806868,
+              "maximum_normal_velocity_m_s": 0.002027930060654497
+            },
+            {
+              "link": "+Y | Sliding foot crosshead",
+              "normal_force_n": 21.870330444288992,
+              "minimum_gap_m": -0.00010746888585433378,
+              "minimum_normal_velocity_m_s": -0.00195038346759447,
+              "maximum_normal_velocity_m_s": 0.00686980039406624
+            },
+            {
+              "link": "-X | Sliding foot crosshead",
+              "normal_force_n": 3.2739391842469616e-9,
+              "minimum_gap_m": 0.00020224068680319007,
+              "minimum_normal_velocity_m_s": 0.03359980223934883,
+              "maximum_normal_velocity_m_s": 0.050084011109858925
+            }
+          ]
+        },
+        {
+          "time_s": 0.0015472167596393806,
+          "unactuated_wrench": [
+            1.5477732175580539,
+            -2.1338993381596447,
+            -0.3437553757402912,
+            -0.7948819774915354,
+            -0.5149345765456488,
+            0.407644322737476
+          ],
+          "per_foot": [
+            {
+              "link": "-Y | Sliding foot crosshead",
+              "normal_force_n": 22.22340123615048,
+              "minimum_gap_m": -0.00009595253162680839,
+              "minimum_normal_velocity_m_s": -0.005736860551037726,
+              "maximum_normal_velocity_m_s": 0.0019264925362232344
+            },
+            {
+              "link": "+X | Sliding foot crosshead",
+              "normal_force_n": 3.220254070272138,
+              "minimum_gap_m": -0.000013845918735544416,
+              "minimum_normal_velocity_m_s": -0.009600690975225961,
+              "maximum_normal_velocity_m_s": 0.0025607490806928684
+            },
+            {
+              "link": "+Y | Sliding foot crosshead",
+              "normal_force_n": 21.832815663394626,
+              "minimum_gap_m": -0.0001074446031231191,
+              "minimum_normal_velocity_m_s": -0.0018944070783862843,
+              "maximum_normal_velocity_m_s": 0.007075867007697148
+            },
+            {
+              "link": "-X | Sliding foot crosshead",
+              "normal_force_n": 8.275780759891197e-11,
+              "minimum_gap_m": 0.0002390055549693626,
+              "minimum_normal_velocity_m_s": 0.0385638081585539,
+              "maximum_normal_velocity_m_s": 0.055061546360827246
+            }
+          ]
+        },
+        {
+          "time_s": 0.002320825139459071,
+          "unactuated_wrench": [
+            1.6934687467631022,
+            -1.4097313477781914,
+            -0.40244860419814243,
+            -0.5246205233394295,
+            -0.556074117852855,
+            0.4755503638780661
+          ],
+          "per_foot": [
+            {
+              "link": "-Y | Sliding foot crosshead",
+              "normal_force_n": 22.16998134362425,
+              "minimum_gap_m": -0.00009539141888642577,
+              "minimum_normal_velocity_m_s": -0.0056822292101671446,
+              "maximum_normal_velocity_m_s": 0.001953762325980088
+            },
+            {
+              "link": "+X | Sliding foot crosshead",
+              "normal_force_n": 3.0730661767875915,
+              "minimum_gap_m": -0.000012912621865091012,
+              "minimum_normal_velocity_m_s": -0.010329402060255989,
+              "maximum_normal_velocity_m_s": 0.003044409514407105
+            },
+            {
+              "link": "+Y | Sliding foot crosshead",
+              "normal_force_n": 21.77889268095589,
+              "minimum_gap_m": -0.00010733760184422625,
+              "minimum_normal_velocity_m_s": -0.0018497833709794492,
+              "maximum_normal_velocity_m_s": 0.007262118541198619
+            },
+            {
+              "link": "-X | Sliding foot crosshead",
+              "normal_force_n": 1.4429382050947056e-12,
+              "minimum_gap_m": 0.00027948588169968147,
+              "minimum_normal_velocity_m_s": 0.043111293128397954,
+              "maximum_normal_velocity_m_s": 0.059578178836545904
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

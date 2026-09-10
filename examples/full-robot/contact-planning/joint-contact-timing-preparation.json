@@ -1,0 +1,100 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-height-speed.recipe.json",
+      "bytes": 146911,
+      "sha256": "d80afde8b5b8b0c12d0349c6328631a1f845e3645c936fd13f3c9c7cc67738ac"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing.result.json",
+      "bytes": 4550473,
+      "sha256": "cc34c14341b4e93b7c91f2eda13284aec50e292136a3db3ff5559f72cfdf0913"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+      "bytes": 161211,
+      "sha256": "e4c026ee7c0336c90d436e7b7802aeba3549a51e6652ccaaee54d6f0933f282e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed-initial.result.json",
+      "bytes": 2350785,
+      "sha256": "b59e36cbe1eb9af64adf8d3bfe13cd103d14b0fcea9427c5a9f679802dafda02"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-phase-probe.recipe.json",
+      "bytes": 161211,
+      "sha256": "9ec26d993928bc72af324c5d0cab11d80ec21b4c22e17117d5d6a73ebe742e90"
+    }
+  ],
+  "original": {
+    "speed_m_s": 0.211710264528351,
+    "frames": 250,
+    "force_error_n": 12.524523848379182,
+    "moment_error_nm": 3.0667182082513644,
+    "torque_margin_nm": -0.2695338587272766,
+    "cone_violation_n": 8.881784197001252e-16,
+    "maximum_inequality": 249.49047696758365,
+    "sampled_feasible": false
+  },
+  "bound": {
+    "speed_m_s": 0.211710264528351,
+    "frames": 250,
+    "force_error_n": 12.524523848379182,
+    "moment_error_nm": 3.0667182082513644,
+    "torque_margin_nm": -0.2695338587272766,
+    "cone_violation_n": 8.881784197001252e-16,
+    "maximum_inequality": 249.49047696758365,
+    "sampled_feasible": false
+  },
+  "timing_probe": {
+    "speed_m_s": 0.211710264528351,
+    "frames": 250,
+    "force_error_n": 12.524533794551374,
+    "moment_error_nm": 3.0666785806404064,
+    "torque_margin_nm": -0.2698130313442716,
+    "cone_violation_n": 8.881784197001252e-16,
+    "maximum_inequality": 249.49067589102748,
+    "sampled_feasible": false
+  },
+  "maximum_curve_error_n": 2.1316282072803006e-14,
+  "maximum_knot_time_error": 1.1102230246251565e-16,
+  "event_order": [
+    {
+      "foot": 0,
+      "kind": "touchdown"
+    },
+    {
+      "foot": 2,
+      "kind": "touchdown"
+    },
+    {
+      "foot": 3,
+      "kind": "liftoff"
+    },
+    {
+      "foot": 1,
+      "kind": "liftoff"
+    },
+    {
+      "foot": 3,
+      "kind": "touchdown"
+    },
+    {
+      "foot": 1,
+      "kind": "touchdown"
+    },
+    {
+      "foot": 2,
+      "kind": "liftoff"
+    },
+    {
+      "foot": 0,
+      "kind": "liftoff"
+    }
+  ],
+  "legacy_full_report_identical": true,
+  "stale_resolved_cached_and_fixed_reports_identical": true,
+  "scope": "Contact-relative force knot timing only; coefficients, physical model, 443 variables and their bounds, objective and search settings unchanged. Strict initial event ordering adds an explicit local domain restriction. Extracted JSON canonicalizes signed zeros."
+}

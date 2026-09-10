@@ -1,0 +1,184 @@
+{
+  "scope": "Original recipe and eight-iteration restart comparisons. 512-sample physical audits; no qualified gait or measured speed gain.",
+  "identical_original_history_prefix": 23,
+  "original_history_length": 23,
+  "restart_control_motion_and_physics_identical": true,
+  "rows": [
+    {
+      "name": "equality32-exact",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.17079263756532845,
+        "moment_error_nm": 0.06334386726397878,
+        "minimum_torque_margin_nm": -0.000186486644608852,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015415651384901896
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 1.8376726690934901,
+        "moment_error_nm": 0.6818573164660705,
+        "minimum_torque_margin_nm": -0.03193826738306909,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015415651384901896
+      },
+      "planned_displacement_rate_m_s": 0.20111452151178386,
+      "dense_loaded_slip_ratio": 0.9085223423086392,
+      "search": {
+        "termination": "linear_constraint_failure",
+        "evaluations": 27676,
+        "initial_objective_cost": 7.578417814171285,
+        "objective_cost": 7.348812382937434,
+        "equality_inf": 3.4158527513065686,
+        "linear_failure": {
+          "reason": "Linearized equalities or stationarity failed residual check",
+          "relative_kkt_error": 0.000001478030277020638,
+          "schur_rank": 480
+        },
+        "refined_iterations": [],
+        "last": {
+          "accepted": true,
+          "bound_fraction": 1,
+          "equality_inf": 3.4158527513065686,
+          "evaluations": 26524,
+          "exact_penalty_weight": 37.92105495687376,
+          "full_step_linear_error": 2.3558318700874634e-10,
+          "iteration": 22,
+          "merit_gradient_inf": 45.64689371590959,
+          "objective_cost": 7.348812382937434,
+          "radius": 0.025,
+          "roundoff_acceptance": false,
+          "schur_rank": 480,
+          "trust_ratio": 0.7009634093222951
+        }
+      }
+    },
+    {
+      "name": "equality32-refined-original",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.17042196078447788,
+        "moment_error_nm": 0.06309082147801773,
+        "minimum_torque_margin_nm": -0.00018621211032909812,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015355157830414243
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 1.8370332864176757,
+        "moment_error_nm": 0.6797429354995145,
+        "minimum_torque_margin_nm": -0.038309310974151196,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015355157830414243
+      },
+      "planned_displacement_rate_m_s": 0.2009265099091681,
+      "dense_loaded_slip_ratio": 0.9045152432587512,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34595,
+        "initial_objective_cost": 7.578417814171285,
+        "objective_cost": 7.303885471549405,
+        "equality_inf": 3.4084392156895573,
+        "linear_failure": null,
+        "refined_iterations": [
+          {
+            "accepted": true,
+            "bound_fraction": 1,
+            "equality_inf": 3.415158887341742,
+            "evaluations": 27677,
+            "exact_penalty_weight": 37.92105495687376,
+            "full_step_linear_error": 2.1397461419405587e-10,
+            "full_step_norm": 98.45530172786195,
+            "iteration": 23,
+            "linear_diagnostics": {
+              "initial_relative_kkt_error": 0.000001478030277020638,
+              "refinement_steps": 1,
+              "relative_constraint_error": 7.763486454425037e-11,
+              "relative_stationarity_error": 2.1397461419405587e-10
+            },
+            "merit_gradient_inf": 45.625152822546994,
+            "objective_cost": 7.346343951156595,
+            "radius": 0.05,
+            "roundoff_acceptance": false,
+            "schur_rank": 480,
+            "trust_ratio": 0.9115380896069245
+          }
+        ],
+        "last": {
+          "accepted": true,
+          "bound_fraction": 1,
+          "equality_inf": 3.4084392156895573,
+          "evaluations": 34595,
+          "exact_penalty_weight": 37.92105495687376,
+          "full_step_linear_error": 2.900271837966282e-10,
+          "full_step_norm": 137.8547831466112,
+          "iteration": 29,
+          "linear_diagnostics": {
+            "initial_relative_kkt_error": 2.900271837966282e-10,
+            "refinement_steps": 0,
+            "relative_constraint_error": 2.900271837966282e-10,
+            "relative_stationarity_error": 1.9262411302248444e-10
+          },
+          "merit_gradient_inf": 45.19742543666077,
+          "objective_cost": 7.303885471549405,
+          "radius": 0.1,
+          "roundoff_acceptance": false,
+          "schur_rank": 480,
+          "trust_ratio": 0.5327423682369927
+        }
+      }
+    },
+    {
+      "name": "equality32-refined",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.17019551951428671,
+        "moment_error_nm": 0.0630834832831012,
+        "minimum_torque_margin_nm": -0.00018593197911598303,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015625668540925595
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 1.8369543493027742,
+        "moment_error_nm": 0.6803784706263379,
+        "minimum_torque_margin_nm": -0.03706911574169236,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015625668540925595
+      },
+      "planned_displacement_rate_m_s": 0.20088869870201154,
+      "dense_loaded_slip_ratio": 0.9048994688650371,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 9226,
+        "initial_objective_cost": 7.348812382937434,
+        "objective_cost": 7.307405677977247,
+        "equality_inf": 3.403910390285734,
+        "linear_failure": null,
+        "refined_iterations": [],
+        "last": {
+          "accepted": true,
+          "bound_fraction": 1,
+          "equality_inf": 3.403910390285734,
+          "evaluations": 9226,
+          "exact_penalty_weight": 16.02344976255132,
+          "full_step_linear_error": 3.140642307471107e-10,
+          "full_step_norm": 123.08931479109448,
+          "iteration": 7,
+          "linear_diagnostics": {
+            "initial_relative_kkt_error": 3.140642307471107e-10,
+            "refinement_steps": 0,
+            "relative_constraint_error": 3.140642307471107e-10,
+            "relative_stationarity_error": 1.945551633011369e-10
+          },
+          "merit_gradient_inf": 43.80726257050979,
+          "objective_cost": 7.307405677977247,
+          "radius": 0.05,
+          "roundoff_acceptance": false,
+          "schur_rank": 480,
+          "trust_ratio": 0.5586797845143343
+        }
+      }
+    }
+  ]
+}

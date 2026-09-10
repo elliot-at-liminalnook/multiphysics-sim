@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "files": [
+    "runs/speed-neural-residual-507/execution-inputs.json",
+    "runs/speed-neural-residual-507/initial.policy.json",
+    "runs/speed-neural-residual-507/manifest.json",
+    "runs/speed-neural-residual-507/native.json",
+    "runs/speed-neural-residual-507/native.log",
+    "runs/speed-neural-residual-507/summary.json",
+    "runs/speed-neural-residual-507/task.json",
+    "runs/speed-neural-residual-507/zero.actions.json",
+    "runs/speed-neural-residual-507/zero.config.json",
+    "runs/speed-neural-residual-507/zero.scene.json",
+    "runs/motion-forecast-v1/448-baselines.json",
+    "runs/motion-forecast-v1/507-baselines.json",
+    "runs/motion-forecast-v1/experiment.json",
+    "runs/motion-forecast-v1/initial-model.json",
+    "runs/motion-forecast-v1/model.json",
+    "runs/motion-forecast-v1/report.json",
+    "runs/ppo-runtime-development/control-tests.log",
+    "runs/ppo-runtime-development/final-tests.log",
+    "runs/ppo-runtime-development/forecast-evaluation-build.log",
+    "runs/ppo-runtime-development/forecast-tests-final.log",
+    "runs/ppo-runtime-development/release-build.log",
+    "runs/ppo-runtime-development/runtime-tests.log",
+    "runs/ppo-runtime-development/training-tests.log",
+    "runs/motion-forecast-v1.stdout.log",
+    "runs/motion-forecast-v1.stderr.log"
+  ],
+  "blob_directory": "examples/full-robot/contact-planning/speed-objective-evidence-files",
+  "manifest": "examples/full-robot/contact-planning/predictive-learning-evidence-v1.json",
+  "terminal_evidence": {
+    "neural_replay": "Session 18507 exited 0; all 1001 physical frames identical to teacher.",
+    "forecast_fit": "Session 28182 exited 0; report/model complete. Session 39168 exited 0 for both baseline comparisons.",
+    "tests": "Session 79855 passed all selected tests; session 28883 passed strengthened forecast tests and built training examples. Evaluation example build also exited 0."
+  },
+  "scope": "Exact zero-residual 0.507 replay and reward, Rust PPO tests/build logs, and first action-conditioned trajectory model with validation against three baselines. No trained full-robot PPO improvement or forecast-conditioned actor is claimed."
+}

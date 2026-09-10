@@ -1,0 +1,246 @@
+{
+  "version": 1,
+  "base_commit": "ab5dbbee128869bcc4fc9f6a4151b57abca74ac7",
+  "files": [
+    {
+      "path": "crates/sim-domain-multibody/src/lib.rs",
+      "bytes": 133,
+      "sha256": "1781374d220264556477014993c5e224ca0865b9bc0af6092ea887e92f9537e0"
+    },
+    {
+      "path": "crates/sim-domain-multibody/src/smooth_contact.rs",
+      "bytes": 9258,
+      "sha256": "b50daeeef53152e69f1fa17120a508e597bc25768b8db4e7d5aab2d7d0c37cb6"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 1654,
+      "sha256": "f051f7350d56cd829e42624ad677ad5a8d9f25c6fadea5741a7cef690d394883"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_implicit.rs",
+      "bytes": 4115,
+      "sha256": "54f183942549c774c49873d060c0233c3ad2074c290ab2bc8df8a1dc23e94b18"
+    },
+    {
+      "path": "crates/sim-runtime/examples/sample_contact_reference.rs",
+      "bytes": 2716,
+      "sha256": "0e47095b045f492df922fe060a028c5f8dcc8eca4424f2f82570c5f1af5fd98a"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 19111,
+      "sha256": "9eb698c855181c48d917f2b76a8ac025ce64c5d1fd28b6b6ac48c3719284198c"
+    },
+    {
+      "path": "crates/sim-runtime/src/lib.rs",
+      "bytes": 2435,
+      "sha256": "13aa1508cf56e98dda38e656588f0cf58272af119dfd428b7f2c9ec8384cf67f"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 8432,
+      "sha256": "2fbf2fac2cdd00b7cd23f1949cc72a36d962ef116857220aa6e32fdf30645ca8"
+    },
+    {
+      "path": "crates/sim-solve/src/least_squares.rs",
+      "bytes": 16136,
+      "sha256": "b95ad15c1cfbfba04d14b9d9b07d400802fa9f84e3e2a5bbc0fd25b2fb7d3786"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/README.md",
+      "bytes": 8534,
+      "sha256": "ace3279366428a293ec1bd3efe0df36d851a0ca87962a0056d2de7cad043f22f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/component-tests.log",
+      "bytes": 1881,
+      "sha256": "6f0d337b0136afd0091809b6548e72abf772004b5c3ae0112be35978f5c33223"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal21-seed.json",
+      "bytes": 5479,
+      "sha256": "439e2845e498f665158ed37d9b0bba00a9cd92220660d91e630c13344234a2ed"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.audit.json",
+      "bytes": 233488,
+      "sha256": "61b0648ab8d13886b648778bc23068d27a72a8bf45a0b79671b0fa4488f2e9ed"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.log",
+      "bytes": 50439,
+      "sha256": "4adeb359e99f7595df05b97ddeebdd0633a9a7edd1476d2a3bb95846fbe71512"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.recipe.json",
+      "bytes": 39973,
+      "sha256": "eb9e38028ad409eb3726fd2143dd011285e116070c8a413ffa873639d20a5cce"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.result.json",
+      "bytes": 86366,
+      "sha256": "fbad9a4861c8b643bbab7ab8439272097e917b276d7cb98380377f21ac7f27d8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.audit.json",
+      "bytes": 233529,
+      "sha256": "e9ee3acab8ef6aa4b9972e40e5ff8d933d59fafd05dbab2a3f701e822337af62"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.log",
+      "bytes": 50450,
+      "sha256": "64baa5bc3502158e24f9df7ff0cfe8141c788721f10e988b64e8b4c3ccd310ee"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.recipe.json",
+      "bytes": 40308,
+      "sha256": "27a5439e17223976d379b9d51938b8796c1c677495e660495182600d85c01179"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.result.json",
+      "bytes": 86736,
+      "sha256": "da6f1af70ff1974c2b2a3d0db6094651fcb4a335ca343bac9b840f8ff0766fbf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.log",
+      "bytes": 67137,
+      "sha256": "be4b47fb74b3890a937923197f9433580e8b5acdced3165bd548eaef8b67742c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.recipe.json",
+      "bytes": 39884,
+      "sha256": "59afeeae6a82ca48c43c3ec4f95b499887d159076d99fe859defc7e97c955aec"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.result.json",
+      "bytes": 318318,
+      "sha256": "460bb9917f0bb39a97a89f3370eec5d01eb7f2c946bee3c6098fa503f61ec5e2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.timing.json",
+      "bytes": 52,
+      "sha256": "5af96ea2a3e0b0263180c4dae3823226fdb164f519ced60004713e435ae1b5be"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.log",
+      "bytes": 50514,
+      "sha256": "3543549b679607ef57e5e4f8c423b3c9ebf386375fd388b8be2a061c6e5a2640"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.recipe.json",
+      "bytes": 40270,
+      "sha256": "158a9f90f12610ec2936dd75dfc871438786c0708c905141fd876b0a7b3b60da"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.result.json",
+      "bytes": 86760,
+      "sha256": "da90c44263f830b10e321c351eccab920d4ef89cebb4cb2f4009bbeb42b60430"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.log",
+      "bytes": 49630,
+      "sha256": "5d752ae8ea07f6e57cfd63ce023e4a2054505bf820e1c6fcf632f652e15386dd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.recipe.json",
+      "bytes": 39405,
+      "sha256": "a5b95d4217485b368d7e4895fdbdbaf136db7414dd8282553115624d5bbc958e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.result.json",
+      "bytes": 240314,
+      "sha256": "f32298919f4db922b5f1d3ebfb09e42e136397e1b5be32588d7c3a88b117d4f2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_robot_trial.mjs",
+      "bytes": 4093,
+      "sha256": "797319e24bbf2ab233fde4d7d40aa7eb8e0e2cd76bf276e6d46ece0298a5e3d7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/release-build.log",
+      "bytes": 581,
+      "sha256": "5e9f357a9f3a69ae4e4ee84a56b086595a16708d9543c81baca1776db4064423"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-tests.log",
+      "bytes": 1213,
+      "sha256": "3896820f522176c2fa901a39c4dd482dd32a50462765163f692ef17fe1157ec5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/solver-tests.log",
+      "bytes": 1391,
+      "sha256": "43af0a688c15cf7db2b07d989ed4f68b3a32e3792de1a16a5c56668cc3e3c886"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_trials.mjs",
+      "bytes": 2555,
+      "sha256": "ccce0fb1b2b46e0566b176adff2cf9c92d2cdb81da5ab17ae6ad943b37c6cb4f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summary.json",
+      "bytes": 4313,
+      "sha256": "d03614be991283261125feaa8ad3aee3c2550f65333e37246b98b121627fdddf"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/CHECKPOINT.md",
+      "bytes": 48073,
+      "sha256": "a567da5a2f95d7ddc893e9446542009b7104237122318b49efa39508d0d3da57"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/planner-literature.md",
+      "bytes": 10244,
+      "sha256": "9bab89d0d2644391d7ad6289f0d53a3ae7980d65ef578a35ed58e7e0f1ec058a"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "examples/full-robot/baseline/robot.rcad",
+      "bytes": 83806475,
+      "sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+    },
+    {
+      "path": "examples/full-robot/foot-markers.json",
+      "bytes": 685,
+      "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal21-reference.result.json",
+      "bytes": 4847953,
+      "sha256": "73cdeaf49215f71ed196d8401c103c9b66408e6495165d6141f19abf3b12763f"
+    },
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8613044,
+      "sha256": "a2d37be8a2fd221d25ae3ca18af8f81b163fc04e193d9baee0bbd3fe4f664b8a"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8562068,
+      "sha256": "18cf0b102ac66054c64aa0b96559baf8053b47168effe956a617c443b3dc987f"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/sample_contact_reference",
+      "bytes": 704944,
+      "sha256": "d5ddf72da91326955eb99a77d2ac4edab93e3028365a0fe43ced1cd3f6c53c2c"
+    }
+  ],
+  "scope": "Direct files are versioned with this manifest. Input scene is durably referenced by prior speed-ceiling archive chain. Binaries are identities, rebuilt from source; final optimizer identity applies to scaled/control searches, not earlier pre-scaling searches. All listed writers terminal; no measured walking or maximum-speed claim. Test logs normalize trailing empty lines only."
+}

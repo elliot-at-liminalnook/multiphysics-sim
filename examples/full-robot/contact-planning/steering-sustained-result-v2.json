@@ -1,0 +1,66 @@
+{
+  "version": 2,
+  "completed": [
+    {
+      "step_s": 0.000625,
+      "yaw_rate_rad_s": 0.0752386367049776,
+      "seed": 2301,
+      "duration_s": 300,
+      "distance_m": 164.01249175175806,
+      "speed_m_s": 0.5467083058391935,
+      "fallen": false
+    },
+    {
+      "step_s": 0.0003125,
+      "yaw_rate_rad_s": 0.09637877957260207,
+      "seed": 2301,
+      "duration_s": 300,
+      "distance_m": 164.06748206736876,
+      "speed_m_s": 0.5468916068912292,
+      "fallen": false
+    }
+  ],
+  "scope": "Separately calibrated nominal/fine steering controllers complete300s at0.5467083/0.5468916m/s without sampled falls. This is a model-guided policy speed gain, not a new learned neural result. Hold the fine winner fixed for third-resolution full validation. Slower heading feedback passes two prefixes and is under full/further-resolution evaluation. Physical maximum, complete trajectory convergence and hardware accuracy remain unproven.",
+  "files": [
+    {
+      "path": "runs/steering-validation-v1/sustained300/summary.json",
+      "sha256": "043c0fe9cd73fe2dacb47042102a6512c3cf5fa6763298fe9582791f68b0fa42"
+    },
+    {
+      "path": "runs/steering-fine-root-v1/sustained300/summary.json",
+      "sha256": "0dacf6436aeb26beb4ba8f886b4ab94237fad85ec4cba52aeb081a09ce4c4390"
+    },
+    {
+      "path": "runs/steering-fine-root-v1/sustained300/spec.json",
+      "sha256": "d9fc441dedd794f982036bfd671c3393d43c1bd4735629522f73f69b53247d16"
+    },
+    {
+      "path": "runs/steering-fine-root-v1/sustained-check.json",
+      "sha256": "f6b0becebcce882cd7f9f2c40e8ae2cf34ea2d667fb0ffccae9c119e44c88501"
+    },
+    {
+      "path": "runs/heading-feedback-slow-v1/state-summary.json",
+      "sha256": "16ed6f2499b0587952de0c671d361bcc40681c5dd9eeabbd1b1094e27d833210"
+    },
+    {
+      "path": "runs/heading-feedback-slow-v1/coarse20/summary.json",
+      "sha256": "f68c6b334217d3a767d77ab7a161d3c3602b8a9c95defad61da22a5e3375ab67"
+    },
+    {
+      "path": "runs/heading-feedback-slow-v1/fine20/summary.json",
+      "sha256": "ef447d4f6205b5fcc623cb10bd0a6b06bb0b7b5830f514bc658349e6965d70db"
+    },
+    {
+      "path": "runs/steering-quarter300-v1/sustained300/spec.json",
+      "sha256": "8f22051ba86b8d46bb4543da1bb4dc65dffa439f6082f7cedd12b7cad4fd7fd8"
+    },
+    {
+      "path": "runs/heading-feedback-sustained-v1/fine300/spec.json",
+      "sha256": "8e30e9a50da8ef049c4ef5dd2472ce352109537d3684c2129d8e1be3e2d25f84"
+    },
+    {
+      "path": "runs/heading-feedback-sustained-v1/quarter20/spec.json",
+      "sha256": "fdabca3e3f1b08ac24da0bee94394b6b3fa32ca6f94f15e7aead22d53a16f2b9"
+    }
+  ]
+}

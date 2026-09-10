@@ -26,7 +26,12 @@ pub struct TaskObservationConfig {
     /// Include floor-force resultants on each marker's link, in world axes.
     /// These are privileged force values, not inferred contact sensors.
     pub floor_forces: bool,
+    /// Opt-in ideal heading of reference-link X projected onto world XY.
+    /// Requires world-Z gravity; this is not an inferred hardware orientation sensor.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub heading_world_z: bool,
 }
+fn is_false(value: &bool) -> bool { !value }
 
 pub struct TaskObserver {
     config: TaskObservationConfig,
@@ -43,8 +48,9 @@ impl TaskObserver {
             || !art.gravity.iter().all(|v| v.is_finite())
             || art.gravity.norm() <= 0.0
             || (config.floor_forces && !art.contact_on)
+            || (config.heading_world_z && (art.gravity.x != 0. || art.gravity.y != 0. || art.gravity.z >= 0.))
         {
-            return Err("task observations require matching CAD provenance, finite nonzero gravity and enabled requested contact physics".into());
+            return Err("task observations require matching CAD provenance, finite nonzero gravity, enabled requested contact physics and world-Z gravity for requested heading".into());
         }
         let index = |name: &str| -> Result<usize, String> {
             let matches: Vec<_> = art
@@ -91,6 +97,9 @@ impl TaskObserver {
                     QuantityKind::Force,
                 );
             }
+        }
+        if config.heading_world_z {
+            channels.push(Channel { name: "body.heading_world_z".into(), kind: QuantityKind::Angle });
         }
         Ok(Self {
             config,
@@ -142,6 +151,13 @@ impl TaskObserver {
                     .fold(Vector3::zeros(), |f, c| f + c.force);
                 values.extend(force.iter());
             }
+        }
+        if self.config.heading_world_z {
+            let (x, y) = (body.r[(0, 0)], body.r[(1, 0)]);
+            if x == 0. && y == 0. {
+                return Err("world-Z heading is undefined for a vertical reference X axis".into());
+            }
+            values.push(y.atan2(x));
         }
         if values.iter().any(|v: &f64| !v.is_finite()) {
             return Err("nonfinite task observation".into());

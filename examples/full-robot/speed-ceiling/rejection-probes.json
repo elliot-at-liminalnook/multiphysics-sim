@@ -1,0 +1,84 @@
+{
+  "independent_coordinates": [
+    "joint.-Y | Hip servo output",
+    "joint.-Y | Worm servo output",
+    "joint.-Y | Foot servo output",
+    "joint.+X | Hip servo output",
+    "joint.+X | Worm servo output",
+    "joint.+X | Foot servo output",
+    "joint.+Y | Hip servo output",
+    "joint.+Y | Worm servo output",
+    "joint.+Y | Foot servo output",
+    "joint.-X | Hip servo output",
+    "joint.-X | Worm servo output",
+    "joint.-X | Foot servo output"
+  ],
+  "embedding": {
+    "direct_closure_jacobian": true,
+    "dependent_solve": "pivoted_qr",
+    "block_dependent_factorization": true,
+    "analytic_mechanism_positions": true,
+    "length_scale_m": 0.1,
+    "angle_scale_rad": 1,
+    "scaled_closure_tolerance": 1e-8,
+    "scaled_position_tolerance": 1e-11,
+    "relative_rank_tolerance": 1e-10,
+    "absolute_rank_tolerance": 1e-12,
+    "max_iterations": 30,
+    "max_scaled_correction": 0.25
+  },
+  "samples": [
+    {
+      "id": "hip30-v125-lift16-gain1",
+      "coordinates": [
+        0.6773202376676318,
+        -0.3237983651249312,
+        -1.112320104359084,
+        0.596091826678199,
+        0.06323903975451309,
+        -1.1454186844158507,
+        0.33701247703568177,
+        0.2652145815822088,
+        -1.283457676717204,
+        0.46301769670484805,
+        -0.3505442137862937,
+        -0.933249747945317
+      ]
+    },
+    {
+      "id": "hip30-v125-lift20-gain1",
+      "coordinates": [
+        0.6773202376676319,
+        -0.3273810981598877,
+        -1.1523118491346513,
+        0.596091826678199,
+        0.06323903975451309,
+        -1.1454186844158507,
+        0.3370124770356821,
+        0.26829082191322245,
+        -1.3273222584072941,
+        0.46301769670484805,
+        -0.3505442137862937,
+        -0.933249747945317
+      ]
+    },
+    {
+      "id": "hip45-v100-lift16-gain1",
+      "coordinates": [
+        0.867067740998727,
+        -0.2737783652460792,
+        -1.128686650080489,
+        0.8569711439731788,
+        -0.07711087237878414,
+        -1.106988676179698,
+        0.687816013626856,
+        0.2669743290369811,
+        -1.28390350677405,
+        0.7198190024612723,
+        -0.214403734291153,
+        -0.9802990499422978
+      ]
+    }
+  ],
+  "record_poses": true
+}

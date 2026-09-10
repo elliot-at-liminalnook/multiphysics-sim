@@ -1,0 +1,306 @@
+{
+  "base_commit": "a245060c999208dbe21cfb6ffd58612d546b067c",
+  "recorded_at": "2026-09-09T16:26:28.131Z",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 56707,
+      "sha256": "7feb309c6b92bc3dba2b4bd7880032180894b8f7c7c49f5b3ddda6084893da15"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_force_basis.rs",
+      "bytes": 12462,
+      "sha256": "4fbffea818e48942764e9f62f5f21085eee3be0c63a83f7ae5f3fed30e881f59"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_support_space.rs",
+      "bytes": 7417,
+      "sha256": "4de235bdf4c7db5b95aa185ca46e076f0c6374232978a136bd9d6c26b16ce310"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_warm_support.mjs",
+      "bytes": 4596,
+      "sha256": "4cc8ab986d3c075bea596f91484ecbd8b1449cbfcf48a2ad77d040e01191db0b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/record_joint_warm_support.mjs",
+      "bytes": 4566,
+      "sha256": "e5c5d8cc429a56e20910d55baf3ace13097d33428971baadabbcab50bd61f90f"
+    }
+  ],
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-warm-support-sources.tar.gz",
+    "bytes": 20657,
+    "sha256": "ed300fe57c0e97108f948534a9609e41fa6251de28c37ac0695fd7c63d710f1a"
+  },
+  "cargo_lock": {
+    "path": "Cargo.lock",
+    "bytes": 163518,
+    "sha256": "2315b7fe8ba43e235355ffdcf823e018a6f17a0b828f83d8d0954a50216e47bf"
+  },
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "balance_auditor": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_force_basis",
+    "bytes": 9157196,
+    "sha256": "5f87f1b672dc0e15c2b46ddd1b2ff5e62166abb8712af1f4191edee41fb6ea30"
+  },
+  "instantaneous_auditor": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_support_space",
+    "bytes": 9114724,
+    "sha256": "0ae763d764b9fc90dbcd4fd32ba40b6f2f4c4cd0d1903bcb35d89cb4f24361a4"
+  },
+  "pre_change_balance_auditor": {
+    "path": "runs/joint-warm-support/audit_joint_force_basis-before",
+    "bytes": 9124140,
+    "sha256": "c248d6884da61bda53c9e979977d5c07271e3f8d3988526b19de58bee7446d76"
+  },
+  "force_only_optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt",
+    "bytes": 9192964,
+    "sha256": "792bc518d5aef6b98c1bd64eee3d38b5543524db4bc2747f5c53202d718d310e"
+  },
+  "optimizer_source_build": {
+    "path": "examples/full-robot/contact-planning/joint-body-grouping-build.json",
+    "bytes": 7955,
+    "sha256": "66e614277bad587aba981877966d005b1ddea87b8f98bd7b3f4ce680ad46ba4d"
+  },
+  "unchanged_other_running_optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt",
+    "bytes": 9150316,
+    "sha256": "1f6b6edc4dd491c30f9d791016f277b83f5484a1d0704fcf93498fe5385dc3fd"
+  },
+  "native_library_manifest": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-native-library.json",
+    "bytes": 5450,
+    "sha256": "1d5bb98f34fdceb3384f730f61a41ef15be68ec9896837471403bc941a6583a4"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+      "bytes": 161647,
+      "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-speed.recipe.json",
+      "bytes": 176501,
+      "sha256": "b389917b1f1ef5f82d854efb8b26db4024f7ba6ad091b6e2a60f18bc8995d2f6"
+    }
+  ],
+  "durable_scene": {
+    "index": "examples/full-robot/speed-ceiling/evidence-v8-index.json",
+    "entry": "validation/constrained-front165-scale1-human-fine.scene.json"
+  },
+  "build_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --release -p sim-runtime --features native-ipopt --example audit_joint_force_basis",
+  "test_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo test --release -p sim-runtime --features native-ipopt --lib contact_planning",
+  "final_audit_commands": [
+    "audit_joint_force_basis runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json --analytic-box-audit",
+    "audit_joint_force_basis runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-body16-speed.recipe.json --analytic-box-audit"
+  ],
+  "force_only_command": "VECLIB_MAXIMUM_THREADS=1 OMP_NUM_THREADS=1 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-warm-force-only.recipe.json /Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/joint-warm-force-only.search.json",
+  "terminal_observations": {
+    "warm_instantaneous": 0,
+    "unit_subtraction_extrapolation": 1,
+    "analytic_extrapolation": 1,
+    "force_only_native": 0,
+    "final_warm_contract": 0,
+    "final_body16_contract": 0,
+    "final_tests": 0,
+    "initial_warm_box": null,
+    "initial_body16_box": null,
+    "body16_instantaneous": null
+  },
+  "initial_audit_observation_limit": "Three process handles/exit codes lost to truncated tool output; process absence and complete JSON observed. Final two contract runs independently complete with exit zero and reproduce original numerical fields. Intermediate auditor binaries were overwritten; final audited source and binary identity retained.",
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-body16-box.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-body16-box.result.json",
+      "bytes": 99068,
+      "sha256": "8721dbccb05514be3bfc7c32424947ae083836c9b9772fd8e1a8f845afd4f09a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-body16-contract.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-body16-contract.result.json",
+      "bytes": 99265,
+      "sha256": "e7550f902d95ea296d9e5f302b4e84877c8309570bd4943df4489cf8cc6bcbd6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-body16-instantaneous.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-body16-instantaneous.result.json",
+      "bytes": 151452,
+      "sha256": "b9b3607cb4bc5bb40c9711dc6a764611932c70880a147c2ccb4b39ba3bcb92a0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-build.log",
+      "bytes": 165,
+      "sha256": "9853a29913319209c1a41d68a958d6f3744a81bd8fcb07f930806bef0c114381"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-checked-build.log",
+      "bytes": 165,
+      "sha256": "a7502079dc30bda3363bc962b347d373be374e2b0e794e3f416678c909e2a932"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-checked.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-checked.result.json",
+      "bytes": 91092,
+      "sha256": "ebcaa8cde72f10bc83d7ad9f09149ed5cc211e450266edef63cebd431dd14524"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-evidence.json",
+      "bytes": 4193,
+      "sha256": "846564e0dc3233147c58bba0063af0f867c910736aba70c96e51cce82666301f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space.result.json",
+      "bytes": 91053,
+      "sha256": "e2de2c2a84b326340b448117aee527742b24819ed0657fa49ce76bade0679974"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-warm-box.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-warm-box.result.json",
+      "bytes": 93946,
+      "sha256": "408c4e8888b51775ea9fff05d02ae24f06c8d7cc9ae35f2ce16a829db1a6151c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-warm-contract.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-warm-contract.result.json",
+      "bytes": 94143,
+      "sha256": "97cb4e0e986dd1197b94329ff01a6b1818c41e6754dac86e5d1e7e89698490bf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only-preparation.json",
+      "bytes": 1219,
+      "sha256": "12114459d80652fe41a907755e39cbb4137939c6dd51dbad81a043c7b69889b8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only.log",
+      "bytes": 3804,
+      "sha256": "855157718e07bb094475c4f481760c7ce55824096403dbe8551f5e8c79fc7c10"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only.recipe.json",
+      "bytes": 142238,
+      "sha256": "e0fce04c1ffddb34f1155834b30a7428483435bb6830796a3b36f32e46bfcd66"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only.result.json",
+      "bytes": 3126602,
+      "sha256": "cb97c03f317943b99d9899dba33803912c50bed9ac4c2a7c5b747e14630cd095"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only.search.json",
+      "bytes": 318,
+      "sha256": "94f584366fd7b3a0762af40487f874edc9806b3301c917d39c22c63ea2b89371"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only.summary.json",
+      "bytes": 32018,
+      "sha256": "d89f3497e6c114ce0fe20eb731d89d561b3fca2e120c90c91774a94975268086"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-analytic-build.log",
+      "bytes": 165,
+      "sha256": "a27fcef05f5295bd3d71492836ac3b671991d41bfdbc565450c062ce77d2578a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-analytic.log",
+      "bytes": 181,
+      "sha256": "4a9054d3442fecd8813b316140eb483848f6478cda107463e52d55b5f68fb272"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-analytic.result.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-basis.log",
+      "bytes": 86,
+      "sha256": "de79d2ed7b544e2a66415f4cd6bc0be3a7ea4c829c5d56b675cfaaface6e5ee0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-basis.result.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-box-build.log",
+      "bytes": 165,
+      "sha256": "4fcf5cd431d3f1a12a3c22dbf54a4bae7bd43d3bd60e549ec51879bed48f8574"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-build.log",
+      "bytes": 165,
+      "sha256": "d25692544b01e9f4d20fe6106b5eeeb2698a496ae4d21c4ba3e5bc8e700fe972"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-contract-build.log",
+      "bytes": 165,
+      "sha256": "61de229800adf839bbcbae4eb2ab4f63a24fbdf1bbd9aba7adc2cd5316154302"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-final-tests.log",
+      "bytes": 1211,
+      "sha256": "cda324b768380dde92280e8f9cf0c6450a06b3de2f4d7938713cfdd6267dc223"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-instantaneous.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-instantaneous.result.json",
+      "bytes": 142835,
+      "sha256": "6fdac67c6dc0789b903f4ec9fea4284228725191d89dc9309cec8ed8a6b1d42e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-tests.log",
+      "bytes": 1211,
+      "sha256": "99e9d1e555fcf6814e2b973cc8be457f51e8653b8bd5260274d5a5448b17bc76"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-support-verification.json",
+      "bytes": 2375,
+      "sha256": "1e5dc3c546346b7cad6f18d325f4fe36cd246718621d48e3d4a778dd2c7341cb"
+    }
+  ],
+  "scope": "Fixed-motion support relaxations, exact shared force balance map and failed force-only initialization attempt. No global physical speed ceiling or new runtime gait established."
+}

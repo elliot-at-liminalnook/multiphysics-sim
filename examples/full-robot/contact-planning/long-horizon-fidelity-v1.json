@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "base_commit": "bf0a8045",
+  "teacher": [
+    {
+      "name": "nominal",
+      "step_s": 0.000625,
+      "inter_link_contact": false,
+      "duration_s": 300,
+      "distance_m": 154.30126902731595,
+      "speed_m_s": 0.5143375634243865,
+      "displacement_xy_m": [
+        76.7038959260299,
+        133.88574970178456
+      ],
+      "fallen": false,
+      "error": null,
+      "result": {
+        "path": "runs/affine-speed300-v1/evaluation-000/result.json",
+        "sha256": "5e44a04427c2e149de175dadd729397b16ac5f44a41c0f4c082c16c6108cb91c"
+      }
+    },
+    {
+      "name": "fine",
+      "step_s": 0.0003125,
+      "inter_link_contact": false,
+      "duration_s": 300,
+      "distance_m": 145.62028604694575,
+      "speed_m_s": 0.48540095348981915,
+      "displacement_xy_m": [
+        18.554867592127025,
+        144.4333223222153
+      ],
+      "fallen": false,
+      "error": null,
+      "result": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/fine.json",
+        "sha256": "86000dfa8ba7d75be9a29f8581217d8cd77612104da3370010528eab86269ae2"
+      },
+      "relative_speed_change": -0.05625995842479699,
+      "endpoint_difference_m": 59.09789153904139
+    },
+    {
+      "name": "contact",
+      "step_s": 0.000625,
+      "inter_link_contact": true,
+      "duration_s": 300,
+      "distance_m": 154.30127626696827,
+      "speed_m_s": 0.5143375875565609,
+      "displacement_xy_m": [
+        76.70894309444273,
+        133.88286636813842
+      ],
+      "fallen": false,
+      "error": null,
+      "result": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/contact.json",
+        "sha256": "7c3359ddd46f87ade563d386f1906a8a6e10b88995c09c6e13c211d80b0f124b"
+      },
+      "relative_speed_change": 4.691894212285185e-8,
+      "endpoint_difference_m": 0.005812703493420477
+    }
+  ],
+  "setup_failure": {
+    "physics_steps_advanced": 0,
+    "result": {
+      "path": "runs/sustained300-teacher-quarter-v1/result.json",
+      "sha256": "fb4f91360b94159148c8c56dba071e9ff8293e8902896afd38455dd20df87887"
+    },
+    "reason": "positive finite step, 1..1000000 steps and a dividing report_every required"
+  },
+  "runtime_change": {
+    "episode_max_steps": "2^53 (exact integer clock representation), with finite total time",
+    "per_advance_max_steps": 1000000,
+    "tests_passed": 11,
+    "parity": {
+      "version": 1,
+      "frames": 101,
+      "transitions": 101,
+      "excluded_fields": [
+        "stepping_wall_s"
+      ],
+      "files": [
+        {
+          "path": "runs/phase-speed300-zero/native2.json",
+          "sha256": "620c75d25edd7879ea59fe74c62bf40592e87863b120bedf2ee294e1d22b57fd"
+        },
+        {
+          "path": "runs/long-episode-parity/native.json",
+          "sha256": "afbe546f604eaab9de6b04503d9f44b4d42eaf796a4f71d3eaa8465fd4d0bfb0"
+        }
+      ],
+      "scope": "New declared-horizon validation preserves all sampled physical/controller fields and task transitions exactly through2s, excluding only elapsed wall-compute timing. Per-call advance cap remains unchanged. Long episode construction, replay and rejected oversized advance are separately tested."
+    }
+  },
+  "followups": [
+    {
+      "name": "learned controller at matching fine timestep",
+      "status": "running",
+      "inputs": "runs/sustained300-learned-fine-v1/inputs.json"
+    },
+    {
+      "name": "teacher at third timestep",
+      "status": "running",
+      "inputs": "runs/sustained300-teacher-quarter-v2/inputs.json"
+    }
+  ],
+  "scope": "All three completed teacher cases cover the full300s without sampled falls. Inter-link contact has negligible net-speed effect here, while timestep refinement changes net speed by about5.6%. Neither discretization is assumed exact; nominal controller rankings and future nominal search improvements are provisional pending matched finer checks. A third-resolution setup failed before physics because of a software episode cap, which has been separated from the unchanged per-call advance cap. This is not a physical speed limit."
+}

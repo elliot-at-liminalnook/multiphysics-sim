@@ -50,6 +50,7 @@ pub fn box_sdf(half: [f64; 3], cell: f64, pad: usize) -> Sdf {
         cell,
         dims,
         values,
+        refinements: vec![],
     }
 }
 

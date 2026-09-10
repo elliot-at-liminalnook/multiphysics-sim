@@ -1,0 +1,54 @@
+{
+  "legacy_all_previous_fields_except_scope_identical": true,
+  "initial_full_report_identical": true,
+  "projected_native_rows_equal_independent_uncached_audit": true,
+  "full_constraints": 6776,
+  "native_constraints": 6494,
+  "fixed_endpoint_rows": 32,
+  "collision_domain_rows": 250,
+  "old_one_step": {
+    "native_status": -1,
+    "model_evaluations": 316,
+    "jacobian_nonzeros": 1599232,
+    "speed_m_s": 0.2116282431399536,
+    "force_error_n": 12.464871765078648,
+    "moment_error_nm": 3.0800448089711545,
+    "torque_margin_nm": -0.2690158466363391,
+    "maximum_inequality": 248.29743530157296,
+    "feasible": false
+  },
+  "projected_one_step": {
+    "native_status": -1,
+    "model_evaluations": 316,
+    "jacobian_nonzeros": 1579982,
+    "speed_m_s": 0.21162787284139978,
+    "force_error_n": 12.464874986823006,
+    "moment_error_nm": 3.0800447313609256,
+    "torque_margin_nm": -0.2690145754458577,
+    "maximum_inequality": 248.2974997364601,
+    "feasible": false
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-projected-one-step.result.json",
+      "bytes": 3079778,
+      "sha256": "dd94587bc2c90926afd80d378938fc27404c1d5f1c82a2a4594f0abd5871694c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-projection-legacy.result.json",
+      "bytes": 3079400,
+      "sha256": "6c96b1706b51fb09856c1ed14f1cc7be0c96d904f178317364b462f4e8a419f4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-projection-tests.log",
+      "bytes": 1630,
+      "sha256": "9b4e216212d79ebc704893e22295a6753d92d74b46d999a73f6ff3f544d4e8a1"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_ipopt_projection.mjs",
+      "bytes": 3561,
+      "sha256": "29831aef625504fd13f7c3e081f07dc3ffd68864632c4d50d20081e45c9384bd"
+    }
+  ],
+  "scope": "One-iteration formulation comparison, with unchanged physical acceptance and independently audited original rows. Collision domain is sampled and local, with no repair from colliding initial guesses. No convergence, runtime speed gain or global speed bound established."
+}

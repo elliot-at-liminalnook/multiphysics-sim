@@ -1,0 +1,61 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+      "bytes": 161211,
+      "sha256": "e4c026ee7c0336c90d436e7b7802aeba3549a51e6652ccaaee54d6f0933f282e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-warm-final.recipe.json",
+      "bytes": 161731,
+      "sha256": "fcd8b1e3ac70ba65a64b53be8f450ea18ee50688f777ee8c9bc0b166391c0d8d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-start-screen.batch.json",
+      "bytes": 1601597,
+      "sha256": "33539af0c0ff3520c9cef591e9540e7a7248ff281243eb8e05cc8c227e314c0b"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-patterns.batch.json",
+      "bytes": 2959937,
+      "sha256": "3d4cdaee2037d5d68154eb5f60ad6ca5a431f3e6c9feb073809b356c693b7723"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-pattern-pilot.batch.json",
+      "bytes": 145490,
+      "sha256": "d530f6748757fab19a64484ac50b87071fbcb9f7319253f1631a6f3ef21964d8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-pattern-legacy.batch.json",
+      "bytes": 24101,
+      "sha256": "46bec2dbaff38b7ccfde8e533968548ac1892f56f8f084ce2d63ebaa754b8340"
+    }
+  ],
+  "cases": 258,
+  "experimental_cases": 256,
+  "phase_grid": [
+    0,
+    0.25,
+    0.5,
+    0.75
+  ],
+  "phase_jitter": [
+    0,
+    0.0005,
+    0.001,
+    0.0015
+  ],
+  "stance_fractions": [
+    0.6,
+    0.75
+  ],
+  "body_references": [
+    "unchanged fast reference",
+    "constant mean of periodic body controls"
+  ],
+  "speed_m_s": 0.211710264528351,
+  "force_layout": "New cases start with three zero linear nodes, then use shared contact/body-event refinement and timing binding. Controls retain their original force bases.",
+  "scope": "Systematic fixed-motion initialization screen at the prior fast target. Physical robot, force bounds, foot centers, swings and tolerances unchanged. Small declared phase offsets avoid coincident events in the current timing representation. A failed start does not exclude its gait family; neither global speed optimality nor runtime feasibility follows."
+}

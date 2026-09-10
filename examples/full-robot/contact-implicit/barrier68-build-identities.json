@@ -1,0 +1,68 @@
+{
+  "base_commit": "c26be74",
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-solve/Cargo.toml",
+      "bytes": 477,
+      "sha256": "205e625b8521d6c766fad99ba80e7856b679ef766addc9002a19b076f1fd080f"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_augmented_lagrangian.rs",
+      "bytes": 18097,
+      "sha256": "899eb7acf8a5ecff813ed67392472a9b240c971d3a3e49d4f042e3d839070679"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 58331,
+      "sha256": "3d6ab5ada1ef363e22f107bd59237805d27c1e8d1b9604b4ad1b433debd88d20"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 49244,
+      "sha256": "45f432efa2fa52644a7ad35951fb93c6b62477d18525fe3369a37c05bf0b9286"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_inequalities.rs",
+      "bytes": 2721,
+      "sha256": "3ff223c0304acecf5175991ee6a163274a6dd6ecbd966bf1d8ea378500683a2c"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 2721,
+      "sha256": "44a0f8ec49db9f4e57d047202b64b0a66cff76eb63757c8bb8c8ed437c63112e"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47237,
+      "sha256": "2b9c7009ca093276bc4d8002c887869807e826e14d0262aa79a02fb24765ef44"
+    },
+    {
+      "path": "crates/sim-solve/src/least_squares.rs",
+      "bytes": 20070,
+      "sha256": "bee77d4fcce86e2afbf9c9fed1efeb9a1bae333948076042ade54b8be120db50"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_barrier.rs",
+      "bytes": 2779,
+      "sha256": "3a7612ead0a1133aeaccd37f056127cfb0f7612fc6f7bade12b955c47ad5d1db"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_inequalities",
+      "bytes": 8760140,
+      "sha256": "a45133e3d5a4258ac58bdab52f86abd48449d03c5c8b0f0eb208d43d6364d0a9"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8670044,
+      "sha256": "38a2f49fb51ef184ec82e8fb4103c6937c8248c602c911b630b947ed468f169b"
+    }
+  ],
+  "scope": "Optional strict reciprocal barrier on sampled actual slip; unchanged CAD, contact, inverse dynamics, actuator law and physical gates."
+}

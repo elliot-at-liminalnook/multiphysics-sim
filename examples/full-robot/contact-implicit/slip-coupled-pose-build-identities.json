@@ -1,0 +1,26 @@
+{
+  "base_commit": "441e036",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 51676,
+      "sha256": "4c3da209684ba5c8f1b8004ec390039d9b1273bf8b8e987c8b819400664b5879"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 2721,
+      "sha256": "44a0f8ec49db9f4e57d047202b64b0a66cff76eb63757c8bb8c8ed437c63112e"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 41654,
+      "sha256": "d45f07ebf2e3b266c4a5db1ca980f348cd42a00fcde3548295d3df5704cafa98"
+    }
+  ],
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+    "bytes": 8665732,
+    "sha256": "9b893547a3c47bf68b0ff2fec411ff29f65c1c597b28797c8bde3f6ed8409b93"
+  },
+  "scope": "Detailed audit additionally exports the authoritative planned link poses. Prior optimizer and pair-only audit identities remain preserved separately; no optimization physics changed."
+}

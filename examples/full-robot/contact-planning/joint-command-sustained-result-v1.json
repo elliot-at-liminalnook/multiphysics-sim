@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "passed": true,
+  "elapsed_s": 300,
+  "step_s": 0.0003125,
+  "steps": 960000,
+  "actions": 15000,
+  "frames": 15001,
+  "prefix_parity_frames": 1001,
+  "net_distance_m": 165.37352021421478,
+  "net_speed_m_s": 0.5512450673807159,
+  "prior_fine_speed_m_s": 0.5468916068912292,
+  "relative_speed_gain": 0.007960371734782479,
+  "scope": "New completed300s speed result with all requested steps/actions, no sampled falls, exact scene/input schedule and1001-frame/transition prefix parity. Same fine timestep as incumbent. New candidate inter-link-contact and finer-timestep validation are not inferred from older gaits.",
+  "candidate": "joint-command-planar-v1/evaluation-002",
+  "controller_spec": "runs/joint-command-sustained-v1/candidate002/spec.json",
+  "evidence_manifest": "examples/full-robot/contact-planning/composite-response-update-evidence-v2.json",
+  "selection_method": "seeded local identification design, prioritized by the planar trajectory forecast",
+  "status": "completed fine300s; fixed-controller third-step300s active; new-candidate inter-link contact unverified"
+}

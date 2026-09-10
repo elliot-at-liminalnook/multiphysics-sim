@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "diagonal68-human-1p25ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal68-human-1p25ms",
+      "duration_s": 20,
+      "step_s": 0.00125,
+      "command_speed_m_s": 0.06780678488063342,
+      "family": "diagonal68",
+      "source": "runs/contact-planning/diagonal68-screen",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "scene_sha256": "754f8f48c09d21d5adf8719a700ef8cb2baf96718abde1aa7091631652708227",
+      "config_sha256": "a1ae9c40198cb16f6e18b39d276731cdf9ed19323406a62e0896ceee31f0a3bd",
+      "actions_sha256": "d6551f759e34b356d6c9ae5b87237bf28eb7e4781bdf7ec09e2b96395fe5de1b"
+    },
+    {
+      "name": "diagonal68-human-0p625ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal68-human-0p625ms",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.06780678488063342,
+      "family": "diagonal68",
+      "source": "runs/contact-planning/diagonal68-screen",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "scene_sha256": "754f8f48c09d21d5adf8719a700ef8cb2baf96718abde1aa7091631652708227",
+      "config_sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d",
+      "actions_sha256": "d6551f759e34b356d6c9ae5b87237bf28eb7e4781bdf7ec09e2b96395fe5de1b"
+    },
+    {
+      "name": "diagonal68-dropout-0p625ms",
+      "kind": "dropout",
+      "prefix": "runs/contact-planning/diagonal68-dropout-0p625ms",
+      "duration_s": 12,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.06780678488063342,
+      "family": "diagonal68",
+      "source": "runs/contact-planning/diagonal68-screen",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/dropout.actions.json",
+      "actions_source_sha256": "59ec22dc77e0e2c04fc6c212f2c1bc981d95ffaa047ca89cda05efe7943229a5",
+      "scene_sha256": "a961ef2dc3b5a2ef1331bd2abf8134bcd8ad4c4fede7d4ad6aa1d982159b7891",
+      "config_sha256": "df17c840edb9c9d368098f0abc2a3e5285d3c632918bc6d58638637cfc8d1c2a",
+      "actions_sha256": "c674c5d652751feaea967c40ddc14e29bdd12299cd63987e0823169cfdb0c181"
+    }
+  ]
+}

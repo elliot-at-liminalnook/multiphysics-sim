@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "id": "compiled184",
+  "wasm": {
+    "artifact_sha256": "0286689ccfe7e85a808a7a186fea1b708784cacbce0452314dd5c3d40c690361",
+    "browser_module_sha256": "29fe5c8ed20bba5dea89bfb3407ce099c18ab15506210042855c301ce7f5ec0a"
+  },
+  "inputs": {
+    "examples/full-robot/contact-planning/compiled184-browser-spec.json": "76217087d615f4da0169a3081c78156cc2dbb726ecd6ec4e5dd7d8978329943c",
+    "Cargo.lock": "2aece6b0637c79b737cca98a08377b4253d67478280b17162c772ebca02f38f1",
+    "crates/sim-domain-control/src/trajectory.rs": "ced82fa77df4f6c89d5d435bb07ca6c36f6bb24e6c4d5ddec5539b642e5fbf5a",
+    "crates/sim-script/src/lib.rs": "3b7eefabb20c2d52768e4ac426ab4871aebe11bc7de8ead93de66909e76baa95",
+    "web/viewer/viewer.js": "a9970cd7ec7312e8ef9bd377bed5aca801e80f1446627ddb7701e99efc7b158f",
+    "web/viewer/motion-commands.mjs": "160237d406526efcbe4605111dc3bcbdfc4f7dfe3800646aecca57eed32b05f6",
+    "web/worker.js": "56fcf9a7de4feddd05f24b6f13186376a6c332e0952acb4c4073e7a9ba5efdb9",
+    "web/worker-message.mjs": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f",
+    "examples/full-robot/speed-ceiling/package_browser_profiles.mjs": "3c6b384f2664fdb06436f29b2e44c1fd398411fcd2bd951522a6abf3e21b3562",
+    "runs/contact-planning/compiled184-screen.scene.json": "b661353d9f3d901b8be93815a57949362bd94840233a4a4b74d6198fca2a5d40",
+    "runs/contact-planning/compiled184-preview.config.json": "2f323969c4ff586de523f5f7e9e74b03d2ec1c08f5e4b5b93255b25df510a68b",
+    "examples/full-robot/fast-wasd/task.json": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026",
+    "runs/contact-planning/compiled184-screen.config.json": "1ce6dfc341c8d31adc51474a4e25162c3dbb50d4393acae3b9a5bb9130ddd660"
+  },
+  "presets": [
+    {
+      "id": "physics-compiled184-5ms",
+      "label": "Experimental · Planned 184 mm/s · 5 ms preview",
+      "mode": "embedded",
+      "path": "data/physics-compiled184-5ms.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "992c84cc2947eceaffef6893a513e956967bf9c09acb64361b408b8300e9b885",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "New automatically optimized gait. Short forward/reverse/stop test completed; longer-run, collision and steering checks pending.",
+      "evidence": "Detailed 8 s simulation at 0.625 ms: 183.8 mm/s forward and 182.7 mm/s reverse displacement speed. Loaded-foot slip peaked at 11.6%. Browser speed and approximation error are not yet qualified. Provisional actuator model."
+    },
+    {
+      "id": "physics-compiled184-reference",
+      "label": "Experimental · Planned 184 mm/s · Detailed physics (slow)",
+      "mode": "embedded",
+      "path": "data/physics-compiled184-reference.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "458a808873f4657799515aca389d48c6ae4dff27b3b7d911e33eac63009c8c17",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "New automatically optimized gait. Short forward/reverse/stop test completed; longer-run, collision and steering checks pending.",
+      "evidence": "Detailed 8 s simulation at 0.625 ms: 183.8 mm/s forward and 182.7 mm/s reverse displacement speed. Loaded-foot slip peaked at 11.6%. Browser speed and approximation error are not yet qualified. Provisional actuator model."
+    }
+  ],
+  "scope": "Shared Rust/WASM runtime and explicit numerical profiles. Native physical qualification, cross-host parity and rendered browser performance are separate requirements. Building this bundle does not establish their acceptance."
+}

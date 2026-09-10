@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "files": [
+    "runs/motion-forecast-v2/448-baselines.json",
+    "runs/motion-forecast-v2/507-baselines.json",
+    "runs/motion-forecast-v2/experiment.json",
+    "runs/motion-forecast-v2/initial-model.json",
+    "runs/motion-forecast-v2/model.json",
+    "runs/motion-forecast-v2/report.json",
+    "runs/motion-forecast-v2-tests.log",
+    "runs/motion-forecast-v2-build.log",
+    "runs/motion-forecast-v2-build-final.log",
+    "runs/motion-forecast-v2.stdout.log",
+    "runs/motion-forecast-v2.stderr.log"
+  ],
+  "blob_directory": "examples/full-robot/contact-planning/speed-objective-evidence-files",
+  "manifest": "examples/full-robot/contact-planning/predictive-learning-evidence-v2.json",
+  "terminal_evidence": {
+    "training": "Session 4640 exited 0, including training and both held-out capture evaluations.",
+    "tests": "Session 67539 exited 0; all three motion-forecast tests passed. Final example rebuild completed before training."
+  },
+  "scope": "Constant-velocity-reference forecast fit, model, validation and baseline reports. Acceleration remains an input and target. Physical forecast errors improve over v1; controller integration and speed improvement are not yet established."
+}

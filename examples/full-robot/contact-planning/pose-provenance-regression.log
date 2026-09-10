@@ -1,0 +1,19 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `release` profile [optimized] target(s) in 39.66s
+     Running tests/initial_base_pose.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/initial_base_pose-9a3be37bbb34f760)
+
+running 1 test
+test explicit_initial_rotation_preserves_mechanism_and_replays ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/motion_tracking.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/motion_tracking-eace05d9295d217b)
+
+running 5 tests
+test ordinary_reference_still_uses_simulation_time ... ok
+test typed_numeric_metadata_accepts_json_representation_but_not_changed_values ... ok
+test body_pose_error_retains_world_translation_and_rotation ... ok
+test pause_and_final_hold_align_with_plan_but_world_drift_stays_visible ... ok
+test incomplete_mismatched_or_invented_phase_cannot_pass ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

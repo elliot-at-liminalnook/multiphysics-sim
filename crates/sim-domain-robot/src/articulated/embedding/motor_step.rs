@@ -142,6 +142,7 @@ where
             self.config,
             &mut workspace,
             coloring.as_ref(),
+            true,
             |t, _h, g, x, rates| {
                 let boundaries = self.control.boundaries(t, g, x, &state.held)?;
                 let mut result = self
@@ -220,6 +221,7 @@ where
             .event_data(t, &state.mechanics, &state.auxiliary, &boundaries)?
             .0;
         guards.extend(self.control.guards(t, &state.mechanics, &state.held)?);
+        guards.extend(self.map.art.imus.iter().map(|imu| state.mechanics.states[imu.state + 15] - t));
         Ok(guards)
     }
     fn scheduled(&self, t: f64, state: &MotorState<C::State>) -> Result<Vec<(usize, f64)>, String> {
@@ -236,6 +238,9 @@ where
                 .into_iter()
                 .map(|(g, t)| (g + self.bank.guard_count(), t)),
         );
+        let offset = self.bank.guard_count() + self.control.guards(t, &state.mechanics, &state.held)?.len();
+        deadlines.extend(self.map.art.imus.iter().enumerate().map(|(i, imu)|
+            (offset + i, state.mechanics.states[imu.state + 15])));
         Ok(deadlines)
     }
     fn jump(
@@ -244,6 +249,12 @@ where
         t: f64,
         state: &mut MotorState<C::State>,
     ) -> Result<(), String> {
+        let sensor_offset = self.bank.guard_count() + self.control.guards(t, &state.mechanics, &state.held)?.len();
+        if guard >= sensor_offset {
+            // Sensors are held states with no force feedback. The shared hybrid
+            // scheduler lands exactly on their clocks and commits jumps atomically.
+            return self.map.art.sample_imu_event(guard - sensor_offset, &mut state.mechanics);
+        }
         let control_guard = guard.checked_sub(self.bank.guard_count());
         let keep_proposal = self.config.reuse_controller_sample_jacobian
             && control_guard.is_some_and(|g| self.control.permits_jacobian_reuse_after_sample(g));

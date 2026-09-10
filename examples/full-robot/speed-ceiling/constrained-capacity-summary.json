@@ -1,0 +1,574 @@
+{
+  "rows": [
+    {
+      "name": "constrained-front150-scale1-human-fine",
+      "sign": "forward",
+      "source_recipe_sha256": "0e986634f036e2f96f33e8e21dc373e09132a99344920ba5a4e53c12881aa6ac",
+      "source_table_sha256": "d51707e9106b2b87d2ae41601ba4c9688a83bcd4b96270120f2770b2edde9909",
+      "capacity_report_sha256": "efe764da87c182d66bb02fc1d0e84c693d21c266303d2cf4151f4580ceedd5a4",
+      "frames": 161,
+      "minimum_margin_nm": -0.5209111422483754,
+      "violating_samples": 7,
+      "violating_frames": 7,
+      "worst": [
+        {
+          "sample": 143,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7438449543712948,
+          "reference_speed_rad_s": 5.093919383022657,
+          "capacity_nm": 0.22293381212291935,
+          "margin_nm": -0.5209111422483754
+        },
+        {
+          "sample": 144,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.747676412619071,
+          "reference_speed_rad_s": 5.015290909507927,
+          "capacity_nm": 0.2649045648027663,
+          "margin_nm": -0.4827718478163047
+        },
+        {
+          "sample": 142,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7358787617558776,
+          "reference_speed_rad_s": 4.948838824186282,
+          "capacity_nm": 0.3003757359119493,
+          "margin_nm": -0.4355030258439283
+        },
+        {
+          "sample": 145,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.743638623711203,
+          "reference_speed_rad_s": 4.725095612790804,
+          "capacity_nm": 0.419806656665042,
+          "margin_nm": -0.323831967046161
+        },
+        {
+          "sample": 141,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7329221872790789,
+          "reference_speed_rad_s": 4.580049232998801,
+          "capacity_nm": 0.4972303361698573,
+          "margin_nm": -0.23569185110922158
+        },
+        {
+          "sample": 140,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8812568461098605,
+          "reference_speed_rad_s": 3.987550609460215,
+          "capacity_nm": 0.8134976128966432,
+          "margin_nm": -0.06775923321321731
+        },
+        {
+          "sample": 146,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7246568086093758,
+          "reference_speed_rad_s": 4.235475702019986,
+          "capacity_nm": 0.6811587504233051,
+          "margin_nm": -0.043498058186070665
+        }
+      ],
+      "counts_by_coordinate": {
+        "joint.+X | Foot servo output": 7
+      }
+    },
+    {
+      "name": "constrained-front150-scale1-human-fine",
+      "sign": "reverse",
+      "source_recipe_sha256": "77097357137b3ebf7677927fb19495af0eae2fddd2983839c1a0b60488eeda30",
+      "source_table_sha256": "75cb9541745d42b446f039c5aa45ef80042450c8a1498ea1afbc1270a37b6164",
+      "capacity_report_sha256": "26fb9d78cbea56a2ef544c103029dad0760ff6accf0cc25593beca5098fca492",
+      "frames": 161,
+      "minimum_margin_nm": -0.1777641945870837,
+      "violating_samples": 5,
+      "violating_frames": 4,
+      "worst": [
+        {
+          "sample": 95,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7323176671046381,
+          "reference_speed_rad_s": 4.472659433666935,
+          "capacity_nm": 0.5545534725175544,
+          "margin_nm": -0.1777641945870837
+        },
+        {
+          "sample": 96,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.726795169373182,
+          "reference_speed_rad_s": 4.435945505251731,
+          "capacity_nm": 0.57415084151813,
+          "margin_nm": -0.152644327855052
+        },
+        {
+          "sample": 94,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7202604423905741,
+          "reference_speed_rad_s": 4.27943707809893,
+          "capacity_nm": 0.6576927976914434,
+          "margin_nm": -0.06256764469913068
+        },
+        {
+          "sample": 97,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.6699337635772069,
+          "reference_speed_rad_s": 4.314626281526229,
+          "capacity_nm": 0.6389093050452164,
+          "margin_nm": -0.03102445853199054
+        },
+        {
+          "sample": 97,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7131219597051209,
+          "reference_speed_rad_s": 4.1761560511010964,
+          "capacity_nm": 0.7128227302321611,
+          "margin_nm": -0.0002992294729597944
+        }
+      ],
+      "counts_by_coordinate": {
+        "joint.+X | Foot servo output": 4,
+        "joint.-X | Foot servo output": 1
+      }
+    },
+    {
+      "name": "constrained-front165-scale1-human-fine",
+      "sign": "forward",
+      "source_recipe_sha256": "cef476964625f0b9d82a0da8a912fde2766a03915b86304108d5020f43c1b445",
+      "source_table_sha256": "bab3e4ea379a5097c9babd87ce36d4fbb6a407869e4095f62b7631d6d658ff44",
+      "capacity_report_sha256": "ed856319d941ae4a05e91ed3ffb13cb960c650059e79efbe63bd20bd204edc94",
+      "frames": 161,
+      "minimum_margin_nm": -0.7838705254824322,
+      "violating_samples": 14,
+      "violating_frames": 12,
+      "worst": [
+        {
+          "sample": 143,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7838705254824322,
+          "reference_speed_rad_s": 5.603311321324923,
+          "capacity_nm": 0,
+          "margin_nm": -0.7838705254824322
+        },
+        {
+          "sample": 144,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7671575305172849,
+          "reference_speed_rad_s": 5.51682000045872,
+          "capacity_nm": 0,
+          "margin_nm": -0.7671575305172849
+        },
+        {
+          "sample": 142,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.799002141293479,
+          "reference_speed_rad_s": 5.443722706604911,
+          "capacity_nm": 0.03621380950314432,
+          "margin_nm": -0.7627883317903347
+        },
+        {
+          "sample": 141,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8476666434602381,
+          "reference_speed_rad_s": 5.038054156298681,
+          "capacity_nm": 0.2527538697868433,
+          "margin_nm": -0.5949127736733948
+        },
+        {
+          "sample": 145,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7452867669588252,
+          "reference_speed_rad_s": 5.197605174069885,
+          "capacity_nm": 0.16758782233154604,
+          "margin_nm": -0.5776989446272792
+        },
+        {
+          "sample": 140,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 1.0802077517897561,
+          "reference_speed_rad_s": 4.386305670406236,
+          "capacity_nm": 0.6006478741863073,
+          "margin_nm": -0.47955987760344887
+        },
+        {
+          "sample": 146,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7098525467224786,
+          "reference_speed_rad_s": 4.659023272221985,
+          "capacity_nm": 0.45507512546563533,
+          "margin_nm": -0.2547774212568432
+        },
+        {
+          "sample": 64,
+          "coordinate": "joint.-Y | Foot servo output",
+          "required_torque_nm": 0.8117833232069208,
+          "reference_speed_rad_s": 4.1789706858521045,
+          "capacity_nm": 0.711320318526349,
+          "margin_nm": -0.10046300468057179
+        },
+        {
+          "sample": 65,
+          "coordinate": "joint.-Y | Foot servo output",
+          "required_torque_nm": 0.8553010843228545,
+          "reference_speed_rad_s": 4.06482310725946,
+          "capacity_nm": 0.7722506606271379,
+          "margin_nm": -0.08305042369571658
+        },
+        {
+          "sample": 64,
+          "coordinate": "joint.+Y | Foot servo output",
+          "required_torque_nm": 0.7732223908558298,
+          "reference_speed_rad_s": 4.17897222362709,
+          "capacity_nm": 0.7113194976840927,
+          "margin_nm": -0.06190289317173703
+        },
+        {
+          "sample": 65,
+          "coordinate": "joint.+Y | Foot servo output",
+          "required_torque_nm": 0.8148939085041608,
+          "reference_speed_rad_s": 4.064823831385763,
+          "capacity_nm": 0.772250274098891,
+          "margin_nm": -0.04264363440526975
+        },
+        {
+          "sample": 108,
+          "coordinate": "joint.+X | Worm servo output",
+          "required_torque_nm": -0.0999691355516506,
+          "reference_speed_rad_s": -5.33032693346324,
+          "capacity_nm": 0.09674284862505346,
+          "margin_nm": -0.003226286926597141
+        }
+      ],
+      "counts_by_coordinate": {
+        "joint.-Y | Foot servo output": 3,
+        "joint.+Y | Foot servo output": 2,
+        "joint.+X | Worm servo output": 2,
+        "joint.+X | Foot servo output": 7
+      }
+    },
+    {
+      "name": "constrained-front165-scale1-human-fine",
+      "sign": "reverse",
+      "source_recipe_sha256": "fdcf47ac5622ff51478982587f89d5f380d36d1bf47a72b83e6a2b24666b2f9e",
+      "source_table_sha256": "5d3d3efa59530b874073e204e67cfde2cbb956d8fb929f043f15488811762e41",
+      "capacity_report_sha256": "94110f56e5a0a97a30e7f9a6686e875b40354bf50d061062991ff752b45a5708",
+      "frames": 161,
+      "minimum_margin_nm": -0.4164150831845192,
+      "violating_samples": 14,
+      "violating_frames": 9,
+      "worst": [
+        {
+          "sample": 95,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7322244029538294,
+          "reference_speed_rad_s": 4.919925377033628,
+          "capacity_nm": 0.3158093197693102,
+          "margin_nm": -0.4164150831845192
+        },
+        {
+          "sample": 96,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7470427497073366,
+          "reference_speed_rad_s": 4.879540055776905,
+          "capacity_nm": 0.33736642566994274,
+          "margin_nm": -0.4096763240373939
+        },
+        {
+          "sample": 97,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.7059788226884769,
+          "reference_speed_rad_s": 4.746088909678852,
+          "capacity_nm": 0.4086007355497378,
+          "margin_nm": -0.2973780871387391
+        },
+        {
+          "sample": 98,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.7368522891662033,
+          "reference_speed_rad_s": 4.664207766966574,
+          "capacity_nm": 0.4523077164473953,
+          "margin_nm": -0.28454457271880795
+        },
+        {
+          "sample": 94,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7011463487219731,
+          "reference_speed_rad_s": 4.707380785908823,
+          "capacity_nm": 0.4292625774605875,
+          "margin_nm": -0.27188377126138563
+        },
+        {
+          "sample": 97,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7566523100218157,
+          "reference_speed_rad_s": 4.5937716562112065,
+          "capacity_nm": 0.48990550325537685,
+          "margin_nm": -0.2667468067664388
+        },
+        {
+          "sample": 96,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.6754245803464278,
+          "reference_speed_rad_s": 4.625588721317966,
+          "capacity_nm": 0.47292200973322157,
+          "margin_nm": -0.20250257061320626
+        },
+        {
+          "sample": 99,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.7790601032274874,
+          "reference_speed_rad_s": 4.3799452931811365,
+          "capacity_nm": 0.6040429524261919,
+          "margin_nm": -0.17501715080129554
+        },
+        {
+          "sample": 100,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.9362799257824748,
+          "reference_speed_rad_s": 3.8933014883225314,
+          "capacity_nm": 0.863806443486132,
+          "margin_nm": -0.07247348229634276
+        },
+        {
+          "sample": 16,
+          "coordinate": "joint.+Y | Foot servo output",
+          "required_torque_nm": 0.7986563274779299,
+          "reference_speed_rad_s": 4.1506723414186295,
+          "capacity_nm": 0.726425569364571,
+          "margin_nm": -0.07223075811335888
+        },
+        {
+          "sample": 15,
+          "coordinate": "joint.+Y | Foot servo output",
+          "required_torque_nm": 0.832926592072808,
+          "reference_speed_rad_s": 4.050211787994898,
+          "capacity_nm": 0.7800499735193602,
+          "margin_nm": -0.05287661855344772
+        },
+        {
+          "sample": 16,
+          "coordinate": "joint.-Y | Foot servo output",
+          "required_torque_nm": 0.7594621142835637,
+          "reference_speed_rad_s": 4.150674252568923,
+          "capacity_nm": 0.7264245492199252,
+          "margin_nm": -0.03303756506363853
+        }
+      ],
+      "counts_by_coordinate": {
+        "joint.-Y | Foot servo output": 2,
+        "joint.+Y | Foot servo output": 2,
+        "joint.+X | Foot servo output": 4,
+        "joint.-X | Foot servo output": 6
+      }
+    },
+    {
+      "name": "constrained-swing175-scale1-human-fine",
+      "sign": "forward",
+      "source_recipe_sha256": "71c135cb1524a643f82c510a73c29f60949e2bd3ef2fdb43cda27ec28ebe27ee",
+      "source_table_sha256": "b9fe84d3b9dfe0ba230d16c7c785d0e6b02fe6ac8d5ea2238392ac815669b88e",
+      "capacity_report_sha256": "0ba50baad153d9d4756a974fecfecfd3237d8da8ecf498f0edc1888ded1c163d",
+      "frames": 161,
+      "minimum_margin_nm": -0.8194449747746941,
+      "violating_samples": 10,
+      "violating_frames": 9,
+      "worst": [
+        {
+          "sample": 145,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8979766171263921,
+          "reference_speed_rad_s": 5.3644440092531,
+          "capacity_nm": 0.07853164235169798,
+          "margin_nm": -0.8194449747746941
+        },
+        {
+          "sample": 144,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8601900730637908,
+          "reference_speed_rad_s": 5.390422746319187,
+          "capacity_nm": 0.06466456469399397,
+          "margin_nm": -0.7955255083697969
+        },
+        {
+          "sample": 146,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.9202876140129014,
+          "reference_speed_rad_s": 5.240832052725676,
+          "capacity_nm": 0.1445139338012783,
+          "margin_nm": -0.7757736802116231
+        },
+        {
+          "sample": 143,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8178694961776423,
+          "reference_speed_rad_s": 5.318839128691551,
+          "capacity_nm": 0.10287487423046734,
+          "margin_nm": -0.7149946219471749
+        },
+        {
+          "sample": 147,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.9141141001703146,
+          "reference_speed_rad_s": 4.999593279970264,
+          "capacity_nm": 0.2732837345555875,
+          "margin_nm": -0.6408303656147271
+        },
+        {
+          "sample": 142,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.7941534565957685,
+          "reference_speed_rad_s": 5.1355354369359345,
+          "capacity_nm": 0.2007197587624894,
+          "margin_nm": -0.5934336978332792
+        },
+        {
+          "sample": 141,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.9075773425636907,
+          "reference_speed_rad_s": 4.774353680075838,
+          "capacity_nm": 0.39351340605119,
+          "margin_nm": -0.5140639365125007
+        },
+        {
+          "sample": 140,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 1.1833217754936585,
+          "reference_speed_rad_s": 4.101082391765158,
+          "capacity_nm": 0.7528959740319342,
+          "margin_nm": -0.43042580146172427
+        },
+        {
+          "sample": 148,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8582645082638053,
+          "reference_speed_rad_s": 4.57348600498177,
+          "capacity_nm": 0.5007336932563038,
+          "margin_nm": -0.3575308150075015
+        },
+        {
+          "sample": 147,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.8733671347455972,
+          "reference_speed_rad_s": 3.8879598405487696,
+          "capacity_nm": 0.8666577385398686,
+          "margin_nm": -0.006709396205728635
+        }
+      ],
+      "counts_by_coordinate": {
+        "joint.+X | Foot servo output": 9,
+        "joint.-X | Foot servo output": 1
+      }
+    },
+    {
+      "name": "constrained-swing175-scale1-human-fine",
+      "sign": "reverse",
+      "source_recipe_sha256": "9336d5102c95fa18262def77987524d3085a3636693cb80b5bc79cb72c99d5ee",
+      "source_table_sha256": "bd2a0a399069a4d7b2a8b5c16622ad8d90762ff38571a1c3e84cd7f5fe8af599",
+      "capacity_report_sha256": "41cd276d57b0ff3decbdc8ab2e561cccf59c8c2705bdbea7b6ffeacd927354d0",
+      "frames": 161,
+      "minimum_margin_nm": -0.6081665915086747,
+      "violating_samples": 13,
+      "violating_frames": 9,
+      "worst": [
+        {
+          "sample": 94,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8455451042936307,
+          "reference_speed_rad_s": 5.066858520614571,
+          "capacity_nm": 0.23737851278495598,
+          "margin_nm": -0.6081665915086747
+        },
+        {
+          "sample": 95,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8198560889895986,
+          "reference_speed_rad_s": 5.031859137740325,
+          "capacity_nm": 0.25606068193945536,
+          "margin_nm": -0.5637954070501432
+        },
+        {
+          "sample": 93,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8500625226614931,
+          "reference_speed_rad_s": 4.961509267020837,
+          "capacity_nm": 0.29361243505181484,
+          "margin_nm": -0.5564500876096783
+        },
+        {
+          "sample": 97,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.8140134126261364,
+          "reference_speed_rad_s": 4.930006234608801,
+          "capacity_nm": 0.31042830242056196,
+          "margin_nm": -0.5035851102055744
+        },
+        {
+          "sample": 96,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.7962056191877712,
+          "reference_speed_rad_s": 4.9594021734003855,
+          "capacity_nm": 0.29473717143882733,
+          "margin_nm": -0.501468447748944
+        },
+        {
+          "sample": 96,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8689292370646389,
+          "reference_speed_rad_s": 4.779207781682822,
+          "capacity_nm": 0.3909223561563778,
+          "margin_nm": -0.47800688090826104
+        },
+        {
+          "sample": 99,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 1.1051333424513705,
+          "reference_speed_rad_s": 4.312110014858428,
+          "capacity_nm": 0.6402524521428263,
+          "margin_nm": -0.4648808903085442
+        },
+        {
+          "sample": 98,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.8413539273664804,
+          "reference_speed_rad_s": 4.757464440806082,
+          "capacity_nm": 0.4025286400072312,
+          "margin_nm": -0.4388252873592492
+        },
+        {
+          "sample": 92,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8013103624624154,
+          "reference_speed_rad_s": 4.6937658655731775,
+          "capacity_nm": 0.4365300268796093,
+          "margin_nm": -0.3647803355828061
+        },
+        {
+          "sample": 95,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.7330955399633183,
+          "reference_speed_rad_s": 4.794787695403842,
+          "capacity_nm": 0.3826060214200079,
+          "margin_nm": -0.35048951854331045
+        },
+        {
+          "sample": 97,
+          "coordinate": "joint.+X | Foot servo output",
+          "required_torque_nm": 0.8614509967548856,
+          "reference_speed_rad_s": 4.2741488106994545,
+          "capacity_nm": 0.6605155990661475,
+          "margin_nm": -0.20093539768873803
+        },
+        {
+          "sample": 94,
+          "coordinate": "joint.-X | Foot servo output",
+          "required_torque_nm": 0.7338129763557882,
+          "reference_speed_rad_s": 4.471328331362737,
+          "capacity_nm": 0.555263995857304,
+          "margin_nm": -0.17854898049848422
+        }
+      ],
+      "counts_by_coordinate": {
+        "joint.+X | Foot servo output": 6,
+        "joint.-X | Foot servo output": 7
+      }
+    }
+  ],
+  "scope": "Required torques under the prescribed constrained point-force allocation, compared with the exact shared effective-servo torque_capacity at signed reference speeds. Negative margin rules out that specific torque/velocity/force allocation at that sample; it does not prove no alternative support allocation, body motion or trajectory works. The allocator does not yet constrain motor torques, and nonzero wrench residuals remain. Not actual measured motor saturation or a global speed ceiling. All prior load outputs reproduce exactly."
+}

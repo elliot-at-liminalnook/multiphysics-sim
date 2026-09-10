@@ -1,0 +1,33 @@
+{
+  "source": "examples/full-robot/speed-ceiling/posture-inspection.json",
+  "source_sha256": "30318849c1aafed11ad467006d4519ebccee066a95eeda734efaa7c20d1555b1",
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "inspected_postures": [
+    "hip0-foot-20",
+    "hip0-foot-40",
+    "hip0-foot-60",
+    "hip0-foot-80",
+    "hip0-foot-100",
+    "hip15-foot-20",
+    "hip15-foot-40",
+    "hip15-foot-60",
+    "hip15-foot-80",
+    "hip15-foot-100",
+    "hip30-foot-20",
+    "hip30-foot-40",
+    "hip30-foot-60",
+    "hip30-foot-80",
+    "hip30-foot-100",
+    "hip45-foot-20",
+    "hip45-foot-40",
+    "hip45-foot-60",
+    "hip45-foot-80",
+    "hip45-foot-100"
+  ],
+  "seeds": [
+    "hip30-foot-60",
+    "hip45-foot-60"
+  ],
+  "foothold_box_margin_m": 0.02,
+  "scope": "Numerical x/y search box enclosing CAD-derived footholds of 20 previously inspected postures, plus an explicit 2 cm fringe. The box and paths between postures are not certified collision-free or globally complete. Joint search intervals, physical tolerances and the weak speed penalty used for feasibility restoration are unchanged. These are optimizer initializations, not manually authored new gaits."
+}

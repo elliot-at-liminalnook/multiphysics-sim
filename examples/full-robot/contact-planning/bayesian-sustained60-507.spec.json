@@ -1,0 +1,62 @@
+{
+  "source_prefix": "runs/speed-only-507-validation/long60",
+  "task": "examples/full-robot/contact-planning/speed-discovery-task.json",
+  "output_directory": "runs/bayesian-sustained60-507",
+  "selector": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+  "runtime_examples": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples",
+  "seed": 73,
+  "initial_design_count": 8,
+  "adaptive_evaluations": 24,
+  "baseline_values": [
+    0.3118509535635109,
+    -0.4481359001962984,
+    1
+  ],
+  "baseline_capture": "runs/speed-only-507-validation/long60.native.json",
+  "problem": {
+    "context_id": "computed-from-exact-artifacts-by-runner",
+    "parameters": [
+      {
+        "name": "command_speed",
+        "unit": "m/s",
+        "bounds": [
+          -1.5,
+          1.5
+        ]
+      },
+      {
+        "name": "tracking_gain",
+        "unit": "1",
+        "bounds": [
+          -3,
+          3
+        ]
+      },
+      {
+        "name": "velocity_lead_factor",
+        "unit": "1",
+        "bounds": [
+          0,
+          3
+        ]
+      }
+    ],
+    "objective_name": "negative net horizontal chassis displacement divided by full trial duration",
+    "objective_unit": "m/s",
+    "constraints": [
+      {
+        "name": "fall observed (chassis ground contact or overturning)",
+        "unit": "1",
+        "scale": 1
+      }
+    ]
+  },
+  "scope": "Direct 60-second optimization from the verified 0.508847847 m/s candidate. Signed speed explores both travel directions; expanded outer tracking-gain and lead windows are search choices, not physical restrictions. Sole acceptance condition is no sampled fall. CAD and actuator physics unchanged.",
+  "seed_values": [
+    [
+      -0.3118509535635109,
+      -0.4481359001962984,
+      1
+    ]
+  ]
+}

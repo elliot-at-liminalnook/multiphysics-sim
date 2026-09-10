@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "scope": "Finest-timestep-conditioned adaptive trajectory search; not yet a sustained speed improvement.",
+  "initial_observations": 31,
+  "coarser_observations": 27,
+  "finest_observations": 4,
+  "physics_step_s": 0.00015625,
+  "first_trial": {
+    "ordinal": 0,
+    "values": [
+      0.23042433287337644,
+      -0.4621196014673128,
+      0.8610566945716087,
+      1.1734035340858477,
+      1.053450462980028,
+      1.1184732430417468,
+      1.0928234695709729,
+      1.0380660381164948,
+      0.09973287938772427
+    ],
+    "status": "predicted",
+    "elapsed_s": 20,
+    "fallen": false,
+    "prefix_net_speed_m_s": 0.5724160368230924,
+    "predicted_speed_m_s": 0.41849695395631487,
+    "fit_window_speeds_m_s": [
+      0.41849695395631487,
+      0.37219896777219813
+    ],
+    "physical_full_horizon_qualified": false,
+    "selection_method": "adaptive composite expected improvement",
+    "proposal": "runs/composite-fidelity-planar-v1/proposal-000/result.json",
+    "posterior_objective_at_mean": -0.5423593324096746,
+    "posterior_expected_improvement": 0.0015323728679159394,
+    "model_values": [
+      0.23042433287337644,
+      -0.4621196014673128,
+      0.8610566945716087,
+      1.1734035340858477,
+      1.053450462980028,
+      1.1184732430417468,
+      1.0928234695709729,
+      1.0380660381164948,
+      0.09973287938772427,
+      0.00015625
+    ],
+    "physics_step_s": 0.00015625
+  },
+  "iterations_requested": 6,
+  "status": "running",
+  "checks": {
+    "inputs": "runs/composite-fidelity-inputs-v1/input-check.json",
+    "selector": "runs/composite-fidelity-inputs-v1/selector-check.json",
+    "tests": "runs/composite-fidelity-inputs-v1/verification.json"
+  },
+  "evidence": "composite-fidelity-evidence-v1.json"
+}

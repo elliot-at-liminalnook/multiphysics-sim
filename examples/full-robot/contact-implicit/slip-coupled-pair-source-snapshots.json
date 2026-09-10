@@ -1,0 +1,23 @@
+{
+  "scope": "Exact pre-pose audit sources recovered and verified against the recorded build SHA-256, retained alongside the extended audit sources.",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 51304,
+      "sha256": "a16ffcf4c25ba54c48e90759700bde71833975094cd8d55d31f627de4d60ca54",
+      "snapshot": "examples/full-robot/contact-implicit/pair-audit-sources/crates__sim-runtime__src__contact_implicit.rs.txt"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 2721,
+      "sha256": "44a0f8ec49db9f4e57d047202b64b0a66cff76eb63757c8bb8c8ed437c63112e",
+      "snapshot": "examples/full-robot/contact-implicit/pair-audit-sources/crates__sim-runtime__examples__audit_contact_implicit.rs.txt"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 41129,
+      "sha256": "8710980ec816d6a07bbf24bf57e404732cf6910f20a90bb4eda062c00db2bc61",
+      "snapshot": "examples/full-robot/contact-implicit/pair-audit-sources/crates__sim-runtime__tests__contact_implicit.rs.txt"
+    }
+  ]
+}

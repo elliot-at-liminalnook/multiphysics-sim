@@ -1,0 +1,53 @@
+{
+  "base_commit": "f88a69837a548f5d3ed14a54b23e488135a55515",
+  "sources": [
+    {
+      "path": "crates/sim-domain-control/src/lib.rs",
+      "bytes": 357,
+      "sha256": "80a022caaf82a6319b3693a24c8b08829b42bd0056602606ab73f2359280a148"
+    },
+    {
+      "path": "crates/sim-domain-control/src/periodic_drift.rs",
+      "bytes": 3983,
+      "sha256": "2a37ed2006edece8d77c6d2e0c0d00eb76d0a481efd8f9a11d417e40aeb29b79"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 34618,
+      "sha256": "15874a98fd8dc7986f1356cf829807069c92660ca809958e99cab2c1eaa91b7e"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_implicit.rs",
+      "bytes": 4316,
+      "sha256": "91d965593ae9ec02a33a24219b82f2e8dfa67249b41a4a85990e5f82c526e484"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 1958,
+      "sha256": "fb69899a733f9f88cdd5e4ca232a78d7176b3feb1a372c8dce488d0fbbf0e07b"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 26517,
+      "sha256": "ced3be3d5aa8f05933c29f2ccbd3fa11669ca3e59d3d27ae3aca6508e4265396"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8656460,
+      "sha256": "53e4245bd887cf69b1fbcc8db6316cd7d4d938e02d571cc56d51917a50f77edb"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8595020,
+      "sha256": "0182719af0474d75b19fb58f25d2a59ea7208f0801e19c1a3d1d17305d997334"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_implicit",
+      "bytes": 8631252,
+      "sha256": "fabd0cf913b0658d47892335b3751d459ce7b802cf4baae9287c0ee010ec2cbf"
+    }
+  ],
+  "scope": "Uncommitted smooth cubic implementation; exact source and binary identities before experiments."
+}

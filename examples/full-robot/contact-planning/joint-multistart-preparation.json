@@ -1,0 +1,35 @@
+{
+  "entries": [
+    {
+      "group": "reference-d0.5",
+      "start_id": "reference-d0.5-p0_0.5_0.25_0.75",
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.recipe.json",
+      "sha256": "6d3e971d7bcef5d9d6c6d741fa82c6b361e386aa67f297b80c03bf7325ce47ad",
+      "initial_maximum_inequality": 456.2889386029605
+    },
+    {
+      "group": "reference-d0.75",
+      "start_id": "reference-d0.75-p0_0.25_0.5_0.75",
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.recipe.json",
+      "sha256": "71819f3a68933a4c26dc32bba7d29934867c0907a62f35f2a33edbf196150baf",
+      "initial_maximum_inequality": 313.28033624766573
+    },
+    {
+      "group": "constant_mean-d0.5",
+      "start_id": "constant_mean-d0.5-p0_0.25_0.75_0.5",
+      "path": "examples/full-robot/contact-planning/joint-multistart-constant_mean-d0.5.recipe.json",
+      "sha256": "fdc50f0b6142e6162e917b8ec3fac16c79cc46f4c8cfd8398cfd4ded6a7fa719",
+      "initial_maximum_inequality": 451.27915747005756
+    },
+    {
+      "group": "constant_mean-d0.75",
+      "start_id": "constant_mean-d0.75-p0_0.75_0.5_0.25",
+      "path": "examples/full-robot/contact-planning/joint-multistart-constant_mean-d0.75.recipe.json",
+      "sha256": "6e606048941b5c669ba754e85254640095d594c0f485593c2cce24eb8a1dcd80",
+      "initial_maximum_inequality": 301.4966234818254
+    }
+  ],
+  "variables": 173,
+  "evaluations_per_start": 3500,
+  "scope": "One minimum-maximum-inequality seed from each of the four timing/body screen groups. Same physical gates, speed target and CAD workspace search bounds as joint-workspace-speed. All motion, timing and force variables remain free. This bounded local multistart does not exhaust the phase grid, gait families or continuous motion space."
+}

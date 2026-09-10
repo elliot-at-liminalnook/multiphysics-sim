@@ -1,0 +1,17 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `release` profile [optimized] target(s) in 15.28s
+     Running tests/planning.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/planning-5cbf3ebce69ed6bf)
+
+running 10 tests
+test floor_clearance_uses_rotated_surface_and_rejects_missing_geometry ... ok
+test midpoint_audit_catches_insufficient_motor_command_sampling ... ok
+test marker_compilation_rejects_unreachable_bounds_identity_and_missing_collision_checks ... ok
+test translated_base_reference_compensates_with_joint_motion_without_mutating_seed ... ok
+test extra_inspections_preserve_motor_commands_and_reconstruct_exact_geometry ... ok
+test midpoint_collision_is_rejected_even_when_command_knots_pass ... ok
+test static_support_report_uses_moving_mass_and_explicit_supports ... ok
+test configuration_batch_matches_analytic_slide_without_mutating_seed ... ok
+test compiled_marker_motion_matches_analytic_slide_and_preserves_input ... ok
+test planner_checks_required_vertical_loads_over_the_declared_phase ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

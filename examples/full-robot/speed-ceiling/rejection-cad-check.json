@@ -1,0 +1,226 @@
+{
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "rows": [
+    {
+      "sample": "hip30-v125-lift16-gain1",
+      "source_link": "-Y | Thigh sector gear",
+      "target_link": "-Y | Hip output shaft and pulley",
+      "runtime_penetration_mm": 0.039419612981180185,
+      "cad_point_world_mm": [
+        0.25070615989829337,
+        -141.2049326731269,
+        -32.398846116475404
+      ],
+      "inside_any_solid": false,
+      "on_any_solid": false,
+      "nearest_surface_mm": 0.21894416383193863,
+      "members": [
+        {
+          "id": "5cdebfc67dad",
+          "name": "-Y | Hip output shaft and pulley",
+          "surface_distance_mm": 35.205695360903036,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "f125bdc0a201",
+          "name": "-Y | Worm enclosure and motor mount",
+          "surface_distance_mm": 0.21894416383193863,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "612062f39577",
+          "name": "-Y | Worm servo internal geometry",
+          "surface_distance_mm": 84.26536315582565,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "2a3dcb848184",
+          "name": "-Y \u00b7 Worm drive \u00b7 HX-30HM",
+          "surface_distance_mm": 105.7838755704644,
+          "solid_classifications": []
+        }
+      ]
+    },
+    {
+      "sample": "hip30-v125-lift20-gain1",
+      "source_link": "-Y | Thigh sector gear",
+      "target_link": "-Y | Hip output shaft and pulley",
+      "runtime_penetration_mm": 0.040255097958257276,
+      "cad_point_world_mm": [
+        0.2507061598983068,
+        -141.2281576571266,
+        -32.42591972399614
+      ],
+      "inside_any_solid": false,
+      "on_any_solid": false,
+      "nearest_surface_mm": 0.21894417014776102,
+      "members": [
+        {
+          "id": "5cdebfc67dad",
+          "name": "-Y | Hip output shaft and pulley",
+          "surface_distance_mm": 35.22891991526712,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "f125bdc0a201",
+          "name": "-Y | Worm enclosure and motor mount",
+          "surface_distance_mm": 0.21894417014776102,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "612062f39577",
+          "name": "-Y | Worm servo internal geometry",
+          "surface_distance_mm": 84.29343459933813,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "2a3dcb848184",
+          "name": "-Y \u00b7 Worm drive \u00b7 HX-30HM",
+          "surface_distance_mm": 105.81094917798515,
+          "solid_classifications": []
+        }
+      ]
+    },
+    {
+      "sample": "hip45-v100-lift16-gain1",
+      "source_link": "-Y | Thigh sector gear",
+      "target_link": "-Y | Hip output shaft and pulley",
+      "runtime_penetration_mm": 0.006266882567578316,
+      "cad_point_world_mm": [
+        0.25070615989829637,
+        -140.88271127331478,
+        -32.019129345571535
+      ],
+      "inside_any_solid": false,
+      "on_any_solid": false,
+      "nearest_surface_mm": 0.2189440763684674,
+      "members": [
+        {
+          "id": "5cdebfc67dad",
+          "name": "-Y | Hip output shaft and pulley",
+          "surface_distance_mm": 34.88347997218245,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "f125bdc0a201",
+          "name": "-Y | Worm enclosure and motor mount",
+          "surface_distance_mm": 0.2189440763684674,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "612062f39577",
+          "name": "-Y | Worm servo internal geometry",
+          "surface_distance_mm": 83.87240168051058,
+          "solid_classifications": [
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT",
+            "TopAbs_State.TopAbs_OUT"
+          ]
+        },
+        {
+          "id": "2a3dcb848184",
+          "name": "-Y \u00b7 Worm drive \u00b7 HX-30HM",
+          "surface_distance_mm": 105.40415879956055,
+          "solid_classifications": []
+        }
+      ]
+    }
+  ],
+  "wall_s": 1.4882770080000003,
+  "scope": "Check sampled SDF rejection points against the versioned CAD B-rep.\n\nRead-only CAD-side diagnostic. This does not certify whole-link or continuous\nclearance. Runtime poses map CAD world coordinates relative to exported link COM.\n"
+}

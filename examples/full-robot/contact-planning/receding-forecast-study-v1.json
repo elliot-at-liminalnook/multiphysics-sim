@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "leader": [
+    {
+      "label": "nominal",
+      "path": "runs/ppo-speed517-current-dynamics/iteration-000-validation.json",
+      "distance_m": 31.030790535038598,
+      "speed_m_s": 0.5171798422506433
+    },
+    {
+      "label": "fine60",
+      "path": "runs/learned-speed5172-validation/fine60.json",
+      "distance_m": 30.99990697593772,
+      "speed_m_s": 0.5166651162656286
+    },
+    {
+      "label": "contact60",
+      "path": "runs/learned-speed5172-validation/contact60.json",
+      "distance_m": 31.030779061199784,
+      "speed_m_s": 0.5171796510199964
+    }
+  ],
+  "nominal_gain_percent": 0.060182919988616135,
+  "model_planner": {
+    "version": 1,
+    "completed": true,
+    "error": null,
+    "time_s": 60,
+    "fall": false,
+    "distance_m": 20.446609935310857,
+    "sustained_speed_m_s": 0.34077683225518096,
+    "frames": 3001,
+    "planning_samples": 2999,
+    "mean_predicted_gain_m": 0.010683726640772792,
+    "warm_start_selected": 1638,
+    "mean_model_evaluations": 6,
+    "wall_s": 230.174314993,
+    "scope": "Full declared horizon with shared physical dynamics. Model-predicted displacement gain is diagnostic; measured net displacement/time and sampled fall determine ranking."
+  },
+  "matched_training": {
+    "version": 1,
+    "comparisons": [
+      {
+        "episode": "000",
+        "matched_transitions": 3000,
+        "fields": [
+          "time_s",
+          "motion_before",
+          "motion_after",
+          "applied_targets_rad",
+          "reward_m",
+          "fall_cost",
+          "values"
+        ],
+        "reward_m": 30.600400512397393
+      },
+      {
+        "episode": "001",
+        "matched_transitions": 3000,
+        "fields": [
+          "time_s",
+          "motion_before",
+          "motion_after",
+          "applied_targets_rad",
+          "reward_m",
+          "fall_cost",
+          "values"
+        ],
+        "reward_m": 30.496992359755026
+      }
+    ],
+    "files": [
+      {
+        "path": "runs/ppo-speed517/iteration-000-episode-000.json",
+        "sha256": "a416ca8a6c3eb38fbc6622b1dfaf5720147f19f32e2dd9b0835908405bdcd387"
+      },
+      {
+        "path": "runs/ppo-speed517-current-dynamics/iteration-000-episode-000.json",
+        "sha256": "38b72cfc812154b38a0201194beff1c36618fe43f0085bd163eeccc2a7f6bb6a"
+      },
+      {
+        "path": "runs/ppo-speed517/iteration-000-episode-001.json",
+        "sha256": "bc29b7b96e48d7227e14bf3141cd61e69752775f274f82bdda81414c74378f65"
+      },
+      {
+        "path": "runs/ppo-speed517-current-dynamics/iteration-000-episode-001.json",
+        "sha256": "fa05d91e33394f5cd71ce2cfbb9ba8d488029517c783fc029f5bf7aad6d30017"
+      }
+    ],
+    "scope": "First-update prediction-input ablation uses exactly identical physical stochastic rollouts, applied targets, rewards, fall costs and initial critic values on both seeds. Only neural input feature sets and their downstream updates differ. This is one matched training comparison, not statistical sample-efficiency proof."
+  },
+  "scope": "First current-dynamics-only PPO update becomes the nominal/fine/contact measured leader. One matched training comparison does not establish general superiority of an input set. Frozen-V3 receding-horizon planner slows down and is not promoted. CAD and actuator physics unchanged; physical maximum remains unproven."
+}

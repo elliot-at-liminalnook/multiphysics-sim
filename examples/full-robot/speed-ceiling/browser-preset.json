@@ -1,0 +1,17 @@
+{
+  "id": "physics-fast-wasd",
+  "label": "Experimental · Fast WASD gait · 100 mm/s command",
+  "mode": "embedded",
+  "path": "data/physics-fast-wasd.json",
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "motion_commands": [
+    "command.forward_speed",
+    "command.lateral_speed",
+    "command.yaw_rate"
+  ],
+  "motion_heartbeat": "command.packet_sequence",
+  "asset_sha256": "1e73b8d6af75ae498b3cdd977af0dde952fbdac0584db0f6264240c212137c3f",
+  "description": "Hold W/S for forward/reverse and combine with A/D to steer. Release to finish the foot transfer and brake. Walking turns; no pivot turn.",
+  "readiness": "60-second motion checks passed. Brief stance contact losses remain under review. Browser 0.45× realtime / 110 ms p95; hardware transfer is unvalidated.",
+  "evidence": "60 s at 0.625 ms: 100.4–102.7 mm/s, 4.3% loaded-foot slip. Release stopped within 0.42 s / 23 mm. Frozen commands stopped within 0.60 s / 43 mm. Provisional actuator model and ideal joint observations."
+}

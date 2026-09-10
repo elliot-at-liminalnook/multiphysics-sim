@@ -1,0 +1,16 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-dynamics)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-compile)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4.73s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_runtime-244b255b3d4999ec)
+
+running 4 tests
+test contact_planning::tests::diagonal_distance_preserves_speed_and_rejects_silent_heading_changes ... ok
+test contact_planning::tests::refinement_ranks_physical_failures_and_respects_circular_spacing ... ok
+test contact_planning::joint::tests::forces_follow_changed_stance_duration_and_remain_zero_in_swing ... ok
+test contact_planning::tests::operating_cases_keep_one_speed_objective_and_every_physical_gate ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+

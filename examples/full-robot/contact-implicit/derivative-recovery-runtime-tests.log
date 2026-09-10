@@ -1,0 +1,18 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-dynamics)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-compile)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `test` profile [optimized + debuginfo] target(s) in 32.49s
+     Running tests/contact_implicit.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/contact_implicit-ea9c03ef0423684e)
+
+running 7 tests
+test planning_contact_is_discoverable_with_explicit_units_and_required_parameters ... ok
+test resolved_contact_profile_uses_material_pair_and_compiled_dissipation ... ok
+test tilted_surface_contacts_match_runtime_samples_and_generate_edge_moments ... ok
+test gravity_and_state_contact_balance_without_actuation_or_contact_schedule ... ok
+test optional_sliding_cost_equals_analytic_friction_work_without_changing_forces ... ok
+test cached_three_knot_evaluation_is_exact_for_probes_and_invalid_inputs ... ok
+test optimizer_discovers_touchdown_from_a_separated_stationary_guess ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s

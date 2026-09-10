@@ -1,0 +1,21 @@
+{
+  "name": "phase-wave",
+  "exit_code": 0,
+  "elapsed_s": 73.664407488,
+  "report": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.028793468062495633,
+    "sampled_feasible": false,
+    "maximum_force_error_n": 0.07393960424658563,
+    "maximum_moment_error_nm": 0.02390225034804011,
+    "minimum_torque_margin_nm": 0.7491804228515018,
+    "maximum_penetration_m": 0.00029556303557531916
+  },
+  "search": {
+    "cost": 0.7500448404764906,
+    "initial_cost": 67.92486039076084,
+    "termination": "iteration_limit",
+    "evaluations": 1274,
+    "rejected": 0
+  }
+}

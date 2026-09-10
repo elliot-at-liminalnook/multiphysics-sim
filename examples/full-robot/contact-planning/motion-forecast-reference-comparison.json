@@ -1,0 +1,149 @@
+{
+  "rows": [
+    {
+      "horizon_s": 0.02,
+      "unit": "rad",
+      "component_samples": 24,
+      "v1_rmse": 0.01891908139762259,
+      "v2_rmse": 0.015998656276034584,
+      "constant_velocity_rmse": 0.06095245776082247
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "rad/s",
+      "component_samples": 24,
+      "v1_rmse": 1.1906978596759255,
+      "v2_rmse": 0.8609808587325242,
+      "constant_velocity_rmse": 3.342138044961341
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "rad/s²",
+      "component_samples": 24,
+      "v1_rmse": 59.534892983796254,
+      "v2_rmse": 43.04904293662622,
+      "constant_velocity_rmse": 167.10690224806706
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "m",
+      "component_samples": 30,
+      "v1_rmse": 0.0011179379187708218,
+      "v2_rmse": 0.0009538639498683515,
+      "constant_velocity_rmse": 0.0036059685099182385
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "m/s",
+      "component_samples": 30,
+      "v1_rmse": 0.08024022325373727,
+      "v2_rmse": 0.06268036018324115,
+      "constant_velocity_rmse": 0.26123380304689303
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "m/s²",
+      "component_samples": 30,
+      "v1_rmse": 4.012011162686864,
+      "v2_rmse": 3.134018009162058,
+      "constant_velocity_rmse": 13.06169015234465
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "rad",
+      "component_samples": 24,
+      "v1_rmse": 0.2117352140108986,
+      "v2_rmse": 0.07457100611596619,
+      "constant_velocity_rmse": 0.43962758011671416
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "rad/s",
+      "component_samples": 24,
+      "v1_rmse": 4.047761049626216,
+      "v2_rmse": 1.1432768954572143,
+      "constant_velocity_rmse": 6.446454022263844
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "rad/s²",
+      "component_samples": 24,
+      "v1_rmse": 76.60684268198582,
+      "v2_rmse": 59.303998040647215,
+      "constant_velocity_rmse": 167.0861958398521
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "m",
+      "component_samples": 30,
+      "v1_rmse": 0.01418402175486619,
+      "v2_rmse": 0.005705797926427418,
+      "constant_velocity_rmse": 0.0405330671905646
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "m/s",
+      "component_samples": 30,
+      "v1_rmse": 0.2692742096873576,
+      "v2_rmse": 0.09502778943228436,
+      "constant_velocity_rmse": 0.6578568465831409
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "m/s²",
+      "component_samples": 30,
+      "v1_rmse": 5.335400357994418,
+      "v2_rmse": 4.123360785304571,
+      "constant_velocity_rmse": 13.056013337273555
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "rad",
+      "component_samples": 24,
+      "v1_rmse": 0.803254455557098,
+      "v2_rmse": 0.1506685392446053,
+      "constant_velocity_rmse": 0.8704710747007592
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "rad/s",
+      "component_samples": 24,
+      "v1_rmse": 7.912438982699013,
+      "v2_rmse": 1.30223429357783,
+      "constant_velocity_rmse": 4.820761601837543
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "rad/s²",
+      "component_samples": 24,
+      "v1_rmse": 92.2804035726394,
+      "v2_rmse": 67.70614639851522,
+      "constant_velocity_rmse": 167.07769863112205
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "m",
+      "component_samples": 30,
+      "v1_rmse": 0.053310539997523554,
+      "v2_rmse": 0.011617722498416277,
+      "constant_velocity_rmse": 0.08414577088197776
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "m/s",
+      "component_samples": 30,
+      "v1_rmse": 0.5334762694752918,
+      "v2_rmse": 0.09827025915294355,
+      "constant_velocity_rmse": 0.44315593606961756
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "m/s²",
+      "component_samples": 30,
+      "v1_rmse": 5.7308737087757295,
+      "v2_rmse": 4.55591582471899,
+      "constant_velocity_rmse": 13.05751121901173
+    }
+  ],
+  "scope": "Same validation samples, network width, seed, training epochs and data. V1 uses constant acceleration as reference; v2 uses constant velocity while retaining acceleration inputs and targets. Physical RMSE comparison avoids comparing differently normalized losses. No actor consumes these forecasts yet."
+}

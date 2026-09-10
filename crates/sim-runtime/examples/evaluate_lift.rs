@@ -25,7 +25,9 @@ fn run() -> Result<(), String> {
     // Environment captures preserve the entire typed scene in their recording.
     // Accept that native/WASM path directly instead of requiring metadata to be
     // copied by a robot-specific conversion script.
-    if capture["kind"] == "sampled_environment_capture" {
+    let bounded_replay =
+        capture["kind"] == "embedded_window_v1" && capture["recording"].is_object();
+    if capture["kind"] == "sampled_environment_capture" || bounded_replay {
         let recorded: Scene = serde_json::from_value(capture["recording"]["scene"].clone())
             .map_err(|e| format!("environment scene: {e}"))?;
         if serde_json::to_value(&recorded).map_err(|e| e.to_string())?
@@ -51,7 +53,10 @@ fn run() -> Result<(), String> {
     if requirements.is_empty() {
         return Err("at least one lift requirement required".into());
     }
-    if capture["completed"] != true
+    if !(capture["completed"] == true
+        || (bounded_replay
+            && capture["window_complete"] == true
+            && capture["recording"]["failure"].is_null()))
         || !capture["error"].is_null()
         || capture["source"] != scene.robot.source
         || capture["scene_options"]
@@ -62,7 +67,7 @@ fn run() -> Result<(), String> {
         || scene.robot.gravity[1] != 0.0
         || scene.robot.gravity[2] >= 0.0
     {
-        return Err("complete contact-enabled capture with matching source/options and world -Z gravity required; gated captures require explicit --simulation-time for phase boundaries".into());
+        return Err("complete contact-enabled capture or completed bounded replay window with matching source/options and world -Z gravity required; gated captures require explicit --simulation-time for phase boundaries".into());
     }
     let session = Session::new(scene, 0)?;
     let recorded_world = !capture["world"].is_null();
@@ -110,7 +115,9 @@ fn run() -> Result<(), String> {
             let hits = sim_runtime::contact_audit::sampled_inter_link_penetrations(art, &poses)?;
             geometry_frames += 1;
             geometry_hits += hits.len();
-            for hit in hits { geometry_maximum_m = geometry_maximum_m.max(hit.penetration_m); }
+            for hit in hits {
+                geometry_maximum_m = geometry_maximum_m.max(hit.penetration_m);
+            }
         }
         let clearance = sampled_floor_clearances(art, &poses, &swings)?;
         let mut forces: BTreeMap<String, f64> = names.iter().map(|n| (n.clone(), 0.0)).collect();
@@ -152,6 +159,7 @@ fn run() -> Result<(), String> {
         })
         .collect::<Result<Vec<Value>, String>>()?;
     let mut result = json!({"time_basis":"simulation_time","motion_gate":capture["motion_gate"],
+        "bounded_replay_window_s":if bounded_replay {capture["window_s"].clone()}else{Value::Null},
         "source":capture["source"],"world":session.scene.robot.world,"world_recorded_in_capture":recorded_world,
         "provenance_scope":"Caller must supply the original experiment scene/world; historical embedded captures do not independently record their world. Preserve exact input hashes with the result. Forces are privileged simulated observations, not deployed sensors."});
     if art.omit_inter_link_contact {

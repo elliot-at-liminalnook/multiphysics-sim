@@ -1,0 +1,40 @@
+{
+  "pilot": {
+    "models": 765,
+    "native_status": -1,
+    "initial_report_matches": true,
+    "native_final_constraints_match": true
+  },
+  "map_cases": [
+    {
+      "baseline_cache_byte_equal": true,
+      "bounded_probe_errors": [
+        5.684341886080802e-14,
+        1.1368683772161603e-13,
+        5.684341886080802e-14
+      ],
+      "case": "all",
+      "columns": 366,
+      "rows": 6576
+    },
+    {
+      "baseline_cache_byte_equal": true,
+      "bounded_probe_errors": [
+        5.684341886080802e-14,
+        5.684341886080802e-14,
+        5.684341886080802e-14
+      ],
+      "case": "reordered_partial",
+      "columns": 183,
+      "rows": 6576
+    }
+  ],
+  "maximum_command_map_error": 1.1368683772161603e-13,
+  "legacy_conic_byte_identical": true,
+  "conic_status": "PrimalInfeasible",
+  "conic_iterations": 15,
+  "servo_command_rows": 6576,
+  "primal_candidate": false,
+  "next_step": "Full joint body/foot/timing/force speed optimization with explicit command limits.",
+  "scope": "The fixed-motion conic solver reports infeasibility under the original force boxes, circular friction cones and hard nominal command limits. This is floating-point solver evidence, not an interval certificate, a global physical speed ceiling or a runtime gait."
+}

@@ -1,0 +1,25 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+      "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-speed.search.json",
+      "sha256": "0f678392bb9890cb57c2237c1b600ca3b433da02fb249eb786721998653fcc7e"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only.recipe.json",
+      "sha256": "e0fce04c1ffddb34f1155834b30a7428483435bb6830796a3b36f32e46bfcd66"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only.search.json",
+      "sha256": "94f584366fd7b3a0762af40487f874edc9806b3301c917d39c22c63ea2b89371"
+    }
+  ],
+  "force_variables": 366,
+  "motion_held_fixed": true,
+  "scope": "Conditional force-only feasibility/initialization solve. Original motion and all physical checks retained; .30 m/s objective is constant because motion is fixed. A success is only a potential initializer for joint speed search, not the user goal or a maximum speed. Existing collision-domain projection used; 100 native iterations and 1000 model attempts are diagnostic limits."
+}

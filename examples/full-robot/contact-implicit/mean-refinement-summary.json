@@ -1,0 +1,276 @@
+{
+  "scope": "Exact initial-curve refinement with native coordinate/residual inspection and preserved physical-row multipliers. Equal inner iteration caps, different variable counts and evaluation cost. This does not prove the coarse basis infeasible or establish a physical maximum; dense audits and runtime qualification remain separate.",
+  "retained_numerical_seed": "mean64-inner60",
+  "retention_reason": "Lower dense force and moment errors while actual slip, mean bound, torque and sampled collision checks pass. Physical balance still fails; no runtime promotion.",
+  "default_audit_exact": true,
+  "coarse_initial_comparison": {
+    "samples": 128,
+    "differences": {
+      "position": 4.440892098500626e-16,
+      "velocity": 1.5765166949677223e-14,
+      "acceleration": 3.917755009297252e-12,
+      "gaps_m": 1.1102230246251565e-16,
+      "contact_forces_world_n": 2.220801320618193e-11,
+      "contact_velocities_world_m_s": 1.908195823574488e-15,
+      "unactuated_wrench": 6.220268744527857e-11,
+      "motor_torques_nm": 6.035394406467276e-12
+    }
+  },
+  "dense_initial_comparison": {
+    "samples": 512,
+    "differences": {
+      "position": 4.440892098500626e-16,
+      "velocity": 1.5765166949677223e-14,
+      "acceleration": 3.917755009297252e-12,
+      "gaps_m": 1.1102230246251565e-16,
+      "contact_forces_world_n": 2.2211565919860732e-11,
+      "contact_velocities_world_m_s": 1.908195823574488e-15,
+      "unactuated_wrench": 1.2497913814968342e-10,
+      "motor_torques_nm": 6.156852805361268e-12
+    }
+  },
+  "native_checkpoint_migration_differences": {
+    "position": 4.440892098500626e-16,
+    "velocity": 1.5765166949677223e-14,
+    "acceleration": 3.917755009297252e-12,
+    "gaps_m": 1.1102230246251565e-16,
+    "contact_forces_world_n": 2.220801320618193e-11,
+    "contact_velocities_world_m_s": 1.908195823574488e-15,
+    "unactuated_wrench": 6.220268744527857e-11,
+    "motor_torques_nm": 6.035394406467276e-12,
+    "objective": 9.7550856281714e-12,
+    "inequalities": 6.035406840965152e-9
+  },
+  "earlier_retained_seed": {
+    "samples": 512,
+    "force_error_n": 0.1185934529032269,
+    "moment_error_nm": 0.0744032186993319,
+    "minimum_torque_margin_nm": 0.3102679986413426,
+    "maximum_point_penetration_m": 0.00010776562199354967,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.03998911159009258,
+    "within_sampled_slip_limit": true,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0,
+    "maximum_continuous_mean_slip_bound": 0.04969925421215265,
+    "body_path_to_displacement_ratio": 1.0690112153694586
+  },
+  "trials": [
+    {
+      "name": "mean32-inner60",
+      "controls": 32,
+      "parameters": 578,
+      "free_parameters": 574,
+      "coarse": {
+        "samples": 128,
+        "force_error_n": 0.11570639024075732,
+        "moment_error_nm": 0.05572184647799638,
+        "minimum_torque_margin_nm": 0.34216505888719556,
+        "maximum_point_penetration_m": 0.00010766399152162265,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.040891526742962606,
+        "within_sampled_slip_limit": true,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0,
+        "maximum_continuous_mean_slip_bound": 0.049806759615130515,
+        "body_path_to_displacement_ratio": 1.0689762436140442
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.11891585415848403,
+        "moment_error_nm": 0.05572184647799638,
+        "minimum_torque_margin_nm": 0.34216505888719556,
+        "maximum_point_penetration_m": 0.00010770423594419487,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.03760041997772837,
+        "within_sampled_slip_limit": true,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0,
+        "maximum_continuous_mean_slip_bound": 0.0498513014690987,
+        "body_path_to_displacement_ratio": 1.0689905561922992
+      },
+      "dense_slip": {
+        "body_path_m": 0.04729913604896213,
+        "displacement_m": 0.04424654247408857,
+        "duration_s": 0.6597773085746947,
+        "groups": [
+          {
+            "continuous_mean_slip_upper_bound": 0.011088968783290805,
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.029198866558575478,
+            "sampled_loaded_slip_ratio": 0.009324419776195659
+          },
+          {
+            "continuous_mean_slip_upper_bound": 0.009822362139844172,
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.017825195122717356,
+            "sampled_loaded_slip_ratio": 0.009312472986021595
+          },
+          {
+            "continuous_mean_slip_upper_bound": 0.0498513014690987,
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.19928102578642445,
+            "sampled_loaded_slip_ratio": 0.03760041997772837
+          },
+          {
+            "continuous_mean_slip_upper_bound": 0.011544677032401453,
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.023865026722561328,
+            "sampled_loaded_slip_ratio": 0.01066658175533006
+          }
+        ],
+        "scope": "Actual loaded-slip measure with continuous mean and RMS upper bounds at declared samples. Mean bound supplies shaping and the optional barrier; independent dense/runtime slip and physical gates remain required.",
+        "shaping_residuals": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "within_sampled_slip_limit": true
+      },
+      "planned_projected_45deg_rate_m_s": 0.06706268161408929,
+      "numerical_bound_diagnostic": {
+        "threshold_fraction": 1e-8,
+        "active_free_bounds": [],
+        "minimum_distance_fraction": 0.3411120326696267
+      },
+      "search": {
+        "termination": "outer_iteration_limit",
+        "evaluations": 68961,
+        "maximum_violation": 1.786092323899819,
+        "within_constraint_tolerance": false,
+        "history": [
+          {
+            "complementarity": 378.35095036472586,
+            "iteration": 3,
+            "maximum_violation": 1.786092323899819,
+            "objective_cost": 3.3476953601139057,
+            "penalty": 100,
+            "shifted_constraint_norm": 1.786092323899819,
+            "inner_termination": "iteration_limit",
+            "inner_evaluations": 68959,
+            "rejected_evaluations": 4,
+            "initial_cost": 2643.468658254376,
+            "last_inner": {
+              "accepted": true,
+              "cost": 1701.018486350102,
+              "damping": 393411.79571912787,
+              "evaluations": 68959,
+              "iteration": 59,
+              "projected_gradient": 89706287.44397338
+            }
+          }
+        ],
+        "next_penalty": 1000
+      }
+    },
+    {
+      "name": "mean64-inner60",
+      "controls": 64,
+      "parameters": 1154,
+      "free_parameters": 1150,
+      "coarse": {
+        "samples": 128,
+        "force_error_n": 0.07013062632153866,
+        "moment_error_nm": 0.02856528012055712,
+        "minimum_torque_margin_nm": 0.31027523800115003,
+        "maximum_point_penetration_m": 0.00010788166627273554,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.04118777873124269,
+        "within_sampled_slip_limit": true,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0,
+        "maximum_continuous_mean_slip_bound": 0.04927540270443165,
+        "body_path_to_displacement_ratio": 1.0689974153133468
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.08073723907359638,
+        "moment_error_nm": 0.033633534931597854,
+        "minimum_torque_margin_nm": 0.31027523800115003,
+        "maximum_point_penetration_m": 0.00010788166627273554,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.04014132488919461,
+        "within_sampled_slip_limit": true,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0,
+        "maximum_continuous_mean_slip_bound": 0.049433241367504495,
+        "body_path_to_displacement_ratio": 1.0690117137975126
+      },
+      "dense_slip": {
+        "body_path_m": 0.04730007219983985,
+        "displacement_m": 0.04424654247408857,
+        "duration_s": 0.6597773085746947,
+        "groups": [
+          {
+            "continuous_mean_slip_upper_bound": 0.010910012247910331,
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.029178101354452056,
+            "sampled_loaded_slip_ratio": 0.009161516318801839
+          },
+          {
+            "continuous_mean_slip_upper_bound": 0.009822008206308654,
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.017840123631069384,
+            "sampled_loaded_slip_ratio": 0.009353433017660059
+          },
+          {
+            "continuous_mean_slip_upper_bound": 0.049433241367504495,
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.19744590593124678,
+            "sampled_loaded_slip_ratio": 0.04014132488919461
+          },
+          {
+            "continuous_mean_slip_upper_bound": 0.011627737275359177,
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.025805387747038437,
+            "sampled_loaded_slip_ratio": 0.01047273399581028
+          }
+        ],
+        "scope": "Actual loaded-slip measure with continuous mean and RMS upper bounds at declared samples. Mean bound supplies shaping and the optional barrier; independent dense/runtime slip and physical gates remain required.",
+        "shaping_residuals": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "within_sampled_slip_limit": true
+      },
+      "planned_projected_45deg_rate_m_s": 0.06706268161408929,
+      "numerical_bound_diagnostic": {
+        "threshold_fraction": 1e-8,
+        "active_free_bounds": [],
+        "minimum_distance_fraction": 0.33862343553048085
+      },
+      "search": {
+        "termination": "outer_iteration_limit",
+        "evaluations": 138078,
+        "maximum_violation": 0.42826400602785597,
+        "within_constraint_tolerance": false,
+        "history": [
+          {
+            "complementarity": 20.4716373510029,
+            "iteration": 3,
+            "maximum_violation": 0.42826400602785597,
+            "objective_cost": 0.23832041446629196,
+            "penalty": 100,
+            "shifted_constraint_norm": 0.42826400602785597,
+            "inner_termination": "iteration_limit",
+            "inner_evaluations": 138076,
+            "rejected_evaluations": 0,
+            "initial_cost": 2643.4686583782823,
+            "last_inner": {
+              "accepted": true,
+              "cost": 416.41915980820585,
+              "damping": 286797.1990792442,
+              "evaluations": 138076,
+              "iteration": 59,
+              "projected_gradient": 27859535.36263207
+            }
+          }
+        ],
+        "next_penalty": 100
+      }
+    }
+  ]
+}

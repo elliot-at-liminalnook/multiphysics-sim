@@ -1,0 +1,11 @@
+{
+  "solver": {
+    "maximum_iterations": 1,
+    "maximum_callback_evaluations": 40,
+    "tolerance": 1e-7,
+    "constraint_tolerance": 1e-7
+  },
+  "maximum_model_evaluations": 700,
+  "difference_step": 0.0001,
+  "collision_free_domain": true
+}

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "id": "diagonal-seed-fixed",
+  "wasm": {
+    "artifact_sha256": "dfc8f4a46f97487727f52c8cfa20f78cc74064258fae05674aeb39f915a151ab",
+    "browser_module_sha256": "9a6d3a5b3496b44b08ad158b64b49ef23dc80642a496a85a770e2457ceb066fd"
+  },
+  "inputs": {
+    "examples/full-robot/contact-planning/diagonal-seed-fixed-browser-spec.json": "0b4d2023ce1a8926c3fbe78ea2ebfb2aeb074507a237bfef999effb8ed5fce7b",
+    "Cargo.lock": "2aece6b0637c79b737cca98a08377b4253d67478280b17162c772ebca02f38f1",
+    "crates/sim-domain-control/src/trajectory.rs": "ced82fa77df4f6c89d5d435bb07ca6c36f6bb24e6c4d5ddec5539b642e5fbf5a",
+    "crates/sim-script/src/lib.rs": "a15719dd0c98f6e518976514de6ac52b2cda096e69419f6a394ac20caa7bf31b",
+    "web/viewer/viewer.js": "69b3ba8559f6e9541cfd499c99d98233eb79aba8102b36ef4fbd45032893d0cb",
+    "web/viewer/motion-commands.mjs": "f3854b84dc9ffb58c04d0656e4287ccd96c0b74076f33b6e39cce0a939f025c7",
+    "web/worker.js": "56fcf9a7de4feddd05f24b6f13186376a6c332e0952acb4c4073e7a9ba5efdb9",
+    "web/worker-message.mjs": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f",
+    "examples/full-robot/speed-ceiling/package_browser_profiles.mjs": "3c6b384f2664fdb06436f29b2e44c1fd398411fcd2bd951522a6abf3e21b3562",
+    "runs/contact-planning/diagonal-seed-preview.scene.json": "69ef06ea83092525771eb2eda03dc2c27248b02b010ab54ebc726f5d3514faf2",
+    "runs/contact-planning/diagonal-seed-preview.config.json": "26676df884c1d18dcf83d7a4e5676c844f38622304666c0fdf409da48b439fe4",
+    "examples/full-robot/fast-wasd/task.json": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026"
+  },
+  "presets": [
+    {
+      "id": "physics-diagonal-seed-5ms",
+      "label": "Experimental · 45° travel · 41 mm/s · 5 ms preview",
+      "mode": "embedded",
+      "path": "data/physics-diagonal-seed-5ms.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "19f5658a977e34db2e9b6ba9a797c187f140caf24a57fe0c032458ff4f630d36",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "First diagonal planning seed; speed search continues. W travels 45° relative to the chassis.",
+      "evidence": "Detailed 8 s test: 40.8/39.5 mm/s, stops 0.28/0.24 s, 2.65% loaded-foot slip, 16/16 planned clearances. No overlap in 401 sampled poses. Sustained, steering, dense geometry and browser qualification remain separate."
+    }
+  ],
+  "scope": "Shared Rust/WASM runtime and explicit numerical profiles. Native physical qualification, cross-host parity and rendered browser performance are separate requirements. Building this bundle does not establish their acceptance."
+}

@@ -1,0 +1,94 @@
+{
+  "scope": "Short start-from-rest tracking diagnostic. Errors at 25 planning knots; contact motion and geometry at 97 report poses. No continuous collision, sustained gait or WASD qualification.",
+  "planned_mean_speed_m_s": 0.18530291114043804,
+  "summaries": [
+    {
+      "name": "adaptive-finegrid-ff32",
+      "completed": true,
+      "step_s": 0.0005157389198797935,
+      "frames": 97,
+      "duration_s": 0.39608749046768144,
+      "feedforward_gain": 1,
+      "measured_mean_diagonal_body_speed_m_s": 0.1685894203767288,
+      "measured_terminal_diagonal_body_speed_m_s": 0.12987103100788727,
+      "maximum_body_position_error_at_plan_knots_m": 0.009878810518363644,
+      "maximum_joint_error_at_plan_knots_rad": 0.016473735334813666,
+      "rms_joint_error_at_plan_knots_rad": 0.004707348230806121,
+      "maximum_tilt_rad": 0.07550119090516695,
+      "maximum_sampled_inter_link_penetration_m": 0,
+      "minimum_sampled_floor_clearance_m": -0.00028060119350942214,
+      "maximum_loaded_material_slip_ratio": 0.7467118171797189,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.036994152738061524,
+          "ratio_to_body_path": 0.5397526278042573
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.04031931834980791,
+          "ratio_to_body_path": 0.5882675076970981
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.05117894678611903,
+          "ratio_to_body_path": 0.7467118171797189
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.01831042071412919,
+          "ratio_to_body_path": 0.26715296783873865
+        }
+      ],
+      "body_path_m": 0.0685390877827788,
+      "capture_sha256": "66cd2dc0a2982e148340fde9a61dadb908e525780bf132c734a4401d32fbc5ad",
+      "wall_s": 1.81347156
+    },
+    {
+      "name": "adaptive-finegrid-ff64",
+      "completed": true,
+      "step_s": 0.00025786945993989675,
+      "frames": 97,
+      "duration_s": 0.39608749046768144,
+      "feedforward_gain": 1,
+      "measured_mean_diagonal_body_speed_m_s": 0.16837311321534723,
+      "measured_terminal_diagonal_body_speed_m_s": 0.13062565260202808,
+      "maximum_body_position_error_at_plan_knots_m": 0.010005374214014843,
+      "maximum_joint_error_at_plan_knots_rad": 0.016818725591435157,
+      "rms_joint_error_at_plan_knots_rad": 0.004780949491217524,
+      "maximum_tilt_rad": 0.07559901316402765,
+      "maximum_sampled_inter_link_penetration_m": 0,
+      "minimum_sampled_floor_clearance_m": -0.0003144840622619771,
+      "maximum_loaded_material_slip_ratio": 0.7508369555897597,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.037396724568844755,
+          "ratio_to_body_path": 0.5460979617251621
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.03957170579231538,
+          "ratio_to_body_path": 0.5778588398935492
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.051417226930489016,
+          "ratio_to_body_path": 0.7508369555897597
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.015551932615260052,
+          "ratio_to_body_path": 0.22710220747931514
+        }
+      ],
+      "body_path_m": 0.06847988307941281,
+      "capture_sha256": "41e9f1862b57001e24618114411a4faa20d83fe1cfeb39c7b4e6db6638df504c",
+      "wall_s": 2.465929283
+    }
+  ],
+  "timestep": {
+    "maximum_body_path_difference_m": 0.00015964893108580936,
+    "relative_mean_speed_difference": 0.0012846894450715407
+  }
+}

@@ -6,10 +6,13 @@
 
 pub mod articulated;
 pub mod actuator_audit;
+pub mod contract;
 pub mod math;
 pub mod model;
+mod checked_json;
 pub mod motor;
 pub mod effective_servo;
+pub mod motion_capability;
 pub mod world_load;
 pub mod sdf;
 

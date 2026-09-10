@@ -1,0 +1,29 @@
+{
+  "source": {
+    "path": "examples/full-robot/contact-planning/joint-workspace-speed.recipe.json",
+    "bytes": 63323,
+    "sha256": "86f4ba64e79bd640a501c7a93921ffda45a7185ed04d798652006609268b1717"
+  },
+  "output": {
+    "path": "examples/full-robot/contact-planning/joint-start-screen.batch.json",
+    "bytes": 1601597,
+    "sha256": "33539af0c0ff3520c9cef591e9540e7a7248ff281243eb8e05cc8c227e314c0b"
+  },
+  "starts": 257,
+  "phase_grid": [
+    0,
+    0.25,
+    0.5,
+    0.75
+  ],
+  "stance_fractions": [
+    0.5,
+    0.75
+  ],
+  "body_initializers": [
+    "reference",
+    "constant_mean"
+  ],
+  "speed_m_s": 0.211710264528351,
+  "scope": "Systematic initial contact timing screen at the unchanged fast reference speed, placements and swing paths. Foot zero fixes the common phase gauge; all 64 quarter-cycle combinations for the other feet are included at two duty fractions and two body initializations, plus the original reference. Native CAD evaluation initializes force nodes and records every failure. This is neither joint optimization of each start nor exhaustion of continuous timing, body/foot motion, phase counts, or force choices. Low initial residual is only a seed ranking, not a gait certificate. Physical tolerances and robot model are unchanged."
+}

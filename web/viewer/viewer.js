@@ -1,3 +1,4 @@
+import {motionCommandConfig,motionHeartbeatIndex,nextMotionAction,boundedInputValue,driveMotionValues} from "./motion-commands.mjs";
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { installLeaderboard } from './leaderboard.js';
@@ -212,16 +213,23 @@ function showFrame(next) {
   $('time').textContent = `${tick.toFixed(3)} s`; $('sim-time').textContent = `${tick.toFixed(3)} s`; $('timeline').value = tick;
   $('execution-state').textContent = next.error ? 'Experiment stopped with an error' : learning?.terminated ? 'Task bound reached' : learning?.truncated ? 'Episode time limit reached' : next.done ? 'Experiment complete' : playing ? (playback ? 'Playing recorded physics' : `Running · ${next.completed_steps ?? ''}${next.requested_steps ? ' / '+next.requested_steps+' physics steps' : ''}`) : 'Paused';
   const contacts = next.contacts || []; $('contact-count').textContent = String(contacts.length);
-  for (const a of [...arrows.children]) { arrows.remove(a); dispose(a); }
+  let activeArrows=0;
   for (const c of contacts) { const p = c.point_m, f = c.force_n; if (!p || !f) continue; const force = new THREE.Vector3(...f), magnitude = force.length(); if (magnitude < 1e-7) continue;
-    arrows.add(new THREE.ArrowHelper(force.normalize(), new THREE.Vector3(...p), Math.min(.10, magnitude * .004), c.other == null ? 0x8cf1ce : 0xffa785, .009, .005));
+    let arrow=arrows.children[activeArrows++];
+    if(!arrow){arrow=new THREE.ArrowHelper();arrows.add(arrow);}
+    arrow.visible=true;arrow.position.set(...p);arrow.setDirection(force.normalize());
+    arrow.setLength(Math.min(.10,magnitude*.004),.009,.005);arrow.setColor(c.other==null?0x8cf1ce:0xffa785);
   }
+  for(let i=activeArrows;i<arrows.children.length;i++)arrows.children[i].visible=false;
   const readings = next.servo_targets_rad?.map((target, i) => ({ name: current.data.coordinate_names[i].replace('joint.', ''), reference: next.reference_targets_rad?.[i], target, actual: next.joint_positions[current.data.joint_indices[i]] })) ||
     next.joint_positions?.map((actual, i) => ({ name: `Joint ${i + 1}`, actual, target: next.telemetry?.actuators?.[i] }));
   $('readings-label').textContent = next.reference_targets_rad ? 'Plan → motor target → actual' : 'Requested → actual';
-  $('joint-readings').replaceChildren();
-  for (const r of readings || []) { const row = document.createElement('div'); row.className = 'reading'; const label = document.createElement('span'); label.textContent = r.name; label.title = r.name;
-    const value = document.createElement('span'); value.textContent = `${r.reference == null ? '' : (r.reference * 180 / Math.PI).toFixed(1) + ' → '}${r.target == null ? '—' : (r.target * 180 / Math.PI).toFixed(1)} → ${(r.actual * 180 / Math.PI).toFixed(1)}°`; row.append(label, value); $('joint-readings').append(row); }
+  const readingPanel=$('joint-readings');let readingIndex=0;
+  for (const r of readings || []) { let row=readingPanel.children[readingIndex++];
+    if(!row){row=document.createElement('div');row.className='reading';row.append(document.createElement('span'),document.createElement('span'));readingPanel.append(row);}
+    const [label,value]=row.children;label.textContent=r.name;label.title=r.name;
+    value.textContent = `${r.reference == null ? '' : (r.reference * 180 / Math.PI).toFixed(1) + ' → '}${r.target == null ? '—' : (r.target * 180 / Math.PI).toFixed(1)} → ${(r.actual * 180 / Math.PI).toFixed(1)}°`; }
+  while(readingPanel.children.length>readingIndex)readingPanel.lastElementChild.remove();
 }
 function restoreInputs(restored) {
   if (!restored || restored.length !== inputs.length) return;
@@ -231,7 +239,8 @@ function restoreInputs(restored) {
 }
 function makeInputs(channels) {
   inputs = channels; values = channels.map(c => c.initial); $('inputs').replaceChildren();
-  driveKeys.clear();const drive=channels.length&&current.data?.policy_contract?.step_reference?.config;
+  const heartbeat=channels.length?motionHeartbeatIndex(current,channels):-1;
+  driveKeys.clear();const drive=channels.length&&motionCommandConfig(current,channels);
   $('teleop').hidden=!drive;$('teleop').replaceChildren();
   if (drive) {
     const help=document.createElement('p');help.textContent='Press Play, then hold W/S to move, A/D to turn. '+(drive.sequence.update_command_before_lift?'Release to request a stop. This controller can cancel a lift before it starts.':'Release to request a stop after the current foot transfer.');$('teleop').append(help);
@@ -245,10 +254,10 @@ function makeInputs(channels) {
   }
   const residualStart=channels.findIndex(c=>c.name.startsWith('residual.'));
   let residualGroup;
-  if(residualStart>=0&&channels.slice(residualStart).every(c=>c.name.startsWith('residual.'))){
+  if(residualStart>=0&&channels.slice(residualStart).every((c,i)=>c.name.startsWith('residual.')||i+residualStart===heartbeat)){
     residualGroup=document.createElement('details');residualGroup.id='residual-inputs';
     residualGroup.hidden=Boolean(current?.data?.config?.policy?.neural_residual);
-    const summary=document.createElement('summary');summary.textContent=`Motor corrections (${channels.length-residualStart})`;residualGroup.append(summary);
+    const summary=document.createElement('summary');summary.textContent=`Motor corrections (${channels.filter(c=>c.name.startsWith('residual.')).length})`;residualGroup.append(summary);
     const help=document.createElement('p');help.textContent='Angle offsets added to the crawl controller. Zero uses the baseline. Command limits still apply.';residualGroup.append(help);
     const clear=document.createElement('button');clear.id='clear-residuals';clear.textContent='Clear motor corrections';
     clear.onclick=()=>{for(const slider of residualGroup.querySelectorAll('input')){slider.value=0;slider.dispatchEvent(new Event('input'));}};residualGroup.append(clear);
@@ -257,8 +266,12 @@ function makeInputs(channels) {
     const display=()=>c.kind==='LinearVelocity'?`${(values[i]*1000).toFixed(2)} mm/s`:c.kind==='AngularVelocity'?`${(values[i]*180/Math.PI).toFixed(3)}°/s`:`${values[i].toFixed(c.kind==='Angle'&&c.upper-c.lower<=.1?4:2)} ${c.kind==='Angle'?'rad':''}`;
     output.textContent = `${c.name}: ${display()}`;
     slider.type = 'range'; slider.min = c.lower; slider.max = c.upper; slider.step = (c.upper-c.lower)/200 || 1; slider.disabled=c.lower===c.upper; slider.value = c.initial; slider.setAttribute('aria-label', c.name);
-    slider.oninput = () => { values[i] = Number(slider.value); output.textContent = `${c.name}: ${display()}`; };
+    // Keep typed command values authoritative: HTML range controls can round
+    // awkward decimal endpoints just outside the declared runtime bounds.
+    slider.setCommandValue = value => { values[i]=boundedInputValue(c,value); slider.value=values[i]; output.textContent=`${c.name}: ${display()}`; };
+    slider.oninput = () => slider.setCommandValue(Number(slider.value));
     label.append(output, slider);
+    if(i===heartbeat){label.hidden=true;slider.step=1;slider.disabled=true;}
     if(residualGroup&&i>=residualStart){if(i===residualStart)$('inputs').append(residualGroup);residualGroup.append(label);}
     else $('inputs').append(label);
   });
@@ -311,7 +324,7 @@ async function loadPreset(id) {
 }
 async function advanceLive(single=false) {
   if (busy || (!playing && !single) || !worker) return; busy = true; const token = epoch, before = performance.now(), old = tick;
-  try { const next = await worker.request('step', { action: values, response_encoding: 'json' }); if (token !== epoch) return; showFrame(next);
+  try { values=nextMotionAction(current,inputs,values);const next = await worker.request('step', { action: values, response_encoding: 'json' }); if (token !== epoch) return; showFrame(next);
     wallWork += (performance.now()-before)/1000; simulatedWork += tick-old;
     const liveRate = (tick-liveStartSim)/((performance.now()-liveStartWall)/1000);
     $('performance').textContent = single ? `${(simulatedWork/wallWork).toFixed(2)}× processing` : `${liveRate.toFixed(2)}× live`;
@@ -369,16 +382,16 @@ renderer.domElement.addEventListener('pointerup', e => { if (!dragStart || Math.
   const b = renderer.domElement.getBoundingClientRect(); pointer.set((e.clientX-b.left)/b.width*2-1,-(e.clientY-b.top)/b.height*2+1); ray.setFromCamera(pointer,camera); selectPart(ray.intersectObjects([...meshes.values()])[0]?.object.name || null);
 });
 function applyDriveKeys() {
-  const drive=current?.data?.policy_contract?.step_reference?.config;if(!drive)return;
-  const directions=[Number(driveKeys.has('w'))-Number(driveKeys.has('s')),0,Number(driveKeys.has('a'))-Number(driveKeys.has('d'))];
+  const drive=motionCommandConfig(current,inputs);if(!drive)return;
+  const requests=driveMotionValues(current,inputs,driveKeys);
   drive.command_channels.forEach((name,axis)=>{
     const i=inputs.findIndex(c=>c.name===name);if(i<0)return;const c=inputs[i];
-    const slider=$('inputs').querySelectorAll('input')[i];slider.value=directions[axis]>0?c.upper:directions[axis]<0?c.lower:0;slider.dispatchEvent(new Event('input'));
+    const slider=$('inputs').querySelectorAll('input')[i];slider.setCommandValue(requests[axis]);
   });
   for(const b of $('teleop').querySelectorAll('[data-drive-key]'))b.setAttribute('aria-pressed',String(driveKeys.has(b.dataset.driveKey)));
 }
 window.addEventListener('keydown', e => { if ($('leaderboard-dialog').open || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable) return;
-  const key=e.key.toLowerCase();if('wasd'.includes(key)&&key.length===1&&current?.data?.policy_contract?.step_reference){e.preventDefault();driveKeys.add(key);applyDriveKeys();return;}
+  const key=e.key.toLowerCase();if('wasd'.includes(key)&&key.length===1&&motionCommandConfig(current,inputs)){e.preventDefault();driveKeys.add(key);applyDriveKeys();return;}
   if (key==='f') fit(selectedName ? meshes.get(selectedName) : model); if (e.code==='Space') {e.preventDefault(); if (!$('play').disabled) $('play').click();} });
 window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(driveKeys.delete(key)){e.preventDefault();applyDriveKeys();}});
 window.addEventListener('blur',()=>{driveKeys.clear();applyDriveKeys();});

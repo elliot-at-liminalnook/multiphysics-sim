@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "files": [
+    "runs/speed-neural-predictive-507/zero.scene.json",
+    "runs/speed-neural-predictive-507/zero.config.json",
+    "runs/speed-neural-predictive-507/zero.actions.json",
+    "runs/speed-neural-predictive-507/task.json",
+    "runs/speed-neural-predictive-507/execution-inputs.json",
+    "runs/speed-neural-predictive-507/native.json",
+    "runs/speed-neural-predictive-507/native.log",
+    "runs/speed-neural-predictive-507/summary.json",
+    "runs/speed-neural-predictive-507/forecast-audit.json",
+    "runs/speed-neural-predictive-507/forecast-audit.stdout.log",
+    "runs/speed-neural-predictive-507/forecast-audit.stderr.log",
+    "runs/speed-neural-predictive-507/ppo-experiment.json"
+  ],
+  "blob_directory": "examples/full-robot/contact-planning/speed-objective-evidence-files",
+  "manifest": "examples/full-robot/contact-planning/predictive-controller-evidence-v1.json",
+  "terminal_evidence": {
+    "replay": "Session 32979 exited 0; 1,001 physical frames match the archived zero-residual .507 teacher. Wall 192.142s.",
+    "audit": "Session 54575 exited 0 after parity checks and online forecast audit. 999 one-step action-matched windows; 100/200ms commands differ and have no measured error assigned."
+  },
+  "scope": "Causal forecast actor integration at zero neural output; replay, one-step forecast audit, and prepared full60 PPO input recipe. Training outcomes are not included or claimed."
+}

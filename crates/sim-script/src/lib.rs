@@ -108,8 +108,78 @@ fn engine(sources: Sources, parameters: Map, seed: u64) -> Engine {
         active: Arc::new(Mutex::new(Vec::new())),
     });
     engine.on_print(|s| eprintln!("{s}"));
-    engine.register_fn("parameters", move || parameters.clone());
+    let parameters = Arc::new(parameters);
+    let all_parameters = parameters.clone();
+    engine.register_fn("parameters", move || (*all_parameters).clone());
+    let selected_parameters = parameters.clone();
+    engine.register_fn("parameters_except", move |excluded: Array| -> ScriptResult<Map> {
+        let excluded = excluded.into_iter().map(|v| v.try_cast::<rhai::ImmutableString>()
+            .ok_or_else(|| error("parameter exclusions must be strings")))
+            .collect::<ScriptResult<Vec<_>>>()?;
+        Ok(selected_parameters.iter().filter(|(key,_)| !excluded.iter().any(|name| name.as_str()==key.as_str()))
+            .map(|(key,value)| (key.clone(),value.clone())).collect())
+    });
+    let queried_parameters = parameters.clone();
+    engine.register_fn("parameter_exists", move |name: rhai::ImmutableString| queried_parameters.contains_key(name.as_str()));
+    // Parameters are immutable captured inputs. Cached trajectories are derived
+    // data, never script state; rebuilding/replaying a controller reconstructs
+    // the same cache without changing its observation/action contract.
+    let trajectories = Mutex::new(BTreeMap::<String,sim_domain_control::trajectory::Trajectory>::new());
+    engine.register_fn("trajectory_parameter_sample", move |name: rhai::ImmutableString, time_s: rhai::FLOAT| -> ScriptResult<Dynamic> {
+        let mut cache=trajectories.lock().map_err(|_| error("trajectory cache unavailable"))?;
+        if !cache.contains_key(name.as_str()) {
+            let input=parameters.get(name.as_str()).ok_or_else(|| error(format!("missing trajectory parameter `{name}`")))?;
+            let value: serde_json::Value=rhai::serde::from_dynamic(input)?;
+            let config=serde_json::from_value(value).map_err(|e| error(e.to_string()))?;
+            let trajectory=sim_domain_control::trajectory::Trajectory::new(config).map_err(error)?;
+            cache.insert(name.to_string(),trajectory);
+        }
+        let sample=cache[name.as_str()].sample(time_s).map_err(error)?;
+        rhai::serde::to_dynamic(sample).map_err(Into::into)
+    });
     engine.register_fn("seed", move || seed as rhai::INT);
+    engine.register_fn("net_displacement", |origin: Array, position: Array, axes: rhai::ImmutableString| -> ScriptResult<Dynamic> {
+        let point=|values:Array|->ScriptResult<[f64;3]> {
+            let value:serde_json::Value=rhai::serde::from_dynamic(&Dynamic::from(values))?;
+            serde_json::from_value(value).map_err(|e|error(e.to_string()))
+        };
+        let axes=serde_json::from_value(serde_json::Value::String(axes.to_string())).map_err(|e|error(e.to_string()))?;
+        let measured=sim_domain_control::displacement::measure(point(origin)?,point(position)?,axes).map_err(error)?;
+        rhai::serde::to_dynamic(measured).map_err(Into::into)
+    });
+    engine.register_fn("parameterized_trajectory", |template: Map, space: Map, values: Map| -> ScriptResult<Dynamic> {
+        let decode = |m: Map| -> ScriptResult<serde_json::Value> { Ok(rhai::serde::from_dynamic(&Dynamic::from(m))?) };
+        let template: sim_domain_control::motion_parameters::TrajectoryTemplate = serde_json::from_value(decode(template)?).map_err(|e| error(e.to_string()))?;
+        let space = serde_json::from_value(decode(space)?).map_err(|e| error(e.to_string()))?;
+        let values = serde_json::from_value(decode(values)?).map_err(|e| error(e.to_string()))?;
+        rhai::serde::to_dynamic(template.materialize(&space, &values).map_err(error)?).map_err(Into::into)
+    });
+    engine.register_fn("trajectory_sample", |parameters: Map, time_s: rhai::FLOAT| -> ScriptResult<Dynamic> {
+        // Deserialize through JSON so numeric integer literals retain their
+        // ordinary meaning for typed floating-point trajectory coordinates.
+        let value: serde_json::Value = rhai::serde::from_dynamic(&Dynamic::from(parameters))?;
+        let config = serde_json::from_value(value).map_err(|e| error(e.to_string()))?;
+        let trajectory = sim_domain_control::trajectory::Trajectory::new(config).map_err(error)?;
+        let sample = trajectory.sample(time_s).map_err(error)?;
+        rhai::serde::to_dynamic(sample).map_err(Into::into)
+    });
+    engine.register_fn("contact_phase_sample", |parameters: Map, time_s: rhai::FLOAT| -> ScriptResult<Dynamic> {
+        let value: serde_json::Value = rhai::serde::from_dynamic(&Dynamic::from(parameters))?;
+        let config = serde_json::from_value(value).map_err(|e| error(e.to_string()))?;
+        let motion = sim_domain_control::contact_phase::ContactPhaseMotion::new(config).map_err(error)?;
+        let sample = motion.sample(time_s).map_err(error)?;
+        rhai::serde::to_dynamic(sample).map_err(Into::into)
+    });
+    engine.register_fn("command_lease_update", |sequence: rhai::FLOAT, age_s: rhai::FLOAT,
+        received: rhai::FLOAT, mut parameters: Map| -> ScriptResult<Dynamic> {
+        for value in parameters.values_mut() {
+            if value.is::<rhai::INT>() { *value=Dynamic::from_float(value.clone_cast::<rhai::INT>() as rhai::FLOAT); }
+        }
+        let config=rhai::serde::from_dynamic(&Dynamic::from(parameters))?;
+        let next=sim_domain_control::command_lease::CommandLease::new(config).map_err(error)?
+            .update(sequence,age_s,received).map_err(error)?;
+        rhai::serde::to_dynamic(next).map_err(Into::into)
+    });
     // Same pure update and validation used by control.angle_integral's registry
     // adapter. Scripts retain ordinary numeric state, so reset/replay stays local.
     engine.register_fn("angle_integral_update", |bias: rhai::FLOAT, correction: rhai::FLOAT,
@@ -451,6 +521,13 @@ pub struct RhaiController {
     state: Map,
 }
 impl RhaiController {
+    /// Copy the current script state for diagnostics without advancing control.
+    /// Returns an error when the script stores values that JSON cannot represent.
+    pub fn state_json(&self) -> ScriptResult<serde_json::Value> {
+        rhai::serde::from_dynamic(&Dynamic::from(self.state.clone()))
+            .map_err(|e| error(e.to_string()))
+    }
+
     pub fn new(sources: Sources, parameters: Map) -> ScriptResult<Self> {
         Self::with_seed(sources, parameters, 0)
     }

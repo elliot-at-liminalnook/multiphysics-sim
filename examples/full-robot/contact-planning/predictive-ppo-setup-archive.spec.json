@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "files": [
+    "runs/speed-ppo-predictive-v1/baseline.json",
+    "runs/speed-ppo-predictive-v1/experiment.json",
+    "runs/speed-ppo-predictive-v1/initial-state.json",
+    "runs/speed-ppo-predictive-v1/iteration-000-start.json",
+    "runs/speed-ppo-predictive-v1/stopped.json",
+    "runs/speed-ppo-predictive-v1.stdout.log",
+    "runs/speed-ppo-predictive-v1.stderr.log",
+    "runs/speed-neural-predictive-507/ppo-experiment-v2.json",
+    "runs/ppo-baseline-guard-tests.log",
+    "runs/ppo-baseline-guard-build.log"
+  ],
+  "blob_directory": "examples/full-robot/contact-planning/speed-objective-evidence-files",
+  "manifest": "examples/full-robot/contact-planning/predictive-ppo-setup-evidence.json",
+  "terminal_evidence": {
+    "stopped_v1": "Session 64979 exited 143 after SIGTERM to PID 67674; no update completed. Its stationary baseline exposed a repeated heartbeat.",
+    "tests": "Baseline expectation and PPO rollout tests passed: 6 selected tests. Guarded release trainer build finished in 52.94s."
+  },
+  "scope": "Preserve failed experiment setup and corrected full-minute action schedule. Baseline verification applies only before training, not as a restriction on learned candidate speed or trajectories."
+}

@@ -363,3 +363,21 @@ def test_api_physical_routes(tmp_path):
         assert c.apply_identification(fp)["hip"]["backlash"] == 0.01
     finally:
         server.stop()
+
+
+def test_bounded_local_distance_grid_preserves_geometry_and_caps_allocation():
+    import trimesh
+    from robocad.physical import signed_distance_grid
+    box = trimesh.creation.box([.02, .02, .02])
+    meshes = [(box.vertices, box.faces)]
+    bounds = [[.008, -.001, -.001], [.012, .001, .001]]
+    grid = signed_distance_grid(meshes, .001, bounds_m=bounds, maximum_nodes=100)
+    values = np.asarray(grid['values']).reshape(grid['dims'])
+    for x, expected in [(0, -.002), (2, 0.), (4, .002)]:
+        assert values[x, 1, 1] == pytest.approx(expected, abs=1e-6)
+    for args in [dict(bounds_m=bounds), dict(bounds_m=bounds, maximum_nodes=10),
+                 dict(bounds_m=[[0,0,0],[0,1,1]], maximum_nodes=100)]:
+        with pytest.raises(ValueError):
+            signed_distance_grid(meshes, .001, **args)
+    with pytest.raises(ValueError, match='dimensions overflow'):
+        signed_distance_grid(meshes, 1., bounds_m=[[0,0,0],[float(np.iinfo(np.intp).max),1,1]], maximum_nodes=100)

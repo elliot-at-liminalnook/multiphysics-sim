@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "compiled184-human-1p25ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/compiled184-human-1p25ms",
+      "duration_s": 20,
+      "step_s": 0.00125,
+      "command_speed_m_s": 0.184176818657572,
+      "family": "compiled184",
+      "source": "runs/contact-planning/compiled184-screen",
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "scene_sha256": "705c15ef5486b3d439dc586b720a75cad8906a285beb4f0619104a8289a2bfac",
+      "config_sha256": "a43f7100ea4ffe65d630cd5d36974f84688902a1fd87e3f7d3d10d9f0d252841",
+      "actions_sha256": "5937ffe65504ff4781d54850f83197e35bf99b6d697a0e0153a187eff5bdd490"
+    },
+    {
+      "name": "compiled184-human-0p625ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/compiled184-human-0p625ms",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.184176818657572,
+      "family": "compiled184",
+      "source": "runs/contact-planning/compiled184-screen",
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "scene_sha256": "705c15ef5486b3d439dc586b720a75cad8906a285beb4f0619104a8289a2bfac",
+      "config_sha256": "cf34e1e47bc0da80e8b40a7a93b494f8e1ab03b89afafc5347085ca70dc68fbb",
+      "actions_sha256": "5937ffe65504ff4781d54850f83197e35bf99b6d697a0e0153a187eff5bdd490"
+    },
+    {
+      "name": "compiled184-dropout-0p625ms",
+      "kind": "dropout",
+      "prefix": "runs/contact-planning/compiled184-dropout-0p625ms",
+      "duration_s": 12,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.184176818657572,
+      "family": "compiled184",
+      "source": "runs/contact-planning/compiled184-screen",
+      "actions_source": "examples/full-robot/fast-wasd/dropout.actions.json",
+      "actions_source_sha256": "59ec22dc77e0e2c04fc6c212f2c1bc981d95ffaa047ca89cda05efe7943229a5",
+      "scene_sha256": "6b5e901f1ce7f04f05ed486f7b8f7049fb97d7489f7f1cab929d497376c4ea04",
+      "config_sha256": "f994bdf2be299c6c1e07a37a8e25ae4ec56d0956edf3c0ce7d1f79204b74dbeb",
+      "actions_sha256": "4e3fad76838664a5740b11b4bbd6d8e10cb04ec5dd8d2eb895f69788ebc7429b"
+    }
+  ]
+}

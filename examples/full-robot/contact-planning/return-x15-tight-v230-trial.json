@@ -1,0 +1,50 @@
+{
+  "prefix": "runs/contact-planning/return-x15-tight-v230",
+  "source": "runs/contact-planning/return-x15-tight-base",
+  "command_speed_m_s": 0.23,
+  "reference_nominal_speed_m_s": 0.211710264528351,
+  "clock_rate": 1.0863904048884685,
+  "physics_step_s": 0.000625,
+  "steady_reference_velocity_scale": 1.0863904048884685,
+  "steady_reference_acceleration_scale": 1.1802441118337306,
+  "windows_s": [
+    [
+      0.8,
+      3
+    ],
+    [
+      4.2,
+      6.4
+    ]
+  ],
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "sources": [
+    {
+      "path": "runs/contact-planning/return-x15-tight-base.scene.json",
+      "sha256": "14036219dbfacdd7adb9cb427cf114cb1621db1572dedc401cda27d813cde44e"
+    },
+    {
+      "path": "runs/contact-planning/return-x15-tight-base.config.json",
+      "sha256": "1f8f80756520a547b230df999d9c2a455d984b4df01ff0b44696587727c24ae4"
+    },
+    {
+      "path": "runs/contact-planning/return-x15-tight-base.actions.json",
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    }
+  ],
+  "files": [
+    {
+      "path": "runs/contact-planning/return-x15-tight-v230.scene.json",
+      "sha256": "36cf26c21a18bd741be0b5fd3220bd22c74811541debca5d4ca7bd935bdff848"
+    },
+    {
+      "path": "runs/contact-planning/return-x15-tight-v230.config.json",
+      "sha256": "1f8f80756520a547b230df999d9c2a455d984b4df01ff0b44696587727c24ae4"
+    },
+    {
+      "path": "runs/contact-planning/return-x15-tight-v230.actions.json",
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    }
+  ],
+  "scope": "Direct closed-loop speed experiment. Motion-command bounds and scheduled speed change, with optional explicit timestep refinement; CAD, world, actuator limits, joint bounds, controller code, reference and solver settings are preserved. Existing odd/even feedforward scales with clock rate; off-nominal loads and transitions remain approximate. Inherited failed reference audits remain explicit. No collision/slip or sustained qualification is implied."
+}

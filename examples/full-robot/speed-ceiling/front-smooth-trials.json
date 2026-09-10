@@ -1,0 +1,84 @@
+{
+  "batch": {
+    "id": "front-smooth",
+    "cases": [
+      {
+        "name": "smooth-front10-v150-human-fine",
+        "source": "runs/speed-ceiling/clearance/front10-flat-v150",
+        "speed": 0.15,
+        "step_s": 0.000625,
+        "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+        "actions_speed": 0.065
+      },
+      {
+        "name": "smooth-front12-v150-human-fine",
+        "source": "runs/speed-ceiling/clearance/front12-flat-v150",
+        "speed": 0.15,
+        "step_s": 0.000625,
+        "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+        "actions_speed": 0.065
+      },
+      {
+        "name": "smooth-front10-v165-human-fine",
+        "source": "runs/speed-ceiling/clearance/front10-flat-v150",
+        "speed": 0.165,
+        "step_s": 0.000625,
+        "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+        "actions_speed": 0.065
+      }
+    ]
+  },
+  "rows": [
+    {
+      "name": "smooth-front10-v150-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-front10-v150-human-fine",
+      "source": "runs/speed-ceiling/clearance/front10-flat-v150",
+      "source_scene_sha256": "da75fec67d48e25b001449cb4dbfb57b448b436d309fe54f283ccb70ad4a2249",
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "kind": "human",
+      "family": "smooth-front10-v150-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.15,
+      "scope": "Uniform periodic cubic B-spline control points from the existing 52 mm flat-return joint table. Shared Rust positions/derivatives; original physical model, initialization, phase/braking/lease and steering retained. Control-point hull bounds reference values, not CAD clearance. No load feedforward yet.",
+      "scene_sha256": "a699c50bd8764ed6524c5eaf9db7b0ec5a67af214d60546d525bdbf6fed31038",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "0d1963f8695e729f6ac4885c21bfb6b4b8437f813ffa02961f637e4902de9c50"
+    },
+    {
+      "name": "smooth-front12-v150-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-front12-v150-human-fine",
+      "source": "runs/speed-ceiling/clearance/front12-flat-v150",
+      "source_scene_sha256": "657d8bf494f39c4a788f85a1a9aff0bf5b37548ae7f6af098924b99b08ea286b",
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "kind": "human",
+      "family": "smooth-front12-v150-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.15,
+      "scope": "Uniform periodic cubic B-spline control points from the existing 52 mm flat-return joint table. Shared Rust positions/derivatives; original physical model, initialization, phase/braking/lease and steering retained. Control-point hull bounds reference values, not CAD clearance. No load feedforward yet.",
+      "scene_sha256": "e897b14d01db7143df0424e096f17c1a7bd9c8d0130c0c962010f7ae5aa64df0",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "0d1963f8695e729f6ac4885c21bfb6b4b8437f813ffa02961f637e4902de9c50"
+    },
+    {
+      "name": "smooth-front10-v165-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-front10-v165-human-fine",
+      "source": "runs/speed-ceiling/clearance/front10-flat-v150",
+      "source_scene_sha256": "da75fec67d48e25b001449cb4dbfb57b448b436d309fe54f283ccb70ad4a2249",
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "kind": "human",
+      "family": "smooth-front10-v165-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.165,
+      "scope": "Uniform periodic cubic B-spline control points from the existing 52 mm flat-return joint table. Shared Rust positions/derivatives; original physical model, initialization, phase/braking/lease and steering retained. Control-point hull bounds reference values, not CAD clearance. No load feedforward yet.",
+      "scene_sha256": "f9813305eb372b1b09b404618764c824769f6a03758c7d963e3fb864d380dc9f",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "8de0cc58a1e8bc16cdffa948792d1b88840f41e9de56838862a99706132d12c6"
+    }
+  ]
+}

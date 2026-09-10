@@ -1,0 +1,68 @@
+{
+  "base_commit": "84bca352a0a8735b51b8e20a0b9aee06dbda3b64",
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/derivative_audit.rs",
+      "bytes": 5767,
+      "sha256": "d5667f7096d85a4d6b1d2a24ec7a2917f46bffb927012d5517f3de756aa8bafe"
+    },
+    {
+      "path": "crates/sim-solve/src/least_squares.rs",
+      "bytes": 20070,
+      "sha256": "bee77d4fcce86e2afbf9c9fed1efeb9a1bae333948076042ade54b8be120db50"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47143,
+      "sha256": "0f9a8f1793e487fe40e29664c6a4fdb861cb3c88f0094db67829d00e461d3fa4"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 24498,
+      "sha256": "567dbc6c1bec0c89b041614929ed6e02c973074d7509c80dd10713b1a065c7e5"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_derivatives.rs",
+      "bytes": 4316,
+      "sha256": "04a9040cc7c404787982c539f3f80da13ed4fe1a9c79969424909a533be1b9e0"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_implicit.rs",
+      "bytes": 4316,
+      "sha256": "91d965593ae9ec02a33a24219b82f2e8dfa67249b41a4a85990e5f82c526e484"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 1654,
+      "sha256": "f051f7350d56cd829e42624ad677ad5a8d9f25c6fadea5741a7cef690d394883"
+    },
+    {
+      "path": "crates/sim-runtime/examples/compile_contact_implicit.rs",
+      "bytes": 4568,
+      "sha256": "d04fdb62fbdd4c0ee8b038bf4eb02461def69e70fc2595fb658ac8c2e296ce6f"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_derivatives",
+      "bytes": 8562824,
+      "sha256": "4bb0c64222fcc97b40a86d702609786a7ce12ebcd1a66fd83646de74e6d17400"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8625476,
+      "sha256": "febd3dbb6e48f3291bfcd95a4c653f4840ef093a6c3da511cb00c83ea1787303"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8571564,
+      "sha256": "b84f030d9430a8ed24d01f03d0375143524aee1d193f36085ce33244102e05ac"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_implicit",
+      "bytes": 8607420,
+      "sha256": "1473119ea61417b5ff7f10724fa50a642d364e9fc848232d4a6aba707b8e16c1"
+    }
+  ],
+  "scope": "Final build used for adaptive optimization and derivative replay. Earlier exploratory derivative diagnostics are independently reproduced by this final build; original intermediate binary identities were not recorded."
+}

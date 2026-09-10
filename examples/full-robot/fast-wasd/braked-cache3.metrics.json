@@ -1,0 +1,57 @@
+{
+  "name": "braked-cache3",
+  "step_s": 0.005,
+  "solver_options": {
+    "cached_mechanical_iteration_limit": 3
+  },
+  "source": "braked-5ms",
+  "speed_m_s": 0.065,
+  "completed": true,
+  "error": null,
+  "final_time_s": 20,
+  "windows": [
+    {
+      "start_s": 1.4,
+      "end_s": 6,
+      "directed_speed_mm_s": 62.84558378046675
+    },
+    {
+      "start_s": 11,
+      "end_s": 16,
+      "directed_speed_mm_s": 62.28972135360052
+    }
+  ],
+  "turn_rad": 0.21913569295164978,
+  "stop_drift_after_transfer_m": 0.000289267120791529,
+  "stop_travel_from_release_m": 0.01730353567224464,
+  "maximum_tilt_rad": 0.012225018360829688,
+  "total_horizontal_body_path_m": 0.9802659496747396,
+  "maximum_slip_ratio": 0.04359234209310519,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.023727061847642446,
+      "motion_to_total_body_path_ratio": 0.02420471899030593
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.042732088620443885,
+      "motion_to_total_body_path_ratio": 0.04359234209310519
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.023039970134229298,
+      "motion_to_total_body_path_ratio": 0.02350379521177304
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.02928799343588744,
+      "motion_to_total_body_path_ratio": 0.02987759948777721
+    }
+  ],
+  "native": {
+    "wall_s": 32.081380181,
+    "simulation_per_wall": 0.6234145752820471,
+    "p95_transition_s": 0.058665887
+  }
+}

@@ -1,0 +1,264 @@
+{
+  "base_commit": "58ec742fb7c9a6a1f99ada63979c26354adb7545",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-contact-timing-sources.tar.gz",
+    "bytes": 72497,
+    "sha256": "66bf117179378668ebc6cae4f565cee4ecfb77aa91cb95d751df744bd306f123"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 44438,
+      "sha256": "b9061158667c02e7ce356b4361a24322c547a3753085cd12bb1ba26d62c226f9"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 53039,
+      "sha256": "fd997df83b96cf40d1f8bc2ac5c289376e18957a5931348aa5a0c3f94506475e"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint_timing.rs",
+      "bytes": 10782,
+      "sha256": "daa735530b8e7f6a629a5684f9e8662147c5df92bf1e6a16cb11d30985f8211b"
+    },
+    {
+      "path": "crates/sim-runtime/examples/bind_joint_contact_timing.rs",
+      "bytes": 4895,
+      "sha256": "677ee62620c8c926c4a12674bba048800223194633890543432841217b56136b"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_force_jacobian.rs",
+      "bytes": 7100,
+      "sha256": "316c950fed966989b601f03a8596b8a0ae7bc8a1b982d240b9f01a337effc0fb"
+    },
+    {
+      "path": "crates/sim-runtime/examples/compile_contact_reference.rs",
+      "bytes": 13068,
+      "sha256": "1743339c3362804290c977af1b9209814fb80211c708975f91c17c1a3a5e85bc"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_joint_contact_timing.mjs",
+      "bytes": 3040,
+      "sha256": "18c985a4b170f321a5d1768b1bee2c86d5cdda431715a0b23ecc500164f526eb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/record_joint_contact_timing.mjs",
+      "bytes": 4235,
+      "sha256": "43ff8cd7b1cc52edf83b11d7930711d4c001513708db8ee4ab95993d67e2bf16"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/bind_joint_contact_timing",
+      "bytes": 9126964,
+      "sha256": "cafb80911d404d31d689dc1a5cf56cdc01f8fe2d8c01ed231a353c60e05777a0"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_force_jacobian",
+      "bytes": 9061716,
+      "sha256": "3fb9b7ae04111ccba744d00ecb95272e2d9e2c709a2c3b0fe7ba1d64cafe6497"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_reference",
+      "bytes": 8915556,
+      "sha256": "98f31cfd83e2626b1df685175c526461ce8231806451d84b179803a0bbe020d1"
+    }
+  ],
+  "unchanged_running_optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9049396,
+    "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+  },
+  "optimizer_build_reference": {
+    "path": "examples/full-robot/contact-planning/joint-derivative-build.json",
+    "bytes": 9942,
+    "sha256": "cb114b9de8a65e4275015d9f7bf6a58ace26d32b5f17a71b55ec35af4c7e2032"
+  },
+  "support_audit_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_support_space",
+    "bytes": 9020236,
+    "sha256": "c42e02bc8328c4b7503309084b3ebb83e0292db17ee17755bde6b181f0ac68a5"
+  },
+  "support_build_reference": {
+    "path": "examples/full-robot/contact-planning/joint-support-space-evidence.json",
+    "bytes": 4193,
+    "sha256": "846564e0dc3233147c58bba0063af0f867c910736aba70c96e51cce82666301f"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-height-speed.recipe.json",
+      "bytes": 146911,
+      "sha256": "d80afde8b5b8b0c12d0349c6328631a1f845e3645c936fd13f3c9c7cc67738ac"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-height-speed-initial.result.json",
+      "bytes": 1462309,
+      "sha256": "a3be7f5e80e9151f49c47c6efa1ed98c9cdff577dc031115ed33f9344c12a1bb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed-launch.json",
+      "bytes": 1443,
+      "sha256": "89c544b0c947e5a561e60dc80548f359ed8751aae6ae57408b2565731f71753b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-constant_mean-d0.75.result.json",
+      "bytes": 1154063,
+      "sha256": "a15dfdb57202ae9ef2f226f82c0f67c9d90eb3d1d09a2b6b59586e65cd092421"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.result.json",
+      "bytes": 1351966,
+      "sha256": "c63b0d93744669d5d458ab41e1aad113813a2c88ef64aab5d74e23e4decea236"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/CONTACT_TIMING.md",
+      "bytes": 5323,
+      "sha256": "40f7a348724dbb865b302978d61e3a80dbe614e22abeefc0d07f36386246f9e3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/README.md",
+      "bytes": 24737,
+      "sha256": "d460bc7de8ce189eaf7154801dc034cfc1b26d76bca7859735e7a5bcba9d18e7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed.log",
+      "bytes": 104417,
+      "sha256": "9eb77d61a4f0ccf8e40c23e1d67da129206b0f6a4eda54a6403a8b1cd658ebf9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed.result.json",
+      "bytes": 1332937,
+      "sha256": "b20641ced39f73b81be3ebb889482eed7eec690fede98759b57ce97e56951ee2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed.summary.json",
+      "bytes": 3727,
+      "sha256": "13d6b751d58de83e5bf0a0387760c75eac55e6f7094b8de41ee10d81755e46c5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing-build.log",
+      "bytes": 2767,
+      "sha256": "0247e8c35f83b85077b9a8685a2cfc285a4065215328003e4085118512545782"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing-checked-build.log",
+      "bytes": 165,
+      "sha256": "b28b95caa943d1b48eef434601528428ce29843f0eab42ce9d6f81575afead4d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing-final-tests.log",
+      "bytes": 1288,
+      "sha256": "5f2d6c9c3f4974dc9ffcd244c9756f0a1ac9d760a6c8f68c41d448fd0e1c3400"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing-jacobian.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing-jacobian.result.json",
+      "bytes": 1463147,
+      "sha256": "50621f80a9114326bf8ed38c8a05a35e2612e2dfb1c56fc21187e1517bfd86a1"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing-preparation.json",
+      "bytes": 3002,
+      "sha256": "4ac2101289582cc1c60e0925b731681f4291b7520060b55e0cc17bee1c8f7458"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing-tests.log",
+      "bytes": 3899,
+      "sha256": "9cc9212f855966589950f096c08fd535f60381292dc6f72774f604e0ca8e605f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing-verification.json",
+      "bytes": 1386,
+      "sha256": "14749824018937dd06701329d18d8472d2164c64f8038ecb0ad5db13e412dd9a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-contact-timing.result.json",
+      "bytes": 4550473,
+      "sha256": "cc34c14341b4e93b7c91f2eda13284aec50e292136a3db3ff5559f72cfdf0913"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-final-support-summary.json",
+      "bytes": 2627,
+      "sha256": "0c1f6ba56229f711e98b99465fc5eaed7bd0165e3809177f4a2d53ee4517f70e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-constant_mean-d0.75-final-audit.recipe.json",
+      "bytes": 63101,
+      "sha256": "d34382d63969cdb0c83e0bf21ed569832d4c103167bae2f2aee9a78d8b9e13e0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-constant_mean-d0.75-final-support.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-constant_mean-d0.75-final-support.result.json",
+      "bytes": 91797,
+      "sha256": "1e927bed3f7a540b0ba288a4a06110477c6acd8dd8ac3a3ec93aa4f297578d4a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75-final-audit.recipe.json",
+      "bytes": 63048,
+      "sha256": "3daeaae331c996ce8a08328e622211f6f091285b9c02da5396f736639569d371"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75-final-support.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75-final-support.result.json",
+      "bytes": 90785,
+      "sha256": "b712f5e5e15a3f024774a632711f9e50a8483a1f2f6c9028d89d233f8f7e4fd5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-phase-probe.recipe.json",
+      "bytes": 161211,
+      "sha256": "9ec26d993928bc72af324c5d0cab11d80ec21b4c22e17117d5d6a73ebe742e90"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed-initial.result.json",
+      "bytes": 2350785,
+      "sha256": "b59e36cbe1eb9af64adf8d3bfe13cd103d14b0fcea9427c5a9f679802dafda02"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+      "bytes": 161211,
+      "sha256": "e4c026ee7c0336c90d436e7b7802aeba3549a51e6652ccaaee54d6f0933f282e"
+    }
+  ],
+  "commands": [
+    "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration cargo test -p sim-runtime --lib contact_planning -- --nocapture",
+    "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration cargo build --release -p sim-runtime --example bind_joint_contact_timing --example audit_joint_force_jacobian --example compile_contact_reference",
+    "bind_joint_contact_timing runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-height-speed.recipe.json",
+    "node examples/full-robot/contact-planning/prepare_joint_contact_timing.mjs",
+    "audit_joint_force_jacobian runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-timed-phase-probe.recipe.json"
+  ],
+  "scope": "Shared contact-relative force-knot parameterization and focused analytic/CAD/derivative checks. Final body8 search and two instantaneous support audits retained. Two older optimizer processes continue separately and their live output/logs are excluded. The timed speed recipe is prepared but has no optimization result yet; no physical speed ceiling or new runtime/browser gait is claimed."
+}

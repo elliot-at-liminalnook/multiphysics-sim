@@ -41,7 +41,29 @@ mod band_tests {
 
 impl Sdf {
     pub fn is_valid(&self) -> bool {
-        self.dims.iter().all(|&d| d >= 2) && self.values.len() >= self.dims[0] * self.dims[1] * self.dims[2] && self.cell > 0.0
+        let count = self.dims.iter().try_fold(1usize, |n, d| n.checked_mul(*d));
+        if !self.dims.iter().all(|&d| d >= 2) || !self.cell.is_finite() || self.cell <= 0.0
+            || self.origin.iter().any(|v| !v.is_finite())
+            || count.is_none_or(|n| self.values.len() < n || self.values[..n].iter().any(|v| !v.is_finite())) {
+            return false;
+        }
+        let upper = self.upper();
+        if upper.iter().any(|v| !v.is_finite()) { return false; }
+        for (i, patch) in self.refinements.iter().enumerate() {
+            let g = &patch.grid;
+            if !g.is_valid() || g.cell >= self.cell || !patch.blend_width_m.is_finite()
+                || patch.blend_width_m <= 0.0 || (0..3).any(|k| {
+                    g.origin[k] < self.origin[k] || g.upper()[k] > upper[k]
+                        || 2.0 * patch.blend_width_m > g.upper()[k] - g.origin[k]
+                }) { return false; }
+            if self.refinements[..i].iter().any(|other| (0..3).all(|k| {
+                g.origin[k].max(other.grid.origin[k]) < g.upper()[k].min(other.grid.upper()[k])
+            })) { return false; }
+        }
+        true
+    }
+    fn upper(&self) -> [f64; 3] {
+        std::array::from_fn(|k| self.origin[k] + self.cell * self.dims[k].saturating_sub(1) as f64)
     }
     fn at(&self, ix: usize, iy: usize, iz: usize) -> f64 {
         self.values[(ix * self.dims[1] + iy) * self.dims[2] + iz]
@@ -50,6 +72,11 @@ impl Sdf {
     /// grid's frame. Outside the grid the distance grows with the distance
     /// to the grid box, so far points never register as contact.
     pub fn sample(&self, p: Vector3<f64>) -> (f64, Vector3<f64>) {
+        let (value, mut gradient) = self.sample_raw(p);
+        if gradient.norm() < 1e-12 { gradient = Vector3::z(); }
+        (value, gradient.normalize())
+    }
+    fn sample_raw(&self, p: Vector3<f64>) -> (f64, Vector3<f64>) {
         let n = [self.dims[0], self.dims[1], self.dims[2]];
         let f = [(p.x - self.origin[0]) / self.cell, (p.y - self.origin[1]) / self.cell, (p.z - self.origin[2]) / self.cell];
         let mut outside = 0.0;
@@ -78,11 +105,26 @@ impl Sdf {
         let gx = (lerp(lerp(v100 - v000, v110 - v010, t[1]), lerp(v101 - v001, v111 - v011, t[1]), t[2])) / self.cell;
         let gy = (lerp(lerp(v010 - v000, v110 - v100, t[0]), lerp(v011 - v001, v111 - v101, t[0]), t[2])) / self.cell;
         let gz = (lerp(lerp(v001 - v000, v101 - v100, t[0]), lerp(v011 - v010, v111 - v110, t[0]), t[1])) / self.cell;
-        let mut g = Vector3::new(gx, gy, gz);
-        if g.norm() < 1e-12 {
-            g = Vector3::z();
+        let value = value + outside.sqrt() * self.cell;
+        let g = Vector3::new(gx, gy, gz);
+        for patch in &self.refinements {
+            let mut distance = f64::INFINITY;
+            let mut direction = Vector3::zeros();
+            for k in 0..3 {
+                for (gap, sign) in [(p[k] - patch.grid.origin[k], 1.0), (patch.grid.upper()[k] - p[k], -1.0)] {
+                    if gap < distance { distance = gap; direction.fill(0.0); direction[k] = sign; }
+                }
+            }
+            if distance <= 0.0 { continue; }
+            let (fine, fine_gradient) = patch.grid.sample_raw(p);
+            if distance >= patch.blend_width_m { return (fine, fine_gradient); }
+            let u = distance / patch.blend_width_m;
+            let weight = u*u*u*(10.0 + u*(-15.0 + 6.0*u));
+            let slope = 30.0*u*u*(1.0-u)*(1.0-u) / patch.blend_width_m;
+            return (value + weight*(fine-value),
+                (1.0-weight)*g + weight*fine_gradient + (fine-value)*slope*direction);
         }
-        (value + outside.sqrt() * self.cell, g.normalize())
+        (value, g)
     }
 }
 
@@ -213,7 +255,7 @@ mod tests {
                 }
             }
         }
-        Sdf { origin: [origin; 3], cell, dims: [n; 3], values }
+        Sdf { origin: [origin; 3], cell, dims: [n; 3], values, refinements: vec![] }
     }
 
     #[test]
@@ -229,5 +271,45 @@ mod tests {
         let (d, _) = s.sample(Vector3::new(0.0, 0.0, 1.0));
         assert!(d > 0.5, "far {d}");
         let _ = g;
+    }
+}
+
+#[cfg(test)]
+mod refinement_tests {
+    use super::*;
+    use crate::model::SdfRefinement;
+    fn plane(origin: f64, cell:f64, n:usize, offset:f64)->Sdf {
+        let mut values=vec![];
+        for _ in 0..n {for _ in 0..n {for z in 0..n {values.push(origin+cell*z as f64+offset);}}}
+        Sdf {origin:[origin;3],cell,dims:[n;3],values,refinements:vec![]}
+    }
+    fn fixture()->Sdf {
+        let mut coarse=plane(-1.,1.,3,0.2);
+        coarse.refinements.push(SdfRefinement{grid:plane(-0.5,0.125,9,0.),blend_width_m:0.25});
+        coarse
+    }
+    #[test]
+    fn local_detail_preserves_parent_and_blends_value_and_gradient() {
+        let field=fixture();assert!(field.is_valid());
+        assert!((field.sample(Vector3::new(0.,0.,0.1)).0-0.1).abs()<1e-12);
+        assert!((field.sample(Vector3::new(-0.75,0.,0.1)).0-0.3).abs()<1e-12);
+        for x in [-0.5,-0.5+1e-7,-0.375,-0.25-1e-7,-0.25] {
+            let p=Vector3::new(x,0.,0.1);let (_,g)=field.sample_raw(p);
+            let numeric=Vector3::from_fn(|axis,_|{let mut a=p;let mut b=p;a[axis]-=1e-6;b[axis]+=1e-6;(field.sample_raw(b).0-field.sample_raw(a).0)/2e-6});
+            assert!((g-numeric).norm()<1e-7,"x={x}, raw={g:?}, numeric={numeric:?}");
+            assert!((field.sample(p).1-numeric.normalize()).norm()<1e-7);
+        }
+        assert!((field.sample(Vector3::new(-0.5+1e-7,0.,0.1)).0-0.3).abs()<1e-12);
+    }
+    #[test]
+    fn invalid_or_overlapping_detail_cannot_disable_geometry_silently() {
+        let mut field=fixture();field.refinements[0].grid.values[0]=f64::NAN;assert!(!field.is_valid());
+        let mut field=fixture();field.refinements[0].blend_width_m=0.;assert!(!field.is_valid());
+        let mut field=fixture();field.refinements[0].grid.origin[0]=-2.;assert!(!field.is_valid());
+        let mut field=fixture();field.refinements.push(field.refinements[0].clone());assert!(!field.is_valid());
+        let mut field=fixture();field.dims=[usize::MAX;3];assert!(!field.is_valid());
+        let json=serde_json::json!({"links":[{"name":"bad","collision":{"sdf":{"dims":[2,2,2],"cell":0.1,"values":[]}}}],"joints":[]});
+        let model=serde_json::from_value(json).unwrap();
+        assert!(crate::Articulated::new(std::sync::Arc::new(model),&Default::default()).err().unwrap().contains("invalid CAD distance grid"));
     }
 }

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "source_plan": "opposite-pair-clear-flight.plan.json",
+  "cycle_s": 0.8,
+  "commanded_speed_range_m_s": [
+    -0.025,
+    0.025
+  ],
+  "yaw_rate_range_rad_s": [
+    -0.03,
+    0.03
+  ],
+  "yaw_jacobian_ratios": [
+    1.4595327959382136,
+    1.4344693676972815,
+    1.4635131105179076,
+    1.4471904013554624
+  ],
+  "scope": "Rhai phase controller through shared Rust actuator/physics runtime. Commands set signed phase rate; stopping and reversing wait for an all-stance phase. Stance hip offsets integrate yaw using initial CAD Jacobian ratios and relax during swing. Walking turns only; no lateral motion or turn-in-place claim. No ideal world-position/foot/contact feedback consumed. Experimental, not stability certified."
+}

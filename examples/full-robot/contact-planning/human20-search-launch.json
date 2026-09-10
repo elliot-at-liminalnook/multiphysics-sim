@@ -1,0 +1,474 @@
+{
+  "version": 1,
+  "recorded_at": "2026-09-09T21:46:12.567Z",
+  "code_and_spec": [
+    {
+      "path": "examples/full-robot/contact-planning/run_bayesian_controller_screen.mjs",
+      "sha256": "550ca2244ca6f95b537b25ab6ab63b9967ed736b2684cdadade66ca197c227c9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/audit_contact_controller.mjs",
+      "sha256": "92406e65764b5c6940913300cb5549e047c9a1cb0751fa0917ac4e288e8e1c1a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/run_controller_validation.mjs",
+      "sha256": "31a19bddfbbd978a272a72d1c325bb775dbb088db0e09aa79efba4466900243c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/run_controller_validation-v1.mjs",
+      "sha256": "79716f82d6d5700a746e89c63c66a7bfb3d157bbad79966775ce9f0dde363f39"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/run_bayesian_controller_screen-human20-v1.mjs",
+      "sha256": "1a1a3b71c327fe3d46e59897c2f595b17ef9c36dce4bd7448462963e5d5bdace"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-human20-pilot-v2.spec.json",
+      "sha256": "a3af41d84db9b9c3409d016c5d979d92b18999435cd34ef6fb4486471f85dfc4"
+    }
+  ],
+  "cancelled_launch": {
+    "recorded_at": "2026-09-09T21:41:22.220Z",
+    "processes": [
+      {
+        "pid": 60322,
+        "ppid": 78522,
+        "command": "node examples/full-robot/contact-planning/run_bayesian_controller_screen.mjs examples/full-robot/contact-planning/bayesian-human20-pilot.spec.json"
+      },
+      {
+        "pid": 60413,
+        "ppid": 60322,
+        "command": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment runs/bayesian-human20-pilot/evaluation-002.scene.json runs/bayesian-human20-pilot/evaluation-002.config.json examples/full-robot/fast-wasd/task.json runs/bayesian-human20-pilot/evaluation-002.actions.json"
+      }
+    ],
+    "reason": "New human20 lift windows omitted turning. Stop before selector fitting; retain completed and partial trials. Correct to historical [1.4,9.8] and [11,15.8] in fresh context.",
+    "action": "SIGTERM to dedicated experiment process tree; cancellation is not a physical failure."
+  },
+  "cancelled_context": {
+    "version": 1,
+    "inputs": [
+      {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.scene.json",
+        "sha256": "754f8f48c09d21d5adf8719a700ef8cb2baf96718abde1aa7091631652708227"
+      },
+      {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.config.json",
+        "sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d"
+      },
+      {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.actions.json",
+        "sha256": "d6551f759e34b356d6c9ae5b87237bf28eb7e4781bdf7ec09e2b96395fe5de1b"
+      },
+      {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.native.json",
+        "sha256": "b49a164f2af1ba37b8267c9e5c3e55828757b1f3843f0bb19954c691224b7d67"
+      },
+      {
+        "path": "examples/full-robot/fast-wasd/task.json",
+        "sha256": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026"
+      }
+    ],
+    "code": [
+      {
+        "path": "examples/full-robot/contact-planning/analyze_controller_screen.mjs",
+        "sha256": "b79e15446d2a79b9ce68b7bc0775107d6682edac68a6760d6bed48d393370fa2"
+      },
+      {
+        "path": "examples/full-robot/speed-ceiling/analyze_validation.mjs",
+        "sha256": "05d0eed02fda12890ba96528c26ae370f90fbaf8efe1afaef81fafb073883529"
+      },
+      {
+        "path": "examples/full-robot/contact-planning/audit_contact_controller.mjs",
+        "sha256": "34c52d0905eae2264bb9a48760c4b858925c1a859521f758dea84db28e22dd94"
+      },
+      {
+        "path": "examples/interactive/recorded_contact_motion.mjs",
+        "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/run_bayesian_controller_screen.mjs",
+        "sha256": "1a1a3b71c327fe3d46e59897c2f595b17ef9c36dce4bd7448462963e5d5bdace"
+      }
+    ],
+    "binaries": [
+      {
+        "path": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+        "sha256": "5d0fcb5263d8053c2ba951dba7fc3b6a80e6a6c1bb5badfe206fe3ae60c812ec"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+        "sha256": "f364502f7563b6221c2736ec4b990c66e6c4194d59c8bd6b36aedcf7762c97ce"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/replay_policy_state",
+        "sha256": "706554e0900a2a552e967d485be88049347a573b98a7d2841257da8cf31600b9"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_lift",
+        "sha256": "241130984bd5f2bc987c7c0d9d413e360f7bb387a3b9fb832d7e4480809eecf5"
+      }
+    ],
+    "problem": {
+      "parameters": [
+        {
+          "name": "command_speed",
+          "unit": "m/s",
+          "bounds": [
+            0.06,
+            0.12
+          ]
+        },
+        {
+          "name": "tracking_gain",
+          "unit": "1",
+          "bounds": [
+            0,
+            1.5
+          ]
+        },
+        {
+          "name": "velocity_lead_factor",
+          "unit": "1",
+          "bounds": [
+            0.5,
+            1.5
+          ]
+        }
+      ],
+      "objective_name": "negative minimum measured forward/reverse speed",
+      "objective_unit": "m/s",
+      "constraints": [
+        {
+          "name": "slip ratio / 0.05 - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "speed tracking relative error / 0.05 - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "heading error / 0.1 rad - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "tilt / 0.1 rad - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "settling duration / (0.8 s + existing 1e-9 s roundoff guard) - 1; unsettled gate failure = 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "late drift / 0.003 m - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "failed fraction of all complete planned swing checks",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "sampled interlink overlap / 0.0001 m; exact zero required",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "absolute turn error from 0.24 rad / 0.06 rad - 1",
+          "unit": "1",
+          "scale": 1
+        }
+      ]
+    },
+    "seed": 0,
+    "scope": "Same detailed runtime, CAD, physical limits, reference motion and declared screen8/human20 gates. Three explicit policy/task parameters vary. Sampled geometry, no qualification beyond the selected schedule.",
+    "evaluation_profile": "human20",
+    "context_id": "7924f9eeea5e8aeb65d7c6f3ca80a26c9118d91fc46bd8d07d26d0fafc06d005"
+  },
+  "cancelled_trial_records": [
+    {
+      "path": "runs/bayesian-human20-pilot/evaluation-000.evaluation.json",
+      "record": {
+        "observation": {
+          "context_id": "7924f9eeea5e8aeb65d7c6f3ca80a26c9118d91fc46bd8d07d26d0fafc06d005",
+          "values": [
+            0.06780678488063342,
+            0.5,
+            1
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.06664697744440759,
+            "residuals": [
+              -0.09756468541666108,
+              -0.6579081464288419,
+              -0.8277385894300785,
+              -0.3800260039065906,
+              -0.5500000005625008,
+              -0.96181818417178,
+              0,
+              0,
+              -0.7457920228305539
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot/evaluation-000.evaluation.json"
+        },
+        "method": "baseline-replay",
+        "metrics": {
+          "speeds_m_s": [
+            0.06664697744440759,
+            0.06760759351975497
+          ],
+          "slip": 0.04512176572916695,
+          "control": true,
+          "planned_lifts": 64,
+          "passed_lifts": 64,
+          "overlap_m": 0,
+          "turn_rad": 0.22474752136983323
+        },
+        "wall_s": 82.050161553,
+        "native_exit_code": 0,
+        "capture_sha256": "3972326c74502bf4b41e2b6799a6742dc086969e4db41a681c2a61e7eac5d999"
+      }
+    },
+    {
+      "path": "runs/bayesian-human20-pilot/evaluation-001.evaluation.json",
+      "record": {
+        "observation": {
+          "context_id": "7924f9eeea5e8aeb65d7c6f3ca80a26c9118d91fc46bd8d07d26d0fafc06d005",
+          "values": [
+            0.060428777976477305,
+            0.9274310355407382,
+            1.4099168133440918
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.05909091095820988,
+            "residuals": [
+              -0.2703114019069224,
+              -0.5572086469171347,
+              -0.5618080510089417,
+              -0.3952504426641239,
+              -0.6500000004374986,
+              -0.9932235379163253,
+              0.017241379310344862,
+              0,
+              -0.992123613755599
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot/evaluation-001.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.05909091095820988,
+            0.05917955650760105
+          ],
+          "slip": 0.036484429904653885,
+          "control": true,
+          "planned_lifts": 58,
+          "passed_lifts": 57,
+          "overlap_m": 0,
+          "turn_rad": 0.24047258317466405
+        },
+        "wall_s": 77.215221499,
+        "native_exit_code": 0,
+        "capture_sha256": "1d5d8d18273f642fc0c5a4f813a624233e29609bf1fe288ebfe93fe3d14f2ea7"
+      }
+    }
+  ],
+  "active_context": {
+    "version": 1,
+    "inputs": [
+      {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.scene.json",
+        "sha256": "754f8f48c09d21d5adf8719a700ef8cb2baf96718abde1aa7091631652708227"
+      },
+      {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.config.json",
+        "sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d"
+      },
+      {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.actions.json",
+        "sha256": "d6551f759e34b356d6c9ae5b87237bf28eb7e4781bdf7ec09e2b96395fe5de1b"
+      },
+      {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.native.json",
+        "sha256": "b49a164f2af1ba37b8267c9e5c3e55828757b1f3843f0bb19954c691224b7d67"
+      },
+      {
+        "path": "examples/full-robot/fast-wasd/task.json",
+        "sha256": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026"
+      }
+    ],
+    "code": [
+      {
+        "path": "examples/full-robot/contact-planning/analyze_controller_screen.mjs",
+        "sha256": "b79e15446d2a79b9ce68b7bc0775107d6682edac68a6760d6bed48d393370fa2"
+      },
+      {
+        "path": "examples/full-robot/speed-ceiling/analyze_validation.mjs",
+        "sha256": "05d0eed02fda12890ba96528c26ae370f90fbaf8efe1afaef81fafb073883529"
+      },
+      {
+        "path": "examples/full-robot/contact-planning/audit_contact_controller.mjs",
+        "sha256": "92406e65764b5c6940913300cb5549e047c9a1cb0751fa0917ac4e288e8e1c1a"
+      },
+      {
+        "path": "examples/interactive/recorded_contact_motion.mjs",
+        "sha256": "86e55532b8ffaba3fd05a88c1fa0b269ba06ba0fa1aa2f13a5254df86068cd93"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/run_bayesian_controller_screen.mjs",
+        "sha256": "550ca2244ca6f95b537b25ab6ab63b9967ed736b2684cdadade66ca197c227c9"
+      }
+    ],
+    "binaries": [
+      {
+        "path": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+        "sha256": "5d0fcb5263d8053c2ba951dba7fc3b6a80e6a6c1bb5badfe206fe3ae60c812ec"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+        "sha256": "f364502f7563b6221c2736ec4b990c66e6c4194d59c8bd6b36aedcf7762c97ce"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/replay_policy_state",
+        "sha256": "706554e0900a2a552e967d485be88049347a573b98a7d2841257da8cf31600b9"
+      },
+      {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_lift",
+        "sha256": "241130984bd5f2bc987c7c0d9d413e360f7bb387a3b9fb832d7e4480809eecf5"
+      }
+    ],
+    "problem": {
+      "parameters": [
+        {
+          "name": "command_speed",
+          "unit": "m/s",
+          "bounds": [
+            0.06,
+            0.12
+          ]
+        },
+        {
+          "name": "tracking_gain",
+          "unit": "1",
+          "bounds": [
+            0,
+            1.5
+          ]
+        },
+        {
+          "name": "velocity_lead_factor",
+          "unit": "1",
+          "bounds": [
+            0.5,
+            1.5
+          ]
+        }
+      ],
+      "objective_name": "negative minimum measured forward/reverse speed",
+      "objective_unit": "m/s",
+      "constraints": [
+        {
+          "name": "slip ratio / 0.05 - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "speed tracking relative error / 0.05 - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "heading error / 0.1 rad - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "tilt / 0.1 rad - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "settling duration / (0.8 s + existing 1e-9 s roundoff guard) - 1; unsettled gate failure = 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "late drift / 0.003 m - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "failed fraction of all complete planned swing checks",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "sampled interlink overlap / 0.0001 m; exact zero required",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "absolute turn error from 0.24 rad / 0.06 rad - 1",
+          "unit": "1",
+          "scale": 1
+        }
+      ]
+    },
+    "seed": 0,
+    "scope": "Same detailed runtime, CAD, physical limits, reference motion and declared screen8/human20 gates. Three explicit policy/task parameters vary. Sampled geometry, no qualification beyond the selected schedule.",
+    "evaluation_profile": "human20",
+    "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41"
+  },
+  "baseline": {
+    "observation": {
+      "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+      "values": [
+        0.06780678488063342,
+        0.5,
+        1
+      ],
+      "outcome": {
+        "status": "complete",
+        "objective": -0.06664697744440759,
+        "residuals": [
+          -0.09756468541666108,
+          -0.6579081464288419,
+          -0.8277385894300785,
+          -0.3800260039065906,
+          -0.5500000005625008,
+          -0.96181818417178,
+          0,
+          0,
+          -0.7457920228305539
+        ]
+      },
+      "evidence": "runs/bayesian-human20-pilot-v2/evaluation-000.evaluation.json"
+    },
+    "method": "baseline-replay",
+    "metrics": {
+      "speeds_m_s": [
+        0.06664697744440759,
+        0.06760759351975497
+      ],
+      "slip": 0.04512176572916695,
+      "control": true,
+      "planned_lifts": 78,
+      "passed_lifts": 78,
+      "overlap_m": 0,
+      "turn_rad": 0.22474752136983323
+    },
+    "wall_s": 84.27907880199999,
+    "native_exit_code": 0,
+    "capture_sha256": "3fd4d71b50576b4078c387ccf454388b2c1f06aebfddaf02d4c7a10dbde5e415"
+  },
+  "scope": "Cancelled incomplete-coverage experiment is excluded from training; partial third episode retained without a score. Corrected full human-schedule baseline replay and original turn-inclusive gates pass. Active outcomes beyond baseline and remaining cancelled raw files are not archived here. No maximum-speed or new qualified-gait claim."
+}

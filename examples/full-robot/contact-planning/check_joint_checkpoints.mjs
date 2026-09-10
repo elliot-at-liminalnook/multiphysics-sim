@@ -1,0 +1,58 @@
+// Experiment orchestration and byte comparisons only; physics stays in Rust.
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {isDeepStrictEqual} from 'node:util';
+import {spawnSync} from 'node:child_process';
+import crypto from 'node:crypto';
+const d='examples/full-robot/contact-planning/';
+const root='runs/joint-checkpoints/verification';
+fs.mkdirSync(root); // Exclusive output ownership.
+const old='/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt';
+const current='/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_checkpoint';
+const scene='runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json';
+const markers='examples/full-robot/gait-exploration/workspace-markers.json';
+const library='runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib';
+const search=d+'joint-checkpoint-smoke.search.json';
+const id=path=>{const b=fs.readFileSync(path);return {path,bytes:b.length,sha256:crypto.createHash('sha256').update(b).digest('hex')};};
+const executions=[];
+function run(name,binary,recipe,checkpoint,expected=0){
+  const args=[scene,markers,d+recipe,library,search,...(checkpoint?[checkpoint]:[])];
+  const stdout=root+'/'+name+'.result.json',stderr=root+'/'+name+'.log';
+  const out=fs.openSync(stdout,'wx'),err=fs.openSync(stderr,'wx');
+  const r=spawnSync(binary,args,{env:{...process.env,VECLIB_MAXIMUM_THREADS:'1',OMP_NUM_THREADS:'1'},stdio:['ignore',out,err]});
+  fs.closeSync(out);fs.closeSync(err);
+  executions.push({name,binary:id(binary),args,exit_code:r.status,signal:r.signal,stdout:id(stdout),stderr:id(stderr)});
+  assert(!r.error,`${name}: launch failure`);
+  assert.equal(r.status,expected,`${name}: inspect ${stderr}`);
+  return fs.readFileSync(stdout);
+}
+const recipe='joint-conic-feasible-speed.recipe.json';
+const control=run('control',old,recipe);
+const disabled=run('disabled',current,recipe);
+const enabled=run('enabled',current,recipe,root+'/feasible');
+assert(control.equals(disabled),'legacy and new disabled outputs differ');
+assert(control.equals(enabled),'checkpoint enabled changes terminal numerical output');
+assert(control.equals(fs.readFileSync(d+'joint-checkpoint-old.result.json')),'prior smoke baseline differs');
+const result=JSON.parse(enabled);
+const best=JSON.parse(fs.readFileSync(root+'/feasible/best_sampled_feasible.json'));
+const least=JSON.parse(fs.readFileSync(root+'/feasible/least_violation.json'));
+assert(best.report.sampled_feasible,'best snapshot must pass its included sampled gates');
+assert(isDeepStrictEqual(best.recipe.candidate,result.best_sampled_feasible),'snapshot candidate differs from library best');
+const original=JSON.parse(fs.readFileSync(d+recipe));
+assert(isDeepStrictEqual(best.recipe.robot,original.robot),'snapshot changes declared physics/gates');
+assert(isDeepStrictEqual(best.recipe.variables,original.variables),'snapshot changes decision bounds');
+assert(isDeepStrictEqual(best.report,least.report),'feasible smoke selections differ');
+const before=fs.readdirSync(root+'/feasible').sort().map(n=>id(root+'/feasible/'+n));
+run('existing_directory',current,recipe,root+'/feasible',1);
+const after=fs.readdirSync(root+'/feasible').sort().map(n=>id(root+'/feasible/'+n));
+assert(isDeepStrictEqual(before,after),'existing checkpoint directory changed');
+assert(fs.readFileSync(root+'/existing_directory.log','utf8').includes('new checkpoint directory required'));
+const infeasible=JSON.parse(run('infeasible',current,'joint-servo-command.recipe.json',root+'/infeasible'));
+assert.equal(infeasible.best_sampled_feasible,null);
+assert(!fs.existsSync(root+'/infeasible/best_sampled_feasible.json'),'infeasible run fabricated feasible snapshot');
+const infeasibleLeast=JSON.parse(fs.readFileSync(root+'/infeasible/least_violation.json'));
+assert.equal(infeasibleLeast.report.sampled_feasible,false);
+assert(infeasibleLeast.report.constraints.inequalities.some(v=>v>0));
+const report={version:1,executions,checks:{legacy_disabled_enabled_byte_equal:true,prior_baseline_byte_equal:true,best_candidate_matches_library:true,declared_model_and_bounds_retained:true,existing_directory_preserved:true,infeasible_has_no_best_snapshot:true},sampled_speed_m_s:best.report.motion_report.speed_m_s,model_evaluations:result.model_evaluations,scope:'Four-model observer smoke/replay and exclusive-output checks. Sampled-feasible fixture has legacy gates without nominal command limits; no dense/runtime or speed improvement claim.'};
+fs.writeFileSync(d+'joint-checkpoint-verification.json',JSON.stringify(report,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({checks:report.checks,sampled_speed_m_s:report.sampled_speed_m_s,model_evaluations:report.model_evaluations}));

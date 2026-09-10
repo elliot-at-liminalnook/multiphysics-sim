@@ -296,17 +296,14 @@ pub fn plan_marker_motion_with_inspections(
                 return Err(format!("authored limit {} violated at {t}s", d.name));
             }
         }
-        if let Some(c) = art
-            .evaluate(&motion.generalized)
-            .contacts
-            .iter()
-            .find(|c| c.other.is_some() && c.penetration > 0.0)
-        {
+        let links = art.evaluate_kinematics_only(&motion.generalized);
+        if let Some(c) = art.inter_link_penetrations(&links)?.first() {
             return Err(format!(
-                "internal contact at {t}s: {} / {}, penetration {} m",
+                "internal contact at {t}s: {} / {}, penetration {} m; independent coordinates {:?}",
                 art.links[c.link].name,
-                art.links[c.other.unwrap()].name,
-                c.penetration
+                art.links[c.other].name,
+                c.penetration_m,
+                map.independent_joint_indices().iter().map(|i|motion.generalized.q[*i]).collect::<Vec<_>>()
             ));
         }
         let actual = world_points(&motion.generalized);

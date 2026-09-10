@@ -1,0 +1,40 @@
+[
+  {
+    "name": "front10-flat-v150",
+    "hip": 0,
+    "speed": 0.15,
+    "reference_speed": 0.065,
+    "lift": 8,
+    "lift_by_leg_mm": [
+      8,
+      10,
+      8,
+      8
+    ],
+    "gain": 0.5,
+    "hold_lookahead_s": 0.01,
+    "source_scene": "runs/speed-ceiling/hip-refinement/refined.scene.json",
+    "return_start_s": 0.04,
+    "return_end_s": 0.36,
+    "return_ramp_fraction": 0.25
+  },
+  {
+    "name": "front12-flat-v150",
+    "hip": 0,
+    "speed": 0.15,
+    "reference_speed": 0.065,
+    "lift": 8,
+    "lift_by_leg_mm": [
+      8,
+      12,
+      8,
+      8
+    ],
+    "gain": 0.5,
+    "hold_lookahead_s": 0.01,
+    "source_scene": "runs/speed-ceiling/hip-refinement/refined.scene.json",
+    "return_start_s": 0.04,
+    "return_end_s": 0.36,
+    "return_ramp_fraction": 0.25
+  }
+]

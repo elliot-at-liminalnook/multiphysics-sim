@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "base_commit": "a06d747d",
+  "prior_goal_turn": "progress: completed independent-command forecasts and300s comparison changed the baseline choice",
+  "observed_at_utc": "2026-09-10T05:33:53.249Z",
+  "processes": [
+    {
+      "name": "search",
+      "pid": 73892,
+      "match": "run_affine_speed_search.mjs runs/affine-speed300-inputs/experiment.json",
+      "observed_command": "73892 05:53 node examples/interactive/run_affine_speed_search.mjs runs/affine-speed300-inputs/experiment.json"
+    },
+    {
+      "name": "baseline",
+      "pid": 73895,
+      "match": "affine-speed300-v1/evaluation-000/scene.json",
+      "observed_command": "73895 05:51 runs/evaluate_policy-reference-v1 runs/affine-speed300-v1/evaluation-000/scene.json runs/affine-speed300-inputs/config.json runs/affine-speed300-inputs/task.json runs/affine-speed300-v1/evaluation-000/actions.json runs/affine-speed300-v1/evaluation-000/result.json 1901"
+    },
+    {
+      "name": "fine",
+      "pid": 73953,
+      "match": "affine-speed300-baseline-fidelity-v1/fine.config.json",
+      "observed_command": "73953 02:40 runs/evaluate_policy-reference-v1 runs/affine-speed300-baseline-fidelity-v1/scene.json runs/affine-speed300-baseline-fidelity-v1/fine.config.json runs/affine-speed300-baseline-fidelity-v1/task.json runs/affine-speed300-baseline-fidelity-v1/actions.json runs/affine-speed300-baseline-fidelity-v1/fine.json 1901"
+    },
+    {
+      "name": "contact",
+      "pid": 73954,
+      "match": "affine-speed300-baseline-fidelity-v1/contact.scene.json",
+      "observed_command": "73954 02:40 runs/evaluate_policy-reference-v1 runs/affine-speed300-baseline-fidelity-v1/contact.scene.json runs/affine-speed300-baseline-fidelity-v1/config.json runs/affine-speed300-baseline-fidelity-v1/task.json runs/affine-speed300-baseline-fidelity-v1/actions.json runs/affine-speed300-baseline-fidelity-v1/contact.json 1901"
+    }
+  ],
+  "parity": {
+    "version": 1,
+    "frames": 101,
+    "physical_fields": [
+      "poses",
+      "joint_positions",
+      "joint_velocities",
+      "servo_targets_rad",
+      "contacts",
+      "motor_states",
+      "motor_readings",
+      "contact_history"
+    ],
+    "applied_command_packets": 100,
+    "files": [
+      {
+        "path": "runs/bayesian-sustained60-507/evaluation-033.native.json",
+        "sha256": "aa996321352d1741c5faefd4488aa1bbfec9a94adbba9cd3bd96835e4e71e2ef"
+      },
+      {
+        "path": "runs/affine-speed2-parity/native.json",
+        "sha256": "554e01e2ce369abdac7efc72970b31f3b9f3b5ffba83bc0f6d8bbd83663ca687"
+      }
+    ],
+    "scope": "Identity affine reference and removal of unused zero-output actor/forecast computations reproduce every sampled physical field and applied command through2s. This is an initialization parity check, not a300s speed result. The expanded search separately requires the original300s baseline score before selecting any candidates."
+  },
+  "rust_tests": {
+    "new_affine": 1,
+    "existing_trajectory": 13
+  },
+  "workflow_checks": {
+    "initial_smoke_evaluations": 3,
+    "extended_selection_evaluations": 14,
+    "selector_training_rows": 9,
+    "selector_excluded_failed_rows": 4,
+    "selected_short_speed_m_s": 0.1783914558468777,
+    "short_scores_not_promoted": true
+  },
+  "files": [
+    {
+      "path": "runs/affine-speed300-inputs/inputs.json",
+      "sha256": "3a0385d63cf4d559c33b51e1d6ddfd01344ce45f9dc8d922418bff0293062aca"
+    },
+    {
+      "path": "runs/affine-speed300-inputs/experiment.json",
+      "sha256": "632a141ae9b156579afcb52dff60222bcbb088bf7798c0c0b6fe70d1f26ef5c4"
+    },
+    {
+      "path": "runs/affine-speed300-v1/context.json",
+      "sha256": "f94d661b31859ea7b87c94899b1fe9c1c2a327857dd7f303ef2aba577045e0ea"
+    },
+    {
+      "path": "runs/affine-speed300-baseline-fidelity-v1/inputs.json",
+      "sha256": "6f4b2be5d731baa618ca939304bcae258830314187feb9850193039b2a1c60f4"
+    },
+    {
+      "path": "runs/affine-speed2-smoke-v1/result.json",
+      "sha256": "9f73757086a46b57aa7345b35a575ba76550c4483a62abce4214ee34ecbf2428"
+    },
+    {
+      "path": "runs/affine-speed2-gp-smoke-v1/result.json",
+      "sha256": "15a6948bde518b3716925b7327aff6142190de994e6d46ea423020f726cfb71b"
+    },
+    {
+      "path": "runs/affine-speed2-selected-v1/report.json",
+      "sha256": "fd70001610ff9b08791a56702073238d5953eda403990b2b86e571c26923e73a"
+    },
+    {
+      "path": "runs/trajectory-affine-tests.log",
+      "sha256": "12aebd4424f55f8d76727f9b47b1f1e454384bd05c4d69674f4693aafb734c84"
+    },
+    {
+      "path": "runs/trajectory-affine-regression-tests.log",
+      "sha256": "5175af204fd55e62869ae2718b3d3b889e6d43d2734e68e066f05427d93c7948"
+    }
+  ],
+  "scope": "Expanded reference amplitudes and separate lead factors are implemented and physically exercised through shared Rust components. The production300s search and baseline fidelity runs are confirmed live here; no new sustained-speed result or physical maximum is claimed. Pending outputs are excluded from the evidence snapshot."
+}

@@ -1,0 +1,261 @@
+{
+  "scope": "Exact-state AL continuation and matched diagonal-scaling comparison at fixed recorded displacement. Actual sampled physics, slip and collision gates remain external to solver termination. No new measured speed, runtime controller promotion or physical maximum claim.",
+  "parent_dense": {
+    "samples": 512,
+    "force_error_n": 0.21096433782191965,
+    "moment_error_nm": 0.12375686048455584,
+    "minimum_torque_margin_nm": 0.22030154227508664,
+    "maximum_point_penetration_m": 0.00010870503993826164,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.0472907443956062,
+    "within_sampled_slip_limit": true,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0
+  },
+  "parent_dense_wrench_peaks": [
+    {
+      "component": "fx",
+      "value": 0.21096433782191965,
+      "time_s": 0.52189416010303
+    },
+    {
+      "component": "fy",
+      "value": 0.1744828139142777,
+      "time_s": 0.2590141387178001
+    },
+    {
+      "component": "fz",
+      "value": -0.16996298247270647,
+      "time_s": 0.5566871041098986
+    },
+    {
+      "component": "mx",
+      "value": -0.06244350085469574,
+      "time_s": 0.22679844982255132
+    },
+    {
+      "component": "my",
+      "value": 0.12375686048455584,
+      "time_s": 0.5270486703262698
+    },
+    {
+      "component": "mz",
+      "value": -0.028543522775987776,
+      "time_s": 0.31313649606181804
+    }
+  ],
+  "rows": [
+    {
+      "name": "warm68",
+      "scaling_exponent": 0.25,
+      "coarse": {
+        "samples": 128,
+        "force_error_n": 0.12933661867924112,
+        "moment_error_nm": 0.07561186631126003,
+        "minimum_torque_margin_nm": 0.2779063447321787,
+        "maximum_point_penetration_m": 0.00010790608265104362,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.04610658851341238,
+        "within_sampled_slip_limit": true,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.12933661867924112,
+        "moment_error_nm": 0.07561186631126003,
+        "minimum_torque_margin_nm": 0.2779063447321787,
+        "maximum_point_penetration_m": 0.00010795163896792914,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.04741499422648852,
+        "within_sampled_slip_limit": true,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0
+      },
+      "dense_wrench_peaks": [
+        {
+          "component": "fx",
+          "value": 0.1271282508312311,
+          "time_s": 0.5283372978820797
+        },
+        {
+          "component": "fy",
+          "value": 0.1108330418961774,
+          "time_s": 0.2590141387178001
+        },
+        {
+          "component": "fz",
+          "value": -0.12933661867924112,
+          "time_s": 0.5566871041098986
+        },
+        {
+          "component": "mx",
+          "value": -0.05242406858802393,
+          "time_s": 0.2590141387178001
+        },
+        {
+          "component": "my",
+          "value": 0.07561186631126003,
+          "time_s": 0.5257600427704598
+        },
+        {
+          "component": "mz",
+          "value": -0.03695962219731269,
+          "time_s": 0.31184786850600804
+        }
+      ],
+      "planned_projected_45deg_rate_m_s": 0.06706268161408929,
+      "search": {
+        "termination": "outer_iteration_limit",
+        "evaluations": 68971,
+        "maximum_violation": 2.7805933155630016,
+        "within_constraint_tolerance": false,
+        "history": [
+          {
+            "complementarity": 29.03542641586072,
+            "iteration": 1,
+            "maximum_violation": 3.4831433131316407,
+            "objective_cost": 5.373599251457071,
+            "penalty": 1,
+            "shifted_constraint_norm": 3.4831433131316407,
+            "inner_termination": "iteration_limit",
+            "inner_evaluations": 34483,
+            "last_inner": {
+              "accepted": true,
+              "cost": 222.60733929032594,
+              "damping": 7743.524375139591,
+              "evaluations": 34483,
+              "iteration": 29,
+              "projected_gradient": 571907.2796366089
+            }
+          },
+          {
+            "complementarity": 100.49597284575788,
+            "iteration": 2,
+            "maximum_violation": 2.7805933155630016,
+            "objective_cost": 5.8048200935556205,
+            "penalty": 10,
+            "shifted_constraint_norm": 2.7805933155630016,
+            "inner_termination": "iteration_limit",
+            "inner_evaluations": 34485,
+            "last_inner": {
+              "accepted": true,
+              "cost": 425.9811001885954,
+              "damping": 3186.635545324935,
+              "evaluations": 34485,
+              "iteration": 29,
+              "projected_gradient": 930384.1395310231
+            }
+          }
+        ],
+        "next_penalty": 100
+      }
+    },
+    {
+      "name": "warm68-jacobi",
+      "scaling_exponent": 0.5,
+      "coarse": {
+        "samples": 128,
+        "force_error_n": 0.09809453195352258,
+        "moment_error_nm": 0.03992315999223768,
+        "minimum_torque_margin_nm": 0.2842650834509279,
+        "maximum_point_penetration_m": 0.00010831918106191107,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.06960176496150708,
+        "within_sampled_slip_limit": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.11968962535121308,
+        "moment_error_nm": 0.04378332640984991,
+        "minimum_torque_margin_nm": 0.2753805832648994,
+        "maximum_point_penetration_m": 0.00010833255423736698,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.07157730874319201,
+        "within_sampled_slip_limit": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0
+      },
+      "dense_wrench_peaks": [
+        {
+          "component": "fx",
+          "value": -0.11968962535121308,
+          "time_s": 0.28607531738980907
+        },
+        {
+          "component": "fy",
+          "value": 0.09809453195352258,
+          "time_s": 0.23195296004579113
+        },
+        {
+          "component": "fz",
+          "value": 0.09209547199266949,
+          "time_s": 0.23968472538065083
+        },
+        {
+          "component": "mx",
+          "value": -0.04378332640984991,
+          "time_s": 0.23968472538065083
+        },
+        {
+          "component": "my",
+          "value": 0.03422938876438805,
+          "time_s": 0.28607531738980907
+        },
+        {
+          "component": "mz",
+          "value": 0.030945933409396206,
+          "time_s": 0.03994745423010847
+        }
+      ],
+      "planned_projected_45deg_rate_m_s": 0.06706268161408929,
+      "search": {
+        "termination": "outer_iteration_limit",
+        "evaluations": 68958,
+        "maximum_violation": 0.9961579996118839,
+        "within_constraint_tolerance": false,
+        "history": [
+          {
+            "complementarity": 5.488439153554494,
+            "iteration": 1,
+            "maximum_violation": 1.3037109842007584,
+            "objective_cost": 20.918696593031317,
+            "penalty": 1,
+            "shifted_constraint_norm": 3.0581450301852957,
+            "inner_termination": "iteration_limit",
+            "inner_evaluations": 34478,
+            "last_inner": {
+              "accepted": true,
+              "cost": 96.76390539298791,
+              "damping": 0.025811747917131974,
+              "evaluations": 34478,
+              "iteration": 29,
+              "projected_gradient": 313481.4362142633
+            }
+          },
+          {
+            "complementarity": 11.5031654866856,
+            "iteration": 2,
+            "maximum_violation": 0.9961579996118839,
+            "objective_cost": 19.74426257436576,
+            "penalty": 10,
+            "shifted_constraint_norm": 0.9961579996118839,
+            "inner_termination": "iteration_limit",
+            "inner_evaluations": 34477,
+            "last_inner": {
+              "accepted": true,
+              "cost": 130.92806901512893,
+              "damping": 0.0077435243751395886,
+              "evaluations": 34477,
+              "iteration": 29,
+              "projected_gradient": 1376484.264884524
+            }
+          }
+        ],
+        "next_penalty": 10
+      }
+    }
+  ]
+}

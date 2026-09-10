@@ -1,0 +1,317 @@
+{
+  "source": "smooth-dynamic-v150-scale1-human-fine",
+  "source_capture_sha256": "199082f726fbba0b33e0820d36c7be451eb2e0653e29cafffa726abb7fc6002d",
+  "rows": [
+    {
+      "label": "forward",
+      "window_s": [
+        2,
+        2.4
+      ],
+      "period_s": 0.00125,
+      "frames": 321,
+      "original_endpoints_exact": 21,
+      "window_capture_sha256": "17eae0e0a20ec6952ae96399510a0e68ffc30c91fdacc878ad989ab02170d451",
+      "audit_sha256": "b2a972536df7e7d72d7d5321f306cf44c03d4cfbe3daf8f5297f74cce3940dcb",
+      "reports": [
+        {
+          "report": {
+            "failed_clearance_samples": 27,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 24,
+            "longest_qualifying_span_s": 0.08625000000000016,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.00669637778284965,
+            "qualifying_start_s": 2.02,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 2.14,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+X | Sliding foot crosshead": 1,
+              "-X | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 2.02,
+            "swing_link": "-Y | Sliding foot crosshead"
+          }
+        },
+        {
+          "report": {
+            "failed_clearance_samples": 64,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 12,
+            "longest_qualifying_span_s": 0.020000000000000018,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.0035006597804694284,
+            "qualifying_start_s": 2.1925,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 2.3000000000000003,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+Y | Sliding foot crosshead": 1,
+              "-Y | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 2.18,
+            "swing_link": "+X | Sliding foot crosshead"
+          }
+        },
+        {
+          "report": {
+            "failed_clearance_samples": 28,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 24,
+            "longest_qualifying_span_s": 0.08499999999999996,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.006623027697794326,
+            "qualifying_start_s": 2.02,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 2.14,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+X | Sliding foot crosshead": 1,
+              "-X | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 2.02,
+            "swing_link": "+Y | Sliding foot crosshead"
+          }
+        },
+        {
+          "report": {
+            "failed_clearance_samples": 19,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 10,
+            "longest_qualifying_span_s": 0.09624999999999995,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.005399435615876413,
+            "qualifying_start_s": 2.1875,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 2.3000000000000003,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+Y | Sliding foot crosshead": 1,
+              "-Y | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 2.18,
+            "swing_link": "-X | Sliding foot crosshead"
+          }
+        }
+      ],
+      "inter_link_geometry_audit": {
+        "frames": 321,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    },
+    {
+      "label": "turn",
+      "window_s": [
+        6.5,
+        7
+      ],
+      "period_s": 0.00125,
+      "frames": 401,
+      "original_endpoints_exact": 26,
+      "window_capture_sha256": "31b81d209502d21c0184d788917f5248c6c90d50c0c0208f98d8afcc57feedaf",
+      "audit_sha256": "4bcfb137449548ad6cea1087d5b04ff3ffb27a073868b1d33ddb10548316cdc6",
+      "reports": [
+        {
+          "report": {
+            "failed_clearance_samples": 24,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 16,
+            "longest_qualifying_span_s": 0.08999999999999986,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.0051522063145165164,
+            "qualifying_start_s": 6.5200000000000005,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 6.640000000000001,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+X | Sliding foot crosshead": 1,
+              "-X | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 6.5200000000000005,
+            "swing_link": "-Y | Sliding foot crosshead"
+          }
+        },
+        {
+          "report": {
+            "failed_clearance_samples": 18,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 9,
+            "longest_qualifying_span_s": 0.09750000000000014,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.006198459360353348,
+            "qualifying_start_s": 6.86625,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 6.98,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+X | Sliding foot crosshead": 1,
+              "-X | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 6.86,
+            "swing_link": "-Y | Sliding foot crosshead"
+          }
+        },
+        {
+          "report": {
+            "failed_clearance_samples": 73,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 25,
+            "longest_qualifying_span_s": 0.01750000000000007,
+            "minimum_swing_force_n": 0,
+            "passed": false,
+            "peak_clearance_m": 0.0046373478253003975,
+            "qualifying_start_s": 6.7,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 6.82,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+Y | Sliding foot crosshead": 1,
+              "-Y | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 6.7,
+            "swing_link": "+X | Sliding foot crosshead"
+          }
+        },
+        {
+          "report": {
+            "failed_clearance_samples": 24,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 15,
+            "longest_qualifying_span_s": 0.08999999999999986,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.005360649878992818,
+            "qualifying_start_s": 6.5200000000000005,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 6.640000000000001,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+X | Sliding foot crosshead": 1,
+              "-X | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 6.5200000000000005,
+            "swing_link": "+Y | Sliding foot crosshead"
+          }
+        },
+        {
+          "report": {
+            "failed_clearance_samples": 18,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 10,
+            "longest_qualifying_span_s": 0.09750000000000014,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.006323156708426481,
+            "qualifying_start_s": 6.86625,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 6.98,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+X | Sliding foot crosshead": 1,
+              "-X | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 6.86,
+            "swing_link": "+Y | Sliding foot crosshead"
+          }
+        },
+        {
+          "report": {
+            "failed_clearance_samples": 26,
+            "failed_support_samples": 0,
+            "failed_unloading_samples": 23,
+            "longest_qualifying_span_s": 0.08750000000000036,
+            "minimum_swing_force_n": 0,
+            "passed": true,
+            "peak_clearance_m": 0.007401747233775069,
+            "qualifying_start_s": 6.7,
+            "samples": 97,
+            "scope": "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate."
+          },
+          "requirements": {
+            "end_s": 6.82,
+            "maximum_sample_gap_s": 0.001251,
+            "maximum_swing_force_n": 1,
+            "minimum_clearance_m": 0.002,
+            "minimum_support_forces_n": {
+              "+Y | Sliding foot crosshead": 1,
+              "-Y | Sliding foot crosshead": 1
+            },
+            "qualifying_duration_s": 0.019999999,
+            "start_s": 6.7,
+            "swing_link": "-X | Sliding foot crosshead"
+          }
+        }
+      ],
+      "inter_link_geometry_audit": {
+        "frames": 401,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      }
+    }
+  ],
+  "scope": "Bounded replay of unchanged config/seed/recorded inputs with 1.25 ms endpoint observations. Every common 20 ms physical/policy endpoint must match exactly, excluding wall time and host-boundary policy_inputs (next action is prequeued in replay). Original lift intervals, clearance, unloading and support requirements retained; only the allowed sample gap is tightened. These two windows do not qualify every lift or full episode."
+}

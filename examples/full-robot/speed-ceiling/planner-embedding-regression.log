@@ -1,0 +1,30 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+    Finished `release` profile [optimized] target(s) in 39.30s
+     Running tests/embedding.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/embedding-d712f3a071929c4f)
+
+running 23 tests
+test geometric_toggle_rejects_a_chart_that_loses_rank ... ok
+test invalid_charts_and_inconsistent_closure_are_rejected_without_mutating_seed ... ok
+test floating_base_motion_is_retained_and_original_rows_close ... ok
+test analytic_slider_crank_rejects_wrong_axes_topology_and_toggle ... ok
+test bounded_plane_placement_matches_analytic_slider_crank_and_rejects_unreachable_target ... ok
+test analytic_slider_crank_handles_offset_guide_and_opposite_coupler_axis ... ok
+test full_point_placement_matches_rotated_analytic_slider_and_rejects_lateral_target ... ok
+test point_motion_placement_matches_analytic_slider_with_moving_rotated_base ... ok
+test qr_chart_matches_analytic_linkage_under_base_rotation_and_translation ... ok
+test analytic_positions_preserve_branches_floating_dynamics_and_rank_checks ... ok
+test rejected_probe_geometry_restarts_with_exact_derivatives ... ok
+test point_jacobians_match_closed_linkage_position_differences_with_rotated_base ... ok
+test reduced_dynamics_matches_full_constrained_solve_under_external_load ... ok
+test blocked_factorization_preserves_closed_motion_across_poses_and_toggle_rejection ... ok
+test nonlinear_slider_crank_matches_geometry_tangent_and_curvature ... ok
+test placement_preserves_base_pose_and_respects_dependent_joint_limits ... ok
+test analytic_slider_crank_matches_independent_formula_and_iterative_chart ... ok
+test exact_probe_base_reuse_preserves_every_fixed_and_rotating_linkage_state ... ok
+test sdirk_stages_preserve_fixed_and_rotating_closed_linkages ... ok
+test linearized_derivative_probes_preserve_exact_fixed_and_rotating_linkage_endpoints ... ok
+test temporal_velocity_guesses_preserve_closed_fixed_and_rotating_linkages ... ok
+test implicit_qr_linkage_refines_toward_independent_explicit_reference ... ok
+test integrated_linkage_preserves_closure_and_refines_energy_error ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.98s

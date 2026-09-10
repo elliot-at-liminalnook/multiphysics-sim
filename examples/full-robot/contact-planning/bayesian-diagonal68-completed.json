@@ -1,0 +1,2676 @@
+{
+  "version": 1,
+  "result": {
+    "problem": {
+      "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+      "parameters": [
+        {
+          "name": "command_speed",
+          "unit": "m/s",
+          "bounds": [
+            0.06,
+            0.16
+          ]
+        },
+        {
+          "name": "tracking_gain",
+          "unit": "1",
+          "bounds": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "velocity_lead_factor",
+          "unit": "1",
+          "bounds": [
+            0.5,
+            1.5
+          ]
+        }
+      ],
+      "objective_name": "negative minimum measured forward/reverse speed",
+      "objective_unit": "m/s",
+      "constraints": [
+        {
+          "name": "slip ratio / 0.05 - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "speed tracking relative error / 0.05 - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "heading error / 0.1 rad - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "tilt / 0.1 rad - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "settling duration / (0.8 s + existing 1e-9 s roundoff guard) - 1; unsettled gate failure = 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "late drift / 0.003 m - 1",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "failed fraction of all complete planned swing checks",
+          "unit": "1",
+          "scale": 1
+        },
+        {
+          "name": "sampled interlink overlap / 0.0001 m; exact zero required",
+          "unit": "1",
+          "scale": 1
+        }
+      ]
+    },
+    "common": [
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.06780678488063342,
+          0.5,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.06424498241627889,
+          "residuals": [
+            -0.5851893453608901,
+            0.05057405999258169,
+            -0.10531225748639794,
+            -0.3892313536872638,
+            -0.4000000007500001,
+            -0.9789227481569157,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-000.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.060714629960795505,
+          0.6182873570271589,
+          1.4099168133440918
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.05844593835238641,
+          "residuals": [
+            -0.6181275657315636,
+            -0.25267053101566095,
+            -0.3915096514403881,
+            -0.3937692607797346,
+            -0.5250000005937501,
+            -0.9917990823474481,
+            0.050000000000000044,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-001.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.11073008006169771,
+          0.2793038275669038,
+          1.1103573441869343
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.10952949365226222,
+          "residuals": [
+            0.4792778520866907,
+            -0.7831508098311626,
+            -0.7405108532519791,
+            -0.3534280730924889,
+            -0.500000000625,
+            -0.9436720180252881,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-002.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.15849834112245537,
+          0.6902410253030458,
+          0.8217371770648858
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.15575769510277496,
+          "residuals": [
+            1.467261559627218,
+            -0.3673366032334293,
+            -0.7507290544149268,
+            -0.35727532851825894,
+            -0.5250000005937501,
+            -0.989020944215538,
+            0.10344827586206895,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-003.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.08755384435544727,
+          0.426409228931391,
+          1.0688525004080054
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08483040232327187,
+          "residuals": [
+            0.6581294041328867,
+            -0.3778817932610936,
+            -0.41218562278384185,
+            -0.35669216870788323,
+            -0.4250000007187501,
+            -0.9611672986304118,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-004.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.07092009496439254,
+          0.8257201301809396,
+          0.9444879780284072
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.06670576602952047,
+          "residuals": [
+            -0.642727435158466,
+            0.18847244550024822,
+            0.04738871265540756,
+            -0.3863793405039695,
+            -0.5500000005625001,
+            -0.9915415905005186,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-005.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.1338566288927302,
+          0.15490529408800172,
+          1.4621136967324202
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13721363793051722,
+          "residuals": [
+            1.929007240058934,
+            -0.06819955519373888,
+            -0.9384362604232666,
+            -0.3196905305326777,
+            -0.6000000005000008,
+            -0.9708854279870698,
+            0.020000000000000018,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-006.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.12022528115605474,
+          0.5486804571371274,
+          0.6638196781772892
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.11799813802430845,
+          "residuals": [
+            0.6764534625230987,
+            -0.6295050241794944,
+            -0.9292985409086416,
+            -0.3645297774491867,
+            -0.6500000004375008,
+            -0.9566040707022607,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-007.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.14509152899250924,
+          0.3409514362856373,
+          0.582349874850368
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13882093697992023,
+          "residuals": [
+            1.394632847018069,
+            -0.13563637296664677,
+            -0.9170245798894272,
+            -0.3595526100862695,
+            -0.5500000005625008,
+            -0.9419518454557944,
+            0.17307692307692313,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-008.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.07718808151302678,
+          0.9845844938443556,
+          0.6710109311964589
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07435306387150231,
+          "residuals": [
+            -0.16611152665597984,
+            -0.26542606424386683,
+            -0.5152658330523292,
+            -0.3832099835623577,
+            -0.7250000003437498,
+            -0.9907990705525105,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-009.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.13936044959462554,
+          0.055057405748898516,
+          1.2621067481817283
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.1386055924409969,
+          "residuals": [
+            1.0970131077015117,
+            -0.3277440780975951,
+            -0.7058366383253574,
+            -0.3275282297296558,
+            -0.5750000005312501,
+            -0.9311553929953937,
+            0.038461538461538436,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-010.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.09333369132382699,
+          0.8377469071381747,
+          1.2249898898696578
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08806638687849559,
+          "residuals": [
+            1.1435192975940534,
+            0.1287037661579591,
+            -0.45865133456694507,
+            -0.34567206641917503,
+            -0.6000000004999997,
+            -0.9885405210830804,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-011.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.10419221092754155,
+          0.1786859029583815,
+          0.853940975856992
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.10170778672224921,
+          "residuals": [
+            0.005027316170460816,
+            -0.5231074985019593,
+            -0.8858106922861262,
+            -0.3738686361420347,
+            -0.6500000004374997,
+            -0.9794026884190329,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-012.evaluation.json"
+      }
+    ],
+    "adaptive": [
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.06780678488063342,
+          0.5,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.06424498241627889,
+          "residuals": [
+            -0.5851893453608901,
+            0.05057405999258169,
+            -0.10531225748639794,
+            -0.3892313536872638,
+            -0.4000000007500001,
+            -0.9789227481569157,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-000.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.060714629960795505,
+          0.6182873570271589,
+          1.4099168133440918
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.05844593835238641,
+          "residuals": [
+            -0.6181275657315636,
+            -0.25267053101566095,
+            -0.3915096514403881,
+            -0.3937692607797346,
+            -0.5250000005937501,
+            -0.9917990823474481,
+            0.050000000000000044,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-001.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.11073008006169771,
+          0.2793038275669038,
+          1.1103573441869343
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.10952949365226222,
+          "residuals": [
+            0.4792778520866907,
+            -0.7831508098311626,
+            -0.7405108532519791,
+            -0.3534280730924889,
+            -0.500000000625,
+            -0.9436720180252881,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-002.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.15849834112245537,
+          0.6902410253030458,
+          0.8217371770648858
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.15575769510277496,
+          "residuals": [
+            1.467261559627218,
+            -0.3673366032334293,
+            -0.7507290544149268,
+            -0.35727532851825894,
+            -0.5250000005937501,
+            -0.989020944215538,
+            0.10344827586206895,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-003.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.08755384435544727,
+          0.426409228931391,
+          1.0688525004080054
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08483040232327187,
+          "residuals": [
+            0.6581294041328867,
+            -0.3778817932610936,
+            -0.41218562278384185,
+            -0.35669216870788323,
+            -0.4250000007187501,
+            -0.9611672986304118,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-004.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.07092009496439254,
+          0.8257201301809396,
+          0.9444879780284072
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.06670576602952047,
+          "residuals": [
+            -0.642727435158466,
+            0.18847244550024822,
+            0.04738871265540756,
+            -0.3863793405039695,
+            -0.5500000005625001,
+            -0.9915415905005186,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-005.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.1338566288927302,
+          0.15490529408800172,
+          1.4621136967324202
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13721363793051722,
+          "residuals": [
+            1.929007240058934,
+            -0.06819955519373888,
+            -0.9384362604232666,
+            -0.3196905305326777,
+            -0.6000000005000008,
+            -0.9708854279870698,
+            0.020000000000000018,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-006.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.12022528115605474,
+          0.5486804571371274,
+          0.6638196781772892
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.11799813802430845,
+          "residuals": [
+            0.6764534625230987,
+            -0.6295050241794944,
+            -0.9292985409086416,
+            -0.3645297774491867,
+            -0.6500000004375008,
+            -0.9566040707022607,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-007.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.14509152899250924,
+          0.3409514362856373,
+          0.582349874850368
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13882093697992023,
+          "residuals": [
+            1.394632847018069,
+            -0.13563637296664677,
+            -0.9170245798894272,
+            -0.3595526100862695,
+            -0.5500000005625008,
+            -0.9419518454557944,
+            0.17307692307692313,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-008.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.07718808151302678,
+          0.9845844938443556,
+          0.6710109311964589
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07435306387150231,
+          "residuals": [
+            -0.16611152665597984,
+            -0.26542606424386683,
+            -0.5152658330523292,
+            -0.3832099835623577,
+            -0.7250000003437498,
+            -0.9907990705525105,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-009.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.13936044959462554,
+          0.055057405748898516,
+          1.2621067481817283
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.1386055924409969,
+          "residuals": [
+            1.0970131077015117,
+            -0.3277440780975951,
+            -0.7058366383253574,
+            -0.3275282297296558,
+            -0.5750000005312501,
+            -0.9311553929953937,
+            0.038461538461538436,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-010.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.09333369132382699,
+          0.8377469071381747,
+          1.2249898898696578
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08806638687849559,
+          "residuals": [
+            1.1435192975940534,
+            0.1287037661579591,
+            -0.45865133456694507,
+            -0.34567206641917503,
+            -0.6000000004999997,
+            -0.9885405210830804,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-011.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.10419221092754155,
+          0.1786859029583815,
+          0.853940975856992
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.10170778672224921,
+          "residuals": [
+            0.005027316170460816,
+            -0.5231074985019593,
+            -0.8858106922861262,
+            -0.3738686361420347,
+            -0.6500000004374997,
+            -0.9794026884190329,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-012.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.06840743368966598,
+          1.236905659041633e-18,
+          0.9584314777651962
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.06443042428859887,
+          "residuals": [
+            -0.2597974548891676,
+            0.1627418795182498,
+            0.0072664982334365025,
+            -0.3852364376189442,
+            -0.47500000065625014,
+            -0.9746581547431159,
+            0.04166666666666663,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-013.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.077378625719447,
+          0.8742731786451633,
+          0.7009296838254906
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07498636706956573,
+          "residuals": [
+            -0.3328418603342478,
+            -0.381674557375852,
+            -0.495400790206727,
+            -0.380040770711637,
+            -0.7000000003749998,
+            -0.9896215004914818,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-014.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.08066666945377293,
+          0.8287517290480901,
+          0.7444164899847656
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07929618214137592,
+          "residuals": [
+            -0.40179612711515755,
+            -0.660209768996999,
+            -0.6623362492303542,
+            -0.37208346709891027,
+            -0.5750000005312501,
+            -0.9898887464781155,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-015.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.08472553311501574,
+          0.7270685042186239,
+          0.8411583220535956
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08288753491032728,
+          "residuals": [
+            0.23737133024610668,
+            -0.5661288546409362,
+            -0.5925548625240218,
+            -0.3680409539153967,
+            -0.6750000004062497,
+            -0.9865880137934105,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-016.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.081084256920507,
+          0.9720374431270512,
+          0.6931952489135502
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07982557179924632,
+          "residuals": [
+            -0.18401554451574031,
+            -0.6895364972032327,
+            -0.6964858367272604,
+            -0.3725099612312226,
+            -0.5750000005312501,
+            -0.9893131767399678,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-017.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.0811657091320938,
+          1,
+          0.6636802885216102
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08007326971332479,
+          "residuals": [
+            -0.26158256370683874,
+            -0.7308125733267214,
+            -0.6810013993999386,
+            -0.37329618600917314,
+            -0.5750000005312501,
+            -0.9877438275660724,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-018.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.08058917771905823,
+          0.7377768905568175,
+          0.8948079421174947
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07917688826283932,
+          "residuals": [
+            -0.4391923322241763,
+            -0.6495089052422678,
+            -0.6714775558513252,
+            -0.3707283050157616,
+            -0.5500000005625001,
+            -0.9896610867845603,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-019.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.08098650409329544,
+          0.6844718522781694,
+          0.9206095199191162
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07975851181906106,
+          "residuals": [
+            -0.3087267957886374,
+            -0.696741503295474,
+            -0.6763904257324,
+            -0.3691089321558293,
+            -0.5500000005625001,
+            -0.9883640475523974,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-020.evaluation.json"
+      }
+    ],
+    "control": [
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.06780678488063342,
+          0.5,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.06424498241627889,
+          "residuals": [
+            -0.5851893453608901,
+            0.05057405999258169,
+            -0.10531225748639794,
+            -0.3892313536872638,
+            -0.4000000007500001,
+            -0.9789227481569157,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-000.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.060714629960795505,
+          0.6182873570271589,
+          1.4099168133440918
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.05844593835238641,
+          "residuals": [
+            -0.6181275657315636,
+            -0.25267053101566095,
+            -0.3915096514403881,
+            -0.3937692607797346,
+            -0.5250000005937501,
+            -0.9917990823474481,
+            0.050000000000000044,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-001.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.11073008006169771,
+          0.2793038275669038,
+          1.1103573441869343
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.10952949365226222,
+          "residuals": [
+            0.4792778520866907,
+            -0.7831508098311626,
+            -0.7405108532519791,
+            -0.3534280730924889,
+            -0.500000000625,
+            -0.9436720180252881,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-002.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.15849834112245537,
+          0.6902410253030458,
+          0.8217371770648858
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.15575769510277496,
+          "residuals": [
+            1.467261559627218,
+            -0.3673366032334293,
+            -0.7507290544149268,
+            -0.35727532851825894,
+            -0.5250000005937501,
+            -0.989020944215538,
+            0.10344827586206895,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-003.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.08755384435544727,
+          0.426409228931391,
+          1.0688525004080054
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08483040232327187,
+          "residuals": [
+            0.6581294041328867,
+            -0.3778817932610936,
+            -0.41218562278384185,
+            -0.35669216870788323,
+            -0.4250000007187501,
+            -0.9611672986304118,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-004.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.07092009496439254,
+          0.8257201301809396,
+          0.9444879780284072
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.06670576602952047,
+          "residuals": [
+            -0.642727435158466,
+            0.18847244550024822,
+            0.04738871265540756,
+            -0.3863793405039695,
+            -0.5500000005625001,
+            -0.9915415905005186,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-005.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.1338566288927302,
+          0.15490529408800172,
+          1.4621136967324202
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13721363793051722,
+          "residuals": [
+            1.929007240058934,
+            -0.06819955519373888,
+            -0.9384362604232666,
+            -0.3196905305326777,
+            -0.6000000005000008,
+            -0.9708854279870698,
+            0.020000000000000018,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-006.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.12022528115605474,
+          0.5486804571371274,
+          0.6638196781772892
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.11799813802430845,
+          "residuals": [
+            0.6764534625230987,
+            -0.6295050241794944,
+            -0.9292985409086416,
+            -0.3645297774491867,
+            -0.6500000004375008,
+            -0.9566040707022607,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-007.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.14509152899250924,
+          0.3409514362856373,
+          0.582349874850368
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13882093697992023,
+          "residuals": [
+            1.394632847018069,
+            -0.13563637296664677,
+            -0.9170245798894272,
+            -0.3595526100862695,
+            -0.5500000005625008,
+            -0.9419518454557944,
+            0.17307692307692313,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-008.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.07718808151302678,
+          0.9845844938443556,
+          0.6710109311964589
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07435306387150231,
+          "residuals": [
+            -0.16611152665597984,
+            -0.26542606424386683,
+            -0.5152658330523292,
+            -0.3832099835623577,
+            -0.7250000003437498,
+            -0.9907990705525105,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-009.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.13936044959462554,
+          0.055057405748898516,
+          1.2621067481817283
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.1386055924409969,
+          "residuals": [
+            1.0970131077015117,
+            -0.3277440780975951,
+            -0.7058366383253574,
+            -0.3275282297296558,
+            -0.5750000005312501,
+            -0.9311553929953937,
+            0.038461538461538436,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-010.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.09333369132382699,
+          0.8377469071381747,
+          1.2249898898696578
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08806638687849559,
+          "residuals": [
+            1.1435192975940534,
+            0.1287037661579591,
+            -0.45865133456694507,
+            -0.34567206641917503,
+            -0.6000000004999997,
+            -0.9885405210830804,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-011.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.10419221092754155,
+          0.1786859029583815,
+          0.853940975856992
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.10170778672224921,
+          "residuals": [
+            0.005027316170460816,
+            -0.5231074985019593,
+            -0.8858106922861262,
+            -0.3738686361420347,
+            -0.6500000004374997,
+            -0.9794026884190329,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-012.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.1418308328827536,
+          0.9658948308608711,
+          1.2383281363272156
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.13417657633355204,
+          "residuals": [
+            1.996848126741245,
+            0.07935015167387016,
+            -0.22880335572020571,
+            -0.34145283870074195,
+            -0.6000000004999997,
+            -0.9911787373221665,
+            0.12962962962962965,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-021.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.06116089001316249,
+          0.28962125381981263,
+          1.036811488211423
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.058918423201775816,
+          "residuals": [
+            -0.6138401196060967,
+            -0.2666990912316449,
+            -0.38194228545473186,
+            -0.3922580344808144,
+            -0.5500000005625001,
+            -0.9966655721536083,
+            0.15000000000000002,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-022.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.12837210712198513,
+          0.08144986576869287,
+          0.5105962245320638
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.1186369560575291,
+          "residuals": [
+            0.8244571198725734,
+            0.5167081514374847,
+            -0.9529394888052146,
+            -0.3728467112775087,
+            -0.6250000004687501,
+            -0.9285957614845564,
+            0.16666666666666663,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-023.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.1099095450430907,
+          0.41891533665452163,
+          1.492705194743602
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.10850720346546122,
+          "residuals": [
+            0.855441357881555,
+            -0.7108198320845984,
+            -0.8473575665735193,
+            -0.3450420679740378,
+            -0.47500000065625014,
+            -0.9551057224532808,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-024.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.0777802340373378,
+          0.8232345059742177,
+          0.7868099945488141
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.07577163107924867,
+          "residuals": [
+            -0.6036483725281889,
+            -0.48351840722800654,
+            -0.554567003526376,
+            -0.37658751835365123,
+            -0.7000000003749998,
+            -0.9909518538505662,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-025.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.08570796364789064,
+          0.6079938728139763,
+          0.9011972231205084
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.08410188930779941,
+          "residuals": [
+            0.5894355368769111,
+            -0.6252216779553001,
+            -0.5571494388281496,
+            -0.36378643352563955,
+            -0.6500000004374997,
+            -0.984571661411654,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-026.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.15072922971488695,
+          0.1932220174945259,
+          1.3254316897741099
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.15286154289795367,
+          "residuals": [
+            1.9393165182534928,
+            0.0544389794678688,
+            -0.7844217532521301,
+            -0.3142451141356388,
+            -0.4500000006875001,
+            -0.9793545569195286,
+            0.1071428571428571,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-027.evaluation.json"
+      },
+      {
+        "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+        "values": [
+          0.1202903473585338,
+          0.711987305902712,
+          0.7175747839193675
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.11747347572090575,
+          "residuals": [
+            0.673575975340535,
+            -0.5316545841816924,
+            -0.8299295712025027,
+            -0.36309762957022473,
+            -0.6500000004375008,
+            -0.9675974042129791,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-diagonal68-pilot/evaluation-028.evaluation.json"
+      }
+    ],
+    "best_adaptive": {
+      "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+      "values": [
+        0.0811657091320938,
+        1,
+        0.6636802885216102
+      ],
+      "outcome": {
+        "status": "complete",
+        "objective": -0.08007326971332479,
+        "residuals": [
+          -0.26158256370683874,
+          -0.7308125733267214,
+          -0.6810013993999386,
+          -0.37329618600917314,
+          -0.5750000005312501,
+          -0.9877438275660724,
+          0,
+          0
+        ]
+      },
+      "evidence": "runs/bayesian-diagonal68-pilot/evaluation-018.evaluation.json"
+    },
+    "best_control": {
+      "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+      "values": [
+        0.0777802340373378,
+        0.8232345059742177,
+        0.7868099945488141
+      ],
+      "outcome": {
+        "status": "complete",
+        "objective": -0.07577163107924867,
+        "residuals": [
+          -0.6036483725281889,
+          -0.48351840722800654,
+          -0.554567003526376,
+          -0.37658751835365123,
+          -0.7000000003749998,
+          -0.9909518538505662,
+          0,
+          0
+        ]
+      },
+      "evidence": "runs/bayesian-diagonal68-pilot/evaluation-025.evaluation.json"
+    },
+    "scope": "One seeded matched-count comparison on a fixed motion family. Full cost must include selector and runtime/audit wall time. Passing these short sampled gates is not timestep/sustained/steering/browser or hardware qualification; no global speed claim."
+  },
+  "trials": [
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-000.evaluation.json",
+      "sha256": "a0f45aedeb002562a57fdbfa5cdb00ddeb457334e1207cbcb2f4ff002cc5093d",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.06780678488063342,
+            0.5,
+            1
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.06424498241627889,
+            "residuals": [
+              -0.5851893453608901,
+              0.05057405999258169,
+              -0.10531225748639794,
+              -0.3892313536872638,
+              -0.4000000007500001,
+              -0.9789227481569157,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-000.evaluation.json"
+        },
+        "method": "baseline-replay",
+        "metrics": {
+          "speeds_m_s": [
+            0.06424498241627889,
+            0.06713281314911258
+          ],
+          "slip": 0.0207405327319555,
+          "control": false,
+          "planned_lifts": 24,
+          "passed_lifts": 24,
+          "overlap_m": 0
+        },
+        "wall_s": 32.672975413,
+        "native_exit_code": 0,
+        "capture_sha256": "393dd4641a6a433c514659d9e0a88b12ddd3597037d3d808ff11c129ade0e017"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-001.evaluation.json",
+      "sha256": "16e5b6eb50c54024c7d8f09073e3e6586334b3554c5d30a8a2ef47c218a24780",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.060714629960795505,
+            0.6182873570271589,
+            1.4099168133440918
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.05844593835238641,
+            "residuals": [
+              -0.6181275657315636,
+              -0.25267053101566095,
+              -0.3915096514403881,
+              -0.3937692607797346,
+              -0.5250000005937501,
+              -0.9917990823474481,
+              0.050000000000000044,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-001.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.06144849419276797,
+            0.05844593835238641
+          ],
+          "slip": 0.019093621713421823,
+          "control": true,
+          "planned_lifts": 20,
+          "passed_lifts": 19,
+          "overlap_m": 0
+        },
+        "wall_s": 29.976640048,
+        "native_exit_code": 0,
+        "capture_sha256": "87571e2f0f1c8f91612b9145f134f0ca6b76de55480398cafa9962f61d640dce"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-002.evaluation.json",
+      "sha256": "61ba3522a774f193f65378e54ba5327136920fbfbc9504233922191107b19b39",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.11073008006169771,
+            0.2793038275669038,
+            1.1103573441869343
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.10952949365226222,
+            "residuals": [
+              0.4792778520866907,
+              -0.7831508098311626,
+              -0.7405108532519791,
+              -0.3534280730924889,
+              -0.500000000625,
+              -0.9436720180252881,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-002.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.10952949365226222,
+            0.11071548344140666
+          ],
+          "slip": 0.07396389260433454,
+          "control": true,
+          "planned_lifts": 40,
+          "passed_lifts": 40,
+          "overlap_m": 0
+        },
+        "wall_s": 38.54350894599999,
+        "native_exit_code": 0,
+        "capture_sha256": "37f6e8b8310ff71c61df30a69202786de9cf8613e8fcdbae6324349d49503c08"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-003.evaluation.json",
+      "sha256": "d72ae12fe2e2d94a89a192148deb04770d66124cf7f7a570cb97a2b580acbca5",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.15849834112245537,
+            0.6902410253030458,
+            0.8217371770648858
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.15575769510277496,
+            "residuals": [
+              1.467261559627218,
+              -0.3673366032334293,
+              -0.7507290544149268,
+              -0.35727532851825894,
+              -0.5250000005937501,
+              -0.989020944215538,
+              0.10344827586206895,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-003.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.16351214606627534,
+            0.15575769510277496
+          ],
+          "slip": 0.12336307798136091,
+          "control": true,
+          "planned_lifts": 58,
+          "passed_lifts": 52,
+          "overlap_m": 0
+        },
+        "wall_s": 38.535116422999984,
+        "native_exit_code": 0,
+        "capture_sha256": "bc472cabacec9368f9458d5462a2655260f54e472c384caaf789a1b7971b9400"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-004.evaluation.json",
+      "sha256": "e6e32617d47fc6bff539e1531b2cdd91e89391071ecc3e8f8d34269da6f1bf1e",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.08755384435544727,
+            0.426409228931391,
+            1.0688525004080054
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.08483040232327187,
+            "residuals": [
+              0.6581294041328867,
+              -0.3778817932610936,
+              -0.41218562278384185,
+              -0.35669216870788323,
+              -0.4250000007187501,
+              -0.9611672986304118,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-004.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.08483040232327187,
+            0.08851480732570441
+          ],
+          "slip": 0.08290647020664434,
+          "control": true,
+          "planned_lifts": 30,
+          "passed_lifts": 30,
+          "overlap_m": 0
+        },
+        "wall_s": 36.228838755000005,
+        "native_exit_code": 0,
+        "capture_sha256": "468f3265607180fca6e8ff770c2a9e5282f75c72017b43efe6cde3d6973fdc14"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-005.evaluation.json",
+      "sha256": "f8595bca5aa8f1935fa4da3508a8ab107258bac91351f3680e211d2fc5f7f798",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.07092009496439254,
+            0.8257201301809396,
+            0.9444879780284072
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.06670576602952047,
+            "residuals": [
+              -0.642727435158466,
+              0.18847244550024822,
+              0.04738871265540756,
+              -0.3863793405039695,
+              -0.5500000005625001,
+              -0.9915415905005186,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-005.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.06670576602952047,
+            0.06853635223925905
+          ],
+          "slip": 0.017863628242076702,
+          "control": false,
+          "planned_lifts": 24,
+          "passed_lifts": 24,
+          "overlap_m": 0
+        },
+        "wall_s": 33.91870455299999,
+        "native_exit_code": 0,
+        "capture_sha256": "4abaeae0d746a67ce39ff2716be62cbfb9f5d94b15f661ddfad511e91d1aa48b"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-006.evaluation.json",
+      "sha256": "7f0886f143ed8316153065a4a6fb2957ae99b42dacb2b935c005debd906fd532",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.1338566288927302,
+            0.15490529408800172,
+            1.4621136967324202
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.13721363793051722,
+            "residuals": [
+              1.929007240058934,
+              -0.06819955519373888,
+              -0.9384362604232666,
+              -0.3196905305326777,
+              -0.6000000005000008,
+              -0.9708854279870698,
+              0.020000000000000018,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-006.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.14009301220985584,
+            0.13721363793051722
+          ],
+          "slip": 0.1464503620029467,
+          "control": true,
+          "planned_lifts": 50,
+          "passed_lifts": 49,
+          "overlap_m": 0
+        },
+        "wall_s": 91.75396890100002,
+        "native_exit_code": 0,
+        "capture_sha256": "191f49dca0bf29be036cdf077485c022f47c1c36d5d52314a4b613cd7caabadc"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-007.evaluation.json",
+      "sha256": "e7417867ffb74fafcfbbf49145fcb2da819294211c2c7e9cf783ddd51620c037",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.12022528115605474,
+            0.5486804571371274,
+            0.6638196781772892
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.11799813802430845,
+            "residuals": [
+              0.6764534625230987,
+              -0.6295050241794944,
+              -0.9292985409086416,
+              -0.3645297774491867,
+              -0.6500000004375008,
+              -0.9566040707022607,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-007.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.11997754984070065,
+            0.11799813802430845
+          ],
+          "slip": 0.08382267312615493,
+          "control": true,
+          "planned_lifts": 46,
+          "passed_lifts": 46,
+          "overlap_m": 0
+        },
+        "wall_s": 94.85148118300002,
+        "native_exit_code": 0,
+        "capture_sha256": "5ea5850e56a210577bda33de261c5fcd294ce59257a1fe7cfb786cf5c8a2526b"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-008.evaluation.json",
+      "sha256": "d4b66ccb614658410912f2a23b2c1a56ad002bc25c4543306fd9d7a30273e37c",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.14509152899250924,
+            0.3409514362856373,
+            0.582349874850368
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.13882093697992023,
+            "residuals": [
+              1.394632847018069,
+              -0.13563637296664677,
+              -0.9170245798894272,
+              -0.3595526100862695,
+              -0.5500000005625008,
+              -0.9419518454557944,
+              0.17307692307692313,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-008.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.14612381397737653,
+            0.13882093697992023
+          ],
+          "slip": 0.11973164235090347,
+          "control": true,
+          "planned_lifts": 52,
+          "passed_lifts": 43,
+          "overlap_m": 0
+        },
+        "wall_s": 62.023904509999966,
+        "native_exit_code": 0,
+        "capture_sha256": "296fb027dc3fad0c903e9538b9ac9a5c56384a63c4ec6c4820cd4d774fd67da7"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-009.evaluation.json",
+      "sha256": "f42068a780d2c078c3bafd4234ad9d0891d4d6d9a81835b9673756f45a5645c9",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.07718808151302678,
+            0.9845844938443556,
+            0.6710109311964589
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07435306387150231,
+            "residuals": [
+              -0.16611152665597984,
+              -0.26542606424386683,
+              -0.5152658330523292,
+              -0.3832099835623577,
+              -0.7250000003437498,
+              -0.9907990705525105,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-009.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.07435306387150231,
+            0.07507396832216577
+          ],
+          "slip": 0.04169442366720101,
+          "control": true,
+          "planned_lifts": 30,
+          "passed_lifts": 30,
+          "overlap_m": 0
+        },
+        "wall_s": 40.03991022099997,
+        "native_exit_code": 0,
+        "capture_sha256": "08a1b0ea07c0f38bcdda2ca76112cf72857e5ead1ac886499607ca0b88f2e692"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-010.evaluation.json",
+      "sha256": "291bf6615a1f20d7a120809ef922ccf6fda45f7fb9494d2ee7b7ce92786d5a71",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.13936044959462554,
+            0.055057405748898516,
+            1.2621067481817283
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.1386055924409969,
+            "residuals": [
+              1.0970131077015117,
+              -0.3277440780975951,
+              -0.7058366383253574,
+              -0.3275282297296558,
+              -0.5750000005312501,
+              -0.9311553929953937,
+              0.038461538461538436,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-010.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.14404474397057399,
+            0.1386055924409969
+          ],
+          "slip": 0.10485065538507558,
+          "control": true,
+          "planned_lifts": 52,
+          "passed_lifts": 50,
+          "overlap_m": 0
+        },
+        "wall_s": 41.73427279100002,
+        "native_exit_code": 0,
+        "capture_sha256": "208fbee6640f0b1e83a5cb26e74b8ec9e8c5af86eaadf02063b87124efa7ec56"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-011.evaluation.json",
+      "sha256": "1d8b7a20e143dd5c506d3d9806f29ba81e6d000b68937e27eee4ae70a4dd481a",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.09333369132382699,
+            0.8377469071381747,
+            1.2249898898696578
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.08806638687849559,
+            "residuals": [
+              1.1435192975940534,
+              0.1287037661579591,
+              -0.45865133456694507,
+              -0.34567206641917503,
+              -0.6000000004999997,
+              -0.9885405210830804,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-011.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.08806638687849559,
+            0.08965916710131623
+          ],
+          "slip": 0.10717596487970268,
+          "control": false,
+          "planned_lifts": 32,
+          "passed_lifts": 32,
+          "overlap_m": 0
+        },
+        "wall_s": 34.83636561999994,
+        "native_exit_code": 0,
+        "capture_sha256": "8b90790eba1831f3ac8257e137f18cdfd29fe2206df49d2ab123819c19747fbb"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-012.evaluation.json",
+      "sha256": "a3173b7373fb2c2215e489885d03bb0f18bb0ebbd61c7ad5eb13e7616a1be095",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.10419221092754155,
+            0.1786859029583815,
+            0.853940975856992
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.10170778672224921,
+            "residuals": [
+              0.005027316170460816,
+              -0.5231074985019593,
+              -0.8858106922861262,
+              -0.3738686361420347,
+              -0.6500000004374997,
+              -0.9794026884190329,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-012.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.10247246139081902,
+            0.10170778672224921
+          ],
+          "slip": 0.050251365808523046,
+          "control": true,
+          "planned_lifts": 36,
+          "passed_lifts": 36,
+          "overlap_m": 0
+        },
+        "wall_s": 33.660188618000014,
+        "native_exit_code": 0,
+        "capture_sha256": "f58cf50c6363f8ee2773673321b4ae6bed22639326edbded8d0c6b9a68b897c5"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-013.evaluation.json",
+      "sha256": "9eea1032198ddfea11d8d561aff00c740147e00442bf1666b126979b00281536",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.06840743368966598,
+            1.236905659041633e-18,
+            0.9584314777651962
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.06443042428859887,
+            "residuals": [
+              -0.2597974548891676,
+              0.1627418795182498,
+              0.0072664982334365025,
+              -0.3852364376189442,
+              -0.47500000065625014,
+              -0.9746581547431159,
+              0.04166666666666663,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-013.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.06443042428859887,
+            0.06650467823868779
+          ],
+          "slip": 0.03701012725554162,
+          "control": false,
+          "planned_lifts": 24,
+          "passed_lifts": 23,
+          "overlap_m": 0
+        },
+        "wall_s": 29.97486274900008,
+        "native_exit_code": 0,
+        "capture_sha256": "cd628fc5b07002e5375442f598d42674ce7ab92a7370b0e7a493c89732f16c6b"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-014.evaluation.json",
+      "sha256": "95223bf05e4c075991cd0f503fbe2ca3e54d016ea469c3d24e6abfa613a519f9",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.077378625719447,
+            0.8742731786451633,
+            0.7009296838254906
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07498636706956573,
+            "residuals": [
+              -0.3328418603342478,
+              -0.381674557375852,
+              -0.495400790206727,
+              -0.380040770711637,
+              -0.7000000003749998,
+              -0.9896215004914818,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-014.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.07498636706956573,
+            0.0754983003610224
+          ],
+          "slip": 0.03335790698328761,
+          "control": true,
+          "planned_lifts": 30,
+          "passed_lifts": 30,
+          "overlap_m": 0
+        },
+        "wall_s": 32.192364630000085,
+        "native_exit_code": 0,
+        "capture_sha256": "b8009f7604316cea0b01051310ed7b9846177ac4cffe7b627424d975f28bd6ff"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-015.evaluation.json",
+      "sha256": "18da7b8e773c773f6f35a32f413e93d9e6c2979f1829ab926aafeee86d241e3d",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.08066666945377293,
+            0.8287517290480901,
+            0.7444164899847656
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07929618214137592,
+            "residuals": [
+              -0.40179612711515755,
+              -0.660209768996999,
+              -0.6623362492303542,
+              -0.37208346709891027,
+              -0.5750000005312501,
+              -0.9898887464781155,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-015.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.07929618214137592,
+            0.08137029760575382
+          ],
+          "slip": 0.029910193644242127,
+          "control": true,
+          "planned_lifts": 28,
+          "passed_lifts": 28,
+          "overlap_m": 0
+        },
+        "wall_s": 32.068627908000025,
+        "native_exit_code": 0,
+        "capture_sha256": "d3c8d03eac7118014cc42a199831c1ec560d403c32da8aa3964b8cac95e87a96"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-016.evaluation.json",
+      "sha256": "3b5e61044651f54c60ea0d3eb472bf9c0480864592366e5845a36c9a4256f0fd",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.08472553311501574,
+            0.7270685042186239,
+            0.8411583220535956
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.08288753491032728,
+            "residuals": [
+              0.23737133024610668,
+              -0.5661288546409362,
+              -0.5925548625240218,
+              -0.3680409539153967,
+              -0.6750000004062497,
+              -0.9865880137934105,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-016.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.08288753491032728,
+            0.08513531369756451
+          ],
+          "slip": 0.06186856651230534,
+          "control": true,
+          "planned_lifts": 28,
+          "passed_lifts": 28,
+          "overlap_m": 0
+        },
+        "wall_s": 37.0450179010001,
+        "native_exit_code": 0,
+        "capture_sha256": "b37ec4440ac1c8c3272df35d150235fd3c60a31aa6ea32b2578e430dac4bb5d5"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-017.evaluation.json",
+      "sha256": "f31b5a0f1c1493f3b82ce4460404b7df17e26f830924f0214e8857751ba908b1",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.081084256920507,
+            0.9720374431270512,
+            0.6931952489135502
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07982557179924632,
+            "residuals": [
+              -0.18401554451574031,
+              -0.6895364972032327,
+              -0.6964858367272604,
+              -0.3725099612312226,
+              -0.5750000005312501,
+              -0.9893131767399678,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-017.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.07982557179924632,
+            0.08174697552509712
+          ],
+          "slip": 0.04079922277421299,
+          "control": true,
+          "planned_lifts": 28,
+          "passed_lifts": 28,
+          "overlap_m": 0
+        },
+        "wall_s": 37.82716708799999,
+        "native_exit_code": 0,
+        "capture_sha256": "6c58fc395bc1f74d24312b69cc2049def8aa5e05a5835dc379f8e24291c184fc"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-018.evaluation.json",
+      "sha256": "dd12bfb82268407fa156c80d5402fde1ab9fb3f3238f8f01b2344491d546e767",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.0811657091320938,
+            1,
+            0.6636802885216102
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.08007326971332479,
+            "residuals": [
+              -0.26158256370683874,
+              -0.7308125733267214,
+              -0.6810013993999386,
+              -0.37329618600917314,
+              -0.5750000005312501,
+              -0.9877438275660724,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-018.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.08007326971332479,
+            0.08190083857181182
+          ],
+          "slip": 0.036920871814658064,
+          "control": true,
+          "planned_lifts": 28,
+          "passed_lifts": 28,
+          "overlap_m": 0
+        },
+        "wall_s": 35.757488161999966,
+        "native_exit_code": 0,
+        "capture_sha256": "8c501fda48bc582d431dc64bfa9dc8871b8fd5f911237bd6c1dbcab46386ce5e"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-019.evaluation.json",
+      "sha256": "34f96f50fac6b18fa360ecc988acfba2f36fc79df5ad1a4d0c63b519b5983c53",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.08058917771905823,
+            0.7377768905568175,
+            0.8948079421174947
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07917688826283932,
+            "residuals": [
+              -0.4391923322241763,
+              -0.6495089052422678,
+              -0.6714775558513252,
+              -0.3707283050157616,
+              -0.5500000005625001,
+              -0.9896610867845603,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-019.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.07917688826283932,
+            0.08127419946772349
+          ],
+          "slip": 0.028040383388791185,
+          "control": true,
+          "planned_lifts": 28,
+          "passed_lifts": 28,
+          "overlap_m": 0
+        },
+        "wall_s": 34.84921413900005,
+        "native_exit_code": 0,
+        "capture_sha256": "d026b622bd3847d08ab27b7eb1affb075196d11ad7fe91c05eb97d80c20d5a80"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-020.evaluation.json",
+      "sha256": "8bd887fc4f66309982a4e6811bb73caaedb2430777e9091e70d2db353b232680",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.08098650409329544,
+            0.6844718522781694,
+            0.9206095199191162
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07975851181906106,
+            "residuals": [
+              -0.3087267957886374,
+              -0.696741503295474,
+              -0.6763904257324,
+              -0.3691089321558293,
+              -0.5500000005625001,
+              -0.9883640475523974,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-020.evaluation.json"
+        },
+        "method": "constrained-log-expected-improvement",
+        "metrics": {
+          "speeds_m_s": [
+            0.07975851181906106,
+            0.08169997893919577
+          ],
+          "slip": 0.034563660210568135,
+          "control": true,
+          "planned_lifts": 28,
+          "passed_lifts": 28,
+          "overlap_m": 0
+        },
+        "wall_s": 34.97935130700003,
+        "native_exit_code": 0,
+        "capture_sha256": "b61c54cbe7c7fd12c184ace78336fdcdbab7ddf8545a3502d8f92af77b91934f"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-021.evaluation.json",
+      "sha256": "a202713cb9b5d34344b2dba32848b14f3145ba51dbb736482539afa723f530b4",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.1418308328827536,
+            0.9658948308608711,
+            1.2383281363272156
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.13417657633355204,
+            "residuals": [
+              1.996848126741245,
+              0.07935015167387016,
+              -0.22880335572020571,
+              -0.34145283870074195,
+              -0.6000000004999997,
+              -0.9911787373221665,
+              0.12962962962962965,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-021.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.14541465522320246,
+            0.13417657633355204
+          ],
+          "slip": 0.14984240633706225,
+          "control": false,
+          "planned_lifts": 54,
+          "passed_lifts": 47,
+          "overlap_m": 0
+        },
+        "wall_s": 49.260048193000024,
+        "native_exit_code": 0,
+        "capture_sha256": "8042a7df731ff935a92292a1fee2c1adceccf86f68436640380616323164f2c1"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-022.evaluation.json",
+      "sha256": "1f653017a653527b68f8923623a53cb4fcf84ea1c810ba6a05269f4afb58d44c",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.06116089001316249,
+            0.28962125381981263,
+            1.036811488211423
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.058918423201775816,
+            "residuals": [
+              -0.6138401196060967,
+              -0.2666990912316449,
+              -0.38194228545473186,
+              -0.3922580344808144,
+              -0.5500000005625001,
+              -0.9966655721536083,
+              0.15000000000000002,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-022.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.061041820928824916,
+            0.058918423201775816
+          ],
+          "slip": 0.019307994019695164,
+          "control": true,
+          "planned_lifts": 20,
+          "passed_lifts": 17,
+          "overlap_m": 0
+        },
+        "wall_s": 36.61039271400007,
+        "native_exit_code": 0,
+        "capture_sha256": "5b2d4301b54c02af43a7ec73ad65df5e96f8ce353790ed7265fc9b43d8343d9b"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-023.evaluation.json",
+      "sha256": "af1f0a316ab9132becda8b0e5d541520c17adc0d1cc650e72dd1e65a76769758",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.12837210712198513,
+            0.08144986576869287,
+            0.5105962245320638
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.1186369560575291,
+            "residuals": [
+              0.8244571198725734,
+              0.5167081514374847,
+              -0.9529394888052146,
+              -0.3728467112775087,
+              -0.6250000004687501,
+              -0.9285957614845564,
+              0.16666666666666663,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-023.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.12364925273856932,
+            0.1186369560575291
+          ],
+          "slip": 0.09122285599362867,
+          "control": false,
+          "planned_lifts": 48,
+          "passed_lifts": 40,
+          "overlap_m": 0
+        },
+        "wall_s": 63.937870047000004,
+        "native_exit_code": 0,
+        "capture_sha256": "01702110466a72d6228cfa6bc09478bc6b2ca8173d00363b6f610ac83040b1d2"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-024.evaluation.json",
+      "sha256": "99175548e3f93f8bef42304a44a1878b1076e132c6d54b087a16adaa45eb1f06",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.1099095450430907,
+            0.41891533665452163,
+            1.492705194743602
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.10850720346546122,
+            "residuals": [
+              0.855441357881555,
+              -0.7108198320845984,
+              -0.8473575665735193,
+              -0.3450420679740378,
+              -0.47500000065625014,
+              -0.9551057224532808,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-024.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.11149872807764401,
+            0.10850720346546122
+          ],
+          "slip": 0.09277206789407776,
+          "control": true,
+          "planned_lifts": 40,
+          "passed_lifts": 40,
+          "overlap_m": 0
+        },
+        "wall_s": 40.928440584999976,
+        "native_exit_code": 0,
+        "capture_sha256": "c7de51adcd285f1c48fc79c08a04787f9a6c20cf71a135793f8f8383c3e2506b"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-025.evaluation.json",
+      "sha256": "5248a47aa15cab15db208d1993134e53dc7ac71a5e68a2ea23783b4be5de93ec",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.0777802340373378,
+            0.8232345059742177,
+            0.7868099945488141
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07577163107924867,
+            "residuals": [
+              -0.6036483725281889,
+              -0.48351840722800654,
+              -0.554567003526376,
+              -0.37658751835365123,
+              -0.7000000003749998,
+              -0.9909518538505662,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-025.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.07586174862959282,
+            0.07577163107924867
+          ],
+          "slip": 0.01981758137359056,
+          "control": true,
+          "planned_lifts": 30,
+          "passed_lifts": 30,
+          "overlap_m": 0
+        },
+        "wall_s": 34.69340878399997,
+        "native_exit_code": 0,
+        "capture_sha256": "a9f777a6eaf7fdec576c0bae3abfc03d97bbcd296a950fc2d79dbb36b656ecae"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-026.evaluation.json",
+      "sha256": "f19c20f536a7a647e8e46192f8302963397f3be017398d345524274dd2db4539",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.08570796364789064,
+            0.6079938728139763,
+            0.9011972231205084
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.08410188930779941,
+            "residuals": [
+              0.5894355368769111,
+              -0.6252216779553001,
+              -0.5571494388281496,
+              -0.36378643352563955,
+              -0.6500000004374997,
+              -0.984571661411654,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-026.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.08410188930779941,
+            0.08618947036056282
+          ],
+          "slip": 0.07947177684384556,
+          "control": true,
+          "planned_lifts": 32,
+          "passed_lifts": 32,
+          "overlap_m": 0
+        },
+        "wall_s": 39.59220785999997,
+        "native_exit_code": 0,
+        "capture_sha256": "8de7627e5d8e827a6600df006fa5239035104e4e6fb86335e9ed79b1741bfe57"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-027.evaluation.json",
+      "sha256": "2f7ededf0ff63354e69095933cb8e49bbf211df5e81c206a1d8671d92bf94c38",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.15072922971488695,
+            0.1932220174945259,
+            1.3254316897741099
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.15286154289795367,
+            "residuals": [
+              1.9393165182534928,
+              0.0544389794678688,
+              -0.7844217532521301,
+              -0.3142451141356388,
+              -0.4500000006875001,
+              -0.9793545569195286,
+              0.1071428571428571,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-027.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.15867596847271412,
+            0.15286154289795367
+          ],
+          "slip": 0.14696582591267465,
+          "control": false,
+          "planned_lifts": 56,
+          "passed_lifts": 50,
+          "overlap_m": 0
+        },
+        "wall_s": 42.21333351700008,
+        "native_exit_code": 0,
+        "capture_sha256": "e14c87eccb93bd73035761c3af0026b510506965a84f73f8feddc2f47c235bc8"
+      }
+    },
+    {
+      "path": "runs/bayesian-diagonal68-pilot/evaluation-028.evaluation.json",
+      "sha256": "d0f39b092405d9f063fd3f549defbaedf79e9107498f263ef3f575c43fca503e",
+      "record": {
+        "observation": {
+          "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+          "values": [
+            0.1202903473585338,
+            0.711987305902712,
+            0.7175747839193675
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.11747347572090575,
+            "residuals": [
+              0.673575975340535,
+              -0.5316545841816924,
+              -0.8299295712025027,
+              -0.36309762957022473,
+              -0.6500000004375008,
+              -0.9675974042129791,
+              0,
+              0
+            ]
+          },
+          "evidence": "runs/bayesian-diagonal68-pilot/evaluation-028.evaluation.json"
+        },
+        "method": "latin-hypercube-control",
+        "metrics": {
+          "speeds_m_s": [
+            0.12132488834797854,
+            0.11747347572090575
+          ],
+          "slip": 0.08367879876702676,
+          "control": true,
+          "planned_lifts": 46,
+          "passed_lifts": 46,
+          "overlap_m": 0
+        },
+        "wall_s": 42.96203749900008,
+        "native_exit_code": 0,
+        "capture_sha256": "0a21cbf4f3d1c22a375f8502273f1c76bae9605a2856779137520a7489028135"
+      }
+    }
+  ],
+  "result_sha256": "bdb24a4923878791596032440af3d2be8029ffc1a99bf5a1f947945e8ab412a1",
+  "scope": "All 29 terminal trial records retained. Full captures for 000/009/018 are in mixed-search-evidence.json; other full captures remain in the run directory pending archival. One seed and short-screen gates only, not algorithm superiority or gait qualification."
+}

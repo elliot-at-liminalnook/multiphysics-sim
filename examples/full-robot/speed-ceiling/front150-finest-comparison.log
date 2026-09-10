@@ -1,0 +1,30 @@
+[
+  {
+    name: 'smooth-dynamic-front10-v150-scale1-human-fine',
+    maximum_body_difference_m: 0.0011767499868824867,
+    maximum_steady_speed_fraction: 0.0011853860456214984,
+    maximum_slip_ratio: 0.1155062362688436,
+    passed_existing_path_speed_screen: true
+  },
+  {
+    name: 'front150-human-1p25ms',
+    maximum_body_difference_m: 0.003251645637872952,
+    maximum_steady_speed_fraction: 0.003100452576336163,
+    maximum_slip_ratio: 0.11106099020605313,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'front150-preview-5ms',
+    maximum_body_difference_m: 0.010100696755005077,
+    maximum_steady_speed_fraction: 0.01597739376645074,
+    maximum_slip_ratio: 0.08350477519386545,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'front150-preview-10ms',
+    maximum_body_difference_m: 0.01767583778056683,
+    maximum_steady_speed_fraction: 0.031491438466978335,
+    maximum_slip_ratio: 0.06317139201462951,
+    passed_existing_path_speed_screen: false
+  }
+]

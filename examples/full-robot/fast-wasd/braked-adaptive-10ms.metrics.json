@@ -1,0 +1,59 @@
+{
+  "name": "braked-adaptive-10ms",
+  "step_s": 0.01,
+  "solver_options": {
+    "max_iterations": 8,
+    "cached_mechanical_iteration_limit": 4
+  },
+  "scope": "Existing bounded subdivision on difficult Newton solves; preserve tolerance and physical law.",
+  "source": "human-braked-65",
+  "speed_m_s": 0.065,
+  "completed": false,
+  "error": "step 606: hybrid advancement at 6.0600000000000005 with step 0.0006249999999999867: implicit mechanical solve: Newton did not converge after 8 iterations; residual=2.85630005880666e-6; largest final residual: Some(\"mechanical velocity row 10: residual=-2.85630005880666e-6, candidate=1.0310307822510685e0\"); last rejected endpoint: None",
+  "final_time_s": 6.0600000000000005,
+  "windows": [
+    {
+      "start_s": 1.4,
+      "end_s": 6,
+      "directed_speed_mm_s": null
+    },
+    {
+      "start_s": 11,
+      "end_s": 16,
+      "directed_speed_mm_s": null
+    }
+  ],
+  "turn_rad": null,
+  "stop_drift_after_transfer_m": null,
+  "stop_travel_from_release_m": null,
+  "maximum_tilt_rad": 0.0050944646232302755,
+  "total_horizontal_body_path_m": 0.35259204234807373,
+  "maximum_slip_ratio": 0.02159833615253266,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.0075217263321661005,
+      "motion_to_total_body_path_ratio": 0.021332660493627253
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.007615401455341728,
+      "motion_to_total_body_path_ratio": 0.02159833615253266
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.007135119453343479,
+      "motion_to_total_body_path_ratio": 0.020236189693412857
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.006182806754353764,
+      "motion_to_total_body_path_ratio": 0.017535298622111804
+    }
+  ],
+  "native": {
+    "wall_s": 10.280761037,
+    "simulation_per_wall": 0.5894505259085715,
+    "p95_transition_s": 0.141551998
+  }
+}

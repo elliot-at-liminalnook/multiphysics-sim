@@ -118,3 +118,43 @@ fn named_task_channels_preserve_frames_units_and_exclude_internal_contacts() {
     bad.markers[0].local_point_m[0] = f64::NAN;
     assert!(TaskObserver::new(art, bad).is_err());
 }
+
+#[test]
+fn optional_world_heading_preserves_existing_channels_and_declares_its_frame() {
+    use sim_core::QuantityKind;
+    let mut scene: Scene = serde_json::from_str(include_str!(
+        "../../../examples/interactive/pendulum.scene.json"
+    )).unwrap();
+    scene.robot.source["cad_sha256"] = serde_json::json!("heading-observation-test");
+    let session = Session::new(scene, 0).unwrap();
+    let mut art = session.robot.art;
+    let config: TaskObservationConfig = serde_json::from_value(serde_json::json!({
+        "observation_source":"ideal_rigid_body_diagnostics",
+        "expected_cad_sha256":"heading-observation-test","reference_link":"ground",
+        "markers":[{"id":"tip","link":"pendulum","local_point_m":[0.,0.,0.]}],"floor_forces":false
+    })).unwrap();
+    assert!(!config.heading_world_z);
+    assert!(serde_json::to_value(&config).unwrap().get("heading_world_z").is_none());
+    let original = TaskObserver::new(&art, config.clone()).unwrap();
+    let mut enabled = config;
+    enabled.heading_world_z = true;
+    let observer = TaskObserver::new(&art, enabled.clone()).unwrap();
+    assert_eq!(observer.channels().len(), original.channels().len() + 1);
+    assert_eq!(observer.channels().last().unwrap().name, "body.heading_world_z");
+    assert_eq!(observer.channels().last().unwrap().kind, QuantityKind::Angle);
+    let mut links = vec![kin(Vector3::zeros(), Matrix3::identity(), Vector3::zeros(), Vector3::zeros()); art.links.len()];
+    let body = art.links.iter().position(|l| l.name == "ground").unwrap();
+    for yaw in [-3.13, -0.4, 0., 1.7, 3.13] {
+        links[body].r = Rotation3::from_euler_angles(0.4, -0.3, yaw).into_inner();
+        let old = original.observe_evaluation(&links, &[]).unwrap();
+        let new = observer.observe_evaluation(&links, &[]).unwrap();
+        assert_eq!(&new[..old.len()], old.as_slice());
+        assert!((new.last().unwrap() - yaw).abs() < 1e-14);
+    }
+    // An exactly vertical local X direction has no projected heading.
+    links[body].r = Matrix3::new(0., 0., 1., 0., 1., 0., -1., 0., 0.);
+    assert!(observer.observe_evaluation(&links, &[]).is_err());
+    assert!(original.observe_evaluation(&links, &[]).is_ok());
+    art.gravity = Vector3::new(0., -9.81, 0.);
+    assert!(TaskObserver::new(&art, enabled).is_err());
+}

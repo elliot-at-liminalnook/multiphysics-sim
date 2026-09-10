@@ -1,0 +1,20 @@
+{
+  "sources": [
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-reference.recipe.json",
+      "sha256": "41443056efce9fd6a5a4f10b9f8dee37c179d4b9a58242481bf87bd4af7de7c4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-v230-clearance.summary.json",
+      "sha256": "ddaa29f03bfe4835298bfc2f9328a5636fc19d8306d2c9927fc1b809dec76b1f"
+    }
+  ],
+  "failed_link": "+X | Sliding foot crosshead",
+  "measured_worst_peak_clearance_m": 0.0004884922809991754,
+  "required_clearance_m": 0.002,
+  "extra_planning_margin_m": 0.001,
+  "lift_increment_m": 0.0025115077190008247,
+  "old_lift_m": 0.003940378483427686,
+  "new_lift_m": 0.006451886202428511,
+  "scope": "One-foot path correction sized from the measured failed peak deficit plus an explicit 1 mm planning margin. Linear clearance response is a candidate heuristic, not assumed physics; the shared compiler and runtime must measure its actual behavior. Acceptance gates and all other motion/robot/world settings are unchanged."
+}

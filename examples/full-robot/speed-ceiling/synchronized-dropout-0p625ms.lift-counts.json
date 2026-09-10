@@ -1,0 +1,94 @@
+{
+  "counts": [
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "detected_complete_unload_intervals": 4,
+      "minimum_expected": 3,
+      "maximum_start_gap_s": 0.52,
+      "passed": true
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "detected_complete_unload_intervals": 4,
+      "minimum_expected": 3,
+      "maximum_start_gap_s": 0.5200000000000001,
+      "passed": true
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "detected_complete_unload_intervals": 4,
+      "minimum_expected": 3,
+      "maximum_start_gap_s": 0.52,
+      "passed": true
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "detected_complete_unload_intervals": 4,
+      "minimum_expected": 3,
+      "maximum_start_gap_s": 0.5200000000000001,
+      "passed": true
+    },
+    {
+      "window_s": [
+        6.8,
+        9
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "detected_complete_unload_intervals": 8,
+      "minimum_expected": 3,
+      "maximum_start_gap_s": 0.41999999999999993,
+      "passed": true
+    },
+    {
+      "window_s": [
+        6.8,
+        9
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "detected_complete_unload_intervals": 4,
+      "minimum_expected": 3,
+      "maximum_start_gap_s": 0.5200000000000005,
+      "passed": true
+    },
+    {
+      "window_s": [
+        6.8,
+        9
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "detected_complete_unload_intervals": 8,
+      "minimum_expected": 3,
+      "maximum_start_gap_s": 0.41999999999999993,
+      "passed": true
+    },
+    {
+      "window_s": [
+        6.8,
+        9
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "detected_complete_unload_intervals": 8,
+      "minimum_expected": 3,
+      "maximum_start_gap_s": 0.41999999999999993,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "scope": "All force-detected complete unload intervals in predeclared steady-command windows; cadence count/gap gates checked separately. Clearance was not used to select intervals."
+}

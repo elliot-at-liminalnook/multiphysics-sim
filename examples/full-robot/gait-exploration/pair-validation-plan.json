@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "variants": [
+    {
+      "name": "opposite-pair-fine",
+      "step_s": 0.000625,
+      "slip_speed_m_s": 0.001
+    },
+    {
+      "name": "opposite-pair-coarse",
+      "step_s": 0.0025,
+      "slip_speed_m_s": 0.001
+    },
+    {
+      "name": "opposite-pair-low-slip",
+      "step_s": 0.00125,
+      "slip_speed_m_s": 0.0001
+    }
+  ],
+  "acceptance": {
+    "reference": "candidates.json opposite-pair preliminary criteria",
+    "all_24_lifts": {
+      "minimum_clearance_m": 0.002,
+      "maximum_swing_force_n": 0.2,
+      "minimum_each_stance_force_n": 1,
+      "minimum_duration_s": 0.04
+    },
+    "numerical_comparison": {
+      "maximum_speed_difference_fraction": 0.05,
+      "maximum_matched_body_position_difference_m": 0.003,
+      "maximum_matched_heading_difference_rad": 0.005
+    },
+    "performance": {
+      "native_screen_only": true,
+      "target_simulation_per_wall": 1,
+      "p95_transition_s": 0.02
+    }
+  },
+  "notes": [
+    "Frozen after the initial pair development trial, before these validation trials.",
+    "Matched recipes: timestep changes only integration settings; low-slip changes only declared contact regularization. No CAD or actuator modification.",
+    "This six-second comparison does not establish long-horizon, terrain, learning or browser qualification."
+  ]
+}

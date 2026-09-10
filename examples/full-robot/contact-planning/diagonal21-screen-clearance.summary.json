@@ -1,0 +1,107 @@
+{
+  "prefix": "runs/contact-planning/diagonal21-screen",
+  "counts": [
+    {
+      "window_s": [
+        1.4,
+        2.9
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 3
+    },
+    {
+      "window_s": [
+        1.4,
+        2.9
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 4
+    },
+    {
+      "window_s": [
+        1.4,
+        2.9
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 3
+    },
+    {
+      "window_s": [
+        1.4,
+        2.9
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 4
+    },
+    {
+      "window_s": [
+        4.8,
+        6.3
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 3
+    },
+    {
+      "window_s": [
+        4.8,
+        6.3
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 4
+    },
+    {
+      "window_s": [
+        4.8,
+        6.3
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 3
+    },
+    {
+      "window_s": [
+        4.8,
+        6.3
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 4
+    }
+  ],
+  "policy_replay_samples": 400,
+  "maximum_command_error_rad": 0,
+  "planned_foot_clearances": 28,
+  "passed_foot_clearances": 28,
+  "failed_foot_clearances": [],
+  "inter_link_geometry_audit": {
+    "frames": 401,
+    "maximum_penetration_m": 0.000012142527121480721,
+    "penetrating_samples": 190,
+    "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+  },
+  "sources": [
+    {
+      "path": "examples/full-robot/contact-planning/diagonal21-screen-audit.json",
+      "sha256": "cbb5a6f7d758f95c8f2a6298196c68eb18bf8b1d506f1a009c58c7538867afe2"
+    },
+    {
+      "path": "runs/contact-planning/diagonal21-screen.native.json",
+      "sha256": "ecb04750126aaf4fea18cde58358f9af435e0bc14d8523e41812e9ff05c19774"
+    },
+    {
+      "path": "runs/contact-planning/diagonal21-screen.policy-state.json",
+      "sha256": "2f82b3b2d00db9ab334eef93d2f2e120521e0918d046e174694da03bfc649701"
+    },
+    {
+      "path": "runs/contact-planning/diagonal21-screen.contact-clearance-requirements.json",
+      "sha256": "f8910006ecf9e331f124506c213a8ae2281cb904127cc9f94867bb0b9807c6db"
+    },
+    {
+      "path": "runs/contact-planning/diagonal21-screen.contact-geometry.json",
+      "sha256": "c32f80a0a0fba6fd95ed8d7319fd42117fc84d94b899de1de9e7221e866dab66"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/audit_contact_controller.mjs",
+      "sha256": "34c52d0905eae2264bb9a48760c4b858925c1a859521f758dea84db28e22dd94"
+    }
+  ],
+  "scope": "All complete independent planned swing intervals within explicit windows, reconstructed by exact Rhai replay. Shared Rust checks 2 mm clearance, <=1 N swing force and 20 ms qualifying duration. Clearance-only mode does not certify support or balance; closed-loop control and timestep tests are separate. Full CAD interlink geometry is checked at recorded poses; no between-sample guarantee."
+}

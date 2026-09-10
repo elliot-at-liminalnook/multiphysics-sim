@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "id": "constrained165",
+  "wasm": {
+    "artifact_sha256": "03ad48aab0d6d374e1609806aa2434d354f66120812ed0872f100a78a7bc4e30",
+    "browser_module_sha256": "65c1577492f143390b00fe01939aaf853f19464d7d4a62086c7f6fb0cb9d6388"
+  },
+  "inputs": {
+    "examples/full-robot/speed-ceiling/constrained165-browser-spec.json": "8f96e5acd587d47e59841e6560f6624e1604f85ac3885c0e5cfa1b8093352df1",
+    "Cargo.lock": "2aece6b0637c79b737cca98a08377b4253d67478280b17162c772ebca02f38f1",
+    "crates/sim-domain-control/src/trajectory.rs": "ced82fa77df4f6c89d5d435bb07ca6c36f6bb24e6c4d5ddec5539b642e5fbf5a",
+    "crates/sim-script/src/lib.rs": "a756a30b2cbf0297e0b7e96af0d9259abe7cb9c1f967f565c6b4e3dc6690718c",
+    "web/viewer/viewer.js": "a9970cd7ec7312e8ef9bd377bed5aca801e80f1446627ddb7701e99efc7b158f",
+    "web/viewer/motion-commands.mjs": "160237d406526efcbe4605111dc3bcbdfc4f7dfe3800646aecca57eed32b05f6",
+    "web/worker.js": "56fcf9a7de4feddd05f24b6f13186376a6c332e0952acb4c4073e7a9ba5efdb9",
+    "web/worker-message.mjs": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f",
+    "examples/full-robot/speed-ceiling/package_browser_profiles.mjs": "3c6b384f2664fdb06436f29b2e44c1fd398411fcd2bd951522a6abf3e21b3562",
+    "runs/speed-ceiling/validation/constrained165-preview-5ms.scene.json": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8",
+    "runs/speed-ceiling/validation/constrained165-preview-5ms.config.json": "7c1c00c843b81b100f6da1d08f61a13ee5d4a88daa05623251d84d7596ca1257",
+    "examples/full-robot/fast-wasd/task.json": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026",
+    "runs/speed-ceiling/validation/constrained165-preview-10ms.scene.json": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8",
+    "runs/speed-ceiling/validation/constrained165-preview-10ms.config.json": "129b02d631a44b7ee817ac6144b5fefafccb08c915414b06811353ac271178af"
+  },
+  "presets": [
+    {
+      "id": "physics-constrained165-5ms",
+      "label": "Experimental · 165 mm/s command · 5 ms preview",
+      "mode": "embedded",
+      "path": "data/physics-constrained165-5ms.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "1d8ec7ed54438020880f0e3da59421d5ee1aaca47c9f3461b213f81c9a11d801",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "Experimental faster gait with slipping. Preview accuracy and realtime performance are being measured.",
+      "evidence": "Detailed 20 s / 0.625 ms test: 169.2–172.2 mm/s, 12.5% loaded-foot slip. Dense replay passed 166/166 planned lifts with no overlap in 10,562 sampled poses. This numerical preview has separate accuracy and browser checks in progress. Sustained validation is running. Provisional actuator model and ideal observations."
+    },
+    {
+      "id": "physics-constrained165-10ms",
+      "label": "Experimental · 165 mm/s command · 10 ms preview",
+      "mode": "embedded",
+      "path": "data/physics-constrained165-10ms.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "6ae75e0525c04a40b124089ab2882e99e22d76a5df3e8cafd56840318e311b2c",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "Experimental faster gait with slipping. Preview accuracy and realtime performance are being measured.",
+      "evidence": "Detailed 20 s / 0.625 ms test: 169.2–172.2 mm/s, 12.5% loaded-foot slip. Dense replay passed 166/166 planned lifts with no overlap in 10,562 sampled poses. This numerical preview has separate accuracy and browser checks in progress. Sustained validation is running. Provisional actuator model and ideal observations."
+    }
+  ],
+  "scope": "Shared Rust/WASM runtime and explicit numerical profiles. Native physical qualification, cross-host parity and rendered browser performance are separate requirements. Building this bundle does not establish their acceptance."
+}

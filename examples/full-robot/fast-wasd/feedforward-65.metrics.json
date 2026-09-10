@@ -1,0 +1,133 @@
+{
+  "name": "feedforward-65",
+  "method": "Nominal damping cancellation from effective CAD-derived actuator D/K",
+  "command_speed_m_s": 0.065,
+  "period_s": 0.8,
+  "source": "hip0-65",
+  "velocity_lead_s": [
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02
+  ],
+  "scope": "Uses the existing provisional actuator model, no gain/torque authority increase. Saturation and contact remain physical.",
+  "completed": true,
+  "error": null,
+  "capture_sha256": "8fda8757a230cba2207f2b4413c408e1bd2cc70b08311bb9f20c17ef6364ed97",
+  "simulated_s": 6,
+  "measured_forward_speed_mm_s": 63.843036196231466,
+  "stop_drift_m": 0.0007944509684918266,
+  "maximum_tilt_rad": 0.00839952941776834,
+  "maximum_heading_rad": 0.00041251173936398676,
+  "maximum_slip_ratio": 0.04981738017594578,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.008116869667704049,
+      "motion_to_net_body_advance_ratio": 0.026497995354333333
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.012580757260150358,
+      "motion_to_net_body_advance_ratio": 0.041070617255304
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.008815604798357277,
+      "motion_to_net_body_advance_ratio": 0.02877905702021517
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.015260066909495036,
+      "motion_to_net_body_advance_ratio": 0.04981738017594578
+    }
+  ],
+  "motor": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "maximum_speed_rad_s": 1.0920178326852001,
+      "maximum_torque_nm": 0.5106413319937728,
+      "angle_span_rad": 0.16808559886521973
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "maximum_speed_rad_s": 0.15405000614012637,
+      "maximum_torque_nm": 0.2782989976886055,
+      "angle_span_rad": 0.022287339619537574
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "maximum_speed_rad_s": 1.1973908999697294,
+      "maximum_torque_nm": 2.1288824539815616,
+      "angle_span_rad": 0.08928812543824893
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "maximum_speed_rad_s": 0.05592055161339209,
+      "maximum_torque_nm": 0.056456724976572954,
+      "angle_span_rad": 0.0008852823392367656
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "maximum_speed_rad_s": 2.1523948642137514,
+      "maximum_torque_nm": 0.32479758848063095,
+      "angle_span_rad": 0.48436626213266276
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "maximum_speed_rad_s": 1.5739732852901274,
+      "maximum_torque_nm": 2.109937922581688,
+      "angle_span_rad": 0.20270961211153837
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "maximum_speed_rad_s": 1.094054130451374,
+      "maximum_torque_nm": 0.5103004322531265,
+      "angle_span_rad": 0.16815749589937112
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "maximum_speed_rad_s": 0.1547858527867368,
+      "maximum_torque_nm": 0.27720372717180347,
+      "angle_span_rad": 0.022101386038050966
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "maximum_speed_rad_s": 1.195925247259994,
+      "maximum_torque_nm": 2.1332517153412396,
+      "angle_span_rad": 0.08929059201887668
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "maximum_speed_rad_s": 0.04541607988456115,
+      "maximum_torque_nm": 0.0431418498809296,
+      "angle_span_rad": 0.0006450363507327985
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "maximum_speed_rad_s": 2.097131594049315,
+      "maximum_torque_nm": 0.47387449738491394,
+      "angle_span_rad": 0.480974606053704
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "maximum_speed_rad_s": 1.5404824947432758,
+      "maximum_torque_nm": 1.972592663264054,
+      "angle_span_rad": 0.20663291649908955
+    }
+  ],
+  "positive_mechanical_work_j": 2.9217142699552077,
+  "native": {
+    "wall_s": 12.706238644,
+    "simulation_per_wall": 0.47220898080906526,
+    "p95_transition_s": 0.083471682
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "matched_previous_capture": {
+    "path": "runs/contact-implicit/resolved-work-ff128.native.json",
+    "bytes": 11365506,
+    "sha256": "175542eb004101581f6979c89e88300cd6f0fb80e6ad7f91f177e9df080467c6"
+  },
+  "current_capture": {
+    "path": "runs/contact-implicit/adaptive-finegrid-ff64.native.json",
+    "bytes": 11367738,
+    "sha256": "41e9f1862b57001e24618114411a4faa20d83fe1cfeb39c7b4e6db6638df504c"
+  },
+  "matched": [
+    "typed CAD robot",
+    "physics options and timestep",
+    "effective actuators",
+    "initial base and joint state",
+    "controller source",
+    "environment policy",
+    "report times"
+  ],
+  "different": [
+    "trajectory and feedforward references",
+    "planning resolution",
+    "torque tolerance/residual scale",
+    "derivative handling"
+  ],
+  "runtime_binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+      "bytes": 15473156,
+      "sha256": "883861839a19fda8be8d0b353c2088373bce364ef3c3d63d2ea92e241a798c14"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_capture_geometry",
+      "bytes": 8284236,
+      "sha256": "3255bfd934cb69dc9f655567a916692c5282229a525f8a0956720978c4d9a5f7"
+    }
+  ],
+  "scope": "Controls for physics/controller clocks and robot properties in the before/after tracking comparison. Does not isolate each planner change; neither short path passes slip quality or sustained gait qualification."
+}

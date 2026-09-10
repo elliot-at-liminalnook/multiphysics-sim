@@ -1,0 +1,47 @@
+{
+  "prefix": "runs/contact-planning/diagonal184-diagnostic-screen",
+  "source_scene": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+  "source_scene_sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8",
+  "compiled_reference": "examples/full-robot/contact-planning/diagonal184-diagnostic-reference.result.json",
+  "compiled_reference_sha256": "a8efcb741ee0dd99ff83290d57332cc983006411775992952b44d404baa6aacd",
+  "travel_heading_offset_rad": 0.7853981633974482,
+  "reference_load_audit": {
+    "diagnostic_allow_failed_reference_audit": true,
+    "required_load_audits_passed": false,
+    "nominal": {
+      "force_n": 0.5347497508547278,
+      "minimum_torque_margin_nm": -0.04576244487770724,
+      "moment_nm": 0.17302489978291336,
+      "penetration_m": 0.00019751674622958681,
+      "sampled_feasible": false
+    },
+    "reverse": {
+      "maximum_force_error_n": 0.5347497508547279,
+      "maximum_moment_error_nm": 0.17302489978291336,
+      "maximum_penetration_m": 0.00019751674622958681,
+      "minimum_torque_margin_nm": -0.08730241015594394,
+      "required": true,
+      "sampled_feasible": false
+    }
+  },
+  "policy": "examples/full-robot/contact-planning/contact-planned.rhai",
+  "policy_sha256": "a9f5483d742861aa7e39110ed14593ec094cde64bd5ae3d9fa37e2475654c4ee",
+  "files": [
+    {
+      "path": "runs/contact-planning/diagonal184-diagnostic-screen.scene.json",
+      "sha256": "0c42757879c5df247d651973821c94f1905aaf929eb7fbac611e8fe03840bfee"
+    },
+    {
+      "path": "runs/contact-planning/diagonal184-diagnostic-screen.config.json",
+      "sha256": "c304d874014f222f4cdbc120dfc7f2a771004563d489eb1d562220678fda7726"
+    },
+    {
+      "path": "runs/contact-planning/diagonal184-diagnostic-screen.actions.json",
+      "sha256": "4a05d253e15b4b9af53b0612b948570f6259a620ace7ad3b60db389d433e78c7"
+    }
+  ],
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "duration_s": 8,
+  "step_s": 0.000625,
+  "scope": "First closed-loop forward/reverse/stop screen of the automatically planned contact motion. Source CAD, contact physics, effective actuators, software bounds and lease remain unchanged. Initial pose and reference are explicit. Static plus odd/even clock-rate feedforward is an approximation during transitions; inherited local yaw ratios still require separate steering validation. User browser bundles are untouched. No success or hardware-transfer claim before measurement."
+}

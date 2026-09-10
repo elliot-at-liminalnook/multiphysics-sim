@@ -1,0 +1,5 @@
+{
+  "invalid_walking_measurement": "examples/full-robot/contact-planning/diagonal-seed-browser-live.json",
+  "reason": "live_performance only drove keys for step_reference controllers; this named-Rhai preset therefore stood still. Its throughput result must not be used as walking evidence.",
+  "correction": "The harness now rejects motion-command presets it cannot drive. Re-measure using gait_live_review with declared UI events and independently checked body displacement."
+}

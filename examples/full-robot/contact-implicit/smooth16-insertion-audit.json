@@ -1,0 +1,63 @@
+{
+  "scope": "Same collocation times before/after exact spline refinement; differences limited to floating-point roundoff propagated through shared CAD physics.",
+  "rows": [
+    {
+      "mode": "uniform",
+      "errors": {
+        "position": {
+          "maximum": 2.220446049250313e-16,
+          "tolerance": 1e-12
+        },
+        "velocity": {
+          "maximum": 6.0298988024953815e-15,
+          "tolerance": 1e-10
+        },
+        "acceleration": {
+          "maximum": 5.897504706808832e-13,
+          "tolerance": 1e-8
+        },
+        "unactuated_wrench": {
+          "maximum": 3.267741632839716e-11,
+          "tolerance": 0.00001
+        },
+        "motor_torques_nm": {
+          "maximum": 2.0543566847663897e-12,
+          "tolerance": 0.00001
+        },
+        "contact_forces_world_n": {
+          "maximum": 2.212097172105132e-11,
+          "tolerance": 0.00001
+        }
+      }
+    },
+    {
+      "mode": "recorded",
+      "errors": {
+        "position": {
+          "maximum": 2.220446049250313e-16,
+          "tolerance": 1e-12
+        },
+        "velocity": {
+          "maximum": 5.995204332975845e-15,
+          "tolerance": 1e-10
+        },
+        "acceleration": {
+          "maximum": 5.88862292261183e-13,
+          "tolerance": 1e-8
+        },
+        "unactuated_wrench": {
+          "maximum": 2.7636559707389097e-11,
+          "tolerance": 0.00001
+        },
+        "motor_torques_nm": {
+          "maximum": 2.639444218743847e-12,
+          "tolerance": 0.00001
+        },
+        "contact_forces_world_n": {
+          "maximum": 2.220446049250313e-11,
+          "tolerance": 0.00001
+        }
+      }
+    }
+  ]
+}

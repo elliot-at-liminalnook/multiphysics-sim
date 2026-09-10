@@ -1,0 +1,33 @@
+{
+  "source_commit": "d37bae7",
+  "session_id": 93138,
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9049396,
+    "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+  },
+  "evidence": {
+    "path": "examples/full-robot/contact-planning/joint-height-workspace-evidence.json",
+    "bytes": 2529,
+    "sha256": "d4eab11389e9229ef22cc941998685ce47de4098ce096e52fefea38fe74d52f4"
+  },
+  "recipe": {
+    "path": "examples/full-robot/contact-planning/joint-height-speed.recipe.json",
+    "bytes": 146911,
+    "sha256": "d80afde8b5b8b0c12d0349c6328631a1f845e3645c936fd13f3c9c7cc67738ac"
+  },
+  "initial": {
+    "path": "examples/full-robot/contact-planning/joint-height-speed-initial.result.json",
+    "bytes": 1462309,
+    "sha256": "a3be7f5e80e9151f49c47c6efa1ed98c9cdff577dc031115ed33f9344c12a1bb"
+  },
+  "arguments": [
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-height-speed.recipe.json",
+    "--analytic-forces"
+  ],
+  "stdout": "examples/full-robot/contact-planning/joint-height-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-height-speed.log",
+  "scope": "Live 8000-evaluation joint speed search with the sampled-CAD height interval. No completed optimization result is included."
+}

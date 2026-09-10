@@ -61,6 +61,22 @@ fn loaded_floor_velocity_objective_respects_activation_and_existing_joint_cap() 
     assert!(on.correction_rad[0].abs() <= 0.002);
     let suggested = &values[0].1 * DVector::from_vec(on.correction_rad.clone());
     assert!(suggested.dot(&velocity) < 0.);
+    // Velocity-only control must not pull a translating robot toward an old
+    // world path. It retains exactly the same load-weighted damping command.
+    let mut velocity_only = enabled.clone();
+    velocity_only.position_gain = 0.;
+    let velocity_helper = PointFeedback::new(&art,velocity_only.clone()).unwrap();
+    let shifted = [target[0]+0.5,target[1]-0.4,target[2]+0.3];
+    let independent = velocity_helper.sample_target(&art,&map,&g,0.,&[shifted],&[1.]).unwrap();
+    assert_eq!(independent.correction_rad,on.correction_rad);
+    velocity_only.floor_velocity_damping = None;
+    let disabled = PointFeedback::new(&art,velocity_only.clone()).unwrap()
+        .sample_target(&art,&map,&g,0.,&[shifted],&[1.]).unwrap();
+    assert_eq!(disabled.correction_rad,vec![0.]);
+    velocity_only.position_gain = -0.1;
+    assert!(PointFeedback::new(&art,velocity_only.clone()).is_err());
+    velocity_only.position_gain = f64::NAN;
+    assert!(PointFeedback::new(&art,velocity_only).is_err());
     let off = helper.sample_target(&art,&map,&g,0.,&[target],&[0.]).unwrap();
     assert_eq!(off.correction_rad,vec![0.]);
     enabled.floor_velocity_damping.as_mut().unwrap().velocity_damping_s=0.;

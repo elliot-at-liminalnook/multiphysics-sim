@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "planners": [
+    {
+      "version": 1,
+      "model": "v3",
+      "capture": {
+        "path": "runs/net-forecast-v3/native.json",
+        "sha256": "02961b4ce986076ee291a6dc1593027426be499109e11f41453f54494bd8be81"
+      },
+      "completed": true,
+      "error": null,
+      "time_s": 60,
+      "fall": false,
+      "distance_m": 17.9060366687688,
+      "sustained_speed_m_s": 0.29843394447947996,
+      "frames": 3001,
+      "planning_samples": 2999,
+      "mean_predicted_gain_m": 0.013453442713188036,
+      "warm_start_selected": 1823,
+      "wall_s": 225.495608503,
+      "online_20ms_position_rmse_m": 0.0037233651708557624,
+      "online_20ms_reference_rmse_m": 0.0040979163495307065,
+      "action_matched_windows": [
+        {
+          "horizon_s": 0.02,
+          "count": 2999
+        },
+        {
+          "horizon_s": 0.1,
+          "count": 0
+        },
+        {
+          "horizon_s": 0.2,
+          "count": 0
+        }
+      ],
+      "scope": "Only the planner objective changes relative to the corresponding prior requested-direction trial. Full-minute shared Rust endpoint score and physical sampled fall checks determine ranking. Prediction gain and errors are diagnostic. No gait gain; not promoted."
+    },
+    {
+      "version": 1,
+      "model": "v5",
+      "capture": {
+        "path": "runs/net-forecast-v5/native.json",
+        "sha256": "366465258c0c06f4127b0a71d3e11dbaad9d0d069bcac6d148303e19e45d8c52"
+      },
+      "completed": true,
+      "error": null,
+      "time_s": 60,
+      "fall": false,
+      "distance_m": 1.7921964179791832,
+      "sustained_speed_m_s": 0.029869940299653053,
+      "frames": 3001,
+      "planning_samples": 2999,
+      "mean_predicted_gain_m": 0.016707770548310838,
+      "warm_start_selected": 1435,
+      "wall_s": 218.131851099,
+      "online_20ms_position_rmse_m": 0.0023743468715416573,
+      "online_20ms_reference_rmse_m": 0.003971462981364432,
+      "action_matched_windows": [
+        {
+          "horizon_s": 0.02,
+          "count": 2999
+        },
+        {
+          "horizon_s": 0.1,
+          "count": 0
+        },
+        {
+          "horizon_s": 0.2,
+          "count": 0
+        }
+      ],
+      "scope": "Only the planner objective changes relative to the corresponding prior requested-direction trial. Full-minute shared Rust endpoint score and physical sampled fall checks determine ranking. Prediction gain and errors are diagnostic. No gait gain; not promoted."
+    }
+  ],
+  "legacy_parity": {
+    "version": 1,
+    "matched_frames": 101,
+    "scope": "All physical poses, generalized motion, applied targets and progress rewards match the old requested-direction planner for the complete2s replay. Added net-distance objective does not alter this legacy path."
+  },
+  "completed_ppo_branches": [
+    {
+      "root": "runs/ppo-speed517",
+      "result": {
+        "best_distance_m": 31.01212653174123,
+        "best_speed_m_s": 0.5168687755290206,
+        "scope": "Deterministic complete-horizon net speed with no sampled falls. Learned stochastic policy uses PPO-Lagrangian; only fall cost, no gait-quality reward. Detailed timestep/contact validation remains required for improvements."
+      },
+      "updates": [
+        {
+          "iteration": 0,
+          "distance_m": 30.978509108660138,
+          "speed_m_s": 0.5163084851443356,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-speed517/iteration-000-validation.json",
+            "sha256": "445c1d2e52bc59589af6d92f9b21cb78377c1ac583b6b7b1c13f11a5cd415f83"
+          }
+        },
+        {
+          "iteration": 1,
+          "distance_m": 30.960591926319537,
+          "speed_m_s": 0.516009865438659,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-speed517/iteration-001-validation.json",
+            "sha256": "aec729be5b72f518f4a1a3b8b4f81b25a944312bfc1299ec7d1cb2046bbaba2e"
+          }
+        },
+        {
+          "iteration": 2,
+          "distance_m": 30.772946256434192,
+          "speed_m_s": 0.5128824376072365,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-speed517/iteration-002-validation.json",
+            "sha256": "3853e57645be078654c6a638f4962849c693653bc2a5bbf14ac1b345d833078b"
+          }
+        },
+        {
+          "iteration": 3,
+          "distance_m": 30.699424773632543,
+          "speed_m_s": 0.5116570795605424,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-speed517/iteration-003-validation.json",
+            "sha256": "75fb3800e3ec1d6cef767a328cc0af624665277db6b010af158a6171eb3e6c10"
+          }
+        }
+      ]
+    },
+    {
+      "root": "runs/ppo-shuffled-resume",
+      "result": {
+        "best_distance_m": 30.76039524429682,
+        "best_speed_m_s": 0.5126732540716137,
+        "scope": "Deterministic complete-horizon net speed with no sampled falls. Learned stochastic policy uses PPO-Lagrangian; only fall cost, no gait-quality reward. Detailed timestep/contact validation remains required for improvements."
+      },
+      "updates": [
+        {
+          "iteration": 0,
+          "distance_m": 30.62581152072831,
+          "speed_m_s": 0.5104301920121385,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-shuffled-resume/iteration-000-validation.json",
+            "sha256": "5563bc7297040ce036cb01f5e3c0c12a69093367888ac32c19ec899fd95fa845"
+          }
+        },
+        {
+          "iteration": 1,
+          "distance_m": 30.686331006446554,
+          "speed_m_s": 0.5114388501074426,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-shuffled-resume/iteration-001-validation.json",
+            "sha256": "7087856428fe4fa2e11281dc71a35824cfaf4f776465297d461652d4df0cce79"
+          }
+        },
+        {
+          "iteration": 2,
+          "distance_m": 30.76039524429682,
+          "speed_m_s": 0.5126732540716137,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-shuffled-resume/iteration-002-validation.json",
+            "sha256": "a2960cf8d58a104277b8176728cc7dfafa8dafda332c057daeaa61a0e362f31d"
+          }
+        },
+        {
+          "iteration": 3,
+          "distance_m": 30.65575491959387,
+          "speed_m_s": 0.5109292486598979,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-shuffled-resume/iteration-003-validation.json",
+            "sha256": "6247f7d868a02c7cb861c25b4c56ec9bb1a3d89f2bb2322d3b944050a29c0b98"
+          }
+        }
+      ]
+    },
+    {
+      "root": "runs/ppo-speed517-current-dynamics",
+      "result": {
+        "best_distance_m": 31.062473800777763,
+        "best_speed_m_s": 0.5177078966796294,
+        "scope": "Deterministic complete-horizon net speed with no sampled falls. Learned stochastic policy uses PPO-Lagrangian; only fall cost, no gait-quality reward. Detailed timestep/contact validation remains required for improvements."
+      },
+      "updates": [
+        {
+          "iteration": 0,
+          "distance_m": 31.030790535038598,
+          "speed_m_s": 0.5171798422506433,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-speed517-current-dynamics/iteration-000-validation.json",
+            "sha256": "e84df9d292b39efa2b4790b02f1cdf9d1aee0dc1fe28ad72d19c3fba20131f22"
+          }
+        },
+        {
+          "iteration": 1,
+          "distance_m": 31.062473800777763,
+          "speed_m_s": 0.5177078966796294,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-speed517-current-dynamics/iteration-001-validation.json",
+            "sha256": "e92bb308ed00f39cd1cb7e93fc6b0a3c0bf95022bbeac84c3486d2a76f634981"
+          }
+        },
+        {
+          "iteration": 2,
+          "distance_m": 30.84056454131225,
+          "speed_m_s": 0.5140094090218709,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-speed517-current-dynamics/iteration-002-validation.json",
+            "sha256": "87cf549d97302e2cf76bb403fb9a80beeb1b7a6d853c2fa450ef0f5e0e5df545"
+          }
+        },
+        {
+          "iteration": 3,
+          "distance_m": 30.972524881174476,
+          "speed_m_s": 0.5162087480195746,
+          "error": null,
+          "validation": {
+            "path": "runs/ppo-speed517-current-dynamics/iteration-003-validation.json",
+            "sha256": "474115cc4d84dccfe7f8d5d9f062c02b158d0e598830d4c630f2738460d81b71"
+          }
+        }
+      ]
+    }
+  ],
+  "leader": "runs/ppo-speed517-current-dynamics/iteration-001-state.json",
+  "continuation_inputs": "runs/ppo-speed518-resume.inputs.json",
+  "scope": "Completed objective-alignment trial and all four updates of three prior PPO branches. No new leader. Fresh-seed sigma0.01/0.03 PPO continuations are launched but have no new speed claim. The global physical maximum remains unproven."
+}

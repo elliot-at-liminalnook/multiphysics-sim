@@ -1,0 +1,73 @@
+{
+  "prefix": "runs/contact-planning/diagonal-hold250",
+  "source": "runs/contact-planning/diagonal-cadence250",
+  "command_speed_m_s": 0.25,
+  "windows_s": [
+    [
+      0.8,
+      3
+    ],
+    [
+      4.2,
+      6.4
+    ]
+  ],
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "original_velocity_lead_s": [
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02,
+    0.02
+  ],
+  "new_velocity_lead_s": [
+    0.03,
+    0.03,
+    0.03,
+    0.03,
+    0.03,
+    0.03,
+    0.03,
+    0.03,
+    0.03,
+    0.03,
+    0.03,
+    0.03
+  ],
+  "sources": [
+    {
+      "path": "runs/contact-planning/diagonal-cadence250.scene.json",
+      "sha256": "3898449960a5faac01c5defb458074ae4701fda2540d7fdaa7e381269b95f4e3"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-cadence250.config.json",
+      "sha256": "a6e8a08ef39008bc86eb53366917e200b3e92c87da9a1a2306807153fd9bc233"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-cadence250.actions.json",
+      "sha256": "aec2d05369490b2fcc6c04809160f5323e0a8f34311cb287e4236cedb7228613"
+    }
+  ],
+  "files": [
+    {
+      "path": "runs/contact-planning/diagonal-hold250.scene.json",
+      "sha256": "d7f6f78bf1d2a13fde7a7341e25c1ecd8a56e3cfa170ec4e65bc4d868a9077d7"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.config.json",
+      "sha256": "a6e8a08ef39008bc86eb53366917e200b3e92c87da9a1a2306807153fd9bc233"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.actions.json",
+      "sha256": "aec2d05369490b2fcc6c04809160f5323e0a8f34311cb287e4236cedb7228613"
+    }
+  ],
+  "scope": "Matched runtime test of mean linear-reference advance over one zero-order hold: added lead T/2=.010 s, giving D/K+T/2=.030 s. This is a first-order hold correction, not exact compensation for curved paths, saturation, impacts or clock acceleration. All other scene/config/actions and all physical gates remain unchanged."
+}

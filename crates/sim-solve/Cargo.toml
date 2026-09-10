@@ -4,14 +4,56 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+native-ipopt = ["dep:libloading"]
+conic = ["dep:clarabel"]
+bayesian = ["dep:egobox-ego", "dep:egobox-doe", "dep:egobox-gp", "dep:linfa", "dep:ndarray", "dep:rand", "dep:rand_xoshiro"]
+
 [dependencies]
+clarabel = { version = "=0.11.1", optional = true }
 web-time = "1.1"
 nalgebra.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 
+[dev-dependencies]
+serde_json.workspace = true
+sim-domain-control = { path = "../sim-domain-control" }
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+egobox-ego = { version = "=0.38.1", optional = true }
+egobox-doe = { version = "=0.35.1", optional = true }
+egobox-gp = { version = "=0.36.3", optional = true }
+linfa = { version = "=0.8.1", optional = true }
+ndarray = { version = "=0.16.1", optional = true }
+rand = { version = "0.8", optional = true }
+rand_xoshiro = { version = "=0.6.0", optional = true }
 faer = "0.22"
+libloading = { version = "0.8.9", optional = true }
+
+[[example]]
+name = "audit_ipopt"
+required-features = ["native-ipopt"]
+
+[[example]]
+name = "suggest_black_box"
+required-features = ["bayesian"]
+
+[[example]]
+name = "suggest_local_global"
+required-features = ["bayesian"]
+
+[[example]]
+name = "mixed_cem"
+required-features = ["bayesian"]
+
+[[example]]
+name = "suggest_composite_planar"
+required-features = ["bayesian"]
+
+[[example]]
+name = "calibrate_response_uncertainty"
+required-features = ["bayesian"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 faer = { version = "0.22", default-features = false, features = ["std", "sparse-linalg"] }

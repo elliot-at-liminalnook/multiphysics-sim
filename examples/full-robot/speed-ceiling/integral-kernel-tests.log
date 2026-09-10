@@ -1,0 +1,10 @@
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-script)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.95s
+     Running tests/angle_integral.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/angle_integral-c73b7df88e4bf0a4)
+
+running 3 tests
+test failed_native_update_does_not_commit_script_state_or_commands ... ok
+test rhai_matches_registry_kernel_and_fresh_replay ... ok
+test json_integer_parameters_work_but_invalid_schema_and_bounds_still_fail ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

@@ -1,0 +1,85 @@
+{
+  "scope": "Same starting motion, physical model, 144 check times, slip objective and fixed displacement as the weighted control. Three restarted ten-iteration AL subproblems differ from one thirty-iteration weighted solve; iteration counts are not equal computational cost. No qualified gait, runtime speed or global maximum claim.",
+  "initial_physical_and_slip_parity": true,
+  "planned_projected_45deg_rate_m_s": 0.20092650990916813,
+  "weighted_control_dense": {
+    "samples": 512,
+    "force_error_n": 0.22352300941563602,
+    "moment_error_nm": 0.05370994126575408,
+    "minimum_torque_margin_nm": -0.0012913922745218798,
+    "maximum_point_penetration_m": 0.00011373090356403548,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.6659106082499472,
+    "within_sampled_slip_limit": false,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0.000016327625443482576
+  },
+  "inequality_coarse": {
+    "samples": 144,
+    "force_error_n": 0.14825407319625744,
+    "moment_error_nm": 0.04484567319208188,
+    "minimum_torque_margin_nm": -0.0007310875727906119,
+    "maximum_point_penetration_m": 0.00011293353869673561,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.7519253258828477,
+    "within_sampled_slip_limit": false,
+    "geometry_samples": 129,
+    "maximum_interlink_overlap_m": 0.000016646283136165693
+  },
+  "inequality_dense": {
+    "samples": 512,
+    "force_error_n": 0.20014757594758875,
+    "moment_error_nm": 0.07182836427205633,
+    "minimum_torque_margin_nm": -0.002947983309359914,
+    "maximum_point_penetration_m": 0.00011293353869673561,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.7265112652375775,
+    "within_sampled_slip_limit": false,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0.000016646283136165693
+  },
+  "search": {
+    "termination": "outer_iteration_limit",
+    "evaluations": 34500,
+    "maximum_violation": 1.9650814639251486,
+    "within_constraint_tolerance": false,
+    "history": [
+      {
+        "complementarity": 5.111513623606494,
+        "iteration": 0,
+        "maximum_violation": 2.260865680133717,
+        "objective_cost": 471.41931933255967,
+        "penalty": 1,
+        "shifted_constraint_norm": 2.260865680133717,
+        "inner_termination": "iteration_limit",
+        "inner_evaluations": 11499,
+        "inner_initial_cost": 489.11818742570495,
+        "inner_cost": 478.81607653616254
+      },
+      {
+        "complementarity": 51.57119964781033,
+        "iteration": 1,
+        "maximum_violation": 2.1606978509601005,
+        "objective_cost": 472.6062488696485,
+        "penalty": 10,
+        "shifted_constraint_norm": 2.1606978509601005,
+        "inner_termination": "iteration_limit",
+        "inner_evaluations": 11499,
+        "inner_initial_cost": 560.9200814961534,
+        "inner_cost": 550.3106809713788
+      },
+      {
+        "complementarity": 433.0567741873217,
+        "iteration": 2,
+        "maximum_violation": 1.9650814639251486,
+        "objective_cost": 475.9545000563738,
+        "penalty": 100,
+        "shifted_constraint_norm": 1.9650814639251486,
+        "inner_termination": "iteration_limit",
+        "inner_evaluations": 11498,
+        "inner_initial_cost": 1256.7937702312506,
+        "inner_cost": 1135.8375117938854
+      }
+    ]
+  }
+}

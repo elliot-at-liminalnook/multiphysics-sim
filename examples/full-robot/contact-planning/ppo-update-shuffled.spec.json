@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "initial_state": "runs/speed-ppo-predictive-v2/iteration-000-start.json",
+  "rollouts": [
+    "runs/speed-ppo-predictive-v2/iteration-000-episode-000.json",
+    "runs/speed-ppo-predictive-v2/iteration-000-episode-001.json"
+  ],
+  "evaluation_template": "runs/speed-ppo-predictive-v2/experiment.json",
+  "optimizer": {
+    "epochs": 4,
+    "batch_size": 256,
+    "actor_learning_rate": 0.0003,
+    "critic_learning_rate": 0.001,
+    "clip_ratio": 0.2,
+    "maximum_gradient_norm": 1,
+    "fall_multiplier_learning_rate": 30,
+    "shuffle_seed": 73
+  },
+  "evaluate": true
+}

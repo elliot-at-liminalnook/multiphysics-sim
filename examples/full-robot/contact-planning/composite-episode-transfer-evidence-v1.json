@@ -1,0 +1,3207 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/COMPOSITE_SPEED_SEARCH.md",
+        "bytes": 19867,
+        "sha256": "31907d4e3a7f0fe798999748564684307b6a173c4e33bd622694909973cfdc81"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/31907d4e3a7f0fe798999748564684307b6a173c4e33bd622694909973cfdc81.gz",
+        "bytes": 7667,
+        "sha256": "88f7eadff914ceed87da468eda31cb0cbc018afb178c324586030e0800efb271"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/composite-adaptive-batch-v1.json",
+        "bytes": 7735,
+        "sha256": "9dbfa1a0a89be310ee8e7f9e7d5b1d7c52a4324a0ab61d92f4d68ebe746f4dd9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9dbfa1a0a89be310ee8e7f9e7d5b1d7c52a4324a0ab61d92f4d68ebe746f4dd9.gz",
+        "bytes": 2882,
+        "sha256": "1db23b612b94d8dd2d219f738a4258055d29e61e19a940c1cbabcedf456a67ac"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/planar_speed_experiment.mjs",
+        "bytes": 7520,
+        "sha256": "e8c1527e815d33e9e039b1afa39529b8131273632596a9b851206cc9dc1ed517"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e8c1527e815d33e9e039b1afa39529b8131273632596a9b851206cc9dc1ed517.gz",
+        "bytes": 2857,
+        "sha256": "9bdd0ffbf3725f9e3414475ecc07c8be7d4ad8cb816ae9717e110137adf4b892"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/run_affine_speed_search.mjs",
+        "bytes": 12608,
+        "sha256": "6467ee5d58622692093b45043e11c3d51c3af1ac0a16e2b5326968ef32cc36db"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6467ee5d58622692093b45043e11c3d51c3af1ac0a16e2b5326968ef32cc36db.gz",
+        "bytes": 4126,
+        "sha256": "6510e4b8dcb0f9fb415f4ef95954c4aac05c7d779773cadd975035749a232689"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/run_composite_planar_speed.mjs",
+        "bytes": 6371,
+        "sha256": "bf2385f195ec992c97255668d4130e2180c8d6e2ef889d498355fe5c915baa81"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bf2385f195ec992c97255668d4130e2180c8d6e2ef889d498355fe5c915baa81.gz",
+        "bytes": 2357,
+        "sha256": "a7588350f4861976223e574ec44a9c61983d84e95edfe5f6c8b555f0c707950c"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/run_prefix_candidate_episode.mjs",
+        "bytes": 7500,
+        "sha256": "f8da7de3e166650d9ad0955bca928eb668dfd386e577839c75a5fd1e3d3052bc"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f8da7de3e166650d9ad0955bca928eb668dfd386e577839c75a5fd1e3d3052bc.gz",
+        "bytes": 2375,
+        "sha256": "2298fd0ef22c776d3c5da55ef875e91c97d9f3673f618ecedc80d00c128713f1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/affine_trajectory-v1",
+        "bytes": 593432,
+        "sha256": "a1b0ae92d09887479ed092da37211dfff51b9afc294d69c0d78df6f07f5e61c1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a1b0ae92d09887479ed092da37211dfff51b9afc294d69c0d78df6f07f5e61c1.gz",
+        "bytes": 259145,
+        "sha256": "a573f27aea579be9f8568e03ffaa10b5bfc2def1681ccd6d993287762917bee0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-inputs-v1/screen.json",
+        "bytes": 246,
+        "sha256": "a74a5296501cd9c8667455dd942303c35c89e0f7552ccadcdf3c6dafeb140df4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a74a5296501cd9c8667455dd942303c35c89e0f7552ccadcdf3c6dafeb140df4.gz",
+        "bytes": 204,
+        "sha256": "6f15d8ce97269ce7fc1c374e79701d4962d3d1f9172828872cc042a478154c59"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-inputs-v1/search.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-inputs-v1/search.stdout.log",
+        "bytes": 4046,
+        "sha256": "d9efdc9d870645812996534cb29135e2a606800fefc87be44e3c66ca75ba076f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d9efdc9d870645812996534cb29135e2a606800fefc87be44e3c66ca75ba076f.gz",
+        "bytes": 1188,
+        "sha256": "425d36bea26d8518bb6aa6bf2960a292c6a98987e6daf83d5858c1cf7a1466b6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-inputs-v1/seed-context.json",
+        "bytes": 6887,
+        "sha256": "68872e57114dcdc718ee7f24ba7c813c291011395b30a5e82c62643781fd6aff"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/68872e57114dcdc718ee7f24ba7c813c291011395b30a5e82c62643781fd6aff.gz",
+        "bytes": 2622,
+        "sha256": "3e2c7abde23d445cc44eae42ca4f21e75761ef868bb723141b28fb79d7359fff"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-inputs-v1/seed-request.json",
+        "bytes": 12484,
+        "sha256": "c393d9cecb50baae1ca56ce3dc468ebe99fcca6ffe65cbe03a787867c5601728"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c393d9cecb50baae1ca56ce3dc468ebe99fcca6ffe65cbe03a787867c5601728.gz",
+        "bytes": 3989,
+        "sha256": "b9845f3a9086dc99ecd9ab6cc0e3aee857f9d94f271514b59af6a4372fa757cd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-inputs-v1/seed-scores.json",
+        "bytes": 403,
+        "sha256": "92be320ef46140c3feaaaed30973c325f193c55d84424c775a08b4377e8b3e85"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/92be320ef46140c3feaaaed30973c325f193c55d84424c775a08b4377e8b3e85.gz",
+        "bytes": 213,
+        "sha256": "0c49ca0a413d9ae3b8bd5aa631432343beb681131d4b98a6ff03701985ad0af4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-inputs-v1/spec.json",
+        "bytes": 621,
+        "sha256": "bf21d515bac2c237aa95b2c2497da0f491ef1d431b49a5f3cadd7ea652356ae8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bf21d515bac2c237aa95b2c2497da0f491ef1d431b49a5f3cadd7ea652356ae8.gz",
+        "bytes": 285,
+        "sha256": "b48b6c928fed824c50e00515d9f21ebb6614a19706a9438c1a2aacb6c77e1cb2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/context.json",
+        "bytes": 3222,
+        "sha256": "9b22021da74dcb8507d4036dc5c3649165024d942a5aa268f7f10eb6cb221fbb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9b22021da74dcb8507d4036dc5c3649165024d942a5aa268f7f10eb6cb221fbb.gz",
+        "bytes": 1427,
+        "sha256": "086566f1b948b6862b323f61460b30703d804f285069091632ec7dd44fa72916"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/actions.json",
+        "bytes": 1548896,
+        "sha256": "4f25d180ad77e243120833127199366454997a55438d48f79c21352a5d4beca6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f25d180ad77e243120833127199366454997a55438d48f79c21352a5d4beca6.gz",
+        "bytes": 42902,
+        "sha256": "b8c6e9e23bfc9d68d1472ab44d655d9604ceb3edbf8f4bf9e303213200cab7cb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/capture.execution.json",
+        "bytes": 60,
+        "sha256": "f5810c0ccbfc743a8aac6ecc45218dc8a3c144ad887829d6ca269ad6bdbfe9ee"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f5810c0ccbfc743a8aac6ecc45218dc8a3c144ad887829d6ca269ad6bdbfe9ee.gz",
+        "bytes": 73,
+        "sha256": "0bf4097b71406fc873ce3dad1586ae5a6ba456bc1d247f0ff1253def509de276"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/capture.launch.json",
+        "bytes": 192,
+        "sha256": "47b33bada84bc92618935269037e6c42b0ce66eb8ed17cb6ca767d7376219d07"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47b33bada84bc92618935269037e6c42b0ce66eb8ed17cb6ca767d7376219d07.gz",
+        "bytes": 169,
+        "sha256": "a5f321964f8990506cfb3819f5058d795660b86d2150c63c29faa3b58e6e161d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/capture.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-0.execution.json",
+        "bytes": 58,
+        "sha256": "f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd.gz",
+        "bytes": 71,
+        "sha256": "576409c16e99851249a638f71dd9900b5cd2f15f2d9d67c6778d74644327c8f8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-0.launch.json",
+        "bytes": 250,
+        "sha256": "51602326af13fdb280de535a413203390fa78cbe6e3404b66317b985f6e64ad8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/51602326af13fdb280de535a413203390fa78cbe6e3404b66317b985f6e64ad8.gz",
+        "bytes": 174,
+        "sha256": "875f135b11aab76602868cb87b31c2cd33d4832f9920d64d475dd2f6dbebf8e8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-0.request.json",
+        "bytes": 63648,
+        "sha256": "f7e6e60b6e2aaa959d6acc7ae5bb7f4a2c061baf5e4f4e624c966562010184bb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f7e6e60b6e2aaa959d6acc7ae5bb7f4a2c061baf5e4f4e624c966562010184bb.gz",
+        "bytes": 23597,
+        "sha256": "ba4c6aed02ab0dd7f5259e6421ee003e7846076fb3b122efc80404ff4d25dbcc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-0.result.json",
+        "bytes": 1528,
+        "sha256": "30552d6e104bf3dc66c172c0e70855ca0bee1d29a7b843a5040c443228884023"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/30552d6e104bf3dc66c172c0e70855ca0bee1d29a7b843a5040c443228884023.gz",
+        "bytes": 667,
+        "sha256": "bc1e7bb1edab5f8f68cb016c0ba64bdaa23f1a3ce997eca370f17ef5315fa1d9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-1.execution.json",
+        "bytes": 58,
+        "sha256": "f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd.gz",
+        "bytes": 71,
+        "sha256": "576409c16e99851249a638f71dd9900b5cd2f15f2d9d67c6778d74644327c8f8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-1.launch.json",
+        "bytes": 250,
+        "sha256": "4bd1f69637f0927479299d93cd09896947b7d251c9c2d2a6926bd8436cb0f542"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4bd1f69637f0927479299d93cd09896947b7d251c9c2d2a6926bd8436cb0f542.gz",
+        "bytes": 174,
+        "sha256": "39ab5cd47eab8ef4324c2983a106759dacd4e75a499b4e52aa6157b9797bf647"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-1.request.json",
+        "bytes": 42499,
+        "sha256": "a553c74f048be61d9881fb4286644e03d6ce6124d8797aaa68dbe007e534c527"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a553c74f048be61d9881fb4286644e03d6ce6124d8797aaa68dbe007e534c527.gz",
+        "bytes": 15701,
+        "sha256": "7030047e377cc218dfa41f06f988175ba86e6f5c450169fc3ab16afa4e34eb04"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-1.result.json",
+        "bytes": 1530,
+        "sha256": "6944518bb6e55ff2c1b3bf2bb90ccea1f5549bb8980cdacd2705f53bd7889485"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6944518bb6e55ff2c1b3bf2bb90ccea1f5549bb8980cdacd2705f53bd7889485.gz",
+        "bytes": 663,
+        "sha256": "1d445b05f978ff9a1b8479e0adae4ecc6f7cb18010500bef27c2204b522164c5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/fit-1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/inputs.json",
+        "bytes": 1158,
+        "sha256": "090d279366538eef0d4eea1c3c8c1d9281ca4749c376bcd79006cf6e4bece2b2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/090d279366538eef0d4eea1c3c8c1d9281ca4749c376bcd79006cf6e4bece2b2.gz",
+        "bytes": 533,
+        "sha256": "2fee8846039f728f117014d5535843916bcf24a626b4e624aea30e16d3c869ef"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/native.json",
+        "bytes": 46203258,
+        "sha256": "d9eda4f2430bb4ac3567ba1c33037035d62c507074c770a9a9480d69939f3a19"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d9eda4f2430bb4ac3567ba1c33037035d62c507074c770a9a9480d69939f3a19.gz",
+        "bytes": 10964779,
+        "sha256": "81b20c2b655ee244735e9eaa04dc895867773949d235b57fb0a5782c940897d9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/observation.json",
+        "bytes": 587,
+        "sha256": "a35f7c95329953d97dbbbbb7d713c53513143635385d57148dce4ce21e5f2aa1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a35f7c95329953d97dbbbbb7d713c53513143635385d57148dce4ce21e5f2aa1.gz",
+        "bytes": 394,
+        "sha256": "32f7b93097a3c16d2cfb4efd83c6b6eb939639e0af2fbba503157dd422d1c2c7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/prediction-errors.json",
+        "bytes": 1497,
+        "sha256": "e50285109dbd36a8387abfc9d71129d61cd547457731e5ff96a0313b387fb3fa"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e50285109dbd36a8387abfc9d71129d61cd547457731e5ff96a0313b387fb3fa.gz",
+        "bytes": 576,
+        "sha256": "830f881911b02bb26e61481960f11fa9fcb7736275738879ee191c2843d0b623"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/prefix-check.json",
+        "bytes": 233,
+        "sha256": "33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033.gz",
+        "bytes": 187,
+        "sha256": "1939a594ead45656c6d77ceab721e779124203bee52b03b169102b941ea55d4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/replay-input.json",
+        "bytes": 13011813,
+        "sha256": "2fb9cad3d153b1f0aa5396de574f41a9da09288eb755b020e734123de77c678c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2fb9cad3d153b1f0aa5396de574f41a9da09288eb755b020e734123de77c678c.gz",
+        "bytes": 3659063,
+        "sha256": "aa99dd789666e76b2ab01c68cf7780e10164a4f7b96195747e231197c209b53f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/scene.json",
+        "bytes": 12745229,
+        "sha256": "472d930397129e923ae977fa624e85c4fc1ce80c580655a13d0a07b17616143d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/472d930397129e923ae977fa624e85c4fc1ce80c580655a13d0a07b17616143d.gz",
+        "bytes": 3639461,
+        "sha256": "38d1c3ba966d8773027de5dfd60286bec907e20b514a47083ba0743433688c4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/screen-inputs.json",
+        "bytes": 425,
+        "sha256": "91a3acb2bb9c22111a8db4b97e98303bdc0760677c6f28ef1c74439f89e627f6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/91a3acb2bb9c22111a8db4b97e98303bdc0760677c6f28ef1c74439f89e627f6.gz",
+        "bytes": 299,
+        "sha256": "c7b43a4bdf67ccb63bada01838b356447494fe0fbd9cd8e05128db6ac97bbbc6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/summary.json",
+        "bytes": 672,
+        "sha256": "abda6f6afa8e545b21d948a8d7b8cafac8b8d88920ae03b421dc7579121b3858"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/abda6f6afa8e545b21d948a8d7b8cafac8b8d88920ae03b421dc7579121b3858.gz",
+        "bytes": 432,
+        "sha256": "9c130f6a4befac7e60c4607f18c3d49e3bb013e1681879900eeec53af205592f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/trajectory.json",
+        "bytes": 1139188,
+        "sha256": "df0f39c654d8a08fdd047404d4a1d9eda78fc8a06e3059725c9d0638400f976e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/df0f39c654d8a08fdd047404d4a1d9eda78fc8a06e3059725c9d0638400f976e.gz",
+        "bytes": 463257,
+        "sha256": "e53db23462b18a2fdf7df9fbcdaf10dca5e408fcd12bf700cf6b9ea236bfda2e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/transform.json",
+        "bytes": 496,
+        "sha256": "240497aed8510817fc35550d1efa83b4cacaa4e24d54c84dceb4f8db238e54e8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/240497aed8510817fc35550d1efa83b4cacaa4e24d54c84dceb4f8db238e54e8.gz",
+        "bytes": 212,
+        "sha256": "ae9b45f1ea25d912b6e261737796bbb7c2e570936ddf6ca710f42aa56057c84d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-000/values.json",
+        "bytes": 174,
+        "sha256": "0d767457b32d75cad4dbdd4ab0a5d402d4cddd2cfacd0d24b383e2216b53df29"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0d767457b32d75cad4dbdd4ab0a5d402d4cddd2cfacd0d24b383e2216b53df29.gz",
+        "bytes": 123,
+        "sha256": "66558c049cbaa18cb54ea3aa79a8f33be7e784a78d9c045107bd99a5ec5e3c10"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/actions.json",
+        "bytes": 1563896,
+        "sha256": "d96110780510a0660ac50f88346fe8ccf33cc30fe2a2cdf6d59b426b9dbc0165"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d96110780510a0660ac50f88346fe8ccf33cc30fe2a2cdf6d59b426b9dbc0165.gz",
+        "bytes": 42911,
+        "sha256": "c8b2ae1ac2f254f6aa7024e5b3a7ae716e5a0727552d3149c7d87a6631afaa8b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/capture.execution.json",
+        "bytes": 60,
+        "sha256": "c2eaabbbbf35db270e2facd1d6bc3406b10d46f15069e51cdfec38f8ef48592c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c2eaabbbbf35db270e2facd1d6bc3406b10d46f15069e51cdfec38f8ef48592c.gz",
+        "bytes": 73,
+        "sha256": "b4d60c9cbbc02e05d8b2c488c936fb05a0289669886fab21008823177b68377a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/capture.launch.json",
+        "bytes": 192,
+        "sha256": "7353fce90ac2c62b061f2bb0eb28ad065d2f6d54c5741aecfad0016872fb7db5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7353fce90ac2c62b061f2bb0eb28ad065d2f6d54c5741aecfad0016872fb7db5.gz",
+        "bytes": 170,
+        "sha256": "ccb334b6ef844be13a5559273e70d5aaebe5c1fbb060fc013a242e2732e5c188"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/capture.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-0.execution.json",
+        "bytes": 58,
+        "sha256": "4bb4e8a633be715193f4e2266c9137f14c13f3aa50d2bbf6bed2884f4549dead"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4bb4e8a633be715193f4e2266c9137f14c13f3aa50d2bbf6bed2884f4549dead.gz",
+        "bytes": 71,
+        "sha256": "44ee5655915039fa1cd6a24873bb435de3ca0aeeeb9c08b0c792ccbf8282b91e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-0.launch.json",
+        "bytes": 250,
+        "sha256": "7a7c3be58832dd5be4f7c86ad80e696c3bd4e3b54430589e821c991e613b93fe"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7a7c3be58832dd5be4f7c86ad80e696c3bd4e3b54430589e821c991e613b93fe.gz",
+        "bytes": 174,
+        "sha256": "3b1f34af98bd9e1cd0c86d0fbd0699d75cad09583f1724b71e610288211d0754"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-0.request.json",
+        "bytes": 63577,
+        "sha256": "89b142498e411f5dd0863ac93064f2156ffe9bf0012954fe6b9ad180b03567cf"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/89b142498e411f5dd0863ac93064f2156ffe9bf0012954fe6b9ad180b03567cf.gz",
+        "bytes": 23449,
+        "sha256": "49526ac0d9057b157a8f39de52b08a65465853fda4dd15199dfa0acd21ae7bb4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-0.result.json",
+        "bytes": 1523,
+        "sha256": "5d80efc9f6cf364a4a3c5ffa7a0f5b02029219e4c7c88c961a857bb5f68d713d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5d80efc9f6cf364a4a3c5ffa7a0f5b02029219e4c7c88c961a857bb5f68d713d.gz",
+        "bytes": 667,
+        "sha256": "cd18d49f77395557e45e6575ff7dd748c1c48c7b41f3f53e734e62dad89148ab"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-1.execution.json",
+        "bytes": 58,
+        "sha256": "f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd.gz",
+        "bytes": 71,
+        "sha256": "576409c16e99851249a638f71dd9900b5cd2f15f2d9d67c6778d74644327c8f8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-1.launch.json",
+        "bytes": 250,
+        "sha256": "acafa7dda4598f13a4d3ce06cb94ac7c68c89a4fdacda686219759447502b4c0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/acafa7dda4598f13a4d3ce06cb94ac7c68c89a4fdacda686219759447502b4c0.gz",
+        "bytes": 174,
+        "sha256": "3c4bb5374563213f2310e50986b13199bc0bde8152a0cb979166996c93170c46"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-1.request.json",
+        "bytes": 42406,
+        "sha256": "e2895e600bd4cc376c780f92e25966efd3a7f4e23304dd0a39c22cd77c2fa62c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e2895e600bd4cc376c780f92e25966efd3a7f4e23304dd0a39c22cd77c2fa62c.gz",
+        "bytes": 15622,
+        "sha256": "c08d0567a879a1ea0a58c3872730f5cda243d804e64ea2bcf652eb1a53938349"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-1.result.json",
+        "bytes": 1532,
+        "sha256": "5ec40af87711df22822a7f793d0bd54efc40ccbf666717bb0c72d88cdc28310d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5ec40af87711df22822a7f793d0bd54efc40ccbf666717bb0c72d88cdc28310d.gz",
+        "bytes": 668,
+        "sha256": "104dc3cdaf0f24f6e153e8a4a316a2945932f0c1dfb45b8bf5980de040352d57"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/fit-1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/inputs.json",
+        "bytes": 1158,
+        "sha256": "b5d7b554ce210a9c2b11a472aa1ab8239dbb9a130c5a745195c1252b7767216f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b5d7b554ce210a9c2b11a472aa1ab8239dbb9a130c5a745195c1252b7767216f.gz",
+        "bytes": 532,
+        "sha256": "05b4dcfd3cd458344560f71158f33252796747d408abbc8c17133a7a96e6c9b2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/native.json",
+        "bytes": 46216021,
+        "sha256": "d45126e93b54a2735575ab774a3017c97bdc8a549197af188ceba94ca64d3024"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d45126e93b54a2735575ab774a3017c97bdc8a549197af188ceba94ca64d3024.gz",
+        "bytes": 10968038,
+        "sha256": "f9e00c3c68c1c4562b6f738300c6270f5deffed9589779b8cc08b71178ab7e3d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/observation.json",
+        "bytes": 585,
+        "sha256": "d3e3f8c788adc9f92267d01286dddeea6ae0da5a20fb8c70f679a90e8e12dc24"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d3e3f8c788adc9f92267d01286dddeea6ae0da5a20fb8c70f679a90e8e12dc24.gz",
+        "bytes": 390,
+        "sha256": "379c14c33c32a6f037e8ad142b028bd6386f5e4404e278843226dec03411bad9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/prediction-errors.json",
+        "bytes": 1483,
+        "sha256": "623812f4999a387ba3801d0c71f7979049f3678d918603b0ae7141191082710c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/623812f4999a387ba3801d0c71f7979049f3678d918603b0ae7141191082710c.gz",
+        "bytes": 570,
+        "sha256": "0e63b9a84cf7de4f6d737118f35d26c3d00a633a01723a5cdd4e5d787516fb57"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/prefix-check.json",
+        "bytes": 233,
+        "sha256": "33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033.gz",
+        "bytes": 187,
+        "sha256": "1939a594ead45656c6d77ceab721e779124203bee52b03b169102b941ea55d4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/replay-input.json",
+        "bytes": 13012159,
+        "sha256": "81b848a277a9455ef7e4a18b769928faec8c2418857fd78dd820537fae9879f8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/81b848a277a9455ef7e4a18b769928faec8c2418857fd78dd820537fae9879f8.gz",
+        "bytes": 3659053,
+        "sha256": "7a7565a39e0d21e4895cefb356bc687a6cf5de74b55a04d2b5498b68007f1356"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/scene.json",
+        "bytes": 12744575,
+        "sha256": "5036016933e2afbd1b3e7bcae8f4d76bd43293d303536e8fad2036853376e5b3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5036016933e2afbd1b3e7bcae8f4d76bd43293d303536e8fad2036853376e5b3.gz",
+        "bytes": 3639440,
+        "sha256": "32edc556a0ac8f45d24788b46fdfe6b9980f7903e66e429c3269798d762094ca"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/screen-inputs.json",
+        "bytes": 425,
+        "sha256": "5a054ad0bbeb435b06494a5917c3a4d5c3f3c8d21ab8f470c39336c96aa69508"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5a054ad0bbeb435b06494a5917c3a4d5c3f3c8d21ab8f470c39336c96aa69508.gz",
+        "bytes": 298,
+        "sha256": "df0b9b9f61bd949444dc048938a25efb4ad60cffed99f8e3339ccf841c3e3c99"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/summary.json",
+        "bytes": 674,
+        "sha256": "82a23f56091a35444902000dbefdf58564e20ce11aaf80152b03eac256065d9b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/82a23f56091a35444902000dbefdf58564e20ce11aaf80152b03eac256065d9b.gz",
+        "bytes": 434,
+        "sha256": "939bb8f40cf319769972f94cb6afc73a9c61070a5ac2c0ee45df1703bf8d8aea"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/trajectory.json",
+        "bytes": 1138533,
+        "sha256": "787b464cad6f54ab7432dac313b10ca411afb8f685f60113505bdd0166110e97"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/787b464cad6f54ab7432dac313b10ca411afb8f685f60113505bdd0166110e97.gz",
+        "bytes": 463210,
+        "sha256": "94822d660463f1d68a45e6a2d3273a7f248d9287603346eea66fb707bd99d3af"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/transform.json",
+        "bytes": 496,
+        "sha256": "a95fc1af3eb6626200fdf6630390e6e9433f2ecab9827c8cc74cbb8921e9ee63"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a95fc1af3eb6626200fdf6630390e6e9433f2ecab9827c8cc74cbb8921e9ee63.gz",
+        "bytes": 215,
+        "sha256": "4bf35332dbfdd8279f8ce9912209d2ce16f46e13ab4fc047713ae8d7cce65b4a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-001/values.json",
+        "bytes": 175,
+        "sha256": "2d82a94e01b35c3a8874ca4901ebd65963dab86823d211671adf7aef795400f3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2d82a94e01b35c3a8874ca4901ebd65963dab86823d211671adf7aef795400f3.gz",
+        "bytes": 123,
+        "sha256": "03ab9e601527839f875e34c675916f7f45247e90ae6517127ed621b2e75bd847"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/actions.json",
+        "bytes": 1548896,
+        "sha256": "5d52060752550b656c6b46114efd353756a72add972a1f56d55551199d194eb9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5d52060752550b656c6b46114efd353756a72add972a1f56d55551199d194eb9.gz",
+        "bytes": 42901,
+        "sha256": "1aadf06b52b47138ddf9b4c0e826f2d57f82da6b214f1c568157e921b2d6c89f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/capture.execution.json",
+        "bytes": 60,
+        "sha256": "c378f79bd15d38a4ba157bfa9300257448b7a1dafb38491649b251472a3f664a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c378f79bd15d38a4ba157bfa9300257448b7a1dafb38491649b251472a3f664a.gz",
+        "bytes": 73,
+        "sha256": "21445f67869eb805df89a813ca7062d56e333f5c72ede524a37afff73f293b0a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/capture.launch.json",
+        "bytes": 192,
+        "sha256": "3cc100ce46296c31fbfade59b4807cff48085ba0e65f79626c6996d43d4740b0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3cc100ce46296c31fbfade59b4807cff48085ba0e65f79626c6996d43d4740b0.gz",
+        "bytes": 171,
+        "sha256": "5d158baa24c61b8be58e34ea66b6755c15acef93515b4acf4bf404bf7152b435"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/capture.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-0.execution.json",
+        "bytes": 58,
+        "sha256": "1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0.gz",
+        "bytes": 71,
+        "sha256": "d37bc11189a121dfd9d5332c2187bfdc8f90c1a096afceb501643b60d98cebe7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-0.launch.json",
+        "bytes": 250,
+        "sha256": "62523c7bad8d78b98a392aa36516bb044fe9160812d5e1fccd2c4265fd6b9a50"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/62523c7bad8d78b98a392aa36516bb044fe9160812d5e1fccd2c4265fd6b9a50.gz",
+        "bytes": 175,
+        "sha256": "7b299d9ed5a05bcde02009b0e86fdde5270c511ee6e9816688a55c8f30cfdb4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-0.request.json",
+        "bytes": 63662,
+        "sha256": "63409484646c338480635b98235823de3c2298969a31e2e59d5c9b7804918663"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/63409484646c338480635b98235823de3c2298969a31e2e59d5c9b7804918663.gz",
+        "bytes": 23423,
+        "sha256": "2c893589d932248e017f13ac4fa1b0279d4be53c1b7a905ba8032e355f834878"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-0.result.json",
+        "bytes": 1525,
+        "sha256": "360a0f5bd3c4893fc3347b829e7bd4a6919ef60ab7dd83679a8ed5ca4fa54095"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/360a0f5bd3c4893fc3347b829e7bd4a6919ef60ab7dd83679a8ed5ca4fa54095.gz",
+        "bytes": 668,
+        "sha256": "d8acb017e91b1975ba5307c6a7ff8b4d5184271092a210d0a0b7eee4412dcfcf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-1.execution.json",
+        "bytes": 58,
+        "sha256": "f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd.gz",
+        "bytes": 71,
+        "sha256": "576409c16e99851249a638f71dd9900b5cd2f15f2d9d67c6778d74644327c8f8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-1.launch.json",
+        "bytes": 250,
+        "sha256": "e0db1947966fe8995d2d04095aa49ae77032ea3ae2c98b8a4c018c71e09554dc"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e0db1947966fe8995d2d04095aa49ae77032ea3ae2c98b8a4c018c71e09554dc.gz",
+        "bytes": 174,
+        "sha256": "fd6a2dac4de43b8f227da39a06dff6b67fde08a24e098b1c47e2674d459ff2de"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-1.request.json",
+        "bytes": 42444,
+        "sha256": "2026a0e7bee9b7de84e2c775600c02c3b8a833230f709e5226f2ed27dd621d1b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2026a0e7bee9b7de84e2c775600c02c3b8a833230f709e5226f2ed27dd621d1b.gz",
+        "bytes": 15563,
+        "sha256": "e9f1d84f150e6cb0dc72b6684e5bd81e691122dec7c69df97b0a2584b189db26"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-1.result.json",
+        "bytes": 1525,
+        "sha256": "82374bbcd1e3a55180fbc0f35e9dab9febbe9e2ac0c961b8a7d4131d5657be0d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/82374bbcd1e3a55180fbc0f35e9dab9febbe9e2ac0c961b8a7d4131d5657be0d.gz",
+        "bytes": 665,
+        "sha256": "977fa2b7702028bb757dc36c848fde05ba3e7454783b4ed73fe0f3f83706bcdf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/fit-1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/inputs.json",
+        "bytes": 1158,
+        "sha256": "83b816ccdf219143c0c5ddcd07fb56c1c16ddfff28302742308da437d6ece027"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/83b816ccdf219143c0c5ddcd07fb56c1c16ddfff28302742308da437d6ece027.gz",
+        "bytes": 531,
+        "sha256": "7ca515a74f65b1c87e50b884db029490b1bcf98c560262269ee10e4407b1ebbe"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/native.json",
+        "bytes": 46208797,
+        "sha256": "68d5ac7e0c515959527274af69bf8b85c186aeca736881ae37e63ce4ea9eefea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/68d5ac7e0c515959527274af69bf8b85c186aeca736881ae37e63ce4ea9eefea.gz",
+        "bytes": 10965133,
+        "sha256": "37427b7d7258dbfdde758bcbbff93ea2d0225f9c5856eca05f2b97a045c8d9f5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/observation.json",
+        "bytes": 584,
+        "sha256": "682be79da024cfdd415cf6610d8e081d069223f2f8e274bf028812d74c986455"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/682be79da024cfdd415cf6610d8e081d069223f2f8e274bf028812d74c986455.gz",
+        "bytes": 389,
+        "sha256": "daf89b41038303f1bfc945dbf5ec12c3588b414e67f3496d4687eb142124c8a8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/prediction-errors.json",
+        "bytes": 1492,
+        "sha256": "4e3d8009aaf2cebc665bd08e96b02b77652b6b2f3d8a63186875d50b42860cc9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4e3d8009aaf2cebc665bd08e96b02b77652b6b2f3d8a63186875d50b42860cc9.gz",
+        "bytes": 578,
+        "sha256": "251e4573730386382fc055e53ebd6bdaa0e20df7453a05db254843a9ff36f8b1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/prefix-check.json",
+        "bytes": 233,
+        "sha256": "33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033.gz",
+        "bytes": 187,
+        "sha256": "1939a594ead45656c6d77ceab721e779124203bee52b03b169102b941ea55d4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/replay-input.json",
+        "bytes": 13011326,
+        "sha256": "0b31a7df6278bc495d3125e85e6c45ba2ba3eae893d98cbb614cf0f17ae5ce08"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0b31a7df6278bc495d3125e85e6c45ba2ba3eae893d98cbb614cf0f17ae5ce08.gz",
+        "bytes": 3658890,
+        "sha256": "a84c9c7123f3d376ce12df337218cae6f35402a97b7dfab6eddf347a5dbc9a92"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/scene.json",
+        "bytes": 12744742,
+        "sha256": "c0d992341729e5d3766ff86e74345add9f8d096ca4e9754309e659a4f1635078"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c0d992341729e5d3766ff86e74345add9f8d096ca4e9754309e659a4f1635078.gz",
+        "bytes": 3639416,
+        "sha256": "ccb6049dbab2cf5484aa34722d8d96142f159e4c5ba38bc1a47145e8e0959edb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/screen-inputs.json",
+        "bytes": 425,
+        "sha256": "5eb6f9cdcc50af2194ed7cca44bdeb9d67cfce8b409805b6fdc873d201d0682d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5eb6f9cdcc50af2194ed7cca44bdeb9d67cfce8b409805b6fdc873d201d0682d.gz",
+        "bytes": 297,
+        "sha256": "e018623934ccb3bc505737775c571ad5023d5dcee75d8ba50786d73c08a45970"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/summary.json",
+        "bytes": 672,
+        "sha256": "810c41b20a77d79a1859ac43ab37a85203f1fab07fc94563a95c806a315cb39a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/810c41b20a77d79a1859ac43ab37a85203f1fab07fc94563a95c806a315cb39a.gz",
+        "bytes": 434,
+        "sha256": "dd6f069a3b6758a8c9548efe62994c20910762ae18dc0661c2e04baffd31ea3c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/trajectory.json",
+        "bytes": 1138704,
+        "sha256": "7b02fca319b945706ac3f913f72daa6d3c1f3988c8f241a16da5ba75c1906df9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7b02fca319b945706ac3f913f72daa6d3c1f3988c8f241a16da5ba75c1906df9.gz",
+        "bytes": 463068,
+        "sha256": "0a814f7c49121728fbe7342e522851e24f8be7264a3a41b7665548b3c35bcac9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/transform.json",
+        "bytes": 492,
+        "sha256": "12b0f8ef4c7f0af5b9ba75fd50fc6db5e375160b0b598da8feecbdeb852c8a35"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/12b0f8ef4c7f0af5b9ba75fd50fc6db5e375160b0b598da8feecbdeb852c8a35.gz",
+        "bytes": 214,
+        "sha256": "b4d5c14b6d567d96ea96418929470b49c3644dfb8f565fdad8b0f1eb4dfb5674"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-002/values.json",
+        "bytes": 174,
+        "sha256": "23468e665af31e643fed7c5ee825c6697fda59cbf5880e2868c87e4e33ab0ad1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/23468e665af31e643fed7c5ee825c6697fda59cbf5880e2868c87e4e33ab0ad1.gz",
+        "bytes": 123,
+        "sha256": "122cf7b7d902646674405812f2dec5eff5590e1c92102a2a83e3f1210dba55eb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/actions.json",
+        "bytes": 1578896,
+        "sha256": "3eca3a7d12d37ca79f42fd466b7b6e8a67400c517272edd7e250ccd64d9f315d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3eca3a7d12d37ca79f42fd466b7b6e8a67400c517272edd7e250ccd64d9f315d.gz",
+        "bytes": 42912,
+        "sha256": "348465cc0b7825b7c8166b7ab9cd4d0ca2582bb2b78f0d5ea7372c854ed5fbeb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/capture.execution.json",
+        "bytes": 59,
+        "sha256": "92a270fb3c605f032e60172789a9e5a9bcdf9c20786f00f3eb1b9e93ad114fc8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/92a270fb3c605f032e60172789a9e5a9bcdf9c20786f00f3eb1b9e93ad114fc8.gz",
+        "bytes": 72,
+        "sha256": "aa0ce2fdd7d95728b490fe50367d7b4c38e0df1511a59a3b37f5e136bb171104"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/capture.launch.json",
+        "bytes": 192,
+        "sha256": "579fc950bf8e297e94c13d491482d209c24282eb7d12512969db032c33011998"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/579fc950bf8e297e94c13d491482d209c24282eb7d12512969db032c33011998.gz",
+        "bytes": 172,
+        "sha256": "1658a25e06f229840cf2ada055ea79d478308005f8f60311274d99a92fc3609c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/capture.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-0.execution.json",
+        "bytes": 58,
+        "sha256": "1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0.gz",
+        "bytes": 71,
+        "sha256": "d37bc11189a121dfd9d5332c2187bfdc8f90c1a096afceb501643b60d98cebe7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-0.launch.json",
+        "bytes": 250,
+        "sha256": "68248e8d635ab9259568fdf8f29020fb84c7d32d12f519ff3f9210848cd9431b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/68248e8d635ab9259568fdf8f29020fb84c7d32d12f519ff3f9210848cd9431b.gz",
+        "bytes": 175,
+        "sha256": "a79139a259e1634c3720973f08155ab659fc98f7733c4599436d029ba11e8963"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-0.request.json",
+        "bytes": 63655,
+        "sha256": "a0f342a0dd48075230392eccdb48f1160ad0ed83fe8deab91af3834090abf388"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a0f342a0dd48075230392eccdb48f1160ad0ed83fe8deab91af3834090abf388.gz",
+        "bytes": 23405,
+        "sha256": "0c60ccc7f0b829fc81a4c9a4fd4e976d5065f6845ec117403ac98643c64a9657"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-0.result.json",
+        "bytes": 1526,
+        "sha256": "e2f3b658b7b60bf7bb29f99c5b04e5037bc34229851b5ac3685c98feb7efbbe8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e2f3b658b7b60bf7bb29f99c5b04e5037bc34229851b5ac3685c98feb7efbbe8.gz",
+        "bytes": 669,
+        "sha256": "04dd226454ac0188b50329e878ce4a2e256f133651db7d8846cd7a062be898e9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-1.execution.json",
+        "bytes": 58,
+        "sha256": "1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0.gz",
+        "bytes": 71,
+        "sha256": "d37bc11189a121dfd9d5332c2187bfdc8f90c1a096afceb501643b60d98cebe7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-1.launch.json",
+        "bytes": 250,
+        "sha256": "7edf81ee361a714aaf8c6dc7eca118bd3dece228e4819739cfa3900b649f8cc8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7edf81ee361a714aaf8c6dc7eca118bd3dece228e4819739cfa3900b649f8cc8.gz",
+        "bytes": 174,
+        "sha256": "7a1091841fee6c7b09ce579186a603332646c1165620919d3ad871fd0569c518"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-1.request.json",
+        "bytes": 42459,
+        "sha256": "8555890add24571522bf3a230046affbdefc98a4fec1cd818fb776b2e787a6d5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8555890add24571522bf3a230046affbdefc98a4fec1cd818fb776b2e787a6d5.gz",
+        "bytes": 15584,
+        "sha256": "0ed3f80c5ee889941358913b8b677ec1c35e69208b1b8820be74fa50f2a0d26f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-1.result.json",
+        "bytes": 1531,
+        "sha256": "0ec5ef0f1b22f62cd063ead79c975d4b6ab4a4e8a03c766079677757edfdd3f6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0ec5ef0f1b22f62cd063ead79c975d4b6ab4a4e8a03c766079677757edfdd3f6.gz",
+        "bytes": 670,
+        "sha256": "e5376371a9602ad2835c6b572365641a341f2b758a520df18caa221228374f27"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/fit-1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/inputs.json",
+        "bytes": 1158,
+        "sha256": "8afb737863ab9a107ecf53d049291d36222f01f802c01a522189689882f387ec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8afb737863ab9a107ecf53d049291d36222f01f802c01a522189689882f387ec.gz",
+        "bytes": 532,
+        "sha256": "5eb7524b04aabd61828978e14e26128c9006593e2c90ada3c5bbbb4ab39b3679"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/native.json",
+        "bytes": 46232720,
+        "sha256": "6d6878dec487957a2ffb7a4c24f072b1d11e4ddf1982d78a22b953798d89a261"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6d6878dec487957a2ffb7a4c24f072b1d11e4ddf1982d78a22b953798d89a261.gz",
+        "bytes": 10967390,
+        "sha256": "a44589c01da45750f52816121351b44adbc6078fa4e7933b1d68be586a2841a2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/observation.json",
+        "bytes": 589,
+        "sha256": "cb4a05c50a901b3de0f59136ea0da6c20a09bd05c93fa42913f7e07793327934"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/cb4a05c50a901b3de0f59136ea0da6c20a09bd05c93fa42913f7e07793327934.gz",
+        "bytes": 395,
+        "sha256": "76fd8705719498503b98c848405d499031221721c3d9641fdd5ede8622d1b764"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/prediction-errors.json",
+        "bytes": 1492,
+        "sha256": "6c6c5496ac9e217552ed512e27ac454d83c9ff8250e75b4735ad01efa40f0469"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6c6c5496ac9e217552ed512e27ac454d83c9ff8250e75b4735ad01efa40f0469.gz",
+        "bytes": 569,
+        "sha256": "b28678a50adaea39919cac79d19a50cbb8e9c20d797d4efe355cdcafc70506ee"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/prefix-check.json",
+        "bytes": 233,
+        "sha256": "33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033.gz",
+        "bytes": 187,
+        "sha256": "1939a594ead45656c6d77ceab721e779124203bee52b03b169102b941ea55d4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/replay-input.json",
+        "bytes": 13013040,
+        "sha256": "73535a8143fd695351e2d9b73be1fc2426592e300e8d2ff285412892c4d36e29"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/73535a8143fd695351e2d9b73be1fc2426592e300e8d2ff285412892c4d36e29.gz",
+        "bytes": 3658834,
+        "sha256": "19dbcc9869960aaf88a510f82078f027816737adf80d99cce7bc6e60bb756214"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/scene.json",
+        "bytes": 12744456,
+        "sha256": "e9b2b8a827ee213551fff540a31df429563a9ed29d3b2fe8bc90074eecb61956"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e9b2b8a827ee213551fff540a31df429563a9ed29d3b2fe8bc90074eecb61956.gz",
+        "bytes": 3639201,
+        "sha256": "33fc1e8444bd14d954d33fb9cc682fc858d21cb9687e152a087dc3d7c83d8241"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/screen-inputs.json",
+        "bytes": 425,
+        "sha256": "d7190abf3af736cdeb33ca29377025dd34012dac2b42b63cb8e83ac74492ec36"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d7190abf3af736cdeb33ca29377025dd34012dac2b42b63cb8e83ac74492ec36.gz",
+        "bytes": 298,
+        "sha256": "2bf6ff09193f31394f4fefa930327097f9bd416fe7804b176df70f20cfb102a9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/summary.json",
+        "bytes": 676,
+        "sha256": "d58a772c6560768041fc43338ca8b42a86dc145452cb8b099807f2b047108023"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d58a772c6560768041fc43338ca8b42a86dc145452cb8b099807f2b047108023.gz",
+        "bytes": 439,
+        "sha256": "fce90d94490cfd9bf20b33a9327afd5f2fa8e75031660c67af2a14a455628138"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/trajectory.json",
+        "bytes": 1138414,
+        "sha256": "853238b274c395d80d1f50d3ebe5c2b41da1bf49d2379c17cba91952efc4e6c7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/853238b274c395d80d1f50d3ebe5c2b41da1bf49d2379c17cba91952efc4e6c7.gz",
+        "bytes": 463000,
+        "sha256": "3bed022a67bd8938e88aa880a88300df156a06757b1b1dba32ac6e158619d38d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/transform.json",
+        "bytes": 492,
+        "sha256": "5bd7caeca80941e714ca15bc2f2795de07a4423e1df80cfdffed43fc43c37d68"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5bd7caeca80941e714ca15bc2f2795de07a4423e1df80cfdffed43fc43c37d68.gz",
+        "bytes": 215,
+        "sha256": "8887ab54705983cef944b9362061e04f7a8e9e51dd9686893bcead9106997f3b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-003/values.json",
+        "bytes": 177,
+        "sha256": "64869816086bd3e3698e41ef655c6e471519347628fda304b2c46e1ead17d786"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/64869816086bd3e3698e41ef655c6e471519347628fda304b2c46e1ead17d786.gz",
+        "bytes": 125,
+        "sha256": "c1ba40d54ce7fd71dfd37bb05fa261f71e54f04196d69f6a2b92e2c829e9c289"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/actions.json",
+        "bytes": 1533896,
+        "sha256": "0682ac29f81692e2eaad06987d91e0a5cdff2afcb19d505431b5de84b40953a2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0682ac29f81692e2eaad06987d91e0a5cdff2afcb19d505431b5de84b40953a2.gz",
+        "bytes": 42914,
+        "sha256": "1a16d1e77482fe84972659a39ae7f4cc959500a2d553daee9725ce5eba133e43"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/capture.execution.json",
+        "bytes": 60,
+        "sha256": "fcb279d73ac49f3e74a1305387f31ddd8daff566dbfa7a84e6e9c3c16d276838"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fcb279d73ac49f3e74a1305387f31ddd8daff566dbfa7a84e6e9c3c16d276838.gz",
+        "bytes": 73,
+        "sha256": "c369835fa4a5ba3ebc746033da0595925919abc52cc68fe91a202a8e7d653205"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/capture.launch.json",
+        "bytes": 192,
+        "sha256": "fd3a85572f2f36c60f9e6d6adaadd28e12136b2c64bc65256bf8f566db2808b4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fd3a85572f2f36c60f9e6d6adaadd28e12136b2c64bc65256bf8f566db2808b4.gz",
+        "bytes": 171,
+        "sha256": "d596a2bb1ce9ef52418a435246de1f06b23a25aece5753278e46ec82ea082cda"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/capture.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-0.execution.json",
+        "bytes": 58,
+        "sha256": "4bb4e8a633be715193f4e2266c9137f14c13f3aa50d2bbf6bed2884f4549dead"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4bb4e8a633be715193f4e2266c9137f14c13f3aa50d2bbf6bed2884f4549dead.gz",
+        "bytes": 71,
+        "sha256": "44ee5655915039fa1cd6a24873bb435de3ca0aeeeb9c08b0c792ccbf8282b91e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-0.launch.json",
+        "bytes": 250,
+        "sha256": "7872d13128104ca20cae0257f17de132d4f364f8e4db67088359cdceb32a018e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7872d13128104ca20cae0257f17de132d4f364f8e4db67088359cdceb32a018e.gz",
+        "bytes": 173,
+        "sha256": "3b02907c9b742eab792332f2e62d0dfc7fa3806a98398b4a8f2bb5e10e275c05"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-0.request.json",
+        "bytes": 62535,
+        "sha256": "31ddff30870e995202ac2bee00de06208e739ae5c808062c7ba4df8647508211"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/31ddff30870e995202ac2bee00de06208e739ae5c808062c7ba4df8647508211.gz",
+        "bytes": 23109,
+        "sha256": "7349d9d7c990526ebffac2152b98bf302a572aad26ab69c59409cb5df3397669"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-0.result.json",
+        "bytes": 1520,
+        "sha256": "6e1498abd823c86dc99e891957216e1ce60072e33ab00c52a7c2fc818c1042b3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6e1498abd823c86dc99e891957216e1ce60072e33ab00c52a7c2fc818c1042b3.gz",
+        "bytes": 667,
+        "sha256": "281a838534386deb19755da03d96568e2cb042cae6a1829d28e1d7f0284c7f21"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-1.execution.json",
+        "bytes": 58,
+        "sha256": "1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0.gz",
+        "bytes": 71,
+        "sha256": "d37bc11189a121dfd9d5332c2187bfdc8f90c1a096afceb501643b60d98cebe7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-1.launch.json",
+        "bytes": 250,
+        "sha256": "95b22d1d7ed169dedcafc5e13d869d7170586514f002de5a6da9343795b1de84"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/95b22d1d7ed169dedcafc5e13d869d7170586514f002de5a6da9343795b1de84.gz",
+        "bytes": 173,
+        "sha256": "255c77f6bb893d264c6a96b7dbda103c1a36c62e06a875ee2988f2595e35f312"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-1.request.json",
+        "bytes": 41741,
+        "sha256": "89ae82c5f214f20e7bfdefe34eecc176ab8ee478987083a5e101260e39567ee5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/89ae82c5f214f20e7bfdefe34eecc176ab8ee478987083a5e101260e39567ee5.gz",
+        "bytes": 15359,
+        "sha256": "2d2daef5958b1363045c1a47d147073198d63d9895c46832ebe49e9bc70eb681"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-1.result.json",
+        "bytes": 1515,
+        "sha256": "424e19b21d10dd67fec1b118b2201f3e617cd51ee78f72825f809001014442cb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/424e19b21d10dd67fec1b118b2201f3e617cd51ee78f72825f809001014442cb.gz",
+        "bytes": 663,
+        "sha256": "1b490adaa5f3fbe6b5be5521212475398442cc529d3d5a119a2b94e0b58a4df8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/fit-1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/inputs.json",
+        "bytes": 1158,
+        "sha256": "ef453365f8dab2e03b24a6da92184f3b39aaf4a58ecaed64eaec7d5e4b1e3007"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ef453365f8dab2e03b24a6da92184f3b39aaf4a58ecaed64eaec7d5e4b1e3007.gz",
+        "bytes": 533,
+        "sha256": "119d16f18a05f13f5a2feb9e5b5d893cc2b6a9a4c63a7c86039deeac079f3430"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/native.json",
+        "bytes": 46213970,
+        "sha256": "dbed0d2908d5e323db5ed5c570c81fa2f5cdef12d1b88e609f7d6f590b0882c4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/dbed0d2908d5e323db5ed5c570c81fa2f5cdef12d1b88e609f7d6f590b0882c4.gz",
+        "bytes": 10980241,
+        "sha256": "257a74c85f7217a5073568c1ad45e9c33c640d571ddf766646da7a28ebe5cd70"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/observation.json",
+        "bytes": 578,
+        "sha256": "e7e9b1dacbc22b1bd8925c40da2b1b2dc0dbecc7da07fef212f76dcc10500f4a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e7e9b1dacbc22b1bd8925c40da2b1b2dc0dbecc7da07fef212f76dcc10500f4a.gz",
+        "bytes": 390,
+        "sha256": "41daccc4564e32d2666f181936f8238632cbeadbef4c69803e6aea5e6409194b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/prediction-errors.json",
+        "bytes": 1470,
+        "sha256": "77e066af9e8c55d7838382bff87b25c8275b64863bc41e909d30187af8797135"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/77e066af9e8c55d7838382bff87b25c8275b64863bc41e909d30187af8797135.gz",
+        "bytes": 572,
+        "sha256": "2c4e61038fb8bdf543a47f88d36df1a352ebcec3ca40e6f787b483747777011a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/prefix-check.json",
+        "bytes": 233,
+        "sha256": "33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033.gz",
+        "bytes": 187,
+        "sha256": "1939a594ead45656c6d77ceab721e779124203bee52b03b169102b941ea55d4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/replay-input.json",
+        "bytes": 13009844,
+        "sha256": "b4992cbc4ef76166e07c3d721ccf0a056886c4fe03e634c22a1cc20c63d45ac1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b4992cbc4ef76166e07c3d721ccf0a056886c4fe03e634c22a1cc20c63d45ac1.gz",
+        "bytes": 3658654,
+        "sha256": "b0e7f5fd2e41c5c23e5adac220557601afadf3ef93d161618a4c97c841e7dce5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/scene.json",
+        "bytes": 12744260,
+        "sha256": "bcaee9602c0f8a4e483476f6007d663c4f7421a586bfccb50dad9ed2f2c3229e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bcaee9602c0f8a4e483476f6007d663c4f7421a586bfccb50dad9ed2f2c3229e.gz",
+        "bytes": 3639191,
+        "sha256": "96ef4a2d4394d7c3000d9da29708ea8f147768c5f67fc7d44700ad07d7c36166"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/screen-inputs.json",
+        "bytes": 425,
+        "sha256": "98666d84cd4bd3134bc54bde3fe907636c34c4ee79d91d72c62ef5d47c52799e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/98666d84cd4bd3134bc54bde3fe907636c34c4ee79d91d72c62ef5d47c52799e.gz",
+        "bytes": 297,
+        "sha256": "a1b2543a7dbdedf4b782a69f28a9514b9972713f3d3f547ad05f9e9af7744617"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/summary.json",
+        "bytes": 675,
+        "sha256": "846726a6ffa17b5448405258ec7e05f355c5d0e30fae7ebfe50b552340be6ca3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/846726a6ffa17b5448405258ec7e05f355c5d0e30fae7ebfe50b552340be6ca3.gz",
+        "bytes": 435,
+        "sha256": "75e06c43837c3339b331d812f39fc847b773d6d0b96fcdc6cb89f3ddfdc69aab"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/trajectory.json",
+        "bytes": 1138226,
+        "sha256": "d17730841ea452e659f5aa5ddedd21c1f9471028480c6006124e76e4e54c1889"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d17730841ea452e659f5aa5ddedd21c1f9471028480c6006124e76e4e54c1889.gz",
+        "bytes": 462851,
+        "sha256": "d33e1accf2c4a00439ed194cced447f63871b28fb7144aecc7c2dc4c25b4843e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/transform.json",
+        "bytes": 496,
+        "sha256": "11719471e91e99ad3451683b6d127974953f82bb354d8cb380dd893282917128"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/11719471e91e99ad3451683b6d127974953f82bb354d8cb380dd893282917128.gz",
+        "bytes": 216,
+        "sha256": "c8c47e5deeac0be99760522ac3c84afd8b34f75b34341c4f2dfc92e495493f50"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-004/values.json",
+        "bytes": 175,
+        "sha256": "e0bb6839d44551ce9f2bf11c8541343c06164b768455e8ac6ea73283a080df86"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e0bb6839d44551ce9f2bf11c8541343c06164b768455e8ac6ea73283a080df86.gz",
+        "bytes": 123,
+        "sha256": "9b610c56b8af2878e1e824e1d05953306b144525d46990a72c0eaca2a10d116a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/actions.json",
+        "bytes": 1548896,
+        "sha256": "a7eb7edef77935e3582fae567bef055256cfc2190f032c235374c42241ec9cc7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a7eb7edef77935e3582fae567bef055256cfc2190f032c235374c42241ec9cc7.gz",
+        "bytes": 42903,
+        "sha256": "acfa690d49aa151bf5ba715d7e5124a2ca3dc31df3613ef46cc3c74e9ee084a7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/capture.execution.json",
+        "bytes": 60,
+        "sha256": "9e5ee044ee3b7562fba26dfe94dc5b9e56540be365bbd50eba4ffb8236280223"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9e5ee044ee3b7562fba26dfe94dc5b9e56540be365bbd50eba4ffb8236280223.gz",
+        "bytes": 73,
+        "sha256": "c3df6427c653a475eafe00d88cbf14c91c9c1b6f56be81a19a29c315213a2067"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/capture.launch.json",
+        "bytes": 192,
+        "sha256": "9674fb29a4cd6f92c7089e18a13eccae77a77912618049a9f0e5ff95c8211def"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9674fb29a4cd6f92c7089e18a13eccae77a77912618049a9f0e5ff95c8211def.gz",
+        "bytes": 171,
+        "sha256": "462b8e79c187085707538edfb0e457cf804d95473e589870ba55d0f7988240b7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/capture.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-0.execution.json",
+        "bytes": 58,
+        "sha256": "1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0.gz",
+        "bytes": 71,
+        "sha256": "d37bc11189a121dfd9d5332c2187bfdc8f90c1a096afceb501643b60d98cebe7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-0.launch.json",
+        "bytes": 250,
+        "sha256": "ea616a7d0f788146fee6787ab12c94ca642eea11ec1b751693e9fe4a0c2158df"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ea616a7d0f788146fee6787ab12c94ca642eea11ec1b751693e9fe4a0c2158df.gz",
+        "bytes": 174,
+        "sha256": "fb662bf1d17d646f2f46f959eb559604e3dfbad064938cec3022ecfbdbdf37e0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-0.request.json",
+        "bytes": 63531,
+        "sha256": "027449b28ce46b823ccee44c9301ba44df499a2129e89a1dccf09c8aceb7fa47"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/027449b28ce46b823ccee44c9301ba44df499a2129e89a1dccf09c8aceb7fa47.gz",
+        "bytes": 23415,
+        "sha256": "13b76c0638342201b842f7c759a101e8c52670d05f2053f65f8a66d951470870"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-0.result.json",
+        "bytes": 1516,
+        "sha256": "be4610e034aadbe662f47a54c87673edfe844018b98abe07d8b2d1b9cd05897f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/be4610e034aadbe662f47a54c87673edfe844018b98abe07d8b2d1b9cd05897f.gz",
+        "bytes": 666,
+        "sha256": "757c71671d2d81c83edae0517d59f415a2d5fd66043432219761a4f0d29a51f7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-1.execution.json",
+        "bytes": 58,
+        "sha256": "f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd.gz",
+        "bytes": 71,
+        "sha256": "576409c16e99851249a638f71dd9900b5cd2f15f2d9d67c6778d74644327c8f8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-1.launch.json",
+        "bytes": 250,
+        "sha256": "55dcbb6f270af2649d08044b9c5076066ef5ed073dac0de815b069fe17ebeac8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/55dcbb6f270af2649d08044b9c5076066ef5ed073dac0de815b069fe17ebeac8.gz",
+        "bytes": 174,
+        "sha256": "f7710821a89c55934ff89926b94d800d5e15248a1ccad8f8b51b13b9925d3d1f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-1.request.json",
+        "bytes": 42357,
+        "sha256": "e9d10d3731f71cbda98aea9c7fc6f7bcbc3624ac9abc09eb9b1a9029e3f6b664"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e9d10d3731f71cbda98aea9c7fc6f7bcbc3624ac9abc09eb9b1a9029e3f6b664.gz",
+        "bytes": 15567,
+        "sha256": "a8c84700d540b966a7fa70556e1f4d0a612fd4456ec935c8a9f08f57a9cfc924"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-1.result.json",
+        "bytes": 1527,
+        "sha256": "8d7a4959aeb2d820fc74eebe34dbfeabb884bc3a8e36f73c9e33ca60303a3850"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8d7a4959aeb2d820fc74eebe34dbfeabb884bc3a8e36f73c9e33ca60303a3850.gz",
+        "bytes": 665,
+        "sha256": "5080af39418953dd7263d799e0a27ab2104ac41f2356f868729948b57eb5d820"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/fit-1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/inputs.json",
+        "bytes": 1158,
+        "sha256": "8d0cbbbb6dc9bbc446ea560835309addf665308d2cb0eaed1f0ae9cd77500bab"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8d0cbbbb6dc9bbc446ea560835309addf665308d2cb0eaed1f0ae9cd77500bab.gz",
+        "bytes": 533,
+        "sha256": "cd12c5d3f83a9e47ed6c7dd29885963ec7090fd0d15996ec68f88c003fc4e2b9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/native.json",
+        "bytes": 46199967,
+        "sha256": "1c919371ec35db0945f3af70131e9f56fe121760624ff4fb9991137dd2e7c4b0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1c919371ec35db0945f3af70131e9f56fe121760624ff4fb9991137dd2e7c4b0.gz",
+        "bytes": 10962797,
+        "sha256": "e143dce3c2ffd52fd21e5e1dbe212752f5fa2891bf6a7c47352b5e611385ff14"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/observation.json",
+        "bytes": 583,
+        "sha256": "4050a91a13a0a295c650b521f74b755a2facb0033a50d2aa369e078d51ec1948"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4050a91a13a0a295c650b521f74b755a2facb0033a50d2aa369e078d51ec1948.gz",
+        "bytes": 388,
+        "sha256": "10f2a6875134f62aefa3a63fc9dd9abad0443e42f5886f6b361ddbe749cf170d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/prediction-errors.json",
+        "bytes": 1483,
+        "sha256": "52cd954e358ba013493ade7973795201d7d71cce7dab632a41be664c4a59b4a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/52cd954e358ba013493ade7973795201d7d71cce7dab632a41be664c4a59b4a9.gz",
+        "bytes": 578,
+        "sha256": "34644d9931dceccd5db6af18e86412b4c59542d1066b33cbe3c302bd86ab0fb3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/prefix-check.json",
+        "bytes": 233,
+        "sha256": "33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033.gz",
+        "bytes": 187,
+        "sha256": "1939a594ead45656c6d77ceab721e779124203bee52b03b169102b941ea55d4f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/replay-input.json",
+        "bytes": 13011452,
+        "sha256": "23926d08c784d2285a3dfa1be03126eae5c059c47fcc11afa6b1fbc847d6a506"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/23926d08c784d2285a3dfa1be03126eae5c059c47fcc11afa6b1fbc847d6a506.gz",
+        "bytes": 3658521,
+        "sha256": "ce63179e98a54cb863e612232e606603695687bf10fca49abf7d2daa721f7ca3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/scene.json",
+        "bytes": 12744868,
+        "sha256": "5445109dba897e48f0782715c9a1e19b3b4613a4256da5249995ded2e5fc43d2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5445109dba897e48f0782715c9a1e19b3b4613a4256da5249995ded2e5fc43d2.gz",
+        "bytes": 3639246,
+        "sha256": "4bc2ad2f7a09b65783f4e9cd7f815d613b5540c89ca9427562714f6aaa8c1e9c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/screen-inputs.json",
+        "bytes": 425,
+        "sha256": "4b149972192475c98ed7a3c898c7165c99f5ab42f7811de1b8532657234e67a3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4b149972192475c98ed7a3c898c7165c99f5ab42f7811de1b8532657234e67a3.gz",
+        "bytes": 298,
+        "sha256": "5b3e8c87a7c4808385d703523fd52c595c15cbd815f18b167826ed1365dd7ed7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/summary.json",
+        "bytes": 677,
+        "sha256": "4b0a78e277ce5bcc27bc4b5383e2e5540189655e7896961612c2687d9ce86067"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4b0a78e277ce5bcc27bc4b5383e2e5540189655e7896961612c2687d9ce86067.gz",
+        "bytes": 436,
+        "sha256": "8d05a6dc6fd4b2acd2c7f0f5ec01c7fe03084281beb8ea4690a0118ee693957f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/trajectory.json",
+        "bytes": 1138830,
+        "sha256": "04179c5e1fdf08911fc64ec58ccbac4713781edd4138a27f0e323923b930aa2a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/04179c5e1fdf08911fc64ec58ccbac4713781edd4138a27f0e323923b930aa2a.gz",
+        "bytes": 462843,
+        "sha256": "47e6f881f468b26b41225d66a3adcde74b8d28bb93db295d38abe937fd5e6cc4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/transform.json",
+        "bytes": 496,
+        "sha256": "16c58fe90fd7b993bdf34000d5ac33260fe0306896de4b394469c17816d0a09d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/16c58fe90fd7b993bdf34000d5ac33260fe0306896de4b394469c17816d0a09d.gz",
+        "bytes": 215,
+        "sha256": "0c9b6b4fe34052218870f25e07d6fc339f1c981a6a1694a7ef42f86209e40888"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/evaluation-005/values.json",
+        "bytes": 176,
+        "sha256": "510cc0a3bac75f8f5dc680314cfee70e825405ba1c4626e1b23145e538f233ed"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/510cc0a3bac75f8f5dc680314cfee70e825405ba1c4626e1b23145e538f233ed.gz",
+        "bytes": 123,
+        "sha256": "b35bf9e5dd6d47d7e72b8f3cf54606587309b0d34e03e89ecc4da5881d2b5c46"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/iteration-0.json",
+        "bytes": 12878,
+        "sha256": "8f62a5fadf6bb4207851127c16f1952cba69d66daf4e4e04197b8860e5288552"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8f62a5fadf6bb4207851127c16f1952cba69d66daf4e4e04197b8860e5288552.gz",
+        "bytes": 4247,
+        "sha256": "4c9c8c81c16fc1697149ea607dd6b13841c1d654593a236d42bb4b5b12ff2a20"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/iteration-1.json",
+        "bytes": 14157,
+        "sha256": "6f26d4edbb773b53f43e21b2e36cfa8baa908841f2f72ff699f7cf0dfc1e2e48"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6f26d4edbb773b53f43e21b2e36cfa8baa908841f2f72ff699f7cf0dfc1e2e48.gz",
+        "bytes": 4514,
+        "sha256": "9efaac5a3c3da214017ecec4374c956245d538a5e69985bbc3a782447d980dfd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/iteration-2.json",
+        "bytes": 15433,
+        "sha256": "495705f27e305ca74aeaa96ec7c1ae753698d4531dd2fd0b2e40f004b1756884"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/495705f27e305ca74aeaa96ec7c1ae753698d4531dd2fd0b2e40f004b1756884.gz",
+        "bytes": 4775,
+        "sha256": "92d3c5bc4d41c5b9878e33ea9a227670e51dd1bb6815cac23c0c1a40c8c6de1e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/iteration-3.json",
+        "bytes": 16718,
+        "sha256": "6f327451d4cc49b987ace627f222bfa92ddc832a719ea126e636d890d372f38b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6f327451d4cc49b987ace627f222bfa92ddc832a719ea126e636d890d372f38b.gz",
+        "bytes": 5056,
+        "sha256": "0c51b679e8e08a1f24247826a0f8e4c219e6c9ed461aa227cca48617759e514c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/iteration-4.json",
+        "bytes": 17991,
+        "sha256": "29175197b33bd76a5ae1f56aea9838aa39997c5a86bc390cad5e560139a300f5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/29175197b33bd76a5ae1f56aea9838aa39997c5a86bc390cad5e560139a300f5.gz",
+        "bytes": 5325,
+        "sha256": "d949a52ba80cb3835969ea595e4a4a8c2687f9eb64c78a150aa8090dba84e226"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/iteration-5.json",
+        "bytes": 19272,
+        "sha256": "0ed80ecad1d506802979e915b73e1c8170f1df1e71916a5151962cfdfcf5de8d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0ed80ecad1d506802979e915b73e1c8170f1df1e71916a5151962cfdfcf5de8d.gz",
+        "bytes": 5589,
+        "sha256": "7ab47009289e07801382c005055eb96fa8775c2ae4bccc890cfa4512e7719d18"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-000/composition-check.json",
+        "bytes": 53,
+        "sha256": "8f1821bb6134869c6009e0114b361241a330ef9232618e0ab8e1334eb4793559"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8f1821bb6134869c6009e0114b361241a330ef9232618e0ab8e1334eb4793559.gz",
+        "bytes": 73,
+        "sha256": "d4ef99a4a0b1586efb0abf3b6d25da15065304933f4fe0d2c19170c2be1f0983"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-000/request.json",
+        "bytes": 12970,
+        "sha256": "6296cfb82ff03c17843e4b2909b12218d55f82a5cd2cb088b67fd9f37216043b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6296cfb82ff03c17843e4b2909b12218d55f82a5cd2cb088b67fd9f37216043b.gz",
+        "bytes": 4156,
+        "sha256": "fa1a5785c758152d602fb5d223024519dd63c0cb9f6f1c356cc3def7d27cebec"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-000/result.json",
+        "bytes": 2466256,
+        "sha256": "53219faecf63ad94ac0c531b46a25896ec6e9222dda2af36879002a3300130a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/53219faecf63ad94ac0c531b46a25896ec6e9222dda2af36879002a3300130a9.gz",
+        "bytes": 457154,
+        "sha256": "c6924de7cdef8dfdb50f53a5bd155246627136c4e3072b25cb26c0560dc81841"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-000/suggest.execution.json",
+        "bytes": 58,
+        "sha256": "24e13cbb381131619474d152e43afcd809b35ce362a3cd4488dc7c0e3cc65674"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/24e13cbb381131619474d152e43afcd809b35ce362a3cd4488dc7c0e3cc65674.gz",
+        "bytes": 71,
+        "sha256": "afce505101dc5f2aa00ba39df93196aa4216fa740b6f531e6b7f3a452d41d13e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-000/suggest.launch.json",
+        "bytes": 231,
+        "sha256": "275d55cb334bbfb8f3a89eb3c163dfb5ded0656cc67805bb2216991356bb7427"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/275d55cb334bbfb8f3a89eb3c163dfb5ded0656cc67805bb2216991356bb7427.gz",
+        "bytes": 161,
+        "sha256": "ce968b94685bc4a55c76f157a6ac552e00ec257cfc282adf58606955fd413a42"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-000/suggest.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-000/suggest.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-001/composition-check.json",
+        "bytes": 53,
+        "sha256": "34550a6273a113d2bf289cf231e7d270d7734ed088c73c51b869982fabcf52c5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/34550a6273a113d2bf289cf231e7d270d7734ed088c73c51b869982fabcf52c5.gz",
+        "bytes": 73,
+        "sha256": "f92a57c2e9d1344d5adbc63a149dd12f0c1ed2e175af72f7609c667c868abc4e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-001/request.json",
+        "bytes": 13560,
+        "sha256": "2e81c5d6d3aa1ec50501e96948a31ce74773e7794851d00e27d6e6ef6fb11ac6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2e81c5d6d3aa1ec50501e96948a31ce74773e7794851d00e27d6e6ef6fb11ac6.gz",
+        "bytes": 4361,
+        "sha256": "3a94780e47116ac39d13ca3548f8a4347d5c57ab9e14f37c8eccdbd7cb1ebadd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-001/result.json",
+        "bytes": 2469369,
+        "sha256": "8f308e7a36263b788eb683961a3c965b0821a7701076a6939932c067c095100c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8f308e7a36263b788eb683961a3c965b0821a7701076a6939932c067c095100c.gz",
+        "bytes": 452438,
+        "sha256": "cff63df89a8b0b1b4ab0331d4a03dedc9ceb3b05593468366e82093c57565b9c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-001/suggest.execution.json",
+        "bytes": 58,
+        "sha256": "a3f96c75460d96962a9c40ac45eca929b51de3d1ff8aca15e3089ad57f66f85f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a3f96c75460d96962a9c40ac45eca929b51de3d1ff8aca15e3089ad57f66f85f.gz",
+        "bytes": 71,
+        "sha256": "910ed1643069146f6c8fe69bb4b5fda5eb53205b6f84d512a4f65b33a8f03da6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-001/suggest.launch.json",
+        "bytes": 231,
+        "sha256": "67c17d0c1482e589d2353df1e4d39bd1c58a046aff569416affee1ade59100b9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/67c17d0c1482e589d2353df1e4d39bd1c58a046aff569416affee1ade59100b9.gz",
+        "bytes": 162,
+        "sha256": "fd048d18c126e360fced0ec83b8e9db6355df79939e63794ed922a1159460753"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-001/suggest.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-001/suggest.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-002/composition-check.json",
+        "bytes": 53,
+        "sha256": "08b2588a42f467bc2c95fa38cd8fe9fee3b0349fd2fc155c33794e3ec0f55f54"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/08b2588a42f467bc2c95fa38cd8fe9fee3b0349fd2fc155c33794e3ec0f55f54.gz",
+        "bytes": 73,
+        "sha256": "7e311873fa16bd9f5b6e4a3be06cdbf72aaefa6ffbd0a0cadb90c4722a837f24"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-002/request.json",
+        "bytes": 14145,
+        "sha256": "8d15c366e4a7dd2066b454e108dea012baa3c44e4788498faf8c66f88a55061f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8d15c366e4a7dd2066b454e108dea012baa3c44e4788498faf8c66f88a55061f.gz",
+        "bytes": 4551,
+        "sha256": "844a1c689db507c974911c96c36286718c25bc7bded5a6ad894af9ae0069ab0c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-002/result.json",
+        "bytes": 2479289,
+        "sha256": "246449f5d572ac8f0276bc43ce8b9775c0763ec174cfd404d05bf4a8787d4457"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/246449f5d572ac8f0276bc43ce8b9775c0763ec174cfd404d05bf4a8787d4457.gz",
+        "bytes": 456978,
+        "sha256": "f5d7301f0e4bf34f095691082876fa2d0a27341f51d12cc60216ebfff8ed4c04"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-002/suggest.execution.json",
+        "bytes": 58,
+        "sha256": "d8734ee728179b89d880a84ff03c92c2eacb46f1ea088185cab8c9b8ac975c07"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d8734ee728179b89d880a84ff03c92c2eacb46f1ea088185cab8c9b8ac975c07.gz",
+        "bytes": 71,
+        "sha256": "95840737f69d3fa0ee9e95eb5d311d7640162617ec198fc45a395aaa239f2ff7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-002/suggest.launch.json",
+        "bytes": 231,
+        "sha256": "d3b48fb85b25fa09afbaefe855b8aded76431e5a16651350ad47c22119f6c661"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d3b48fb85b25fa09afbaefe855b8aded76431e5a16651350ad47c22119f6c661.gz",
+        "bytes": 162,
+        "sha256": "a12748c54348a5c4ef927433640b0232fcc462f2c490f29077535d0d4c0e8f42"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-002/suggest.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-002/suggest.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-003/composition-check.json",
+        "bytes": 53,
+        "sha256": "625a6d64fc644c737cc800d0588efe339a1d1df2334a73290c833cb779bf59a6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/625a6d64fc644c737cc800d0588efe339a1d1df2334a73290c833cb779bf59a6.gz",
+        "bytes": 73,
+        "sha256": "bb5a7356222b1b33471ce0ec63fde837f4a1591651bd6b798a023795322d5af3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-003/request.json",
+        "bytes": 14729,
+        "sha256": "66be57568483c6e0673feb82218cbbb178115640c31732ca0a71ac31a8119960"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/66be57568483c6e0673feb82218cbbb178115640c31732ca0a71ac31a8119960.gz",
+        "bytes": 4738,
+        "sha256": "fbf4869f09cbe229f43a50606d129394d7b2295fdba78ef4c3f0414a833f2844"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-003/result.json",
+        "bytes": 2474175,
+        "sha256": "fb41be22fe0f755833f635edfaca991433bbd053dd667785f77193a2efaad72b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fb41be22fe0f755833f635edfaca991433bbd053dd667785f77193a2efaad72b.gz",
+        "bytes": 454412,
+        "sha256": "53ea2b77a6e9917543248b6eb30b1cf40d83132ed1205224127bd4078353dd4c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-003/suggest.execution.json",
+        "bytes": 58,
+        "sha256": "c51d05f9a47c82c9e7081ab3c08f1353c62f280bcb3f6e25ef00f3b791d174a4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c51d05f9a47c82c9e7081ab3c08f1353c62f280bcb3f6e25ef00f3b791d174a4.gz",
+        "bytes": 71,
+        "sha256": "8bb1782fe5ad4f93a5d2358985afa3e9247c7d14fe3a00559c1aad63aa91d259"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-003/suggest.launch.json",
+        "bytes": 231,
+        "sha256": "43fd763bd3b7115b75bfd4e154157499988a4401fa8003cf1a21614fae6d465f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/43fd763bd3b7115b75bfd4e154157499988a4401fa8003cf1a21614fae6d465f.gz",
+        "bytes": 162,
+        "sha256": "af0d57096399095bf7e5234fb1d11e54ae3808ad4f42d7a8cc9e9f8baa9fa9d7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-003/suggest.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-003/suggest.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-004/composition-check.json",
+        "bytes": 53,
+        "sha256": "0e84a43807e23ed89c4ae4f7a6f57e443d8fd3e0e2ec961ff814263c117c3f1d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0e84a43807e23ed89c4ae4f7a6f57e443d8fd3e0e2ec961ff814263c117c3f1d.gz",
+        "bytes": 73,
+        "sha256": "beff4480c926fe9ea5aae25bf7d5ba7cd1ff78df46794cc3d1341f7c1a242497"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-004/request.json",
+        "bytes": 15318,
+        "sha256": "665935db1ba50825d05d60e61e4b9de91000eff92b67164a0f8899651a7675e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/665935db1ba50825d05d60e61e4b9de91000eff92b67164a0f8899651a7675e0.gz",
+        "bytes": 4932,
+        "sha256": "29f6846c9152952df9751c5205c856e4450d74145b47528a6a970cd92ab0147d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-004/result.json",
+        "bytes": 2473172,
+        "sha256": "495a197eef09c6a0b933f2677a4d725eb4426a4678cbafad15e28f2b19061c90"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/495a197eef09c6a0b933f2677a4d725eb4426a4678cbafad15e28f2b19061c90.gz",
+        "bytes": 459036,
+        "sha256": "cf0f3ade17cca7d606d507ade78c8d5cb28832607364305dd0aa6b28e30f18e9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-004/suggest.execution.json",
+        "bytes": 58,
+        "sha256": "b280303c267947cb335025b03fbb6238b2f3b8bf9580f9876ca36f4b2ba723cd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b280303c267947cb335025b03fbb6238b2f3b8bf9580f9876ca36f4b2ba723cd.gz",
+        "bytes": 71,
+        "sha256": "75408a5475f84aed9250a83d48e84417b5b3cb0c97e790f4850da4f081d382a0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-004/suggest.launch.json",
+        "bytes": 231,
+        "sha256": "e28e7d08d72073fef4b3ee586e5cd3cf6af025cc97776998bf93ab2d1e5e901f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e28e7d08d72073fef4b3ee586e5cd3cf6af025cc97776998bf93ab2d1e5e901f.gz",
+        "bytes": 163,
+        "sha256": "fb678b36e33a5e7a144d9ec29836b02dd59592276c421e9333b2816e854de8ed"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-004/suggest.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-004/suggest.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-005/composition-check.json",
+        "bytes": 53,
+        "sha256": "44c372ba7426f353605a9d3d960fd39473ea56e79aa7ccd5d452378f6a64115b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/44c372ba7426f353605a9d3d960fd39473ea56e79aa7ccd5d452378f6a64115b.gz",
+        "bytes": 73,
+        "sha256": "8cc616e925c1e0e425f3576a3cac275eb78f266522344129cc7c576f6a39677b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-005/request.json",
+        "bytes": 15896,
+        "sha256": "dbe5e0cbc04dc6fcfafe4c437ebc2cef8c98574f56e9678c7c1eebaf6cfb623a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/dbe5e0cbc04dc6fcfafe4c437ebc2cef8c98574f56e9678c7c1eebaf6cfb623a.gz",
+        "bytes": 5124,
+        "sha256": "07ccf70da76e80f98e3c65e33c43f621e6344284a367f104e3302e4f9f06c9ec"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-005/result.json",
+        "bytes": 2475878,
+        "sha256": "8fccc0467f6873b70a1746f416572c4334f6ea658ac7c66b80ee0bd38b9c8a1c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8fccc0467f6873b70a1746f416572c4334f6ea658ac7c66b80ee0bd38b9c8a1c.gz",
+        "bytes": 448789,
+        "sha256": "bb6040eaeec47b71178747942c9db63beea051e1404e19dc922c936c67e024c3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-005/suggest.execution.json",
+        "bytes": 58,
+        "sha256": "280e2c65eb7c68b799893503dbbe11a3e111333b76794c5ad250248539de3d44"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/280e2c65eb7c68b799893503dbbe11a3e111333b76794c5ad250248539de3d44.gz",
+        "bytes": 71,
+        "sha256": "0044bf64497e29b3cce4d52c17e8cab467f313aad622ebec99f746256ddc8274"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-005/suggest.launch.json",
+        "bytes": 231,
+        "sha256": "a8609e6c6e953867a74e1aae8f4cccc9b8edd468bdd62f345b1bca7058a8f094"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a8609e6c6e953867a74e1aae8f4cccc9b8edd468bdd62f345b1bca7058a8f094.gz",
+        "bytes": 162,
+        "sha256": "c4c5a511ce4de875fa743b920905e5ad678af73a298ae668946b9a7fdae8ca76"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-005/suggest.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/proposal-005/suggest.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/result.json",
+        "bytes": 20289,
+        "sha256": "9b57374d763352fb98d84839c1d956840f0a70db3f35cbdb9227d7080ab03f00"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9b57374d763352fb98d84839c1d956840f0a70db3f35cbdb9227d7080ab03f00.gz",
+        "bytes": 6013,
+        "sha256": "c9231b61f73f0de7be7b5dde1b33f93583e26b65c99bbe99291379c2e9518daa"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-planar-v1/spec.json",
+        "bytes": 621,
+        "sha256": "bf21d515bac2c237aa95b2c2497da0f491ef1d431b49a5f3cadd7ea652356ae8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bf21d515bac2c237aa95b2c2497da0f491ef1d431b49a5f3cadd7ea652356ae8.gz",
+        "bytes": 285,
+        "sha256": "b48b6c928fed824c50e00515d9f21ebb6614a19706a9438c1a2aacb6c77e1cb2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-sustained-v1/candidate000/capture.launch.json",
+        "bytes": 193,
+        "sha256": "9d3a35e49724b0e2f79bbc3ce7450e150d3bc0315f20f9827cc44e99cdd7f4b9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9d3a35e49724b0e2f79bbc3ce7450e150d3bc0315f20f9827cc44e99cdd7f4b9.gz",
+        "bytes": 171,
+        "sha256": "5707e8131b7b1561c0663847f76ee427fe7da3c3b43dc4a211454c74bf9268fe"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-sustained-v1/candidate000/inputs.json",
+        "bytes": 2413,
+        "sha256": "7567643e1435112746c567c518ccd1fa4c92761cbd0f11420a22c23980a4d470"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7567643e1435112746c567c518ccd1fa4c92761cbd0f11420a22c23980a4d470.gz",
+        "bytes": 1051,
+        "sha256": "f026e1e543fd109ecad717ab6411ba062045a280fc67e9d6269d34ddcd257cc1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-sustained-v1/candidate000/replay-input.json",
+        "bytes": 14850252,
+        "sha256": "516c8e0e5c799a7c286da891d53568113d7f79ec7b060f893a9b1e11a120a552"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/516c8e0e5c799a7c286da891d53568113d7f79ec7b060f893a9b1e11a120a552.gz",
+        "bytes": 3746240,
+        "sha256": "1168b48086c864a9ad3dee6a507b0cef3f306571fb3ff47271bbcb8557094723"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-sustained-v1/candidate000/spec.json",
+        "bytes": 204,
+        "sha256": "14fa34aa3e28dd50b338017266d6b25545cbe8797fbe799c09bc07a8696b2c17"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/14fa34aa3e28dd50b338017266d6b25545cbe8797fbe799c09bc07a8696b2c17.gz",
+        "bytes": 147,
+        "sha256": "17691d1de4f7ea0070a4eac9fac32b40757d49aad034afef0ef515a2eb0d15ef"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-sustained-v1/selected.spec.json",
+        "bytes": 204,
+        "sha256": "14fa34aa3e28dd50b338017266d6b25545cbe8797fbe799c09bc07a8696b2c17"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/14fa34aa3e28dd50b338017266d6b25545cbe8797fbe799c09bc07a8696b2c17.gz",
+        "bytes": 147,
+        "sha256": "17691d1de4f7ea0070a4eac9fac32b40757d49aad034afef0ef515a2eb0d15ef"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-adaptive-sustained-v1/selection.json",
+        "bytes": 1961,
+        "sha256": "aa5a6965d46045d5bdb018655426823604727fcd931d41ed87be0e7953d18c1b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/aa5a6965d46045d5bdb018655426823604727fcd931d41ed87be0e7953d18c1b.gz",
+        "bytes": 968,
+        "sha256": "c4f787c1c5a0c10b9265e8ba4ef3785fca2ffea6f9e2dd5c2ef678574e124f01"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/archive-prepare.mjs",
+        "bytes": 3256,
+        "sha256": "e9ffdf5bbbf02531540fd11da7ed48819ae2929fa5a8a0b34a6956124a4ff4f7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e9ffdf5bbbf02531540fd11da7ed48819ae2929fa5a8a0b34a6956124a4ff4f7.gz",
+        "bytes": 1323,
+        "sha256": "e2276be9000cc116a997d332bb0ab8654358fd0572452941aae318070f0b6c9f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/audit-batch.mjs",
+        "bytes": 2971,
+        "sha256": "a2ed663e5bb9a9587bae0591e68e2549ca9bb8919372fcf0a5aa4394b7d80c7c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a2ed663e5bb9a9587bae0591e68e2549ca9bb8919372fcf0a5aa4394b7d80c7c.gz",
+        "bytes": 1254,
+        "sha256": "18758a0110c34e50c4d2475d384293541e7c95ef60ea5c6bcc1993c3b1998453"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/audit-batch.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/audit-batch.stdout.log",
+        "bytes": 726,
+        "sha256": "2edb47c4641cf93544d9c0e63c6ff98dad63dd0ee99b2dc9a53b08a1e2d44081"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2edb47c4641cf93544d9c0e63c6ff98dad63dd0ee99b2dc9a53b08a1e2d44081.gz",
+        "bytes": 305,
+        "sha256": "a7e7ce02ac30c6cd6451f527858fb301b2f5e7692af204dd57f8fce8159a66c9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/batch-check.json",
+        "bytes": 4275,
+        "sha256": "e4ae696346059bda52c78ef94a83534eb73cfacf5e3e4d4b1ee07ca0e7c9ea23"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e4ae696346059bda52c78ef94a83534eb73cfacf5e3e4d4b1ee07ca0e7c9ea23.gz",
+        "bytes": 1503,
+        "sha256": "3f737aaf12b8727fb3fcfa5cdb334b9663b1f13f0307f3dcd3a74e73b3f12dab"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/check.json",
+        "bytes": 947,
+        "sha256": "ffd53daae8012114df25f27050023930f5fb0893da56fcfe8b2c8f54ac32f5ea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ffd53daae8012114df25f27050023930f5fb0893da56fcfe8b2c8f54ac32f5ea.gz",
+        "bytes": 565,
+        "sha256": "ee0f549ad344f171cc4ee32c213ec859d78cc250cca511796aab38e1a7be8714"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/check.mjs",
+        "bytes": 2091,
+        "sha256": "b51ebfe37f367f3a8acb24f0840144ebc905ba77c919376de739bdb691b69e27"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b51ebfe37f367f3a8acb24f0840144ebc905ba77c919376de739bdb691b69e27.gz",
+        "bytes": 890,
+        "sha256": "fb145ef4a6468a393210693638277ea20e84e2a641981a3f52d6d1d226cef869"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/check.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/check.stdout.log",
+        "bytes": 68,
+        "sha256": "859e108923ecf6b0a6314146fe37ad617526679e899102ea7a93cc2b10deeab8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/859e108923ecf6b0a6314146fe37ad617526679e899102ea7a93cc2b10deeab8.gz",
+        "bytes": 88,
+        "sha256": "233e8ced5efb0e49417593263e95d72aa4d7bb516216f2439f46112eeb5028de"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/composite-episode-transfer-v1/select.mjs",
+        "bytes": 1513,
+        "sha256": "3161b9a30334a7cbd8228e6100e6aa24937f4fe1c56464a3d93bb734766efd84"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3161b9a30334a7cbd8228e6100e6aa24937f4fe1c56464a3d93bb734766efd84.gz",
+        "bytes": 698,
+        "sha256": "0eeafbc6579add686c550a7e4ec66d36231061bfff069ef4650f54495e8f7a68"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/joint-command-search-inputs-v1/actions.json",
+        "bytes": 1563896,
+        "sha256": "2e61985f8afc2000fdbba5c8e1c334c26bbf947f4dde824a942929f5746e3957"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2e61985f8afc2000fdbba5c8e1c334c26bbf947f4dde824a942929f5746e3957.gz",
+        "bytes": 42911,
+        "sha256": "c2745aba038ea4e152ee3ab89e5eca72509d1ec7e24d84e59c6f75f1418a5a24"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/joint-command-search-inputs-v1/command-schema.json",
+        "bytes": 1321,
+        "sha256": "00e8f16e82e801db31783bc084401d291996aa485fac1bd56bfd3e1b70a1f785"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/00e8f16e82e801db31783bc084401d291996aa485fac1bd56bfd3e1b70a1f785.gz",
+        "bytes": 251,
+        "sha256": "4fc72e5423dfe59f808a4b498df361346cefb8b6c0be4912eb45bed40471192e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/joint-command-search-inputs-v1/config.json",
+        "bytes": 130205,
+        "sha256": "9dbd0c33b47b7fa324ef714f1a4710b449afe9cba5a6cab957f452cb2754ca01"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9dbd0c33b47b7fa324ef714f1a4710b449afe9cba5a6cab957f452cb2754ca01.gz",
+        "bytes": 8852,
+        "sha256": "fc8b945b5f1213343152250fe6ac13fbd8ee8ca93fea30a65a746bbdc657623a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/joint-command-search-inputs-v1/reference.json",
+        "bytes": 1139353,
+        "sha256": "80cf60fea989e75a18ba8d38755461ae855b970354b772b0251025ab21e3cc0f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/80cf60fea989e75a18ba8d38755461ae855b970354b772b0251025ab21e3cc0f.gz",
+        "bytes": 463548,
+        "sha256": "c23f0240686840fc56ab66087ae94b25075185b91676251a991a1a957ab92ee5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/joint-command-search-inputs-v1/scene.json",
+        "bytes": 12745396,
+        "sha256": "a37a624c908e4cec2e2f7dfc90a61321a5ff65ec9f68eb15d9f92c159d710a3a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a37a624c908e4cec2e2f7dfc90a61321a5ff65ec9f68eb15d9f92c159d710a3a.gz",
+        "bytes": 3639704,
+        "sha256": "5e1a74dcfdaf2781c504f971b6cf6f63bbd7d2717878519958e699fc995e5fbc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/joint-command-search-inputs-v1/source-experiment.json",
+        "bytes": 3155,
+        "sha256": "2fabf48a6284d97d32b13fc5ec703473c58a8f13c9dcfe0a60edbc1dd2474321"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2fabf48a6284d97d32b13fc5ec703473c58a8f13c9dcfe0a60edbc1dd2474321.gz",
+        "bytes": 1374,
+        "sha256": "2e6ae0169cf15b14101ee5c477308e9fcf4952dc3f0e9aad698cce92ab27436c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/joint-command-search-inputs-v1/task.json",
+        "bytes": 7469,
+        "sha256": "79e3aaaeb1b6819cfb0a159259b55b02c9ecce1621287adb695594789bdd41dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/79e3aaaeb1b6819cfb0a159259b55b02c9ecce1621287adb695594789bdd41dd.gz",
+        "bytes": 825,
+        "sha256": "fea231ce79bcfb7389790e272d173f29e42a32d8e2cb60987194c4da2a65fee7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/joint-command-sustained-v2/candidate010/replay-input.json",
+        "bytes": 14848861,
+        "sha256": "ea41e4609e9f754d22171dc7e56cbd7ec72db7ae60b143c649cbbdda504e3b80"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ea41e4609e9f754d22171dc7e56cbd7ec72db7ae60b143c649cbbdda504e3b80.gz",
+        "bytes": 3746077,
+        "sha256": "3c3d5c62ea7af9545079863d2bc73c1a753d9db689c40665fa7ab0fa156ae7c6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/predict_planar_motion-trend-v1",
+        "bytes": 633168,
+        "sha256": "63c9bfbe80cb142810808f7eac13954708b2e4b600edc3772496c2d5b7b912a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/63c9bfbe80cb142810808f7eac13954708b2e4b600edc3772496c2d5b7b912a9.gz",
+        "bytes": 276002,
+        "sha256": "724db45a9160673759473c71ac3dfc81a5d96e22adfc321e70ad08186cc100cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/run_environment-long-episode-v1",
+        "bytes": 15877072,
+        "sha256": "1e30e3ffb13855b9ebace260a8bf2889c4ce71b1655b5810fcd2f4e9344849e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1e30e3ffb13855b9ebace260a8bf2889c4ce71b1655b5810fcd2f4e9344849e0.gz",
+        "bytes": 4726377,
+        "sha256": "18910b91e95e7df0ad3fa8bccd4b7f70019ad04ed2c9d7270507f3c9a9b04611"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/suggest_composite_planar-v2",
+        "bytes": 11393104,
+        "sha256": "2349e3630b5041d9626e592f802aa527f13a3eb74f5bff793daad8718b91e294"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2349e3630b5041d9626e592f802aa527f13a3eb74f5bff793daad8718b91e294.gz",
+        "bytes": 2699743,
+        "sha256": "c59185a06b5c5f95e105592768f2951a3d328708f6f6285cb750ffb52db14401"
+      }
+    }
+  ],
+  "scope": "Completed six-evaluation adaptive batch with 26 accumulated response observations, prequential turning-error audit, generic exact-prefix-to-full episode transfer and its regression. Immutable selected full300s inputs only; live outputs excluded. Earlier20 seed rows and known-winner regression captures are durably referenced by composite-adaptive-evidence-v1 and its linked predecessor manifests.",
+  "terminal_evidence": "Adaptive batch session4172 exited0 with result.json and all six capture/twelve fit executions exited0. Transfer regression session37278 exited0; batch audit exited0. Selected candidate000 full300s session33052 is live, PID84485 confirmed running. Existing candidate010 quarter and composite negative quarter/contact PIDs83639/84142/84143 remain live. No unfinished native capture or live driver output is archived.",
+  "specification": {
+    "path": "runs/composite-episode-transfer-v1/archive-spec.json",
+    "sha256": "8cc4c1bfc5d2965b481250114d2fe031ee8c6c66befa6d4bd9a2cc75e91d1e0f"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/archive_evidence_files.mjs",
+    "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+  }
+}

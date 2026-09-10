@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "checks": [
+    {
+      "name": "single",
+      "exit_code": 0,
+      "byte_identical": true,
+      "sha256": "56c8023c34ff9dac9981cc89c9a27d86ad1bc2356e262ac58017243720ae0103"
+    },
+    {
+      "name": "double",
+      "exit_code": 0,
+      "byte_identical": true,
+      "sha256": "6566f7dfe8e880512e3acc5225e5e211cf907f5d2243534ad9872285bddf80c3"
+    }
+  ]
+}

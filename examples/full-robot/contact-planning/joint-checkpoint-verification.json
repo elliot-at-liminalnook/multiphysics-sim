@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "executions": [
+    {
+      "name": "control",
+      "binary": {
+        "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt",
+        "bytes": 9221300,
+        "sha256": "278e9c4de8427ac4f97619ff507529feb599272c8887d811f72aea451f977b82"
+      },
+      "args": [
+        "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "examples/full-robot/gait-exploration/workspace-markers.json",
+        "examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json",
+        "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+        "examples/full-robot/contact-planning/joint-checkpoint-smoke.search.json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "stdout": {
+        "path": "runs/joint-checkpoints/verification/control.result.json",
+        "bytes": 2997838,
+        "sha256": "2f628eade45fdf775a2cc104ddfe02acbfef367ca2256fa81c8b6da0ff112ed2"
+      },
+      "stderr": {
+        "path": "runs/joint-checkpoints/verification/control.log",
+        "bytes": 134,
+        "sha256": "33547fa576883b116ecc57fcf1c9747684b18a6f7f5022409f54f494c1f3103d"
+      }
+    },
+    {
+      "name": "disabled",
+      "binary": {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_checkpoint",
+        "bytes": 9386268,
+        "sha256": "64ff92a73eacb4467eadc57b9abcf16684f022a495a729be01fc05853a0eaab9"
+      },
+      "args": [
+        "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "examples/full-robot/gait-exploration/workspace-markers.json",
+        "examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json",
+        "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+        "examples/full-robot/contact-planning/joint-checkpoint-smoke.search.json"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "stdout": {
+        "path": "runs/joint-checkpoints/verification/disabled.result.json",
+        "bytes": 2997838,
+        "sha256": "2f628eade45fdf775a2cc104ddfe02acbfef367ca2256fa81c8b6da0ff112ed2"
+      },
+      "stderr": {
+        "path": "runs/joint-checkpoints/verification/disabled.log",
+        "bytes": 134,
+        "sha256": "33547fa576883b116ecc57fcf1c9747684b18a6f7f5022409f54f494c1f3103d"
+      }
+    },
+    {
+      "name": "enabled",
+      "binary": {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_checkpoint",
+        "bytes": 9386268,
+        "sha256": "64ff92a73eacb4467eadc57b9abcf16684f022a495a729be01fc05853a0eaab9"
+      },
+      "args": [
+        "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "examples/full-robot/gait-exploration/workspace-markers.json",
+        "examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json",
+        "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+        "examples/full-robot/contact-planning/joint-checkpoint-smoke.search.json",
+        "runs/joint-checkpoints/verification/feasible"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "stdout": {
+        "path": "runs/joint-checkpoints/verification/enabled.result.json",
+        "bytes": 2997838,
+        "sha256": "2f628eade45fdf775a2cc104ddfe02acbfef367ca2256fa81c8b6da0ff112ed2"
+      },
+      "stderr": {
+        "path": "runs/joint-checkpoints/verification/enabled.log",
+        "bytes": 134,
+        "sha256": "33547fa576883b116ecc57fcf1c9747684b18a6f7f5022409f54f494c1f3103d"
+      }
+    },
+    {
+      "name": "existing_directory",
+      "binary": {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_checkpoint",
+        "bytes": 9386268,
+        "sha256": "64ff92a73eacb4467eadc57b9abcf16684f022a495a729be01fc05853a0eaab9"
+      },
+      "args": [
+        "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "examples/full-robot/gait-exploration/workspace-markers.json",
+        "examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json",
+        "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+        "examples/full-robot/contact-planning/joint-checkpoint-smoke.search.json",
+        "runs/joint-checkpoints/verification/feasible"
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "stdout": {
+        "path": "runs/joint-checkpoints/verification/existing_directory.result.json",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "runs/joint-checkpoints/verification/existing_directory.log",
+        "bytes": 61,
+        "sha256": "bdfbe5e37daeee2cd9d0b68e584fb92ea07a6e913134f4c7307aa52b1315bb17"
+      }
+    },
+    {
+      "name": "infeasible",
+      "binary": {
+        "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_checkpoint",
+        "bytes": 9386268,
+        "sha256": "64ff92a73eacb4467eadc57b9abcf16684f022a495a729be01fc05853a0eaab9"
+      },
+      "args": [
+        "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "examples/full-robot/gait-exploration/workspace-markers.json",
+        "examples/full-robot/contact-planning/joint-servo-command.recipe.json",
+        "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+        "examples/full-robot/contact-planning/joint-checkpoint-smoke.search.json",
+        "runs/joint-checkpoints/verification/infeasible"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "stdout": {
+        "path": "runs/joint-checkpoints/verification/infeasible.result.json",
+        "bytes": 3985280,
+        "sha256": "1e3fc3cddf6e16bfcaf987574169a654fdf214b382e01f1271667f0b8f432de9"
+      },
+      "stderr": {
+        "path": "runs/joint-checkpoints/verification/infeasible.log",
+        "bytes": 134,
+        "sha256": "8a09044cbf75a1c270ea3e313d1888722aa0dfe1c7c6bdcf3b7d1e2738f2a8ae"
+      }
+    }
+  ],
+  "checks": {
+    "legacy_disabled_enabled_byte_equal": true,
+    "prior_baseline_byte_equal": true,
+    "best_candidate_matches_library": true,
+    "declared_model_and_bounds_retained": true,
+    "existing_directory_preserved": true,
+    "infeasible_has_no_best_snapshot": true
+  },
+  "sampled_speed_m_s": 0.02515190739040914,
+  "model_evaluations": 4,
+  "scope": "Four-model observer smoke/replay and exclusive-output checks. Sampled-feasible fixture has legacy gates without nominal command limits; no dense/runtime or speed improvement claim."
+}

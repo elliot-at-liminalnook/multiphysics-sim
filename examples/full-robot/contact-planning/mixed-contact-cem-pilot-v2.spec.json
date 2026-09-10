@@ -1,0 +1,81 @@
+{
+  "output_root": "runs/mixed-contact-cem-pilot-v2",
+  "scene": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+  "markers": "examples/full-robot/gait-exploration/workspace-markers.json",
+  "orders": [
+    {
+      "id": "control-refined",
+      "recipe": "runs/contact-order-neighbors-matched/control-refined.recipe.json"
+    },
+    {
+      "id": "edge-002",
+      "recipe": "runs/contact-order-neighbors-matched/edge-002.recipe.json"
+    },
+    {
+      "id": "edge-006",
+      "recipe": "examples/full-robot/contact-planning/mixed-cem-edge006-initial.recipe.json"
+    },
+    {
+      "id": "edge-004",
+      "recipe": "runs/contact-order-neighbors-matched/edge-004.recipe.json"
+    },
+    {
+      "id": "edge-000",
+      "recipe": "runs/contact-order-neighbors-matched/edge-000.recipe.json"
+    },
+    {
+      "id": "edge-001",
+      "recipe": "runs/contact-order-neighbors-matched/edge-001.recipe.json"
+    },
+    {
+      "id": "edge-005",
+      "recipe": "runs/contact-order-neighbors-matched/edge-005.recipe.json"
+    }
+  ],
+  "repetitions": [
+    1,
+    2
+  ],
+  "tools": {
+    "selector": {
+      "path": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/mixed_cem",
+      "sha256": "a051da0f38edd9512d46765ed7051bfb567405f40e7b74e9f033cf3556d95e37"
+    },
+    "expander": {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/expand_joint_contact_cycle",
+      "sha256": "c5732bbb721754f45156f7d514fe7a18c90a64e0e547c22b3ce5c4935ced9a09"
+    },
+    "conic": {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/solve_joint_force_cones",
+      "sha256": "1931c981395499e2ceb92305561ed7379a1176fce7cf4e7f5a6a3e81899bb2a7"
+    },
+    "optimizer": {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_steps",
+      "sha256": "1056b56c0cf5978d7a1828b1f188680de3f8f0211965d4e81e869c7929a5d4bc"
+    },
+    "initializer": {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/set_joint_initializer",
+      "sha256": "67a4fb3ac1cc6aa3285903cb59e64b9c975274266a53ca27b38d87e7bce1b269"
+    }
+  },
+  "library": "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+  "search": "examples/full-robot/contact-planning/contact-order-refinement.search.json",
+  "config": {
+    "seed": 42,
+    "population": 8,
+    "elites": 3,
+    "learning_rate": 0.7,
+    "exploration_probability": 0.25,
+    "minimum_std": 0.025
+  },
+  "initial_means": [
+    0.9930233684861556,
+    0.006545258860229651
+  ],
+  "initial_stds": [
+    0.15,
+    0.15
+  ],
+  "generations": 3,
+  "scope": "Mixed CEM planning pilot with seven seed contact orders, one/two-cycle expansion and adaptive period/displacement initializers. All body/foot/force/timing variables remain free inside their recorded boxes during local refinement. Force-conic proposals outside exact boxes are retained as evidence but not used as native initializers. No bound relaxation, full contact-family coverage, runtime success or maximum-speed claim."
+}

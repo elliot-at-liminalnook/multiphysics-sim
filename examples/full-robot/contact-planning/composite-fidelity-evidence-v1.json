@@ -1,0 +1,1987 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/Cargo.lock",
+        "bytes": 183174,
+        "sha256": "3f6f31f145fe7d7b0bbf1abd7bac619922f0dd7c68b19388f31997157d156c18"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3f6f31f145fe7d7b0bbf1abd7bac619922f0dd7c68b19388f31997157d156c18.gz",
+        "bytes": 41946,
+        "sha256": "139186b8c7e77275b64a01d1060f113b1b066ae59f526ca3808c24f98d90763c"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control/src/planar_prediction.rs",
+        "bytes": 8259,
+        "sha256": "5db90bff37b63c75fa2f6a90bd5972db3e90ecffcd25aa95c1d39e96313f05cf"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5db90bff37b63c75fa2f6a90bd5972db3e90ecffcd25aa95c1d39e96313f05cf.gz",
+        "bytes": 2607,
+        "sha256": "84e6ee919d6cbcc29e4fe39d4c6f6e977da14e5b67c41b0ff5dc2fc1197eb67a"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve/examples/suggest_composite_planar.rs",
+        "bytes": 5272,
+        "sha256": "7ac22bdcb8a3d1f8bd42e3d14360ae5bc3b0bd26e75895d5aa204cb00c78681a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7ac22bdcb8a3d1f8bd42e3d14360ae5bc3b0bd26e75895d5aa204cb00c78681a.gz",
+        "bytes": 2079,
+        "sha256": "ca28c5c0d9a841075b49f87b2c299494b87ea1eae2d57b7287de1499c7894c36"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve/src/bayesian.rs",
+        "bytes": 22331,
+        "sha256": "46a61605497394d244bb5d7ba85e3943c72a4989411bb302c8aabc87e701b202"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/46a61605497394d244bb5d7ba85e3943c72a4989411bb302c8aabc87e701b202.gz",
+        "bytes": 6212,
+        "sha256": "516e484bf90e1c05b1e358573afed878ee75e9785a60000dfc33d6391fce4f20"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve/src/composite.rs",
+        "bytes": 21055,
+        "sha256": "6805c46f209abcceaea8b0102b5c95e8befcce88546322dcf2f0fe79fffff418"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6805c46f209abcceaea8b0102b5c95e8befcce88546322dcf2f0fe79fffff418.gz",
+        "bytes": 5571,
+        "sha256": "b850d7e3553d2869ffb12f1ceea9fb62926549458de7cc893cb0c02598351bf8"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/planar_speed_experiment.mjs",
+        "bytes": 7520,
+        "sha256": "e8c1527e815d33e9e039b1afa39529b8131273632596a9b851206cc9dc1ed517"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e8c1527e815d33e9e039b1afa39529b8131273632596a9b851206cc9dc1ed517.gz",
+        "bytes": 2857,
+        "sha256": "9bdd0ffbf3725f9e3414475ecc07c8be7d4ad8cb816ae9717e110137adf4b892"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/run_affine_speed_search.mjs",
+        "bytes": 12608,
+        "sha256": "6467ee5d58622692093b45043e11c3d51c3af1ac0a16e2b5326968ef32cc36db"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6467ee5d58622692093b45043e11c3d51c3af1ac0a16e2b5326968ef32cc36db.gz",
+        "bytes": 4126,
+        "sha256": "6510e4b8dcb0f9fb415f4ef95954c4aac05c7d779773cadd975035749a232689"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/run_composite_planar_speed.mjs",
+        "bytes": 7750,
+        "sha256": "fddc8b241f4683587710e1003242ec1f1c08539ee4f8292c2a4de78f625a3e05"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fddc8b241f4683587710e1003242ec1f1c08539ee4f8292c2a4de78f625a3e05.gz",
+        "bytes": 2702,
+        "sha256": "ac42ce3d991785c98610db3549bea031be688dd663138484ca8c012850b9190f"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/affine_trajectory-v1",
+        "bytes": 593432,
+        "sha256": "a1b0ae92d09887479ed092da37211dfff51b9afc294d69c0d78df6f07f5e61c1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a1b0ae92d09887479ed092da37211dfff51b9afc294d69c0d78df6f07f5e61c1.gz",
+        "bytes": 259145,
+        "sha256": "a573f27aea579be9f8568e03ffaa10b5bfc2def1681ccd6d993287762917bee0"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-adaptive-completion-v1/negative-quarter-check.json",
+        "bytes": 839,
+        "sha256": "cd3a4356fe427c62b15696fccb5d81aa36165c31799eccec01a833df331db6bb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/cd3a4356fe427c62b15696fccb5d81aa36165c31799eccec01a833df331db6bb.gz",
+        "bytes": 496,
+        "sha256": "5055a12ed04e34ad21d1ffecd4a46df03e2947767416fb3caf2985d4efbe7e4b"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-adaptive-inputs-v1/seed-request.json",
+        "bytes": 12484,
+        "sha256": "c393d9cecb50baae1ca56ce3dc468ebe99fcca6ffe65cbe03a787867c5601728"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c393d9cecb50baae1ca56ce3dc468ebe99fcca6ffe65cbe03a787867c5601728.gz",
+        "bytes": 3989,
+        "sha256": "b9845f3a9086dc99ecd9ab6cc0e3aee857f9d94f271514b59af6a4372fa757cd"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-adaptive-planar-v1/context.json",
+        "bytes": 3222,
+        "sha256": "9b22021da74dcb8507d4036dc5c3649165024d942a5aa268f7f10eb6cb221fbb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9b22021da74dcb8507d4036dc5c3649165024d942a5aa268f7f10eb6cb221fbb.gz",
+        "bytes": 1427,
+        "sha256": "086566f1b948b6862b323f61460b30703d804f285069091632ec7dd44fa72916"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-adaptive-planar-v1/result.json",
+        "bytes": 20289,
+        "sha256": "9b57374d763352fb98d84839c1d956840f0a70db3f35cbdb9227d7080ab03f00"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9b57374d763352fb98d84839c1d956840f0a70db3f35cbdb9227d7080ab03f00.gz",
+        "bytes": 6013,
+        "sha256": "c9231b61f73f0de7be7b5dde1b33f93583e26b65c99bbe99291379c2e9518daa"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-adaptive-results-v1/candidate002-quarter-check.json",
+        "bytes": 841,
+        "sha256": "a90874d7856a539a5a5ce9feb1de668d24410a573cb608a7c7b4345ecf96aa91"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a90874d7856a539a5a5ce9feb1de668d24410a573cb608a7c7b4345ecf96aa91.gz",
+        "bytes": 499,
+        "sha256": "b7183ddbb7b82e58f5ef6a6fa1781eb98ec7fcdb0021436f948c7bf64ebd89fe"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-episode-transfer-v1/batch-check.json",
+        "bytes": 4275,
+        "sha256": "e4ae696346059bda52c78ef94a83534eb73cfacf5e3e4d4b1ee07ca0e7c9ea23"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e4ae696346059bda52c78ef94a83534eb73cfacf5e3e4d4b1ee07ca0e7c9ea23.gz",
+        "bytes": 1503,
+        "sha256": "3f737aaf12b8727fb3fcfa5cdb334b9663b1f13f0307f3dcd3a74e73b3f12dab"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/check-selector.mjs",
+        "bytes": 2485,
+        "sha256": "3539f274402b25ddbb90dc5f175ac07b168dfea6e82df5b0afc55195842f6276"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3539f274402b25ddbb90dc5f175ac07b168dfea6e82df5b0afc55195842f6276.gz",
+        "bytes": 1085,
+        "sha256": "0b2219529af2d9ce3093fa2ebdda0effdeeefb1f0a247e499351af99bc23ce6f"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/check-selector.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/check-selector.stdout.log",
+        "bytes": 822,
+        "sha256": "04c5fff593b8ef916fa5bba7bd0c5648e40e9cf29c96bbc4b6b8285f7be300b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/04c5fff593b8ef916fa5bba7bd0c5648e40e9cf29c96bbc4b6b8285f7be300b5.gz",
+        "bytes": 506,
+        "sha256": "933aa7e0327971d2927930b9d96c8346efc9e831727b304c5805f2e795a49a57"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/config.json",
+        "bytes": 130208,
+        "sha256": "6f1677b6f8924c6bdb0e9d01d8777599a6a8e84df45f7579f274d91d876b6b2a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6f1677b6f8924c6bdb0e9d01d8777599a6a8e84df45f7579f274d91d876b6b2a.gz",
+        "bytes": 8853,
+        "sha256": "f9e663a49461743ba2fcf10abcf135496318d2fbf45b10e989f8f614cb41db67"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/first-request.json",
+        "bytes": 19966,
+        "sha256": "484398cb1866879d251fb6610b27f688a07d4a7943ca42612ebf1ab5dbcef3d7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/484398cb1866879d251fb6610b27f688a07d4a7943ca42612ebf1ab5dbcef3d7.gz",
+        "bytes": 6080,
+        "sha256": "ecbb254a7f82881fa3723530a48f0f4a6eb48d8aa00465b21feff64a3662ab74"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/first-result.json",
+        "bytes": 2523950,
+        "sha256": "ebb19ddf14ec7a6c28e6fd87046e5d2a3ad3ce8e55580874a0f64b0517a1f082"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ebb19ddf14ec7a6c28e6fd87046e5d2a3ad3ce8e55580874a0f64b0517a1f082.gz",
+        "bytes": 450410,
+        "sha256": "95f785c2f9edaba079531ffa0ec79f97fb2fa9a30df37071cf6ed4483566dac5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/first.execution.json",
+        "bytes": 58,
+        "sha256": "7024674fee2ccc4ebc8cb8816f663a49d611f713753bb1c725afa3231c189c78"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7024674fee2ccc4ebc8cb8816f663a49d611f713753bb1c725afa3231c189c78.gz",
+        "bytes": 71,
+        "sha256": "abc53a8166a5d92f80897dd89e16f20bfa560a2de1eec14fdcb38e9afeb5f60e"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/first.launch.json",
+        "bytes": 217,
+        "sha256": "c7667a5bc1873e94c51b42af77ef8a00c405b433c08d25b745f06ca6c1c249ff"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c7667a5bc1873e94c51b42af77ef8a00c405b433c08d25b745f06ca6c1c249ff.gz",
+        "bytes": 162,
+        "sha256": "4c209f3df26e54831d24f006e3109e968ff8177b58c3e9767afcff3e2702f2e9"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/first.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/first.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/input-check.json",
+        "bytes": 2065,
+        "sha256": "ce1d7606e7b911690c17ff8d418cac04a8ff9b5bd7f462948645a488ef2ea03b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ce1d7606e7b911690c17ff8d418cac04a8ff9b5bd7f462948645a488ef2ea03b.gz",
+        "bytes": 979,
+        "sha256": "f03ab00cc4d0ccf986f77b37c786f6edb9636febdb4e461deab30bcfd3698181"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/launch-check.json",
+        "bytes": 417,
+        "sha256": "caf24799fa37c1d1a18ffc116b8afe0ae3af9265354412cf84e100d6f21ee1d9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/caf24799fa37c1d1a18ffc116b8afe0ae3af9265354412cf84e100d6f21ee1d9.gz",
+        "bytes": 305,
+        "sha256": "abaf7834ffa1693441cdd71b82d62e238baad1a33188b2b17e95a4e923bb8444"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/legacy-result.json",
+        "bytes": 2475878,
+        "sha256": "8fccc0467f6873b70a1746f416572c4334f6ea658ac7c66b80ee0bd38b9c8a1c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8fccc0467f6873b70a1746f416572c4334f6ea658ac7c66b80ee0bd38b9c8a1c.gz",
+        "bytes": 448789,
+        "sha256": "bb6040eaeec47b71178747942c9db63beea051e1404e19dc922c936c67e024c3"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/legacy.execution.json",
+        "bytes": 58,
+        "sha256": "65c4b6a4a2eef5b2bfc9fba2ab38ded695d90a0bc0b994ed998b43efb12ae9cf"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/65c4b6a4a2eef5b2bfc9fba2ab38ded695d90a0bc0b994ed998b43efb12ae9cf.gz",
+        "bytes": 71,
+        "sha256": "389c9447e37564b05594f74feea35915b2714bdec353e67a2392bda03ef6b2d7"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/legacy.launch.json",
+        "bytes": 225,
+        "sha256": "59c34197ba19104f6597356d8721b540be13abc7c71066bd53b450b3de2a517d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/59c34197ba19104f6597356d8721b540be13abc7c71066bd53b450b3de2a517d.gz",
+        "bytes": 183,
+        "sha256": "b4fd9249ec03a60a01990efbde91cd031d1fa52dcf060164ed28e3f40061b107"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/legacy.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/legacy.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-0/actions.json",
+        "bytes": 1533896,
+        "sha256": "4d11ea25518a2f8c1adb2c338366a9a4c73ae58fbaba8983e7efffc54ed9543d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4d11ea25518a2f8c1adb2c338366a9a4c73ae58fbaba8983e7efffc54ed9543d.gz",
+        "bytes": 42909,
+        "sha256": "e62d2067bd569167b76d6d79c9a52db7e8ce02a7316ab56ada9acf57c8467007"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-0/inputs.json",
+        "bytes": 1156,
+        "sha256": "184b655db8f219550a33d1f827f46ac7adb8bbddfa8f3d6c91a8256fd7079d4e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/184b655db8f219550a33d1f827f46ac7adb8bbddfa8f3d6c91a8256fd7079d4e.gz",
+        "bytes": 528,
+        "sha256": "25b3619334dcf4e44d5816ab3a8c77f94124842cd97fd95d4de5cd0c974205ed"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-0/scene.json",
+        "bytes": 12744861,
+        "sha256": "d6d5ce1f5dbd57663b3fd8904ea03c8488dc9cdee96f8e6c0e7eb312bd14dec1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d6d5ce1f5dbd57663b3fd8904ea03c8488dc9cdee96f8e6c0e7eb312bd14dec1.gz",
+        "bytes": 3639602,
+        "sha256": "40163fd81dcf6d1f2ec107c30d5e00667a80008d6e851bff817b9fe4c7b7ded9"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-0/trajectory.json",
+        "bytes": 1138809,
+        "sha256": "ac4196c2818bb86e93395865c9d905939921a9b1b36e99718d29d01013ca88ae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ac4196c2818bb86e93395865c9d905939921a9b1b36e99718d29d01013ca88ae.gz",
+        "bytes": 463422,
+        "sha256": "4b7f2ea67ab380f25dc48eb785e2df65e17e05b01bae7852944dae8707f5dd30"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-0/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-0/transform.json",
+        "bytes": 496,
+        "sha256": "f9cef5b9c54ee98c43afd6c0f0825678ce71f6f3b1a9020d68ea17847ba59f67"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f9cef5b9c54ee98c43afd6c0f0825678ce71f6f3b1a9020d68ea17847ba59f67.gz",
+        "bytes": 215,
+        "sha256": "8ea6050bb9aa553959d2e22584c3b6a45a06a5cab1d8ec547e801664bcbc2d35"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-0/values.json",
+        "bytes": 175,
+        "sha256": "f3a1529f1a1d8b5edeecde8b4e756d5cbb3a99f5087dd3ba212f17f6ed66a670"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f3a1529f1a1d8b5edeecde8b4e756d5cbb3a99f5087dd3ba212f17f6ed66a670.gz",
+        "bytes": 123,
+        "sha256": "c726d080204c2608e4c19ceb67635356808d9978dae004c9c7fc16a631a57466"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-1/actions.json",
+        "bytes": 1548896,
+        "sha256": "52968a275a5593c8414344d27bc6f17a7010d7119b1ca0b90b4226a9fa4cd159"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/52968a275a5593c8414344d27bc6f17a7010d7119b1ca0b90b4226a9fa4cd159.gz",
+        "bytes": 42908,
+        "sha256": "214c8c7547ef62068f638663b591a37f1294f461eb84cad070722f2e371b804b"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-1/inputs.json",
+        "bytes": 1156,
+        "sha256": "b5577c17cb0113a05a0c25ec81f870166d8ee0c7cf89d5b2a4377fa0ea43b353"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b5577c17cb0113a05a0c25ec81f870166d8ee0c7cf89d5b2a4377fa0ea43b353.gz",
+        "bytes": 536,
+        "sha256": "067fa90d10f6fe4b424bc955f6a5076925d7914743e15132588f63e2806a234f"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-1/scene.json",
+        "bytes": 12743839,
+        "sha256": "897d82c784fb59643d13e20c26e10b8ed8bc0ee046d5f9597b9e27117054cce3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/897d82c784fb59643d13e20c26e10b8ed8bc0ee046d5f9597b9e27117054cce3.gz",
+        "bytes": 3639376,
+        "sha256": "1f0ecd9e487a1d701a8ea598fee47fd43e5dc7352fb335cc769bc894fc2af688"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-1/trajectory.json",
+        "bytes": 1137800,
+        "sha256": "d86416b4dadcd9a64e568d460eb4d6fd77fd1f7a5e0d1dbcf13cb32f1ae8c38b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d86416b4dadcd9a64e568d460eb4d6fd77fd1f7a5e0d1dbcf13cb32f1ae8c38b.gz",
+        "bytes": 463187,
+        "sha256": "145979d1aca3ff5bf7212396075254174dcfe9f9c358c98d82cd10fd1340b244"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-1/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-1/transform.json",
+        "bytes": 492,
+        "sha256": "2458138f62e7a688184eaa91e47310f8d660810634ee9e72273dd42605d9cd90"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2458138f62e7a688184eaa91e47310f8d660810634ee9e72273dd42605d9cd90.gz",
+        "bytes": 215,
+        "sha256": "1260741071825e63ef823c64b126c64dcd1366c3d8b487631bfed2feec06a70c"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-1/values.json",
+        "bytes": 175,
+        "sha256": "76c84f972b33d926374735c0a4d875412329bdfa8e7f9a76f58f5247b5209992"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/76c84f972b33d926374735c0a4d875412329bdfa8e7f9a76f58f5247b5209992.gz",
+        "bytes": 123,
+        "sha256": "e22d488695f5c8c525ea84290fab1f1ad75c009b11944081dcb5d8b60d2b68d5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-2/actions.json",
+        "bytes": 1548896,
+        "sha256": "a5b8eea08458be8a80800275c2c2f3230bb1315bfa03e00067341196d57d4e70"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a5b8eea08458be8a80800275c2c2f3230bb1315bfa03e00067341196d57d4e70.gz",
+        "bytes": 42896,
+        "sha256": "9cc8412f068b4792bdc475a106a15b0124e47be595d58bb35dedff8ebfef94bf"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-2/inputs.json",
+        "bytes": 1156,
+        "sha256": "b9fce8e745bc2815427c6fb6f3cb96c270433a42eedbe35dbc47f43cedadcf4a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b9fce8e745bc2815427c6fb6f3cb96c270433a42eedbe35dbc47f43cedadcf4a.gz",
+        "bytes": 533,
+        "sha256": "208e4efbdae4045b01e1506c19eced687f2d593ef2ef34754d8f2533b1e1208d"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-2/scene.json",
+        "bytes": 12744375,
+        "sha256": "37cd0bb4598336d0bc6741d0cd7d3cf5e542f7d2b43cce2ee0fd67d01a0d23e1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/37cd0bb4598336d0bc6741d0cd7d3cf5e542f7d2b43cce2ee0fd67d01a0d23e1.gz",
+        "bytes": 3639394,
+        "sha256": "db617bf3c30b41aec47e238f2b198e43072419b6a34d02eebcd8460d4e56cb8c"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-2/trajectory.json",
+        "bytes": 1138331,
+        "sha256": "db27539f257ea3d019dbefd8fbff596609b39a93be723ca342658287333cb1d1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/db27539f257ea3d019dbefd8fbff596609b39a93be723ca342658287333cb1d1.gz",
+        "bytes": 463111,
+        "sha256": "3f429ab2f0e2bb4534469831f5e63f1e76f8717e8e9379d4fa9e467d928d7140"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-2/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-2/transform.json",
+        "bytes": 492,
+        "sha256": "c6fa04a93bea97fbd0714e6ddb34c023f4e30d75a8eb364bc17c033d6d9a4aad"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c6fa04a93bea97fbd0714e6ddb34c023f4e30d75a8eb364bc17c033d6d9a4aad.gz",
+        "bytes": 215,
+        "sha256": "b638b738fa6760581a51f6d6da41f8b3a84f2264b4705e8de59d50496ef84ef7"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-2/values.json",
+        "bytes": 173,
+        "sha256": "e2b556b096fa581cc315b233cd992693c6d517b3e70a46ff707483eac95c3f72"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e2b556b096fa581cc315b233cd992693c6d517b3e70a46ff707483eac95c3f72.gz",
+        "bytes": 123,
+        "sha256": "68a194d5b1a56acb90266104d6196835883250654751ac69bfa6eb3974e3835c"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-3/actions.json",
+        "bytes": 1548896,
+        "sha256": "d7fcc4318d1965fab89d20e957097c8d1f17208c09a4c0abce04ead11204b741"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d7fcc4318d1965fab89d20e957097c8d1f17208c09a4c0abce04ead11204b741.gz",
+        "bytes": 42903,
+        "sha256": "43f2b561ac3aa41d84ee0dc77065a276a006fcce12779795f44fb281e13b11f2"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-3/inputs.json",
+        "bytes": 1156,
+        "sha256": "2d6d1b4c7eb6a79b5f1ebd6c336e100b0b2dc92dc10c810b237634b78f03c1ec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2d6d1b4c7eb6a79b5f1ebd6c336e100b0b2dc92dc10c810b237634b78f03c1ec.gz",
+        "bytes": 530,
+        "sha256": "5f063bd40a60cd5db5a7734632337fe832cec1a53a5015dfc6bbc99276d48e80"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-3/scene.json",
+        "bytes": 12744341,
+        "sha256": "e943fc9750dc719596195f160c0f05ba000b59234a86bd5ceafeb7e37c9d331d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e943fc9750dc719596195f160c0f05ba000b59234a86bd5ceafeb7e37c9d331d.gz",
+        "bytes": 3639452,
+        "sha256": "96071b1bd3c315b0058c5b024a8a887e4f549ad1a905159178f9b32ab8703008"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-3/trajectory.json",
+        "bytes": 1138318,
+        "sha256": "ae0a4cacc77bcb6668be1bf9a57a1d429c9aa7d8518966bbbe15671e2b48654e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ae0a4cacc77bcb6668be1bf9a57a1d429c9aa7d8518966bbbe15671e2b48654e.gz",
+        "bytes": 463083,
+        "sha256": "6eb2c4e7f33771995d87d0cd72aea5d2870a7cbe5e458d26649f2076632874c5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-3/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-3/transform.json",
+        "bytes": 496,
+        "sha256": "bf7e8ba98be879f8ebb25ac19bbf0ea9286bd2c269c9f06d589bf7ab242ba8bf"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bf7e8ba98be879f8ebb25ac19bbf0ea9286bd2c269c9f06d589bf7ab242ba8bf.gz",
+        "bytes": 214,
+        "sha256": "91c622d7773db40021d9a5d28dff49fa5f29de065dfe00065511cb0908fa3c00"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/materialized-3/values.json",
+        "bytes": 176,
+        "sha256": "949c6849475608089a883f103a915be7079a9f8f4b59e6e388ca8e3df599a0b7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/949c6849475608089a883f103a915be7079a9f8f4b59e6e388ca8e3df599a0b7.gz",
+        "bytes": 124,
+        "sha256": "d7f8660507babf4f6d6d91125234ec711ef483914ff8437da3e4860a39492c9c"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/prepare.mjs",
+        "bytes": 8023,
+        "sha256": "b7ff8d2963dc1acccfb21694894178000054efb964820003f697c803d97193ea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b7ff8d2963dc1acccfb21694894178000054efb964820003f697c803d97193ea.gz",
+        "bytes": 2704,
+        "sha256": "34c3c505d87328b0079c78a2f21f0c14b59a67174258f10b9266602a47f699f5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/prepare.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/prepare.stdout.log",
+        "bytes": 133,
+        "sha256": "57193d92a9376d2bdc7cbf8e3cb13c5fc4e7860a3e7c9157f1348068156a42e8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/57193d92a9376d2bdc7cbf8e3cb13c5fc4e7860a3e7c9157f1348068156a42e8.gz",
+        "bytes": 135,
+        "sha256": "7ffa3cd12f74b758132a5c2006a3d06f5d84072d73b3233edb3c5b75533d48df"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/screen.json",
+        "bytes": 244,
+        "sha256": "62f858970ece7edaa76b6d7515d65bb1e0f72ed58b8516459e6342ef81c6098a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/62f858970ece7edaa76b6d7515d65bb1e0f72ed58b8516459e6342ef81c6098a.gz",
+        "bytes": 203,
+        "sha256": "dbd7cec20c85d4c370a24016111263f58cb586a29a3abf2aa7d78e42c8646eb4"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/seed-context.json",
+        "bytes": 14936,
+        "sha256": "0efadcc1ef081dc184889ccb7b0b66f0603a093ab06c6807eaa91011b0c18782"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0efadcc1ef081dc184889ccb7b0b66f0603a093ab06c6807eaa91011b0c18782.gz",
+        "bytes": 4591,
+        "sha256": "3d9927420321ef507e3ae4f2c4770858a7ed8f37f449e53bf87d9f3902016bc3"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/seed-request.json",
+        "bytes": 19358,
+        "sha256": "69f7ec3d7be3dca3f355f4eb456d93b1248309b96b6b0af45077f72b27f3d8c3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/69f7ec3d7be3dca3f355f4eb456d93b1248309b96b6b0af45077f72b27f3d8c3.gz",
+        "bytes": 5892,
+        "sha256": "ea9bb1f6e729048eb85a28b9cef134216b4468369d251e6a741e7f5f185e806e"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/seed-scores.json",
+        "bytes": 623,
+        "sha256": "21d77916e9094c018f37f368f306872d8266754508d173ec98bf643f5cb86141"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/21d77916e9094c018f37f368f306872d8266754508d173ec98bf643f5cb86141.gz",
+        "bytes": 300,
+        "sha256": "ea82b32a155245df4360efbf95831748e4c08ff72c52541905ab83fa3fb34f9a"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/selector-check.json",
+        "bytes": 746,
+        "sha256": "a1465c028544ee78a36c7b7391c5223457ea51839ae7000adbb222c1b989798b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a1465c028544ee78a36c7b7391c5223457ea51839ae7000adbb222c1b989798b.gz",
+        "bytes": 492,
+        "sha256": "eaacbdc42e927e3b915ee019670a77572ce9d8f86bcaf0cb713102819863ba74"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/source-experiment.json",
+        "bytes": 2913,
+        "sha256": "411ce15c673e5fa4b1688d49005cbbab62458b37d78db58b2a546a246bee4b91"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/411ce15c673e5fa4b1688d49005cbbab62458b37d78db58b2a546a246bee4b91.gz",
+        "bytes": 1252,
+        "sha256": "8e1aa97b66ea9864ddf877a0e3c272ee41fb01a8271b246858bc05fd96f44dbe"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/spec.json",
+        "bytes": 663,
+        "sha256": "e56cd9b8f2855d028447f5ceae03a45ac302a57eccb3520af2aa269b2e624281"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e56cd9b8f2855d028447f5ceae03a45ac302a57eccb3520af2aa269b2e624281.gz",
+        "bytes": 304,
+        "sha256": "95ab4f1caa639e6b75869295457023c0d30417adfebf429bf501af26fefb21dd"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-inputs-v1/verification.json",
+        "bytes": 711,
+        "sha256": "08fbce44baf02cc87cb348d11f55908c160d71fc78ae2f4844314397cbfd3ed5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/08fbce44baf02cc87cb348d11f55908c160d71fc78ae2f4844314397cbfd3ed5.gz",
+        "bytes": 331,
+        "sha256": "e8d0daab3b9037922a921a833fec6dc9d0a1364b691869b42884afe241e63d60"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/context.json",
+        "bytes": 3341,
+        "sha256": "f2e18484de870c039aaa65206edcfc808407052d2a88d4ec840e1cf5ce8571a1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f2e18484de870c039aaa65206edcfc808407052d2a88d4ec840e1cf5ce8571a1.gz",
+        "bytes": 1511,
+        "sha256": "9199c52f221e6488a3a46a0da56cf70b4ee21c56aa741e5f79177777f2f934c2"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/actions.json",
+        "bytes": 1548896,
+        "sha256": "4796a8d424e7befbc750ec308742f3fd2be869f2f8b62f1c2f02f951c7810539"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4796a8d424e7befbc750ec308742f3fd2be869f2f8b62f1c2f02f951c7810539.gz",
+        "bytes": 42905,
+        "sha256": "c2d8d902312a7d0580cc16665721116b6f28358f4b1be925733406a86ab27b52"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/capture.execution.json",
+        "bytes": 60,
+        "sha256": "807ee94a90625a1c450e7d2d0f546a0d8535e711e8eacc755027a58417b38bd9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/807ee94a90625a1c450e7d2d0f546a0d8535e711e8eacc755027a58417b38bd9.gz",
+        "bytes": 73,
+        "sha256": "a75d2d21e3d19ddb07dbe2ff686b1f48b71b4ca1e6e8e085f28a9ee0b5877104"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/capture.launch.json",
+        "bytes": 192,
+        "sha256": "1894f75fe48e9a2ed63c125a8bd8c685585a173f32a6edeadbe01023accba04d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1894f75fe48e9a2ed63c125a8bd8c685585a173f32a6edeadbe01023accba04d.gz",
+        "bytes": 172,
+        "sha256": "8affcda76dad1ec08eb6ff0551bc0905ba7d53d7056d07f13ddc510ad2503902"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/capture.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-0.execution.json",
+        "bytes": 58,
+        "sha256": "1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1d08bf80b464c114e8118002c1876068df0681cd59dfe0c9d3e1a7b57aea0ab0.gz",
+        "bytes": 71,
+        "sha256": "d37bc11189a121dfd9d5332c2187bfdc8f90c1a096afceb501643b60d98cebe7"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-0.launch.json",
+        "bytes": 250,
+        "sha256": "ee6d4d65bd171d3d5d2d889930c2046d20f65ebffe9641ff0daaac400604e50e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ee6d4d65bd171d3d5d2d889930c2046d20f65ebffe9641ff0daaac400604e50e.gz",
+        "bytes": 175,
+        "sha256": "04ddecd2a068aaa1f3eb744472172ffee6d2a0a11a2dfab81d8fa6bc04913716"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-0.request.json",
+        "bytes": 63570,
+        "sha256": "acb5f3e49a9b04719cb6d78ef89c86805fe72919ca50351d401719d9aa5787ea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/acb5f3e49a9b04719cb6d78ef89c86805fe72919ca50351d401719d9aa5787ea.gz",
+        "bytes": 23467,
+        "sha256": "cfa9154b73290050378eeaa262134ca4d4da8e145e6b996a90c115da8bb12c5f"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-0.result.json",
+        "bytes": 1523,
+        "sha256": "6a5641d7370e5cc443d77410ebc068b0c937d73dfedfe20e42e53155f1f10540"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6a5641d7370e5cc443d77410ebc068b0c937d73dfedfe20e42e53155f1f10540.gz",
+        "bytes": 668,
+        "sha256": "325e07e4b6139752e43bdcc805b71fe130a5492505129e01f3447cf41614785e"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-0.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-0.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-1.execution.json",
+        "bytes": 58,
+        "sha256": "f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f6e0b76e14b35384d2cc5a2043d2a24f2d0db3b59418958123fbd0f1354f04dd.gz",
+        "bytes": 71,
+        "sha256": "576409c16e99851249a638f71dd9900b5cd2f15f2d9d67c6778d74644327c8f8"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-1.launch.json",
+        "bytes": 250,
+        "sha256": "640ec7c83404fd61778e5af3d0042f77d862a94299799c6cf4b55a0d4030caa9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/640ec7c83404fd61778e5af3d0042f77d862a94299799c6cf4b55a0d4030caa9.gz",
+        "bytes": 176,
+        "sha256": "37167ea8bebf603a4944d0bb39f53c53b34224a1aca15f46dd0c2766ac7b469a"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-1.request.json",
+        "bytes": 42397,
+        "sha256": "29c047cee9c9bf45c7d18d8c6fd4e8b1878dca8fc7f4df853440ca49502ef400"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/29c047cee9c9bf45c7d18d8c6fd4e8b1878dca8fc7f4df853440ca49502ef400.gz",
+        "bytes": 15608,
+        "sha256": "bd8c990258471ef88eff4282590550600911761499ea53a0975209908e3f7f42"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-1.result.json",
+        "bytes": 1526,
+        "sha256": "ecdf55a563ac4aa565404c0387d10615ffd86047ec3ed9277a5ceb2a2557e6e7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ecdf55a563ac4aa565404c0387d10615ffd86047ec3ed9277a5ceb2a2557e6e7.gz",
+        "bytes": 664,
+        "sha256": "9cda46e7fe272ad1cd944ae60016cc0da0847e7ca712391067ab550f6022f383"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-1.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/fit-1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/inputs.json",
+        "bytes": 1156,
+        "sha256": "168346411f7203c81e53127aa4b125e971667cf4299154acd189758bd3434bff"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/168346411f7203c81e53127aa4b125e971667cf4299154acd189758bd3434bff.gz",
+        "bytes": 537,
+        "sha256": "93911736ad3bdec78271337db7cd8716b92ddfda356ac49e3aa91f87e0858ada"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/native.json",
+        "bytes": 46200008,
+        "sha256": "4cbb69bb914830126ca811bef6a83dcd5877c969d552faf1089ea8bdb8e83759"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4cbb69bb914830126ca811bef6a83dcd5877c969d552faf1089ea8bdb8e83759.gz",
+        "bytes": 10964464,
+        "sha256": "778a98b525d47356ac945497a1520b8fc235adc39bbb0a08d3dc498cfc8c9c10"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/observation.json",
+        "bytes": 599,
+        "sha256": "54744c4df97b25ed979a9ba547da92aff8b4ac5381d3d726c6719a7d6efd9e39"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/54744c4df97b25ed979a9ba547da92aff8b4ac5381d3d726c6719a7d6efd9e39.gz",
+        "bytes": 396,
+        "sha256": "bad7379cf6ce1cb222ca02971573e0e97e04cb695bdbe2e5859b3109ca8a91a3"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/prediction-errors.json",
+        "bytes": 1486,
+        "sha256": "403a1d0d4c1365afc154393bcc6ae17ffb1763940585a520a5ddae45fa817686"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/403a1d0d4c1365afc154393bcc6ae17ffb1763940585a520a5ddae45fa817686.gz",
+        "bytes": 569,
+        "sha256": "759653c952ddf41574335b080f70cbb9bbfcf836d62ea1c82db4ec33d71936b1"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/prefix-check.json",
+        "bytes": 234,
+        "sha256": "5be6ac2a6d03434500892905e458a3e7ec45c5b5360c89fa7bc38a53f3068709"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5be6ac2a6d03434500892905e458a3e7ec45c5b5360c89fa7bc38a53f3068709.gz",
+        "bytes": 187,
+        "sha256": "284d107be7fd7d6d41cf91ecd89e070d2bdf6b8d7686c201e527f910ae5e62d2"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/replay-input.json",
+        "bytes": 13010974,
+        "sha256": "9dfb8c9c4faa2e875ce1cc95fea40a7144b0df741fe29f93f146cad59c99285c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9dfb8c9c4faa2e875ce1cc95fea40a7144b0df741fe29f93f146cad59c99285c.gz",
+        "bytes": 3659246,
+        "sha256": "d527272bfed1e68507949a5b481e08fc9caddd206b22c06c2a0b36268f94c7db"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/scene.json",
+        "bytes": 12744081,
+        "sha256": "b5034430bb44dc991d26328d397a4b8cf724a165bb187ffc5ab75d514f97a23f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b5034430bb44dc991d26328d397a4b8cf724a165bb187ffc5ab75d514f97a23f.gz",
+        "bytes": 3639417,
+        "sha256": "c02ae2349f09d71e7e96495e814c691b3f12e9b56423861400fec993679ad67f"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/screen-inputs.json",
+        "bytes": 425,
+        "sha256": "53f3cd2477c11b5e5d9994d2d9aad3ef75d638b9efb55faec2a618c3bb1567d7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/53f3cd2477c11b5e5d9994d2d9aad3ef75d638b9efb55faec2a618c3bb1567d7.gz",
+        "bytes": 299,
+        "sha256": "e2a4dd88998e09d4b561cb9584864c0fee4e507c5163c9fd5ccf8b92d9a06453"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/summary.json",
+        "bytes": 906,
+        "sha256": "ea676745b16ae70b2c9004e0d805284f788b9022599725f403351661f1c83b1f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ea676745b16ae70b2c9004e0d805284f788b9022599725f403351661f1c83b1f.gz",
+        "bytes": 464,
+        "sha256": "796c3e9093aab759071ee39390197767dfcfdba30d89d7569dee759078edadcd"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/trajectory.json",
+        "bytes": 1138050,
+        "sha256": "c17e8fe69d9b3074e6abf4256ba769bd5e350f07d77ac1a58e140e7c26c0a35d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c17e8fe69d9b3074e6abf4256ba769bd5e350f07d77ac1a58e140e7c26c0a35d.gz",
+        "bytes": 463204,
+        "sha256": "5c70d849a108e8a43760ee0b5c7c31a3b0be1e71048f0912b6a9c294110eac8f"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/transform-execution.json",
+        "bytes": 55,
+        "sha256": "47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47743bdcfec7e077e43a26f71d8f48cbf20235cf3d1381ec12f85abb148b2b88.gz",
+        "bytes": 68,
+        "sha256": "2285c6b7950014b66b76c6460b37044b2c257dea4b9388f3b2f7558d0fea1ad5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/transform.json",
+        "bytes": 492,
+        "sha256": "94ee63dd88aea17c28473dda62731b30e4973876d911735bebe42385c4ce11fc"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/94ee63dd88aea17c28473dda62731b30e4973876d911735bebe42385c4ce11fc.gz",
+        "bytes": 214,
+        "sha256": "b6f8aa026c2c6ff574746920d3ad58d58d38c902d268b30db08b265d8c444591"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/evaluation-000/values.json",
+        "bytes": 175,
+        "sha256": "05d413317b0fb9a38f85cdbe784b8a3874dc5e1068b912f3c2fa261bf3eedacd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/05d413317b0fb9a38f85cdbe784b8a3874dc5e1068b912f3c2fa261bf3eedacd.gz",
+        "bytes": 123,
+        "sha256": "29af67e5513a737ba9bd77ec32a98a9d1e3b43c621ec2b5221e629e86f0500fe"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/proposal-000/composition-check.json",
+        "bytes": 53,
+        "sha256": "66521e37b0712da52c9da5752ed4b91ddf1e05bd1df0ce9e157124d15efab4b2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/66521e37b0712da52c9da5752ed4b91ddf1e05bd1df0ce9e157124d15efab4b2.gz",
+        "bytes": 73,
+        "sha256": "883d15469726a34e8729f53fc31aab7703294473ea4a714f329370c23ad87809"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/proposal-000/request.json",
+        "bytes": 19966,
+        "sha256": "73adb053f2c455b2bcff3f8c5d0833323f035a1f343edab4ec715bf1b0a20dae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/73adb053f2c455b2bcff3f8c5d0833323f035a1f343edab4ec715bf1b0a20dae.gz",
+        "bytes": 6077,
+        "sha256": "6a9f852be16884078668704ea41a11bd830e873d1e2e82d0d3edb47754c39d32"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/proposal-000/result.json",
+        "bytes": 2523950,
+        "sha256": "00ce36cfc1d69dcaaa86d632b5db35486e213c1ff64ef080ebdd59ac1480aa57"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/00ce36cfc1d69dcaaa86d632b5db35486e213c1ff64ef080ebdd59ac1480aa57.gz",
+        "bytes": 450406,
+        "sha256": "86953169facdc00dac72094cc45bc3f9f5f25c7f63d70ce9ba6927169fc9babb"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/proposal-000/suggest.execution.json",
+        "bytes": 58,
+        "sha256": "f5495b9558aa7d44e233af463182de4e06373d6090f2ebb64dbea19e4cb6595f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f5495b9558aa7d44e233af463182de4e06373d6090f2ebb64dbea19e4cb6595f.gz",
+        "bytes": 71,
+        "sha256": "88d6d4fd2cdcc2572c12a8654013a87b00c66322d7ae6f4dfa7fb3fe52e2bdaf"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/proposal-000/suggest.launch.json",
+        "bytes": 231,
+        "sha256": "f726e6f94dda80e09c2912a618547005ff6125b2cb3e51be0a5fd3ac6a36ab2f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f726e6f94dda80e09c2912a618547005ff6125b2cb3e51be0a5fd3ac6a36ab2f.gz",
+        "bytes": 162,
+        "sha256": "6d5c3e7fdc1cf8aaeab59b1878731804e7583f2b4988b080ebea5cc565db4153"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/proposal-000/suggest.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/proposal-000/suggest.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-fidelity-planar-v1/spec.json",
+        "bytes": 663,
+        "sha256": "e56cd9b8f2855d028447f5ceae03a45ac302a57eccb3520af2aa269b2e624281"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e56cd9b8f2855d028447f5ceae03a45ac302a57eccb3520af2aa269b2e624281.gz",
+        "bytes": 304,
+        "sha256": "95ab4f1caa639e6b75869295457023c0d30417adfebf429bf501af26fefb21dd"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/execution.json",
+        "bytes": 46,
+        "sha256": "0bc53a2c3914934cf234ddfae5ab18435b264f6d5c8a940020b51024dc5e2690"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0bc53a2c3914934cf234ddfae5ab18435b264f6d5c8a940020b51024dc5e2690.gz",
+        "bytes": 66,
+        "sha256": "4b4b463c4305315a4fc7904725b2d7bb5f62035825e9d860eae7d9890d6349b9"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/fit-10.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/fit-10.request.json",
+        "bytes": 42517,
+        "sha256": "ec4120ae1e995d114f5d19588c0d99eafd23111ac169c5cfc1c5e08c7374b5d3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ec4120ae1e995d114f5d19588c0d99eafd23111ac169c5cfc1c5e08c7374b5d3.gz",
+        "bytes": 15708,
+        "sha256": "9b5d3d7406baca6d6fa48b4fe69c55aa24d967136a22232466366e15fc518ed8"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/fit-10.result.json",
+        "bytes": 1524,
+        "sha256": "4b43e70fa4d5af4902a2adfc55f6772ad6b8b362adfe1d724497d37c73524e99"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4b43e70fa4d5af4902a2adfc55f6772ad6b8b362adfe1d724497d37c73524e99.gz",
+        "bytes": 662,
+        "sha256": "1334b5572fb0439179d4c341fda12e629fe0b3fbba8cf792fcb94709909ada73"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/fit-5.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/fit-5.request.json",
+        "bytes": 63633,
+        "sha256": "14f1724835d35884553a0820d61d6e2c21a2af0617df0cb44cd61c67b6b1bcd7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/14f1724835d35884553a0820d61d6e2c21a2af0617df0cb44cd61c67b6b1bcd7.gz",
+        "bytes": 23573,
+        "sha256": "c6c54b03728e61c5e4ce0cbd5c782a4b35f601963703fea44fe5418836e0a619"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/fit-5.result.json",
+        "bytes": 1524,
+        "sha256": "bc4514cca76117fce5544661865272d7ce6d0b2acef9c4ccc85c8d4ce4c3c091"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bc4514cca76117fce5544661865272d7ce6d0b2acef9c4ccc85c8d4ce4c3c091.gz",
+        "bytes": 666,
+        "sha256": "71c68d71dae58429415e6913860e44aa674725098e90687e5275cf83dc6acfb4"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/replay-input.json",
+        "bytes": 14857457,
+        "sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6.gz",
+        "bytes": 3748685,
+        "sha256": "2ca17a4a4eb099fcc665811f38e641a9ae89f92b769303e4c6e34b3ba53fbc2b"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/summary.json",
+        "bytes": 746,
+        "sha256": "bcfdfe03a96e180fdcd05fecdc64ceb4127a09b53a9a9cdab323e01cfc73d14d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bcfdfe03a96e180fdcd05fecdc64ceb4127a09b53a9a9cdab323e01cfc73d14d.gz",
+        "bytes": 429,
+        "sha256": "b063011c042ebaa2e24c67011df8ed5525186626e26fbe00627ad120308a0aa5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-probe-v1/candidate20/capture.execution.json",
+        "bytes": 59,
+        "sha256": "dcec4a1746f160400fb4cbb0a86be2946b3629f7465f60d2e51430a583553a2f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/dcec4a1746f160400fb4cbb0a86be2946b3629f7465f60d2e51430a583553a2f.gz",
+        "bytes": 72,
+        "sha256": "d520f79850d6e3c7f8f950a596bb23b83b42e042e50721ce3b3c3f57e4d44947"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-probe-v1/candidate20/observation.json",
+        "bytes": 586,
+        "sha256": "aaceb1d73350b8ffdaaae4845f7dc24e3896a9660353517deaa16492a9a6e0ea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/aaceb1d73350b8ffdaaae4845f7dc24e3896a9660353517deaa16492a9a6e0ea.gz",
+        "bytes": 391,
+        "sha256": "9f244035612711c1c662f0972d34ac06ecba5b1c1703b5102262f60ba480911e"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-probe-v1/candidate20/prefix-check.json",
+        "bytes": 233,
+        "sha256": "33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33545d3d4fc12dc3ea9512fb63952b8b4a33eb5f869bc34ab9232310d88e3033.gz",
+        "bytes": 187,
+        "sha256": "1939a594ead45656c6d77ceab721e779124203bee52b03b169102b941ea55d4f"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-probe-v1/candidate20/replay-input.json",
+        "bytes": 13010925,
+        "sha256": "9f2d464e1d70405b4bec04389ed3a3dd5c2aff9f629c84febaf39a155996c4e4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9f2d464e1d70405b4bec04389ed3a3dd5c2aff9f629c84febaf39a155996c4e4.gz",
+        "bytes": 3658877,
+        "sha256": "0a3e1fd8cfc48a31acec98ba57ed1d5b3e16186fb502209da5ac3452c9f75989"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-probe-v1/candidate20/summary.json",
+        "bytes": 586,
+        "sha256": "32ae7f1c7df8ca403bb56d166b2b11b4d7bd068eb8321d2f4ff82c2c86502d66"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/32ae7f1c7df8ca403bb56d166b2b11b4d7bd068eb8321d2f4ff82c2c86502d66.gz",
+        "bytes": 393,
+        "sha256": "59064c8ed81e7e36bbb7df454f1f916c4d08194d7a8f5882802c3e848896cd0e"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/execution.json",
+        "bytes": 46,
+        "sha256": "de56e1404cc573afe1c4e33ed86216ac7dd53f280d53dbf0f926c698b08b2cec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/de56e1404cc573afe1c4e33ed86216ac7dd53f280d53dbf0f926c698b08b2cec.gz",
+        "bytes": 66,
+        "sha256": "67216e077d8b05399c0f2dce4d5554eaa4275564967515318e8356e3093a200c"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/fit-10.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/fit-10.request.json",
+        "bytes": 42404,
+        "sha256": "8f6c415b73a33e2d175d330d71491a95252564a486d4dc5c0c9ac99f2a7f7b46"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8f6c415b73a33e2d175d330d71491a95252564a486d4dc5c0c9ac99f2a7f7b46.gz",
+        "bytes": 15603,
+        "sha256": "bf8453f481f15e2de0865341e252d623953383526c024c296f55cbdb45cafe81"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/fit-10.result.json",
+        "bytes": 1527,
+        "sha256": "d51eb84ceec1f50ee86b65507f006e3da03b2983cdaa5e5d95bcc09405c4e26c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d51eb84ceec1f50ee86b65507f006e3da03b2983cdaa5e5d95bcc09405c4e26c.gz",
+        "bytes": 667,
+        "sha256": "13e9b39e5eab7a84862fd219103ec311062a5b0e2001a0db14a45c803a03f5f7"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/fit-5.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/fit-5.request.json",
+        "bytes": 63600,
+        "sha256": "1aabcecd619f49cf3a37329601053cdd78e25ebd5747979a76b78d443aece502"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1aabcecd619f49cf3a37329601053cdd78e25ebd5747979a76b78d443aece502.gz",
+        "bytes": 23451,
+        "sha256": "efed5b1689a02588fd501923af1cf5df5ead2a3e20294c11c820088cc4fafd18"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/fit-5.result.json",
+        "bytes": 1527,
+        "sha256": "95763bd6a22f46e5fa9217cc44328191cd2ae0c2c79b43906e43eb6e1a6cd894"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/95763bd6a22f46e5fa9217cc44328191cd2ae0c2c79b43906e43eb6e1a6cd894.gz",
+        "bytes": 669,
+        "sha256": "9f8f5e0059fdecf2fee1c3f47fd1f683185508b4c1d52d2d0f92c6e1e2ae9534"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/replay-input.json",
+        "bytes": 13011234,
+        "sha256": "3ac8974ce00c08f68fde681ec815050c68fbc757e6b43db6236026c5a772e11e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3ac8974ce00c08f68fde681ec815050c68fbc757e6b43db6236026c5a772e11e.gz",
+        "bytes": 3659196,
+        "sha256": "39535f6d816661cfd09cc9a21f18301d2806d731fdd6554cf3ea3fc7f3b31662"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/candidate20/summary.json",
+        "bytes": 731,
+        "sha256": "f775f2598985e7d48991a9810406a312b2579829a3053808260718701c9ac4d7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f775f2598985e7d48991a9810406a312b2579829a3053808260718701c9ac4d7.gz",
+        "bytes": 431,
+        "sha256": "87c24f1edb96477bc2f0de3d327e76a8651a75d1111f02ecaa1be70e3933bf1e"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-quarter20-v1/check.json",
+        "bytes": 802,
+        "sha256": "1766655dcc3f4242cc44f2488faa2826309c56879f04cd0feb154a4ab1696a36"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1766655dcc3f4242cc44f2488faa2826309c56879f04cd0feb154a4ab1696a36.gz",
+        "bytes": 502,
+        "sha256": "665657f8fe972a7e176aa7e9db95662d4dd0ecd8a8d7e92e6fae1c442c852bfe"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-uncertainty-update-v1/candidate010-quarter-check.json",
+        "bytes": 835,
+        "sha256": "afb5d8925cd8144926a00e13341a1e7c0558d75dc40b8b8f0feb5c7fd163dfb6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/afb5d8925cd8144926a00e13341a1e7c0558d75dc40b8b8f0feb5c7fd163dfb6.gz",
+        "bytes": 491,
+        "sha256": "c37f93f33b0bbe098638fb19dc4f9c0889923d5f3547c41dba7023ee4dd6e529"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/execution.json",
+        "bytes": 47,
+        "sha256": "e9705249459cdd869999d2b4ec19ca519401a7b27a817a95fde0ad5396276aa8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e9705249459cdd869999d2b4ec19ca519401a7b27a817a95fde0ad5396276aa8.gz",
+        "bytes": 67,
+        "sha256": "48afd007848113bba01b2778d5ae660d847451520e6d0174911a0a429c2dd3b9"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/fit-10.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/fit-10.request.json",
+        "bytes": 42487,
+        "sha256": "bcd4901aa753eeb104ddb1fbf58919d8bbe91642edb771e5248cb8417426b073"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bcd4901aa753eeb104ddb1fbf58919d8bbe91642edb771e5248cb8417426b073.gz",
+        "bytes": 15709,
+        "sha256": "5bf87b7796aed6d2c0b6c5078083b64653bacf69a1dbae468775c2882b7b25d8"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/fit-10.result.json",
+        "bytes": 1520,
+        "sha256": "e8e189e3a60cb59ee7c6fc3cedbaadef7adfa03c53d820894ffc646146f053af"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e8e189e3a60cb59ee7c6fc3cedbaadef7adfa03c53d820894ffc646146f053af.gz",
+        "bytes": 662,
+        "sha256": "4629b511a4465d251324630fe4609d2fa5e4795ce1d3b307a55211fbe0a1bbea"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/fit-5.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/fit-5.request.json",
+        "bytes": 63651,
+        "sha256": "a54e0785daa96e84276f07ccd429a4384fdd4c8172245f7084e9b0edf0095423"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a54e0785daa96e84276f07ccd429a4384fdd4c8172245f7084e9b0edf0095423.gz",
+        "bytes": 23583,
+        "sha256": "4ae92e4efa9afd0bc390d65db013fc06cbbe39c1b18727bd6d2a6ffb33bb33f7"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/fit-5.result.json",
+        "bytes": 1522,
+        "sha256": "d66300bafed2abddf428ebe55a7dce27dd1746296ee18777c5a39ce00ea6a5f6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d66300bafed2abddf428ebe55a7dce27dd1746296ee18777c5a39ce00ea6a5f6.gz",
+        "bytes": 667,
+        "sha256": "4267b7a38e6c3fc073fe52adb98d1416c9d7a5443e2b9a79a065d20ef1549a0a"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/replay-input.json",
+        "bytes": 14842942,
+        "sha256": "9f974d8367d5df7ae183f05a402ba9c88738ac3cee0c877fd3f3ac3b8e3174f5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9f974d8367d5df7ae183f05a402ba9c88738ac3cee0c877fd3f3ac3b8e3174f5.gz",
+        "bytes": 3748251,
+        "sha256": "4ce017e586a89f6f9e55ecdb6133018fd9a4d958b7e8bb6005571aae88a2621c"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v1/candidate002/summary.json",
+        "bytes": 746,
+        "sha256": "cbe5fd7feb04ebbe254cda85829d36c497a16080e67d3769a47685f14956e5ef"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/cbe5fd7feb04ebbe254cda85829d36c497a16080e67d3769a47685f14956e5ef.gz",
+        "bytes": 430,
+        "sha256": "61577c3ca8841ae68131d0961be90cdd11aa2f94fbe9944623ed0ede71ff4194"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/execution.json",
+        "bytes": 47,
+        "sha256": "425b9ac7a817a8f9dfee20a1ad50ce980359a25d77f13b7124773b6d3c75acf9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/425b9ac7a817a8f9dfee20a1ad50ce980359a25d77f13b7124773b6d3c75acf9.gz",
+        "bytes": 67,
+        "sha256": "f09b9f184d0ec9da33b64fe6e107f2f2d646d75100fce4f76281fe05c9b45336"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/fit-10.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/fit-10.request.json",
+        "bytes": 42442,
+        "sha256": "382df84829026c0a8a41eb9682cc73eb7276614524f34fe7456b1b876619e550"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/382df84829026c0a8a41eb9682cc73eb7276614524f34fe7456b1b876619e550.gz",
+        "bytes": 15702,
+        "sha256": "a2d80184645c043d109d89bce5b3b03f4d60d9c8444f08a63b47bf5276242213"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/fit-10.result.json",
+        "bytes": 1523,
+        "sha256": "80804054c3eb4dbd6906c5428e12f673411507385f5b60e9b8ad3cef9383a823"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/80804054c3eb4dbd6906c5428e12f673411507385f5b60e9b8ad3cef9383a823.gz",
+        "bytes": 664,
+        "sha256": "b35a5151d18887ea202b00c2aae53a410466d5e02940629fed75aaced02efa64"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/fit-5.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/fit-5.request.json",
+        "bytes": 63588,
+        "sha256": "8f8412139be5d83d1edb5bed95e7dcf7696e5a14112b2817220760ead5d6dad8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8f8412139be5d83d1edb5bed95e7dcf7696e5a14112b2817220760ead5d6dad8.gz",
+        "bytes": 23531,
+        "sha256": "fc0a28a14e44b184b129cc50226b933f9f9a54e4210ffd56ee02fdc5a9365dcf"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/fit-5.result.json",
+        "bytes": 1522,
+        "sha256": "6adc618f5537cdc700a62a97b2f8e67d0d12d67756e6a7a5b16fa228b675737c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6adc618f5537cdc700a62a97b2f8e67d0d12d67756e6a7a5b16fa228b675737c.gz",
+        "bytes": 663,
+        "sha256": "fe620e8dfaf8bac338c5648951b517bd7cb99893de2904a6cdb952c2b72afec5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/replay-input.json",
+        "bytes": 14856920,
+        "sha256": "f799f2b8e30d4587164c76ad8f208575d3ae167bc2aa6210ec8e16a38f2d409d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f799f2b8e30d4587164c76ad8f208575d3ae167bc2aa6210ec8e16a38f2d409d.gz",
+        "bytes": 3748603,
+        "sha256": "81e6bf64a5a63e8ea13d9b6b78ac5533983ef18890c0b860f9ef59660fbdfe75"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-quarter300-v2/candidate010/summary.json",
+        "bytes": 743,
+        "sha256": "e722cfc01e55cd533fb4e772e028dbe015d20cd1a40a63b8c35939393726b6c4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e722cfc01e55cd533fb4e772e028dbe015d20cd1a40a63b8c35939393726b6c4.gz",
+        "bytes": 430,
+        "sha256": "915acb0070e3c025fdf5a62fcab8ccf912e2607a149ce70d2c49ee2aa75e7da2"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-search-inputs-v1/actions.json",
+        "bytes": 1563896,
+        "sha256": "2e61985f8afc2000fdbba5c8e1c334c26bbf947f4dde824a942929f5746e3957"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2e61985f8afc2000fdbba5c8e1c334c26bbf947f4dde824a942929f5746e3957.gz",
+        "bytes": 42911,
+        "sha256": "c2745aba038ea4e152ee3ab89e5eca72509d1ec7e24d84e59c6f75f1418a5a24"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-search-inputs-v1/command-schema.json",
+        "bytes": 1321,
+        "sha256": "00e8f16e82e801db31783bc084401d291996aa485fac1bd56bfd3e1b70a1f785"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/00e8f16e82e801db31783bc084401d291996aa485fac1bd56bfd3e1b70a1f785.gz",
+        "bytes": 251,
+        "sha256": "4fc72e5423dfe59f808a4b498df361346cefb8b6c0be4912eb45bed40471192e"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-search-inputs-v1/config.json",
+        "bytes": 130205,
+        "sha256": "9dbd0c33b47b7fa324ef714f1a4710b449afe9cba5a6cab957f452cb2754ca01"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9dbd0c33b47b7fa324ef714f1a4710b449afe9cba5a6cab957f452cb2754ca01.gz",
+        "bytes": 8852,
+        "sha256": "fc8b945b5f1213343152250fe6ac13fbd8ee8ca93fea30a65a746bbdc657623a"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-search-inputs-v1/reference.json",
+        "bytes": 1139353,
+        "sha256": "80cf60fea989e75a18ba8d38755461ae855b970354b772b0251025ab21e3cc0f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/80cf60fea989e75a18ba8d38755461ae855b970354b772b0251025ab21e3cc0f.gz",
+        "bytes": 463548,
+        "sha256": "c23f0240686840fc56ab66087ae94b25075185b91676251a991a1a957ab92ee5"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-search-inputs-v1/scene.json",
+        "bytes": 12745396,
+        "sha256": "a37a624c908e4cec2e2f7dfc90a61321a5ff65ec9f68eb15d9f92c159d710a3a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a37a624c908e4cec2e2f7dfc90a61321a5ff65ec9f68eb15d9f92c159d710a3a.gz",
+        "bytes": 3639704,
+        "sha256": "5e1a74dcfdaf2781c504f971b6cf6f63bbd7d2717878519958e699fc995e5fbc"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-search-inputs-v1/source-experiment.json",
+        "bytes": 3155,
+        "sha256": "2fabf48a6284d97d32b13fc5ec703473c58a8f13c9dcfe0a60edbc1dd2474321"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2fabf48a6284d97d32b13fc5ec703473c58a8f13c9dcfe0a60edbc1dd2474321.gz",
+        "bytes": 1374,
+        "sha256": "2e6ae0169cf15b14101ee5c477308e9fcf4952dc3f0e9aad698cce92ab27436c"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/joint-command-search-inputs-v1/task.json",
+        "bytes": 7469,
+        "sha256": "79e3aaaeb1b6819cfb0a159259b55b02c9ecce1621287adb695594789bdd41dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/79e3aaaeb1b6819cfb0a159259b55b02c9ecce1621287adb695594789bdd41dd.gz",
+        "bytes": 825,
+        "sha256": "fea231ce79bcfb7389790e272d173f29e42a32d8e2cb60987194c4da2a65fee7"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/predict_planar_motion-trend-v1",
+        "bytes": 633168,
+        "sha256": "63c9bfbe80cb142810808f7eac13954708b2e4b600edc3772496c2d5b7b912a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/63c9bfbe80cb142810808f7eac13954708b2e4b600edc3772496c2d5b7b912a9.gz",
+        "bytes": 276002,
+        "sha256": "724db45a9160673759473c71ac3dfc81a5d96e22adfc321e70ad08186cc100cf"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/run_environment-long-episode-v1",
+        "bytes": 15877072,
+        "sha256": "1e30e3ffb13855b9ebace260a8bf2889c4ce71b1655b5810fcd2f4e9344849e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1e30e3ffb13855b9ebace260a8bf2889c4ce71b1655b5810fcd2f4e9344849e0.gz",
+        "bytes": 4726377,
+        "sha256": "18910b91e95e7df0ad3fa8bccd4b7f70019ad04ed2c9d7270507f3c9a9b04611"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/suggest_composite_planar-v4",
+        "bytes": 11428800,
+        "sha256": "19bc3bebab489f8a9348b9b039196398725850fad2400f489dc62f2fe4f0cf72"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/19bc3bebab489f8a9348b9b039196398725850fad2400f489dc62f2fe4f0cf72.gz",
+        "bytes": 2712601,
+        "sha256": "41673dafbe0a6019a4ecef48342281aa393fe2e309a0a6731f2b1ee638d085dc"
+      }
+    }
+  ],
+  "scope": "Timestep-conditioned selector,31-row data and exact-scene reconstruction,legacy report parity,immutable adaptive context and first completed physical20s trial. No growing logs or later evaluations archived.",
+  "terminal_evidence": {
+    "prepare_exit_code": 0,
+    "selector_check_exit_code": 0,
+    "evaluation000": {
+      "exit_code": 0,
+      "signal": null,
+      "error": null,
+      "wall_s": 184.176
+    },
+    "verification": {
+      "version": 1,
+      "passed": true,
+      "solver_tests": {
+        "command": "/Users/elliot/.cargo/bin/cargo test -p sim-solve --features bayesian --lib",
+        "exit_code": 0,
+        "passed": 50,
+        "failed": 0,
+        "evidence": "Observed terminal exec session65614; cargo test profile completed in23.67s, tests in0.24s."
+      },
+      "release_build": {
+        "command": "/Users/elliot/.cargo/bin/cargo build -p sim-solve --features bayesian --release --example suggest_composite_planar",
+        "exit_code": 0,
+        "evidence": "Observed terminal exec session19937; completed in20.25s."
+      },
+      "input_check": "runs/composite-fidelity-inputs-v1/input-check.json",
+      "selector_check": "runs/composite-fidelity-inputs-v1/selector-check.json",
+      "launch_check": "runs/composite-fidelity-inputs-v1/launch-check.json"
+    }
+  },
+  "specification": {
+    "path": "runs/composite-fidelity-inputs-v1/archive-spec.json",
+    "sha256": "1cea2712f697a4fff5c4f6d961aa5a89b62e0858311d174238ce5f103718d7f9"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/archive_evidence_files.mjs",
+    "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+  }
+}

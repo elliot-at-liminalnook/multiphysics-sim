@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {
+      "case": "constant_loaded_sliding",
+      "sampled_slip_upper_bound": 1.0
+    },
+    {
+      "case": "stationary_contact_and_unloaded_swing",
+      "sampled_slip_upper_bound": 0.0
+    }
+  ],
+  "config": {
+    "displacement_m": 0.2,
+    "duration_s": 1.0,
+    "load_threshold_n": 1.0
+  },
+  "scope": "Declared contact observations illustrate the residual only; no robot simulation or gait acceptance is claimed."
+}

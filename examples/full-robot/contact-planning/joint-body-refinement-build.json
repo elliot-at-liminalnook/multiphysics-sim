@@ -1,0 +1,157 @@
+{
+  "base_commit": "467211cde143ccde2fcaf62eb08c06b4197f3f24",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-body-refinement-sources.tar.gz",
+    "bytes": 48975,
+    "sha256": "24a7156284c4a85a6a28b743afa1111a666350ee900524bf01829b825814ca75"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-runtime/examples/refine_joint_contact_body.rs",
+      "bytes": 7746,
+      "sha256": "350d3f71c00c56be159252292a002f639f62bf3c336f814ca884443bc77c285a"
+    },
+    {
+      "path": "crates/sim-domain-control/src/trajectory.rs",
+      "bytes": 23624,
+      "sha256": "e63f71f67145682719dbf289497dcd3ec15ad7d0eb6e823eb9a5998a3d1767a1"
+    },
+    {
+      "path": "crates/sim-domain-control/src/periodic_drift.rs",
+      "bytes": 5648,
+      "sha256": "941071f790ab5819a2bad963036ea87df6e893f00e3f948a03dab377ae8f9ffe"
+    }
+  ],
+  "refiner_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/refine_joint_contact_body",
+    "bytes": 9020828,
+    "sha256": "8c82ef1efe2709327f02422f07fbe1077675fd337e530fef044414cf64fd3fc8"
+  },
+  "optimizer_and_jacobian_auditor": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+      "bytes": 9049396,
+      "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_force_jacobian",
+      "bytes": 8980084,
+      "sha256": "f08ec7e9629de88f26287677b83fd5d9fe688e2594f72e15ec80aa03f39772d2"
+    }
+  ],
+  "optimizer_build_reference": {
+    "path": "examples/full-robot/contact-planning/joint-derivative-build.json",
+    "bytes": 9942,
+    "sha256": "cb114b9de8a65e4275015d9f7bf6a58ace26d32b5f17a71b55ec35af4c7e2032"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed.recipe.json",
+      "bytes": 63323,
+      "sha256": "86f4ba64e79bd640a501c7a93921ffda45a7185ed04d798652006609268b1717"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/BODY_REFINEMENT.md",
+      "bytes": 3478,
+      "sha256": "778b83824b6445f587dc9e10c5602fc8c2cf3b5390c7a1bc88d3d29530acff29"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/README.md",
+      "bytes": 24117,
+      "sha256": "255e32c22eef85632bad84486acdfe18838e93446771208af626321a06c097f0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_body_refinement.mjs",
+      "bytes": 2057,
+      "sha256": "75213da687b9428d250f70d54d51d1f9bd9a9abb4ed0ee53e79a6e2ef10e2d5d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement-build.log",
+      "bytes": 885,
+      "sha256": "33527892ce83b1ce3674917baa3532d9979632cd711a27fa7bbb07803bd67f73"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement-checked-build.log",
+      "bytes": 165,
+      "sha256": "9e025522ac7fcc9dd8211215e17830b8cba8d0818a0c64f0791e1662b069c23d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement-preparation.json",
+      "bytes": 1870,
+      "sha256": "340c5c17442a10d4bba4cc6e8d60264221d92d53e3813d45e965320b419f6cac"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement-tests.log",
+      "bytes": 535,
+      "sha256": "1ca060e3f3bc456440a792037e75bb96ab99b7df52d28ac39b9bbdaed0e1615f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement-verification.json",
+      "bytes": 457,
+      "sha256": "54dec4f177e605c45fa6fd55a2cec3236c839ae36da4ca5a85f806175e2163ca"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement.result.json",
+      "bytes": 1946672,
+      "sha256": "3ba0a247e083f0344826499fba3f0dc23425d4fdd5624c16ced5c8f6393f27db"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-force-jacobian.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-force-jacobian.result.json",
+      "bytes": 979216,
+      "sha256": "77f15a965f120173ffb2315a835654469c58f2f3b87003815d6fd1973ffdc3fb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed-initial.result.json",
+      "bytes": 970155,
+      "sha256": "5e752a5431533a261469107ade6c1d07a7b03662de645f6089d64c963f94dfa9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed.recipe.json",
+      "bytes": 70676,
+      "sha256": "a9309ce23eef4a8e0a255a310b252fb4a2f98001da115048e5ee14e8237cabec"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_joint_body_refinement.mjs",
+      "bytes": 3334,
+      "sha256": "3b594ae0bf82d7c33a88f3ff3e439fd78eab34b45ba3a25e82906313d7c10bc1"
+    }
+  ],
+  "checks": {
+    "source_archive_extraction_verified": true,
+    "optimizer_and_auditor_unchanged": true,
+    "periodic_trajectory_tests_passed": 2,
+    "verification": {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement-verification.json",
+      "bytes": 457,
+      "sha256": "54dec4f177e605c45fa6fd55a2cec3236c839ae36da4ca5a85f806175e2163ca"
+    }
+  },
+  "scope": "Completed exact body-basis refinement, original/common-frame fidelity, and larger-layout force-derivative audit. No body8 optimization result is included. Other live multistart output/log files excluded."
+}

@@ -30,6 +30,100 @@ fn fixture() -> (Scene, Config, Task) {
 }
 
 #[test]
+fn speed_return_matches_endpoint_displacement_and_replays() {
+    let (mut scene, config, mut task) = fixture();
+    scene.options.contact = true;
+    scene.robot.world.floor_z = -10.;
+    task.rewards.clear();
+    task.speed = Some(sim_runtime::speed_task::SpeedTaskConfig { body_link: "pendulum".into() });
+    let mut env = EmbeddedEnvironment::new(scene.clone(), config.clone(), task.clone(), 0).unwrap();
+    assert_eq!(env.contract()["speed_task"]["reward_unit"], "m");
+    assert_eq!(env.transition().reward, 0.);
+    let p0 = env.frame().unwrap()["poses"].as_array().unwrap().iter()
+        .find(|p| p["name"] == "pendulum").unwrap()["position_m"].clone();
+    let actions = vec![vec![0.6]; 3];
+    let mut sum = 0.;
+    for a in &actions { sum += env.step(a).unwrap().reward; }
+    let frame = env.frame().unwrap();
+    let p1 = &frame["poses"].as_array().unwrap().iter()
+        .find(|p| p["name"] == "pendulum").unwrap()["position_m"];
+    let distance = (p1[0].as_f64().unwrap()-p0[0].as_f64().unwrap())
+        .hypot(p1[1].as_f64().unwrap()-p0[1].as_f64().unwrap());
+    assert!((sum-distance).abs() < 1e-12 && sum > 0.);
+    let last = env.transition().clone();
+    assert_eq!(env.reset(0).unwrap().reward, 0.);
+    for a in &actions { env.step(a).unwrap(); }
+    assert_eq!(env.transition(), &last);
+    let report = sim_runtime::policy_evaluation::evaluate_episode(scene.clone(), config.clone(), task.clone(), &actions, 0);
+    assert_eq!(report.score, Some(sum));
+    let rate = sim_runtime::policy_evaluation::worst_reward_rate(&[report]).unwrap();
+    assert!((rate-last.speed.unwrap().net_speed_m_s).abs() < 1e-12);
+    task.survival_reward_per_s = 1.;
+    assert!(EmbeddedEnvironment::new(scene.clone(), config.clone(), task.clone(), 0).is_err());
+    task.survival_reward_per_s = 0.;
+    scene.robot.links.iter_mut().find(|l| l.name == "pendulum").unwrap().collision.hull.clear();
+    assert!(EmbeddedEnvironment::new(scene, config, task, 0).err().unwrap().contains("hull"));
+}
+
+#[test]
+fn generic_progress_uses_the_same_physics_with_explicit_failure_bounds() {
+    use sim_domain_control::displacement::DisplacementAxes;
+    use sim_runtime::progress_task::ProgressTaskConfig;
+    let (mut s,c,mut task)=fixture();
+    // Deliberately no contact requirement or CAD ground-clearance test.
+    s.options.contact=false;task.rewards.clear();
+    task.progress=Some(ProgressTaskConfig{link:"pendulum".into(),axes:DisplacementAxes::Xz});
+    let mut env=EmbeddedEnvironment::new(s.clone(),c.clone(),task.clone(),17).unwrap();
+    let mut raw=EmbeddedSession::new(s.clone(),c.clone(),17,CaptureMode::Latest).unwrap();
+    assert_eq!(env.contract()["progress_task"]["component"],"control.net_displacement");
+    assert_eq!(env.contract()["progress_task"]["frame"],"world");
+    let initial=env.transition().clone();let mut sum=0.;
+    for _ in 0..3 {
+        let t=env.step(&[0.6]).unwrap();sum+=t.reward;
+        raw.set_inputs(&[0.6]).unwrap();raw.advance(80).unwrap();
+        let ef=env.frame().unwrap();let rf=raw.frame().unwrap();
+        for field in ["joint_positions","joint_velocities","poses","policy"] {assert_eq!(ef[field],rf[field],"{field}");}
+        assert_eq!(sum,t.progress.as_ref().unwrap().net_distance_m);
+        assert!(!t.terminated);
+    }
+    assert!(sum>0.&&env.transition().truncated);
+    let last=env.transition().clone();let record=env.episode_recording();
+    assert_eq!(env.reset(17).unwrap(),initial);
+    let (mut replay,actions)=env.prepare_replay(record).unwrap();assert_eq!(actions.len(),3);
+    for action in actions {replay.step(&action).unwrap();}
+    assert_eq!(replay.transition(),&last);
+    let complete=sim_runtime::policy_evaluation::evaluate_episode(s.clone(),c.clone(),task.clone(),&vec![vec![0.6];3],17);
+    assert_eq!(complete.score,Some(sum));
+    let short=sim_runtime::policy_evaluation::evaluate_episode(s.clone(),c.clone(),task.clone(),&vec![vec![0.6];2],17);
+    assert!(short.score.is_none());
+    // Failure remains a task choice: the same dynamics now fail a stated bound.
+    task.termination_bounds.push(TerminationBound{observation:"angle".into(),lower:0.,upper:0.});
+    let mut bounded=EmbeddedEnvironment::new(s.clone(),c.clone(),task.clone(),17).unwrap();
+    assert!(bounded.step(&[0.6]).unwrap().terminated);
+    assert!(bounded.transition().termination_reasons.iter().all(|r|r.starts_with("angle outside")));
+    let failed=sim_runtime::policy_evaluation::evaluate_episode(s.clone(),c.clone(),task.clone(),&vec![vec![0.6];3],17);
+    assert!(failed.score.is_none());assert!(failed.final_transition.unwrap().terminated);
+    task.termination_bounds.clear();task.survival_reward_per_s=1.;
+    assert!(EmbeddedEnvironment::new(s,c,task,17).err().unwrap().contains("net-distance-only"));
+}
+
+#[test]
+fn generic_xy_progress_preserves_the_legacy_speed_reward_on_matched_motion() {
+    use sim_domain_control::displacement::DisplacementAxes;
+    let (mut s,c,mut legacy)=fixture();s.options.contact=true;s.robot.world.floor_z=-10.;legacy.rewards.clear();
+    legacy.speed=Some(sim_runtime::speed_task::SpeedTaskConfig{body_link:"pendulum".into()});
+    let encoded=serde_json::to_value(&legacy).unwrap();assert!(encoded.get("progress").is_none());
+    let mut modern=legacy.clone();modern.speed=None;
+    modern.progress=Some(sim_runtime::progress_task::ProgressTaskConfig{link:"pendulum".into(),axes:DisplacementAxes::Xy});
+    let mut a=EmbeddedEnvironment::new(s.clone(),c.clone(),legacy,3).unwrap();
+    let mut b=EmbeddedEnvironment::new(s,c,modern,3).unwrap();
+    for _ in 0..3 {let old=a.step(&[0.6]).unwrap();let new=b.step(&[0.6]).unwrap();
+        assert_eq!(old.reward,new.reward);
+        assert_eq!(old.speed.unwrap().net_speed_m_s,new.progress.unwrap().net_speed_m_s);
+        assert!(serde_json::to_value(a.transition()).unwrap().get("progress").is_none());}
+}
+
+#[test]
 fn teacher_motion_and_action_observations_use_current_frames_and_declared_units() {
     let (s, c, mut task) = fixture();
     for (name, source) in [

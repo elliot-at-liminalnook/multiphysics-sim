@@ -1,0 +1,605 @@
+{
+  "rows": [
+    {
+      "id": "all8",
+      "source": "runs/speed-ceiling/validation/smooth-hip0-v125-human-fine",
+      "source_scene_sha256": "a4b9b9583538b66cbf5818f4ce7453238345ca7f757cec6b20ac1049dd516c78",
+      "uniform_speed_m_s": 0.17154722838359174,
+      "refinements": [
+        {
+          "subdivisions": 4,
+          "cells": 160,
+          "duration_lower_s": 0.18691767339581017,
+          "duration_upper_s": 0.1904170035725136,
+          "uniform_duration_s": 0.30312352166788914,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.014115045877297443,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.08369084656952011,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.013933999966887168,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011552103667945113,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.05289399661303441,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.014231010877829213,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.27308485599710447,
+          "speed_upper_m_s": 0.2781973424732645,
+          "subdivisions_per_segment": 4,
+          "uniform_to_piecewise_speed_ratio": 1.5918931396925131,
+          "recipe_sha256": "b7fa73d157ac5270edc1ca5c656bdbfe13ce8f1c42f36693a6acf911d0bb2972",
+          "report_sha256": "a8a4adbc59b703e849fd5ae9bd01bf0a13d17d35034f9e004a3a606acc0b662c"
+        },
+        {
+          "subdivisions": 64,
+          "cells": 2560,
+          "duration_lower_s": 0.1870174606401389,
+          "duration_upper_s": 0.1872356857134948,
+          "uniform_duration_s": 0.30312352166788914,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011904775067951396,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.08282139845588886,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.013259610176944122,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.0111829732513519,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.05416023758048208,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.013906691180876245,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.2777248354225038,
+          "speed_upper_m_s": 0.2780489042146657,
+          "subdivisions_per_segment": 64,
+          "uniform_to_piecewise_speed_ratio": 1.6189409647673902,
+          "recipe_sha256": "0fd2e76448bb905a0e9b99ac89562ad1583e7610a7a3e7dd41decc51782f74fd",
+          "report_sha256": "fe62c1d6584418e45e741c4ac330427be7bfbccbcb2f91a887154fbefe1cb74b"
+        },
+        {
+          "subdivisions": 256,
+          "cells": 10240,
+          "duration_lower_s": 0.1870181468655926,
+          "duration_upper_s": 0.1870726239833708,
+          "uniform_duration_s": 0.30312352166788914,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.0118672339111476,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.08285752846324326,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.013125778407103966,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011080824766358778,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.054235931991175414,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.013905326444341538,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.2779669140933329,
+          "speed_upper_m_s": 0.27804788397016733,
+          "subdivisions_per_segment": 256,
+          "uniform_to_piecewise_speed_ratio": 1.6203521135985899,
+          "recipe_sha256": "6f260cd9aa374cdd345d91a720b6e7730043dd0ec4742834e730fd8bd37d2350",
+          "report_sha256": "b73cc7eb6d4625f7c49e8b230d56bc7b5aa933aa3515857bdb8461107a7ba7df"
+        }
+      ]
+    },
+    {
+      "id": "front10",
+      "source": "runs/speed-ceiling/validation/smooth-front10-v150-human-fine",
+      "source_scene_sha256": "a699c50bd8764ed6524c5eaf9db7b0ec5a67af214d60546d525bdbf6fed31038",
+      "uniform_speed_m_s": 0.1622198118396761,
+      "refinements": [
+        {
+          "subdivisions": 4,
+          "cells": 160,
+          "duration_lower_s": 0.19090269643527757,
+          "duration_upper_s": 0.1947325270315239,
+          "uniform_duration_s": 0.32055270814512016,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.014115045877297443,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.08888471337842395,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.02870676860181151,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011552103667945113,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.04573031555855858,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.005743579947487226,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.26703294407298517,
+          "speed_upper_m_s": 0.27239007604918636,
+          "subdivisions_per_segment": 4,
+          "uniform_to_piecewise_speed_ratio": 1.6461179497415348,
+          "recipe_sha256": "c0be12d32c87f518f96f4c1be2f4d0ebbe3e72635f59c45a9cb3b16daa56ca65",
+          "report_sha256": "22e7170589c5125c4daa2b8e6f2e4d3e362e6f378a321bfb4bacbe8b1c2464b1"
+        },
+        {
+          "subdivisions": 64,
+          "cells": 2560,
+          "duration_lower_s": 0.1910745211112777,
+          "duration_upper_s": 0.19131117033308806,
+          "uniform_duration_s": 0.32055270814512016,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011904775067951396,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.08908412770009137,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.024824492044037718,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.0111829732513519,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.04724511427307667,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.007069687996578735,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.27180848828358445,
+          "speed_upper_m_s": 0.27214512797190954,
+          "subdivisions_per_segment": 64,
+          "uniform_to_piecewise_speed_ratio": 1.6755566733871956,
+          "recipe_sha256": "955a7bdc766dd1daaf2c3941599a58ec549b93593dec6222c0449b3a1cd67a4b",
+          "report_sha256": "c73862e5988538f3c4ca8d9ab3c461b06538aadd00d01840cc1fbf76c594d027"
+        },
+        {
+          "subdivisions": 256,
+          "cells": 10240,
+          "duration_lower_s": 0.19107492259319858,
+          "duration_upper_s": 0.1911340735977724,
+          "uniform_duration_s": 0.32055270814512016,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.0118672339111476,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.08913911225381682,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.02476582166669384,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011080824766358778,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.04722293513197462,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.007058145867779848,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.27206033451382494,
+          "speed_upper_m_s": 0.27214455614727,
+          "subdivisions_per_segment": 256,
+          "uniform_to_piecewise_speed_ratio": 1.6771091732168057,
+          "recipe_sha256": "c4172501ea6b3aaf5ca154d849f5a0529be2acbba4559ad0ce8b9a1c95bc4420",
+          "report_sha256": "d5ef09fccbc95664566f619056438aad349a7adda7119777e04d07443b3149db"
+        }
+      ]
+    },
+    {
+      "id": "front12",
+      "source": "runs/speed-ceiling/validation/smooth-front12-v150-human-fine",
+      "source_scene_sha256": "e897b14d01db7143df0424e096f17c1a7bd9c8d0130c0c962010f7ae5aa64df0",
+      "uniform_speed_m_s": 0.13775390485941136,
+      "refinements": [
+        {
+          "subdivisions": 4,
+          "cells": 160,
+          "duration_lower_s": 0.19646801049770377,
+          "duration_upper_s": 0.2009344160371115,
+          "uniform_duration_s": 0.37748476206950404,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.014115045877297443,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.09553592622506799,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.03879934783784266,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011552103667945113,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.039366708645878094,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.001565283783080175,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.2587909081259423,
+          "speed_upper_m_s": 0.2646741312658009,
+          "subdivisions_per_segment": 4,
+          "uniform_to_piecewise_speed_ratio": 1.8786466226860044,
+          "recipe_sha256": "188e9af3fecdf20022b830ad48f0c1221ea6ac81190ddbd078d69ad9ec36f59a",
+          "report_sha256": "f92a1b9f6054b7875696a8738be84ffd8b42c967fc4a4ddcd08ed3ce1c91747f"
+        },
+        {
+          "subdivisions": 64,
+          "cells": 2560,
+          "duration_lower_s": 0.19658100730863598,
+          "duration_upper_s": 0.1968574077813968,
+          "uniform_duration_s": 0.37748476206950404,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011904775067951396,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.09502771823020335,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.03536966752528553,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.0111829732513519,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.04068686775241283,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.0026854059541915826,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.26415058791053553,
+          "speed_upper_m_s": 0.2645219938178412,
+          "subdivisions_per_segment": 64,
+          "uniform_to_piecewise_speed_ratio": 1.9175542659216946,
+          "recipe_sha256": "d29325fc2c4e4497c5b28f73f6307a123d59ea7c4f821046c166b4f9ca77be77",
+          "report_sha256": "6ea3e99c0a185960045ceead371bf3d1562037758f82ba7539477e9e88fbdde7"
+        },
+        {
+          "subdivisions": 256,
+          "cells": 10240,
+          "duration_lower_s": 0.19658167831732745,
+          "duration_upper_s": 0.19665065946068788,
+          "uniform_duration_s": 0.37748476206950404,
+          "limiting_coordinates": [
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.0118672339111476,
+              "coordinate": "joint.-Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.09514588767107288,
+              "coordinate": "joint.+X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.03517027964438009,
+              "coordinate": "joint.+X | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.+Y | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.011080824766358778,
+              "coordinate": "joint.+Y | Foot servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0,
+              "coordinate": "joint.-X | Hip servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.04065493006800391,
+              "coordinate": "joint.-X | Worm servo output"
+            },
+            {
+              "allocated_upper_duration_s": 0.002731503399724721,
+              "coordinate": "joint.-X | Foot servo output"
+            }
+          ],
+          "scope": "Rate-only minimum cycle time bracket for the same joint path. Integral max_i |dq_i/ds|/budget_i ds; lower duration from per-cell endpoint displacements, upper duration from exact polynomial rate extrema and piecewise constant phase rates. Speed bounds invert those durations using the declared stride. Uses f64, not outward-rounded interval arithmetic. Omits acceleration, torque, phase-rate continuity, dwell, support/contact and stability; the upper construction is not a dynamically feasible controller. No-load budgets are not hard backdrive limits or a global physical speed ceiling.",
+          "speed_lower_m_s": 0.26442830216084395,
+          "speed_upper_m_s": 0.2645210909027859,
+          "subdivisions_per_segment": 256,
+          "uniform_to_piecewise_speed_ratio": 1.9195702831851749,
+          "recipe_sha256": "d6cc263a43957921a89cccb66e5ec4efb5fbe26d735cd58691d4b2ebc7b6eaba",
+          "report_sha256": "34d118908e58c5ea7686a15d27285491de63ed91d07364bdeb7755c986c60408"
+        }
+      ]
+    }
+  ],
+  "scope": "Rate-only reference-path calculation, not a controller or dynamic gait qualification. No-load budgets are provisional design budgets, not hard motor/backdrive limits. Acceleration, torque, phase continuity, support/contact and body stability remain unresolved. Nested bounds use f64 arithmetic; exact existing uniform-rate reports are checked."
+}

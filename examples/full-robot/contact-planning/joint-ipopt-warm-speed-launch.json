@@ -1,0 +1,38 @@
+{
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-warm-build.json",
+    "bytes": 7184,
+    "sha256": "9065be50f74d662061bfba8f9d1e4fa10b11c300afcb576b8054b7289ce9894e"
+  },
+  "session_id": 59984,
+  "recorded_at": "2026-09-09T15:20:18.359Z",
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt",
+    "bytes": 9150316,
+    "sha256": "1f6b6edc4dd491c30f9d791016f277b83f5484a1d0704fcf93498fe5385dc3fd"
+  },
+  "recipe": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+    "bytes": 161647,
+    "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+  },
+  "search": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-warm-speed.search.json",
+    "bytes": 285,
+    "sha256": "0f678392bb9890cb57c2237c1b600ca3b433da02fb249eb786721998653fcc7e"
+  },
+  "environment": {
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "arguments": [
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+    "/Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+    "examples/full-robot/contact-planning/joint-ipopt-warm-speed.search.json"
+  ],
+  "stdout": "examples/full-robot/contact-planning/joint-ipopt-warm-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-ipopt-warm-speed.log",
+  "scope": "Live 8000-model-attempt native joint search from completed timing-aware AL motion, same .30 m/s speed target and all physical bounds/acceptance. Initial interior distances explicitly 1e-8. One-step pilot preserved near balance and slightly increased speed but remained infeasible; neither native convergence nor a runtime gait is established."
+}

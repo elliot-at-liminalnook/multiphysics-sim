@@ -1,0 +1,81 @@
+{
+  "rows": [
+    {
+      "group": "constant_mean-d0.75",
+      "speed_m_s": 0.03805686484499565,
+      "frames": 160,
+      "frames_outside_tolerance": 18,
+      "maximum_residual_lower_bound": 6.8487084437073955,
+      "independent_reconstruction_error": 0,
+      "worst": {
+        "active_feet": [
+          1,
+          2
+        ],
+        "clock": {
+          "phase_acceleration_per_s": 0,
+          "phase_rate": 1
+        },
+        "dual_column_residual_maximum": 1.3714531601556465e-11,
+        "dual_weights": [
+          -4.2921845971493156,
+          -8.606122815361203,
+          -3.5077043144866593,
+          8.90071109487743,
+          -4.43910642280413,
+          -1.2967404927621828e-13
+        ],
+        "least_squares_maximum_residual": 8.90071109487743,
+        "least_squares_residuals": [
+          -4.2921845971493156,
+          -8.606122815361203,
+          -3.5077043144866593,
+          8.90071109487743,
+          -4.43910642280413,
+          -1.2967404927621828e-13
+        ],
+        "maximum_residual_lower_bound": 6.8487084437073955,
+        "phase": 0.9999973525554985
+      }
+    },
+    {
+      "group": "reference-d0.75",
+      "speed_m_s": 0.04669511552504007,
+      "frames": 160,
+      "frames_outside_tolerance": 32,
+      "maximum_residual_lower_bound": 15.110066775160396,
+      "independent_reconstruction_error": 0,
+      "worst": {
+        "active_feet": [
+          0,
+          3
+        ],
+        "clock": {
+          "phase_acceleration_per_s": 0,
+          "phase_rate": 1
+        },
+        "dual_column_residual_maximum": 1.0658141036401503e-11,
+        "dual_weights": [
+          13.029623225519401,
+          17.495391548311176,
+          -6.516028972277695,
+          -18.40377429334592,
+          13.706137659602646,
+          -1.865174681370263e-14
+        ],
+        "least_squares_maximum_residual": 18.40377429334592,
+        "least_squares_residuals": [
+          13.029623225519401,
+          17.495391548311176,
+          -6.516028972277695,
+          -18.40377429334592,
+          13.706137659602646,
+          -1.865174681370263e-14
+        ],
+        "maximum_residual_lower_bound": 15.110066775160396,
+        "phase": 0.28648313241538814
+      }
+    }
+  ],
+  "scope": "Completed local candidate motions only. Floating-point dual bounds for independent point support forces, with friction, actuator and force-curve restrictions removed. Neither failure is a physical speed ceiling. Native process handles were lost across compaction; complete output was recovered after processes exited, with exact candidate and independent CAD reconstruction checks."
+}

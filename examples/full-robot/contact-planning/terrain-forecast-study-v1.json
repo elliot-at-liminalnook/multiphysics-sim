@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "source_base_commit": "1b956aeb",
+  "fits": [
+    {
+      "horizon_s": 0.02,
+      "training_samples": 5960,
+      "validation_samples": 5960,
+      "v5_normalized_validation_mse": 0.09308656713782368,
+      "v6_normalized_validation_mse": 0.09289176452682574
+    },
+    {
+      "horizon_s": 0.1,
+      "training_samples": 5956,
+      "validation_samples": 5956,
+      "v5_normalized_validation_mse": 0.10886319523334453,
+      "v6_normalized_validation_mse": 0.10850685746781748
+    },
+    {
+      "horizon_s": 0.2,
+      "training_samples": 5951,
+      "validation_samples": 5951,
+      "v5_normalized_validation_mse": 0.11477115282835926,
+      "v6_normalized_validation_mse": 0.11205039267827573
+    }
+  ],
+  "forecast_comparisons": {
+    "version": 1,
+    "rows": [
+      {
+        "dataset": "planner_holdout",
+        "model": 5,
+        "horizon_s": 0.02,
+        "samples": 990,
+        "position_rmse_m": 0.0019825020518164935,
+        "constant_velocity_position_rmse_m": 0.004075937183771654,
+        "report": "runs/forecast-v6-comparison/planner_holdout-v5-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 6,
+        "horizon_s": 0.02,
+        "samples": 990,
+        "position_rmse_m": 0.0019627524674952776,
+        "constant_velocity_position_rmse_m": 0.004075937183771654,
+        "report": "runs/forecast-v6-comparison/planner_holdout-v6-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 5,
+        "horizon_s": 0.1,
+        "samples": 986,
+        "position_rmse_m": 0.0152965895115042,
+        "constant_velocity_position_rmse_m": 0.04224669594893066,
+        "report": "runs/forecast-v6-comparison/planner_holdout-v5-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 6,
+        "horizon_s": 0.1,
+        "samples": 986,
+        "position_rmse_m": 0.015778239588534956,
+        "constant_velocity_position_rmse_m": 0.04224669594893066,
+        "report": "runs/forecast-v6-comparison/planner_holdout-v6-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 5,
+        "horizon_s": 0.2,
+        "samples": 981,
+        "position_rmse_m": 0.03225292256141746,
+        "constant_velocity_position_rmse_m": 0.09634301307431765,
+        "report": "runs/forecast-v6-comparison/planner_holdout-v5-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 6,
+        "horizon_s": 0.2,
+        "samples": 981,
+        "position_rmse_m": 0.03211921523435075,
+        "constant_velocity_position_rmse_m": 0.09634301307431765,
+        "report": "runs/forecast-v6-comparison/planner_holdout-v6-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 5,
+        "horizon_s": 0.02,
+        "samples": 599,
+        "position_rmse_m": 0.0011429790684867173,
+        "constant_velocity_position_rmse_m": 0.0030902071440758547,
+        "report": "runs/forecast-v6-comparison/held_commands-v5-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 6,
+        "horizon_s": 0.02,
+        "samples": 599,
+        "position_rmse_m": 0.0011242038552031926,
+        "constant_velocity_position_rmse_m": 0.0030902071440758547,
+        "report": "runs/forecast-v6-comparison/held_commands-v6-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 5,
+        "horizon_s": 0.1,
+        "samples": 595,
+        "position_rmse_m": 0.009281261508502121,
+        "constant_velocity_position_rmse_m": 0.03600712948148476,
+        "report": "runs/forecast-v6-comparison/held_commands-v5-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 6,
+        "horizon_s": 0.1,
+        "samples": 595,
+        "position_rmse_m": 0.009092862961045755,
+        "constant_velocity_position_rmse_m": 0.03600712948148476,
+        "report": "runs/forecast-v6-comparison/held_commands-v6-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 5,
+        "horizon_s": 0.2,
+        "samples": 590,
+        "position_rmse_m": 0.021431342793424287,
+        "constant_velocity_position_rmse_m": 0.0815472158829343,
+        "report": "runs/forecast-v6-comparison/held_commands-v5-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 6,
+        "horizon_s": 0.2,
+        "samples": 590,
+        "position_rmse_m": 0.02120436356525097,
+        "constant_velocity_position_rmse_m": 0.0815472158829343,
+        "report": "runs/forecast-v6-comparison/held_commands-v6-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_net_planner",
+        "model": 5,
+        "horizon_s": 0.02,
+        "samples": 2999,
+        "position_rmse_m": 0.0023743468715416573,
+        "constant_velocity_position_rmse_m": 0.003971462981364432,
+        "report": "runs/forecast-v6-comparison/unseen_net_planner-v5-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_net_planner",
+        "model": 6,
+        "horizon_s": 0.02,
+        "samples": 2999,
+        "position_rmse_m": 0.0022490294260377832,
+        "constant_velocity_position_rmse_m": 0.003971462981364432,
+        "report": "runs/forecast-v6-comparison/unseen_net_planner-v6-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_net_planner",
+        "model": 5,
+        "horizon_s": 0.1,
+        "samples": 2995,
+        "position_rmse_m": 0.016924733227154567,
+        "constant_velocity_position_rmse_m": 0.037781756114825565,
+        "report": "runs/forecast-v6-comparison/unseen_net_planner-v5-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_net_planner",
+        "model": 6,
+        "horizon_s": 0.1,
+        "samples": 2995,
+        "position_rmse_m": 0.017957952524185024,
+        "constant_velocity_position_rmse_m": 0.037781756114825565,
+        "report": "runs/forecast-v6-comparison/unseen_net_planner-v6-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_net_planner",
+        "model": 5,
+        "horizon_s": 0.2,
+        "samples": 2990,
+        "position_rmse_m": 0.035193176494820476,
+        "constant_velocity_position_rmse_m": 0.07776817171855727,
+        "report": "runs/forecast-v6-comparison/unseen_net_planner-v5-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_net_planner",
+        "model": 6,
+        "horizon_s": 0.2,
+        "samples": 2990,
+        "position_rmse_m": 0.03576503608606017,
+        "constant_velocity_position_rmse_m": 0.07776817171855727,
+        "report": "runs/forecast-v6-comparison/unseen_net_planner-v6-h10.json",
+        "exit_code": 0
+      }
+    ],
+    "files": [
+      {
+        "path": "runs/forecast-v6-comparison/run.cjs",
+        "sha256": "12b5be1b98b428860585f41fe0a8b55c833bfeb5c3305c8250b332c421494e77"
+      },
+      {
+        "path": "runs/evaluate_motion_forecast-terrain-v6",
+        "sha256": "076cc054793c415025bed523dc4798adfe14f7926fbba061a54a00cc45c507d2"
+      },
+      {
+        "path": "runs/receding-forecast-speed517-v1/native.json",
+        "sha256": "751cd4900d1af2bc37d82b1f474a2dd57b25c3bb37117582abef1c8102fc658e"
+      },
+      {
+        "path": "runs/motion-forecast-v5-h1/model.json",
+        "sha256": "47e213d0aefa36ca52b3d32e2c3cd5bd5fe0ab22b242b5ed705b4b158805950d"
+      },
+      {
+        "path": "runs/motion-forecast-v6-h1/model.json",
+        "sha256": "41d3eee9594151abb764ea8ab0513f2efee6cdb03610f5c49ebcca0bf12227e2"
+      },
+      {
+        "path": "runs/motion-forecast-v5-h5/model.json",
+        "sha256": "70b596c979d7ba636a8c1977e476dc19c945f290bea4f4e0eb0875aa93a4bdb5"
+      },
+      {
+        "path": "runs/motion-forecast-v6-h5/model.json",
+        "sha256": "2439bdb07056842847c300fd7eaea64ce1d86592e058a3b69952de17f6c7ca1e"
+      },
+      {
+        "path": "runs/motion-forecast-v5-h10/model.json",
+        "sha256": "e603b948288826854ea412a7f5eef49a9993931245b4ad6d0bc4b05254d26c86"
+      },
+      {
+        "path": "runs/motion-forecast-v6-h10/model.json",
+        "sha256": "b473f42875db5d3064b290b46576f629025102e15b86409a956fbdda9af42175"
+      },
+      {
+        "path": "runs/forecast-held-command-probe/native.json",
+        "sha256": "a816b24315f63ec6c3e0941651754cce7ab53355256bf5d15448b2e738d047be"
+      },
+      {
+        "path": "runs/net-forecast-v5/native.json",
+        "sha256": "366465258c0c06f4127b0a71d3e11dbaad9d0d069bcac6d148303e19e45d8c52"
+      }
+    ],
+    "scope": "V5/V6 compare identical actual future action windows per dataset/horizon. The held-out V3 segment was excluded from both training sets; held-command probe and net-V5 planner trajectory were entirely excluded. Extra terrain inputs also change the seeded initialization shape. These are supervised prediction measurements, not counterfactual-plan validity or speed gains."
+  },
+  "controller": {
+    "completed": true,
+    "error": null,
+    "time_s": 60,
+    "fall": false,
+    "distance_m": 3.375943147085506,
+    "speed_m_s": 0.056265719118091764,
+    "wall_s": 206.76389428,
+    "frames": 3001,
+    "planning_samples": 2999,
+    "mean_predicted_gain_m": 0.017948103366310444,
+    "warm_start_selected": 963,
+    "online_position_rmse_20ms_m": 0.002277289819389005,
+    "online_constant_velocity_rmse_20ms_m": 0.00385920766964417,
+    "action_matched_windows": [
+      {
+        "horizon_s": 0.02,
+        "count": 2999
+      },
+      {
+        "horizon_s": 0.1,
+        "count": 0
+      },
+      {
+        "horizon_s": 0.2,
+        "count": 0
+      }
+    ],
+    "capture": {
+      "path": "runs/net-forecast-v6/native.json",
+      "sha256": "fe3e5f8f8cab591a1be6a692f38ee529f55c2fc66e8de17a16e107bfe140d1c7"
+    },
+    "scope": "Complete-minute net-displacement planner with V6 terrain-aware models, otherwise unchanged relative to V5. This improves that slow planner but not the incumbent. Online errors score executed action prefixes only; no full100/200ms plan was executed unchanged."
+  },
+  "legacy_parity": {
+    "version": 1,
+    "frames": 101,
+    "scope": "All sampled joint motion, body poses, targets, contacts, policy predictions/plans, observations, progress rewards, distance and fall metrics match the old V5 net-distance planner exactly through2s. Each speed field correctly divides identical distance by its declared2s/60s horizon; truncation occurs only at the new2s endpoint. Empty terrain-link recipes preserve legacy physical and predictive behavior.",
+    "initial_check_correction": "The first checker compared horizon-normalized speed fields and failed as expected because the replay horizon is2s versus60s. This check verifies each quotient and endpoint truncation explicitly while requiring all physical values to match exactly.",
+    "files": [
+      {
+        "path": "runs/net-forecast-v5/native.json",
+        "sha256": "366465258c0c06f4127b0a71d3e11dbaad9d0d069bcac6d148303e19e45d8c52"
+      },
+      {
+        "path": "runs/terrain-forecast-legacy2/native.json",
+        "sha256": "5c78720ff3ed1624c7a86ff2158b3fb70a2a9348bb5b182cd55ce2ae6554c938"
+      }
+    ]
+  },
+  "closed_first_ppo_updates": [
+    {
+      "sigma": 0.01,
+      "distance_m": 30.703822471589678,
+      "speed_m_s": 0.5117303745264946,
+      "validation_path": "runs/ppo-speed518-resume-sigma01/iteration-000-validation.json",
+      "accepted": false
+    },
+    {
+      "sigma": 0.03,
+      "distance_m": 29.989423803585144,
+      "speed_m_s": 0.4998237300597524,
+      "validation_path": "runs/ppo-speed518-resume-sigma03/iteration-000-validation.json",
+      "accepted": false
+    }
+  ],
+  "leader": {
+    "nominal_speed_m_s": 0.5177078966796294,
+    "state": "runs/ppo-speed517-current-dynamics/iteration-001-state.json",
+    "validation": "examples/full-robot/contact-planning/learned-speed5177-validation.json"
+  },
+  "scope": "Completed optional terrain observations, controlled forecast comparison and full-minute planner trial. No new leading gait. Both PPO continuations remain active after these closed first updates. Physics properties are not hardware-calibrated and a physical maximum remains unproven."
+}

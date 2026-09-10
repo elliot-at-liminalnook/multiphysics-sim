@@ -1,0 +1,9 @@
+{
+  "source": "runs/contact-planning/diagonal68-preview",
+  "prefix": "runs/contact-planning/diagonal68-minimal-observations",
+  "changes": [
+    "Disable inherited unused body-feedback observations",
+    "Disable inherited unused point-feedback observations"
+  ],
+  "scope": "No physical approximation: source policy consumes neither correction channel. Exact command and physical replay comparison is required before accepting this performance simplification."
+}

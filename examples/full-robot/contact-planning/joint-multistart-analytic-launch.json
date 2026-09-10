@@ -1,0 +1,72 @@
+{
+  "source_commit": "727f1a2",
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9049396,
+    "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+  },
+  "build": {
+    "path": "examples/full-robot/contact-planning/joint-derivative-build.json",
+    "bytes": 9942,
+    "sha256": "cb114b9de8a65e4275015d9f7bf6a58ace26d32b5f17a71b55ec35af4c7e2032"
+  },
+  "entries": [
+    {
+      "group": "reference-d0.5",
+      "session_id": 13897,
+      "recipe": {
+        "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.recipe.json",
+        "bytes": 63150,
+        "sha256": "6d3e971d7bcef5d9d6c6d741fa82c6b361e386aa67f297b80c03bf7325ce47ad"
+      },
+      "initial": {
+        "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5-initial.result.json",
+        "bytes": 918301,
+        "sha256": "df6f47ee59b367ae177eb51656ea972f9c522d839d1d605478e5e76e953af27f"
+      },
+      "initial_log": {
+        "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5-initial.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "initial_inequalities_match_screen": true,
+      "arguments": [
+        "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "examples/full-robot/gait-exploration/workspace-markers.json",
+        "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.recipe.json",
+        "--analytic-forces"
+      ],
+      "stdout": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.result.json",
+      "stderr": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.log"
+    },
+    {
+      "group": "reference-d0.75",
+      "session_id": 60510,
+      "recipe": {
+        "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.recipe.json",
+        "bytes": 63043,
+        "sha256": "71819f3a68933a4c26dc32bba7d29934867c0907a62f35f2a33edbf196150baf"
+      },
+      "initial": {
+        "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75-initial.result.json",
+        "bytes": 929874,
+        "sha256": "f692b00a1705d2f69ff14c8e85d3eef03c7dde0d10d833dfdc3eb528e37c4651"
+      },
+      "initial_log": {
+        "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75-initial.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "initial_inequalities_match_screen": true,
+      "arguments": [
+        "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "examples/full-robot/gait-exploration/workspace-markers.json",
+        "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.recipe.json",
+        "--analytic-forces"
+      ],
+      "stdout": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.result.json",
+      "stderr": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.log"
+    }
+  ],
+  "scope": "Both initial CAD reports exactly reproduce their screened inequality vectors. Analytic-force optimizations are live; output files are excluded from completed evidence until authoritative terminal status."
+}

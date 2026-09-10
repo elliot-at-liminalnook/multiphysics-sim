@@ -1,0 +1,118 @@
+{
+  "independent_coordinates": [
+    "joint.-Y | Hip servo output",
+    "joint.-Y | Worm servo output",
+    "joint.-Y | Foot servo output",
+    "joint.+X | Hip servo output",
+    "joint.+X | Worm servo output",
+    "joint.+X | Foot servo output",
+    "joint.+Y | Hip servo output",
+    "joint.+Y | Worm servo output",
+    "joint.+Y | Foot servo output",
+    "joint.-X | Hip servo output",
+    "joint.-X | Worm servo output",
+    "joint.-X | Foot servo output"
+  ],
+  "embedding": {
+    "direct_closure_jacobian": true,
+    "dependent_solve": "pivoted_qr",
+    "block_dependent_factorization": true,
+    "analytic_mechanism_positions": true,
+    "length_scale_m": 0.1,
+    "angle_scale_rad": 1,
+    "scaled_closure_tolerance": 1e-8,
+    "scaled_position_tolerance": 1e-11,
+    "relative_rank_tolerance": 1e-10,
+    "absolute_rank_tolerance": 1e-12,
+    "max_iterations": 30,
+    "max_scaled_correction": 0.25
+  },
+  "samples": [
+    {
+      "id": "coupled-same-hip0-foot-60",
+      "coordinates": [
+        0,
+        -0.00008346418847292681,
+        -1.0471975511965976,
+        0,
+        -0.27612813350949833,
+        -1.0471975511965976,
+        0,
+        -0.00008346425388696227,
+        -1.0471975511965976,
+        0,
+        -0.00007650604473797781,
+        -1.0471975511965976
+      ]
+    },
+    {
+      "id": "opposite-pair-50mm",
+      "coordinates": [
+        0.09677284451589566,
+        -0.007558742927220537,
+        -1.0450724916370102,
+        3.7537103249075646e-19,
+        -0.02348408107058456,
+        -1.1220216608186222,
+        -0.09677282296529534,
+        -0.00756004383942106,
+        -1.0450721210304004,
+        -8.341077089330226e-20,
+        -0.2531013768721278,
+        -0.9673120064835227
+      ]
+    },
+    {
+      "id": "opposite-pair-100mm",
+      "coordinates": [
+        0.09218668756450396,
+        -0.006765636721769363,
+        -1.14806973035928,
+        2.347981587306246e-18,
+        -0.010045966108003894,
+        -1.125720327614921,
+        -0.09218666800006692,
+        -0.006766910441734353,
+        -1.148069368775535,
+        -1.1692929056067794e-19,
+        -0.26626119260916986,
+        -0.9628274237360208
+      ]
+    },
+    {
+      "id": "long-stride-wave-compact-support",
+      "coordinates": [
+        0.18935932191701044,
+        -0.003964684594462102,
+        -1.0460953568357556,
+        0.012607797606514159,
+        -0.02239122749232262,
+        -1.1223234696921884,
+        0.0868079427878923,
+        -0.0529234368202445,
+        -1.0319763349759583,
+        -0.011193030892986223,
+        -0.2545943627165345,
+        -0.9668049888460324
+      ]
+    },
+    {
+      "id": "continuous-wave-compact-support",
+      "coordinates": [
+        0.19682267831207,
+        0.07905179227859055,
+        -1.069136479065359,
+        0.0420650157804655,
+        -0.029970915636101388,
+        -1.120226507884242,
+        0.06219210307564794,
+        -0.13295263449210323,
+        -1.0819757476962424,
+        -0.037478603491219876,
+        -0.2514542271184129,
+        -0.9678708580421344
+      ]
+    }
+  ],
+  "record_poses": true
+}

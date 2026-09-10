@@ -1,0 +1,290 @@
+{
+  "reports": [
+    {
+      "name": "periodic-uniform",
+      "period_s": 0.39608749046768144,
+      "exact_pose_and_velocity_closure": true,
+      "within_planning_tolerances": false,
+      "planned_diagonal_displacement_rate_m_s": 0.2438845263633608,
+      "maximum_force_error_n": 4.480407466778384,
+      "maximum_moment_error_nm": 0.5012635553425999,
+      "minimum_torque_margin_nm": -0.01614366170198922,
+      "maximum_planned_slip_ratio": 1.9611010246262275,
+      "geometry": {
+        "poses": 121,
+        "maximum_inter_link_penetration_m": 0,
+        "minimum_floor_clearance_m": -0.0001304233054566506
+      },
+      "final_cost": 1739.24351792144,
+      "termination": "iteration_limit",
+      "optimistic_total_peak_motoring_power_w": 48.64499936262055,
+      "positive_discrete_motor_work_j": 5.9136653870807665,
+      "maximum_individual_peak_power_ratio": 0.9265313734993775,
+      "knot_variation": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "span_rad": 0.03066878842909304,
+          "total_variation_rad": 0.4520111435668843,
+          "direction_reversals": 20
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "span_rad": 0.08996935861502875,
+          "total_variation_rad": 1.1340583914845075,
+          "direction_reversals": 24
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "span_rad": 0.022707503977170473,
+          "total_variation_rad": 0.18634392125117483,
+          "direction_reversals": 22
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "span_rad": 0.026717724252008246,
+          "total_variation_rad": 0.426881101685356,
+          "direction_reversals": 24
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "span_rad": 0.0906403732009382,
+          "total_variation_rad": 1.1449067113292788,
+          "direction_reversals": 22
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "span_rad": 0.04849313236882624,
+          "total_variation_rad": 0.3894509692203352,
+          "direction_reversals": 12
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "span_rad": 0.035598870305495245,
+          "total_variation_rad": 0.4549229541804283,
+          "direction_reversals": 24
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "span_rad": 0.08311017811319132,
+          "total_variation_rad": 1.54200616857774,
+          "direction_reversals": 24
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "span_rad": 0.017686893127508707,
+          "total_variation_rad": 0.2813249234595925,
+          "direction_reversals": 24
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "span_rad": 0.041398440345534526,
+          "total_variation_rad": 0.48133694782229997,
+          "direction_reversals": 20
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "span_rad": 0.11845659930008123,
+          "total_variation_rad": 1.0011103711922535,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "span_rad": 0.07393389077817902,
+          "total_variation_rad": 0.6607140904170081,
+          "direction_reversals": 16
+        }
+      ]
+    },
+    {
+      "name": "periodic-perturbed",
+      "period_s": 0.39608749046768144,
+      "exact_pose_and_velocity_closure": true,
+      "within_planning_tolerances": false,
+      "planned_diagonal_displacement_rate_m_s": 0.25067032256775723,
+      "maximum_force_error_n": 1.4662179454449062,
+      "maximum_moment_error_nm": 0.8386259932562062,
+      "minimum_torque_margin_nm": -0.007658601766560746,
+      "maximum_planned_slip_ratio": 1.0708778943270003,
+      "geometry": {
+        "poses": 121,
+        "maximum_inter_link_penetration_m": 0,
+        "minimum_floor_clearance_m": -0.00017888734891746694
+      },
+      "final_cost": 136.88168465755942,
+      "termination": "iteration_limit",
+      "optimistic_total_peak_motoring_power_w": 48.64499936262055,
+      "positive_discrete_motor_work_j": 5.772001834765303,
+      "maximum_individual_peak_power_ratio": 0.9875659806208116,
+      "knot_variation": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "span_rad": 0.04954128519771284,
+          "total_variation_rad": 0.40121187676337744,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "span_rad": 0.14246268996842693,
+          "total_variation_rad": 1.1446026029647092,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "span_rad": 0.07502373879810009,
+          "total_variation_rad": 0.3995355563018985,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "span_rad": 0.07076163462312723,
+          "total_variation_rad": 0.3551536282939889,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "span_rad": 0.18199734595066142,
+          "total_variation_rad": 0.9977531298387214,
+          "direction_reversals": 14
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "span_rad": 0.10944902885061225,
+          "total_variation_rad": 0.5892844232172245,
+          "direction_reversals": 14
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "span_rad": 0.06917254265236417,
+          "total_variation_rad": 0.4759753041118544,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "span_rad": 0.29786830783324314,
+          "total_variation_rad": 1.5355074428138513,
+          "direction_reversals": 10
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "span_rad": 0.08043410053078093,
+          "total_variation_rad": 0.302347541566395,
+          "direction_reversals": 12
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "span_rad": 0.06077181178152835,
+          "total_variation_rad": 0.4248700107909982,
+          "direction_reversals": 18
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "span_rad": 0.15462504524166798,
+          "total_variation_rad": 1.4163140360558755,
+          "direction_reversals": 22
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "span_rad": 0.09552927148306156,
+          "total_variation_rad": 0.8573140903734755,
+          "direction_reversals": 18
+        }
+      ]
+    },
+    {
+      "name": "periodic-perturbed-refinement",
+      "period_s": 0.39608749046768144,
+      "exact_pose_and_velocity_closure": true,
+      "within_planning_tolerances": false,
+      "planned_diagonal_displacement_rate_m_s": 0.25067629766160104,
+      "maximum_force_error_n": 1.4443355216163631,
+      "maximum_moment_error_nm": 0.8268437498689227,
+      "minimum_torque_margin_nm": -0.007500388778439504,
+      "maximum_planned_slip_ratio": 1.0708732074490313,
+      "geometry": {
+        "poses": 121,
+        "maximum_inter_link_penetration_m": 0,
+        "minimum_floor_clearance_m": -0.00017892674111241735
+      },
+      "final_cost": 131.21104726871837,
+      "termination": "iteration_limit",
+      "optimistic_total_peak_motoring_power_w": 48.64499936262055,
+      "positive_discrete_motor_work_j": 5.769054056946478,
+      "maximum_individual_peak_power_ratio": 0.9864844347788659,
+      "knot_variation": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "span_rad": 0.04965798168882052,
+          "total_variation_rad": 0.40115843108365246,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "span_rad": 0.14245823886550735,
+          "total_variation_rad": 1.144605497019091,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "span_rad": 0.07510993196842097,
+          "total_variation_rad": 0.39969122726877826,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "span_rad": 0.07073696950495201,
+          "total_variation_rad": 0.3551736985746765,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "span_rad": 0.18197283921052154,
+          "total_variation_rad": 0.9977458838053366,
+          "direction_reversals": 14
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "span_rad": 0.10946629205910541,
+          "total_variation_rad": 0.5886662139340433,
+          "direction_reversals": 14
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "span_rad": 0.06919206440560544,
+          "total_variation_rad": 0.4760848682690102,
+          "direction_reversals": 16
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "span_rad": 0.29784082430761316,
+          "total_variation_rad": 1.5354182663593496,
+          "direction_reversals": 10
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "span_rad": 0.08033665834604342,
+          "total_variation_rad": 0.3021556881783214,
+          "direction_reversals": 12
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "span_rad": 0.060769509707572,
+          "total_variation_rad": 0.42474223371269293,
+          "direction_reversals": 18
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "span_rad": 0.15431429087810455,
+          "total_variation_rad": 1.4149801311609789,
+          "direction_reversals": 22
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "span_rad": 0.0955460238974668,
+          "total_variation_rad": 0.8575082115191774,
+          "direction_reversals": 18
+        }
+      ]
+    }
+  ],
+  "scope": "Infeasible periodic planning candidates, not measured speed, stable gait, continuous energy balance or a global physical limit. Reversal count ignores adjacent increment products smaller than 1e-18 rad squared."
+}

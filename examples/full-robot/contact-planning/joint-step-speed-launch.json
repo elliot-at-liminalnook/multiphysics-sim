@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "observed_utc": "2026-09-09T20:34:34.479Z",
+  "pid": 57863,
+  "session_id": 76113,
+  "observed_process": "57863 03:53 100.0 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_steps runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-step-conic-speed.recipe.json runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/joint-step-speed.search.json runs/joint-checkpoints/multi-step-speed",
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_steps",
+    "bytes": 9504076,
+    "sha256": "1056b56c0cf5978d7a1828b1f188680de3f8f0211965d4e81e869c7929a5d4bc"
+  },
+  "args": [
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-step-conic-speed.recipe.json",
+    "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+    "examples/full-robot/contact-planning/joint-step-speed.search.json",
+    "runs/joint-checkpoints/multi-step-speed"
+  ],
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-step-conic-speed.recipe.json",
+      "bytes": 329462,
+      "sha256": "9e7db054ebda8223497a0fd3ca9c4daac2628656dfe582270c9bc5c22b6b6507"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+      "bytes": 2013744,
+      "sha256": "78bad0de2784d8e3f8fd2465d04f61779b7d7435579aba53c911d0db70d28b7c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-step-speed.search.json",
+      "bytes": 320,
+      "sha256": "77c941ec853d4214409cd614c0e6bde692b1d4f71a136d0475371c2f9c3466a8"
+    }
+  ],
+  "stdout": "examples/full-robot/contact-planning/joint-step-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-step-speed.log",
+  "checkpoint_directory": "runs/joint-checkpoints/multi-step-speed",
+  "sampled_checkpoint": {
+    "valid_report_index": 55,
+    "speed_m_s": 0.025810774641992298,
+    "feasible": true
+  },
+  "scope": "Verified live multi-step joint speed search. Checkpoints can include rejected NLP trials or derivative probes; full physical/runtime acceptance remains separate. No completed speed gain claimed."
+}

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "goal_complete": false,
+  "review_stop": "User-requested one-hour boundary; no further autonomous search.",
+  "requirements": [
+    {
+      "item": "Movement envelope",
+      "status": "partial",
+      "evidence": "829 coarse/1288 fine poses; exact CAD checks identify false grid rejection. Full coupled continuous clearance and hardware limits unresolved."
+    },
+    {
+      "item": "Three physics-derived strategies and target speed",
+      "status": "partial",
+      "evidence": "Wave, continuous wave and paired strategies compared. Paired steering demonstrates approximately 25 mm/s; other paths retain geometry rejections. Sustained qualification incomplete."
+    },
+    {
+      "item": "Teacher learning, student distillation, robustness",
+      "status": "partial",
+      "evidence": "Full-authority Rust student distilled from physics teacher; failed tilt at 3.28 s. Teacher PPO and on-policy robustness outstanding."
+    },
+    {
+      "item": "Measured validation and browser delivery",
+      "status": "partial",
+      "evidence": "Exact preset, replay, unranked leaderboard, numerical comparison and live browser steering tested. Slip and realtime/p95 gates fail; terrain/minute validation missing."
+    },
+    {
+      "item": "Bounded experiments and checkpoints",
+      "status": "satisfied",
+      "evidence": "Checkpoint before 30 minutes; work stopped for review within one hour."
+    }
+  ]
+}

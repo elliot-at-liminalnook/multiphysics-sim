@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "diagonal77-human-1p25ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal77-human-1p25ms",
+      "duration_s": 20,
+      "step_s": 0.00125,
+      "command_speed_m_s": 0.07718808151302678,
+      "family": "diagonal77",
+      "source": "runs/bayesian-diagonal68-pilot/evaluation-009",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/diagonal77-validation-settings.json",
+        "sha256": "f4258fa50b7790ce0faa66a4a43f8501a595e1f324be366adda05528a134d6a1"
+      },
+      "scene_sha256": "75bcfa2c3b9c4977818875627b9c67d7b10a6c56356f8132f6bca9f2d4bb1979",
+      "config_sha256": "a1ae9c40198cb16f6e18b39d276731cdf9ed19323406a62e0896ceee31f0a3bd",
+      "actions_sha256": "e562231f73d6c0f3fbcfa15312fc65fbea8fbc6a9de72a6ff2550863f63cf141"
+    },
+    {
+      "name": "diagonal77-human-0p625ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal77-human-0p625ms",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.07718808151302678,
+      "family": "diagonal77",
+      "source": "runs/bayesian-diagonal68-pilot/evaluation-009",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/diagonal77-validation-settings.json",
+        "sha256": "f4258fa50b7790ce0faa66a4a43f8501a595e1f324be366adda05528a134d6a1"
+      },
+      "scene_sha256": "75bcfa2c3b9c4977818875627b9c67d7b10a6c56356f8132f6bca9f2d4bb1979",
+      "config_sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d",
+      "actions_sha256": "e562231f73d6c0f3fbcfa15312fc65fbea8fbc6a9de72a6ff2550863f63cf141"
+    },
+    {
+      "name": "diagonal77-dropout-0p625ms",
+      "kind": "dropout",
+      "prefix": "runs/contact-planning/diagonal77-dropout-0p625ms",
+      "duration_s": 12,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.07718808151302678,
+      "family": "diagonal77",
+      "source": "runs/bayesian-diagonal68-pilot/evaluation-009",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/dropout.actions.json",
+      "actions_source_sha256": "59ec22dc77e0e2c04fc6c212f2c1bc981d95ffaa047ca89cda05efe7943229a5",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/diagonal77-validation-settings.json",
+        "sha256": "f4258fa50b7790ce0faa66a4a43f8501a595e1f324be366adda05528a134d6a1"
+      },
+      "scene_sha256": "c96b717dcc540405ee3d21913a4ec1fd7702e7665d74d1ea06a77249861d8277",
+      "config_sha256": "df17c840edb9c9d368098f0abc2a3e5285d3c632918bc6d58638637cfc8d1c2a",
+      "actions_sha256": "678c1ca1917eff2a99bf0fc60254c5db04924c0996040e75569bacc0c4d5bc2e"
+    },
+    {
+      "name": "diagonal77-human-0p3125ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal77-human-0p3125ms",
+      "duration_s": 20,
+      "step_s": 0.0003125,
+      "command_speed_m_s": 0.07718808151302678,
+      "family": "diagonal77",
+      "source": "runs/bayesian-diagonal68-pilot/evaluation-009",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/diagonal77-validation-settings.json",
+        "sha256": "f4258fa50b7790ce0faa66a4a43f8501a595e1f324be366adda05528a134d6a1"
+      },
+      "scene_sha256": "75bcfa2c3b9c4977818875627b9c67d7b10a6c56356f8132f6bca9f2d4bb1979",
+      "config_sha256": "2dab395966ac830f938df860a3bf9fa865affddc4a86661126f4cd389024447b",
+      "actions_sha256": "e562231f73d6c0f3fbcfa15312fc65fbea8fbc6a9de72a6ff2550863f63cf141"
+    }
+  ]
+}

@@ -1,0 +1,948 @@
+{
+  "robot": {
+    "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "independent_coordinates": [
+      "joint.-Y | Hip servo output",
+      "joint.-Y | Worm servo output",
+      "joint.-Y | Foot servo output",
+      "joint.+X | Hip servo output",
+      "joint.+X | Worm servo output",
+      "joint.+X | Foot servo output",
+      "joint.+Y | Hip servo output",
+      "joint.+Y | Worm servo output",
+      "joint.+Y | Foot servo output",
+      "joint.-X | Hip servo output",
+      "joint.-X | Worm servo output",
+      "joint.-X | Foot servo output"
+    ],
+    "initial_coordinates": [
+      0,
+      -0.00008346418847292681,
+      -1.0471975511965976,
+      0,
+      -0.27612813350949833,
+      -1.0471975511965976,
+      0,
+      -0.00008346425388696227,
+      -1.0471975511965976,
+      0,
+      -0.00007650604473797781,
+      -1.0471975511965976
+    ],
+    "initial_base_translation_m": [
+      0,
+      0,
+      -0.06906212053309974
+    ],
+    "joint_search_bounds": [
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976,
+        "max_step": 0.05
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214,
+        "max_step": 0.1
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02,
+        "max_step": 0.1
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976,
+        "max_step": 0.05
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996,
+        "max_step": 0.1
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02,
+        "max_step": 0.1
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976,
+        "max_step": 0.05
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075,
+        "max_step": 0.1
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02,
+        "max_step": 0.1
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976,
+        "max_step": 0.05
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563,
+        "max_step": 0.1
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02,
+        "max_step": 0.1
+      }
+    ],
+    "embedding": {
+      "direct_closure_jacobian": true,
+      "dependent_solve": "pivoted_qr",
+      "block_dependent_factorization": true,
+      "analytic_mechanism_positions": true,
+      "length_scale_m": 0.1,
+      "angle_scale_rad": 1,
+      "scaled_closure_tolerance": 1e-8,
+      "scaled_position_tolerance": 1e-11,
+      "relative_rank_tolerance": 1e-10,
+      "absolute_rank_tolerance": 1e-12,
+      "max_iterations": 30,
+      "max_scaled_correction": 0.25
+    },
+    "placement": {
+      "tolerance_m": 1e-9,
+      "damping_m": 0.000001,
+      "max_iterations": 40
+    },
+    "actuators": {
+      "joint.+X | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+X | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+X | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      }
+    },
+    "uniform_samples": 64,
+    "sampling": "contact_intervals",
+    "additional_phases": [
+      0.2355,
+      0.9095,
+      0.9085000000000001,
+      0.9075,
+      0.9065,
+      0.9055,
+      0.9045,
+      0.9034999999999999,
+      0.9025
+    ],
+    "include_body_knots": true,
+    "phase_rate": 1,
+    "phase_acceleration_per_s": 0,
+    "additional_clocks": [
+      {
+        "phase_rate": -1,
+        "phase_acceleration_per_s": 0
+      }
+    ],
+    "force_allocation": {
+      "regularization": 0.0001,
+      "maximum_iterations": 20000,
+      "gradient_tolerance_n": 0.000001
+    },
+    "moment_length_scale_m": 0.35,
+    "force_tolerance_n": 0.05,
+    "moment_tolerance_nm": 0.02,
+    "torque_tolerance_nm": 0.01,
+    "penetration_tolerance_m": 0.0001,
+    "velocity_tolerance_m_s": 1e-7,
+    "acceleration_tolerance_m_s2": 0.000001,
+    "direction_world": [
+      0.7071067811865476,
+      0.7071067811865475,
+      0
+    ],
+    "target_speed_m_s": 0.36,
+    "speed_residual_scale_m_s": 10,
+    "extend_motoring_penalty_past_no_load": true
+  },
+  "motion": {
+    "period_s": 0.6539579339644943,
+    "displacement_world_m": [
+      0.03641489930885061,
+      0.036414899308850605,
+      0
+    ],
+    "body": {
+      "interpolation": "periodic_cubic_b_spline",
+      "keyframes": [
+        {
+          "time_s": 0,
+          "values": [
+            -0.001171710769132403,
+            0.0003254952568169517,
+            0.002055775112936916,
+            0.011817547194232711,
+            -0.02964573036566992,
+            -0.01509245028332648
+          ]
+        },
+        {
+          "time_s": 0.16348948349112358,
+          "values": [
+            -0.009633044810753303,
+            0.002709737923791266,
+            -0.005113676620698275,
+            0.029027826774749216,
+            0.019665883575691406,
+            -0.012524006817993275
+          ]
+        },
+        {
+          "time_s": 0.32697896698224715,
+          "values": [
+            -0.0038794063648829747,
+            -0.0019606949291529775,
+            0.0001007740345766589,
+            0.02104439605166035,
+            -0.08103503131638096,
+            0.001160884711509727
+          ]
+        },
+        {
+          "time_s": 0.49046845047337073,
+          "values": [
+            0.0037359132132795854,
+            -0.0026748567775265117,
+            0.005887949767170154,
+            -0.03624679689767128,
+            -0.028681364309125212,
+            -0.057496444365097904
+          ]
+        },
+        {
+          "time_s": 0.6539579339644943,
+          "values": [
+            -0.001171710769132403,
+            0.0003254952568169517,
+            0.002055775112936916,
+            0.011817547194232711,
+            -0.02964573036566992,
+            -0.01509245028332648
+          ]
+        }
+      ]
+    },
+    "feet": [
+      {
+        "center_world_m": [
+          0.005611673657708174,
+          -0.3185130399900386,
+          -0.4410181228863441
+        ],
+        "phase_offset": 0,
+        "stance_fraction": 0.751212129632526,
+        "swing_offset_world_m": [
+          0.00129936771839834,
+          -0.018376114814595328,
+          0.010144770106656452
+        ]
+      },
+      {
+        "center_world_m": [
+          0.33192521456996343,
+          -0.00044348624241053944,
+          -0.4410181228863441
+        ],
+        "phase_offset": 0.5118883334444883,
+        "stance_fraction": 0.5892541840835861,
+        "swing_offset_world_m": [
+          -0.005352797051834553,
+          0.002060586459938639,
+          0.0030439889782857064
+        ]
+      },
+      {
+        "center_world_m": [
+          -0.008867769061531555,
+          0.31276800524604137,
+          -0.4410181228863441
+        ],
+        "phase_offset": 0,
+        "stance_fraction": 0.7495607467938188,
+        "swing_offset_world_m": [
+          -0.0059706529122248945,
+          0.015888876530039637,
+          0.01052842302715731
+        ]
+      },
+      {
+        "center_world_m": [
+          -0.30624524436168404,
+          0.008885012959152408,
+          -0.4410181228863441
+        ],
+        "phase_offset": 0.5030504802534346,
+        "stance_fraction": 0.593210485735542,
+        "swing_offset_world_m": [
+          -0.004428913961001854,
+          0.007161839196973961,
+          0.004177858737930862
+        ]
+      }
+    ]
+  },
+  "variables": [
+    {
+      "decision": {
+        "kind": "period"
+      },
+      "bound": {
+        "lower": 0.25,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "displacement_along_direction"
+      },
+      "bound": {
+        "lower": 0.02,
+        "upper": 0.09
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_stance",
+        "foot": 0
+      },
+      "bound": {
+        "lower": 0.3,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_center",
+        "foot": 0,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -0.024762999954528166,
+        "upper": 0.015237000045471835
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_center",
+        "foot": 0,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -0.3365558363141676,
+        "upper": -0.29655583631416754
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 0,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 0,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 0,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0.003,
+        "upper": 0.025
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_phase",
+        "foot": 1
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 0.999
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_stance",
+        "foot": 1
+      },
+      "bound": {
+        "lower": 0.3,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_center",
+        "foot": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": 0.31253455387942186,
+        "upper": 0.3525345538794219
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_center",
+        "foot": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -0.019999999989994025,
+        "upper": 0.020000000010005976
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0.003,
+        "upper": 0.025
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_phase",
+        "foot": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 0.999
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_stance",
+        "foot": 2
+      },
+      "bound": {
+        "lower": 0.3,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_center",
+        "foot": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -0.024762000045099382,
+        "upper": 0.015237999954900617
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_center",
+        "foot": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": 0.29655583631902543,
+        "upper": 0.33655583631902547
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0.003,
+        "upper": 0.025
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_phase",
+        "foot": 3
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 0.999
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_stance",
+        "foot": 3
+      },
+      "bound": {
+        "lower": 0.3,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_center",
+        "foot": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -0.3413183194930321,
+        "upper": -0.30131831949303206
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_center",
+        "foot": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -0.020000000028445743,
+        "upper": 0.019999999971554258
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "foot_swing",
+        "foot": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0.003,
+        "upper": 0.025
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 0,
+        "channel": 0
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 0,
+        "channel": 1
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 0,
+        "channel": 2
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 0,
+        "channel": 3
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 0,
+        "channel": 4
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 0,
+        "channel": 5
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 1,
+        "channel": 0
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 1,
+        "channel": 1
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 1,
+        "channel": 2
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 1,
+        "channel": 3
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 1,
+        "channel": 4
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 1,
+        "channel": 5
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 2,
+        "channel": 0
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 2,
+        "channel": 1
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 2,
+        "channel": 2
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 2,
+        "channel": 3
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 2,
+        "channel": 4
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 2,
+        "channel": 5
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 3,
+        "channel": 0
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 3,
+        "channel": 1
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 3,
+        "channel": 2
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 3,
+        "channel": 3
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 3,
+        "channel": 4
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "body_control",
+        "control": 3,
+        "channel": 5
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    }
+  ],
+  "search": {
+    "maximum_iterations": 16,
+    "maximum_evaluations": 1850,
+    "difference_step": 0.0001,
+    "initial_damping": 0.1,
+    "gradient_tolerance": 0.00001
+  },
+  "adaptive": {
+    "maximum_rounds": 3,
+    "audit_uniform_samples": 1000,
+    "maximum_added_phases_per_round": 8,
+    "minimum_phase_separation": 0.00025
+  }
+}

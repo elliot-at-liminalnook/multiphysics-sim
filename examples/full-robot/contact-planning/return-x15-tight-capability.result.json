@@ -1,0 +1,686 @@
+{
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "provenance": {
+    "scope": "Exact reference rate extrema from shared Rust; no loaded gait or global speed claim.",
+    "source": "examples/full-robot/contact-planning/return-x15-tight-reference.result.json"
+  },
+  "reference_cycle_coordinates": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "peak_reference_rate_rad_s": 3.1273553478277947,
+      "time_scaled_rate_budget_speed_m_s": 0.37311241561081765
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "peak_reference_rate_rad_s": 5.49043927924829,
+      "time_scaled_rate_budget_speed_m_s": 0.21252490901988347
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "peak_reference_rate_rad_s": 4.469481149003052,
+      "time_scaled_rate_budget_speed_m_s": 0.2610717149040247
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "peak_reference_rate_rad_s": 2.9395058467123842,
+      "time_scaled_rate_budget_speed_m_s": 0.39695621276156906
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "peak_reference_rate_rad_s": 4.827855470897399,
+      "time_scaled_rate_budget_speed_m_s": 0.241692220352351
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "peak_reference_rate_rad_s": 5.182507333716579,
+      "time_scaled_rate_budget_speed_m_s": 0.22515262076139503
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "peak_reference_rate_rad_s": 3.243517273261773,
+      "time_scaled_rate_budget_speed_m_s": 0.35974992885671137
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "peak_reference_rate_rad_s": 5.397004518561646,
+      "time_scaled_rate_budget_speed_m_s": 0.21620421185276598
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "peak_reference_rate_rad_s": 4.97022561881423,
+      "time_scaled_rate_budget_speed_m_s": 0.2347690422512086
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "peak_reference_rate_rad_s": 2.5312621661647574,
+      "time_scaled_rate_budget_speed_m_s": 0.4609775802359493
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "peak_reference_rate_rad_s": 6.3615023444588505,
+      "time_scaled_rate_budget_speed_m_s": 0.1834244562242156
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "peak_reference_rate_rad_s": 2.6956847012571505,
+      "time_scaled_rate_budget_speed_m_s": 0.4328603815413823
+    }
+  ],
+  "reference_cycle_interpolation": "periodic_cubic_b_spline",
+  "reference_cycle_rate_budget_speed_m_s": 0.1834244562242156,
+  "reference_cycle_retiming": null,
+  "rows": [
+    {
+      "authored_limit_violations": [],
+      "directions": [
+        {
+          "feet": [
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  4.407030878904567,
+                  1.2711412305333278,
+                  -0.4099005680141203
+                ],
+                "limiting_coordinate": 0,
+                "maximum_task_speed": 1.2506302339091946
+              },
+              "coordinate_names": [
+                "joint.-Y | Hip servo output",
+                "joint.-Y | Worm servo output",
+                "joint.-Y | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.-Y | Hip servo output",
+              "marker": "-Y-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -0.6660152713021855,
+                  -12.319200962878746,
+                  4.1182641739062715
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.4473963916602527
+              },
+              "coordinate_names": [
+                "joint.+X | Hip servo output",
+                "joint.+X | Worm servo output",
+                "joint.+X | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.+X | Worm servo output",
+              "marker": "+X-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -4.490763576816902,
+                  3.541886704155635,
+                  -0.9999971531994484
+                ],
+                "limiting_coordinate": 0,
+                "maximum_task_speed": 1.227311561753628
+              },
+              "coordinate_names": [
+                "joint.+Y | Hip servo output",
+                "joint.+Y | Worm servo output",
+                "joint.+Y | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.+Y | Hip servo output",
+              "marker": "+Y-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  0.338710363213414,
+                  14.199577664621016,
+                  -3.820021135195489
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.3881499991835542
+              },
+              "coordinate_names": [
+                "joint.-X | Hip servo output",
+                "joint.-X | Worm servo output",
+                "joint.-X | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.-X | Worm servo output",
+              "marker": "-X-foot-surface"
+            }
+          ],
+          "frozen_pose_ideal_return_rate_budget_m_s": 0.2587666661223695,
+          "frozen_pose_quintic_return_rate_budget_m_s": 0.10526101672774352,
+          "frozen_pose_stance_rate_budget_m_s": 0.3881499991835542,
+          "static_load_screens": [
+            {
+              "balanced_candidate": true,
+              "constant_static_torque_stance_rate_budget_m_s": 0.3881499991835542,
+              "support_markers": [
+                "-Y-foot-surface",
+                "+X-foot-surface",
+                "+Y-foot-surface",
+                "-X-foot-surface"
+              ]
+            },
+            {
+              "balanced_candidate": false,
+              "constant_static_torque_stance_rate_budget_m_s": 1.0248303286678517,
+              "support_markers": [
+                "-Y-foot-surface",
+                "+Y-foot-surface"
+              ]
+            },
+            {
+              "balanced_candidate": false,
+              "constant_static_torque_stance_rate_budget_m_s": 0.37607310184656106,
+              "support_markers": [
+                "+X-foot-surface",
+                "-X-foot-surface"
+              ]
+            }
+          ],
+          "unit_direction_world": [
+            1.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "feet": [
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  2.873457147414424,
+                  9.966388624868602,
+                  -3.2138272760368847
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.5530153665869243
+              },
+              "coordinate_names": [
+                "joint.-Y | Hip servo output",
+                "joint.-Y | Worm servo output",
+                "joint.-Y | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.-Y | Worm servo output",
+              "marker": "-Y-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  2.615898625004088,
+                  -10.039982198342427,
+                  3.356329612503401
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.5489617361910667
+              },
+              "coordinate_names": [
+                "joint.+X | Hip servo output",
+                "joint.+X | Worm servo output",
+                "joint.+X | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.+X | Worm servo output",
+              "marker": "+X-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -3.9454717847098495,
+                  -6.913861368323283,
+                  1.9520222591612062
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.7971762471520456
+              },
+              "coordinate_names": [
+                "joint.+Y | Hip servo output",
+                "joint.+Y | Worm servo output",
+                "joint.+Y | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.+Y | Worm servo output",
+              "marker": "+Y-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -3.1778703292103803,
+                  10.744307551125832,
+                  -2.8904720195026035
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.5129754553937669
+              },
+              "coordinate_names": [
+                "joint.-X | Hip servo output",
+                "joint.-X | Worm servo output",
+                "joint.-X | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.-X | Worm servo output",
+              "marker": "-X-foot-surface"
+            }
+          ],
+          "frozen_pose_ideal_return_rate_budget_m_s": 0.34198363692917794,
+          "frozen_pose_quintic_return_rate_budget_m_s": 0.1391119879033944,
+          "frozen_pose_stance_rate_budget_m_s": 0.5129754553937669,
+          "static_load_screens": [
+            {
+              "balanced_candidate": true,
+              "constant_static_torque_stance_rate_budget_m_s": 0.5044222678855762,
+              "support_markers": [
+                "-Y-foot-surface",
+                "+X-foot-surface",
+                "+Y-foot-surface",
+                "-X-foot-surface"
+              ]
+            },
+            {
+              "balanced_candidate": false,
+              "constant_static_torque_stance_rate_budget_m_s": 0.5530153665869243,
+              "support_markers": [
+                "-Y-foot-surface",
+                "+Y-foot-surface"
+              ]
+            },
+            {
+              "balanced_candidate": false,
+              "constant_static_torque_stance_rate_budget_m_s": 0.46144704510988416,
+              "support_markers": [
+                "+X-foot-surface",
+                "-X-foot-surface"
+              ]
+            }
+          ],
+          "unit_direction_world": [
+            0.7071067811865476,
+            0.7071067811865475,
+            0.0
+          ]
+        },
+        {
+          "feet": [
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -0.3433488101331813,
+                  12.823460730636791,
+                  -4.135137552881823
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.4298033249138173
+              },
+              "coordinate_names": [
+                "joint.-Y | Hip servo output",
+                "joint.-Y | Worm servo output",
+                "joint.-Y | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.-Y | Worm servo output",
+              "marker": "-Y-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  4.3654545845760975,
+                  -1.879478028001555,
+                  0.628302683890473
+                ],
+                "limiting_coordinate": 0,
+                "maximum_task_speed": 1.2625411517056604
+              },
+              "coordinate_names": [
+                "joint.+X | Hip servo output",
+                "joint.+X | Worm servo output",
+                "joint.+X | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.+X | Hip servo output",
+              "marker": "+X-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -1.088976131080148,
+                  -13.319563219605826,
+                  3.7605735061593943
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.41379480453358053
+              },
+              "coordinate_names": [
+                "joint.+Y | Hip servo output",
+                "joint.+Y | Worm servo output",
+                "joint.+Y | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.+Y | Worm servo output",
+              "marker": "+Y-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -4.832897682245787,
+                  0.9951677924887897,
+                  -0.26772359644504085
+                ],
+                "limiting_coordinate": 0,
+                "maximum_task_speed": 1.1404268042290326
+              },
+              "coordinate_names": [
+                "joint.-X | Hip servo output",
+                "joint.-X | Worm servo output",
+                "joint.-X | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.-X | Hip servo output",
+              "marker": "-X-foot-surface"
+            }
+          ],
+          "frozen_pose_ideal_return_rate_budget_m_s": 0.27586320302238704,
+          "frozen_pose_quintic_return_rate_budget_m_s": 0.11221554021249641,
+          "frozen_pose_stance_rate_budget_m_s": 0.41379480453358053,
+          "static_load_screens": [
+            {
+              "balanced_candidate": true,
+              "constant_static_torque_stance_rate_budget_m_s": 0.3845619542083181,
+              "support_markers": [
+                "-Y-foot-surface",
+                "+X-foot-surface",
+                "+Y-foot-surface",
+                "-X-foot-surface"
+              ]
+            },
+            {
+              "balanced_candidate": false,
+              "constant_static_torque_stance_rate_budget_m_s": 0.3499054621604418,
+              "support_markers": [
+                "-Y-foot-surface",
+                "+Y-foot-surface"
+              ]
+            },
+            {
+              "balanced_candidate": false,
+              "constant_static_torque_stance_rate_budget_m_s": 1.1404268042290326,
+              "support_markers": [
+                "+X-foot-surface",
+                "-X-foot-surface"
+              ]
+            }
+          ],
+          "unit_direction_world": [
+            6.123233995736766e-17,
+            1.0,
+            0.0
+          ]
+        },
+        {
+          "feet": [
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -3.359025691329434,
+                  8.168723456956744,
+                  -2.634140333526882
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.6747157114537445
+              },
+              "coordinate_names": [
+                "joint.-Y | Hip servo output",
+                "joint.-Y | Worm servo output",
+                "joint.-Y | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.-Y | Worm servo output",
+              "marker": "-Y-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  3.557786454427236,
+                  7.381998880960385,
+                  -2.467775435670078
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.7466224457368675
+              },
+              "coordinate_names": [
+                "joint.+X | Hip servo output",
+                "joint.+X | Worm servo output",
+                "joint.+X | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.+X | Worm servo output",
+              "marker": "+X-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  2.4054269710357232,
+                  -11.922845581729122,
+                  3.3662317955503527
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.46226934846623596
+              },
+              "coordinate_names": [
+                "joint.+Y | Hip servo output",
+                "joint.+Y | Worm servo output",
+                "joint.+Y | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.+Y | Worm servo output",
+              "marker": "+Y-foot-surface"
+            },
+            {
+              "bound": {
+                "coordinate_rates_per_unit": [
+                  -3.6568791185831087,
+                  -9.33692776215129,
+                  2.511853678442726
+                ],
+                "limiting_coordinate": 1,
+                "maximum_task_speed": 0.5902976010236969
+              },
+              "coordinate_names": [
+                "joint.-X | Hip servo output",
+                "joint.-X | Worm servo output",
+                "joint.-X | Foot servo output"
+              ],
+              "limiting_coordinate": "joint.-X | Worm servo output",
+              "marker": "-X-foot-surface"
+            }
+          ],
+          "frozen_pose_ideal_return_rate_budget_m_s": 0.3081795656441574,
+          "frozen_pose_quintic_return_rate_budget_m_s": 0.12536117924508094,
+          "frozen_pose_stance_rate_budget_m_s": 0.46226934846623596,
+          "static_load_screens": [
+            {
+              "balanced_candidate": true,
+              "constant_static_torque_stance_rate_budget_m_s": 0.4296119769245558,
+              "support_markers": [
+                "-Y-foot-surface",
+                "+X-foot-surface",
+                "+Y-foot-surface",
+                "-X-foot-surface"
+              ]
+            },
+            {
+              "balanced_candidate": false,
+              "constant_static_torque_stance_rate_budget_m_s": 0.390895603921383,
+              "support_markers": [
+                "-Y-foot-surface",
+                "+Y-foot-surface"
+              ]
+            },
+            {
+              "balanced_candidate": false,
+              "constant_static_torque_stance_rate_budget_m_s": 0.5013558027369851,
+              "support_markers": [
+                "+X-foot-surface",
+                "-X-foot-surface"
+              ]
+            }
+          ],
+          "unit_direction_world": [
+            -0.7071067811865475,
+            0.7071067811865476,
+            0.0
+          ]
+        }
+      ],
+      "error": null,
+      "id": "return-x15-tight",
+      "sampled_geometry_valid": true,
+      "sampled_penetrations": [],
+      "static_support": [
+        {
+          "allocation": {
+            "forces_world_n": [
+              [
+                0.019839399556708354,
+                0.0018061269372109112,
+                9.674160519482655
+              ],
+              [
+                0.09528502517650678,
+                -0.020370623945455635,
+                11.267189180270819
+              ],
+              [
+                -0.032438189633814285,
+                0.0011317415656424967,
+                9.613026533927105
+              ],
+              [
+                -0.08268623509941098,
+                0.01743275544261194,
+                8.452529166250455
+              ]
+            ],
+            "scaled_wrench_residual_norm_n": 2.6366896189824224e-14,
+            "unilateral_friction_satisfied": true,
+            "wrench_residual": [
+              -1.0130785099704553e-14,
+              9.71445146547012e-15,
+              1.4210854715202004e-14,
+              1.0685896612017132e-15,
+              3.3306690738754696e-16,
+              1.6852222417750871e-15
+            ]
+          },
+          "contact_height_range_m": 0.03916755101895275,
+          "markers": [
+            "-Y-foot-surface",
+            "+X-foot-surface",
+            "+Y-foot-surface",
+            "-X-foot-surface"
+          ],
+          "maximum_static_stall_fraction": 0.2902130567514712,
+          "required_motor_torques_nm": [
+            -0.00442694752181334,
+            0.22747489544688687,
+            0.8069896669798253,
+            0.007814476815303305,
+            0.2386958587798635,
+            0.7947867332386054,
+            -0.0067227941947651,
+            0.20783948602160623,
+            0.8538053618975444,
+            0.004782685881518931,
+            0.16600495251540523,
+            0.7209103865389115
+          ]
+        },
+        {
+          "allocation": {
+            "forces_world_n": [
+              [
+                2.2241978747764284,
+                0.14020208401054912,
+                18.811853057694393
+              ],
+              [
+                2.290377384938599,
+                0.11225566269201481,
+                19.739639571038914
+              ]
+            ],
+            "scaled_wrench_residual_norm_n": 4.69774808262476,
+            "unilateral_friction_satisfied": true,
+            "wrench_residual": [
+              4.514575259715027,
+              0.25245774670256393,
+              -0.4554127711977145,
+              -0.006236312160588203,
+              0.11877728210250738,
+              0.004022602181679584
+            ]
+          },
+          "contact_height_range_m": 0.021483765198058113,
+          "markers": [
+            "-Y-foot-surface",
+            "+Y-foot-surface"
+          ],
+          "maximum_static_stall_fraction": 0.6252488823062253,
+          "required_motor_torques_nm": [
+            -0.4976958901942662,
+            0.4727619457982154,
+            1.642073887363982,
+            3.6147324657949534e-18,
+            -0.10078891453110154,
+            -0.19886022799879888,
+            0.48536882882536586,
+            0.4542399366926043,
+            1.8394790855005034,
+            -1.115562123423147e-18,
+            -0.05517687512869649,
+            -0.08003341495430177
+          ]
+        },
+        {
+          "allocation": {
+            "forces_world_n": [
+              [
+                0.0207724840779136,
+                -0.3470415372947458,
+                19.406973266450105
+              ],
+              [
+                0.03319548875469902,
+                -0.36684665158171315,
+                19.58215289356562
+              ]
+            ],
+            "scaled_wrench_residual_norm_n": 0.7403259667026845,
+            "unilateral_friction_satisfied": true,
+            "wrench_residual": [
+              0.05396797283261262,
+              -0.713888188876459,
+              -0.017779239915292067,
+              0.01867487274062332,
+              0.001440694769304307,
+              -0.0011614644361713543
+            ]
+          },
+          "contact_height_range_m": 0.03916755101895275,
+          "markers": [
+            "+X-foot-surface",
+            "-X-foot-surface"
+          ],
+          "maximum_static_stall_fraction": 0.603246658091773,
+          "required_motor_torques_nm": [
+            -1.1956922624750552e-17,
+            -0.05712308288238842,
+            -0.07638049096805508,
+            0.07839838406486495,
+            0.46900861501533114,
+            1.5132427391358,
+            1.6214879398679942e-17,
+            -0.056975610950066854,
+            -0.08189466254792764,
+            -0.07601416645517563,
+            0.44327865367694474,
+            1.7747486518727056
+          ]
+        }
+      ]
+    }
+  ],
+  "scope": "Conditional shaft-rate budgets from the shared CAD closure Jacobian and effective actuator model. No-load speed is a design budget, not a hard backdrive limit. Frozen-pose return bounds omit varying geometry, lifting, acceleration, torque, friction and stability. Static support uses explicit point forces with contact disabled only for the audit: minimum-norm allocation is a candidate, not an optimized feasibility proof; contact height differences are reported, not resolved. Constant-static-torque rate screens omit velocity and acceleration loads. The declared polynomial joint-reference rate bound includes interior extrema and applies only to uniform time scaling of that reference. None is a global attainable speed proof.",
+  "sum_peak_positive_motor_power_w": 48.64499936262055,
+  "version": 1
+}

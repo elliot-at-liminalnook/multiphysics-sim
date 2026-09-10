@@ -1,0 +1,25 @@
+{
+  "id": "diagonal424",
+  "output": "runs/speed-ceiling/viewer-diagonal424",
+  "wasm": "/Users/elliot/physics-simulator/target/gait-exploration/wasm32-unknown-unknown/release/sim_web.wasm",
+  "profiles": [
+    {
+      "id": "physics-diagonal424-5ms",
+      "label": "0.424 m/s candidate · WASD preview",
+      "scene": "runs/contact-planning/diagonal424-preview.scene.json",
+      "config": "runs/contact-planning/diagonal424-preview-5ms.config.json",
+      "task": "examples/full-robot/contact-planning/speed-discovery-task.json",
+      "readiness": "Press Play. Hold W/S to move; combine A/D to steer. Release to stop. W follows the diagonal gait.",
+      "evidence": "Native continuous run: 8.479 m in 20 s (0.424 m/s), no detected fall. Finer-step run: 0.422 m/s. Browser preview uses 5 ms steps; detailed mode is slower. Steering and stopping are available to try."
+    },
+    {
+      "id": "physics-diagonal424-0p625ms",
+      "label": "0.424 m/s candidate · detailed physics",
+      "scene": "runs/contact-planning/diagonal424-preview.scene.json",
+      "config": "runs/contact-planning/diagonal424-preview-0p625ms.config.json",
+      "task": "examples/full-robot/contact-planning/speed-discovery-task.json",
+      "readiness": "Press Play. Hold W/S to move; combine A/D to steer. Release to stop. W follows the diagonal gait.",
+      "evidence": "Native continuous run: 8.479 m in 20 s (0.424 m/s), no detected fall. Finer-step run: 0.422 m/s. Browser preview uses 5 ms steps; detailed mode is slower. Steering and stopping are available to try."
+    }
+  ]
+}

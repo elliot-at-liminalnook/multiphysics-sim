@@ -57,8 +57,10 @@ impl<'a> RigidEmbedding<'a> {
             .collect();
         self.set_motion(&mut g, &velocity, motion.acceleration_bias.as_slice());
         let mass = sim_solve::profile::EMBEDDED_INERTIA.time(|| self.art.rigid_mass_matrix(&g))?;
-        let reduced = sim_solve::profile::EMBEDDED_PROJECT_INERTIA.time(|| motion.tangent.transpose() * mass * &motion.tangent);
-        let evaluation = sim_solve::profile::EMBEDDED_FORCE_EVALUATION.time(|| self.art.evaluate(&g));
+        let reduced = sim_solve::profile::EMBEDDED_PROJECT_INERTIA
+            .time(|| motion.tangent.transpose() * mass * &motion.tangent);
+        let evaluation =
+            sim_solve::profile::EMBEDDED_FORCE_EVALUATION.time(|| self.art.evaluate(&g));
         let required = DVector::from_iterator(
             self.full_dimension(),
             self.art
@@ -101,6 +103,25 @@ impl<'a> RigidEmbedding<'a> {
 }
 
 impl PreparedEmbeddedDynamics<'_, '_> {
+    /// Required *reduced* external generalized loads for a prescribed reduced
+    /// acceleration at this exact prepared state. Includes the same gravity,
+    /// contact, passive loads and velocity bias as the forward solve. It does
+    /// not allocate loads to actuators or contacts. For a floating base, the
+    /// first six entries are a required world wrench about the base COM.
+    pub fn required_reduced_forces(&self, accelerations: &[f64]) -> Result<DVector<f64>, String> {
+        if accelerations.len() != self.map.reduced_dimension()
+            || accelerations.iter().any(|v| !v.is_finite())
+        {
+            return Err("finite dimension-matched reduced accelerations required".into());
+        }
+        let result = &self.reduced * DVector::from_column_slice(accelerations)
+            + self.tangent.transpose() * &self.required;
+        if result.iter().any(|v| !v.is_finite()) {
+            return Err("nonfinite required reduced forces".into());
+        }
+        Ok(result)
+    }
+
     /// Solve with fresh full-coordinate forces/torques. Retains the original
     /// subtraction/projection order and balance check, avoiding a changed
     /// floating-point expression from separately projecting passive loads.

@@ -425,6 +425,11 @@ fn prepared_dynamics_owns_contact_state_and_applies_fresh_forces() {
     let forced = prepared
         .accelerations(&[6.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         .unwrap();
+    let required = prepared.required_reduced_forces(forced.reduced_accelerations.as_slice()).unwrap();
+    assert!((required[0] - 6.0).abs() < 1e-10);
+    assert!(required.rows(1,5).amax() < 1e-10);
+    assert!(prepared.required_reduced_forces(&[0.0;5]).is_err());
+    assert!(prepared.required_reduced_forces(&[f64::NAN;6]).is_err());
     // Independent F=ma: 6 N changes a 2 kg COM's acceleration by 3 m/s^2.
     assert!((forced.full_accelerations[0] - original.full_accelerations[0] - 3.0).abs() < 1e-12);
     assert_eq!(forced.bristle_rates, original.bristle_rates);

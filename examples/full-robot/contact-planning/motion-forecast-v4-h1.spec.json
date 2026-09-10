@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "recipe": {
+    "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "reference_link": "Robot | Chassis and hip mounts",
+    "axes": [
+      {
+        "kind": "joint",
+        "name": "joint.-Y | Hip servo output",
+        "index": 0,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.-Y | Worm servo output",
+        "index": 8,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.-Y | Foot servo output",
+        "index": 16,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.+X | Hip servo output",
+        "index": 2,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.+X | Worm servo output",
+        "index": 10,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.+X | Foot servo output",
+        "index": 18,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.+Y | Hip servo output",
+        "index": 4,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.+Y | Worm servo output",
+        "index": 12,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.+Y | Foot servo output",
+        "index": 20,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.-X | Hip servo output",
+        "index": 6,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.-X | Worm servo output",
+        "index": 14,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "joint",
+        "name": "joint.-X | Foot servo output",
+        "index": 22,
+        "position_kind": "Angle"
+      },
+      {
+        "kind": "link",
+        "name": "Robot | Chassis and hip mounts.x",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": 0
+      },
+      {
+        "kind": "link",
+        "name": "Robot | Chassis and hip mounts.y",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": 1
+      },
+      {
+        "kind": "link",
+        "name": "Robot | Chassis and hip mounts.z",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": 2
+      },
+      {
+        "kind": "link",
+        "name": "-Y | Sliding foot crosshead.x",
+        "link": "-Y | Sliding foot crosshead",
+        "axis": 0
+      },
+      {
+        "kind": "link",
+        "name": "-Y | Sliding foot crosshead.y",
+        "link": "-Y | Sliding foot crosshead",
+        "axis": 1
+      },
+      {
+        "kind": "link",
+        "name": "-Y | Sliding foot crosshead.z",
+        "link": "-Y | Sliding foot crosshead",
+        "axis": 2
+      },
+      {
+        "kind": "link",
+        "name": "+X | Sliding foot crosshead.x",
+        "link": "+X | Sliding foot crosshead",
+        "axis": 0
+      },
+      {
+        "kind": "link",
+        "name": "+X | Sliding foot crosshead.y",
+        "link": "+X | Sliding foot crosshead",
+        "axis": 1
+      },
+      {
+        "kind": "link",
+        "name": "+X | Sliding foot crosshead.z",
+        "link": "+X | Sliding foot crosshead",
+        "axis": 2
+      },
+      {
+        "kind": "link",
+        "name": "+Y | Sliding foot crosshead.x",
+        "link": "+Y | Sliding foot crosshead",
+        "axis": 0
+      },
+      {
+        "kind": "link",
+        "name": "+Y | Sliding foot crosshead.y",
+        "link": "+Y | Sliding foot crosshead",
+        "axis": 1
+      },
+      {
+        "kind": "link",
+        "name": "+Y | Sliding foot crosshead.z",
+        "link": "+Y | Sliding foot crosshead",
+        "axis": 2
+      },
+      {
+        "kind": "link",
+        "name": "-X | Sliding foot crosshead.x",
+        "link": "-X | Sliding foot crosshead",
+        "axis": 0
+      },
+      {
+        "kind": "link",
+        "name": "-X | Sliding foot crosshead.y",
+        "link": "-X | Sliding foot crosshead",
+        "axis": 1
+      },
+      {
+        "kind": "link",
+        "name": "-X | Sliding foot crosshead.z",
+        "link": "-X | Sliding foot crosshead",
+        "axis": 2
+      }
+    ],
+    "actuator_targets": [
+      "-Y | Hip servo output.target",
+      "-Y | Worm servo output.target",
+      "-Y | Foot servo output.target",
+      "+X | Hip servo output.target",
+      "+X | Worm servo output.target",
+      "+X | Foot servo output.target",
+      "+Y | Hip servo output.target",
+      "+Y | Worm servo output.target",
+      "+Y | Foot servo output.target",
+      "-X | Hip servo output.target",
+      "-X | Worm servo output.target",
+      "-X | Foot servo output.target"
+    ],
+    "horizons_steps": [
+      1
+    ],
+    "period_s": 0.02,
+    "reference": "constant_velocity"
+  },
+  "training": [
+    {
+      "path": "runs/bayesian-speed-only-bounded-expanded/evaluation-013.native.json",
+      "start_s": 0,
+      "end_s": 19.82
+    },
+    {
+      "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-009.native.json",
+      "start_s": 0,
+      "end_s": 19.82
+    },
+    {
+      "path": "runs/speed-ppo-predictive-v2/iteration-000-episode-000.json",
+      "format": "speed_rollout",
+      "start_s": 0,
+      "end_s": 39.82
+    }
+  ],
+  "validation": [
+    {
+      "path": "runs/speed-only-507-validation/long60.native.json",
+      "start_s": 20,
+      "end_s": 59.82
+    },
+    {
+      "path": "runs/speed-only-448-validation/long60.native.json",
+      "start_s": 20,
+      "end_s": 59.82
+    },
+    {
+      "path": "runs/speed-ppo-predictive-v2/iteration-000-episode-000.json",
+      "format": "speed_rollout",
+      "start_s": 40,
+      "end_s": 59.82
+    }
+  ],
+  "width": 32,
+  "seed": 73,
+  "epochs": 40,
+  "batch_size": 64,
+  "learning_rate": 0.001
+}

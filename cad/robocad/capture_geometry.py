@@ -68,7 +68,7 @@ def sdf_cell_probes(sdf, pose, world_point):
 
 
 def audit_captured_pair(cad_path, scene, capture, left, right, times, probe_frame_s=None, probe_sdf_cells=False,
-                        *, measure_pair_distances=True):
+                        *, measure_pair_distances=True, probe_both_sides=False):
     """Inspect exact B-rep member distances and captured contact points.
 
     Distances are nonnegative: zero cannot distinguish touching from overlap.
@@ -76,6 +76,8 @@ def audit_captured_pair(cad_path, scene, capture, left, right, times, probe_fram
     Set measure_pair_distances=False for focused contact-point inspection without
     expensive whole-shape distance queries. An empty distance list then means
     unmeasured, not separated; the report records this explicitly.
+    probe_both_sides also classifies each witness against its source link's
+    exact solids: a tessellated source sample need not lie on the exact B-rep.
     """
     from OCP.BRepBuilderAPI import BRepBuilderAPI_Transform, BRepBuilderAPI_MakeVertex
     from OCP.BRepClass3d import BRepClass3d_SolidClassifier
@@ -195,21 +197,27 @@ def audit_captured_pair(cad_path, scene, capture, left, right, times, probe_fram
                 raise ValueError("finite captured contact point required")
             point = gp_Pnt(*xyz)
             vertex = Body(BRepBuilderAPI_MakeVertex(point).Vertex())
-            members = []
-            for member in target["members"]:
-                states = []
-                explorer = TopExp_Explorer(moved[member].shape, TopAbs_SOLID)
-                while explorer.More():
-                    state = BRepClass3d_SolidClassifier(explorer.Current(), point, 1e-6).State()
-                    states.append({TopAbs_IN: "inside", TopAbs_ON: "boundary", TopAbs_OUT: "outside"}.get(state, "unknown"))
-                    explorer.Next()
-                gap, _, nearest = kernel.distance(vertex, moved[member])
-                surface_gap, _, _ = kernel.distance(vertex, surfaces[member])
-                members.append({"member": member, "name": nodes[member]["name"], "solid_states": states,
-                                "distance_mm": gap, "surface_distance_mm": surface_gap, "nearest_world_mm": nearest})
+            def inspect_members(link):
+                members = []
+                for member in link["members"]:
+                    states = []
+                    explorer = TopExp_Explorer(moved[member].shape, TopAbs_SOLID)
+                    while explorer.More():
+                        state = BRepClass3d_SolidClassifier(explorer.Current(), point, 1e-6).State()
+                        states.append({TopAbs_IN: "inside", TopAbs_ON: "boundary", TopAbs_OUT: "outside"}.get(state, "unknown"))
+                        explorer.Next()
+                    gap, _, nearest = kernel.distance(vertex, moved[member])
+                    surface_gap, _, _ = kernel.distance(vertex, surfaces[member])
+                    members.append({"member": member, "name": nodes[member]["name"], "solid_states": states,
+                                    "distance_mm": gap, "surface_distance_mm": surface_gap, "nearest_world_mm": nearest})
+                return members
             probes.append({"runtime_contact": contact if seed_time is None and cell is None else None,
                            "seed_frame_s": seed_time, "point_world_m": world_point,
-                           "target": target["name"], "brep_members": members})
+                           "target": target["name"], "brep_members": inspect_members(target)})
+            if probe_both_sides:
+                source_link = links[contact["link"]]
+                probes[-1]["source_link"] = source_link["name"]
+                probes[-1]["source_brep_members"] = inspect_members(source_link)
             if cell is not None:
                 probes[-1]["sdf_cell_node"] = cell
         rows.append({"time_s": time, "member_distances": distances, "contact_point_probes": probes})

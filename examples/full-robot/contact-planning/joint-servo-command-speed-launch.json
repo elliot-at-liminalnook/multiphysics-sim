@@ -1,0 +1,41 @@
+{
+  "recorded_at": "2026-09-09T18:47:20.631Z",
+  "session_id": 2394,
+  "command": "VECLIB_MAXIMUM_THREADS=1 OMP_NUM_THREADS=1 /Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-servo-command-speed.recipe.json /Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/joint-servo-command-speed.search.json",
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/joint-servo-conic-build.json",
+    "bytes": 8944,
+    "sha256": "0a26e8122ccf8c8f873e710b9c981c15a9784ecd2c5c7c0deab6e213e645a952"
+  },
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt",
+    "bytes": 9221300,
+    "sha256": "278e9c4de8427ac4f97619ff507529feb599272c8887d811f72aea451f977b82"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-servo-command-speed.recipe.json",
+      "bytes": 177817,
+      "sha256": "cf77373793bcf879b4bb2b726d4365072fc52b8b22d12a0a2a4bedc719fb3a5e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-servo-command-speed.search.json",
+      "bytes": 320,
+      "sha256": "77c941ec853d4214409cd614c0e6bde692b1d4f71a136d0475371c2f9c3466a8"
+    }
+  ],
+  "output": "examples/full-robot/contact-planning/joint-servo-command-speed.result.json",
+  "log": "examples/full-robot/contact-planning/joint-servo-command-speed.log",
+  "status": "Launched and observed running; no terminal result yet.",
+  "scope": "Full joint body/foot/timing/force search with nominal command limits, all previous gates and .30 m/s experimental target. 100 native iterations and 20000 model attempts are a per-run numerical budget, not a time limit or physical stopping certificate."
+}

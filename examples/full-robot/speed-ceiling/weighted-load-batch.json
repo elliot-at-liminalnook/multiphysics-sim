@@ -1,0 +1,48 @@
+{
+  "id": "weighted-load",
+  "cases": [
+    {
+      "source": "runs/speed-ceiling/validation/smooth-front10-v150-human-fine",
+      "speed": 0.15,
+      "table_name": "weighted-front150-loads",
+      "name_prefix": "weighted-front150",
+      "scales": [
+        0.5,
+        1
+      ],
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      }
+    },
+    {
+      "source": "runs/speed-ceiling/validation/smooth-front10-v165-human-fine",
+      "speed": 0.165,
+      "table_name": "weighted-front165-loads",
+      "name_prefix": "weighted-front165",
+      "scales": [
+        0.5,
+        1
+      ],
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      }
+    },
+    {
+      "source": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-human-fine",
+      "speed": 0.175,
+      "table_name": "weighted-swing175-loads",
+      "name_prefix": "weighted-swing175",
+      "scales": [
+        0.5,
+        1
+      ],
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      }
+    }
+  ],
+  "scope": "Weighted wrench residual uses explicit 0.35 m numerical force/moment scaling; friction coefficient inherited from CAD-derived capability recipe. Not an inequality-constrained force optimizer or a physical property change."
+}

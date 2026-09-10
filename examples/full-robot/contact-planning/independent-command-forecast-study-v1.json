@@ -1,0 +1,1972 @@
+{
+  "version": 1,
+  "base_commit": "7c315fd0",
+  "controllers": [
+    {
+      "model": "v3",
+      "completed": true,
+      "error": null,
+      "fallen": false,
+      "duration_s": 60,
+      "distance_m": 12.231301317216447,
+      "speed_m_s": 0.20385502195360744,
+      "wall_s": 215.187181046,
+      "reference_selected": 868,
+      "planning_samples": 2999,
+      "online_position_rmse_20ms_m": 0.003405017104502727,
+      "action_matched_windows": [
+        {
+          "horizon_s": 0.02,
+          "count": 2999
+        },
+        {
+          "horizon_s": 0.1,
+          "count": 0
+        },
+        {
+          "horizon_s": 0.2,
+          "count": 0
+        }
+      ],
+      "capture": {
+        "path": "runs/reference-forecast-v3/native.json",
+        "sha256": "6091878dd1b7ae48da58759608620abef204e42c710cd99fd095f4e13b2f03f8"
+      }
+    },
+    {
+      "model": "v6",
+      "completed": true,
+      "error": null,
+      "fallen": false,
+      "duration_s": 60,
+      "distance_m": 14.608122693040759,
+      "speed_m_s": 0.2434687115506793,
+      "wall_s": 211.52762179,
+      "reference_selected": 677,
+      "planning_samples": 2999,
+      "online_position_rmse_20ms_m": 0.0019265956405978214,
+      "action_matched_windows": [
+        {
+          "horizon_s": 0.02,
+          "count": 2999
+        },
+        {
+          "horizon_s": 0.1,
+          "count": 0
+        },
+        {
+          "horizon_s": 0.2,
+          "count": 0
+        }
+      ],
+      "capture": {
+        "path": "runs/reference-forecast-v6/native.json",
+        "sha256": "f07199857decc57ab33f1b32433516022ea031d8da704768b5b09ffc998e9310"
+      }
+    },
+    {
+      "model": "v7",
+      "completed": true,
+      "error": null,
+      "fallen": false,
+      "duration_s": 60,
+      "distance_m": 6.254710339874481,
+      "speed_m_s": 0.10424517233124135,
+      "wall_s": 197.303097638,
+      "reference_selected": 373,
+      "planning_samples": 2999,
+      "online_position_rmse_20ms_m": 0.0031500977546058888,
+      "action_matched_windows": [
+        {
+          "horizon_s": 0.02,
+          "count": 2999
+        },
+        {
+          "horizon_s": 0.1,
+          "count": 0
+        },
+        {
+          "horizon_s": 0.2,
+          "count": 0
+        }
+      ],
+      "capture": {
+        "path": "runs/reference-forecast-v7/native.json",
+        "sha256": "b90f9382f54a273eeb8490cf5c024e40995d61e411dc5b0a71f0e116d2431026"
+      }
+    }
+  ],
+  "excitation": [
+    {
+      "name": "s03-seed1701",
+      "duration_s": 60,
+      "distance_m": 23.706910810372495,
+      "speed_m_s": 0.3951151801728749,
+      "fallen": false,
+      "error": null,
+      "command_audit": {
+        "actuators": 12,
+        "intervals": 3000,
+        "maximum_command_error_rad": 0,
+        "mismatched_commands": 0,
+        "scope": "Shared Rust trajectory sampling compared against every reported applied motor target at its actual policy clock. Matching verifies execution of the precomputed plan; it does not certify model accuracy, hardware calibration or locomotion speed.",
+        "version": 1
+      },
+      "generation": {
+        "actuators": 12,
+        "clipped_commands": 2,
+        "knots": 3001,
+        "maximum_change_rad": [
+          0.25732622043221354,
+          0.5568052624077693,
+          0.26743638853579416,
+          0.22514934418920135,
+          0.5536623352981037,
+          0.31173229058498353,
+          0.22034047179270816,
+          0.6058699727114096,
+          0.26317229562965916,
+          0.23513779054509693,
+          0.5639834786925645,
+          0.26894424032153563
+        ],
+        "scope": "All perturbations are drawn before simulation, independently of future physical states. Noise fractions scale existing actuator command spans; saturation uses those same explicit bounds. The resulting scheduled targets still execute through ordinary Rust servo/contact physics. No policy likelihood or learning-speed claim is made.",
+        "seed": 1701,
+        "standard_deviation_fraction": 0.03,
+        "version": 1
+      },
+      "capture": {
+        "path": "runs/actuator-excitation-v1-s03-seed1701/native.json",
+        "sha256": "57e37e8a55cceb3815e268fdab06249d0b765ce76733cbeac5569e6b0bfb561c"
+      }
+    },
+    {
+      "name": "s10-seed1701",
+      "duration_s": 60,
+      "distance_m": 12.181494119274182,
+      "speed_m_s": 0.20302490198790304,
+      "fallen": false,
+      "error": null,
+      "command_audit": {
+        "actuators": 12,
+        "intervals": 3000,
+        "maximum_command_error_rad": 0,
+        "mismatched_commands": 0,
+        "scope": "Shared Rust trajectory sampling compared against every reported applied motor target at its actual policy clock. Matching verifies execution of the precomputed plan; it does not certify model accuracy, hardware calibration or locomotion speed.",
+        "version": 1
+      },
+      "generation": {
+        "actuators": 12,
+        "clipped_commands": 118,
+        "knots": 3001,
+        "maximum_change_rad": [
+          0.8577540681073785,
+          1.8560175413592312,
+          0.8674987217904301,
+          0.7504978139640046,
+          1.8455411176603458,
+          1.0391076352832787,
+          0.7344682393090274,
+          2.0195665757046988,
+          0.8772409854321972,
+          0.783792635150323,
+          1.8799449289752155,
+          0.8964808010717853
+        ],
+        "scope": "All perturbations are drawn before simulation, independently of future physical states. Noise fractions scale existing actuator command spans; saturation uses those same explicit bounds. The resulting scheduled targets still execute through ordinary Rust servo/contact physics. No policy likelihood or learning-speed claim is made.",
+        "seed": 1701,
+        "standard_deviation_fraction": 0.1,
+        "version": 1
+      },
+      "capture": {
+        "path": "runs/actuator-excitation-v1-s10-seed1701/native.json",
+        "sha256": "5e4d5b2f9224980061a28b6dfb01e07228511918f97870ff6b29eeda8a79c25b"
+      }
+    },
+    {
+      "name": "s10-seed1702",
+      "duration_s": 60,
+      "distance_m": 11.057048368844276,
+      "speed_m_s": 0.18428413948073794,
+      "fallen": false,
+      "error": null,
+      "command_audit": {
+        "actuators": 12,
+        "intervals": 3000,
+        "maximum_command_error_rad": 0,
+        "mismatched_commands": 0,
+        "scope": "Shared Rust trajectory sampling compared against every reported applied motor target at its actual policy clock. Matching verifies execution of the precomputed plan; it does not certify model accuracy, hardware calibration or locomotion speed.",
+        "version": 1
+      },
+      "generation": {
+        "actuators": 12,
+        "clipped_commands": 115,
+        "knots": 3001,
+        "maximum_change_rad": [
+          0.7513385809439864,
+          2.1703097027370495,
+          0.9339794813175349,
+          0.73192519029764,
+          1.7518853949635367,
+          0.8655064834908821,
+          0.6507858743225663,
+          1.7726093755495929,
+          0.8145365819376336,
+          0.7796876797606955,
+          1.8819431511576892,
+          0.9246366618256433
+        ],
+        "scope": "All perturbations are drawn before simulation, independently of future physical states. Noise fractions scale existing actuator command spans; saturation uses those same explicit bounds. The resulting scheduled targets still execute through ordinary Rust servo/contact physics. No policy likelihood or learning-speed claim is made.",
+        "seed": 1702,
+        "standard_deviation_fraction": 0.1,
+        "version": 1
+      },
+      "capture": {
+        "path": "runs/actuator-excitation-v1-s10-seed1702/native.json",
+        "sha256": "39a6d6fc9dff4ec1ee98672ad385fe2f2ff48ff33d30ca117e7ce68c0520c094"
+      }
+    }
+  ],
+  "forecasts": [
+    {
+      "horizon_s": 0.02,
+      "training_samples": 9940,
+      "validation_samples": 10930,
+      "final_validation_normalized_mse": 0.2013404086638486,
+      "model": {
+        "path": "runs/motion-forecast-v7-h1/model.json",
+        "sha256": "e3612732dca0ed0bfc312ab9298e658c0975afd8ada0b65162529ecf0f9539aa"
+      }
+    },
+    {
+      "horizon_s": 0.1,
+      "training_samples": 9928,
+      "validation_samples": 10914,
+      "final_validation_normalized_mse": 0.25669495897432903,
+      "model": {
+        "path": "runs/motion-forecast-v7-h5/model.json",
+        "sha256": "ce6a8cd474cbb0984005162bf61a1286a1608da6d6bba1f3b19a582802a8ebcb"
+      }
+    },
+    {
+      "horizon_s": 0.2,
+      "training_samples": 9913,
+      "validation_samples": 10894,
+      "final_validation_normalized_mse": 0.27770278388580055,
+      "model": {
+        "path": "runs/motion-forecast-v7-h10/model.json",
+        "sha256": "06b966a1f7b2bd1d34d21cef6c695c6cb1330793ea91e527dc9756a7f916edee"
+      }
+    }
+  ],
+  "physical_comparison": {
+    "version": 1,
+    "rows": [
+      {
+        "dataset": "independent_seed_holdout",
+        "model": 6,
+        "horizon_s": 0.02,
+        "samples": 2990,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.06964673282023566,
+            "constant_velocity": 0.11239295702765043,
+            "constant_acceleration": 0.14860665118290764,
+            "last_observation": 0.09504596293348269
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 3.862314381181425,
+            "constant_velocity": 6.251248830201517,
+            "constant_acceleration": 10.411896860206902,
+            "last_observation": 6.251248830201517
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 193.11571905907124,
+            "constant_velocity": 312.5624415100759,
+            "constant_acceleration": 520.5948430103452,
+            "last_observation": 520.5948430103452
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.003617221719363783,
+            "constant_velocity": 0.005368591520052474,
+            "constant_acceleration": 0.007045408116548637,
+            "last_observation": 0.007590898206581073
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.24630441509862194,
+            "constant_velocity": 0.3646214085708619,
+            "constant_acceleration": 0.5595243069069548,
+            "last_observation": 0.3646214085708619
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 12.315220754931095,
+            "constant_velocity": 18.231070428543095,
+            "constant_acceleration": 27.976215345347736,
+            "last_observation": 27.976215345347736
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/independent_seed_holdout-v6-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "independent_seed_holdout",
+        "model": 7,
+        "horizon_s": 0.02,
+        "samples": 2990,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.04934718180964042,
+            "constant_velocity": 0.11239295702765043,
+            "constant_acceleration": 0.14860665118290764,
+            "last_observation": 0.09504596293348269
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 2.7533772134389407,
+            "constant_velocity": 6.251248830201517,
+            "constant_acceleration": 10.411896860206902,
+            "last_observation": 6.251248830201517
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 137.66886067194702,
+            "constant_velocity": 312.5624415100759,
+            "constant_acceleration": 520.5948430103452,
+            "last_observation": 520.5948430103452
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.002613141433134784,
+            "constant_velocity": 0.005368591520052474,
+            "constant_acceleration": 0.007045408116548637,
+            "last_observation": 0.007590898206581073
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.17614219217191424,
+            "constant_velocity": 0.3646214085708619,
+            "constant_acceleration": 0.5595243069069548,
+            "last_observation": 0.3646214085708619
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 8.807109608595711,
+            "constant_velocity": 18.231070428543095,
+            "constant_acceleration": 27.976215345347736,
+            "last_observation": 27.976215345347736
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/independent_seed_holdout-v7-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "independent_seed_holdout",
+        "model": 6,
+        "horizon_s": 0.1,
+        "samples": 2986,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.35420160542056867,
+            "constant_velocity": 0.5559171310936443,
+            "constant_acceleration": 1.8949431673952202,
+            "last_observation": 0.26158480196367045
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 4.902160038207006,
+            "constant_velocity": 7.747486509156592,
+            "constant_acceleration": 34.900543585659186,
+            "last_observation": 7.747486509156592
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 260.7406406459066,
+            "constant_velocity": 312.582356499865,
+            "constant_acceleration": 441.5784576831197,
+            "last_observation": 441.5784576831197
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.024128136078945542,
+            "constant_velocity": 0.03986884432931773,
+            "constant_acceleration": 0.10776275632056395,
+            "last_observation": 0.027363633314428298
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.37065770490241723,
+            "constant_velocity": 0.6259122486248399,
+            "constant_acceleration": 2.0516066738275587,
+            "last_observation": 0.6259122486248399
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 16.348239324222185,
+            "constant_velocity": 18.22720843081109,
+            "constant_acceleration": 26.3544755950228,
+            "last_observation": 26.3544755950228
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/independent_seed_holdout-v6-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "independent_seed_holdout",
+        "model": 7,
+        "horizon_s": 0.1,
+        "samples": 2986,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.2298561796432861,
+            "constant_velocity": 0.5559171310936443,
+            "constant_acceleration": 1.8949431673952202,
+            "last_observation": 0.26158480196367045
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 3.649824487022408,
+            "constant_velocity": 7.747486509156592,
+            "constant_acceleration": 34.900543585659186,
+            "last_observation": 7.747486509156592
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 217.84328463940614,
+            "constant_velocity": 312.582356499865,
+            "constant_acceleration": 441.5784576831197,
+            "last_observation": 441.5784576831197
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.017283428909834888,
+            "constant_velocity": 0.03986884432931773,
+            "constant_acceleration": 0.10776275632056395,
+            "last_observation": 0.027363633314428298
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.2732037651729097,
+            "constant_velocity": 0.6259122486248399,
+            "constant_acceleration": 2.0516066738275587,
+            "last_observation": 0.6259122486248399
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 13.68197241929581,
+            "constant_velocity": 18.22720843081109,
+            "constant_acceleration": 26.3544755950228,
+            "last_observation": 26.3544755950228
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/independent_seed_holdout-v7-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "independent_seed_holdout",
+        "model": 6,
+        "horizon_s": 0.2,
+        "samples": 2981,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.6950931739147517,
+            "constant_velocity": 1.1205101756745028,
+            "constant_acceleration": 6.914856973880865,
+            "last_observation": 0.26122083930394174
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 4.924736004964978,
+            "constant_velocity": 7.44460187377307,
+            "constant_acceleration": 66.33468660061202,
+            "last_observation": 7.44460187377307
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 267.105759333981,
+            "constant_velocity": 312.4814595358651,
+            "constant_acceleration": 446.0856404058085,
+            "last_observation": 446.0856404058085
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.04932025374708064,
+            "constant_velocity": 0.08728179146332764,
+            "constant_acceleration": 0.4039929167319929,
+            "last_observation": 0.034340060519573126
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.36839089431556643,
+            "constant_velocity": 0.5708507960774291,
+            "constant_acceleration": 3.9406522678262674,
+            "last_observation": 0.5708507960774291
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 16.419028039731025,
+            "constant_velocity": 18.230549898366863,
+            "constant_acceleration": 26.199472394987215,
+            "last_observation": 26.199472394987215
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/independent_seed_holdout-v6-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "independent_seed_holdout",
+        "model": 7,
+        "horizon_s": 0.2,
+        "samples": 2981,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.4570978137366706,
+            "constant_velocity": 1.1205101756745028,
+            "constant_acceleration": 6.914856973880865,
+            "last_observation": 0.26122083930394174
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 3.870056310237891,
+            "constant_velocity": 7.44460187377307,
+            "constant_acceleration": 66.33468660061202,
+            "last_observation": 7.44460187377307
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 225.00749218820985,
+            "constant_velocity": 312.4814595358651,
+            "constant_acceleration": 446.0856404058085,
+            "last_observation": 446.0856404058085
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.035328961664257245,
+            "constant_velocity": 0.08728179146332764,
+            "constant_acceleration": 0.4039929167319929,
+            "last_observation": 0.034340060519573126
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.30310403790148516,
+            "constant_velocity": 0.5708507960774291,
+            "constant_acceleration": 3.9406522678262674,
+            "last_observation": 0.5708507960774291
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 14.216604543611716,
+            "constant_velocity": 18.230549898366863,
+            "constant_acceleration": 26.199472394987215,
+            "last_observation": 26.199472394987215
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/independent_seed_holdout-v7-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 6,
+        "horizon_s": 0.02,
+        "samples": 599,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.0199041272339366,
+            "constant_velocity": 0.05615310983174489,
+            "constant_acceleration": 0.05972523563121696,
+            "last_observation": 0.07856248074720794
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.032930648987771,
+            "constant_velocity": 3.1033213216662117,
+            "constant_acceleration": 4.185974652943872,
+            "last_observation": 3.1033213216662117
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 51.646532449388545,
+            "constant_velocity": 155.16606608331057,
+            "constant_acceleration": 209.29873264719356,
+            "last_observation": 209.29873264719356
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.0011242038552031926,
+            "constant_velocity": 0.0030902071440758547,
+            "constant_acceleration": 0.003169297962502225,
+            "last_observation": 0.008272960156375086
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.07668831506224483,
+            "constant_velocity": 0.2252613123498267,
+            "constant_acceleration": 0.26005462481724745,
+            "last_observation": 0.2252613123498267
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 3.834415753112241,
+            "constant_velocity": 11.263065617491337,
+            "constant_acceleration": 13.002731240862373,
+            "last_observation": 13.002731240862373
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/held_commands-v6-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 7,
+        "horizon_s": 0.02,
+        "samples": 599,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.018858036702979714,
+            "constant_velocity": 0.05615310983174489,
+            "constant_acceleration": 0.05972523563121696,
+            "last_observation": 0.07856248074720794
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.0166284314961995,
+            "constant_velocity": 3.1033213216662117,
+            "constant_acceleration": 4.185974652943872,
+            "last_observation": 3.1033213216662117
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 50.83142157480995,
+            "constant_velocity": 155.16606608331057,
+            "constant_acceleration": 209.29873264719356,
+            "last_observation": 209.29873264719356
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.0010825119045434373,
+            "constant_velocity": 0.0030902071440758547,
+            "constant_acceleration": 0.003169297962502225,
+            "last_observation": 0.008272960156375086
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.07486427624148609,
+            "constant_velocity": 0.2252613123498267,
+            "constant_acceleration": 0.26005462481724745,
+            "last_observation": 0.2252613123498267
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 3.7432138120743046,
+            "constant_velocity": 11.263065617491337,
+            "constant_acceleration": 13.002731240862373,
+            "last_observation": 13.002731240862373
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/held_commands-v7-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 6,
+        "horizon_s": 0.1,
+        "samples": 595,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.11604621593484059,
+            "constant_velocity": 0.41795620857641147,
+            "constant_acceleration": 0.9143297169418623,
+            "last_observation": 0.26985083325259157
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.5704661296614866,
+            "constant_velocity": 6.12216611503779,
+            "constant_acceleration": 17.455844309476216,
+            "last_observation": 6.12216611503779
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 71.90867763642046,
+            "constant_velocity": 155.6862505023775,
+            "constant_acceleration": 221.45826731111794,
+            "last_observation": 221.45826731111794
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.009092862961045755,
+            "constant_velocity": 0.03600712948148476,
+            "constant_acceleration": 0.06355166419806979,
+            "last_observation": 0.034843105206472574
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.14333487821475438,
+            "constant_velocity": 0.5947774929312478,
+            "constant_acceleration": 1.3212597937749078,
+            "last_observation": 0.5947774929312478
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 5.2550149399769195,
+            "constant_velocity": 11.300829895041767,
+            "constant_acceleration": 17.908841113232086,
+            "last_observation": 17.908841113232086
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/held_commands-v6-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 7,
+        "horizon_s": 0.1,
+        "samples": 595,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.10813772374916991,
+            "constant_velocity": 0.41795620857641147,
+            "constant_acceleration": 0.9143297169418623,
+            "last_observation": 0.26985083325259157
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.4997731466026434,
+            "constant_velocity": 6.12216611503779,
+            "constant_acceleration": 17.455844309476216,
+            "last_observation": 6.12216611503779
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 67.08799196881645,
+            "constant_velocity": 155.6862505023775,
+            "constant_acceleration": 221.45826731111794,
+            "last_observation": 221.45826731111794
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.008860399997516068,
+            "constant_velocity": 0.03600712948148476,
+            "constant_acceleration": 0.06355166419806979,
+            "last_observation": 0.034843105206472574
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.14224871067411565,
+            "constant_velocity": 0.5947774929312478,
+            "constant_acceleration": 1.3212597937749078,
+            "last_observation": 0.5947774929312478
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 5.1892530967255395,
+            "constant_velocity": 11.300829895041767,
+            "constant_acceleration": 17.908841113232086,
+            "last_observation": 17.908841113232086
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/held_commands-v7-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 6,
+        "horizon_s": 0.2,
+        "samples": 590,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.22563420180381302,
+            "constant_velocity": 0.8813934741238447,
+            "constant_acceleration": 3.4432493384790863,
+            "last_observation": 0.269357585762767
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.5575119924138399,
+            "constant_velocity": 5.622391262643195,
+            "constant_acceleration": 33.64399922753476,
+            "last_observation": 5.622391262643195
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 70.77378876886137,
+            "constant_velocity": 156.34414774336827,
+            "constant_acceleration": 225.73078680128737,
+            "last_observation": 225.73078680128737
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.02120436356525097,
+            "constant_velocity": 0.0815472158829343,
+            "constant_acceleration": 0.2518496401728382,
+            "last_observation": 0.054135220136597446
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.1649739034819383,
+            "constant_velocity": 0.5262411868098533,
+            "constant_acceleration": 2.5576518938571953,
+            "last_observation": 0.5262411868098533
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 5.219885570595197,
+            "constant_velocity": 11.348591874855893,
+            "constant_acceleration": 16.88177782433447,
+            "last_observation": 16.88177782433447
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/held_commands-v6-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "held_commands",
+        "model": 7,
+        "horizon_s": 0.2,
+        "samples": 590,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.19592675613476002,
+            "constant_velocity": 0.8813934741238447,
+            "constant_acceleration": 3.4432493384790863,
+            "last_observation": 0.269357585762767
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.4656824556089167,
+            "constant_velocity": 5.622391262643195,
+            "constant_acceleration": 33.64399922753476,
+            "last_observation": 5.622391262643195
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 78.86814682910489,
+            "constant_velocity": 156.34414774336827,
+            "constant_acceleration": 225.73078680128737,
+            "last_observation": 225.73078680128737
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.019096082239916504,
+            "constant_velocity": 0.0815472158829343,
+            "constant_acceleration": 0.2518496401728382,
+            "last_observation": 0.054135220136597446
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.16422574421500843,
+            "constant_velocity": 0.5262411868098533,
+            "constant_acceleration": 2.5576518938571953,
+            "last_observation": 0.5262411868098533
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 5.386115383482168,
+            "constant_velocity": 11.348591874855893,
+            "constant_acceleration": 16.88177782433447,
+            "last_observation": 16.88177782433447
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/held_commands-v7-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 6,
+        "horizon_s": 0.02,
+        "samples": 990,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.035603153764519606,
+            "constant_velocity": 0.07449755053060202,
+            "constant_acceleration": 0.09053514449379466,
+            "last_observation": 0.0865471817099275
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.8472778255355113,
+            "constant_velocity": 4.020177931876024,
+            "constant_acceleration": 6.174441131266273,
+            "last_observation": 4.020177931876024
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 92.36389127677556,
+            "constant_velocity": 201.00889659380127,
+            "constant_acceleration": 308.72205656331374,
+            "last_observation": 308.72205656331374
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.0019627524674952776,
+            "constant_velocity": 0.004075937183771654,
+            "constant_acceleration": 0.004701728868676352,
+            "last_observation": 0.009247919441999772
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.13614015856112685,
+            "constant_velocity": 0.29448070596699216,
+            "constant_acceleration": 0.38384676640508275,
+            "last_observation": 0.29448070596699216
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 6.807007928056343,
+            "constant_velocity": 14.724035298349603,
+            "constant_acceleration": 19.192338320254137,
+            "last_observation": 19.192338320254137
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/planner_holdout-v6-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 7,
+        "horizon_s": 0.02,
+        "samples": 990,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.03331424956628086,
+            "constant_velocity": 0.07449755053060202,
+            "constant_acceleration": 0.09053514449379466,
+            "last_observation": 0.0865471817099275
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.7338965975288172,
+            "constant_velocity": 4.020177931876024,
+            "constant_acceleration": 6.174441131266273,
+            "last_observation": 4.020177931876024
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 86.69482987644085,
+            "constant_velocity": 201.00889659380127,
+            "constant_acceleration": 308.72205656331374,
+            "last_observation": 308.72205656331374
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.0018996688060550142,
+            "constant_velocity": 0.004075937183771654,
+            "constant_acceleration": 0.004701728868676352,
+            "last_observation": 0.009247919441999772
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.13069962109130467,
+            "constant_velocity": 0.29448070596699216,
+            "constant_acceleration": 0.38384676640508275,
+            "last_observation": 0.29448070596699216
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 6.5349810545652325,
+            "constant_velocity": 14.724035298349603,
+            "constant_acceleration": 19.192338320254137,
+            "last_observation": 19.192338320254137
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/planner_holdout-v7-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 6,
+        "horizon_s": 0.1,
+        "samples": 986,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.18937967503058378,
+            "constant_velocity": 0.46631332402751563,
+            "constant_acceleration": 1.20234123719088,
+            "last_observation": 0.28968294874691186
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 2.6918846340424913,
+            "constant_velocity": 6.889772183457703,
+            "constant_acceleration": 22.7201469294627,
+            "last_observation": 6.889772183457703
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 136.21836469136815,
+            "constant_velocity": 200.90314346601923,
+            "constant_acceleration": 292.5566497464168,
+            "last_observation": 292.5566497464168
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.015778239588534956,
+            "constant_velocity": 0.04224669594893066,
+            "constant_acceleration": 0.08407183076894725,
+            "last_observation": 0.037716549778441896
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.23742946533563172,
+            "constant_velocity": 0.6949414417087856,
+            "constant_acceleration": 1.6911496738984897,
+            "last_observation": 0.6949414417087856
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 9.541006092277314,
+            "constant_velocity": 14.714004103231117,
+            "constant_acceleration": 22.517285930683233,
+            "last_observation": 22.517285930683233
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/planner_holdout-v6-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 7,
+        "horizon_s": 0.1,
+        "samples": 986,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.17432831502947918,
+            "constant_velocity": 0.46631332402751563,
+            "constant_acceleration": 1.20234123719088,
+            "last_observation": 0.28968294874691186
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 2.5527822742908883,
+            "constant_velocity": 6.889772183457703,
+            "constant_acceleration": 22.7201469294627,
+            "last_observation": 6.889772183457703
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 131.98081753085853,
+            "constant_velocity": 200.90314346601923,
+            "constant_acceleration": 292.5566497464168,
+            "last_observation": 292.5566497464168
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.01374983400618142,
+            "constant_velocity": 0.04224669594893066,
+            "constant_acceleration": 0.08407183076894725,
+            "last_observation": 0.037716549778441896
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.23145248324629356,
+            "constant_velocity": 0.6949414417087856,
+            "constant_acceleration": 1.6911496738984897,
+            "last_observation": 0.6949414417087856
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 9.746296411825522,
+            "constant_velocity": 14.714004103231117,
+            "constant_acceleration": 22.517285930683233,
+            "last_observation": 22.517285930683233
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/planner_holdout-v7-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 6,
+        "horizon_s": 0.2,
+        "samples": 981,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.36838940840967843,
+            "constant_velocity": 0.9870053428455792,
+            "constant_acceleration": 4.464397924229527,
+            "last_observation": 0.30674527170389215
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 2.7080403774912307,
+            "constant_velocity": 6.358005218544183,
+            "constant_acceleration": 43.45019969731454,
+            "last_observation": 6.358005218544183
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 139.09263687987902,
+            "constant_velocity": 200.9495121660443,
+            "constant_acceleration": 289.3786835384557,
+            "last_observation": 289.3786835384557
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.03211921523435075,
+            "constant_velocity": 0.09634301307431765,
+            "constant_acceleration": 0.328311017455834,
+            "last_observation": 0.055208156154527135
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.23535322459773445,
+            "constant_velocity": 0.6245683923793277,
+            "constant_acceleration": 3.2925698142556006,
+            "last_observation": 0.6245683923793277
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 9.803844379137683,
+            "constant_velocity": 14.708549080066271,
+            "constant_acceleration": 21.617481714997812,
+            "last_observation": 21.617481714997812
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/planner_holdout-v6-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "planner_holdout",
+        "model": 7,
+        "horizon_s": 0.2,
+        "samples": 981,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.31074200003148694,
+            "constant_velocity": 0.9870053428455792,
+            "constant_acceleration": 4.464397924229527,
+            "last_observation": 0.30674527170389215
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 2.564993542256836,
+            "constant_velocity": 6.358005218544183,
+            "constant_acceleration": 43.45019969731454,
+            "last_observation": 6.358005218544183
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 139.70391113872708,
+            "constant_velocity": 200.9495121660443,
+            "constant_acceleration": 289.3786835384557,
+            "last_observation": 289.3786835384557
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.02896020504704035,
+            "constant_velocity": 0.09634301307431765,
+            "constant_acceleration": 0.328311017455834,
+            "last_observation": 0.055208156154527135
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.23354605916416518,
+            "constant_velocity": 0.6245683923793277,
+            "constant_acceleration": 3.2925698142556006,
+            "last_observation": 0.6245683923793277
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 9.89143691415274,
+            "constant_velocity": 14.708549080066271,
+            "constant_acceleration": 21.617481714997812,
+            "last_observation": 21.617481714997812
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/planner_holdout-v7-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_reference_planner",
+        "model": 6,
+        "horizon_s": 0.02,
+        "samples": 2999,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.03367907115161978,
+            "constant_velocity": 0.0659729408910337,
+            "constant_acceleration": 0.07760976715149219,
+            "last_observation": 0.07749494767008931
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.7225304901396779,
+            "constant_velocity": 3.5890196238481544,
+            "constant_acceleration": 5.378617961083643,
+            "last_observation": 3.5890196238481544
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 86.12652450698394,
+            "constant_velocity": 179.45098119240757,
+            "constant_acceleration": 268.930898054182,
+            "last_observation": 268.930898054182
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.0019265956405978214,
+            "constant_velocity": 0.0036805879440020206,
+            "constant_acceleration": 0.004288757770686396,
+            "last_observation": 0.0072185738677469245
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.12763080593216403,
+            "constant_velocity": 0.266559739338568,
+            "constant_acceleration": 0.3530504588814796,
+            "last_observation": 0.266559739338568
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 6.381540296608204,
+            "constant_velocity": 13.327986966928396,
+            "constant_acceleration": 17.65252294407398,
+            "last_observation": 17.65252294407398
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/unseen_reference_planner-v6-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_reference_planner",
+        "model": 7,
+        "horizon_s": 0.02,
+        "samples": 2999,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.025816316649832003,
+            "constant_velocity": 0.0659729408910337,
+            "constant_acceleration": 0.07760976715149219,
+            "last_observation": 0.07749494767008931
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.3695468397254673,
+            "constant_velocity": 3.5890196238481544,
+            "constant_acceleration": 5.378617961083643,
+            "last_observation": 3.5890196238481544
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 68.47734198627337,
+            "constant_velocity": 179.45098119240757,
+            "constant_acceleration": 268.930898054182,
+            "last_observation": 268.930898054182
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.001536073920786809,
+            "constant_velocity": 0.0036805879440020206,
+            "constant_acceleration": 0.004288757770686396,
+            "last_observation": 0.0072185738677469245
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.10409930803747099,
+            "constant_velocity": 0.266559739338568,
+            "constant_acceleration": 0.3530504588814796,
+            "last_observation": 0.266559739338568
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 5.204965401873547,
+            "constant_velocity": 13.327986966928396,
+            "constant_acceleration": 17.65252294407398,
+            "last_observation": 17.65252294407398
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/unseen_reference_planner-v7-h1.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_reference_planner",
+        "model": 6,
+        "horizon_s": 0.1,
+        "samples": 2995,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.1646417826860876,
+            "constant_velocity": 0.42192172657665417,
+            "constant_acceleration": 1.0726335877013515,
+            "last_observation": 0.2476906198304349
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 2.358766219970361,
+            "constant_velocity": 6.051349340886975,
+            "constant_acceleration": 20.17950047069326,
+            "last_observation": 6.051349340886975
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 117.68123215638056,
+            "constant_velocity": 179.5031068449613,
+            "constant_acceleration": 254.76083825049363,
+            "last_observation": 254.76083825049363
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.014624550246999195,
+            "constant_velocity": 0.036264790387187336,
+            "constant_acceleration": 0.07778498282322685,
+            "last_observation": 0.0274961256522567
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.2108742076061064,
+            "constant_velocity": 0.5778490413507025,
+            "constant_acceleration": 1.5518963877808927,
+            "last_observation": 0.5778490413507025
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 8.365672591808476,
+            "constant_velocity": 13.33331812415726,
+            "constant_acceleration": 20.224912584176064,
+            "last_observation": 20.224912584176064
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/unseen_reference_planner-v6-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_reference_planner",
+        "model": 7,
+        "horizon_s": 0.1,
+        "samples": 2995,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.1371834717144508,
+            "constant_velocity": 0.42192172657665417,
+            "constant_acceleration": 1.0726335877013515,
+            "last_observation": 0.2476906198304349
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 2.057730616763067,
+            "constant_velocity": 6.051349340886975,
+            "constant_acceleration": 20.17950047069326,
+            "last_observation": 6.051349340886975
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 106.371224376209,
+            "constant_velocity": 179.5031068449613,
+            "constant_acceleration": 254.76083825049363,
+            "last_observation": 254.76083825049363
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.010736564391126146,
+            "constant_velocity": 0.036264790387187336,
+            "constant_acceleration": 0.07778498282322685,
+            "last_observation": 0.0274961256522567
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.18105910716940227,
+            "constant_velocity": 0.5778490413507025,
+            "constant_acceleration": 1.5518963877808927,
+            "last_observation": 0.5778490413507025
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 8.477750729458403,
+            "constant_velocity": 13.33331812415726,
+            "constant_acceleration": 20.224912584176064,
+            "last_observation": 20.224912584176064
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/unseen_reference_planner-v7-h5.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_reference_planner",
+        "model": 6,
+        "horizon_s": 0.2,
+        "samples": 2990,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.3270678717701327,
+            "constant_velocity": 0.8763042526321115,
+            "constant_acceleration": 3.981996325826415,
+            "last_observation": 0.2204825435118411
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 2.1388249177992913,
+            "constant_velocity": 5.648833256507286,
+            "constant_acceleration": 38.686859828212874,
+            "last_observation": 5.648833256507286
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 116.51170316427,
+            "constant_velocity": 179.5422965196411,
+            "constant_acceleration": 261.40396105193247,
+            "last_observation": 261.40396105193247
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.02822280732163765,
+            "constant_velocity": 0.07943957393945494,
+            "constant_acceleration": 0.2957135419028658,
+            "last_observation": 0.03718635552171416
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.1981123113323631,
+            "constant_velocity": 0.5324248383062562,
+            "constant_acceleration": 2.9529640901957155,
+            "last_observation": 0.5324248383062562
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 8.758215853682561,
+            "constant_velocity": 13.339518712705267,
+            "constant_acceleration": 20.293432090801172,
+            "last_observation": 20.293432090801172
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/unseen_reference_planner-v6-h10.json",
+        "exit_code": 0
+      },
+      {
+        "dataset": "unseen_reference_planner",
+        "model": 7,
+        "horizon_s": 0.2,
+        "samples": 2990,
+        "groups": [
+          {
+            "unit": "rad",
+            "outputs": 12,
+            "learned": 0.23547184409346208,
+            "constant_velocity": 0.8763042526321115,
+            "constant_acceleration": 3.981996325826415,
+            "last_observation": 0.2204825435118411
+          },
+          {
+            "unit": "rad/s",
+            "outputs": 12,
+            "learned": 1.9096130908421713,
+            "constant_velocity": 5.648833256507286,
+            "constant_acceleration": 38.686859828212874,
+            "last_observation": 5.648833256507286
+          },
+          {
+            "unit": "rad/s²",
+            "outputs": 12,
+            "learned": 108.87853979341845,
+            "constant_velocity": 179.5422965196411,
+            "constant_acceleration": 261.40396105193247,
+            "last_observation": 261.40396105193247
+          },
+          {
+            "unit": "m",
+            "outputs": 15,
+            "learned": 0.021255835910010915,
+            "constant_velocity": 0.07943957393945494,
+            "constant_acceleration": 0.2957135419028658,
+            "last_observation": 0.03718635552171416
+          },
+          {
+            "unit": "m/s",
+            "outputs": 15,
+            "learned": 0.1754113195820069,
+            "constant_velocity": 0.5324248383062562,
+            "constant_acceleration": 2.9529640901957155,
+            "last_observation": 0.5324248383062562
+          },
+          {
+            "unit": "m/s²",
+            "outputs": 15,
+            "learned": 8.571287946544775,
+            "constant_velocity": 13.339518712705267,
+            "constant_acceleration": 20.293432090801172,
+            "last_observation": 20.293432090801172
+          }
+        ],
+        "report": "runs/forecast-v7-comparison/unseen_reference_planner-v7-h10.json",
+        "exit_code": 0
+      }
+    ],
+    "files": [
+      {
+        "path": "runs/forecast-v7-comparison/run.cjs",
+        "sha256": "39111c5400c54c29c17d213e50893fc3a698594e52f453867ff597b32b50fae2"
+      },
+      {
+        "path": "runs/evaluate_motion_forecast-terrain-v6",
+        "sha256": "076cc054793c415025bed523dc4798adfe14f7926fbba061a54a00cc45c507d2"
+      },
+      {
+        "path": "runs/actuator-excitation-v1-s10-seed1702/native.json",
+        "sha256": "39a6d6fc9dff4ec1ee98672ad385fe2f2ff48ff33d30ca117e7ce68c0520c094"
+      },
+      {
+        "path": "runs/motion-forecast-v6-h1/model.json",
+        "sha256": "41d3eee9594151abb764ea8ab0513f2efee6cdb03610f5c49ebcca0bf12227e2"
+      },
+      {
+        "path": "runs/motion-forecast-v7-h1/model.json",
+        "sha256": "e3612732dca0ed0bfc312ab9298e658c0975afd8ada0b65162529ecf0f9539aa"
+      },
+      {
+        "path": "runs/motion-forecast-v6-h5/model.json",
+        "sha256": "2439bdb07056842847c300fd7eaea64ce1d86592e058a3b69952de17f6c7ca1e"
+      },
+      {
+        "path": "runs/motion-forecast-v7-h5/model.json",
+        "sha256": "ce6a8cd474cbb0984005162bf61a1286a1608da6d6bba1f3b19a582802a8ebcb"
+      },
+      {
+        "path": "runs/motion-forecast-v6-h10/model.json",
+        "sha256": "b473f42875db5d3064b290b46576f629025102e15b86409a956fbdda9af42175"
+      },
+      {
+        "path": "runs/motion-forecast-v7-h10/model.json",
+        "sha256": "06b966a1f7b2bd1d34d21cef6c695c6cb1330793ea91e527dc9756a7f916edee"
+      },
+      {
+        "path": "runs/forecast-held-command-probe/native.json",
+        "sha256": "a816b24315f63ec6c3e0941651754cce7ab53355256bf5d15448b2e738d047be"
+      },
+      {
+        "path": "runs/receding-forecast-speed517-v1/native.json",
+        "sha256": "751cd4900d1af2bc37d82b1f474a2dd57b25c3bb37117582abef1c8102fc658e"
+      },
+      {
+        "path": "runs/reference-forecast-v6/native.json",
+        "sha256": "f07199857decc57ab33f1b32433516022ea031d8da704768b5b09ffc998e9310"
+      }
+    ],
+    "scope": "Identical actual future-action windows for V6/V7. Seed1702 is excluded entirely from fitting, but is included in the declared validation set; final epoch is fixed, without validation-based checkpoint selection. The other held-out windows are also excluded from fitting. Compare physical units because the expanded V7 corpus changes training normalization. These predictions do not establish counterfactual planning accuracy or speed gains."
+  },
+  "ppo": [
+    {
+      "root": "runs/ppo-speed518-resume-sigma01",
+      "result": {
+        "best_distance_m": 31.062473800777763,
+        "best_speed_m_s": 0.5177078966796294,
+        "scope": "Deterministic complete-horizon net speed with no sampled falls. Learned stochastic policy uses PPO-Lagrangian; only fall cost, no gait-quality reward. Detailed timestep/contact validation remains required for improvements."
+      },
+      "updates": [
+        {
+          "iteration": 0,
+          "distance_m": 30.703822471589678,
+          "speed_m_s": 0.5117303745264946,
+          "fallen": false,
+          "episodes": [
+            {
+              "path": "runs/ppo-speed518-resume-sigma01/iteration-000-episode-000.json",
+              "distance_m": 29.924608692668148,
+              "speed_m_s": 0.4987434782111358,
+              "fallen": false
+            },
+            {
+              "path": "runs/ppo-speed518-resume-sigma01/iteration-000-episode-001.json",
+              "distance_m": 30.75800613014448,
+              "speed_m_s": 0.512633435502408,
+              "fallen": false
+            }
+          ],
+          "validation": {
+            "path": "runs/ppo-speed518-resume-sigma01/iteration-000-validation.json",
+            "sha256": "6860c06edf1486c6fe5e10c7d69350142eef64e2e767ecbee1ced45239e1ed17"
+          }
+        },
+        {
+          "iteration": 1,
+          "distance_m": 30.594799345576053,
+          "speed_m_s": 0.5099133224262675,
+          "fallen": false,
+          "episodes": [
+            {
+              "path": "runs/ppo-speed518-resume-sigma01/iteration-001-episode-000.json",
+              "distance_m": 29.849550375560405,
+              "speed_m_s": 0.4974925062593401,
+              "fallen": false
+            },
+            {
+              "path": "runs/ppo-speed518-resume-sigma01/iteration-001-episode-001.json",
+              "distance_m": 30.218780174697688,
+              "speed_m_s": 0.5036463362449615,
+              "fallen": false
+            }
+          ],
+          "validation": {
+            "path": "runs/ppo-speed518-resume-sigma01/iteration-001-validation.json",
+            "sha256": "a1cf8567301d90bf824cbc61f96b61d8e15c7beddfc6a2dbd4366b084406c515"
+          }
+        },
+        {
+          "iteration": 2,
+          "distance_m": 30.443470490186748,
+          "speed_m_s": 0.5073911748364458,
+          "fallen": false,
+          "episodes": [
+            {
+              "path": "runs/ppo-speed518-resume-sigma01/iteration-002-episode-000.json",
+              "distance_m": 29.17648518569891,
+              "speed_m_s": 0.4862747530949818,
+              "fallen": false
+            },
+            {
+              "path": "runs/ppo-speed518-resume-sigma01/iteration-002-episode-001.json",
+              "distance_m": 29.831806796408028,
+              "speed_m_s": 0.4971967799401338,
+              "fallen": false
+            }
+          ],
+          "validation": {
+            "path": "runs/ppo-speed518-resume-sigma01/iteration-002-validation.json",
+            "sha256": "cfde297fff8c85073966a1181f02c97bd3dcc431519deb60c38a37c6e95e7365"
+          }
+        },
+        {
+          "iteration": 3,
+          "distance_m": 29.987416557033413,
+          "speed_m_s": 0.49979027595055686,
+          "fallen": false,
+          "episodes": [
+            {
+              "path": "runs/ppo-speed518-resume-sigma01/iteration-003-episode-000.json",
+              "distance_m": 30.5758233420625,
+              "speed_m_s": 0.5095970557010416,
+              "fallen": false
+            },
+            {
+              "path": "runs/ppo-speed518-resume-sigma01/iteration-003-episode-001.json",
+              "distance_m": 29.770527441404845,
+              "speed_m_s": 0.4961754573567474,
+              "fallen": false
+            }
+          ],
+          "validation": {
+            "path": "runs/ppo-speed518-resume-sigma01/iteration-003-validation.json",
+            "sha256": "82704f5b9211d358577a22df71252f8a2e91c310ad294704b78f02d7a39a0d41"
+          }
+        }
+      ],
+      "scope": "All four updates and eight full60s stochastic rollouts completed. None of the deterministic updates improved the restored incumbent."
+    },
+    {
+      "root": "runs/ppo-speed518-resume-sigma03",
+      "result": {
+        "best_distance_m": 31.062473800777763,
+        "best_speed_m_s": 0.5177078966796294,
+        "scope": "Deterministic complete-horizon net speed with no sampled falls. Learned stochastic policy uses PPO-Lagrangian; only fall cost, no gait-quality reward. Detailed timestep/contact validation remains required for improvements."
+      },
+      "updates": [
+        {
+          "iteration": 0,
+          "distance_m": 29.989423803585144,
+          "speed_m_s": 0.4998237300597524,
+          "fallen": false,
+          "episodes": [
+            {
+              "path": "runs/ppo-speed518-resume-sigma03/iteration-000-episode-000.json",
+              "distance_m": 25.050040564148674,
+              "speed_m_s": 0.41750067606914454,
+              "fallen": false
+            },
+            {
+              "path": "runs/ppo-speed518-resume-sigma03/iteration-000-episode-001.json",
+              "distance_m": 26.915476606279945,
+              "speed_m_s": 0.4485912767713324,
+              "fallen": false
+            }
+          ],
+          "validation": {
+            "path": "runs/ppo-speed518-resume-sigma03/iteration-000-validation.json",
+            "sha256": "e4f404f4112f0b5cf956bf084f0698a4c4fbe144310ef87daca1713b801b3440"
+          }
+        },
+        {
+          "iteration": 1,
+          "distance_m": 28.488394492333832,
+          "speed_m_s": 0.47480657487223055,
+          "fallen": false,
+          "episodes": [
+            {
+              "path": "runs/ppo-speed518-resume-sigma03/iteration-001-episode-000.json",
+              "distance_m": 25.47680387015955,
+              "speed_m_s": 0.4246133978359925,
+              "fallen": false
+            },
+            {
+              "path": "runs/ppo-speed518-resume-sigma03/iteration-001-episode-001.json",
+              "distance_m": 23.79039599789185,
+              "speed_m_s": 0.39650659996486415,
+              "fallen": false
+            }
+          ],
+          "validation": {
+            "path": "runs/ppo-speed518-resume-sigma03/iteration-001-validation.json",
+            "sha256": "fa76af0103c0575f618c9f2395eb4ae4eee04b29b449bd240ad7dc17c29e1146"
+          }
+        },
+        {
+          "iteration": 2,
+          "distance_m": 28.212541335792768,
+          "speed_m_s": 0.4702090222632128,
+          "fallen": false,
+          "episodes": [
+            {
+              "path": "runs/ppo-speed518-resume-sigma03/iteration-002-episode-000.json",
+              "distance_m": 21.5082098171213,
+              "speed_m_s": 0.35847016361868833,
+              "fallen": false
+            },
+            {
+              "path": "runs/ppo-speed518-resume-sigma03/iteration-002-episode-001.json",
+              "distance_m": 23.43590606660786,
+              "speed_m_s": 0.3905984344434643,
+              "fallen": false
+            }
+          ],
+          "validation": {
+            "path": "runs/ppo-speed518-resume-sigma03/iteration-002-validation.json",
+            "sha256": "ebfe943443485bf21f5a69445047308df752a1aba1d8bd2b04211904ffcb6e70"
+          }
+        },
+        {
+          "iteration": 3,
+          "distance_m": 29.238924740991816,
+          "speed_m_s": 0.4873154123498636,
+          "fallen": false,
+          "episodes": [
+            {
+              "path": "runs/ppo-speed518-resume-sigma03/iteration-003-episode-000.json",
+              "distance_m": 24.39661085502967,
+              "speed_m_s": 0.40661018091716117,
+              "fallen": false
+            },
+            {
+              "path": "runs/ppo-speed518-resume-sigma03/iteration-003-episode-001.json",
+              "distance_m": 22.21021843523446,
+              "speed_m_s": 0.37017030725390765,
+              "fallen": false
+            }
+          ],
+          "validation": {
+            "path": "runs/ppo-speed518-resume-sigma03/iteration-003-validation.json",
+            "sha256": "9fa8f5fc865c51121986db3397ec483dda53d977fb4c8ada3d9910a943833e5f"
+          }
+        }
+      ],
+      "scope": "All four updates and eight full60s stochastic rollouts completed. None of the deterministic updates improved the restored incumbent."
+    }
+  ],
+  "sustained300": [
+    {
+      "name": "teacher",
+      "status": "pending",
+      "duration_s": 300,
+      "inputs": "runs/sustained300-speed518/inputs.json"
+    },
+    {
+      "name": "learned",
+      "status": "pending",
+      "duration_s": 300,
+      "inputs": "runs/sustained300-speed518/inputs.json"
+    }
+  ],
+  "reference_disabled_parity": {
+    "version": 1,
+    "frames": 101,
+    "scope": "All sampled joint motion, body poses, targets, contacts, policy predictions/plans, observations, progress rewards, distance and fall metrics match the old V6 net-distance planner exactly through2s. Each speed field correctly divides identical distance by its declared2s/60s horizon; truncation occurs only at the new2s endpoint. With no reference proposal, legacy physical and predictive behavior is preserved.",
+    "files": [
+      {
+        "path": "runs/net-forecast-v6/native.json",
+        "sha256": "fe3e5f8f8cab591a1be6a692f38ee529f55c2fc66e8de17a16e107bfe140d1c7"
+      },
+      {
+        "path": "runs/reference-forecast-legacy2/native.json",
+        "sha256": "57464ba7b5fdbf7b9fa4b2180f944faa620b0d19cec6867698f733687c73b433"
+      }
+    ]
+  },
+  "excitation_baseline_parity": {
+    "version": 1,
+    "frames": 101,
+    "scope": "The independent-command adapter with the original unperturbed reference reproduces every sampled physical pose, joint position/velocity, applied target and contact exactly through2s. Only authored commands are replayed; no recorded future state is supplied to physics.",
+    "files": [
+      {
+        "path": "runs/bayesian-sustained60-507/evaluation-033.native.json",
+        "sha256": "aa996321352d1741c5faefd4488aa1bbfec9a94adbba9cd3bd96835e4e71e2ef"
+      },
+      {
+        "path": "runs/actuator-excitation-v1-baseline2/native.json",
+        "sha256": "a9529a8f6708643b5275ef8053f46528765735424dff37c9e936270341669b79"
+      }
+    ]
+  },
+  "leader_60s_nominal_m_s": 0.5177078966796294,
+  "scope": "Completed authored-command planner, independently scheduled action-data, V7 dynamics fitting, matched physical prediction tests and both PPO continuations. The300s comparison is reported only where finished, otherwise explicitly pending. Prediction diagnostics are not gait constraints. Only full-horizon net displacement and sampled absence of falling select speed candidates, under unchanged CAD/runtime physics. No physical maximum, hardware calibration, sample-efficiency gain or PLANC reproduction is established."
+}

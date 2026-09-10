@@ -1,0 +1,401 @@
+{
+  "version": 2,
+  "base_commit": "0da0a7f7e30b0a50eef9d664bdca5a8291b6e500",
+  "files": [
+    {
+      "path": "crates/sim-domain-multibody/src/smooth_contact.rs",
+      "bytes": 9258,
+      "sha256": "b50daeeef53152e69f1fa17120a508e597bc25768b8db4e7d5aab2d7d0c37cb6"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 1654,
+      "sha256": "f051f7350d56cd829e42624ad677ad5a8d9f25c6fadea5741a7cef690d394883"
+    },
+    {
+      "path": "crates/sim-runtime/examples/export_surface_markers.rs",
+      "bytes": 1471,
+      "sha256": "35967f4c9bce315617152a21c30c9f90e3bb3abd44adddb698ce869ee03607a9"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_implicit.rs",
+      "bytes": 4115,
+      "sha256": "54f183942549c774c49873d060c0233c3ad2074c290ab2bc8df8a1dc23e94b18"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 19111,
+      "sha256": "9eb698c855181c48d917f2b76a8ac025ce64c5d1fd28b6b6ac48c3719284198c"
+    },
+    {
+      "path": "crates/sim-runtime/src/tracking.rs",
+      "bytes": 16935,
+      "sha256": "ede436ece6de376b3f721ad4501c4a149188b4157e9241eb2b3426e31b50994a"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 11074,
+      "sha256": "b3bf1a1039ae7f45127092f7f07eb90fc6465f4a0ed39e8b04dc47fb2f0d617a"
+    },
+    {
+      "path": "crates/sim-solve/src/least_squares.rs",
+      "bytes": 16136,
+      "sha256": "b95ad15c1cfbfba04d14b9d9b07d400802fa9f84e3e2a5bbc0fd25b2fb7d3786"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/README.md",
+      "bytes": 8814,
+      "sha256": "22d150ad1ca5461f680b7bab9da0dbf1c3151d477e44de0b538d59caba7cf6b8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/SURFACE_RESULTS.md",
+      "bytes": 6744,
+      "sha256": "6a81c40976b9de5d5fb609bf1cbd6da3eb118529da63cd99398e55d6be2b466e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/component-tests.log",
+      "bytes": 1881,
+      "sha256": "6f0d337b0136afd0091809b6548e72abf772004b5c3ae0112be35978f5c33223"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal21-seed.json",
+      "bytes": 5479,
+      "sha256": "439e2845e498f665158ed37d9b0bba00a9cd92220660d91e630c13344234a2ed"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.audit.json",
+      "bytes": 233488,
+      "sha256": "61b0648ab8d13886b648778bc23068d27a72a8bf45a0b79671b0fa4488f2e9ed"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.log",
+      "bytes": 50439,
+      "sha256": "4adeb359e99f7595df05b97ddeebdd0633a9a7edd1476d2a3bb95846fbe71512"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.recipe.json",
+      "bytes": 39973,
+      "sha256": "eb9e38028ad409eb3726fd2143dd011285e116070c8a413ffa873639d20a5cce"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.result.json",
+      "bytes": 86366,
+      "sha256": "fbad9a4861c8b643bbab7ab8439272097e917b276d7cb98380377f21ac7f27d8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.audit.json",
+      "bytes": 233529,
+      "sha256": "e9ee3acab8ef6aa4b9972e40e5ff8d933d59fafd05dbab2a3f701e822337af62"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.log",
+      "bytes": 50450,
+      "sha256": "64baa5bc3502158e24f9df7ff0cfe8141c788721f10e988b64e8b4c3ccd310ee"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.recipe.json",
+      "bytes": 40308,
+      "sha256": "27a5439e17223976d379b9d51938b8796c1c677495e660495182600d85c01179"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.result.json",
+      "bytes": 86736,
+      "sha256": "da6f1af70ff1974c2b2a3d0db6094651fcb4a335ca343bac9b840f8ff0766fbf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.log",
+      "bytes": 67137,
+      "sha256": "be4b47fb74b3890a937923197f9433580e8b5acdced3165bd548eaef8b67742c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.recipe.json",
+      "bytes": 39884,
+      "sha256": "59afeeae6a82ca48c43c3ec4f95b499887d159076d99fe859defc7e97c955aec"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.result.json",
+      "bytes": 318318,
+      "sha256": "460bb9917f0bb39a97a89f3370eec5d01eb7f2c946bee3c6098fa503f61ec5e2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.timing.json",
+      "bytes": 52,
+      "sha256": "5af96ea2a3e0b0263180c4dae3823226fdb164f519ced60004713e435ae1b5be"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.log",
+      "bytes": 50514,
+      "sha256": "3543549b679607ef57e5e4f8c423b3c9ebf386375fd388b8be2a061c6e5a2640"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.recipe.json",
+      "bytes": 40270,
+      "sha256": "158a9f90f12610ec2936dd75dfc871438786c0708c905141fd876b0a7b3b60da"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.result.json",
+      "bytes": 86760,
+      "sha256": "da90c44263f830b10e321c351eccab920d4ef89cebb4cb2f4009bbeb42b60430"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.log",
+      "bytes": 49630,
+      "sha256": "5d752ae8ea07f6e57cfd63ce023e4a2054505bf820e1c6fcf632f652e15386dd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.recipe.json",
+      "bytes": 39405,
+      "sha256": "a5b95d4217485b368d7e4895fdbdbaf136db7414dd8282553115624d5bbc958e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.result.json",
+      "bytes": 240314,
+      "sha256": "f32298919f4db922b5f1d3ebfb09e42e136397e1b5be32588d7c3a88b117d4f2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_robot_trial.mjs",
+      "bytes": 4093,
+      "sha256": "797319e24bbf2ab233fde4d7d40aa7eb8e0e2cd76bf276e6d46ece0298a5e3d7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_surface_trial.mjs",
+      "bytes": 4295,
+      "sha256": "3498434bed10365c3d54d3cdf5c1d9b3dea200eddc7f356cc7168a289347ee77"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/release-build.log",
+      "bytes": 581,
+      "sha256": "5e9f357a9f3a69ae4e4ee84a56b086595a16708d9543c81baca1776db4064423"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-tests.log",
+      "bytes": 1213,
+      "sha256": "3896820f522176c2fa901a39c4dd482dd32a50462765163f692ef17fe1157ec5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/solver-tests.log",
+      "bytes": 1391,
+      "sha256": "43af0a688c15cf7db2b07d989ed4f68b3a32e3792de1a16a5c56668cc3e3c886"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_surface_trial.mjs",
+      "bytes": 3352,
+      "sha256": "6e8277f0eea28837095913e6ccf12a861031946d1a4e9f3a5584692fbd4277f2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_trials.mjs",
+      "bytes": 2555,
+      "sha256": "ccce0fb1b2b46e0566b176adff2cf9c92d2cdb81da5ab17ae6ad943b37c6cb4f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summary.json",
+      "bytes": 4313,
+      "sha256": "d03614be991283261125feaa8ad3aee3c2550f65333e37246b98b121627fdddf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-build.log",
+      "bytes": 165,
+      "sha256": "245ed20d01eb575c8615810d3eacd23cb8b94ed8a938c0e877f65868882fa211"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-markers.json",
+      "bytes": 12596,
+      "sha256": "87852fc9203e680b77b144cdfe5778e62790ff4fa121652611b9ae33fc6b2aac"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-selection.json",
+      "bytes": 356,
+      "sha256": "43710137cf799378d709fba259da669ad84c394d7f51e2ce31ff2c9d8ed42cff"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-tests.log",
+      "bytes": 761,
+      "sha256": "dbedb583872781a9f4dfb0816b57cf8f8ee072d943bd2a81b919500e05aa9343"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-initial.audit.json",
+      "bytes": 127249,
+      "sha256": "cac43f15658aac009e26b263f5866244dcaa7ea4b8c0245c2852882e644b7d22"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-initial.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-initial.positions.json",
+      "bytes": 6576,
+      "sha256": "597bee0fcfa3d0d925bba8adc32307b6b72047312241fbcb002a84ff95df75d9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.audit.json",
+      "bytes": 355608,
+      "sha256": "cc6dbeaff8b51650d6ce7fdb5fd4f36524e43b2f419cb7523a8fd5bf07c3d199"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.log",
+      "bytes": 211621,
+      "sha256": "702a450ea6117b2ab26f087fcf9faa78ff947ec2f5cd3bf7cbd71aebc5719dd5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.recipe.json",
+      "bytes": 39477,
+      "sha256": "e7a9807c7d4101fe7e6b700a6bf26b0e20ea8beeadbf612a90a2e3881e5d0563"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.result.json",
+      "bytes": 224191,
+      "sha256": "b487b86a630003fbd557f2b48d17397b3de79f7d20694cff6acc2fa1f0d4bf11"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.summary.json",
+      "bytes": 5321,
+      "sha256": "0acba438e6c2063d0b2bfa5ed0ce1ce0f304a7113d8e2986a6e445719eae9157"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.audit.json",
+      "bytes": 352761,
+      "sha256": "eb5e422cad7b6457108f6608d3dab4ab1bfa1cda7ff1e01aacb2a457f4cdf1f0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.log",
+      "bytes": 214948,
+      "sha256": "eddf4ed0965921e8cb65a65c9fe2f519dbbc4d3e93de33fd4a55ee64d0158ae6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.recipe.json",
+      "bytes": 39717,
+      "sha256": "394bc5df21e114178613929157f62b6016d41c655cc02b97064461524416b11c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.result.json",
+      "bytes": 221454,
+      "sha256": "0b0ed3c20cde7369d7cc15429fd8dd82ee684ecba65b1eeb5ca4506879107b09"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.summary.json",
+      "bytes": 5232,
+      "sha256": "86cd739396f43c70a36503dc870c619f5243d25a105e446ea093fe75ff096590"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.audit.json",
+      "bytes": 352279,
+      "sha256": "ee1f6644382b0152035b27a192764c4c5948c6733c36340c818bf8fa99ca9301"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.log",
+      "bytes": 200485,
+      "sha256": "5fea09aba65045c4d0fefbd8bc19238f3ce338596da066cfd1ebef8b14e71d87"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.recipe.json",
+      "bytes": 39465,
+      "sha256": "d310e4139d4dae217ff59e921c42fa815b71d09012764a9b7bb68362cfcf8489"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.result.json",
+      "bytes": 928838,
+      "sha256": "b8ec6c450bd812961aec064a55a6e4e6329b5a0c4b35c30dde934bec4b2f871a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.summary.json",
+      "bytes": 19310,
+      "sha256": "f8ee361b2d10bfdd9b83d63475db994363157c549e0760705d3b48caa068633d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.audit.json",
+      "bytes": 356729,
+      "sha256": "b8ee67ce44a8be313a0526605fe1b092c3bf281d54742594db429304158f9eb4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.log",
+      "bytes": 198049,
+      "sha256": "fc0f01a99cc86677023a745b14c40b1e0a55b20f86b409532ffd1aa31f40af38"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.recipe.json",
+      "bytes": 39262,
+      "sha256": "888e0b1d1db32685fb70e540c21da9594d8b2bb5258eda6b508902c1f86e1527"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.result.json",
+      "bytes": 947375,
+      "sha256": "c08376de05639e58ecac8d4602367fd20bf28a9d75481d9be8abbb20e2ca1c05"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.summary.json",
+      "bytes": 19468,
+      "sha256": "12175ef6e8f054503935c252a5f00e3ae7f626541276e0e8040406ad58aa15bd"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/CHECKPOINT.md",
+      "bytes": 51287,
+      "sha256": "d5c51b1cb5910cac55a7518241e62a98f467b145c46e0b18e8e9a74bdaf6c059"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "examples/full-robot/baseline/robot.rcad",
+      "bytes": 83806475,
+      "sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+    },
+    {
+      "path": "examples/full-robot/foot-markers.json",
+      "bytes": 685,
+      "sha256": "04eb3b95fedcaf27229508cf7b2768b09bce61dca94b4e815618d007fa59892c"
+    },
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/export_surface_markers",
+      "bytes": 8102444,
+      "sha256": "6fefe09986d48ab6ec3abf6c55df3ed7ee440da51667730602c5ee810bb17c34"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8604396,
+      "sha256": "99d2b1827cb5242867c155a4f2bb4b2f958ec409a8a434dc21a837c3267cd0df"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8553788,
+      "sha256": "72f2a60db9542199a4df072e286c7fa47521aaed564a6f3d7f2fce1055aaadc6"
+    }
+  ],
+  "scope": "Commit-scoped direct source/evidence snapshot. Binary identities apply to surface-marker export, all surface25 optimizer runs, and their audits. Binaries are rebuilt from source, not stored here. Scene is durably referenced in the existing speed-ceiling archive chain. All writers terminal. Test logs normalize trailing empty lines only. Planning feasibility is not detailed walking or a physical maximum."
+}

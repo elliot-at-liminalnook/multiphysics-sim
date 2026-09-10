@@ -23,6 +23,10 @@ pub struct PointFeedbackConfig {
     /// One dimensionless gain per marker, in [0,1]. Multiplies displacement
     /// before solving, so activation smoothly attenuates even isolated joints.
     pub activation: TrajectoryConfig,
+    /// Dimensionless positional feedback gain. Zero permits contact-velocity
+    /// damping without pinning a moving controller to a world position path.
+    #[serde(default = "unit_position_gain")]
+    pub position_gain: f64,
     pub damping_m_per_rad: f64,
     pub maximum_correction_rad: f64,
     /// Optional privileged stationary-floor contact-velocity objective. No
@@ -30,6 +34,7 @@ pub struct PointFeedbackConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub floor_velocity_damping: Option<LoadDampingConfig>,
 }
+fn unit_position_gain() -> f64 { 1.0 }
 pub struct PointFeedback {
     config: PointFeedbackConfig,
     points: Vec<EmbeddedPoint>,
@@ -64,6 +69,8 @@ impl PointFeedback {
             return Err("floor velocity damping requires active stationary world-Z flat-floor contact".into());
         }
         if config.expected_cad_sha256.is_empty()
+            || !config.position_gain.is_finite()
+            || !(0.0..=1.0).contains(&config.position_gain)
             || art.model.source["cad_sha256"].as_str() != Some(&config.expected_cad_sha256)
             || config.coordinate_frame.trim().is_empty()
             || [config.damping_m_per_rad, config.maximum_correction_rad]
@@ -200,7 +207,7 @@ impl PointFeedback {
         let mut displacements = errors
             .iter()
             .zip(&activation)
-            .map(|(e, a)| e * *a)
+            .map(|(e, a)| e * (*a * self.config.position_gain))
             .collect::<Vec<_>>();
         let floor_velocity_damping = if let (Some(damping), Some(evaluation)) = (&self.floor_damping, &evaluation) {
             let mut sample = FloorVelocityDampingSample { normal_force_n: vec![],

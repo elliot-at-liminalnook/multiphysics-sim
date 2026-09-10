@@ -1,0 +1,23 @@
+{
+  "id": "swing-redistribution-dynamic",
+  "cases": [
+    {
+      "source": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-human-fine",
+      "speed": 0.175,
+      "table_name": "swing-redistributed-0p5-v175-loads",
+      "name_prefix": "swing-redistributed-dynamic-0p5-v175",
+      "scales": [
+        1
+      ]
+    },
+    {
+      "source": "runs/speed-ceiling/validation/swing-redistributed-0p8-v175-human-fine",
+      "speed": 0.175,
+      "table_name": "swing-redistributed-0p8-v175-loads",
+      "name_prefix": "swing-redistributed-dynamic-0p8-v175",
+      "scales": [
+        1
+      ]
+    }
+  ]
+}

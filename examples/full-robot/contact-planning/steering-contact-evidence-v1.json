@@ -1,0 +1,411 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/physical.rs",
+        "bytes": 72112,
+        "sha256": "398f2c215acb879ae1adf46cd35e6dd052afdac8a0e1b3583bcd339f555cbce1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/398f2c215acb879ae1adf46cd35e6dd052afdac8a0e1b3583bcd339f555cbce1.gz",
+        "bytes": 18668,
+        "sha256": "9d66821eaee2a512315b40632cd24ffdf27f31c7be650da14141a5d06718d73c"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/SPEED_OBJECTIVE.md",
+        "bytes": 17827,
+        "sha256": "4aeaf2d3ba7cd9b8274abf39ec96bb3d0b4bc3df7d4c2b758a71fd1ea11dfba1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4aeaf2d3ba7cd9b8274abf39ec96bb3d0b4bc3df7d4c2b758a71fd1ea11dfba1.gz",
+        "bytes": 7044,
+        "sha256": "6b145282969fb3687333465263fc7b8da86aff5e4d35fe0ffd6be1911166d119"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/STEERING_RESPONSE.md",
+        "bytes": 11540,
+        "sha256": "2c7d1e7aa101457a1998db21cf0cdb40672e4e2ac9d8393736b43569798ed433"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2c7d1e7aa101457a1998db21cf0cdb40672e4e2ac9d8393736b43569798ed433.gz",
+        "bytes": 4762,
+        "sha256": "18be706f2a024c7e4fcc3b191c705e88669691afe3a99acbc7912d2dab961283"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/composite-speed-search-evidence-v1.json",
+        "bytes": 279480,
+        "sha256": "0ee69b85ecb4326d3c68d5beb35afa4a71c551a8fa4f7bc6ab80ed3179b266a4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0ee69b85ecb4326d3c68d5beb35afa4a71c551a8fa4f7bc6ab80ed3179b266a4.gz",
+        "bytes": 40607,
+        "sha256": "8656cb6dbcf70bc6d50fc17f8950c569959e5d24c018608a2056ba8df47b349d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/predict_planar_motion-trend-v1",
+        "bytes": 633168,
+        "sha256": "63c9bfbe80cb142810808f7eac13954708b2e4b600edc3772496c2d5b7b912a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/63c9bfbe80cb142810808f7eac13954708b2e4b600edc3772496c2d5b7b912a9.gz",
+        "bytes": 276002,
+        "sha256": "724db45a9160673759473c71ac3dfc81a5d96e22adfc321e70ad08186cc100cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/run_environment-long-episode-v1",
+        "bytes": 15877072,
+        "sha256": "1e30e3ffb13855b9ebace260a8bf2889c4ce71b1655b5810fcd2f4e9344849e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1e30e3ffb13855b9ebace260a8bf2889c4ce71b1655b5810fcd2f4e9344849e0.gz",
+        "bytes": 4726377,
+        "sha256": "18910b91e95e7df0ad3fa8bccd4b7f70019ad04ed2c9d7270507f3c9a9b04611"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-contact-archive-v1/prepare.cjs",
+        "bytes": 2073,
+        "sha256": "2db73716ae62a8e624fe557697356683b1cf232c5bf71ac818f6b17c1dc3787c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2db73716ae62a8e624fe557697356683b1cf232c5bf71ac818f6b17c1dc3787c.gz",
+        "bytes": 1052,
+        "sha256": "94acad56f2715cd0eafcd722b8c1669c46c37960f57bf3572896518700938be8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/check-v2.cjs",
+        "bytes": 2165,
+        "sha256": "f4cff547bc4521a5aac2e19db3da30fecdd04b8015e7adc8d64bf5772990adf1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f4cff547bc4521a5aac2e19db3da30fecdd04b8015e7adc8d64bf5772990adf1.gz",
+        "bytes": 917,
+        "sha256": "f8502d4ce4e5bd271b98e294b4f1f5e6f705221addb9e48695c8c692b7623ec8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/check-v2.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/check-v2.stdout.log",
+        "bytes": 715,
+        "sha256": "4cf1440241713c87526ade0254f61e1f9538e80721d0d3bf25d4d000de9629e6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4cf1440241713c87526ade0254f61e1f9538e80721d0d3bf25d4d000de9629e6.gz",
+        "bytes": 449,
+        "sha256": "fff33f47e45554f4cf89b214127809c5e6b7e194cd70631ec94731c1b989c1d1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/check.cjs",
+        "bytes": 1938,
+        "sha256": "7b526df556c72972e375c432cc25434c698da3be28eb449342e1abb47f4d4b05"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7b526df556c72972e375c432cc25434c698da3be28eb449342e1abb47f4d4b05.gz",
+        "bytes": 860,
+        "sha256": "a9370efbb1006359a597b28407b498ea2ae68d3c03c7cf0945e3ef10d9cd5cff"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/check.json",
+        "bytes": 740,
+        "sha256": "e571013a1491a415009100dbc4d7c1b0e977caf82b0804b83796ee4532a6e94a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e571013a1491a415009100dbc4d7c1b0e977caf82b0804b83796ee4532a6e94a.gz",
+        "bytes": 452,
+        "sha256": "310e7f68462bfe3550992114898fa7216c592720884607140f10205e24ab19f8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/check.stderr.log",
+        "bytes": 356613,
+        "sha256": "0ba80228f98a7263bbf276132950d785bd8ea0f6e13f7b0f34001dcebf089127"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0ba80228f98a7263bbf276132950d785bd8ea0f6e13f7b0f34001dcebf089127.gz",
+        "bytes": 38397,
+        "sha256": "49c78aafc7d45ff50fc4502aa8b25d7096e99528972d7510a8b331f5cec73e38"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/check.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/prepare.cjs",
+        "bytes": 1672,
+        "sha256": "fdea9e667d941fdc9e5e95d2bcaf2e6fd11607cbb23aa810706f7d4e7eb65acd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fdea9e667d941fdc9e5e95d2bcaf2e6fd11607cbb23aa810706f7d4e7eb65acd.gz",
+        "bytes": 793,
+        "sha256": "223c43572fee95aeb7317a272a4e76d4fa37ef871a2e0964a7a10b500686e4ee"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/run-one.cjs",
+        "bytes": 2938,
+        "sha256": "1101b9999b597447d80696b7be59439aaeb6e0777bf46cbb65d681bc342ad09b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1101b9999b597447d80696b7be59439aaeb6e0777bf46cbb65d681bc342ad09b.gz",
+        "bytes": 1317,
+        "sha256": "fbf10b8507e0ed0c3c48c73ec33553191464711e449b1c46ceab3532d3ac6211"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/execution.json",
+        "bytes": 47,
+        "sha256": "a6b2cc16227d66903f8340861bc7af5c8d5fded904aba2864441360088da12de"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a6b2cc16227d66903f8340861bc7af5c8d5fded904aba2864441360088da12de.gz",
+        "bytes": 67,
+        "sha256": "e12c194217b202aaa61e57449a50afc45cbf6e2c83cccc350ada56dc4dfff6c9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/fit-10.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/fit-10.request.json",
+        "bytes": 42558,
+        "sha256": "836d579e20982c318aa79c1cd46d9cc3480ce4b5803e1626a464b721cc4a8a3a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/836d579e20982c318aa79c1cd46d9cc3480ce4b5803e1626a464b721cc4a8a3a.gz",
+        "bytes": 15712,
+        "sha256": "ed670e11f10292dbaaab61bcb653fbb08e71c25a9c23020344ce88af99fc6b83"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/fit-10.result.json",
+        "bytes": 1526,
+        "sha256": "8ac96fe1597ddb150e750d1a3e30be9832756bb5348332b2b5b0c252f1629dd9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8ac96fe1597ddb150e750d1a3e30be9832756bb5348332b2b5b0c252f1629dd9.gz",
+        "bytes": 663,
+        "sha256": "a1b0bc8931aa0330fbd05f8fd8f90a9163352ad39240a230429b486be7bfee07"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/fit-5.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/fit-5.request.json",
+        "bytes": 63729,
+        "sha256": "b7df226b513331a71c9efe926d799b5aab451bf6a163cb8226740b9ee44ee233"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b7df226b513331a71c9efe926d799b5aab451bf6a163cb8226740b9ee44ee233.gz",
+        "bytes": 23605,
+        "sha256": "88328ed1a2966ef6bdbbfb33be370baffb9262f582e1ea49a8cc1dd19b5af0a6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/fit-5.result.json",
+        "bytes": 1526,
+        "sha256": "696fff5f61ec5208c352e81cc6c54be9c8b206378282a27115868660482cc42b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/696fff5f61ec5208c352e81cc6c54be9c8b206378282a27115868660482cc42b.gz",
+        "bytes": 671,
+        "sha256": "a3c1c7e70ffa48ad13ca464af1e65dcea7709392c7d6c0e0ae67cb433d21a572"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/launch.json",
+        "bytes": 138,
+        "sha256": "11c7529a709a323c48c3850f5119f88d4ac0cdac5d9f44cf14f78493ae2f47c0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/11c7529a709a323c48c3850f5119f88d4ac0cdac5d9f44cf14f78493ae2f47c0.gz",
+        "bytes": 137,
+        "sha256": "60423e7b9ec269941216107d5e69eb12103d2b529201774dcf1f24f8fdd800b9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/native.json",
+        "bytes": 511961572,
+        "sha256": "dddd296723a0dc32c33154eb5948ddbafae32fa127a1b90f9a1f557a63e502b9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/dddd296723a0dc32c33154eb5948ddbafae32fa127a1b90f9a1f557a63e502b9.gz",
+        "bytes": 113802298,
+        "sha256": "f4e81560c63ac9d74a044a18b498fa6a7477d84957a522cc8f4680f819e1ef07"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/replay-input.json",
+        "bytes": 14865469,
+        "sha256": "465443617ed2f45226c282476fea91f504e53670ab4f377735135d8610825c95"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/465443617ed2f45226c282476fea91f504e53670ab4f377735135d8610825c95.gz",
+        "bytes": 3748523,
+        "sha256": "eb3041520c8c86f3cb191384a551e8f9f9d4cac77813bdf377bcd04951ea60a1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/spec.json",
+        "bytes": 1569,
+        "sha256": "b3dded8c3ef0b8a4f287e12fe98af2d7eaa3b02bfe4f70b08efae94ca2dea643"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b3dded8c3ef0b8a4f287e12fe98af2d7eaa3b02bfe4f70b08efae94ca2dea643.gz",
+        "bytes": 799,
+        "sha256": "51fbdd6d515421daf9777bac5fe796b07f5ce945a2bd0b4f4e91c505e62eaaa2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/stdout.log",
+        "bytes": 736,
+        "sha256": "18df8559c9efc3da54fb4adf22f042fd7fc148936a1873ebf36972610aa4b541"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/18df8559c9efc3da54fb4adf22f042fd7fc148936a1873ebf36972610aa4b541.gz",
+        "bytes": 440,
+        "sha256": "094dc5af496e9487b074e34e2aa122db13a9f56435b8b243672fcab06abb4c5b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-contact300-v1/sustained300/summary.json",
+        "bytes": 747,
+        "sha256": "b55f1b6d58d946e75f0ed4d70ca94549a7c01393f7809208713d8b487efbd664"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b55f1b6d58d946e75f0ed4d70ca94549a7c01393f7809208713d8b487efbd664.gz",
+        "bytes": 429,
+        "sha256": "88bac23fa30b3ffb611b68d21bb56999d6a6a783fd95cc4bf3f06943ccb10bb2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/sustained300/replay-input.json",
+        "bytes": 14865468,
+        "sha256": "20c50ecdffa38a7a68cfcc6a8a1659e6f29ef651a1780349ac2b797f319d8a41"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/20c50ecdffa38a7a68cfcc6a8a1659e6f29ef651a1780349ac2b797f319d8a41.gz",
+        "bytes": 3748522,
+        "sha256": "618568cfce60b22a51e6571c345504e894b4f9d116ed074d3de8c265c982f357"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/sustained300/summary.json",
+        "bytes": 750,
+        "sha256": "0dacf6436aeb26beb4ba8f886b4ab94237fad85ec4cba52aeb081a09ce4c4390"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0dacf6436aeb26beb4ba8f886b4ab94237fad85ec4cba52aeb081a09ce4c4390.gz",
+        "bytes": 431,
+        "sha256": "133cff137ef234c900a1eeb0039472d3d14f8453dd14c7707eee16a36cf521f3"
+      }
+    }
+  ],
+  "scope": "Matched fine300s inter-link-contact result0.5461336476m/s with all960000steps/15000actions and zero sampled falls. Only contact-omission flag changes from prior0.5468916069m/s result; canonical false-field serialization verified from Rustdefinition. Initial failed exact-serialization diagnostic retained. Scalar speed comparison, not trajectory equality, timestep convergence, hardware accuracy or physical maximum.",
+  "terminal_evidence": "Contact full300 session47103 exit0. Corrected canonical scene/action/full-horizon verification session89368 exit0; initial diagnostic11297 failed on serde omission of explicitfalse and is retained.",
+  "specification": {
+    "path": "runs/steering-contact-archive.spec.json",
+    "sha256": "d793f461adbb60ee7080f2be252d968b0422331e90e315b0f013bd8fe878a27a"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/archive_evidence_files.mjs",
+    "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+  }
+}

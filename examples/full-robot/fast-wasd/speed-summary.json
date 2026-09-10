@@ -1,0 +1,2101 @@
+{
+  "rows": [
+    {
+      "name": "stride-50",
+      "method": "stride",
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8000000000000002,
+      "source_plan": "examples/full-robot/fast-wasd/opposite-pair-50mm.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "5b91e0792dd0b27ddea69df69a143bb655165f22f629030e49ee195d2b9651ac",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 46.9708551674969,
+      "stop_drift_m": 0.0019417407132715056,
+      "maximum_tilt_rad": 0.00491202941312612,
+      "maximum_heading_rad": 0.0009529263700478283,
+      "maximum_slip_ratio": 0.06858176601758036,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.011255455358913884,
+          "motion_to_net_body_advance_ratio": 0.04979839621216399
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.012068825774538565,
+          "motion_to_net_body_advance_ratio": 0.053397054901032796
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.010136419814514614,
+          "motion_to_net_body_advance_ratio": 0.04484735925821646
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.015500880842781044,
+          "motion_to_net_body_advance_ratio": 0.06858176601758036
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.1765045320862912,
+          "maximum_torque_nm": 0.3497708363644546,
+          "angle_span_rad": 0.13928929093826417
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.1983396159318284,
+          "maximum_torque_nm": 0.25789822289692843,
+          "angle_span_rad": 0.014127728351026572
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 0.838923607361319,
+          "maximum_torque_nm": 2.0587683028738706,
+          "angle_span_rad": 0.10023628506904703
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.08048650711051485,
+          "maximum_torque_nm": 0.0655841270831975,
+          "angle_span_rad": 0.0006045571015809689
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 2.2334240552041864,
+          "maximum_torque_nm": 0.31171868384078716,
+          "angle_span_rad": 0.39306770570578903
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.2632900228134962,
+          "maximum_torque_nm": 2.014727425285117,
+          "angle_span_rad": 0.15130636585609047
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.1811957577812529,
+          "maximum_torque_nm": 0.349004452259227,
+          "angle_span_rad": 0.13908488079323325
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.1930215120558577,
+          "maximum_torque_nm": 0.2560462946172187,
+          "angle_span_rad": 0.014105976730294541
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 0.8395273865690611,
+          "maximum_torque_nm": 2.0567239050632007,
+          "angle_span_rad": 0.10023685400106963
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.050129504283962685,
+          "maximum_torque_nm": 0.04115287057076222,
+          "angle_span_rad": 0.00032005288673189064
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 2.1935731099464517,
+          "maximum_torque_nm": 0.4664389712344231,
+          "angle_span_rad": 0.39312164847449865
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.1920623108805508,
+          "maximum_torque_nm": 2.0545366724513574,
+          "angle_span_rad": 0.16284433606389837
+        }
+      ],
+      "positive_mechanical_work_j": 2.5073210171809546,
+      "native": {
+        "wall_s": 12.058249058,
+        "simulation_per_wall": 0.49758468009244866,
+        "p95_transition_s": 0.064189638
+      }
+    },
+    {
+      "name": "stride-100",
+      "method": "stride",
+      "command_speed_m_s": 0.1,
+      "period_s": 0.8000000000000002,
+      "source_plan": "examples/full-robot/fast-wasd/opposite-pair-100mm.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "bd1888ba6d7dae70f1906c961c5f34515fbeb2f53a54b6b5dfad2f052d642f09",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 92.90510422680744,
+      "stop_drift_m": 0.003202907345761977,
+      "maximum_tilt_rad": 0.014612417377892883,
+      "maximum_heading_rad": 0.002052904007600593,
+      "maximum_slip_ratio": 0.2734208743845773,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.02687393523233165,
+          "motion_to_net_body_advance_ratio": 0.06018960964457646
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.03867851915045398,
+          "motion_to_net_body_advance_ratio": 0.08662836124183489
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.03587425577540327,
+          "motion_to_net_body_advance_ratio": 0.0803476466227932
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.12207912483181753,
+          "motion_to_net_body_advance_ratio": 0.2734208743845773
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 2.3326049108318103,
+          "maximum_torque_nm": 0.7703212974445567,
+          "angle_span_rad": 0.2755404565531856
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.4991970913781519,
+          "maximum_torque_nm": 0.36509357156377614,
+          "angle_span_rad": 0.06320829496726019
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 0.9017574365723863,
+          "maximum_torque_nm": 2.0970739622580243,
+          "angle_span_rad": 0.10116209712698532
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.12292687301594821,
+          "maximum_torque_nm": 0.09477898536354631,
+          "angle_span_rad": 0.0014601564043709553
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 5.357175038320506,
+          "maximum_torque_nm": 0.3572117621640263,
+          "angle_span_rad": 0.7926278111434517
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.8184959416385305,
+          "maximum_torque_nm": 2.266217822294447,
+          "angle_span_rad": 0.24125663754552407
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 2.3409264286792717,
+          "maximum_torque_nm": 0.7727197418178899,
+          "angle_span_rad": 0.27531966737292884
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.5004993814657058,
+          "maximum_torque_nm": 0.36472059811538765,
+          "angle_span_rad": 0.0632407775881259
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 0.8854493711867862,
+          "maximum_torque_nm": 2.096369195147751,
+          "angle_span_rad": 0.10257452468658901
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.07348033477420746,
+          "maximum_torque_nm": 0.05713136681566951,
+          "angle_span_rad": 0.0007514621931478418
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 6.12533444226428,
+          "maximum_torque_nm": 0.6112356204748246,
+          "angle_span_rad": 0.7755657208973011
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.869099818206778,
+          "maximum_torque_nm": 2.056937312041731,
+          "angle_span_rad": 0.301512207368522
+        }
+      ],
+      "positive_mechanical_work_j": 4.068475263272338,
+      "native": {
+        "wall_s": 14.326460317,
+        "simulation_per_wall": 0.4188054737345209,
+        "p95_transition_s": 0.087227995
+      }
+    },
+    {
+      "name": "cadence-50",
+      "method": "cadence",
+      "command_speed_m_s": 0.05,
+      "period_s": 0.4000000000000001,
+      "source_plan": "examples/full-robot/gait-exploration/opposite-pair-clear-flight.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "9220c6c5aaade2428a8022c9a449e4e3c87b8fcedebe4aa3869980878b500504",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 58.08590885406569,
+      "stop_drift_m": 0.0008451223346171489,
+      "maximum_tilt_rad": 0.0027025671481220965,
+      "maximum_heading_rad": 0.00029320236211257197,
+      "maximum_slip_ratio": 0.14642437459850366,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.009190389850111036,
+          "motion_to_net_body_advance_ratio": 0.03299521904659178
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.03275415808573244,
+          "motion_to_net_body_advance_ratio": 0.11759355569800774
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.009172805426089805,
+          "motion_to_net_body_advance_ratio": 0.03293208767438109
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.04078460834640064,
+          "motion_to_net_body_advance_ratio": 0.14642437459850366
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 2.030674798977108,
+          "maximum_torque_nm": 0.5527942116875768,
+          "angle_span_rad": 0.08708892495791026
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.09059088647341593,
+          "maximum_torque_nm": 0.22048032146589686,
+          "angle_span_rad": 0.005505801013816039
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.6134225636894712,
+          "maximum_torque_nm": 2.0408467995789112,
+          "angle_span_rad": 0.10078572606035463
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.0013719642295461556,
+          "maximum_torque_nm": 0.004331607448462483,
+          "angle_span_rad": 0.00010376965633754956
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 3.792994342346672,
+          "maximum_torque_nm": 0.3872183008525252,
+          "angle_span_rad": 0.21409428243228118
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.7250864177278964,
+          "maximum_torque_nm": 1.9295728750577381,
+          "angle_span_rad": 0.14071278591115588
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 2.0380959826904483,
+          "maximum_torque_nm": 0.564574960610035,
+          "angle_span_rad": 0.08721424180291423
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.0924001895686839,
+          "maximum_torque_nm": 0.22040200741869825,
+          "angle_span_rad": 0.005544480091350593
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.613448596449269,
+          "maximum_torque_nm": 2.0467316948791665,
+          "angle_span_rad": 0.1007966740315871
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.0011159057469308296,
+          "maximum_torque_nm": 0.004954562299136166,
+          "angle_span_rad": 0.00013351530238969958
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 3.5463372215029536,
+          "maximum_torque_nm": 0.5016927506575977,
+          "angle_span_rad": 0.21593716882204606
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.648914980293495,
+          "maximum_torque_nm": 2.197751639292123,
+          "angle_span_rad": 0.1411474504016217
+        }
+      ],
+      "positive_mechanical_work_j": 3.9225748976369825,
+      "native": {
+        "wall_s": 13.53968069,
+        "simulation_per_wall": 0.4431419128245335,
+        "p95_transition_s": 0.103922514
+      }
+    },
+    {
+      "name": "cadence-100",
+      "method": "cadence",
+      "command_speed_m_s": 0.1,
+      "period_s": 0.20000000000000004,
+      "source_plan": "examples/full-robot/gait-exploration/opposite-pair-clear-flight.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "5ce580864895c0ce7d6e2bc825de3e20733abb08af97e1e53ba62a4143c8c4c1",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 110.17689455133257,
+      "stop_drift_m": 0.001967626600795253,
+      "maximum_tilt_rad": 0.0062954929270956275,
+      "maximum_heading_rad": 0.003345743812084213,
+      "maximum_slip_ratio": 0.2838434487753537,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.04744892980927133,
+          "motion_to_net_body_advance_ratio": 0.08999847896889428
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.14964772774013393,
+          "motion_to_net_body_advance_ratio": 0.2838434487753537
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.04682331083233804,
+          "motion_to_net_body_advance_ratio": 0.08881183984838306
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.13361173272812843,
+          "motion_to_net_body_advance_ratio": 0.2534272694087271
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 3.0084253690380014,
+          "maximum_torque_nm": 0.4754109908198232,
+          "angle_span_rad": 0.07895346142123733
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.527827282472112,
+          "maximum_torque_nm": 0.4649775410194702,
+          "angle_span_rad": 0.004411604481382398
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 2.7572624375780475,
+          "maximum_torque_nm": 2.2980940655827338,
+          "angle_span_rad": 0.10038714740847121
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.020522944374512988,
+          "maximum_torque_nm": 0.02988314318620075,
+          "angle_span_rad": 0.0004289762257569289
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 5.265868918187444,
+          "maximum_torque_nm": 0.6668416179835306,
+          "angle_span_rad": 0.1849876907932998
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 3.031302948236688,
+          "maximum_torque_nm": 1.5964670943023407,
+          "angle_span_rad": 0.1332440411740412
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 2.99686831423127,
+          "maximum_torque_nm": 0.47370263769334414,
+          "angle_span_rad": 0.078646540956221
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.5257603688558246,
+          "maximum_torque_nm": 0.4642079948477676,
+          "angle_span_rad": 0.004505324960187853
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 2.7456933173082665,
+          "maximum_torque_nm": 2.2869578843317515,
+          "angle_span_rad": 0.10041176004932284
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.009835016901442088,
+          "maximum_torque_nm": 0.013626791607950222,
+          "angle_span_rad": 0.00019847085646314052
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 6.686215588189159,
+          "maximum_torque_nm": 0.9619645536139437,
+          "angle_span_rad": 0.18938604603405196
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 2.715200926897033,
+          "maximum_torque_nm": 2.4540055141429207,
+          "angle_span_rad": 0.1424474435115457
+        }
+      ],
+      "positive_mechanical_work_j": 10.584816204911485,
+      "native": {
+        "wall_s": 15.759968057,
+        "simulation_per_wall": 0.3807114315396737,
+        "p95_transition_s": 0.084844459
+      }
+    },
+    {
+      "name": "landing-50",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8,
+      "stride_m": 0.04000000000000001,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": false,
+      "peak_world_swing_speed_m_s": 0.23437500000000003,
+      "source_plan": "examples/full-robot/fast-wasd/landing-50.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "bfa5608a1dfa1416c0fae28550c9ae6b988c04c396b6be0ebcd406c340ede6d9",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 49.33193458924567,
+      "stop_drift_m": 0.0011935421587001536,
+      "maximum_tilt_rad": 0.0016461538275569989,
+      "maximum_heading_rad": 0.0003647417049130603,
+      "maximum_slip_ratio": 0.0288755509216518,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.005422047199886484,
+          "motion_to_net_body_advance_ratio": 0.022917577922645614
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.0068316381664929385,
+          "motion_to_net_body_advance_ratio": 0.0288755509216518
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.005120441227792181,
+          "motion_to_net_body_advance_ratio": 0.021642768222067725
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.0018351715763965028,
+          "motion_to_net_body_advance_ratio": 0.007756791125752605
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 0.8146872669289085,
+          "maximum_torque_nm": 0.22965716041980133,
+          "angle_span_rad": 0.1253418092640476
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.09868081979858385,
+          "maximum_torque_nm": 0.22091891371914305,
+          "angle_span_rad": 0.01164145710481164
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.016578990889669,
+          "maximum_torque_nm": 2.0571473614125244,
+          "angle_span_rad": 0.0805361897895851
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.005920672598186437,
+          "maximum_torque_nm": 0.024045292005558112,
+          "angle_span_rad": 0.0005884972576055644
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 1.5516507619672415,
+          "maximum_torque_nm": 0.27581491989757556,
+          "angle_span_rad": 0.35824984327359716
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.0467630925444413,
+          "maximum_torque_nm": 2.0195391778318936,
+          "angle_span_rad": 0.1618263783512497
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 0.8165301802352587,
+          "maximum_torque_nm": 0.23126476772966487,
+          "angle_span_rad": 0.12538230739419792
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.09888453140665458,
+          "maximum_torque_nm": 0.2201629890538194,
+          "angle_span_rad": 0.0115355296329342
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.016506515041521,
+          "maximum_torque_nm": 2.0597315175093622,
+          "angle_span_rad": 0.08053748211787815
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.005920416684339295,
+          "maximum_torque_nm": 0.01911858287576329,
+          "angle_span_rad": 0.00048166136265657527
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 1.537819288814209,
+          "maximum_torque_nm": 0.4270131691455809,
+          "angle_span_rad": 0.35903545960726163
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.031244705805975,
+          "maximum_torque_nm": 1.9422838679209544,
+          "angle_span_rad": 0.16327575090987034
+        }
+      ],
+      "positive_mechanical_work_j": 2.4113837440540062,
+      "native": {
+        "wall_s": 11.372998291,
+        "simulation_per_wall": 0.5275653654804545,
+        "p95_transition_s": 0.071121116
+      }
+    },
+    {
+      "name": "landing-75",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.075,
+      "period_s": 0.8,
+      "stride_m": 0.06,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": false,
+      "peak_world_swing_speed_m_s": 0.35156249999999994,
+      "source_plan": "examples/full-robot/fast-wasd/landing-75.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "b32271e5e0ab41770f73553af4b76d8c5a15e51bbf1965af107f0ae512db2960",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 72.34881962974023,
+      "stop_drift_m": 0.0032568941443020297,
+      "maximum_tilt_rad": 0.011098948250674428,
+      "maximum_heading_rad": 0.0006629038778626009,
+      "maximum_slip_ratio": 0.0847644920568028,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.008018146471090401,
+          "motion_to_net_body_advance_ratio": 0.023004309349154435
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.023380488173531506,
+          "motion_to_net_body_advance_ratio": 0.06707934116910964
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.007443255744538672,
+          "motion_to_net_body_advance_ratio": 0.02135493013623546
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.02954464324676653,
+          "motion_to_net_body_advance_ratio": 0.0847644920568028
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.2137529451264617,
+          "maximum_torque_nm": 0.5331221270055192,
+          "angle_span_rad": 0.18760091857321573
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.18854944576208837,
+          "maximum_torque_nm": 0.28902457413764837,
+          "angle_span_rad": 0.02868243730051272
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0180440095011047,
+          "maximum_torque_nm": 2.079280109414569,
+          "angle_span_rad": 0.08045883084231042
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.011651714321125205,
+          "maximum_torque_nm": 0.03729100762799959,
+          "angle_span_rad": 0.0009794626172089011
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 2.3710910725510166,
+          "maximum_torque_nm": 0.30244392433147615,
+          "angle_span_rad": 0.5409867551153292
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.2029507542806006,
+          "maximum_torque_nm": 2.0717689030109305,
+          "angle_span_rad": 0.20188510718972652
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.2162401260152518,
+          "maximum_torque_nm": 0.5334063968910348,
+          "angle_span_rad": 0.18768997015901273
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.18921911612528236,
+          "maximum_torque_nm": 0.2873301233488093,
+          "angle_span_rad": 0.028538122655123763
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0180449291697444,
+          "maximum_torque_nm": 2.0852710834383217,
+          "angle_span_rad": 0.08046090358639013
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.01521771513984674,
+          "maximum_torque_nm": 0.03502313282598614,
+          "angle_span_rad": 0.0007580244256014508
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 2.300806371576475,
+          "maximum_torque_nm": 0.5033851563270584,
+          "angle_span_rad": 0.5302097252496986
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.1889851850274629,
+          "maximum_torque_nm": 2.004228773341994,
+          "angle_span_rad": 0.22246092551031293
+        }
+      ],
+      "positive_mechanical_work_j": 3.1062518462142203,
+      "native": {
+        "wall_s": 12.582253698,
+        "simulation_per_wall": 0.47686210626588493,
+        "p95_transition_s": 0.069620275
+      }
+    },
+    {
+      "name": "landing-100",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.1,
+      "period_s": 0.8,
+      "stride_m": 0.08000000000000002,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": false,
+      "peak_world_swing_speed_m_s": 0.46875000000000006,
+      "source_plan": "examples/full-robot/fast-wasd/landing-100.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "e1ba5e04f3de50aaa5b8f6a9ff8a36134a7276e676a0422fb307b44b9a2bff70",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 96.38381014018356,
+      "stop_drift_m": 0.004035419596062651,
+      "maximum_tilt_rad": 0.01514565855379988,
+      "maximum_heading_rad": 0.0004411859653889809,
+      "maximum_slip_ratio": 0.3843274483420655,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.017858846504184907,
+          "motion_to_net_body_advance_ratio": 0.03848944917202216
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.0358090784842254,
+          "motion_to_net_body_advance_ratio": 0.0771758526449383
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.016683420752773587,
+          "motion_to_net_body_advance_ratio": 0.03595616743381861
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.17832536071405147,
+          "motion_to_net_body_advance_ratio": 0.3843274483420655
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.61508350240023,
+          "maximum_torque_nm": 0.6651055828594921,
+          "angle_span_rad": 0.24888253195170773
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.3500422508883016,
+          "maximum_torque_nm": 0.327557774933259,
+          "angle_span_rad": 0.05440563613875788
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0188479145113796,
+          "maximum_torque_nm": 2.103148578609954,
+          "angle_span_rad": 0.08075666374162727
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.019393772692442485,
+          "maximum_torque_nm": 0.04544097042496986,
+          "angle_span_rad": 0.0012181895547045598
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 3.799736311897891,
+          "maximum_torque_nm": 0.3337067905988395,
+          "angle_span_rad": 0.7244072607851437
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.3208352147603248,
+          "maximum_torque_nm": 2.112755612416107,
+          "angle_span_rad": 0.2479828748090882
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.6186779325882539,
+          "maximum_torque_nm": 0.6644709783850123,
+          "angle_span_rad": 0.2489422447357868
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.3509480614432901,
+          "maximum_torque_nm": 0.3260736671069338,
+          "angle_span_rad": 0.05441397121596882
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0187345773077743,
+          "maximum_torque_nm": 2.1075835736466373,
+          "angle_span_rad": 0.08218997842885556
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.023373596414431427,
+          "maximum_torque_nm": 0.04760083823114636,
+          "angle_span_rad": 0.0009566043590502247
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 3.200321994574426,
+          "maximum_torque_nm": 0.574905202127788,
+          "angle_span_rad": 0.7008826237998504
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.4533057671929508,
+          "maximum_torque_nm": 1.9994473430834365,
+          "angle_span_rad": 0.29397426265680915
+        }
+      ],
+      "positive_mechanical_work_j": 3.7028279566322304,
+      "native": {
+        "wall_s": 13.989012375,
+        "simulation_per_wall": 0.4289080486284151,
+        "p95_transition_s": 0.083794767
+      }
+    },
+    {
+      "name": "landing-50-centered-transition",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8,
+      "stride_m": 0.04000000000000001,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": true,
+      "peak_world_swing_speed_m_s": 0.23437500000000003,
+      "source_plan": "examples/full-robot/fast-wasd/landing-50-centered-transition.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "6dc8d1572257b9f298e1b88b9f926741f2a16c93e2c6bd477fd53507fc9533b0",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 51.956852012417684,
+      "stop_drift_m": 0.0007566267925001159,
+      "maximum_tilt_rad": 0.013730411492088182,
+      "maximum_heading_rad": 0.00044029292999338656,
+      "maximum_slip_ratio": 0.30957394118506054,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.013786642534187033,
+          "motion_to_net_body_advance_ratio": 0.0554522850368308
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.07696680600597652,
+          "motion_to_net_body_advance_ratio": 0.30957394118506054
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.013449517987593227,
+          "motion_to_net_body_advance_ratio": 0.05409631120895535
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.014765210030227748,
+          "motion_to_net_body_advance_ratio": 0.05938825447853268
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 0.8187329569436025,
+          "maximum_torque_nm": 0.6358850375894705,
+          "angle_span_rad": 0.12579428662779274
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.08699019013921185,
+          "maximum_torque_nm": 0.2536962069079308,
+          "angle_span_rad": 0.013352215347402739
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0156955792832059,
+          "maximum_torque_nm": 2.0421056450639905,
+          "angle_span_rad": 0.0822051950000322
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.0048364735683394024,
+          "maximum_torque_nm": 0.023498206108761938,
+          "angle_span_rad": 0.0005498097215878435
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 1.5333728246871117,
+          "maximum_torque_nm": 0.3906453351273613,
+          "angle_span_rad": 0.35696355970244753
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.3307374384020203,
+          "maximum_torque_nm": 1.9951255381395165,
+          "angle_span_rad": 0.166191165691419
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 0.8208036948779178,
+          "maximum_torque_nm": 0.6355579837458334,
+          "angle_span_rad": 0.12585043131655038
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.08725616674489033,
+          "maximum_torque_nm": 0.25536627769318254,
+          "angle_span_rad": 0.013356805241317897
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0156135649113427,
+          "maximum_torque_nm": 2.04646059393997,
+          "angle_span_rad": 0.0822044750742068
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.005186275588409784,
+          "maximum_torque_nm": 0.016996939602513708,
+          "angle_span_rad": 0.0004649306952797597
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 1.554619466627555,
+          "maximum_torque_nm": 0.4259819636136707,
+          "angle_span_rad": 0.3628473968618268
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.035661926151145,
+          "maximum_torque_nm": 1.9530394696262792,
+          "angle_span_rad": 0.15826303760634053
+        }
+      ],
+      "positive_mechanical_work_j": 2.598563558510629,
+      "native": {
+        "wall_s": 10.960638518,
+        "simulation_per_wall": 0.5474133637512595,
+        "p95_transition_s": 0.066406519
+      }
+    },
+    {
+      "name": "landing-75-centered-transition",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.075,
+      "period_s": 0.8,
+      "stride_m": 0.06,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": true,
+      "peak_world_swing_speed_m_s": 0.35156249999999994,
+      "source_plan": "examples/full-robot/fast-wasd/landing-75-centered-transition.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "06c0d63268013a122d28cf9410b604df210cda7fed728df041a775dd51d0be46",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 76.81298469141433,
+      "stop_drift_m": 0.0012206378540424712,
+      "maximum_tilt_rad": 0.012674773340321792,
+      "maximum_heading_rad": 0.0008661373977142734,
+      "maximum_slip_ratio": 0.1891046849062927,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.013673206548054696,
+          "motion_to_net_body_advance_ratio": 0.03717825539655355
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.06954784156354563,
+          "motion_to_net_body_advance_ratio": 0.1891046849062927
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.013039488463744505,
+          "motion_to_net_body_advance_ratio": 0.035455138532554234
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.011797039465142514,
+          "motion_to_net_body_advance_ratio": 0.03207684639421242
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.2247998088254195,
+          "maximum_torque_nm": 0.6609897405971218,
+          "angle_span_rad": 0.18872424806438787
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.1395884726019116,
+          "maximum_torque_nm": 0.2486682637413114,
+          "angle_span_rad": 0.021131216241012857
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.017254517715504,
+          "maximum_torque_nm": 2.052367854928371,
+          "angle_span_rad": 0.08361448830303941
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.009163162905571383,
+          "maximum_torque_nm": 0.03294138588144306,
+          "angle_span_rad": 0.0008476105486380746
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 2.3213728695051357,
+          "maximum_torque_nm": 0.3628475039217625,
+          "angle_span_rad": 0.5342195097777713
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.1162699664819475,
+          "maximum_torque_nm": 1.9993952113518882,
+          "angle_span_rad": 0.21204832240931348
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.2277819585520913,
+          "maximum_torque_nm": 0.6605951501315693,
+          "angle_span_rad": 0.1888073622164041
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.13852357226415807,
+          "maximum_torque_nm": 0.2511281578117762,
+          "angle_span_rad": 0.021137045530810923
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0172323247308142,
+          "maximum_torque_nm": 2.0556800913164532,
+          "angle_span_rad": 0.08361403745889606
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.008626546950511592,
+          "maximum_torque_nm": 0.022209742752037014,
+          "angle_span_rad": 0.000652600041173874
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 2.343538379741574,
+          "maximum_torque_nm": 0.5095763296643072,
+          "angle_span_rad": 0.5439964180087133
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.047938268462109,
+          "maximum_torque_nm": 1.9756693868683213,
+          "angle_span_rad": 0.207830086198593
+        }
+      ],
+      "positive_mechanical_work_j": 3.156811137659354,
+      "native": {
+        "wall_s": 12.379818968,
+        "simulation_per_wall": 0.4846597527402551,
+        "p95_transition_s": 0.06654565
+      }
+    },
+    {
+      "name": "hip0-60",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 0,
+      "command_speed_m_s": 0.06,
+      "period_s": 0.8,
+      "stride_m": 0.048,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip0-60.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "53f55477296e1cd86ebe9e5b111af497e6628f0dfc7e52fc900f235817abea87",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 58.35549721007704,
+      "stop_drift_m": 0.0013795539380554158,
+      "maximum_tilt_rad": 0.0036177251774782786,
+      "maximum_heading_rad": 0.0004977648995344806,
+      "maximum_slip_ratio": 0.02271586183552468,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.006281870977896272,
+          "motion_to_net_body_advance_ratio": 0.0224145176857323
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.006366325396924193,
+          "motion_to_net_body_advance_ratio": 0.02271586183552468
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.005913517843196658,
+          "motion_to_net_body_advance_ratio": 0.021100186671712585
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.005170574907602543,
+          "motion_to_net_body_advance_ratio": 0.01844927142242471
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 0.9727477180829155,
+          "maximum_torque_nm": 0.27585410968300084,
+          "angle_span_rad": 0.15045296089286037
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.11456203729755518,
+          "maximum_torque_nm": 0.2502691835795712,
+          "angle_span_rad": 0.017488253714734447
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0174297929464722,
+          "maximum_torque_nm": 2.066654228125176,
+          "angle_span_rad": 0.08049731728161591
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.0077561088609620745,
+          "maximum_torque_nm": 0.028976198505373717,
+          "angle_span_rad": 0.0007286421490410882
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 1.8671444301522633,
+          "maximum_torque_nm": 0.2757166497772829,
+          "angle_span_rad": 0.43140597201466124
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.049867591715051,
+          "maximum_torque_nm": 2.0415095197202726,
+          "angle_span_rad": 0.17812317064932381
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 0.974705063458484,
+          "maximum_torque_nm": 0.2777135724175879,
+          "angle_span_rad": 0.15052473910595326
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.11519665377630978,
+          "maximum_torque_nm": 0.24931351392286652,
+          "angle_span_rad": 0.017361663849788773
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0174010801042082,
+          "maximum_torque_nm": 2.070398797242039,
+          "angle_span_rad": 0.0804990505504053
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.00808310333154082,
+          "maximum_torque_nm": 0.02415695482220937,
+          "angle_span_rad": 0.0005814673977687404
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 1.841782966214483,
+          "maximum_torque_nm": 0.45755306487601577,
+          "angle_span_rad": 0.42806339641733615
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.0924202893919264,
+          "maximum_torque_nm": 1.9442363443006063,
+          "angle_span_rad": 0.18564745711467223
+        }
+      ],
+      "positive_mechanical_work_j": 2.6687647752965415,
+      "native": {
+        "wall_s": 12.149096202,
+        "simulation_per_wall": 0.49386389738294045,
+        "p95_transition_s": 0.077942613
+      }
+    },
+    {
+      "name": "hip0-65",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 0,
+      "command_speed_m_s": 0.065,
+      "period_s": 0.8,
+      "stride_m": 0.052000000000000005,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip0-65.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "558475c8516909f8d884c0a85e3ee49f9762cdfdc2ce177fff4fe6b43841082f",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 62.90622906653573,
+      "stop_drift_m": 0.002021103033802285,
+      "maximum_tilt_rad": 0.006131233712660616,
+      "maximum_heading_rad": 0.0005481772027347945,
+      "maximum_slip_ratio": 0.04040289099493702,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.006720943531635735,
+          "motion_to_net_body_advance_ratio": 0.022211115536707494
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.012225660095416292,
+          "motion_to_net_body_advance_ratio": 0.04040289099493702
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.0062856008622856315,
+          "motion_to_net_body_advance_ratio": 0.02077241183662739
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.011002002032832464,
+          "motion_to_net_body_advance_ratio": 0.036358992920575685
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.0533187848522636,
+          "maximum_torque_nm": 0.29912834477183775,
+          "angle_span_rad": 0.1630771404872578
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.13725693114007026,
+          "maximum_torque_nm": 0.2664068101721421,
+          "angle_span_rad": 0.020909694460113107
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0181399124931376,
+          "maximum_torque_nm": 2.0708064813723746,
+          "angle_span_rad": 0.08048604915989022
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.008856644361921627,
+          "maximum_torque_nm": 0.03155872845161307,
+          "angle_span_rad": 0.0008025125135852122
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 2.0258942145428795,
+          "maximum_torque_nm": 0.2868594505166298,
+          "angle_span_rad": 0.46820839399869835
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.1091245887994612,
+          "maximum_torque_nm": 2.051411763384121,
+          "angle_span_rad": 0.18611765809786496
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.0554332352206086,
+          "maximum_torque_nm": 0.3011910710908959,
+          "angle_span_rad": 0.16315412063898146
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.13787007829414344,
+          "maximum_torque_nm": 0.26519701435747634,
+          "angle_span_rad": 0.02076955396396628
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0181218420084428,
+          "maximum_torque_nm": 2.0755334212754346,
+          "angle_span_rad": 0.08048789898266695
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.01051734922694863,
+          "maximum_torque_nm": 0.027539042902204356,
+          "angle_span_rad": 0.0006337603550961568
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 1.9932840766738011,
+          "maximum_torque_nm": 0.47250122400712435,
+          "angle_span_rad": 0.4616380575365453
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.1310192399172836,
+          "maximum_torque_nm": 1.962736229738558,
+          "angle_span_rad": 0.19711159902871545
+        }
+      ],
+      "positive_mechanical_work_j": 2.830552100131431,
+      "native": {
+        "wall_s": 12.867603074,
+        "simulation_per_wall": 0.4662873081719058,
+        "p95_transition_s": 0.098390402
+      }
+    },
+    {
+      "name": "hip30-50",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 30,
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8,
+      "stride_m": 0.04000000000000001,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip30-50.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "b01c4e45d6ee47751915929ca2d6f1a734c2de58ad0f0db8f30fd5d65b7e4181",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 50.35189319141064,
+      "stop_drift_m": 0.0011867012345878846,
+      "maximum_tilt_rad": 0.011827024619631551,
+      "maximum_heading_rad": 0.033959054668802974,
+      "maximum_slip_ratio": 0.0910660374403113,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.022015029777887163,
+          "motion_to_net_body_advance_ratio": 0.0910660374403113
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.007936711880796869,
+          "motion_to_net_body_advance_ratio": 0.03283052117492873
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.01053153858853385,
+          "motion_to_net_body_advance_ratio": 0.043564124013624236
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.0032850650358283513,
+          "motion_to_net_body_advance_ratio": 0.013588800858542974
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 0.6946424789475731,
+          "maximum_torque_nm": 0.2089915090616769,
+          "angle_span_rad": 0.1020870235536171
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.7992653424026777,
+          "maximum_torque_nm": 0.31702295109170653,
+          "angle_span_rad": 0.18690460856233418
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.2494986962674268,
+          "maximum_torque_nm": 2.137524676945683,
+          "angle_span_rad": 0.11344219318746918
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.4353904691086482,
+          "maximum_torque_nm": 0.6722295150388979,
+          "angle_span_rad": 0.06730857631501785
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 1.3303021305800748,
+          "maximum_torque_nm": 0.41747914470906317,
+          "angle_span_rad": 0.30539046463654623
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.0543347117619728,
+          "maximum_torque_nm": 1.9978464627899046,
+          "angle_span_rad": 0.14968061881043715
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 0.7338639016846497,
+          "maximum_torque_nm": 0.20629611001944542,
+          "angle_span_rad": 0.11506339585756975
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.7609463623064391,
+          "maximum_torque_nm": 0.3195652982602897,
+          "angle_span_rad": 0.17649479663163883
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.0277094961103084,
+          "maximum_torque_nm": 1.991484356277868,
+          "angle_span_rad": 0.1192756224766145
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.410391969403294,
+          "maximum_torque_nm": 0.5807188560210111,
+          "angle_span_rad": 0.05722300117876655
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 1.3498947246327428,
+          "maximum_torque_nm": 0.44565138359605333,
+          "angle_span_rad": 0.31510258961219834
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.024117887473802,
+          "maximum_torque_nm": 1.9421338523169327,
+          "angle_span_rad": 0.14924299855115508
+        }
+      ],
+      "positive_mechanical_work_j": 2.8036382608830634,
+      "native": {
+        "wall_s": 11.751036469,
+        "simulation_per_wall": 0.5105932583758369,
+        "p95_transition_s": 0.07257683
+      }
+    },
+    {
+      "name": "hip30-75",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 30,
+      "command_speed_m_s": 0.075,
+      "period_s": 0.8,
+      "stride_m": 0.06,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip30-75.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "869916385c071b64cabf4d7fef7c05ba1f9c77aaca64b1f9010444d7b48f399e",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 73.19999720299282,
+      "stop_drift_m": 0.002719733436779141,
+      "maximum_tilt_rad": 0.013865378600051078,
+      "maximum_heading_rad": 0.05431367809494374,
+      "maximum_slip_ratio": 0.129654141634521,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.04579370837296422,
+          "motion_to_net_body_advance_ratio": 0.129654141634521
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.02548052324673876,
+          "motion_to_net_body_advance_ratio": 0.07214212360894516
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.014562054200192692,
+          "motion_to_net_body_advance_ratio": 0.04122904007651876
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.020897599903799278,
+          "motion_to_net_body_advance_ratio": 0.05916665135921511
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.0148565417376825,
+          "maximum_torque_nm": 0.6023746497558657,
+          "angle_span_rad": 0.15010485382330496
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 1.2385652470042887,
+          "maximum_torque_nm": 0.32268743863665117,
+          "angle_span_rad": 0.28779225861970437
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.3789640671948584,
+          "maximum_torque_nm": 2.144457327765477,
+          "angle_span_rad": 0.1410402776830293
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.6549236603906212,
+          "maximum_torque_nm": 0.7552089351455015,
+          "angle_span_rad": 0.10251350621449162
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 1.993368956443361,
+          "maximum_torque_nm": 0.4469582882853528,
+          "angle_span_rad": 0.4576879852640378
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.1707208462943333,
+          "maximum_torque_nm": 2.046236949263061,
+          "angle_span_rad": 0.1837378083760972
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.1183698813973912,
+          "maximum_torque_nm": 0.31181559566377876,
+          "angle_span_rad": 0.1752508614050854
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 1.1090347328650674,
+          "maximum_torque_nm": 0.3335388618882332,
+          "angle_span_rad": 0.25422767674568414
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.1319230455618114,
+          "maximum_torque_nm": 2.023898847003653,
+          "angle_span_rad": 0.13554154115994677
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.5529746614966031,
+          "maximum_torque_nm": 0.5790833878825763,
+          "angle_span_rad": 0.08089586335755367
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 2.025564339923143,
+          "maximum_torque_nm": 0.5098180229967486,
+          "angle_span_rad": 0.4684150265548481
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.2001456983828998,
+          "maximum_torque_nm": 2.008283490120192,
+          "angle_span_rad": 0.19918851732316645
+        }
+      ],
+      "positive_mechanical_work_j": 3.5470282792955103,
+      "native": {
+        "wall_s": 14.161228674,
+        "simulation_per_wall": 0.4236920494770339,
+        "p95_transition_s": 0.088717035
+      }
+    },
+    {
+      "name": "hip45-50",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 45,
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8,
+      "stride_m": 0.04000000000000001,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip45-50.plan.json",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "31241f93a448a5054077e987905f7ea24dac25d65bb863f954b0e03ec8bcbb54",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 51.02070085899714,
+      "stop_drift_m": 0.0011938358690821314,
+      "maximum_tilt_rad": 0.014377624561280762,
+      "maximum_heading_rad": 0.04230074783863748,
+      "maximum_slip_ratio": 0.16295565420744135,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.03996011452369946,
+          "motion_to_net_body_advance_ratio": 0.16295565420744135
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.018481478758480236,
+          "motion_to_net_body_advance_ratio": 0.07536668745088126
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.009475604325247522,
+          "motion_to_net_body_advance_ratio": 0.038641113025734634
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.007289585537626261,
+          "motion_to_net_body_advance_ratio": 0.029726621015575057
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 0.5700244447578406,
+          "maximum_torque_nm": 0.2339831570105819,
+          "angle_span_rad": 0.08105347221578962
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 1.100692064628596,
+          "maximum_torque_nm": 0.3146272043106071,
+          "angle_span_rad": 0.2589056521351225
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.4181662637543229,
+          "maximum_torque_nm": 2.1327992544623275,
+          "angle_span_rad": 0.13284652710040223
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.5926544348707031,
+          "maximum_torque_nm": 0.6817169227745835,
+          "angle_span_rad": 0.09169439900874055
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 1.0704888775840182,
+          "maximum_torque_nm": 0.5033561160157675,
+          "angle_span_rad": 0.24419548843015887
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.0593007222343875,
+          "maximum_torque_nm": 1.9698739783151487,
+          "angle_span_rad": 0.13516083724931338
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 0.618195886080726,
+          "maximum_torque_nm": 0.24479196490370356,
+          "angle_span_rad": 0.09655880661350358
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 1.093197539785454,
+          "maximum_torque_nm": 0.40190594349233955,
+          "angle_span_rad": 0.25545959305372795
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.1257419389614385,
+          "maximum_torque_nm": 1.9894257114915126,
+          "angle_span_rad": 0.1360563188706727
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.5421692886547588,
+          "maximum_torque_nm": 0.5743089186750614,
+          "angle_span_rad": 0.08145442213284748
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 1.1254762209311258,
+          "maximum_torque_nm": 0.45664543394770224,
+          "angle_span_rad": 0.2621961461272527
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.0165716540049095,
+          "maximum_torque_nm": 1.942781304381261,
+          "angle_span_rad": 0.13254341685022542
+        }
+      ],
+      "positive_mechanical_work_j": 2.874692788913636,
+      "native": {
+        "wall_s": 10.913518774,
+        "simulation_per_wall": 0.5497768523836875,
+        "p95_transition_s": 0.071609024
+      }
+    },
+    {
+      "name": "feedforward-65",
+      "method": "Nominal damping cancellation from effective CAD-derived actuator D/K",
+      "command_speed_m_s": 0.065,
+      "period_s": 0.8,
+      "source": "hip0-65",
+      "velocity_lead_s": [
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02
+      ],
+      "scope": "Uses the existing provisional actuator model, no gain/torque authority increase. Saturation and contact remain physical.",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "8fda8757a230cba2207f2b4413c408e1bd2cc70b08311bb9f20c17ef6364ed97",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 63.843036196231466,
+      "stop_drift_m": 0.0007944509684918266,
+      "maximum_tilt_rad": 0.00839952941776834,
+      "maximum_heading_rad": 0.00041251173936398676,
+      "maximum_slip_ratio": 0.04981738017594578,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.008116869667704049,
+          "motion_to_net_body_advance_ratio": 0.026497995354333333
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.012580757260150358,
+          "motion_to_net_body_advance_ratio": 0.041070617255304
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.008815604798357277,
+          "motion_to_net_body_advance_ratio": 0.02877905702021517
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.015260066909495036,
+          "motion_to_net_body_advance_ratio": 0.04981738017594578
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.0920178326852001,
+          "maximum_torque_nm": 0.5106413319937728,
+          "angle_span_rad": 0.16808559886521973
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.15405000614012637,
+          "maximum_torque_nm": 0.2782989976886055,
+          "angle_span_rad": 0.022287339619537574
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.1973908999697294,
+          "maximum_torque_nm": 2.1288824539815616,
+          "angle_span_rad": 0.08928812543824893
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.05592055161339209,
+          "maximum_torque_nm": 0.056456724976572954,
+          "angle_span_rad": 0.0008852823392367656
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 2.1523948642137514,
+          "maximum_torque_nm": 0.32479758848063095,
+          "angle_span_rad": 0.48436626213266276
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.5739732852901274,
+          "maximum_torque_nm": 2.109937922581688,
+          "angle_span_rad": 0.20270961211153837
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.094054130451374,
+          "maximum_torque_nm": 0.5103004322531265,
+          "angle_span_rad": 0.16815749589937112
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.1547858527867368,
+          "maximum_torque_nm": 0.27720372717180347,
+          "angle_span_rad": 0.022101386038050966
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.195925247259994,
+          "maximum_torque_nm": 2.1332517153412396,
+          "angle_span_rad": 0.08929059201887668
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.04541607988456115,
+          "maximum_torque_nm": 0.0431418498809296,
+          "angle_span_rad": 0.0006450363507327985
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 2.097131594049315,
+          "maximum_torque_nm": 0.47387449738491394,
+          "angle_span_rad": 0.480974606053704
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.5404824947432758,
+          "maximum_torque_nm": 1.972592663264054,
+          "angle_span_rad": 0.20663291649908955
+        }
+      ],
+      "positive_mechanical_work_j": 2.9217142699552077,
+      "native": {
+        "wall_s": 12.706238644,
+        "simulation_per_wall": 0.47220898080906526,
+        "p95_transition_s": 0.083471682
+      }
+    },
+    {
+      "name": "feedforward-75",
+      "method": "Nominal damping cancellation from effective CAD-derived actuator D/K",
+      "command_speed_m_s": 0.075,
+      "period_s": 0.8,
+      "source": "landing-75",
+      "velocity_lead_s": [
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02
+      ],
+      "scope": "Uses the existing provisional actuator model, no gain/torque authority increase. Saturation and contact remain physical.",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "ce20771780b90d3f2b243c427efcfb97079be5c663680480da355ed54a50c681",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 73.23588666797428,
+      "stop_drift_m": 0.0012720799007455762,
+      "maximum_tilt_rad": 0.012925478829026284,
+      "maximum_heading_rad": 0.0005392404688453848,
+      "maximum_slip_ratio": 0.07894551471196494,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.012321658002043002,
+          "motion_to_net_body_advance_ratio": 0.0350103122900136
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.019733645469425583,
+          "motion_to_net_body_advance_ratio": 0.05607046473700614
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.013103560619576965,
+          "motion_to_net_body_advance_ratio": 0.037231982037356386
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.027784374644197397,
+          "motion_to_net_body_advance_ratio": 0.07894551471196494
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.2569352945099799,
+          "maximum_torque_nm": 0.69404718443509,
+          "angle_span_rad": 0.1940128041401477
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.21093207989128462,
+          "maximum_torque_nm": 0.3266438162501258,
+          "angle_span_rad": 0.0305668231638884
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.1965683332967414,
+          "maximum_torque_nm": 2.136108970922438,
+          "angle_span_rad": 0.08919906366597008
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.0704092897973762,
+          "maximum_torque_nm": 0.06851634081499368,
+          "angle_span_rad": 0.0010614326162142731
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 2.5286981222171376,
+          "maximum_torque_nm": 0.3190002703228301,
+          "angle_span_rad": 0.5603665719297553
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.5777592259346394,
+          "maximum_torque_nm": 2.1248887521361137,
+          "angle_span_rad": 0.22359951720715343
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.259487044379145,
+          "maximum_torque_nm": 0.6952269844541451,
+          "angle_span_rad": 0.19408878831991683
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.21165883447106995,
+          "maximum_torque_nm": 0.32600318692672053,
+          "angle_span_rad": 0.030369525282866846
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.1948298383317266,
+          "maximum_torque_nm": 2.1407557273845312,
+          "angle_span_rad": 0.08976334800218133
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.05267838361673165,
+          "maximum_torque_nm": 0.04926370914717931,
+          "angle_span_rad": 0.000728866269320177
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 2.430205034238417,
+          "maximum_torque_nm": 0.5064712650788458,
+          "angle_span_rad": 0.5511628813359127
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.6705972252417356,
+          "maximum_torque_nm": 2.007430695472538,
+          "angle_span_rad": 0.23268305290305435
+        }
+      ],
+      "positive_mechanical_work_j": 3.1921479084106785,
+      "native": {
+        "wall_s": 12.640297577,
+        "simulation_per_wall": 0.474672369337053,
+        "p95_transition_s": 0.08116246
+      }
+    },
+    {
+      "name": "feedforward-100",
+      "method": "Nominal damping cancellation from effective CAD-derived actuator D/K",
+      "command_speed_m_s": 0.1,
+      "period_s": 0.8,
+      "source": "landing-100",
+      "velocity_lead_s": [
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02
+      ],
+      "scope": "Uses the existing provisional actuator model, no gain/torque authority increase. Saturation and contact remain physical.",
+      "completed": true,
+      "error": null,
+      "capture_sha256": "cfce0368decb336268fff4e5e44579487972733331ddd87e0dca40c2b6b8a316",
+      "simulated_s": 6,
+      "measured_forward_speed_mm_s": 97.19756900144792,
+      "stop_drift_m": 0.0018446999344401702,
+      "maximum_tilt_rad": 0.015857022695003015,
+      "maximum_heading_rad": 0.0005761774065270913,
+      "maximum_slip_ratio": 0.40651489524820267,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.021537778954407533,
+          "motion_to_net_body_advance_ratio": 0.04620202690961293
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.02772748398993184,
+          "motion_to_net_body_advance_ratio": 0.05947994749832515
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.022230098707811095,
+          "motion_to_net_body_advance_ratio": 0.04768716499857368
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.18950311363305672,
+          "motion_to_net_body_advance_ratio": 0.40651489524820267
+        }
+      ],
+      "motor": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_speed_rad_s": 1.669785790555775,
+          "maximum_torque_nm": 0.6580895544598003,
+          "angle_span_rad": 0.2580398419485102
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_speed_rad_s": 0.3897876437141028,
+          "maximum_torque_nm": 0.33401173027563896,
+          "angle_span_rad": 0.05761602077167144
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_speed_rad_s": 1.1935065058978986,
+          "maximum_torque_nm": 2.158747624889238,
+          "angle_span_rad": 0.09531366125252783
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_speed_rad_s": 0.10846144690631271,
+          "maximum_torque_nm": 0.09656861317317872,
+          "angle_span_rad": 0.0012691663691944688
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_speed_rad_s": 4.171493150208804,
+          "maximum_torque_nm": 0.3403611074127718,
+          "angle_span_rad": 0.7501900260373675
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_speed_rad_s": 1.5948763864231845,
+          "maximum_torque_nm": 2.156179076766725,
+          "angle_span_rad": 0.26582175198494395
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_speed_rad_s": 1.6739377376887221,
+          "maximum_torque_nm": 0.6592933917774245,
+          "angle_span_rad": 0.2581360960102471
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_speed_rad_s": 0.3907854825631128,
+          "maximum_torque_nm": 0.3330903060363884,
+          "angle_span_rad": 0.05762351549720427
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_speed_rad_s": 1.1918673477028672,
+          "maximum_torque_nm": 2.159840064737062,
+          "angle_span_rad": 0.09694362246996313
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_speed_rad_s": 0.06800516822706447,
+          "maximum_torque_nm": 0.062230899633651526,
+          "angle_span_rad": 0.0008688977425970651
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_speed_rad_s": 3.5351027102227635,
+          "maximum_torque_nm": 0.5811055089609105,
+          "angle_span_rad": 0.7282501699309918
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_speed_rad_s": 1.8750904587213562,
+          "maximum_torque_nm": 2.023287366987718,
+          "angle_span_rad": 0.3053677935534892
+        }
+      ],
+      "positive_mechanical_work_j": 3.819860306546153,
+      "native": {
+        "wall_s": 13.94332699,
+        "simulation_per_wall": 0.43031336812965326,
+        "p95_transition_s": 0.082416044
+      }
+    }
+  ],
+  "scope": "6 s live-command development screening; independent geometry, sustained steering and browser checks remain separate."
+}

@@ -1,0 +1,336 @@
+{
+  "scope": "Matched strict sampled-slip barrier trial at fixed displacement. Solver-domain rejection protects only the optimization samples. Dense slip, balance, CAD collision and runtime tracking remain separate gates; no physical speed ceiling or qualified gait is implied.",
+  "parent_audit_exactly_equal": true,
+  "barrier_weight": 0.0001,
+  "control_dense": {
+    "samples": 512,
+    "force_error_n": 0.11724582134089273,
+    "moment_error_nm": 0.04209000702210865,
+    "minimum_torque_margin_nm": 0.24713300914480382,
+    "maximum_point_penetration_m": 0.0001083613704023767,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.0752011064875786,
+    "within_sampled_slip_limit": false,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0
+  },
+  "barrier_coarse": {
+    "samples": 128,
+    "force_error_n": 0.1567336020780212,
+    "moment_error_nm": 0.06210698248258168,
+    "minimum_torque_margin_nm": 0.25445618531610825,
+    "maximum_point_penetration_m": 0.00010785870468876801,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.045694118104024406,
+    "within_sampled_slip_limit": true,
+    "geometry_samples": 129,
+    "maximum_interlink_overlap_m": 0
+  },
+  "barrier_dense": {
+    "samples": 512,
+    "force_error_n": 0.1567336020780212,
+    "moment_error_nm": 0.06306354420320529,
+    "minimum_torque_margin_nm": 0.25445618531610825,
+    "maximum_point_penetration_m": 0.00010793430786104619,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.049770921462622054,
+    "within_sampled_slip_limit": true,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0
+  },
+  "dense_slip": {
+    "body_path_m": 0.0472992762639535,
+    "displacement_m": 0.04424654247408857,
+    "duration_s": 0.6597773085746947,
+    "groups": [
+      {
+        "group": "+X | Sliding foot crosshead",
+        "rms_slip_upper_bound": 0.024719954092023055,
+        "sampled_loaded_slip_ratio": 0.008712985507185014
+      },
+      {
+        "group": "+Y | Sliding foot crosshead",
+        "rms_slip_upper_bound": 0.01725643986998036,
+        "sampled_loaded_slip_ratio": 0.008875999591744501
+      },
+      {
+        "group": "-X | Sliding foot crosshead",
+        "rms_slip_upper_bound": 0.2698655396417022,
+        "sampled_loaded_slip_ratio": 0.049770921462622054
+      },
+      {
+        "group": "-Y | Sliding foot crosshead",
+        "rms_slip_upper_bound": 0.019891059098345685,
+        "sampled_loaded_slip_ratio": 0.009177766935087156
+      }
+    ],
+    "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+    "shaping_residuals": [
+      0,
+      0,
+      4.397310792834044,
+      0
+    ],
+    "within_sampled_slip_limit": true
+  },
+  "retained_warm68_dense": {
+    "samples": 512,
+    "force_error_n": 0.12933661867924112,
+    "moment_error_nm": 0.07561186631126003,
+    "minimum_torque_margin_nm": 0.2779063447321787,
+    "maximum_point_penetration_m": 0.00010795163896792914,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.04741499422648852,
+    "within_sampled_slip_limit": true,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0
+  },
+  "final_actual_slip_inequalities": [
+    -0.8292870412233494,
+    -0.8213400097355141,
+    -0.08611763791951194,
+    -0.8179026660514114
+  ],
+  "final_barrier_residuals": [
+    0.012058550903253208,
+    0.012175225706124039,
+    0.11612023090259736,
+    0.012226393695813463
+  ],
+  "load_cutoff_diagnostic": {
+    "scope": "Numerical sensitivity experiment, not claimed physical positioning accuracy. Shared Rust audits of uniform vertical control perturbations show a hard loaded-set cutoff crossing.",
+    "witness": {
+      "group": "-X | Sliding foot crosshead",
+      "time_s": 0.5309145529936997,
+      "load_n": 0.9999999999553548,
+      "distance_to_threshold_n": -4.4645176444646495e-11
+    },
+    "probes": {
+      "up": {
+        "vertical_shift_m": 1e-12,
+        "load_n": 0.9999999212586193,
+        "sampled_loaded_slip_ratio": 0.045694118094117185,
+        "rms_slip_upper_bound": 0.27124302793897787,
+        "force_error_n": 0.15673303489820875,
+        "moment_error_nm": 0.06210698410169216
+      },
+      "down": {
+        "vertical_shift_m": -1e-12,
+        "load_n": 1.000000078652095,
+        "sampled_loaded_slip_ratio": 0.0569565938415605,
+        "rms_slip_upper_bound": 0.27124303817923223,
+        "force_error_n": 0.15673416923926276,
+        "moment_error_nm": 0.06210698086370072
+      }
+    },
+    "slip_jump": 0.011262475747443317
+  },
+  "continuous_mean_bound_diagnostic": {
+    "scope": "Offline reduction of recorded Rust forces and material velocities. Sum dt*sum(fn*|vt|)/max(group_load,threshold), divided by body path. Right-endpoint weights recovered from audit times; floating rounding may differ from native uniform dt. Actual <= mean bound <= RMS bound is checked, but this bound is not yet integrated into the optimizer.",
+    "audits": [
+      {
+        "source": "recorded68.audit.json",
+        "samples": 144,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "actual_slip": 0.0060441360394520565,
+            "continuous_mean_bound": 0.006715569167902542,
+            "rms_bound": 0.014617343263467471
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "actual_slip": 0.009526329605421841,
+            "continuous_mean_bound": 0.011091193111388807,
+            "rms_bound": 0.025878389897290965
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "actual_slip": 0.025722907408992447,
+            "continuous_mean_bound": 0.03217411033967199,
+            "rms_bound": 0.10595675266977532
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "actual_slip": 0.007731488000377482,
+            "continuous_mean_bound": 0.007901689905448149,
+            "rms_bound": 0.018386263607920457
+          }
+        ],
+        "maximum_continuous_mean_bound": 0.03217411033967199
+      },
+      {
+        "source": "recorded68-restore.audit.json",
+        "samples": 128,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "actual_slip": 0.008519150662566952,
+            "continuous_mean_bound": 0.010540121158419761,
+            "rms_bound": 0.025288033665429817
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "actual_slip": 0.008874076078897156,
+            "continuous_mean_bound": 0.009314076474267378,
+            "rms_bound": 0.017369233343553142
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "actual_slip": 0.04619115026792723,
+            "continuous_mean_bound": 0.055626579228756724,
+            "rms_bound": 0.21376983154697252
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "actual_slip": 0.00882659027087266,
+            "continuous_mean_bound": 0.009384071996272695,
+            "rms_bound": 0.01790813764253682
+          }
+        ],
+        "maximum_continuous_mean_bound": 0.055626579228756724
+      },
+      {
+        "source": "warm68.audit.json",
+        "samples": 128,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "actual_slip": 0.008734242888798116,
+            "continuous_mean_bound": 0.010756176789520951,
+            "rms_bound": 0.026468172922158664
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "actual_slip": 0.009351788296289333,
+            "continuous_mean_bound": 0.009908330206632841,
+            "rms_bound": 0.018100149327103306
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "actual_slip": 0.04610658851341238,
+            "continuous_mean_bound": 0.05805709530162464,
+            "rms_bound": 0.2203646103736868
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "actual_slip": 0.010226397312516506,
+            "continuous_mean_bound": 0.011014742168734878,
+            "rms_bound": 0.022990692147481867
+          }
+        ],
+        "maximum_continuous_mean_bound": 0.05805709530162464
+      },
+      {
+        "source": "barrier68-jacobi.audit.json",
+        "samples": 128,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "actual_slip": 0.00853564793883253,
+            "continuous_mean_bound": 0.010299676457437582,
+            "rms_bound": 0.024696884502657255
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "actual_slip": 0.008932999513224295,
+            "continuous_mean_bound": 0.009291387126329459,
+            "rms_bound": 0.017249697253280013
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "actual_slip": 0.045694118104024406,
+            "continuous_mean_bound": 0.06954047124288484,
+            "rms_bound": 0.2712430344040749
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "actual_slip": 0.00910486669742943,
+            "continuous_mean_bound": 0.009802211863291494,
+            "rms_bound": 0.019722067824995866
+          }
+        ],
+        "maximum_continuous_mean_bound": 0.06954047124288484
+      },
+      {
+        "source": "barrier68-jacobi-dense.audit.json",
+        "samples": 512,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "actual_slip": 0.008712985507185014,
+            "continuous_mean_bound": 0.010314752947736833,
+            "rms_bound": 0.024719954092023055
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "actual_slip": 0.008875999591744501,
+            "continuous_mean_bound": 0.009292934448031849,
+            "rms_bound": 0.01725643986998036
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "actual_slip": 0.049770921462622054,
+            "continuous_mean_bound": 0.06908315095264793,
+            "rms_bound": 0.2698655396417022
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "actual_slip": 0.009177766935087156,
+            "continuous_mean_bound": 0.009853332260048638,
+            "rms_bound": 0.019891059098345685
+          }
+        ],
+        "maximum_continuous_mean_bound": 0.06908315095264793
+      }
+    ]
+  },
+  "planned_projected_45deg_rate_m_s": 0.06706268161408929,
+  "search": {
+    "termination": "outer_iteration_limit",
+    "evaluations": 72581,
+    "maximum_violation": 2.1346720415604237,
+    "within_constraint_tolerance": false,
+    "history": [
+      {
+        "complementarity": 11.276088452648931,
+        "iteration": 1,
+        "maximum_violation": 2.366208108918212,
+        "objective_cost": 9.519056399504205,
+        "penalty": 1,
+        "shifted_constraint_norm": 2.366208108918212,
+        "inner_termination": "iteration_limit",
+        "inner_evaluations": 35030,
+        "rejected_evaluations": 559,
+        "last_inner": {
+          "accepted": true,
+          "cost": 231.86341479745047,
+          "damping": 145708.0724885659,
+          "evaluations": 35030,
+          "iteration": 29,
+          "projected_gradient": 587288.888604093
+        }
+      },
+      {
+        "complementarity": 14.72953551377481,
+        "iteration": 2,
+        "maximum_violation": 2.1346720415604237,
+        "objective_cost": 9.796659573213812,
+        "penalty": 1,
+        "shifted_constraint_norm": 2.1346720415604237,
+        "inner_termination": "iteration_limit",
+        "inner_evaluations": 37548,
+        "rejected_evaluations": 3204,
+        "last_inner": {
+          "accepted": true,
+          "cost": 442.6416972373156,
+          "damping": 1457080724.8856573,
+          "evaluations": 37548,
+          "iteration": 29,
+          "projected_gradient": 517147.94365259574
+        }
+      }
+    ],
+    "next_penalty": 10
+  }
+}

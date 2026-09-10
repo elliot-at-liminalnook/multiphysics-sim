@@ -1,0 +1,30 @@
+[
+  {
+    name: 'constrained-front165-scale1-human-fine',
+    maximum_body_difference_m: 0.0006646726578096075,
+    maximum_steady_speed_fraction: 0.0004166822121594738,
+    maximum_slip_ratio: 0.12515446849871004,
+    passed_existing_path_speed_screen: true
+  },
+  {
+    name: 'constrained165-preview-5ms',
+    maximum_body_difference_m: 0.008939949844572739,
+    maximum_steady_speed_fraction: 0.009586227649065325,
+    maximum_slip_ratio: 0.1052658943783532,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'constrained165-preview-10ms',
+    maximum_body_difference_m: 0.025900020570752316,
+    maximum_steady_speed_fraction: 0.020113671464683677,
+    maximum_slip_ratio: 0.08840098371487003,
+    passed_existing_path_speed_screen: false
+  },
+  {
+    name: 'constrained165-human-1p25ms',
+    maximum_body_difference_m: 0.002213296469251089,
+    maximum_steady_speed_fraction: 0.0016834588713044577,
+    maximum_slip_ratio: 0.1255760042215703,
+    passed_existing_path_speed_screen: true
+  }
+]

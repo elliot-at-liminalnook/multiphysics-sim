@@ -1,0 +1,184 @@
+{
+  "scope": "Same CAD, period and fixed displacement. Full-objective versus feasibility-only LM comparison, then matched continued/targeted restoration. Dense physical quality is compared independently; objective costs have different definitions. No measured speed, qualified gait or physical maximum claim.",
+  "baseline_dense": {
+    "samples": 512,
+    "force_error_n": 1.8370332864176757,
+    "moment_error_nm": 0.6797429354995145,
+    "minimum_torque_margin_nm": -0.038309310974151196,
+    "maximum_point_penetration_m": 0.00011342999995622716,
+    "within_planning_tolerances": false,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0.000015355157830414243,
+    "maximum_floor_penetration_m": 0.00011342999995622716
+  },
+  "rows": [
+    {
+      "name": "restore32-full-control",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.10833795134425103,
+        "moment_error_nm": 0.069293244920739,
+        "minimum_torque_margin_nm": -0.00000873001244972027,
+        "maximum_point_penetration_m": 0.00011200957702162118,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000015399140363411208,
+        "maximum_floor_penetration_m": 0.00011200957702162118
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 1.3236198916561592,
+        "moment_error_nm": 0.46035162370821214,
+        "minimum_torque_margin_nm": -0.03056635555842499,
+        "maximum_point_penetration_m": 0.00011201209079503283,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000015399140363411208,
+        "maximum_floor_penetration_m": 0.00011201209079503283
+      },
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "dense_loaded_slip_ratio": 0.8715040416641622,
+      "dense_sliding_work_j": 0.23198325981530776,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34481,
+        "initial_cost": 8.186168968229488,
+        "cost": 7.030639469470115,
+        "last": {
+          "accepted": true,
+          "cost": 7.030639469470115,
+          "damping": 8.603915972377328,
+          "evaluations": 34481,
+          "iteration": 29,
+          "projected_gradient": 54.18465813189911
+        }
+      }
+    },
+    {
+      "name": "restore32-fixed",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.09291011582781028,
+        "moment_error_nm": 0.027182343800550762,
+        "minimum_torque_margin_nm": -0.0005288079413995339,
+        "maximum_point_penetration_m": 0.00011286905345375686,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.00001563099467624515,
+        "maximum_floor_penetration_m": 0.0001132862783169708
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.8850161346167217,
+        "moment_error_nm": 0.3689070457379034,
+        "minimum_torque_margin_nm": -0.034404896627046246,
+        "maximum_point_penetration_m": 0.0001132862783169708,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000015656861530997856,
+        "maximum_floor_penetration_m": 0.0001132862783169708
+      },
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "dense_loaded_slip_ratio": 0.9097951100103566,
+      "dense_sliding_work_j": 0.30382655508140344,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34483,
+        "initial_cost": 209.84089429632525,
+        "cost": 57.37658033832098,
+        "last": {
+          "accepted": true,
+          "cost": 57.37658033832098,
+          "damping": 31.866355453249337,
+          "evaluations": 34483,
+          "iteration": 29,
+          "projected_gradient": 1881456.2703467736
+        }
+      }
+    },
+    {
+      "name": "restore32-continued",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.0808680088604834,
+        "moment_error_nm": 0.01539416137702454,
+        "minimum_torque_margin_nm": -0.00006678887365871994,
+        "maximum_point_penetration_m": 0.00011493064919121387,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000016507924103589382,
+        "maximum_floor_penetration_m": 0.00011493064919121387
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.8402821383657284,
+        "moment_error_nm": 0.3999442127602614,
+        "minimum_torque_margin_nm": -0.04811015532766213,
+        "maximum_point_penetration_m": 0.00011497984298558528,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000016515829189036905,
+        "maximum_floor_penetration_m": 0.00011497984298558528
+      },
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "dense_loaded_slip_ratio": 0.9063032582736794,
+      "dense_sliding_work_j": 0.31542177241466296,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34486,
+        "initial_cost": 57.37658033832098,
+        "cost": 22.647238651275796,
+        "last": {
+          "accepted": true,
+          "cost": 22.647238651275796,
+          "damping": 3540.706161472153,
+          "evaluations": 34486,
+          "iteration": 29,
+          "projected_gradient": 718.6816584703267
+        }
+      }
+    },
+    {
+      "name": "restore32-targeted",
+      "optimized": {
+        "samples": 112,
+        "force_error_n": 0.1320584458310371,
+        "moment_error_nm": 0.038625118354634225,
+        "minimum_torque_margin_nm": -0.000017033126359145,
+        "maximum_point_penetration_m": 0.00011291852775741074,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.00001691073775229903,
+        "maximum_floor_penetration_m": 0.00011291852775741074
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.3193024468283362,
+        "moment_error_nm": 0.1188253579554619,
+        "minimum_torque_margin_nm": -0.0003693369355435294,
+        "maximum_point_penetration_m": 0.00011292959636549638,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.00001691073775229903,
+        "maximum_floor_penetration_m": 0.00011292959636549638
+      },
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "dense_loaded_slip_ratio": 0.8990639003624209,
+      "dense_sliding_work_j": 0.31219596616441414,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34484,
+        "initial_cost": 3352.042476708966,
+        "cost": 81.22674833846189,
+        "last": {
+          "accepted": true,
+          "cost": 81.22674833846189,
+          "damping": 106.22118484416448,
+          "evaluations": 34484,
+          "iteration": 29,
+          "projected_gradient": 523511.2343282485
+        }
+      }
+    }
+  ]
+}

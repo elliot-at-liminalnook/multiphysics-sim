@@ -1,0 +1,1033 @@
+{
+  "base_commit": "af6489470d8a410b35ba590d641f1acdd14915f4",
+  "recorded_at": "2026-09-09T19:42:47.104Z",
+  "sources": {
+    "path": "examples/full-robot/contact-planning/bayesian-search-sources.tar.gz",
+    "bytes": 69217,
+    "sha256": "5bd20ae48ac8c76da7fb27995501986bd9832a813b08ecf41e5c77cda5b3218d",
+    "entries": [
+      {
+        "path": "Cargo.lock",
+        "bytes": 183127,
+        "sha256": "a38a0fb773d040af5c4edcfa973b183c48e877d0e56e2150969d02e7aff562b4"
+      },
+      {
+        "path": "crates/sim-solve/Cargo.toml",
+        "bytes": 1149,
+        "sha256": "6cac7780a208f25a6535951bfad4743bb8a0951fc24ba687e90e439b5887d83b"
+      },
+      {
+        "path": "crates/sim-solve/src/lib.rs",
+        "bytes": 47517,
+        "sha256": "c09a752d7f18c8de2879ef98c4ac16a698e503d41bba2e4308332d8cfebb56cc"
+      },
+      {
+        "path": "crates/sim-solve/src/bayesian.rs",
+        "bytes": 17404,
+        "sha256": "e38617802981d669117eda91711065233e4fb0369db1ddfd7b829f16321e89dd"
+      },
+      {
+        "path": "crates/sim-solve/examples/suggest_black_box.rs",
+        "bytes": 2087,
+        "sha256": "0720285666ad63e88469cf3011fe4442c9d56fe5444aa368ba5c1d99d135f731"
+      },
+      {
+        "path": ".github/workflows/bayesian.yml",
+        "bytes": 804,
+        "sha256": "bf4c89836c074dccc92529b8c633063de3c13581e8717699932f25afc89c12d7"
+      },
+      {
+        "path": "examples/full-robot/contact-planning/run_bayesian_controller_screen.mjs",
+        "bytes": 10070,
+        "sha256": "d8ecd7eb780fef879eecd2397159f56156d1812d307d8ef1509653091451df56"
+      },
+      {
+        "path": "examples/full-robot/contact-planning/bayesian-controller-pilot.spec.json",
+        "bytes": 2185,
+        "sha256": "546a56b075a85233c0fd72ec8a25045797685392c12357742380f5c68c73a867"
+      },
+      {
+        "path": "examples/full-robot/contact-planning/record_bayesian_search.mjs",
+        "bytes": 4878,
+        "sha256": "e819a6cfc7f3b17a773396fa012364e33f881093b68086259bb17f5f07e36aae"
+      }
+    ]
+  },
+  "completed_snapshot": {
+    "path": "examples/full-robot/contact-planning/bayesian-search-completed-snapshot.tar.gz",
+    "bytes": 63832387,
+    "sha256": "e70ed7e5aa54238d2f1e6345509b79b81542f4995085071ad5eacf6c88b4d57a",
+    "entries": [
+      {
+        "path": "runs/bayesian-controller-pilot-v2/context.json",
+        "bytes": 3301,
+        "sha256": "960e8df764304fa853bae029b5a3097368a8b4b943806f1f63842f590129fa46"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000-audit.execution.json",
+        "bytes": 268,
+        "sha256": "11e9f11d6aa0913f37d2821cc93f2afa844fe2b393fa3e4ad209f15de688798a"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000-audit.stdout.log",
+        "bytes": 316,
+        "sha256": "5b6e6e8dd84cf7c518616e2c2280816c9423dfcf0450a332573d2f2e30fa6990"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000-measure.execution.json",
+        "bytes": 246,
+        "sha256": "81482015df96390cdb31c93eab32f7b4ce7df4f114043d00b1be254f4ff76a66"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000-measure.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000-measure.stdout.log",
+        "bytes": 864,
+        "sha256": "75954cbbf127809607910b30a3f93d405c1cbf5589860b9848dbce6d39a8c344"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.actions.json",
+        "bytes": 20734,
+        "sha256": "aec2d05369490b2fcc6c04809160f5323e0a8f34311cb287e4236cedb7228613"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.clearance.spec.json",
+        "bytes": 94,
+        "sha256": "5a6ed6a75566d99334e7326bba97cac277b59e08cd88e171bf2a5d7870bda3a3"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.clearance.summary.json",
+        "bytes": 3225,
+        "sha256": "58ceed889d6e12b101e6d9c9f70937ba7cad00d4602d6005736aa29ba285b78a"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.config.json",
+        "bytes": 130276,
+        "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.contact-clearance-requirements.json",
+        "bytes": 14644,
+        "sha256": "f5f15813be2b423aff8613fc4dad31f660b55045b8559f4371cfce8a88e3b08a"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.contact-geometry.json",
+        "bytes": 642421,
+        "sha256": "23f0358453a69e22ecc37da25e8835216c73fae493bad4c4d0e3d7311617792f"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.evaluation.json",
+        "bytes": 718,
+        "sha256": "54c24162e14450c9f61250db040122e41511645e5f285b18544035aac55195b2"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.native.json",
+        "bytes": 26687245,
+        "sha256": "3fb69dac9af19f749de228e25c458f68afedd2e6798290b062becaba272cdc5a"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.policy-state.json",
+        "bytes": 96472,
+        "sha256": "e6aa8ab16cb70a09ef2606ee78c1917d88d2a78203585dd76a0c2d4c311e9a5a"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.scene.json",
+        "bytes": 12774039,
+        "sha256": "f3e407c77c13dc1491ffe9c8c59e8bad836ea70a6f5229069ab87d36c0a29fe4"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-000.summary.json",
+        "bytes": 2535,
+        "sha256": "e65a34bb9c9043a22c32d15de79e1ed2a5bf93279877a78949dfee1c791a6d9f"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001-audit.execution.json",
+        "bytes": 268,
+        "sha256": "450b95a420702c63cf38f445a76729883b84d3489009a213476653cbb6483883"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001-audit.stdout.log",
+        "bytes": 316,
+        "sha256": "f06eea5e8ba621427affc1c11c07638e6a06f4e7557ceb69cf710cf76a4f9a45"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001-measure.execution.json",
+        "bytes": 261,
+        "sha256": "7b76284adcb0b21df044204fa3faa019b87cb73bdfcf978a3e097c41ba6d697e"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001-measure.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001-measure.stdout.log",
+        "bytes": 868,
+        "sha256": "ff5c1f380a506f46264255d5caedf4486133cb05d9568520d2b60afa4168248d"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.actions.json",
+        "bytes": 30334,
+        "sha256": "586382d6811c5a5fdc74c124428ff76d759619bdebc72fccfce5470cefb305d7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.clearance.spec.json",
+        "bytes": 94,
+        "sha256": "e8dfed69acf392b4650eded756fc00489b03951f1ebe7295caf8a00b7f921f94"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.clearance.summary.json",
+        "bytes": 3225,
+        "sha256": "0817f28c417a3f8dcd1741a260da8c5323d421165964b2c8cde31881878fe56a"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.config.json",
+        "bytes": 130276,
+        "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.contact-clearance-requirements.json",
+        "bytes": 5750,
+        "sha256": "fbd75755f2034311192dc1b8fecd756c48a287b105c444da36ca34d57b611379"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.contact-geometry.json",
+        "bytes": 613102,
+        "sha256": "bd522d2b77360c0eaf5a9eb37f5c9b85a9235210bbbd7390b2e4df063d744b9f"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.evaluation.json",
+        "bytes": 768,
+        "sha256": "02acf7e455d52068073a21ab29604946926329d05645293fbd05affe5b5cf3ea"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.native.json",
+        "bytes": 26753288,
+        "sha256": "e68dd95c12ab3a0087938e3a262e34b300bf86ca09b0d68d05a72d155c0730f3"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.policy-state.json",
+        "bytes": 98242,
+        "sha256": "61b90408a812e8b378da5f5b87c491dcfb416b4ea432db86e28170bc1cb56325"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.scene.json",
+        "bytes": 12774246,
+        "sha256": "6c1884a155445ee2dbb02bf24043d197c42f329155d86bf708909959b5627058"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-001.summary.json",
+        "bytes": 2555,
+        "sha256": "30505f93fd2dcccc1cc34feb7ff5dbc7b5c555d61e4eebe34f320810da2ddee7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002-audit.execution.json",
+        "bytes": 268,
+        "sha256": "0094420d967c91ee98a1ae0c942f7fb1f4ed96d23a3ad93648744d82879ff6ed"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002-audit.stdout.log",
+        "bytes": 316,
+        "sha256": "6a05c2056aec8ec25a0392b52965a2ac8bc7b0f37c5f6fc254eafc8b31f2fa4e"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002-measure.execution.json",
+        "bytes": 261,
+        "sha256": "16fd001ea337830782cbf56739c3008e541f26586b3f614023c7bf79e7201a5e"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002-measure.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002-measure.stdout.log",
+        "bytes": 864,
+        "sha256": "280b48befa3bc6e168569c7822e16ed1407215c274dd95c09f4fcabc4f57ca43"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.actions.json",
+        "bytes": 30334,
+        "sha256": "0f24191f57d467872d9d50c030ac607815003a135327a5d81b41755aea85e5f6"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.clearance.spec.json",
+        "bytes": 94,
+        "sha256": "68c028b5bc8e8c4052f72c52d041188f25e30c2023c8bb6c3dff5e774390063f"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.clearance.summary.json",
+        "bytes": 3225,
+        "sha256": "9ff9f55fae8d202cdd4df8ce6359f845192a8f075871b2bf7c2fa9a1dfd5839b"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.config.json",
+        "bytes": 130276,
+        "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.contact-clearance-requirements.json",
+        "bytes": 12130,
+        "sha256": "f32da936f67142e6f63a9229838fe5420a03da386f1eb27008e25ab11d41bf28"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.contact-geometry.json",
+        "bytes": 633190,
+        "sha256": "3a6e217e0258e07898bc940eb717d0e7cc68fda057305b6b74e565afe47b2cc0"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.evaluation.json",
+        "bytes": 768,
+        "sha256": "a60f625b062ca8b66e95503b0e36db0557ff21ae7ec6fe0c3cb298d8db3ed232"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.native.json",
+        "bytes": 26728180,
+        "sha256": "fec337e275e617de8eef4c9ec37cd49e5771719f35204cec0806840bb4724323"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.policy-state.json",
+        "bytes": 96446,
+        "sha256": "97647b01c9540f349060da7033df6078c44f76082fd0d9ea4872663881ebae33"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.scene.json",
+        "bytes": 12774246,
+        "sha256": "ee474eb04be822b412470b12be4e873452b6d64ec3e22a6b8e93e00217892c47"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-002.summary.json",
+        "bytes": 2549,
+        "sha256": "2299efe8228f3837d285fd1bb1879a33c35a14d1097200ecb120bf0178dc44e1"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-audit.execution.json",
+        "bytes": 268,
+        "sha256": "a33df2e1e7ec2a8b3132ef7b9748e8f774b98496bf12477b1efba85e72d308f1"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-audit.stdout.log",
+        "bytes": 316,
+        "sha256": "547b57798729258d73936f47d77add42a1426a41d289883dd3a50dfc75bb1a29"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-measure.execution.json",
+        "bytes": 260,
+        "sha256": "fe1b2854a3c47ffe3d18667d001d1ee64ca53e219693d0f6e5bbde4dc6a86eb6"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-measure.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-measure.stdout.log",
+        "bytes": 850,
+        "sha256": "ac14c2a7cc8024295d3aa2bac9ede0c78b631cbd3f55c6d3b0aae66f204b108d"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.actions.json",
+        "bytes": 30094,
+        "sha256": "925cc74fa85a934e070ecd1edf409d08868608834e04bb690dfc4f649f837da9"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.clearance.spec.json",
+        "bytes": 94,
+        "sha256": "2b9dd3970baf98d026d89d396efcb3570f83e332813d7609033ff07764529cd2"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.clearance.summary.json",
+        "bytes": 18170,
+        "sha256": "0449b9c852bbc0658da18aa7812dbebcfd984068107c231c49b951c3c13d8c60"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.config.json",
+        "bytes": 130276,
+        "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.contact-clearance-requirements.json",
+        "bytes": 18097,
+        "sha256": "e98c8fc86779bb3d701643f231f3367995d68e0713211a7205e84a81dad42577"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.contact-geometry.json",
+        "bytes": 652939,
+        "sha256": "ff7cd890d965039ba844e484b868607652b5647cf47b2397e162d8aef44efb73"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.evaluation.json",
+        "bytes": 792,
+        "sha256": "88dc0c0f52777983642986ed4d7f3cfb2ac59ac4599cf923ae20c2bafc10c0c1"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.native.json",
+        "bytes": 26709590,
+        "sha256": "6a9aaaeedf2c42e71266008a1f6f845a1b7e4ce73f7e1d11c0f23c11b71a8bf1"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.policy-state.json",
+        "bytes": 95416,
+        "sha256": "fa39eb7e42211177755e087e4e7bce972189312d83734853058a0285de83a398"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.scene.json",
+        "bytes": 12774246,
+        "sha256": "b9de5eff1e0b2c34a3346166e58cf99d884be7cff4e97730a018326de325b07c"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.summary.json",
+        "bytes": 2532,
+        "sha256": "edab2239065becc2af28ac5d57aa9bc95a2dcfd93539493b37dffb3eede6d3d8"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004-audit.execution.json",
+        "bytes": 268,
+        "sha256": "a206779c699cab30f0538f5409e6fb3302b2a996edb18ec33ce689d50d563ed2"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004-audit.stdout.log",
+        "bytes": 316,
+        "sha256": "b6ebd56e916cb12d56632d4ad16c64147087f867baf83307dfff5aae010e56f7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004-measure.execution.json",
+        "bytes": 259,
+        "sha256": "9ee8601f83004cd862955f26216432f02f5275184f01ec6cbf6ef431eb67d0df"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004-measure.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004-measure.stdout.log",
+        "bytes": 873,
+        "sha256": "aa8a58654556b1797556d159057be6761b3e9863f34770ea1135cdaa967b0cd0"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.actions.json",
+        "bytes": 29454,
+        "sha256": "d6a95fe522376f9fe84a634e72ffbfb6afff23ff640fdbeff75ab10fee62c2c1"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.clearance.spec.json",
+        "bytes": 94,
+        "sha256": "ff533452f62f4bdb7d0dae3f97b8d7cb0ae185e32271313f7782a38ae6bc1589"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.clearance.summary.json",
+        "bytes": 3225,
+        "sha256": "404651deca266f3161f45347ca689426afc20d7701b0955002563e58c61ea362"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.config.json",
+        "bytes": 130276,
+        "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.contact-clearance-requirements.json",
+        "bytes": 9553,
+        "sha256": "57dfbc94ba8671dd596d7a8d13c74d8deba0d9d182254973e161846a20660a98"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.contact-geometry.json",
+        "bytes": 625313,
+        "sha256": "ad8ad90a34bd4488fa1c825aa3f9a1c07c1c0fe70b4f60a62925d9b5d7616559"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.evaluation.json",
+        "bytes": 775,
+        "sha256": "dd06d0ed7c3d715dcceec7a2336b4e08a2bfb734b05ae9441f486dbdc16aaf6e"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.native.json",
+        "bytes": 26738265,
+        "sha256": "42c0e743773b0acdaad36b76ce04ff51c053ff96ebbd99e000ab5a6beb88ad88"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.policy-state.json",
+        "bytes": 97890,
+        "sha256": "8b821b1ed29b5783bf8a2104cca15a971fe1a902348905ccd91a4e0b51cff20b"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.scene.json",
+        "bytes": 12774233,
+        "sha256": "9718ca539cd9aa61fb02e28828ff92720a06dfcc88f6d4b27ab8963623078751"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-004.summary.json",
+        "bytes": 2561,
+        "sha256": "f2511284ca30d6e22f4b26c1875d30c03439340c776cb0524e573a8311887719"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005-audit.execution.json",
+        "bytes": 268,
+        "sha256": "b14f7e40cdd97fcd83dadce789468133b0be0f876e89948f19ed13b640913fcb"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005-audit.stdout.log",
+        "bytes": 316,
+        "sha256": "c78c3b4ee5fdb07f05803020cb9c614cca2fa46fffae2285aca67793b7c210cc"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005-measure.execution.json",
+        "bytes": 261,
+        "sha256": "38d865a2346da4091b240ea3e96634615d88495bb15e526145769597409f76e7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005-measure.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005-measure.stdout.log",
+        "bytes": 869,
+        "sha256": "71ec942a0cf7c24bf30e83b92c5552fffa89cbdf4b5bc910c240849749cc8916"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.actions.json",
+        "bytes": 30334,
+        "sha256": "b1df5d0a8ab0d40d617f93c88628052803c3aea502871d13839d04b5f1df7da4"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.clearance.spec.json",
+        "bytes": 94,
+        "sha256": "2bee3e9e9ece9615769987295eb6e9f1ecfed66f9757954688bef53534f0d414"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.clearance.summary.json",
+        "bytes": 3225,
+        "sha256": "f69feb0975ceda480cbd1bc28829b7c6acef4dfa2fc6a20ceccf649885cf7041"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.config.json",
+        "bytes": 130276,
+        "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.contact-clearance-requirements.json",
+        "bytes": 6995,
+        "sha256": "64a68609851fc4fde7eba95351584b77a7595a1492b37472d1581b7749736a15"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.contact-geometry.json",
+        "bytes": 617368,
+        "sha256": "b9a2404720ee5ac4bc4ad526882ff5977aded2e071c43283a8d9d9ba233d4e6c"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.evaluation.json",
+        "bytes": 775,
+        "sha256": "6db963472010ff21896bfcd432ff0d0a88affc011c658513708209898901f502"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.native.json",
+        "bytes": 26756354,
+        "sha256": "5a1c61daa5f398a30444bc069dfa63279a0d9e44ca9c291de615a02ec7c9ec34"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.policy-state.json",
+        "bytes": 98879,
+        "sha256": "91d635bd0d37f4b092361796e850f3775d4020c14fb617cc2acd5187a20494eb"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.scene.json",
+        "bytes": 12774246,
+        "sha256": "e38c64919c5449464fad769974a481e7865aeb57366baf21fdc366584d6dc14c"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-005.summary.json",
+        "bytes": 2557,
+        "sha256": "837e4e2b210c4b92f07c60f36dd844dc9fab28374aec17b2a9411bfafba2b7d1"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/initial-design.execution.json",
+        "bytes": 269,
+        "sha256": "db040595219789f18f62ebd9d7764a43edf52070faec605dfc3f4dfda14da945"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/initial-design.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/initial-design.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/initial.design-request.json",
+        "bytes": 1002,
+        "sha256": "e3327add85138b65ef97f60273a8c6ef36bfeb7b5953f45667c79539ee60ead4"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/initial.design.json",
+        "bytes": 1833,
+        "sha256": "e9c9eab727404bb0c2a30ffe01c12569c278ee58488272e323050ec5a1804530"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot-v2/spec.json",
+        "bytes": 1938,
+        "sha256": "570e07cc8e94849fab3718f3b2bde7fa25d3c5c0144e19817c86e2b8333467f0"
+      }
+    ]
+  },
+  "telemetry_comparison_failure": {
+    "path": "examples/full-robot/contact-planning/bayesian-search-telemetry-failure.tar.gz",
+    "bytes": 10524671,
+    "sha256": "1b6716c2c385120ead923f55685a96ca9cc4caf2f46fa42b2a94f80c6f0884d2",
+    "entries": [
+      {
+        "path": "runs/bayesian-controller-pilot/context.json",
+        "bytes": 3301,
+        "sha256": "aeb0e64a91d63029711eea6ff02a965e3efe9d610cb50673e415814944843f27"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot/evaluation-000.actions.json",
+        "bytes": 20734,
+        "sha256": "aec2d05369490b2fcc6c04809160f5323e0a8f34311cb287e4236cedb7228613"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot/evaluation-000.config.json",
+        "bytes": 130276,
+        "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot/evaluation-000.native.json",
+        "bytes": 26687268,
+        "sha256": "30ae849495430df6c007d88e9d84304601a1505e8d4b63e956519e0728ca85c6"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot/evaluation-000.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot/evaluation-000.scene.json",
+        "bytes": 12774039,
+        "sha256": "f3e407c77c13dc1491ffe9c8c59e8bad836ea70a6f5229069ab87d36c0a29fe4"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot/runner.mjs",
+        "bytes": 9922,
+        "sha256": "8511f265379859419a1da31791d323a23339c61bcb52a576a5a08e72a9296d96"
+      },
+      {
+        "path": "runs/bayesian-controller-pilot/spec.json",
+        "bytes": 1935,
+        "sha256": "0a05f2473e751a9db8ad50a2c5ae6451064c0015fa8b194b43871f681d73d2a6"
+      }
+    ]
+  },
+  "ei_diagnostic_sources": {
+    "path": "examples/full-robot/contact-planning/bayesian-ei-diagnostic-sources.tar.gz",
+    "bytes": 63283,
+    "sha256": "c0cafda02b38ececa51d12edca80eb09bb172446e6349015e9e4249ec313e8ba"
+  },
+  "logs": [
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-tests.log",
+      "bytes": 11064,
+      "sha256": "a6403dd186ccbfddfc13321f60fd47199ec2917ca3f466d875534d1b2c6a08a6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-tests-default.log",
+      "bytes": 1491,
+      "sha256": "9335140e60ec28eecc85ff3da8edd8807e61bc18ca60dc52093078692fadb312"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-repeat-diagnosis.log",
+      "bytes": 1242,
+      "sha256": "49a7d130f697ddc5a85a8c2c5f4c8e006b60390a680dfb8b5591a2c38618704c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-logei-tests.log",
+      "bytes": 762,
+      "sha256": "62fd1c1f0f3bb8776a219f9cdd61e955959ab401d2a71caa040f2949d34f24b0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-all-tests.log",
+      "bytes": 3995,
+      "sha256": "ecf678d6687111440ab0e95c30fbb04fce9ada4a72c22ca3734f125c0b1f996e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-build.log",
+      "bytes": 161,
+      "sha256": "d4893cd8c1281b0befe92ceb94f34d91be8ffe724fb3856d08ac40e01df0e606"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-controller-pilot.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bayesian-controller-pilot.error.log",
+      "bytes": 818,
+      "sha256": "3ecefed3d546597482997835c55820af2cf2da4dd8567f53e70061f8d52d7971"
+    }
+  ],
+  "context": {
+    "path": "runs/bayesian-controller-pilot-v2/context.json",
+    "bytes": 3301,
+    "sha256": "960e8df764304fa853bae029b5a3097368a8b4b943806f1f63842f590129fa46"
+  },
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+      "sha256": "5d0fcb5263d8053c2ba951dba7fc3b6a80e6a6c1bb5badfe206fe3ae60c812ec"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+      "sha256": "f364502f7563b6221c2736ec4b990c66e6c4194d59c8bd6b36aedcf7762c97ce"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/replay_policy_state",
+      "sha256": "706554e0900a2a552e967d485be88049347a573b98a7d2841257da8cf31600b9"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_lift",
+      "sha256": "241130984bd5f2bc987c7c0d9d413e360f7bb387a3b9fb832d7e4480809eecf5"
+    }
+  ],
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "runtime_source_provenance": {
+    "path": "examples/full-robot/contact-planning/smooth-return-evidence-index.json",
+    "bytes": 18831,
+    "sha256": "0842201cb3e3abc0bb0058dab114b9a139f51dbb5244a437e60fbf2b57da76fb"
+  },
+  "completed_trials": [
+    {
+      "observation": {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.25,
+          0.5,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.24922912777101194,
+          "residuals": [
+            2.275818602421885,
+            -0.12423434589612725,
+            -0.546370810588436,
+            -0.1395018444662437,
+            -0.5500000005625001,
+            -0.9361707706957858,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-000.evaluation.json"
+      },
+      "metrics": {
+        "speeds_m_s": [
+          0.2609470706762984,
+          0.24922912777101194
+        ],
+        "slip": 0.16379093012109425,
+        "control": true,
+        "planned_lifts": 46,
+        "passed_lifts": 46,
+        "overlap_m": 0
+      },
+      "wall_s": 31.903622633999998,
+      "capture_sha256": "3fb69dac9af19f749de228e25c458f68afedd2e6798290b062becaba272cdc5a"
+    },
+    {
+      "observation": {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.10157218591375013,
+          0.6182873570271589,
+          1.4099168133440918
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.0949361232384309,
+          "residuals": [
+            1.9215659536645022,
+            0.3066692649411382,
+            -0.42980444764568404,
+            -0.11974388509389133,
+            -0.5000000006250007,
+            -0.9828445275711725,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-001.evaluation.json"
+      },
+      "metrics": {
+        "speeds_m_s": [
+          0.10257749697939395,
+          0.0949361232384309
+        ],
+        "slip": 0.1460782976832251,
+        "control": false,
+        "planned_lifts": 18,
+        "passed_lifts": 18,
+        "overlap_m": 0
+      },
+      "wall_s": 28.399221029,
+      "capture_sha256": "e68dd95c12ab3a0087938e3a262e34b300bf86ca09b0d68d05a72d155c0730f3"
+    },
+    {
+      "observation": {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.21160617613573496,
+          0.2793038275669038,
+          1.1103573441869343
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.20474684483542185,
+          "residuals": [
+            0.6976076195779262,
+            -0.35168893218757624,
+            -0.49189432396482535,
+            -0.13750488885773138,
+            -0.6000000005000008,
+            -0.933207124210146,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-002.evaluation.json"
+      },
+      "metrics": {
+        "speeds_m_s": [
+          0.215161482850621,
+          0.20474684483542185
+        ],
+        "slip": 0.08488038097889632,
+        "control": true,
+        "planned_lifts": 38,
+        "passed_lifts": 38,
+        "overlap_m": 0
+      },
+      "wall_s": 32.05417602,
+      "capture_sha256": "fec337e275e617de8eef4c9ec37cd49e5771719f35204cec0806840bb4724323"
+    },
+    {
+      "observation": {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.3166963504694018,
+          0.6902410253030458,
+          0.8217371770648858
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.32196018638655366,
+          "residuals": [
+            4.138953083454717,
+            0.6419680348187216,
+            -0.047868913427282944,
+            -0.2372092478614768,
+            -0.35000000081250005,
+            -0.962262703173144,
+            0.26315789473684215,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-003.evaluation.json"
+      },
+      "metrics": {
+        "speeds_m_s": [
+          0.3426966146801271,
+          0.32196018638655366
+        ],
+        "slip": 0.25694765417273585,
+        "control": false,
+        "planned_lifts": 57,
+        "passed_lifts": 42,
+        "overlap_m": 0
+      },
+      "wall_s": 29.501720260000003,
+      "capture_sha256": "6a9aaaeedf2c42e71266008a1f6f845a1b7e4ce73f7e1d11c0f23c11b71a8bf1"
+    },
+    {
+      "observation": {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.160618457581984,
+          0.426409228931391,
+          1.0688525004080054
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.15044566713166765,
+          "residuals": [
+            1.2063322540607073,
+            0.26670254508251423,
+            -0.31957006437005187,
+            -0.13734841108619567,
+            -0.5000000006250007,
+            -0.9689326382165783,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-004.evaluation.json"
+      },
+      "metrics": {
+        "speeds_m_s": [
+          0.16301096221136355,
+          0.15044566713166765
+        ],
+        "slip": 0.11031661270303537,
+        "control": false,
+        "planned_lifts": 30,
+        "passed_lifts": 30,
+        "overlap_m": 0
+      },
+      "wall_s": 31.953280962000004,
+      "capture_sha256": "42c0e743773b0acdaad36b76ce04ff51c053ff96ebbd99e000ab5a6beb88ad88"
+    },
+    {
+      "observation": {
+        "context_id": "1ebe6bf597aa00eef01cc11ebe9885396bae84c7a8ba3e7c47edeb0626cca10e",
+        "values": [
+          0.12402420892166359,
+          0.8257201301809396,
+          0.9444879780284072
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.11617353883640137,
+          "residuals": [
+            1.1728606201306113,
+            0.26598994720794833,
+            -0.2519916498517537,
+            -0.122801907426758,
+            -0.5750000005312501,
+            -0.9897249878845318,
+            0,
+            0
+          ]
+        },
+        "evidence": "runs/bayesian-controller-pilot-v2/evaluation-005.evaluation.json"
+      },
+      "metrics": {
+        "speeds_m_s": [
+          0.12843817089626144,
+          0.11617353883640137
+        ],
+        "slip": 0.10864303100653058,
+        "control": false,
+        "planned_lifts": 22,
+        "passed_lifts": 22,
+        "overlap_m": 0
+      },
+      "wall_s": 30.404600835000018,
+      "capture_sha256": "5a1c61daa5f398a30444bc069dfa63279a0d9e44ca9c291de615a02ec7c9ec34"
+    }
+  ],
+  "verification": {
+    "shared_tests_passed": 39,
+    "bayesian_tests_passed": 4,
+    "baseline_non_timing_frame_equality": true,
+    "excluded_telemetry_field": "stepping_wall_s",
+    "failed_feature_build_exit_code": 101,
+    "ei_repeat_test_exit_code": 101,
+    "logei_tests_exit_code": 0,
+    "build_exit_code": 0,
+    "initial_telemetry_sensitive_driver_exit_code": 1
+  },
+  "scope": "Optional native constrained LogEI selection and deterministic initial designs are implemented and tested. Completed trial prefix is archived; the remaining one-seed robot comparison is live and its final results are unknown. No passing speed improvement, broad contact-family exhaustion, timestep/sustained/browser qualification or physical maximum follows."
+}

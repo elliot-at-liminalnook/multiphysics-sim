@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "best_fine": {
+    "version": 1,
+    "passed": true,
+    "source": "runs/joint-command-sustained-v2/candidate010",
+    "elapsed_s": 300,
+    "step_s": 0.0003125,
+    "steps": 960000,
+    "actions": 15000,
+    "frames": 15001,
+    "prefix_parity_frames": 1001,
+    "net_distance_m": 165.71454286317177,
+    "net_speed_m_s": 0.5523818095439059,
+    "displacement_xy_m": [
+      54.36559779714243,
+      156.5429381751516
+    ],
+    "scope": "Completed300s requested interval, all steps/actions and zero sampled falls, exact scene/input schedule and initial1001-frame/transition parity excluding wall timing. This does not establish hardware accuracy or a physical speed limit."
+  },
+  "previous_fine": {
+    "version": 1,
+    "passed": true,
+    "elapsed_s": 300,
+    "step_s": 0.0003125,
+    "steps": 960000,
+    "actions": 15000,
+    "frames": 15001,
+    "prefix_parity_frames": 1001,
+    "net_distance_m": 165.37352021421478,
+    "net_speed_m_s": 0.5512450673807159,
+    "prior_fine_speed_m_s": 0.5468916068912292,
+    "relative_speed_gain": 0.007960371734782479,
+    "scope": "New completed300s speed result with all requested steps/actions, no sampled falls, exact scene/input schedule and1001-frame/transition prefix parity. Same fine timestep as incumbent. New candidate inter-link-contact and finer-timestep validation are not inferred from older gaits."
+  },
+  "heading_feedback_comparison": {
+    "version": 1,
+    "fine": {
+      "source": "runs/heading-feedback-sustained-v1/fine300/native.json",
+      "step_s": 0.0003125,
+      "speed_m_s": 0.5468435312299678,
+      "displacement_xy_m": [
+        104.07065500596596,
+        126.81760546136594
+      ]
+    },
+    "quarter": {
+      "source": "runs/heading-feedback-quarter300-v1/quarter300",
+      "step_s": 0.00015625,
+      "speed_m_s": 0.5468228712688402,
+      "displacement_xy_m": [
+        101.16985067965054,
+        129.1357194671563
+      ]
+    },
+    "relative_speed_change": -0.000037780388626118544,
+    "endpoint_difference_m": 3.713262485121629,
+    "scope": "Matched slower heading-feedback controller at the two finer timesteps. Compare net-speed agreement and endpoint difference separately; neither proves full-trajectory convergence or hardware accuracy."
+  },
+  "evidence_manifest": "examples/full-robot/contact-planning/joint-sustained-late-evidence-v1.json",
+  "scope": "Completed full300s results only. Candidate010 fixed-controller third-resolution validation is active; no new-candidate inter-link contact qualification, full-trajectory convergence, neural-training gain or physical speed maximum is asserted."
+}

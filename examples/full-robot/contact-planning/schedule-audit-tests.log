@@ -1,0 +1,22 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `release` profile [optimized] target(s) in 36.04s
+     Running tests/lift.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/lift-d9bf5685dc032555)
+
+running 3 tests
+test clearance_only_scope_is_explicit_and_cannot_claim_support ... ok
+test lift_requires_simultaneous_conditions_and_consecutive_duration ... ok
+test incomplete_or_invalid_evidence_cannot_pass_lift_checks ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/walking_task.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/walking_task-cba91269d25c0eee)
+
+running 6 tests
+test invalid_scales_and_missing_geometry_are_rejected ... ok
+test far_body_errors_have_an_explicit_bounded_cost ... ok
+test heading_cost_wraps_angles_uses_declared_offset_and_is_bounded ... ok
+test truncated_swing_is_not_rewarded_as_a_completed_step ... ok
+test canceled_prelift_recentering_earns_no_step_credit_or_failure ... ok
+test objective_checks_simultaneous_support_and_awards_each_completed_step_once ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

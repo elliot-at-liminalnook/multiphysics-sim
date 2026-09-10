@@ -1,0 +1,81 @@
+{
+  "rows": [
+    {
+      "name": "diagonal68-sustained",
+      "kind": "sustained",
+      "prefix": "runs/contact-planning/diagonal68-sustained",
+      "duration_s": 60,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.06780678488063342,
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "completed": true,
+      "error": null,
+      "simulated_s": 60,
+      "windows": [
+        {
+          "start_s": 1.4,
+          "end_s": 20,
+          "speed_m_s": 0.06669704077963183,
+          "lateral_speed_m_s": 0.00040750389310738154,
+          "direction_error_rad": 0.006109698688870633
+        },
+        {
+          "start_s": 25,
+          "end_s": 40,
+          "speed_m_s": 0.06724195519412386,
+          "lateral_speed_m_s": 0.003043216280973123,
+          "direction_error_rad": 0.04522683875599256
+        },
+        {
+          "start_s": 45,
+          "end_s": 56,
+          "speed_m_s": 0.0664146349941853,
+          "lateral_speed_m_s": 0.002342742900054126,
+          "direction_error_rad": 0.0352598782036385
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 56,
+          "permanently_below_1mm_s_at": 56.32,
+          "release_travel_m": 0.011658867053378413,
+          "late_drift_m": 0.000007409715498371656
+        }
+      ],
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.051496893502508925,
+          "ratio_to_total_body_path": 0.012993352862189122
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.026997556303941534,
+          "ratio_to_total_body_path": 0.006811843426183373
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.04428390585437352,
+          "ratio_to_total_body_path": 0.011173419904519182
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.0820833140951146,
+          "ratio_to_total_body_path": 0.020710714600362532
+        }
+      ],
+      "total_body_path_m": 3.963326021289375,
+      "maximum_slip_ratio": 0.020710714600362532,
+      "maximum_tilt_rad": 0.0621271003783035,
+      "turn_rad": null,
+      "passed_turn_response": true,
+      "passed_travel_heading": true,
+      "passed_control_checks": true,
+      "passed_contact_quality": true,
+      "passed_motion_checks": true,
+      "capture_sha256": "5ee13437fb233aa2efc9d2c78371f555c698b2b75dd1e9ed550fade2bbf35532"
+    }
+  ],
+  "comparisons": [],
+  "scope": "Command-driven native recordings. Control gates require ±5% speed tracking, <=0.1 rad travel-heading error relative to the declared chassis offset at each window start, <=0.1 rad tilt, human-schedule yaw change 0.24±0.06 rad, settling below 1 mm/s within 0.8 s and <=3 mm late drift. Contact quality separately requires <=5% loaded material slip; combined motion checks require both. These development thresholds are not physical speed limits. Collision, periodic lift and browser checks remain separate."
+}

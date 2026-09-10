@@ -1,0 +1,705 @@
+[
+  {
+    name: 'human-5ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.039833370810635454,
+    turn_rad: 0.21108607112889438,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.05470159325938183,
+    turn_rad: 0.20846546143930417,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'human-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.05947908990919937,
+    turn_rad: 0.20822456893799612,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'sustained-5ms',
+    completed: true,
+    windows: [ [Object], [Object], [Object] ],
+    maximum_slip_ratio: 0.04001684597384026,
+    turn_rad: null,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'dropout-5ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.04058363947849411,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'v95-human-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.049301328990821756,
+    turn_rad: 0.2018241273310492,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'short-rear10-v100-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0587319588210285,
+    turn_rad: 0.20893779012689756,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'short-rear12-v100-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.059305818481840175,
+    turn_rad: 0.20959398880270394,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'short-frontrear10-v100-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.05904402002605809,
+    turn_rad: 0.2088283885980719,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'sampled-gain0-lookahead0ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.23114777314507104,
+    turn_rad: 0.21394854299126173,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'sampled-gain0.5-lookahead10ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.04808919593670118,
+    turn_rad: 0.20884573593113862,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'sampled-gain0-lookahead10ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.12324901327001624,
+    turn_rad: 0.2132842571529849,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-human-5ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.03887226458270804,
+    turn_rad: 0.2121370898263635,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.046806929755284436,
+    turn_rad: 0.20936104347172765,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-human-0p3125ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0489143991960424,
+    turn_rad: 0.2083929475476721,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-sustained-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object], [Object] ],
+    maximum_slip_ratio: 0.04304585576052135,
+    turn_rad: null,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-dropout-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.046098943263177476,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-cadence-105-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.07376283739556883,
+    turn_rad: 0.2024941972511427,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-110-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0869387762305974,
+    turn_rad: 0.20993620723974277,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-125-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.1193613740402244,
+    turn_rad: 0.22393360429504278,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-150-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.17304857655585465,
+    turn_rad: 0.23890423228488708,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-200-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.5791937155461869,
+    turn_rad: 0.2617743746393551,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-300-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.4187691261672197,
+    turn_rad: 0.266425320254109,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-human-10ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.03317298042618648,
+    turn_rad: 0.21263035289218474,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'belt-short-hip30-v125-cad-yaw-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.10628302522512369,
+    turn_rad: 0.1312423645104533,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'belt-short-hip45-v150-centered-cad-yaw-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.1815483241257124,
+    turn_rad: 0.05608164094647153,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'belt-short-hip30-v125-full-cad-yaw-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.10830536882425722,
+    turn_rad: 0.13981639248849503,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'belt-short-hip45-v150-centered-full-cad-yaw-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.18081438311097608,
+    turn_rad: 0.072331407387345,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat-return-hip0-v110-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.06202937101485316,
+    turn_rad: 0.21069495934131413,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat-return-hip0-v125-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.08639049777349396,
+    turn_rad: 0.2231559145156963,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat-return-hip0-v150-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.11312906539152799,
+    turn_rad: 0.24106701140245868,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-human-5ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.06834970509509078,
+    turn_rad: 0.22313003477973467,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.08301131353775704,
+    turn_rad: 0.2229904251903196,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-human-0p3125ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0868447748910966,
+    turn_rad: 0.22324362319189442,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-sustained-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object], [Object] ],
+    maximum_slip_ratio: 0.08477266852975848,
+    turn_rad: null,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-dropout-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.086664079993997,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-be-10ms-tangent',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.05524567664326658,
+    turn_rad: 0.22382788016432367,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-sdirk2-5ms-tangent',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.09093518891423526,
+    turn_rad: 0.2243895080395665,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-sdirk2-10ms-tangent',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.08382780438825244,
+    turn_rad: 0.22574543904023087,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-sdirk2-20ms-tangent',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.11474161712751321,
+    turn_rad: 0.22566626311967902,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-sdirk2-2p5ms-tangent',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.08868494590033976,
+    turn_rad: 0.22322857483148045,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'flat125-sdirk2-1p25ms-tangent',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.08917225834637771,
+    turn_rad: 0.22335842335586528,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-hip0-v125-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.07970886586769022,
+    turn_rad: 0.2230046122281344,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-hip0-v150-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.11678066631029628,
+    turn_rad: 0.24037352039250823,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-hip0-v175-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.14652433757293207,
+    turn_rad: 0.2590436829027929,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-dynamic-v125-scale0.5-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0794879588191882,
+    turn_rad: 0.22298960392688016,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-dynamic-v125-scale1-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.07543398873964317,
+    turn_rad: 0.22297781304784342,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-dynamic-v150-scale0.5-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.11411729798202715,
+    turn_rad: 0.24038425462543128,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-dynamic-v150-scale1-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.1149478448740216,
+    turn_rad: 0.24038668385423598,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-front10-v150-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.1159523060568335,
+    turn_rad: 0.24097886706915866,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-front12-v150-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.12054553201247264,
+    turn_rad: 0.24240526621143654,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-front10-v165-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.13873860023349804,
+    turn_rad: 0.258263328504815,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-dynamic-front10-v150-scale1-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.1155062362688436,
+    turn_rad: 0.24100454343516237,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-dynamic-front12-v150-scale1-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.11867615057551772,
+    turn_rad: 0.24240372397816795,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'smooth-dynamic-front10-v165-scale1-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.13899412053432875,
+    turn_rad: 0.2582490534284256,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  }
+] [
+  {
+    reference: 'human-1p25ms',
+    candidate: 'human-5ms',
+    maximum_body_difference_m: 0.00261108078354073,
+    maximum_speed_fraction: 0.0025724228775982337,
+    absolute_slip_ratio_difference: 0.014868222448746374,
+    both_motion_checks_passed: false,
+    passed: true
+  },
+  {
+    reference: 'human-1p25ms',
+    candidate: 'human-0p625ms',
+    maximum_body_difference_m: 0.0008602179835290355,
+    maximum_speed_fraction: 0.0010920309264257578,
+    absolute_slip_ratio_difference: 0.004777496649817539,
+    both_motion_checks_passed: false,
+    passed: true
+  },
+  {
+    reference: 'synchronized-human-1p25ms',
+    candidate: 'synchronized-human-5ms',
+    maximum_body_difference_m: 0.0027727213628227707,
+    maximum_speed_fraction: 0.004513464456957579,
+    absolute_slip_ratio_difference: 0.007934665172576398,
+    both_motion_checks_passed: true,
+    passed: true
+  },
+  {
+    reference: 'synchronized-human-1p25ms',
+    candidate: 'synchronized-human-0p3125ms',
+    maximum_body_difference_m: 0.0018615682207596392,
+    maximum_speed_fraction: 0.0053722374833341194,
+    absolute_slip_ratio_difference: 0.0021074694407579656,
+    both_motion_checks_passed: true,
+    passed: true
+  },
+  {
+    reference: 'synchronized-human-1p25ms',
+    candidate: 'synchronized-human-10ms',
+    maximum_body_difference_m: 0.007221415624421441,
+    maximum_speed_fraction: 0.006981754439339276,
+    absolute_slip_ratio_difference: 0.013633949329097957,
+    both_motion_checks_passed: true,
+    passed: false
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat-return-hip0-v125-human-fine',
+    maximum_body_difference_m: 0.002830053544229304,
+    maximum_speed_fraction: 0.00223215843594634,
+    absolute_slip_ratio_difference: 0.0033791842357369234,
+    both_motion_checks_passed: false,
+    passed: true
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat125-human-5ms',
+    maximum_body_difference_m: 0.009979768223092598,
+    maximum_speed_fraction: 0.00684328852074093,
+    absolute_slip_ratio_difference: 0.014661608442666257,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat125-human-0p3125ms',
+    maximum_body_difference_m: 0.004301839498738171,
+    maximum_speed_fraction: 0.003445359893856561,
+    absolute_slip_ratio_difference: 0.0038334613533395623,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat125-be-10ms-tangent',
+    maximum_body_difference_m: 0.01653115015223882,
+    maximum_speed_fraction: 0.013184165003858411,
+    absolute_slip_ratio_difference: 0.027765636894490457,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat125-sdirk2-5ms-tangent',
+    maximum_body_difference_m: 0.002097671058151003,
+    maximum_speed_fraction: 0.001422844831971673,
+    absolute_slip_ratio_difference: 0.00792387537647822,
+    both_motion_checks_passed: false,
+    passed: true
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat125-sdirk2-10ms-tangent',
+    maximum_body_difference_m: 0.006948050105602397,
+    maximum_speed_fraction: 0.005717064363287937,
+    absolute_slip_ratio_difference: 0.0008164908504953994,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat125-sdirk2-20ms-tangent',
+    maximum_body_difference_m: 0.020481659191244717,
+    maximum_speed_fraction: 0.02657064823643209,
+    absolute_slip_ratio_difference: 0.031730303589756176,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat125-sdirk2-2p5ms-tangent',
+    maximum_body_difference_m: 0.004912186708595201,
+    maximum_speed_fraction: 0.003883960133332477,
+    absolute_slip_ratio_difference: 0.005673632362582726,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-human-1p25ms',
+    candidate: 'flat125-sdirk2-1p25ms-tangent',
+    maximum_body_difference_m: 0.00621528729083963,
+    maximum_speed_fraction: 0.0062866588589817205,
+    absolute_slip_ratio_difference: 0.006160944808620672,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat-return-hip0-v125-human-fine',
+    maximum_body_difference_m: 0.0034145691951755312,
+    maximum_speed_fraction: 0.004637701056472867,
+    absolute_slip_ratio_difference: 0.0027817605728837486,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat125-human-5ms',
+    maximum_body_difference_m: 0.014885983271088844,
+    maximum_speed_fraction: 0.011693159725954484,
+    absolute_slip_ratio_difference: 0.02082255325128693,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat125-human-1p25ms',
+    maximum_body_difference_m: 0.00621528729083963,
+    maximum_speed_fraction: 0.006326430972299463,
+    absolute_slip_ratio_difference: 0.006160944808620672,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat125-human-0p3125ms',
+    maximum_body_difference_m: 0.0019203483059984285,
+    maximum_speed_fraction: 0.0037184642683224947,
+    absolute_slip_ratio_difference: 0.0023274834552811097,
+    both_motion_checks_passed: false,
+    passed: true
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat125-be-10ms-tangent',
+    maximum_body_difference_m: 0.01908614720851155,
+    maximum_speed_fraction: 0.00925714303231817,
+    absolute_slip_ratio_difference: 0.03392658170311113,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat125-sdirk2-5ms-tangent',
+    maximum_body_difference_m: 0.005369895458180777,
+    maximum_speed_fraction: 0.007758277333884897,
+    absolute_slip_ratio_difference: 0.0017629305678575485,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat125-sdirk2-10ms-tangent',
+    maximum_body_difference_m: 0.01289502096631962,
+    maximum_speed_fraction: 0.011593016769748082,
+    absolute_slip_ratio_difference: 0.005344453958125273,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat125-sdirk2-20ms-tangent',
+    maximum_body_difference_m: 0.02651774311215814,
+    maximum_speed_fraction: 0.033065176580688596,
+    absolute_slip_ratio_difference: 0.025569358781135504,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'flat125-sdirk2-1p25ms-tangent',
+    candidate: 'flat125-sdirk2-2p5ms-tangent',
+    maximum_body_difference_m: 0.0014791753096390244,
+    maximum_speed_fraction: 0.002417899233284295,
+    absolute_slip_ratio_difference: 0.0004873124460379463,
+    both_motion_checks_passed: false,
+    passed: true
+  }
+]

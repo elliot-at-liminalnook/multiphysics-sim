@@ -1,0 +1,42 @@
+{
+  "prefix": "runs/contact-implicit/surface-tracking-ff64",
+  "files": [
+    {
+      "path": "runs/contact-implicit/surface-tracking-ff64.scene.json",
+      "sha256": "61860325fb2141edb853effec0c111a5c79f7955732a727d64a757b380f72594"
+    },
+    {
+      "path": "runs/contact-implicit/surface-tracking-ff64.config.json",
+      "sha256": "8a887a1e64c5ca1954f1ac21e6a7e948b72359ef35249a0dcf973c28a23e2470"
+    },
+    {
+      "path": "runs/contact-implicit/surface-tracking-ff64.task.json",
+      "sha256": "181a15bb663002b7d8a19b836727a296c4775e3d31ab3b29f58c3aba89a22c0d"
+    },
+    {
+      "path": "runs/contact-implicit/surface-tracking-ff64.actions.json",
+      "sha256": "c3dac931f44a14c4df29cf152a35a33b6e8411054ea6c228e3991cef638986e3"
+    }
+  ],
+  "source_scene": {
+    "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+  },
+  "source_config": {
+    "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.config.json",
+    "sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697"
+  },
+  "compiled_reference": {
+    "path": "examples/full-robot/contact-implicit/surface25-translating.compiled.json",
+    "sha256": "886d1a273b9734b86e001a29c8de9c48b9b3d0ae33e9e3a76a3933a667689930"
+  },
+  "policy": {
+    "path": "examples/full-robot/contact-implicit/finite-plan.rhai",
+    "sha256": "fc5c30e2482b96ef371799a5788a95f9b4ea4475f59cf9a08808c4595635ddb6"
+  },
+  "step_s": 0.0005157389198797935,
+  "controller_period_s": 0.004125911359038348,
+  "duration_s": 0.39608749046768144,
+  "feedforward_gain": 1,
+  "scope": "Finite-horizon timed diagnostic through the normal Rust/Rhai environment, effective servo envelopes and detailed bristle/surface contact. Existing task tilt/height bounds retained. No command-response, endpoint hold, periodic or sustained gait claim; browser bundles unchanged."
+}

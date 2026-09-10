@@ -1,0 +1,59 @@
+{
+  "native_search_and_returned_cad_identical": true,
+  "original_model_evaluations": 316,
+  "grouped_model_evaluations": 220,
+  "model_attempt_reduction_fraction": 0.3037974683544304,
+  "grouped": {
+    "model_evaluations": 220,
+    "grouped_body_probes": 96,
+    "body_group_fallbacks": 0,
+    "native_status": -1,
+    "model_budget_exhausted": false,
+    "speed_m_s": 0.02527278542350563,
+    "maximum_inequality": 0.5816500070061723,
+    "feasible": false
+  },
+  "budget": {
+    "model_evaluations": 12,
+    "grouped_body_probes": 8,
+    "body_group_fallbacks": 0,
+    "native_status": -13,
+    "model_budget_exhausted": true,
+    "speed_m_s": 0.025000001671875008,
+    "maximum_inequality": 0.5832082509173429,
+    "feasible": false
+  },
+  "fallback": {
+    "model_evaluations": 180,
+    "grouped_body_probes": 36,
+    "body_group_fallbacks": 12,
+    "native_status": -13,
+    "model_budget_exhausted": true,
+    "speed_m_s": 0.025000001671875008,
+    "maximum_inequality": 0.5832082509176981,
+    "feasible": false
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-one-step.result.json",
+      "bytes": 3107882,
+      "sha256": "bc8c659b33ecad1071da44f566151538d0b9f509e6039f5ea64f4529a645b1d7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-budget.result.json",
+      "bytes": 2977678,
+      "sha256": "3203a56989fc7883abe2c062964964e797ced04efafecb6dbf2b68e44d5e1297"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-fallback.result.json",
+      "bytes": 2977826,
+      "sha256": "6d38c114b946c635788e91fc08fdfe7a71a572b5bdf6a123d7e9e2c0149a3864"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_body_grouping.mjs",
+      "bytes": 3333,
+      "sha256": "4329268c8d308b79a4ff40000937b1ddb91a521f66007b6901124a9712855df7"
+    }
+  ],
+  "scope": "Same native pilot result and full physical audit with fewer model attempts, plus budget and deliberately unreachable-probe fallback checks. No optimizer wall-time speedup, new runtime gait, global maximum or browser qualification claimed."
+}

@@ -1,0 +1,50 @@
+{
+  "prefix": "runs/contact-planning/return-x25-lift-v250",
+  "source": "runs/contact-planning/return-x25-lift-base",
+  "command_speed_m_s": 0.25,
+  "reference_nominal_speed_m_s": 0.211710264528351,
+  "clock_rate": 1.1808591357483351,
+  "physics_step_s": 0.000625,
+  "steady_reference_velocity_scale": 1.1808591357483351,
+  "steady_reference_acceleration_scale": 1.394428298480305,
+  "windows_s": [
+    [
+      0.8,
+      3
+    ],
+    [
+      4.2,
+      6.4
+    ]
+  ],
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "sources": [
+    {
+      "path": "runs/contact-planning/return-x25-lift-base.scene.json",
+      "sha256": "d8005a9cb174c33f7519f6befdba79612109d2af3953627263fed605a46b8403"
+    },
+    {
+      "path": "runs/contact-planning/return-x25-lift-base.config.json",
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/return-x25-lift-base.actions.json",
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    }
+  ],
+  "files": [
+    {
+      "path": "runs/contact-planning/return-x25-lift-v250.scene.json",
+      "sha256": "248f1caff6942ca2aa54b268f222465b365f501c272b36937259ec3ac0f3c0ea"
+    },
+    {
+      "path": "runs/contact-planning/return-x25-lift-v250.config.json",
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/return-x25-lift-v250.actions.json",
+      "sha256": "aec2d05369490b2fcc6c04809160f5323e0a8f34311cb287e4236cedb7228613"
+    }
+  ],
+  "scope": "Direct closed-loop speed experiment. Motion-command bounds and scheduled speed change, with optional explicit timestep refinement; CAD, world, actuator limits, joint bounds, controller code, reference and solver settings are preserved. Existing odd/even feedforward scales with clock rate; off-nominal loads and transitions remain approximate. Inherited failed reference audits remain explicit. No collision/slip or sustained qualification is implied."
+}

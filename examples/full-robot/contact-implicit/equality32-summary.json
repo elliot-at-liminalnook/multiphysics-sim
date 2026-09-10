@@ -1,0 +1,157 @@
+{
+  "scope": "Same initial motion, CAD, bounds, contact law and 80 collocation samples. Independent 512-sample physical comparison; original failed solve uses identical parent dense audit. Planned displacement is not measured speed. No candidate is qualified.",
+  "rows": [
+    {
+      "name": "equality32",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.17636854731332974,
+        "moment_error_nm": 0.06451054336343987,
+        "minimum_torque_margin_nm": -0.000194122158491572,
+        "maximum_point_penetration_m": 0.00011280966662569059,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.00001519040916281998,
+        "maximum_floor_penetration_m": 0.00011280966662569059
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 1.8782396591179005,
+        "moment_error_nm": 0.7026787496148095,
+        "minimum_torque_margin_nm": -0.004205560102600314,
+        "maximum_point_penetration_m": 0.00011285744992262092,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000015192742429197357,
+        "maximum_floor_penetration_m": 0.00011285744992262092
+      },
+      "planned_displacement_rate_m_s": 0.2023498701641573,
+      "dense_loaded_slip_ratio": 0.9381394795829004,
+      "dense_sliding_work_j": 0.28279934225613024,
+      "search": {
+        "initial_objective_cost": 7.578417814171285,
+        "objective_cost": 7.578417814171285,
+        "initial_equality_inf": 3.5273709462665948,
+        "equality_inf": 3.5273709462665948,
+        "evaluations": 1153,
+        "termination": "linear_constraint_failure",
+        "linear_failure": {
+          "reason": "Linearized equalities or stationarity failed residual check",
+          "relative_kkt_error": 0.006261323652227878,
+          "schur_rank": 475
+        },
+        "accepted_steps": 0,
+        "last": null
+      }
+    },
+    {
+      "name": "equality32-whitened",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 33.10667971766733,
+        "moment_error_nm": 8.19538854954571,
+        "minimum_torque_margin_nm": 0.0002117631921452201,
+        "maximum_point_penetration_m": 0.0001236638114242572,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000015198917430714676,
+        "maximum_floor_penetration_m": 0.00012447217288713563
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 33.10822253970448,
+        "moment_error_nm": 8.280431748718565,
+        "minimum_torque_margin_nm": -0.0137737207442159,
+        "maximum_point_penetration_m": 0.00012447217288713563,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000015201026028079532,
+        "maximum_floor_penetration_m": 0.00012447217288713563
+      },
+      "planned_displacement_rate_m_s": 0.20235438531921768,
+      "dense_loaded_slip_ratio": 0.3694000941555629,
+      "dense_sliding_work_j": 0.08225434736123113,
+      "search": {
+        "initial_objective_cost": 7.578417814171285,
+        "objective_cost": 3.435579106763055,
+        "initial_equality_inf": 3.5273709462665948,
+        "equality_inf": 662.1335943533467,
+        "evaluations": 34605,
+        "termination": "iteration_limit",
+        "linear_failure": null,
+        "accepted_steps": 30,
+        "last": {
+          "accepted": true,
+          "bound_fraction": 1,
+          "equality_inf": 662.1335943533467,
+          "evaluations": 34605,
+          "full_step_linear_error": 1.2800312640716356e-10,
+          "iteration": 29,
+          "merit_gradient_inf": 31.27514434219446,
+          "objective_cost": 3.435579106763055,
+          "radius": 0.000390625,
+          "roundoff_acceptance": false,
+          "schur_rank": 480,
+          "trust_ratio": 0.9723232334424298
+        }
+      }
+    },
+    {
+      "name": "equality32-exact",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.17079263756532845,
+        "moment_error_nm": 0.06334386726397878,
+        "minimum_torque_margin_nm": -0.000186486644608852,
+        "maximum_point_penetration_m": 0.00011330938681369807,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000015415651384901896,
+        "maximum_floor_penetration_m": 0.00011330938681369807
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 1.8376726690934901,
+        "moment_error_nm": 0.6818573164660705,
+        "minimum_torque_margin_nm": -0.03193826738306909,
+        "maximum_point_penetration_m": 0.00011334818487940268,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000015415651384901896,
+        "maximum_floor_penetration_m": 0.00011334818487940268
+      },
+      "planned_displacement_rate_m_s": 0.20111452151178386,
+      "dense_loaded_slip_ratio": 0.9085223423086392,
+      "dense_sliding_work_j": 0.27239842407501225,
+      "search": {
+        "initial_objective_cost": 7.578417814171285,
+        "objective_cost": 7.348812382937434,
+        "initial_equality_inf": 3.5273709462665948,
+        "equality_inf": 3.4158527513065686,
+        "evaluations": 27676,
+        "termination": "linear_constraint_failure",
+        "linear_failure": {
+          "reason": "Linearized equalities or stationarity failed residual check",
+          "relative_kkt_error": 0.000001478030277020638,
+          "schur_rank": 480
+        },
+        "accepted_steps": 23,
+        "last": {
+          "accepted": true,
+          "bound_fraction": 1,
+          "equality_inf": 3.4158527513065686,
+          "evaluations": 26524,
+          "exact_penalty_weight": 37.92105495687376,
+          "full_step_linear_error": 2.3558318700874634e-10,
+          "iteration": 22,
+          "merit_gradient_inf": 45.64689371590959,
+          "objective_cost": 7.348812382937434,
+          "radius": 0.025,
+          "roundoff_acceptance": false,
+          "schur_rank": 480,
+          "trust_ratio": 0.7009634093222951
+        }
+      }
+    }
+  ]
+}

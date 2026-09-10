@@ -1,0 +1,61 @@
+{
+  "source": "runs/bayesian-speed-only-diagonal21/evaluation-004",
+  "measurement": {
+    "observation": {
+      "context_id": "4b644b65a0ea929de221ee8f56f9ebc30ea75f9c665e2e3ecf8b43512bcd6d2d",
+      "values": [
+        0.4145857401522177,
+        0.5712202317581493,
+        2.2157405858142285
+      ],
+      "outcome": {
+        "status": "complete",
+        "objective": -0.423949248534455,
+        "residuals": [
+          -1
+        ]
+      },
+      "evidence": "runs/bayesian-speed-only-diagonal21/evaluation-004.evaluation.json"
+    },
+    "method": "initial-latin-hypercube",
+    "metrics": {
+      "net_distance_m": 8.4789849706891,
+      "displacement_xy_m": [
+        5.750583221193301,
+        6.230889081768484
+      ],
+      "elapsed_s": 20,
+      "requested_duration_s": 20,
+      "speed_m_s": 0.423949248534455,
+      "minimum_chassis_up_z": 0.996954185816426,
+      "minimum_chassis_ground_clearance_m": 0.28810254472540126,
+      "chassis_floor_contact": false,
+      "fallen": false,
+      "completed": true,
+      "scope": "Net horizontal chassis displacement divided by the full trial duration. Falling means chassis ground contact or overturning. CAD hull clearance and orientation are sampled at recorded frames; no slip, tracking, lift, steering or stop threshold."
+    },
+    "wall_s": 112.26837423200003,
+    "native_exit_code": 0,
+    "capture_sha256": "94406e76eb3d8564bddf3192a085c1e95df2eb1a93f282fbbed94785eb103daa"
+  },
+  "source_files": [
+    {
+      "path": "runs/bayesian-speed-only-diagonal21/evaluation-004.scene.json",
+      "sha256": "aa1ab2b9c4e4cc20463549a83d9d6948233c9400c84b006364511be68e47de31"
+    },
+    {
+      "path": "runs/bayesian-speed-only-diagonal21/evaluation-004.config.json",
+      "sha256": "48c7e36e73bc6d5606612757fb6b8d859b32c02304a65ca2b425d5e594818479"
+    },
+    {
+      "path": "runs/bayesian-speed-only-diagonal21/evaluation-004.actions.json",
+      "sha256": "c1d7daf44076e69514188c9cfbc58deabe976da6e15ebe9294a00b2dc31003a9"
+    },
+    {
+      "path": "runs/bayesian-speed-only-diagonal21/evaluation-004.native.json",
+      "sha256": "94406e76eb3d8564bddf3192a085c1e95df2eb1a93f282fbbed94785eb103daa"
+    }
+  ],
+  "command_speed_m_s": 0.4145857401522177,
+  "scope": "Same measured controller, with WASD maximum command set to its recorded request and five-minute interactive duration. Preview changes only timestep fields and the existing Broyden option; detailed mode retains 0.625 ms integration."
+}

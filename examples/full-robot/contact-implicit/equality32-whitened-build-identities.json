@@ -1,0 +1,27 @@
+{
+  "base_commit": "1082997374237d05cc39ebf58e4f71ebb06548cb",
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/equality_dogleg.rs",
+      "bytes": 22841,
+      "sha256": "744bc0247d3c15162e260591add7cbedf2c482a073f67b6b69967a8b21ce7513"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 41215,
+      "sha256": "97191d84ade48596b705d0dc6dbc887e4915ad5a699e2b70f6bfee95fa75ca17"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_equalities",
+      "bytes": 8743700,
+      "sha256": "bf137966d728fb808bba78f3fb2a64888811173737c1909cb829e9887a5e0456"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8607900,
+      "sha256": "03e741ba1afe0fd633d0d410b124dc55ec7ced9439b333534ea8f515a82b114e"
+    }
+  ]
+}

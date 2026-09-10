@@ -1,0 +1,39 @@
+[
+  {
+    name: 'compiled184-human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.07698731328773778,
+    turn_rad: 0.24322674569737324,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'compiled184-human-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0779245375502951,
+    turn_rad: 0.24322779350322163,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'compiled184-dropout-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.10599989190295002,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: false
+  }
+] [
+  {
+    reference: 'compiled184-human-1p25ms',
+    candidate: 'compiled184-human-0p625ms',
+    maximum_body_difference_m: 0.0027375313942035366,
+    maximum_speed_fraction: 0.0026218976017578824,
+    absolute_slip_ratio_difference: 0.0009372242625573235,
+    both_motion_checks_passed: false,
+    passed: true
+  }
+]

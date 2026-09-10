@@ -1,0 +1,53 @@
+{
+  "base_commit": "bbff424",
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-solve/Cargo.toml",
+      "bytes": 477,
+      "sha256": "205e625b8521d6c766fad99ba80e7856b679ef766addc9002a19b076f1fd080f"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_augmented_lagrangian.rs",
+      "bytes": 18097,
+      "sha256": "899eb7acf8a5ecff813ed67392472a9b240c971d3a3e49d4f042e3d839070679"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 56124,
+      "sha256": "cf902bdbfa44bead6e51089021befd447f39b7a8a8b986fb2ca64905a1c1dad1"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 46319,
+      "sha256": "d3c8a8fe549be464d781df30d364c5f7ae6c7789ad5c8800d37636ef1d9c6d27"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_inequalities.rs",
+      "bytes": 2721,
+      "sha256": "3ff223c0304acecf5175991ee6a163274a6dd6ecbd966bf1d8ea378500683a2c"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 2721,
+      "sha256": "44a0f8ec49db9f4e57d047202b64b0a66cff76eb63757c8bb8c8ed437c63112e"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_inequalities",
+      "bytes": 8758740,
+      "sha256": "336f86debd4ae92b47af8f83f0bfd6c0675c004149a57484a6ca121b7e3f7047"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8669316,
+      "sha256": "7397fdb867244e2a272ef485234bd21e8338e1c16efbaa321b72b47a95f5eea0"
+    }
+  ],
+  "scope": "Shared continuation of completed AL outer iterations. No contact or actuator physics change; new serde_json dependency is test-only."
+}

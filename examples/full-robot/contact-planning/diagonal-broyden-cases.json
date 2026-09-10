@@ -1,0 +1,17 @@
+{
+  "rows": [
+    {
+      "prefix": "runs/contact-planning/diagonal-seed-broyden",
+      "scene": "runs/contact-planning/diagonal-seed-preview.scene.json",
+      "actions": "runs/contact-planning/diagonal-seed-preview.actions.json",
+      "config": "runs/contact-planning/diagonal-seed-broyden.config.json"
+    },
+    {
+      "prefix": "runs/contact-planning/diagonal-seed-broyden-negligible",
+      "scene": "runs/contact-planning/diagonal-seed-preview.scene.json",
+      "actions": "runs/contact-planning/diagonal-seed-preview.actions.json",
+      "config": "runs/contact-planning/diagonal-seed-broyden-negligible.config.json"
+    }
+  ],
+  "scope": "Existing guarded solver options; same physical model, timestep and convergence tolerances. Diagnostic performance/fidelity comparison."
+}

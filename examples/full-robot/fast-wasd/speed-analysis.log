@@ -1,0 +1,257 @@
+[
+  {
+    name: 'stride-50',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 46.9708551674969,
+    stop_drift_m: 0.0019417407132715056,
+    maximum_slip_ratio: 0.06858176601758036,
+    maximum_tilt_rad: 0.00491202941312612,
+    peak_motor_speed: 2.2334240552041864,
+    native: {
+      wall_s: 12.058249058,
+      simulation_per_wall: 0.49758468009244866,
+      p95_transition_s: 0.064189638
+    }
+  },
+  {
+    name: 'stride-100',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 92.90510422680744,
+    stop_drift_m: 0.003202907345761977,
+    maximum_slip_ratio: 0.2734208743845773,
+    maximum_tilt_rad: 0.014612417377892883,
+    peak_motor_speed: 6.12533444226428,
+    native: {
+      wall_s: 14.326460317,
+      simulation_per_wall: 0.4188054737345209,
+      p95_transition_s: 0.087227995
+    }
+  },
+  {
+    name: 'cadence-50',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 58.08590885406569,
+    stop_drift_m: 0.0008451223346171489,
+    maximum_slip_ratio: 0.14642437459850366,
+    maximum_tilt_rad: 0.0027025671481220965,
+    peak_motor_speed: 3.792994342346672,
+    native: {
+      wall_s: 13.53968069,
+      simulation_per_wall: 0.4431419128245335,
+      p95_transition_s: 0.103922514
+    }
+  },
+  {
+    name: 'cadence-100',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 110.17689455133257,
+    stop_drift_m: 0.001967626600795253,
+    maximum_slip_ratio: 0.2838434487753537,
+    maximum_tilt_rad: 0.0062954929270956275,
+    peak_motor_speed: 6.686215588189159,
+    native: {
+      wall_s: 15.759968057,
+      simulation_per_wall: 0.3807114315396737,
+      p95_transition_s: 0.084844459
+    }
+  },
+  {
+    name: 'landing-50',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 49.33193458924567,
+    stop_drift_m: 0.0011935421587001536,
+    maximum_slip_ratio: 0.0288755509216518,
+    maximum_tilt_rad: 0.0016461538275569989,
+    peak_motor_speed: 1.5516507619672415,
+    native: {
+      wall_s: 11.372998291,
+      simulation_per_wall: 0.5275653654804545,
+      p95_transition_s: 0.071121116
+    }
+  },
+  {
+    name: 'landing-75',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 72.34881962974023,
+    stop_drift_m: 0.0032568941443020297,
+    maximum_slip_ratio: 0.0847644920568028,
+    maximum_tilt_rad: 0.011098948250674428,
+    peak_motor_speed: 2.3710910725510166,
+    native: {
+      wall_s: 12.582253698,
+      simulation_per_wall: 0.47686210626588493,
+      p95_transition_s: 0.069620275
+    }
+  },
+  {
+    name: 'landing-100',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 96.38381014018356,
+    stop_drift_m: 0.004035419596062651,
+    maximum_slip_ratio: 0.3843274483420655,
+    maximum_tilt_rad: 0.01514565855379988,
+    peak_motor_speed: 3.799736311897891,
+    native: {
+      wall_s: 13.989012375,
+      simulation_per_wall: 0.4289080486284151,
+      p95_transition_s: 0.083794767
+    }
+  },
+  {
+    name: 'landing-50-centered-transition',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 51.956852012417684,
+    stop_drift_m: 0.0007566267925001159,
+    maximum_slip_ratio: 0.30957394118506054,
+    maximum_tilt_rad: 0.013730411492088182,
+    peak_motor_speed: 1.554619466627555,
+    native: {
+      wall_s: 10.960638518,
+      simulation_per_wall: 0.5474133637512595,
+      p95_transition_s: 0.066406519
+    }
+  },
+  {
+    name: 'landing-75-centered-transition',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 76.81298469141433,
+    stop_drift_m: 0.0012206378540424712,
+    maximum_slip_ratio: 0.1891046849062927,
+    maximum_tilt_rad: 0.012674773340321792,
+    peak_motor_speed: 2.343538379741574,
+    native: {
+      wall_s: 12.379818968,
+      simulation_per_wall: 0.4846597527402551,
+      p95_transition_s: 0.06654565
+    }
+  },
+  {
+    name: 'hip0-60',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 58.35549721007704,
+    stop_drift_m: 0.0013795539380554158,
+    maximum_slip_ratio: 0.02271586183552468,
+    maximum_tilt_rad: 0.0036177251774782786,
+    peak_motor_speed: 1.8671444301522633,
+    native: {
+      wall_s: 12.149096202,
+      simulation_per_wall: 0.49386389738294045,
+      p95_transition_s: 0.077942613
+    }
+  },
+  {
+    name: 'hip0-65',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 62.90622906653573,
+    stop_drift_m: 0.002021103033802285,
+    maximum_slip_ratio: 0.04040289099493702,
+    maximum_tilt_rad: 0.006131233712660616,
+    peak_motor_speed: 2.0258942145428795,
+    native: {
+      wall_s: 12.867603074,
+      simulation_per_wall: 0.4662873081719058,
+      p95_transition_s: 0.098390402
+    }
+  },
+  {
+    name: 'hip30-50',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 50.35189319141064,
+    stop_drift_m: 0.0011867012345878846,
+    maximum_slip_ratio: 0.0910660374403113,
+    maximum_tilt_rad: 0.011827024619631551,
+    peak_motor_speed: 1.3498947246327428,
+    native: {
+      wall_s: 11.751036469,
+      simulation_per_wall: 0.5105932583758369,
+      p95_transition_s: 0.07257683
+    }
+  },
+  {
+    name: 'hip30-75',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 73.19999720299282,
+    stop_drift_m: 0.002719733436779141,
+    maximum_slip_ratio: 0.129654141634521,
+    maximum_tilt_rad: 0.013865378600051078,
+    peak_motor_speed: 2.025564339923143,
+    native: {
+      wall_s: 14.161228674,
+      simulation_per_wall: 0.4236920494770339,
+      p95_transition_s: 0.088717035
+    }
+  },
+  {
+    name: 'hip45-50',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 51.02070085899714,
+    stop_drift_m: 0.0011938358690821314,
+    maximum_slip_ratio: 0.16295565420744135,
+    maximum_tilt_rad: 0.014377624561280762,
+    peak_motor_speed: 1.4181662637543229,
+    native: {
+      wall_s: 10.913518774,
+      simulation_per_wall: 0.5497768523836875,
+      p95_transition_s: 0.071609024
+    }
+  },
+  {
+    name: 'feedforward-65',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 63.843036196231466,
+    stop_drift_m: 0.0007944509684918266,
+    maximum_slip_ratio: 0.04981738017594578,
+    maximum_tilt_rad: 0.00839952941776834,
+    peak_motor_speed: 2.1523948642137514,
+    native: {
+      wall_s: 12.706238644,
+      simulation_per_wall: 0.47220898080906526,
+      p95_transition_s: 0.083471682
+    }
+  },
+  {
+    name: 'feedforward-75',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 73.23588666797428,
+    stop_drift_m: 0.0012720799007455762,
+    maximum_slip_ratio: 0.07894551471196494,
+    maximum_tilt_rad: 0.012925478829026284,
+    peak_motor_speed: 2.5286981222171376,
+    native: {
+      wall_s: 12.640297577,
+      simulation_per_wall: 0.474672369337053,
+      p95_transition_s: 0.08116246
+    }
+  },
+  {
+    name: 'feedforward-100',
+    completed: true,
+    simulated_s: 6,
+    measured_forward_speed_mm_s: 97.19756900144792,
+    stop_drift_m: 0.0018446999344401702,
+    maximum_slip_ratio: 0.40651489524820267,
+    maximum_tilt_rad: 0.015857022695003015,
+    peak_motor_speed: 4.171493150208804,
+    native: {
+      wall_s: 13.94332699,
+      simulation_per_wall: 0.43031336812965326,
+      p95_transition_s: 0.082416044
+    }
+  }
+]

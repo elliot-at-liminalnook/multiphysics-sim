@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "maximum_zero_dynamic_static_difference_rad": 0,
+  "results": [
+    {
+      "name": "zero-dynamic",
+      "expected_success": true,
+      "exit": 0,
+      "error": ""
+    },
+    {
+      "name": "legacy-static",
+      "expected_success": true,
+      "exit": 0,
+      "error": ""
+    },
+    {
+      "name": "overflow-support-sum",
+      "expected_success": false,
+      "exit": 1,
+      "error": "finite coordinates/translation and nonnegative nonempty support shares required"
+    },
+    {
+      "name": "discontinuous-reference",
+      "expected_success": false,
+      "exit": 1,
+      "error": "dynamic feedforward requires a reference with continuous velocity and acceleration"
+    },
+    {
+      "name": "ambiguous-reference",
+      "expected_success": false,
+      "exit": 1,
+      "error": "choose literal static samples or one finite dynamic reference"
+    },
+    {
+      "name": "both-cad-hashes-missing",
+      "expected_success": false,
+      "exit": 1,
+      "error": "registered markers/frame and matching CAD hash required"
+    },
+    {
+      "name": "archived-static",
+      "expected_success": true,
+      "exit": 0,
+      "error": ""
+    }
+  ],
+  "archived_static_targets_exact": true,
+  "example_source_sha256": "df30378524a1ced34708629f3237dce3a1891314eb6d7f5e4bede3749488be8d",
+  "scope": "CLI behavior and zero-motion compatibility checks. Analytic inertia/gravity validation remains in sim-domain-robot inverse_loads; these checks do not validate gait contact assumptions."
+}

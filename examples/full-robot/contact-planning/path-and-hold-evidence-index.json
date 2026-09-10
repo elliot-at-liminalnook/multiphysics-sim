@@ -1,0 +1,1183 @@
+{
+  "base_commit": "d8f5591",
+  "base": {
+    "path": "examples/full-robot/contact-planning/cadence-speed-evidence-index.json",
+    "bytes": 24018,
+    "sha256": "46f9ad990638a425ef139bf6d59dddb68bd8386f8467231ce82ba9a06ad6c507"
+  },
+  "archive_bytes": 99436754,
+  "archive_sha256": "ec2ada85771584b75f783d2eb3162f6942cc9eb8785f21d011c9c0138637904f",
+  "parts": [
+    {
+      "path": "examples/full-robot/contact-planning/path-and-hold-evidence.part-00",
+      "bytes": 47185920,
+      "sha256": "96f73786a045960a705a239a0e3933f9a4ed1a64e2dbbcf0b77bcf5a6184e2aa"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/path-and-hold-evidence.part-01",
+      "bytes": 47185920,
+      "sha256": "28f2c9a130ab64118dfe88700ff4877cbbde2eddec4f00a9325a6966e768064c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/path-and-hold-evidence.part-02",
+      "bytes": 5064914,
+      "sha256": "bfe06ad6273811d238dc3cd392c498dca2e5bef0c95cae7c6f660fa0599e310c"
+    }
+  ],
+  "files": [
+    {
+      "path": "runs/contact-planning/belt-three15-base.actions.json",
+      "bytes": 23854,
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-base.config.json",
+      "bytes": 130266,
+      "sha256": "5e50b8a9f14936c4f6b180d1100b6df24b10f520d183f76f1130644f38bd1e4a"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-base.scene.json",
+      "bytes": 12775260,
+      "sha256": "16e7b3c23b74fe97bff374f20cd22f576558d4b4ef317d7cbfb0c3c1dab0bcc2"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.actions.json",
+      "bytes": 20734,
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.config.json",
+      "bytes": 130266,
+      "sha256": "5e50b8a9f14936c4f6b180d1100b6df24b10f520d183f76f1130644f38bd1e4a"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.contact-clearance-requirements.json",
+      "bytes": 13369,
+      "sha256": "db52af5fac5cbf6e8c12d506423676d8a3a815114a9257f08b75287f57889ca6"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.contact-geometry.json",
+      "bytes": 638108,
+      "sha256": "06c62356b54ea8a06ba50dfa6de2217baf79d5f6ff78606317eff91e48006fd5"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.contact-geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.native.json",
+      "bytes": 26643248,
+      "sha256": "6a4c37d79c51d52a2f1dca2de901c4037ca017445b5ee7d77866acf1ca1591fd"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.policy-state.json",
+      "bytes": 96409,
+      "sha256": "34c7f61d3601f167ea3a421965d56d775a2a19aef5fe050362c3460e7d45d88c"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.runtime.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-v230.scene.json",
+      "bytes": 12775234,
+      "sha256": "4964303e5b3dca2223f7a5f08108613a53ea2c12aeb78823a10d23d812d4c15b"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-base.actions.json",
+      "bytes": 23854,
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-base.config.json",
+      "bytes": 130272,
+      "sha256": "812f2ce023b557415644f8750652763fc054adcaebdfc4f7493f9632a1295228"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-base.scene.json",
+      "bytes": 12775977,
+      "sha256": "da26650abe4672ebaa4d0880545d29ea066f2d31eacced8590c10161538a0640"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.actions.json",
+      "bytes": 20734,
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.config.json",
+      "bytes": 130272,
+      "sha256": "812f2ce023b557415644f8750652763fc054adcaebdfc4f7493f9632a1295228"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.contact-clearance-requirements.json",
+      "bytes": 13369,
+      "sha256": "db52af5fac5cbf6e8c12d506423676d8a3a815114a9257f08b75287f57889ca6"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.contact-geometry.json",
+      "bytes": 638028,
+      "sha256": "e951bd33072b5f1ed8b098f245dcb29e2dc1765e4f2945d29e59e87260301b7c"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.contact-geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.native.json",
+      "bytes": 26643947,
+      "sha256": "659f6ab9e5896371158c75d2d8dcce59a9f9dfe6fc6607ad0afbc43cf5c65657"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.policy-state.json",
+      "bytes": 96418,
+      "sha256": "c9958846669bd13683b9c6b98ee5040a54fed44585bc4526693ccf8d01b50238"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.runtime.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.scene.json",
+      "bytes": 12775951,
+      "sha256": "d4fe5d75ddaba4d87f2069a1077a2e1c3e2b275ce905cbe182454f7df710dfc0"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.actions.json",
+      "bytes": 20734,
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.config.json",
+      "bytes": 130274,
+      "sha256": "a6e8a08ef39008bc86eb53366917e200b3e92c87da9a1a2306807153fd9bc233"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.contact-clearance-requirements.json",
+      "bytes": 13369,
+      "sha256": "db52af5fac5cbf6e8c12d506423676d8a3a815114a9257f08b75287f57889ca6"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.contact-geometry.json",
+      "bytes": 638226,
+      "sha256": "e85e7a8ad61313946f6376bd06eb64be77216a9f41f464d17304934fa9cb6e21"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.contact-geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.native.json",
+      "bytes": 26685007,
+      "sha256": "4a4936c87434bd1e62fa4ea3c80c292ed9bf80f67cd4fe34f2a09afdc70db36a"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.policy-state.json",
+      "bytes": 96408,
+      "sha256": "7f30c03cec11fab1f0acfb990ffa8389af56879d26ebcf5b414ab2889e322ca5"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.runtime.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold230.scene.json",
+      "bytes": 12777680,
+      "sha256": "30862145d7abc43dc1156016cf04a93a80ec80f7a187e2a0db941c2d48943501"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.actions.json",
+      "bytes": 20734,
+      "sha256": "aec2d05369490b2fcc6c04809160f5323e0a8f34311cb287e4236cedb7228613"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.config.json",
+      "bytes": 130274,
+      "sha256": "a6e8a08ef39008bc86eb53366917e200b3e92c87da9a1a2306807153fd9bc233"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.contact-clearance-requirements.json",
+      "bytes": 14644,
+      "sha256": "f5f15813be2b423aff8613fc4dad31f660b55045b8559f4371cfce8a88e3b08a"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.contact-geometry.json",
+      "bytes": 642552,
+      "sha256": "3ee9d4dc0155b6a995ef262256e5bb1a0197311d16abfa786b00bba90c2904dc"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.contact-geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.native.json",
+      "bytes": 26682765,
+      "sha256": "ec938816781c3610975b0c136a56c83bac00f45a778ce9fd4ca1638e9ecba753"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.policy-state.json",
+      "bytes": 96462,
+      "sha256": "ffe3cca25d0fa9ee5c2e2949e8ef7744b2f22ca4aa701ed810e04b2b57d32da7"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.runtime.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold250.scene.json",
+      "bytes": 12777680,
+      "sha256": "d7f6f78bf1d2a13fde7a7341e25c1ecd8a56e3cfa170ec4e65bc4d868a9077d7"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.actions.json",
+      "bytes": 20734,
+      "sha256": "7300b17c64acc244497caaa16fdbe474c095973fa976e6adf063d34fe39b9333"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.config.json",
+      "bytes": 130274,
+      "sha256": "a6e8a08ef39008bc86eb53366917e200b3e92c87da9a1a2306807153fd9bc233"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.contact-clearance-requirements.json",
+      "bytes": 15940,
+      "sha256": "f35eb1c0c51815563ae35228c7f8c168089ec6ed734072d01a51a1e98cb461f8"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.contact-geometry.json",
+      "bytes": 646839,
+      "sha256": "9cfed2a47ac28f552c36415e6930a93fb879a9d55baae388a707c676fcaf7266"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.contact-geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.native.json",
+      "bytes": 26676440,
+      "sha256": "c2f33c1dcf54bb40a553cec1085fd45fdda53e7578c92c0da679781f663f778b"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.policy-state.json",
+      "bytes": 96367,
+      "sha256": "ed16f8955e6f21daf8d5cd1e681be503f949009e2e145f005d983d9156f79129"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.runtime.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-hold280.scene.json",
+      "bytes": 12777680,
+      "sha256": "f0631073563577f0d02ef8f80107ef7127a0fa0a3a54b16ade2c23e6e0e46bfe"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-base.actions.json",
+      "bytes": 23854,
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-base.config.json",
+      "bytes": 130276,
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-base.scene.json",
+      "bytes": 12774292,
+      "sha256": "db6be8a26142ad0e8546c5bd7c4531ac6dfe11a77ccaacfc86e5718862399592"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.actions.json",
+      "bytes": 20734,
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.config.json",
+      "bytes": 130276,
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.contact-clearance-requirements.json",
+      "bytes": 13369,
+      "sha256": "db52af5fac5cbf6e8c12d506423676d8a3a815114a9257f08b75287f57889ca6"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.contact-geometry.json",
+      "bytes": 637783,
+      "sha256": "070b364a1e841f1eba93e6a73fe781b44edf9859393c92f92b505d3fbaf482d5"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.contact-geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.native.json",
+      "bytes": 26673759,
+      "sha256": "27dffb7ab44ad10fa8020890bca327cdc763891901d46a397784b3f0a29a4953"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.policy-state.json",
+      "bytes": 96413,
+      "sha256": "5862731d2b0c41a6c8ece46ac5e3718ecf7ce42397974c00f673b280ddbb048f"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.runtime.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/xhip-clearance10-v230.scene.json",
+      "bytes": 12774266,
+      "sha256": "dd6bacfe8f1165192e09bf898fe303ae72914678c22d3d26f9c74f255c48d9ca"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-base.actions.json",
+      "bytes": 23854,
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-base.config.json",
+      "bytes": 130276,
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-base.scene.json",
+      "bytes": 12774258,
+      "sha256": "2c50cb1705727cca307f2c8781c89a2f71367fb917767df27a58035598340d1a"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.actions.json",
+      "bytes": 20734,
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.config.json",
+      "bytes": 130277,
+      "sha256": "e2a881b2282e27b0136647af661e358db9137ec1ed21339bd7a08647fb992c17"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.contact-clearance-requirements.json",
+      "bytes": 13369,
+      "sha256": "db52af5fac5cbf6e8c12d506423676d8a3a815114a9257f08b75287f57889ca6"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.contact-geometry.json",
+      "bytes": 637691,
+      "sha256": "34a77d14727838477ab5d5ccb0e9d5483b2b03314eb11cd07457a6b457104cb9"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.contact-geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.native.json",
+      "bytes": 26674345,
+      "sha256": "f2396396e539199b5f5a37c4152a2acaac28deb2e59e5cb3df3b00d1c7213b24"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.policy-state.json",
+      "bytes": 96411,
+      "sha256": "167521a7f45706b1523992db540a689513e9d2e5ff22a7bd18e247cf9af99b39"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.runtime.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230-fine.scene.json",
+      "bytes": 12774232,
+      "sha256": "4f45a5e4de86eeecdab329b79d34e3cee3f2cb3981aac596800fe4a65e869cc0"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.actions.json",
+      "bytes": 20734,
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.config.json",
+      "bytes": 130276,
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.contact-clearance-requirements.json",
+      "bytes": 13369,
+      "sha256": "db52af5fac5cbf6e8c12d506423676d8a3a815114a9257f08b75287f57889ca6"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.contact-geometry.json",
+      "bytes": 637825,
+      "sha256": "3414497f781fb8ba153e66da31d3a6380bf20d6055c6b6e299c52e8fdd253c56"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.contact-geometry.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.native.json",
+      "bytes": 26674172,
+      "sha256": "9b64ab4be11f51c99ec78ac88391568b5518ec9dbc337e4d3bebbfc678452b94"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.policy-state.json",
+      "bytes": 96406,
+      "sha256": "b0d85ec198e5e366077b98fb255655caad2d92cdaa88d8c09e08ab43f15d3267"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.runtime.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.scene.json",
+      "bytes": 12774232,
+      "sha256": "4f45a5e4de86eeecdab329b79d34e3cee3f2cb3981aac596800fe4a65e869cc0"
+    }
+  ],
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "cad/robocad/capture_geometry.py",
+      "bytes": 12135,
+      "sha256": "25eb72f352dd5918415d9e83a3627820f629d679447a9c5361bb9182d4836954"
+    },
+    {
+      "path": "cad/robocad/kernel/occt.py",
+      "bytes": 55625,
+      "sha256": "8927cd5cba186c7f420715b145f8afdb0f384b75666d0a65d1b7ff4658841c1d"
+    },
+    {
+      "path": "cad/tests/test_capture_geometry.py",
+      "bytes": 5399,
+      "sha256": "fa190244801980f0821772b7c686c32ffed91fcec6b634d4ded1a921cdb5867b"
+    },
+    {
+      "path": "crates/sim-domain-control/examples/contact_slip.rs",
+      "bytes": 1534,
+      "sha256": "8876c59982c22c8fd66eaa275b6a8941256230f6e5776eed7259de86dc70b490"
+    },
+    {
+      "path": "crates/sim-domain-control/src/contact_slip.rs",
+      "bytes": 10262,
+      "sha256": "7fd9ddecffe04c081dbeb863c82d7803f124b6e4ab653576fa9fdf7f8705728e"
+    },
+    {
+      "path": "crates/sim-domain-control/src/elements.rs",
+      "bytes": 6532,
+      "sha256": "cb5af59a5522e7b0cae38941c5f322658cba2d85be7bc738ae5a7d4651535ce0"
+    },
+    {
+      "path": "crates/sim-domain-control/src/lib.rs",
+      "bytes": 380,
+      "sha256": "80116313eacb3c45c276cd4ee44d6cc3d275d98077f117861abf309d40fbf702"
+    },
+    {
+      "path": "crates/sim-domain-control/src/periodic_drift.rs",
+      "bytes": 5648,
+      "sha256": "941071f790ab5819a2bad963036ea87df6e893f00e3f948a03dab377ae8f9ffe"
+    },
+    {
+      "path": "crates/sim-domain-control/src/trajectory.rs",
+      "bytes": 23624,
+      "sha256": "e63f71f67145682719dbf289497dcd3ec15ad7d0eb6e823eb9a5998a3d1767a1"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/effective_servo.rs",
+      "bytes": 8382,
+      "sha256": "12042cd60eff567139a9823d07869ec6f91010cbf6c5ec81b32cc0d220ab24eb"
+    },
+    {
+      "path": "crates/sim-runtime/examples/analyze_motion_capability.rs",
+      "bytes": 15937,
+      "sha256": "b5fe1aa79206cc2744e3922b05a678f6ba53e0c22fca7e94d4b3bc4338c1ce13"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_capture_geometry.rs",
+      "bytes": 2816,
+      "sha256": "be7514204c403b7e546037e7c4c7a58e322c3b07c5bce9d5f370aeae23472281"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_derivatives.rs",
+      "bytes": 4182,
+      "sha256": "6491e11bc7728acc8c24aa0670c3615905f433d6ae0a76b20fb9eeff775b1531"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 3957,
+      "sha256": "ba6d708c03545c223e30dbc848fcaf4e6f19979c97e1a95553df5f714cae64f4"
+    },
+    {
+      "path": "crates/sim-runtime/examples/benchmark_contact_implicit.rs",
+      "bytes": 2765,
+      "sha256": "b778f1e69a2af753bb9d9e9c0f765828b036cadac1615d255a6da47819fefcbd"
+    },
+    {
+      "path": "crates/sim-runtime/examples/compile_contact_implicit.rs",
+      "bytes": 4667,
+      "sha256": "1c11e9ab36775eaf65f8b6d52edaee48a71c62e0c846bfaebd9176e8afd69b81"
+    },
+    {
+      "path": "crates/sim-runtime/examples/compile_contact_reference.rs",
+      "bytes": 11502,
+      "sha256": "a101e929ba7ad04bd77f387e9b4d50fc0d6ac212dd50c2c8fd5f9fb7e2a66d1a"
+    },
+    {
+      "path": "crates/sim-runtime/examples/evaluate_lift.rs",
+      "bytes": 8439,
+      "sha256": "ab30e19b92f1d0ea922492da6d93d67f1603c1084b77a7ba0fe72f5ba7ab7d44"
+    },
+    {
+      "path": "crates/sim-runtime/examples/inspect_configurations.rs",
+      "bytes": 1306,
+      "sha256": "3f8723f053d6baca12c795923e666a1e4719dba08ee6756adb957c2c21b20edc"
+    },
+    {
+      "path": "crates/sim-runtime/examples/inspect_floor_contact.rs",
+      "bytes": 1030,
+      "sha256": "c31eb3184424d70823a0f6bd2774ccc3531eae4dffecf4d71a4900338be94f9f"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_equalities.rs",
+      "bytes": 2350,
+      "sha256": "d03edf1c7f80d4e8328a1498fdc702424b60bfd2e497bf7f83c7d3444677bff8"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_implicit.rs",
+      "bytes": 4316,
+      "sha256": "91d965593ae9ec02a33a24219b82f2e8dfa67249b41a4a85990e5f82c526e484"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_inequalities.rs",
+      "bytes": 2721,
+      "sha256": "3ff223c0304acecf5175991ee6a163274a6dd6ecbd966bf1d8ea378500683a2c"
+    },
+    {
+      "path": "crates/sim-runtime/examples/refine_contact_periodic.rs",
+      "bytes": 1646,
+      "sha256": "7723dbdc34c8319a80787937580dc60cd00f30afec94a450692c6979df1e8b92"
+    },
+    {
+      "path": "crates/sim-runtime/examples/restore_contact_feasibility.rs",
+      "bytes": 2922,
+      "sha256": "eadeffb8928bb4a98ccb3c7e24794f38e34b3e2ff11b51e4c70610278731468e"
+    },
+    {
+      "path": "crates/sim-runtime/examples/run_environment.rs",
+      "bytes": 5266,
+      "sha256": "ed35f5617619720f099157dfb9a4062b3863aa2f004b90ac72ecbc5c8bb352da"
+    },
+    {
+      "path": "crates/sim-runtime/examples/sample_capture_seed.rs",
+      "bytes": 5442,
+      "sha256": "01c41334ca01c976217988e1342957fa321aadcbfdab19f3105fc811e106af2a"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_audit.rs",
+      "bytes": 25303,
+      "sha256": "0bbfc34b575e3386465ae109cc51607f6c1b232f8f65eae3d5a8435c783b4786"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 60011,
+      "sha256": "6593d8200df55b564d7dbe8808f15796df54da4487fd85bba6e04174d38838ca"
+    },
+    {
+      "path": "crates/sim-runtime/src/tracking.rs",
+      "bytes": 16935,
+      "sha256": "ede436ece6de376b3f721ad4501c4a149188b4157e9241eb2b3426e31b50994a"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 49959,
+      "sha256": "e6310f359c6e8cc173d66718b9a642bf8d3ef396243a090e8181ea7a66b273b6"
+    },
+    {
+      "path": "crates/sim-script/examples/replay_policy_state.rs",
+      "bytes": 4830,
+      "sha256": "9dce2ec111530c9fd8c41e69bbf689730b161b066d05b4f7ff6969f3f1cd700b"
+    },
+    {
+      "path": "crates/sim-solve/Cargo.toml",
+      "bytes": 477,
+      "sha256": "205e625b8521d6c766fad99ba80e7856b679ef766addc9002a19b076f1fd080f"
+    },
+    {
+      "path": "crates/sim-solve/src/derivative_audit.rs",
+      "bytes": 5767,
+      "sha256": "d5667f7096d85a4d6b1d2a24ec7a2917f46bffb927012d5517f3de756aa8bafe"
+    },
+    {
+      "path": "crates/sim-solve/src/equality_dogleg.rs",
+      "bytes": 30150,
+      "sha256": "0b29a68ef8401fc3e0ef557a26886ee41e1bde75fb78b865eacfca29a9263988"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_augmented_lagrangian.rs",
+      "bytes": 18097,
+      "sha256": "899eb7acf8a5ecff813ed67392472a9b240c971d3a3e49d4f042e3d839070679"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_barrier.rs",
+      "bytes": 2779,
+      "sha256": "3a7612ead0a1133aeaccd37f056127cfb0f7612fc6f7bade12b955c47ad5d1db"
+    },
+    {
+      "path": "crates/sim-solve/src/least_squares.rs",
+      "bytes": 20070,
+      "sha256": "bee77d4fcce86e2afbf9c9fed1efeb9a1bae333948076042ade54b8be120db50"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47237,
+      "sha256": "2b9c7009ca093276bc4d8002c887869807e826e14d0262aa79a02fb24765ef44"
+    },
+    {
+      "path": "examples/full-robot/audit_captured_geometry.py",
+      "bytes": 1273,
+      "sha256": "a89bcc91a3e7fd988078a410ed20b4305971049182fc2978c88c8cf79c28a4be"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/README.md",
+      "bytes": 11256,
+      "sha256": "ea7410269fbe893747b819b2e0d304c733542934676750d8756334f981eaf839"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/CADENCE_SPEED.md",
+      "bytes": 4643,
+      "sha256": "a6e48dfe05ef64f7c899c963d63ebf43754e8c650df31c878afdba3d8f784807"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/PATH_AND_HOLD.md",
+      "bytes": 6851,
+      "sha256": "f7cddcf344a727f89fe03003442105fc939ea774481dd0cd90095d1079e5c85e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/README.md",
+      "bytes": 22712,
+      "sha256": "8da07b9bd59d1921663a983631eb5715944809b8fc473a29e189318ae4df3f65"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/analyze_controller_screen.mjs",
+      "bytes": 4614,
+      "sha256": "b79e15446d2a79b9ce68b7bc0775107d6682edac68a6760d6bed48d393370fa2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/audit_contact_controller.mjs",
+      "bytes": 4310,
+      "sha256": "34c52d0905eae2264bb9a48760c4b858925c1a859521f758dea84db28e22dd94"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-base-trial.json",
+      "bytes": 2412,
+      "sha256": "6657767b3243802d1b651f287b99c3557da443cb851f7ebf189d5edf90afdaec"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-capability.recipe.json",
+      "bytes": 980602,
+      "sha256": "2c77077f16f99dffa25eec4d9de24ea908fa6ac122022adcd8bf93bb479a64b7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-capability.result.json",
+      "bytes": 4203,
+      "sha256": "eabcbbc20f0336101f8a8b26ff3ed1fb25d423fc3d9c9e13e4390bbadbd8aebf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-reference.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-reference.recipe.json",
+      "bytes": 24964,
+      "sha256": "81a2e101f3191953a184458a414de492fa3bb70433b9d3d203cbc535d63d8e75"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-reference.result.json",
+      "bytes": 4845385,
+      "sha256": "715384a8c9f9b68a6de0cb4cc274e39cd0a167924d40044a1da63f53dd785a06"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-v230-clearance.summary.json",
+      "bytes": 4197,
+      "sha256": "1ad4f24ed3e1e5860515adb6347bad21cab74a0944e2cab3421444396be82cba"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-v230-trial.json",
+      "bytes": 2010,
+      "sha256": "f612fe8a6bba44789e1ce15d372795190f1c4a872b0e2d06c9b8f16bdf7fc060"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-v230.summary.json",
+      "bytes": 2522,
+      "sha256": "ff35c4af1a213ad6db6e5146f5238fa65b279549e1793ed1797944cd5c13bcdd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-base-trial.json",
+      "bytes": 2454,
+      "sha256": "b15984992ace6fb9b769a84b51a0ac6f086c6391262218eae479c46581ba629e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-capability.recipe.json",
+      "bytes": 980877,
+      "sha256": "c6d88a67b1afb412c112f94897187f4932af8cce9352f1b3380f94e6cf5a0cdb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-capability.result.json",
+      "bytes": 4219,
+      "sha256": "2db0d7a3bc86cfb0e08fbb33984f332d3eb3768a5159cdfc347e3dc544087dc9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-reference.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-reference.recipe.json",
+      "bytes": 24964,
+      "sha256": "84480a4fb4a47bdfa67a176990189010dfc7073803c3859afd7eef12356cd6b0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-reference.result.json",
+      "bytes": 4846106,
+      "sha256": "0feb5848a69d698f7797efd631e93e9d85489876e3ccb794d5dc511315c0aff4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-v230-clearance.summary.json",
+      "bytes": 4251,
+      "sha256": "ddc77d4102739df037319edd8c0419ad9b6e34b7c401bbe75e105b05dbf3efb9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-v230-trial.json",
+      "bytes": 2082,
+      "sha256": "852eaaa51195fe9d937e0cddc09ddf86b5e51433ead7defe496f37ac11e05de7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-v230.summary.json",
+      "bytes": 2521,
+      "sha256": "522c5f4e23cd4dc47ac86af7e9c9a27e114a66fc008e76976913af716a22fff5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-geometry-build.log",
+      "bytes": 164,
+      "sha256": "05090bd70bb2dd17068461f3ba789c24aa2d78159167af20cc2ea05f9ef3e0ce"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-mixed.recipe.json",
+      "bytes": 1365,
+      "sha256": "d0a9d62a37751de41fdde372aa0ce74c320540e892252c82e0c8b99ae5983a41"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-mixed.result.json",
+      "bytes": 3508,
+      "sha256": "a43fb643a21656edfe02c8aeaeaad531361ff820ff09fd42a3f9508dded8906d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-parent-geometry-default.json",
+      "bytes": 1259959,
+      "sha256": "eb77993130c6306db128e0e1ad255c33bc4d5e41793f7a7964e2174394d9c3cf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-parent-geometry-pairs.json",
+      "bytes": 1325003,
+      "sha256": "6b1e609551611c1861b6609871e737fdd1dfce96b2a91033819d647d2934c2a8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-posture.recipe.json",
+      "bytes": 2146,
+      "sha256": "b029879f691dc66ab68143cc51595c16b1690e2d8a951643902671582c20cbf2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-posture.result.json",
+      "bytes": 7814,
+      "sha256": "dafe3c5b6b349b2be531162666bef3d83d74f9a9e831c46139f5f6efbadfa354"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-preparation.json",
+      "bytes": 2601,
+      "sha256": "c5a1e08990d903e78e537a3693589ed6f457044f81e385b91e8b4a15425edb6e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-safe.recipe.json",
+      "bytes": 1766,
+      "sha256": "aea34de53a0ad759b5dec4823cb0a69378dd6315548fd7781a8aed27bd5b863c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/belt15-safe.result.json",
+      "bytes": 5447,
+      "sha256": "54fc5a75f2eb529ad5c2d28a62103c526a9a578cb15f37cf55790b65372aae39"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/cadence-speed-summary.json",
+      "bytes": 19022,
+      "sha256": "6fc82c8c33481a80cbafc7fa1660bac37b316eb0a9365a7a1dd40af9eac895c3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence211-clearance.summary.json",
+      "bytes": 3213,
+      "sha256": "ee10db02c875173b3d5b28a9da12644416165b6747092520b8e714a57cbbbe81"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence211-trial.json",
+      "bytes": 1980,
+      "sha256": "c0c0be8f26396367d078ce1744901ec890568bd3c3267c4567c201280e2a3f82"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence211.summary.json",
+      "bytes": 2553,
+      "sha256": "0cf6b605c6de51319da81cb336571eda7d697541b07ab9fe0354ed73c1dacde7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence230-clearance.summary.json",
+      "bytes": 4210,
+      "sha256": "b607f23e5f173de563843ba7e86080f35b59b7d3645899c820c3dde7a7dbac4b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence230-fine-clearance.summary.json",
+      "bytes": 4239,
+      "sha256": "6a6b3596e89503c4ced34e377d1efe1bbf418dfb9fd2a893c7e8efa7e4b9d701"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence230-fine-trial.json",
+      "bytes": 2039,
+      "sha256": "9340130a3048532d42053d03b2fc7d3a93b142df810216e0501f0214288f6706"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence230-fine.summary.json",
+      "bytes": 2540,
+      "sha256": "403a40ccadcc4d966976c7bd4b5fe6b44f715852aa8d67058c76ed10db88d01f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence230-trial.json",
+      "bytes": 1949,
+      "sha256": "01a9b452655be1ecf846ba9830e6a02338ac87b158ebabfa65a93a41b1517834"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence230.summary.json",
+      "bytes": 2533,
+      "sha256": "f4c5a51a036d3957fa276ebfa599bf0ece07603fd5fc0d10dc1db462d424b830"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence250-clearance.summary.json",
+      "bytes": 9207,
+      "sha256": "b55085bcc393d1265d2a781697488e976678f6ceaf47487ccd4dfda3c08c7293"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence250-trial.json",
+      "bytes": 1948,
+      "sha256": "583d999d4d19b6d69c791aeffd7da08693044d8f8a2a5454a2f7f28b2ceba841"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence250.summary.json",
+      "bytes": 2532,
+      "sha256": "4e06392cd3aad957e5ac58084653cddc329f15ba45e76d129e95e8749bf3fbe9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence280-clearance.summary.json",
+      "bytes": 15127,
+      "sha256": "4de8b05d5e3d49cdeb66705250adedd4edd2270f48e32c536900e201aa2dd2dd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence280-trial.json",
+      "bytes": 1949,
+      "sha256": "18890d1c9a4aba1fd0eb3fbe5f502d0fa504131e150e0115bb3088129da18329"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-cadence280.summary.json",
+      "bytes": 2530,
+      "sha256": "2de3c22a265f2f56321c01af3cfd7fa36ca44d0e62b5ae0db8a6aee7ab16dd46"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold230-clearance.summary.json",
+      "bytes": 5182,
+      "sha256": "1ebe5a6bf35e94d4092fe2a1f1064cc3133c2e70a7c41916b0456c7568f8ea4e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold230-trial.json",
+      "bytes": 1954,
+      "sha256": "c110754f5ce616f19c68da61b9eb993f506534bafd5155484741f0ed5a36455d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold230.summary.json",
+      "bytes": 2533,
+      "sha256": "ba46d9622f91c848afdbf8ceef9dce795524c1f814effe959873a6c294fbb7e3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold250-clearance.summary.json",
+      "bytes": 11158,
+      "sha256": "6d02682066b15be70ffa9e524d15eae8316539a4a3aa40246e5c33fccd3e311b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold250-trial.json",
+      "bytes": 1954,
+      "sha256": "101dd9fa1e99c86dc648993e876f9c8ac691f06c343aa53344a82b1e282cf1b5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold250.summary.json",
+      "bytes": 2533,
+      "sha256": "e3b3c1fee1c0b2259a4b5c129bba1a9ab738b528677deed5b152c6115e247083"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold280-clearance.summary.json",
+      "bytes": 15109,
+      "sha256": "ec89c6e65523e4bd278531474d283caad4bf192eda7808fab437d4f2d72d5a8a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold280-trial.json",
+      "bytes": 1954,
+      "sha256": "b59cc622d13e694bdb4b2704f9f9f4b26d653c904c24fdcae1477ce55c4892ff"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal-hold280.summary.json",
+      "bytes": 2532,
+      "sha256": "07b6c7ca75470ecd1a170a10c412cd43d8720eae44905f7341071a18b4095f6f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal21-cadence-capability.recipe.json",
+      "bytes": 984447,
+      "sha256": "cefcdc2b127eeac2f3d4420804de09762bc5fd0e17aacde5eef79073eb169a39"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal21-cadence-capability.result.json",
+      "bytes": 4212,
+      "sha256": "483d12e928e9e4934372bb72c23d63f597d96d7e00261cc72974a85fd17e31fd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/diagonal21-reference.result.json",
+      "bytes": 4847953,
+      "sha256": "73cdeaf49215f71ed196d8401c103c9b66408e6495165d6141f19abf3b12763f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/path-and-hold-summary.json",
+      "bytes": 4456,
+      "sha256": "4817da00dcfb218ef53b1ff6f39d7ed45f0d65d2311a5e729507a78464daf11b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_cadence_screen.mjs",
+      "bytes": 3291,
+      "sha256": "3da6f929abc608b0bd3d9f17ab615d5655a69620f0b64854f97a73562b739b0e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_hold_lead_trial.mjs",
+      "bytes": 2218,
+      "sha256": "c0213ba36dd5216e7100c8ccbd6294280ce7ef4260b2938353f8875a77ad6a88"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/runtime-evidence/evidence-v4-index.json",
+      "bytes": 38699,
+      "sha256": "2709711c4d56936a1ee7dd8c61698fb4ce0ba01b1c4218a3fbcb38f0737b6308"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/summarize_cadence_speed.mjs",
+      "bytes": 4851,
+      "sha256": "7d9696e9aae42a40d3f9199883717c4fac87cc54f7f31b3a194bee52b1eae476"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/summarize_path_and_hold.mjs",
+      "bytes": 5809,
+      "sha256": "57c50eced64214c3d0093e6933bc429f381dd2bdc39f5893140209649cbb7203"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-base-trial.json",
+      "bytes": 2432,
+      "sha256": "29bdd2bfd1541b333a5cc3bce581fbc4c503f248254809df4592970839f346e9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-capability.recipe.json",
+      "bytes": 980292,
+      "sha256": "f3f2d843828742e4fc7cca7781ef665013634e6a6ef8b3c4d597afc47685b1e3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-capability.result.json",
+      "bytes": 24209,
+      "sha256": "1996a7b079ed0a28458c3de017148b5c2575ad56acdb8ac54cf5c3d259bc2826"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-posture.recipe.json",
+      "bytes": 1315,
+      "sha256": "04b35c085f830e63d1f4505d22440d7340c09c673f9e1011f62fc87f06c8f0fb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-posture.result.json",
+      "bytes": 3285,
+      "sha256": "c8c90229fae6adba6f6c6d8c2a81da50f1750d4d0f7d04396a4e5b38bae1793f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-reference.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-reference.recipe.json",
+      "bytes": 24934,
+      "sha256": "41443056efce9fd6a5a4f10b9f8dee37c179d4b9a58242481bf87bd4af7de7c4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-reference.result.json",
+      "bytes": 4844536,
+      "sha256": "06ad38f4408ff9a563fb11d19353806615864979f445f8c96341440def2f18b2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-v230-clearance.summary.json",
+      "bytes": 8162,
+      "sha256": "ddaa29f03bfe4835298bfc2f9328a5636fc19d8306d2c9927fc1b809dec76b1f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-v230-trial.json",
+      "bytes": 2042,
+      "sha256": "0cebb45a4eb42f1c60a719b04ee0991721d425e00d2254ed4f5b8e9800ea7863"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-clearance10-v230.summary.json",
+      "bytes": 2540,
+      "sha256": "287442f17f56d73319fb02da9b8592b3f34c1321b0ea418838979375254ee7a4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-base-trial.json",
+      "bytes": 2396,
+      "sha256": "0e3ffa9089feb6415690e40ed36cb844adf9be213c02a7e6983de33c698f7f3a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-capability.recipe.json",
+      "bytes": 980363,
+      "sha256": "e30c19e7b95b2cee9ce3df80540da15a0bed6cd0ac6fedc86ca55ee5cf643e29"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-capability.result.json",
+      "bytes": 24232,
+      "sha256": "2b3d1141a29d02b2c72257d007343b5a103666f98d9b366832c4a3988b7ca59e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-preparation.json",
+      "bytes": 1039,
+      "sha256": "d4926e79650dd259c73a671f01a78bf04491fb347de642c1360cd7da205c3f27"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-reference.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-reference.recipe.json",
+      "bytes": 24934,
+      "sha256": "fb550f72934be1f9789f5c2f9347ee09ea1e2718896e90ea481d1e7e8c59db18"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-reference.result.json",
+      "bytes": 4844508,
+      "sha256": "d064d6818ab218db2fd3624b00a32058556a12484e2c3d3e63a5784d478f536c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-v230-clearance.summary.json",
+      "bytes": 3159,
+      "sha256": "2405101f23b84ff382642a1cf496fb949d6a04f680353291058ec525bfca53e6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-v230-fine-clearance.summary.json",
+      "bytes": 3189,
+      "sha256": "cc1c4f44f385878d82e1ac0fa8551d01fb78486d03f54beaee622176991d29da"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-v230-fine-trial.json",
+      "bytes": 2007,
+      "sha256": "d5eb0f65184f193f345aa2efb0db765c21b8f621bc4e29dd204344fdc370352a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-v230-fine.summary.json",
+      "bytes": 2538,
+      "sha256": "a4b50dc1d944f791cf1c748de1ae8e7e45eec9d9b16887c1faba7862837ec5e3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-v230-trial.json",
+      "bytes": 1986,
+      "sha256": "e37ff72bc8a6d24898728648456f8c53ac8e4b15e9f56ddd99d84a6404b4e795"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-v230.summary.json",
+      "bytes": 2536,
+      "sha256": "d7e8fda956af6c1eda10de5cc653bcf97abbfb66102b5b5f0a27bd8299cc9991"
+    },
+    {
+      "path": "examples/full-robot/fast-wasd/task.json",
+      "bytes": 9359,
+      "sha256": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/CHECKPOINT.md",
+      "bytes": 62314,
+      "sha256": "55f076542b82c9c1e68f1dc459fa9a1bb850afef86c9977c2386c190de3d8dad"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/README.md",
+      "bytes": 40886,
+      "sha256": "aa3f8ba65d07e78543ef2130cc7ad03c95d9828a38bd8882786cef37fef3fcee"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/planner-literature.md",
+      "bytes": 10800,
+      "sha256": "cbebd136b3c95b2046dbd142312d1e9fa67788f86e13a29bb4e29b9a72bde706"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+      "bytes": 15473156,
+      "sha256": "883861839a19fda8be8d0b353c2088373bce364ef3c3d63d2ea92e241a798c14"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/replay_policy_state",
+      "bytes": 5303556,
+      "sha256": "43fb6ada3d942fb8ecd99143973ac7f66db137f0f8cee7eef2df953b2ca9fb99"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_lift",
+      "bytes": 8470092,
+      "sha256": "a71a0c986f214b397e7284509b6b6d06e0d1a337a27441fcb5f8ec0d095a2450"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/analyze_motion_capability",
+      "bytes": 8516292,
+      "sha256": "d822f00212fff7b82610a9de371e37233fa0be6956eaa07a0dffc36222097800"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/inspect_configurations",
+      "bytes": 8236356,
+      "sha256": "f942de55e4c3ca5e0c08150b4d0fb0cdb3247ba907239038e11191c394154b71"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_reference",
+      "bytes": 8744012,
+      "sha256": "82190aab66af94b315b212a8c57b33b32a5fa51064da8b9302551f051cafed8a"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_capture_geometry",
+      "bytes": 8313420,
+      "sha256": "f28e178504875fb58b7a2ea083925ed3c6d877a62ad70c0cef05c075f0e6dbf9"
+    }
+  ],
+  "cad": {
+    "path": "examples/full-robot/baseline/robot.rcad",
+    "bytes": 83806475,
+    "sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+  },
+  "verification": {
+    "extracted_and_current_files": 84
+  },
+  "restore": "tar -xzf examples/full-robot/contact-planning/cadence-speed-evidence.tar.gz; cat examples/full-robot/contact-planning/path-and-hold-evidence.part-* > /tmp/path-and-hold-evidence.tar.gz; tar -xzf /tmp/path-and-hold-evidence.tar.gz",
+  "scope": "Eight completed matched runtime path/hold/refinement experiments. Final .234 m/s candidate passes short control/lift/sampled-geometry checks at two timesteps but still fails the 5% slip criterion. No sustained, browser, sim-to-real or global speed maximum claim."
+}

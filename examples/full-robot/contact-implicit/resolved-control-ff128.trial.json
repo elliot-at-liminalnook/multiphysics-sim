@@ -1,0 +1,42 @@
+{
+  "prefix": "runs/contact-implicit/resolved-control-ff128",
+  "files": [
+    {
+      "path": "runs/contact-implicit/resolved-control-ff128.scene.json",
+      "sha256": "2f0dfc7bf4b217360d77fc156ef996414dae9aab0d15232d7741decc3dab24a0"
+    },
+    {
+      "path": "runs/contact-implicit/resolved-control-ff128.config.json",
+      "sha256": "0dd4e17d44890acba77406834fd97ec80b3ddf9926047e786bfa13a50928876c"
+    },
+    {
+      "path": "runs/contact-implicit/resolved-control-ff128.task.json",
+      "sha256": "181a15bb663002b7d8a19b836727a296c4775e3d31ab3b29f58c3aba89a22c0d"
+    },
+    {
+      "path": "runs/contact-implicit/resolved-control-ff128.actions.json",
+      "sha256": "c3dac931f44a14c4df29cf152a35a33b6e8411054ea6c228e3991cef638986e3"
+    }
+  ],
+  "source_scene": {
+    "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+  },
+  "source_config": {
+    "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.config.json",
+    "sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697"
+  },
+  "compiled_reference": {
+    "path": "examples/full-robot/contact-implicit/resolved-contact-control.compiled.json",
+    "sha256": "e20a10d42d62efed917cd6065ff6dbbe34d90c8c9756b02309b346413433f297"
+  },
+  "policy": {
+    "path": "examples/full-robot/contact-implicit/finite-plan.rhai",
+    "sha256": "fc5c30e2482b96ef371799a5788a95f9b4ea4475f59cf9a08808c4595635ddb6"
+  },
+  "step_s": 0.00025786945993989675,
+  "controller_period_s": 0.004125911359038348,
+  "duration_s": 0.39608749046768144,
+  "feedforward_gain": 1,
+  "scope": "Finite-horizon timed diagnostic through the normal Rust/Rhai environment and effective servo envelopes. Source contact profile retained: sampled CAD surfaces with regularized Coulomb friction (1 mm/s), interlink force response omitted and checked separately by geometry audit. Session construction clocks align with embedded/controller steps. Existing task tilt/height bounds retained. No command-response, endpoint hold, periodic or sustained gait claim; browser bundles unchanged."
+}

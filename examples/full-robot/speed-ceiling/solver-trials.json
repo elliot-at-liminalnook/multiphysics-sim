@@ -1,0 +1,31 @@
+{
+  "rows": [
+    {
+      "name": "broyden",
+      "prefix": "runs/speed-ceiling/performance/flat125-broyden",
+      "source": "runs/speed-ceiling/validation/flat125-human-5ms",
+      "config_sha256": "b5ae59ab3f0adc8bee063b6214a2ed473167fa9e7bf4f73635e0a9eaaed731a5",
+      "source_config_sha256": "ef3d4ce9b50a5050ea7cde9c0290a56f2621defaf2b62bdeae941c49d16ec222",
+      "newton_overrides": {
+        "broyden_updates": true
+      },
+      "implicit_overrides": {}
+    },
+    {
+      "name": "tangent-broyden",
+      "prefix": "runs/speed-ceiling/performance/flat125-tangent-broyden",
+      "source": "runs/speed-ceiling/validation/flat125-human-5ms",
+      "config_sha256": "7c1c00c843b81b100f6da1d08f61a13ee5d4a88daa05623251d84d7596ca1257",
+      "source_config_sha256": "ef3d4ce9b50a5050ea7cde9c0290a56f2621defaf2b62bdeae941c49d16ec222",
+      "newton_overrides": {
+        "broyden_updates": true
+      },
+      "implicit_overrides": {
+        "linearized_jacobian_probes": true,
+        "linearized_probe_relative_step": 0.00001,
+        "reuse_exact_probe_base": true
+      }
+    }
+  ],
+  "scope": "Same physical scene, inputs, 5 ms timestep and Newton/contact tolerances. Existing guarded correction-matrix approximations retain exact residual/endpoint checks. Compare complete native frames and production browser parity before any performance claim."
+}

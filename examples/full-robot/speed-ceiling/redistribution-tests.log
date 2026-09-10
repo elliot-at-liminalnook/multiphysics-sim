@@ -1,0 +1,19 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control)
+    Finished `test` profile [optimized + debuginfo] target(s) in 3.42s
+     Running tests/trajectory.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/trajectory-0016bfced091143b)
+
+running 12 tests
+test authored_value_bounds_cover_all_reference_segments ... ok
+test linear_interpolation_retains_endpoint_holds_and_channel_order ... ok
+test quintic_has_analytic_midpoint_rest_endpoints_and_checked_derivatives ... ok
+test periodic_spline_has_analytic_values_and_continuous_cycle_derivatives ... ok
+test rejects_nonfinite_unsorted_and_dimension_mismatched_input ... ok
+test traversal_rejects_invalid_budgets_and_unbounded_work ... ok
+test rate_bounds_include_interior_spline_extrema ... ok
+test traversal_bounds_match_analytic_linear_and_quintic_paths ... ok
+test periodic_spline_validates_closure_timing_and_control_hull_bounds ... ok
+test periodic_traversal_brackets_total_variation_and_refines ... ok
+test redistributed_periodic_reference_preserves_phase_anchors_and_is_c2 ... ok
+test traversal_cells_cover_rate_switches_without_missing_interior_peaks ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

@@ -1,0 +1,104 @@
+{
+  "base_commit": "dfc0054043be59622c528bac456892bd50e23328",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-support-space-sources.tar.gz",
+    "bytes": 57924,
+    "sha256": "a703051a42e801c11c9dec3e9f8bedbc31fe63c5596497d8861b6b0ade8310a4"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 43997,
+      "sha256": "978652d63619cd2ac58fe3d2f59634be00a0633bd8c1c6a3a67fdc3d98fcab3b"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 26615,
+      "sha256": "5e5de797b9adfd5658e33f813530da138856e3a4d5709347c8832bce6bd5c408"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_support_space.rs",
+      "bytes": 7417,
+      "sha256": "4de235bdf4c7db5b95aa185ca46e076f0c6374232978a136bd9d6c26b16ce310"
+    }
+  ],
+  "audit_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_support_space",
+    "bytes": 9014836,
+    "sha256": "76bc37ffe9edc9e7f75232a2d889d072314effae98cbaec6237820bafe96954b"
+  },
+  "optimizer_build_reference": {
+    "path": "examples/full-robot/contact-planning/joint-cache-build.json",
+    "bytes": 2903,
+    "sha256": "a7b06bbf1d903756689be0cc23c045daf95ff512c38fb6c2900e6fdee27da6c0"
+  },
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9024684,
+    "sha256": "e24cb5fa554e51dede351a24304a5a99d1415a0856e8d3350b0b26b73bc847c7"
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-build.log",
+      "bytes": 165,
+      "sha256": "9853a29913319209c1a41d68a958d6f3744a81bd8fcb07f930806bef0c114381"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-checked-build.log",
+      "bytes": 165,
+      "sha256": "a7502079dc30bda3363bc962b347d373be374e2b0e794e3f416678c909e2a932"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space.result.json",
+      "bytes": 91053,
+      "sha256": "e2de2c2a84b326340b448117aee527742b24819ed0657fa49ce76bade0679974"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-checked.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-space-checked.result.json",
+      "bytes": 91092,
+      "sha256": "ebcaa8cde72f10bc83d7ad9f09149ed5cc211e450266edef63cebd431dd14524"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed.recipe.json",
+      "bytes": 63323,
+      "sha256": "86f4ba64e79bd640a501c7a93921ffda45a7185ed04d798652006609268b1717"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed-preparation.json",
+      "bytes": 3843,
+      "sha256": "5fc4cceeea5a63ad8d3138f7d6e55d3bf0cd1fd6da683c7acce157670b8018ae"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed-initial.result.json",
+      "bytes": 931115,
+      "sha256": "30d38c3bc178d23a33313a60fd1d2b407b2a199d6c164d22b8b72da65a9fd1f7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed-initial.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "checks": {
+    "independent_reconstruction_error": 0,
+    "checked_rows_identical": true,
+    "workspace_initial_report_byte_identical": true,
+    "optimizer_binary_matches_recorded_build": true
+  },
+  "scope": "Completed instantaneous-support audit and prepared/running wider search. Live workspace optimization output/log excluded until terminal. Initial support report is the checked report without its reconstruction metric."
+}

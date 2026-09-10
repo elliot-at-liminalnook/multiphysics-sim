@@ -1,0 +1,68 @@
+{
+  "base_commit": "3044f13b9cb8990da701639aaa5c746d6e1fac07",
+  "sources": [
+    {
+      "path": "crates/sim-domain-robot/src/effective_servo.rs",
+      "bytes": 8483,
+      "sha256": "adc5d5ffe731b7daeec21a648a10811a292c180f6e9ddf83bb0942c07f5976df"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/servo_command.rs",
+      "bytes": 4561,
+      "sha256": "4860725ad38359c349ca281d6aff40afd5c2d1f847c0528dd014777a2c666e94"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 48958,
+      "sha256": "1c728624f9ba907ea39e999ff60563b80e95196d15ad46d31aca1fe038e5ff67"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 58266,
+      "sha256": "3963a4fdf2ea2c24560d96ec753752cd610d73240b7b6b8bdf33d1f228a21b3e"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint_ipopt.rs",
+      "bytes": 27806,
+      "sha256": "efdd910f6d284ee5f7cd902f32992d46126bf89412a31d8666721ed19d115479"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_force_jacobian.rs",
+      "bytes": 7100,
+      "sha256": "316c950fed966989b601f03a8596b8a0ae7bc8a1b982d240b9f01a337effc0fb"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_joint_ipopt.rs",
+      "bytes": 2502,
+      "sha256": "5039ece45a079a7d3b77b8da757dcb50a519b6bacfee5e0f1ec93951293b8a23"
+    },
+    {
+      "path": "crates/sim-runtime/examples/compile_contact_reference.rs",
+      "bytes": 13068,
+      "sha256": "1743339c3362804290c977af1b9209814fb80211c708975f91c17c1a3a5e85bc"
+    }
+  ],
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-servo-command-initial-sources.tar.gz",
+    "bytes": 39946,
+    "sha256": "f51ed11a98ffc0e7d559ac4523a8377aa6bd90ea480cef36927c85888b95c6ad"
+  },
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt",
+      "bytes": 9221300,
+      "sha256": "278e9c4de8427ac4f97619ff507529feb599272c8887d811f72aea451f977b82"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/audit_joint_force_jacobian",
+      "bytes": 9102460,
+      "sha256": "7efa93940a9e12947ec8417c0e875dc56851e40152fd6f1e0c2596d414fb8ce7"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/compile_contact_reference",
+      "bytes": 8950916,
+      "sha256": "c48c96b8e0a6f1c12278ae6098baafde23cb8c185b80ef54f105d4e0352145c9"
+    }
+  ],
+  "scope": "Build used by the failed default derivative audit and byte-identical legacy compiler replay. The following CLI selection change preserves the default audit cases."
+}

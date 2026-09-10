@@ -1,0 +1,16 @@
+{
+  "independent_coordinates": ["joint.passive axle", "joint.right axle", "joint.left axle"],
+  "step_s": 0.003,
+  "steps": 5,
+  "report_every": 1,
+  "applied_generalized_loads": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  "implicit": {},
+  "motors": {
+    "residual_scales": [1, 1, 1],
+    "events": {},
+    "boundaries": [
+      {"voltage_v": 0, "winding_temperature_k": 298.15},
+      {"voltage_v": 0, "winding_temperature_k": 298.15}
+    ]
+  }
+}

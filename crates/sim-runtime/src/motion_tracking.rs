@@ -84,6 +84,11 @@ pub fn compare_motion(
     if !same_typed::<Option<[f64; 3]>>(&a["initial_base_translation_m"], placement)? {
         return Err("different initial world placement".into());
     }
+    let rotation = b.get("initial_base_rotation_vector_rad")
+        .unwrap_or(&b["config"]["initial_base_rotation_vector_rad"]);
+    if !same_typed::<Option<[f64; 3]>>(&a["initial_base_rotation_vector_rad"], rotation)? {
+        return Err("different initial world rotation".into());
+    }
     let frames = a["frames"].as_array().ok_or("missing simulation frames")?;
     let reference = b["frames"].as_array().ok_or("missing reference frames")?;
     for fs in [frames, reference] {

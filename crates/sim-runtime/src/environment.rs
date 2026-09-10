@@ -106,6 +106,12 @@ pub struct Task {
     /// Optional executed stepping/body tracking objective, separate from policy.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub walking: Option<crate::walking_task::WalkingTaskConfig>,
+    /// Net displacement in metres; divide the complete return by episode seconds.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub speed: Option<crate::speed_task::SpeedTaskConfig>,
+    /// Net displacement objective with separately authored termination bounds.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub progress: Option<crate::progress_task::ProgressTaskConfig>,
 }
 fn is_zero(value: &f64) -> bool { *value == 0.0 }
 
@@ -118,10 +124,18 @@ pub struct RewardValue {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Transition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub progress: Option<crate::progress_task::ProgressObservation>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub speed: Option<crate::speed_task::SpeedObservation>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub walking: Option<crate::walking_task::WalkingObservation>,
     pub time_s: f64,
     pub elapsed_s: f64,
     pub observations: Vec<f64>,
+    /// Authored held sensor outputs, with explicit optional sample timestamps.
+    /// These are separate from ideal task observations and reward channels.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub imu_samples: Vec<sim_domain_robot::articulated::ImuReading>,
     pub reward: f64,
     pub reward_terms: Vec<RewardValue>,
     /// A declared task bound failed; this does not mean the robot succeeded.
@@ -184,6 +198,8 @@ pub struct EnvironmentRecording {
 /// Shared native/WASM adapter. Solver errors are errors, never valid learning
 /// transitions. After a failed advance, reset is required to continue.
 pub struct EmbeddedEnvironment {
+    progress: Option<crate::progress_task::ProgressMonitor>,
+    speed: Option<crate::speed_task::SpeedMonitor>,
     walking: Option<crate::walking_task::WalkingMonitor>,
     session: EmbeddedSession,
     task: Task,
@@ -237,11 +253,19 @@ impl EmbeddedEnvironment {
                 return Err("observation names must be nonempty and unique".into());
             }
             let coordinate = |name: &str| {
-                session
-                    .coordinate_names()
-                    .iter()
-                    .position(|x| x == name)
-                    .ok_or_else(|| format!("unknown independent coordinate {name}"))
+                let matches: Vec<_> = session.articulated().dofs().enumerate()
+                    .filter(|(_, (_, d))| d.name == name).collect();
+                if matches.len() != 1 {
+                    return Err(format!("unique articulated coordinate required: {name}"));
+                }
+                let (index, (_, dof)) = matches[0];
+                let kinds = match dof.kind {
+                    sim_domain_robot::articulated::DofKind::Revolute =>
+                        (QuantityKind::Angle, QuantityKind::AngularVelocity),
+                    sim_domain_robot::articulated::DofKind::Prismatic =>
+                        (QuantityKind::Length, QuantityKind::LinearVelocity),
+                };
+                Ok((index, kinds))
             };
             let body = |name: &str| {
                 frame["poses"]
@@ -257,24 +281,20 @@ impl EmbeddedEnvironment {
             let mut floor_force = None;
             let mut neural = None;
             let (pointer, kind) = match &o.source {
-                CoordinatePosition { coordinate: name } => (
-                    format!(
-                        "/joint_positions/{}",
-                        session.joint_indices()[coordinate(name)?]
-                    ),
-                    QuantityKind::Angle,
-                ),
-                CoordinateVelocity { coordinate: name } => (
-                    format!(
-                        "/joint_velocities/{}",
-                        session.joint_indices()[coordinate(name)?]
-                    ),
-                    QuantityKind::AngularVelocity,
-                ),
-                ReferencePosition { coordinate: name } => (
-                    format!("/reference_targets_rad/{}", coordinate(name)?),
-                    QuantityKind::Angle,
-                ),
+                CoordinatePosition { coordinate: name } => {
+                    let (i, (kind, _)) = coordinate(name)?;
+                    (format!("/joint_positions/{i}"), kind)
+                }
+                CoordinateVelocity { coordinate: name } => {
+                    let (i, (_, kind)) = coordinate(name)?;
+                    (format!("/joint_velocities/{i}"), kind)
+                }
+                ReferencePosition { coordinate: name } => {
+                    let (i, (kind, _)) = coordinate(name)?;
+                    let motor = session.motor_joint_indices().iter().position(|j| *j == i)
+                        .ok_or_else(|| format!("no actuator reference for coordinate {name}"))?;
+                    (format!("/reference_targets_rad/{motor}"), kind)
+                }
                 BodyPosition { link, axis } => (
                     format!("/poses/{}/position_m/{}", body(link)?, axis.index()),
                     QuantityKind::Length,
@@ -388,7 +408,25 @@ impl EmbeddedEnvironment {
             let feet=policy.point_feedback.as_ref().ok_or("walking task requires foot reference bindings")?;
             crate::walking_task::WalkingMonitor::new(config,task.period_s,body.reference_link.clone(),feet.markers.iter().map(|m|m.link.clone()).collect(),session.articulated())
         }).transpose()?;
+        let speed = task.speed.as_ref().map(|config| {
+            if !task.rewards.is_empty() || task.walking.is_some() || task.survival_reward_per_s != 0.0
+                || task.termination_penalty != 0.0 || !task.termination_bounds.is_empty() || task.progress.is_some() {
+                return Err("speed task is a distance-only objective with its own sampled fall detection; other rewards and task bounds must be empty".into());
+            }
+            crate::speed_task::SpeedMonitor::new(config, session.scene(),
+                session.config().step_s * session.config().steps as f64)
+        }).transpose()?;
+        let progress=task.progress.as_ref().map(|config| {
+            if !task.rewards.is_empty()||task.walking.is_some()||task.speed.is_some()
+                ||task.survival_reward_per_s!=0.||task.termination_penalty!=0. {
+                return Err("progress task is a net-distance-only objective; use termination_bounds for task-specific failure".into());
+            }
+            crate::progress_task::ProgressMonitor::new(config,session.scene(),
+                session.config().step_s*session.config().steps as f64)
+        }).transpose()?;
         let mut result = Self {
+            progress,
+            speed,
             walking,
             session,
             task,
@@ -397,10 +435,13 @@ impl EmbeddedEnvironment {
             reward_indices,
             bound_indices,
             latest: Transition {
+                progress: None,
+                speed: None,
                 walking: None,
                 time_s: 0.0,
                 elapsed_s: 0.0,
                 observations: vec![],
+                imu_samples: vec![],
                 reward: 0.0,
                 reward_terms: vec![],
                 terminated: false,
@@ -415,6 +456,11 @@ impl EmbeddedEnvironment {
     }
 
     fn observe(&mut self, frame: &Value, elapsed_s: f64) -> Result<Transition, String> {
+        let time_s = frame["time_s"].as_f64().ok_or("missing endpoint time")?;
+        let imu_samples: Vec<sim_domain_robot::articulated::ImuReading> = frame.get("imu_samples")
+            .map(|s| serde_json::from_value(s.clone()).map_err(|e|e.to_string()))
+            .transpose()?.unwrap_or_default();
+        crate::imu_observation::validate_readings(&imu_samples,time_s)?;
         let observations: Vec<f64> = self
             .bindings
             .iter()
@@ -445,7 +491,7 @@ impl EmbeddedEnvironment {
                 value,
             });
         }
-        let termination_reasons: Vec<_> = self
+        let mut termination_reasons: Vec<_> = self
             .task
             .termination_bounds
             .iter()
@@ -453,6 +499,15 @@ impl EmbeddedEnvironment {
             .filter(|(b, i)| observations[**i] < b.lower || observations[**i] > b.upper)
             .map(|(b, _)| format!("{} outside [{}, {}]", b.observation, b.lower, b.upper))
             .collect();
+        let speed = self.speed.as_mut().map(|s| s.observe(frame, self.session.articulated())).transpose()?;
+        if let Some(s) = &speed {
+            reward_terms.push(RewardValue { name: "speed.net_progress".into(), value: s.progress_reward_m });
+            if s.fallen { termination_reasons.push("speed task: sampled body ground contact or overturning".into()); }
+        }
+        let progress=self.progress.as_mut().map(|p|p.observe(frame)).transpose()?;
+        if let Some(p)=&progress {
+            reward_terms.push(RewardValue{name:"progress.net_displacement".into(),value:p.progress_reward_m});
+        }
         if self.task.survival_reward_per_s != 0.0 {
             reward_terms.push(RewardValue { name: "task.survival".into(), value: self.task.survival_reward_per_s * elapsed_s });
         }
@@ -474,10 +529,13 @@ impl EmbeddedEnvironment {
             return Err("nonfinite total reward".into());
         }
         Ok(Transition {
+            progress,
+            speed,
             walking,
-            time_s: frame["time_s"].as_f64().ok_or("missing endpoint time")?,
+            time_s,
             elapsed_s,
             observations,
+            imu_samples,
             reward,
             reward_terms,
             terminated: !termination_reasons.is_empty(),
@@ -530,8 +588,56 @@ impl EmbeddedEnvironment {
     pub fn inputs(&self) -> &[InputChannel] {
         self.session.inputs()
     }
+    /// Number of complete controller action intervals in the validated horizon.
+    pub fn action_intervals(&self) -> usize {
+        self.session.config().steps / self.stride
+    }
     pub fn frame(&self) -> Result<Value, String> {
         self.session.interactive_frame()
+    }
+    /// Read-only prediction at the current committed endpoint. The caller retains
+    /// the previous committed frame from this episode, exactly one recipe period
+    /// earlier. Future controls use runtime input order; results declare recipe order.
+    /// This never advances physics, changes the held action or chooses a command.
+    pub fn predict_controller_trajectory(&self, model:&crate::motion_forecast::TrajectoryForecaster,
+        previous:&crate::motion_data::MotionSnapshot, future_actions:&[Vec<f64>])
+        ->Result<crate::motion_forecast::ControllerTrajectoryPrediction,String>{
+        if self.fault.is_some(){return Err("cannot predict from a failed environment".into());}
+        model.validate()?;
+        model.recipe.validate_physics_context(self.session.physics_context())?;
+        model.recipe.validate_robot(self.session.articulated())?;
+        let channels=&model.recipe.controller_inputs;
+        model.recipe.controller_context.as_ref().ok_or("controller forecast context required")?
+            .matches(&crate::forecast_actions::ControllerContext::from_runtime(self.session.scene(),self.session.config())?)?;
+        let indices=crate::forecast_actions::bind(channels,self.inputs())?;
+        if (model.recipe.period_s-self.task.period_s).abs()>1e-12 {
+            return Err("controller forecast period must match environment transitions".into());
+        }
+        // Validate caller-owned history before using its finite differences.
+        let mut previous=crate::motion_data::MotionSnapshot::from_frame(&json!(previous))?;
+        let mut current=crate::motion_data::MotionSnapshot::from_frame(&self.frame()?)?;
+        if previous.time_s<0. || current.time_s<model.recipe.period_s-1e-12 {
+            return Err("controller forecast requires a completed history interval".into());
+        }
+        let art=self.session.articulated();
+        let mut names:Vec<_>=art.links.iter().map(|l|l.name.as_str()).collect();names.sort();
+        for s in [&previous,&current] {
+            let mut observed:Vec<_>=s.poses.iter().map(|p|p.name.as_str()).collect();observed.sort();
+            if observed!=names||s.joint_positions.len()!=art.dofs().count(){return Err("forecast motion topology mismatch".into());}
+        }
+        for s in [&mut previous,&mut current] {
+            s.observe_ground(&model.recipe.terrain_relative_links,|x,y|art.floor_height(x,y))?;
+        }
+        let reorder=|a:&[f64]|->Result<Vec<f64>,String>{
+            crate::forecast_actions::validate_values(self.inputs(),a)?;
+            Ok(indices.iter().map(|i|a[*i]).collect())
+        };
+        let actions=crate::forecast_actions::ControllerActionSequence {channels:channels.clone(),
+            previous:reorder(self.session.input_values())?,
+            future:future_actions.iter().map(|a|reorder(a)).collect::<Result<_,_>>()?};
+        let (inputs,prior)=crate::motion_forecast::forecast_input(&model.recipe,&previous,&current,&actions.previous,&actions.future)?;
+        let prediction=model.predict(&inputs,&prior)?;
+        Ok(crate::motion_forecast::ControllerTrajectoryPrediction {time_s:current.time_s,physics_context:self.session.physics_context().clone(),actions,inputs,prior,prediction})
     }
     /// Read-only accepted-step diagnostics; no extra work enters the control loop.
     pub fn implicit_step_diagnostics(
@@ -580,7 +686,7 @@ impl EmbeddedEnvironment {
             return Err("only valid completed-transition environment prefixes can be replayed; failed attempts remain diagnostic records".into());
         }
         let equal = |a: Value, b: Value| -> Result<(), String> {
-            if a == b {
+            if crate::physics_context::fingerprint(&a) == crate::physics_context::fingerprint(&b) {
                 Ok(())
             } else {
                 Err("replay must match loaded robot, controller and task".into())
@@ -634,6 +740,8 @@ impl EmbeddedEnvironment {
             json!({"index":index,"name":dof.name,"joint":joint.name,"position_unit":position_unit,"velocity_unit":velocity_unit})
         }).collect();
         json!({"coordinate_names":self.session.coordinate_names(),"joint_indices":self.session.joint_indices(),
+            "robot_input":self.session.robot_input_binding(),
+            "physics_context":self.session.physics_context(),
             "frame_coordinates":frame_coordinates,
             "step_s":self.session.config().step_s,"steps":self.session.config().steps,
             "report_every":self.stride,"policy_contract":self.session.policy_metadata(),
@@ -649,6 +757,12 @@ impl EmbeddedEnvironment {
                 json!({"name":o.name,"kind":b.kind,"unit":b.kind.unit(),"source":o.source})).collect::<Vec<_>>(),
             "reward":"sum of negative scaled squared endpoint errors times elapsed simulation seconds",
             "termination_sampling":"action transition endpoints; not physical travel stops"});
+        if !self.session.articulated().imus.is_empty() {
+            contract["authored_sensor_outputs"] = json!({"field":"imu_samples",
+                "schedule":self.session.diagnostic_metadata()["imu_schedule"],
+                "availability":"sample_time_s=null before first tick; otherwise values are held from that sample time",
+                "scope":"authored simulated IMUs, separate from ideal task observations; not automatically used by rewards or termination"});
+        }
         if self.task.survival_reward_per_s != 0.0 || self.task.termination_penalty != 0.0 {
             contract["reward"] = json!("survival rate minus scaled squared endpoint errors, times elapsed simulation seconds; subtract termination penalty once for sampled task failure, not reset, timeout alone or numerical failure");
             contract["survival_reward_per_s"] = json!(self.task.survival_reward_per_s);
@@ -661,6 +775,23 @@ impl EmbeddedEnvironment {
                 "reward":"additional capped squared body-position error rate; one qualified-step bonus or failed-step penalty per observed swing outcome; interrupted swings fail",
                 "observation_scope":"privileged task diagnostics in transition.walking, not added to the actor sensor vector",
                 "qualification":"same sampled CAD-surface clearance, unloading and support checker as offline lift acceptance; not between-sample contact accuracy or complete walking acceptance"});
+        }
+        if let Some(s) = &self.task.speed {
+            contract["reward"] = json!("change in net horizontal displacement from reset, in metres; undiscounted sum equals endpoint distance; divide by full configured duration for m/s");
+            contract["speed_task"] = json!({"config":s,"reward_unit":"m", "discount_requirement":1.0,
+                "fall":"body +Z world projection <= 0, transformed CAD hull vertex clearance <= 0, or positive body floor normal force",
+                "sampling":"transition endpoints; hull vertices against runtime floor/height field, not continuous CAD collision certification",
+                "observations":"privileged task diagnostics, not actor sensor inputs",
+                "failure":"terminated episodes have diagnostic progress only; no eligible completed-episode score"});
+        }
+        if let Some(p)=&self.task.progress {
+            contract["reward"]=json!("change in net displacement from reset along selected world axes, in metres; undiscounted sum equals endpoint distance; divide by full configured duration for m/s");
+            contract["progress_task"]=json!({"config":p,"component":sim_domain_control::displacement::NET_DISPLACEMENT,
+                "reward_unit":"m","distance_unit":"m","speed_unit":"m/s","frame":"world","discount_requirement":1.0,
+                "failure":"explicit task termination_bounds only; no implicit ground-contact, upright, slip or gait restriction",
+                "sampling":"action transition endpoints",
+                "eligibility":"only full requested episodes without task termination or numerical failure qualify completed speed",
+                "observations":"task diagnostics; not added to actor sensor inputs"});
         }
         contract
     }

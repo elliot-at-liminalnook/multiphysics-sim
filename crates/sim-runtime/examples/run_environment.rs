@@ -14,10 +14,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         None
     };
+    let motion = if args.len() == 4 && args[0] == "--motion" {
+        let document: serde_json::Value = serde_json::from_slice(&std::fs::read(&args[1])?)?;
+        let variant: sim_runtime::motion_parameters::MotionVariant = serde_json::from_value(document["variant"].clone())?;
+        variant.validate()?;
+        Some(variant)
+    } else { None };
     let replay = args.len() == 2 && args[0] == "--replay";
     if !replay && !(3..=4).contains(&args.len()) {
         return Err(
-            "usage: run_environment scene.json config.json task.json [actions.json] [--profile report.json], or run_environment --replay episode.recording.json [--profile report.json]".into(),
+            "usage: run_environment scene.json config.json task.json [actions.json] [--profile report.json], or --replay episode.recording.json, or --motion materialized-motion.json config.json task.json".into(),
         );
     }
     let (mut env, actions, steps, episode_steps) = if replay {
@@ -29,6 +35,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Reuse the browser's validation, seed handling and held-action reconstruction.
         let (env, actions) = loaded.prepare_replay(record)?;
         (env, Some(actions), steps, episode_steps)
+    } else if let Some(variant) = &motion {
+        let config: Config = serde_json::from_slice(&std::fs::read(&args[2])?)?;
+        let task: Task = serde_json::from_slice(&std::fs::read(&args[3])?)?;
+        let steps = config.steps;
+        let env = EmbeddedEnvironment::new(variant.scene.clone(), config, task, 0)?;
+        (env, Some(variant.actions.clone()), steps, steps)
     } else {
         let scene: Scene = serde_json::from_slice(&std::fs::read(&args[0])?)?;
         let config: Config = serde_json::from_slice(&std::fs::read(&args[1])?)?;
@@ -95,6 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "{}",
         serde_json::to_string(&json!({"version":1,"kind":"sampled_environment_capture",
         "completed":completed,"error":error,"contract":env.contract(),"task":env.task(),"metadata":env.metadata(),
+        "motion_parameters":motion.as_ref().map(|m|json!({"recipe":m.parameterization,"values":m.values,"source_actions":m.source_actions})),
         "requested_steps_completed":requested_steps_completed,"requested_capture_steps":steps,
         "recording":env.recording(),"transitions":transitions,"frames":frames,"wall_s":wall_s,
         "transition_wall_s":transition_wall_s,

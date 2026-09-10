@@ -1,0 +1,25 @@
+{
+  "id": "constrained165",
+  "output": "runs/speed-ceiling/viewer-constrained165",
+  "wasm": "/Users/elliot/physics-simulator/target/gait-exploration/wasm32-unknown-unknown/release/sim_web.wasm",
+  "profiles": [
+    {
+      "id": "physics-constrained165-5ms",
+      "label": "Experimental · 165 mm/s command · 5 ms preview",
+      "scene": "runs/speed-ceiling/validation/constrained165-preview-5ms.scene.json",
+      "config": "runs/speed-ceiling/validation/constrained165-preview-5ms.config.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "Experimental faster gait with slipping. Preview accuracy and realtime performance are being measured.",
+      "evidence": "Detailed 20 s / 0.625 ms test: 169.2–172.2 mm/s, 12.5% loaded-foot slip. Dense replay passed 166/166 planned lifts with no overlap in 10,562 sampled poses. This numerical preview has separate accuracy and browser checks in progress. Sustained validation is running. Provisional actuator model and ideal observations."
+    },
+    {
+      "id": "physics-constrained165-10ms",
+      "label": "Experimental · 165 mm/s command · 10 ms preview",
+      "scene": "runs/speed-ceiling/validation/constrained165-preview-10ms.scene.json",
+      "config": "runs/speed-ceiling/validation/constrained165-preview-10ms.config.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "Experimental faster gait with slipping. Preview accuracy and realtime performance are being measured.",
+      "evidence": "Detailed 20 s / 0.625 ms test: 169.2–172.2 mm/s, 12.5% loaded-foot slip. Dense replay passed 166/166 planned lifts with no overlap in 10,562 sampled poses. This numerical preview has separate accuracy and browser checks in progress. Sustained validation is running. Provisional actuator model and ideal observations."
+    }
+  ]
+}

@@ -1,0 +1,480 @@
+{
+  "scope": "Four matched fixed-displacement searches vary only optional slip shaping and its explicit scale. Physical and original loaded-slip gates are independently audited at 512 times; surrogate acceptance is not substituted for them. Objective costs with different weights are not directly comparable. No measured speed or physical maximum claim.",
+  "initial_parity": {
+    "planning_report_exact": true,
+    "geometry_report_exact": true,
+    "maximum_slip_metric_difference": 6.661338147750939e-16,
+    "slip_limit_passed": false,
+    "scope": "New Rust slip report versus preceding independent JavaScript evidence reducer on the same 512 samples; physics and geometry unchanged."
+  },
+  "rows": [
+    {
+      "name": "slip32-control",
+      "slip_ratio_scale": null,
+      "optimized": {
+        "samples": 144,
+        "force_error_n": 0.17549170994198152,
+        "moment_error_nm": 0.051137932163713054,
+        "minimum_torque_margin_nm": -0.000005879303984768214,
+        "maximum_point_penetration_m": 0.00011385502436239703,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.00001720360113943648
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.17693762250287107,
+        "moment_error_nm": 0.06824026045911025,
+        "minimum_torque_margin_nm": -0.04222332644988656,
+        "maximum_point_penetration_m": 0.00011385502436239703,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.00001720360113943648
+      },
+      "dense_slip": {
+        "body_path_m": 0.0834572455376824,
+        "displacement_m": 0.07960923285285043,
+        "duration_s": 0.39608749046768144,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.5179563783213392,
+            "sampled_loaded_slip_ratio": 0.1987420007298299
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 1.7097109074639236,
+            "sampled_loaded_slip_ratio": 0.8952015451883389
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 1.2533809626500982,
+            "sampled_loaded_slip_ratio": 0.45672524909326023
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.9296901193207358,
+            "sampled_loaded_slip_ratio": 0.28330518312062725
+          }
+        ],
+        "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+        "shaping_residuals": [
+          4.679563783213392,
+          16.597109074639235,
+          12.03380962650098,
+          8.796901193207356
+        ],
+        "within_sampled_slip_limit": false
+      },
+      "contact_pattern": [
+        {
+          "group": "-Y | Sliding foot crosshead",
+          "actual": 0.28330518312062725,
+          "bound": 0.9296901193207352,
+          "loaded_fraction": 0.7421875,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 4.911363398983478e-96,
+          "maximum_normal_force_n": 23.54161017044398
+        },
+        {
+          "group": "+X | Sliding foot crosshead",
+          "actual": 0.1987420007298299,
+          "bound": 0.517956378321339,
+          "loaded_fraction": 0.58203125,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 2.5198477907643714e-21,
+          "maximum_normal_force_n": 19.63209882230598
+        },
+        {
+          "group": "+Y | Sliding foot crosshead",
+          "actual": 0.8952015451883392,
+          "bound": 1.7097109074639214,
+          "loaded_fraction": 0.859375,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 3.7687203846335235e-14,
+          "maximum_normal_force_n": 22.01402889732802
+        },
+        {
+          "group": "-X | Sliding foot crosshead",
+          "actual": 0.45672524909326023,
+          "bound": 1.2533809626500987,
+          "loaded_fraction": 0.638671875,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 1.799290782515725e-147,
+          "maximum_normal_force_n": 18.479090117994975
+        }
+      ],
+      "maximum_independent_slip_metric_difference": 2.220446049250313e-15,
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34488,
+        "initial_cost": 100.71499180616448,
+        "cost": 95.72162927327552,
+        "last": {
+          "accepted": true,
+          "cost": 95.72162927327552,
+          "damping": 39341.17957191279,
+          "evaluations": 34488,
+          "iteration": 29,
+          "projected_gradient": 1276.141820480148
+        }
+      }
+    },
+    {
+      "name": "slip32-shaped",
+      "slip_ratio_scale": 0.1,
+      "optimized": {
+        "samples": 144,
+        "force_error_n": 0.18582866412222063,
+        "moment_error_nm": 0.0552315759730377,
+        "minimum_torque_margin_nm": -0.0000030521549163331496,
+        "maximum_point_penetration_m": 0.00011351871713238815,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.0000170066901524356
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.18582866412222063,
+        "moment_error_nm": 0.06641750901710286,
+        "minimum_torque_margin_nm": -0.025379875713880548,
+        "maximum_point_penetration_m": 0.00011351871713238815,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.0000170066901524356
+      },
+      "dense_slip": {
+        "body_path_m": 0.0834740575995828,
+        "displacement_m": 0.07960923285285043,
+        "duration_s": 0.39608749046768144,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.34934426651173167,
+            "sampled_loaded_slip_ratio": 0.20129879943408238
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 1.516829622551855,
+            "sampled_loaded_slip_ratio": 0.7790843230144628
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.8623132391195394,
+            "sampled_loaded_slip_ratio": 0.39335597908218634
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.6621997536134153,
+            "sampled_loaded_slip_ratio": 0.19742701444284178
+          }
+        ],
+        "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+        "shaping_residuals": [
+          2.9934426651173167,
+          14.668296225518548,
+          8.123132391195393,
+          6.1219975361341525
+        ],
+        "within_sampled_slip_limit": false
+      },
+      "contact_pattern": [
+        {
+          "group": "-Y | Sliding foot crosshead",
+          "actual": 0.19742701444284178,
+          "bound": 0.6621997536134152,
+          "loaded_fraction": 0.716796875,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 2.656777047306287e-94,
+          "maximum_normal_force_n": 23.560798999343795
+        },
+        {
+          "group": "+X | Sliding foot crosshead",
+          "actual": 0.20129879943408238,
+          "bound": 0.34934426651173184,
+          "loaded_fraction": 0.583984375,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 7.213888116077901e-27,
+          "maximum_normal_force_n": 19.57833916522126
+        },
+        {
+          "group": "+Y | Sliding foot crosshead",
+          "actual": 0.779084323014463,
+          "bound": 1.5168296225518565,
+          "loaded_fraction": 0.83203125,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 1.1174240335586465e-22,
+          "maximum_normal_force_n": 21.983988086608736
+        },
+        {
+          "group": "-X | Sliding foot crosshead",
+          "actual": 0.39335597908218634,
+          "bound": 0.8623132391195397,
+          "loaded_fraction": 0.619140625,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 9.324794608601669e-148,
+          "maximum_normal_force_n": 18.55670712297843
+        }
+      ],
+      "maximum_independent_slip_metric_difference": 1.5543122344752192e-15,
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34483,
+        "initial_cost": 357.29425453044536,
+        "cost": 277.2584311382512,
+        "last": {
+          "accepted": true,
+          "cost": 277.2584311382512,
+          "damping": 95.59906635974808,
+          "evaluations": 34483,
+          "iteration": 29,
+          "projected_gradient": 400610.1178747001
+        }
+      }
+    },
+    {
+      "name": "slip32-shaped05",
+      "slip_ratio_scale": 0.05,
+      "optimized": {
+        "samples": 144,
+        "force_error_n": 0.21538993266463513,
+        "moment_error_nm": 0.05897711273991879,
+        "minimum_torque_margin_nm": -0.000004446426384363544,
+        "maximum_point_penetration_m": 0.00011299861263092126,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000016649625151071923
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.21538993266463513,
+        "moment_error_nm": 0.06980984129218662,
+        "minimum_torque_margin_nm": -0.002321785861467668,
+        "maximum_point_penetration_m": 0.00011299861263092126,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000016649625151071923
+      },
+      "dense_slip": {
+        "body_path_m": 0.08348245987609627,
+        "displacement_m": 0.07960923285285043,
+        "duration_s": 0.39608749046768144,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.32876267708804996,
+            "sampled_loaded_slip_ratio": 0.19245233867749525
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 1.3911250708967489,
+            "sampled_loaded_slip_ratio": 0.7287270577392722
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.6059198888320002,
+            "sampled_loaded_slip_ratio": 0.30602922106545233
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.4519478944776367,
+            "sampled_loaded_slip_ratio": 0.13055927862844371
+          }
+        ],
+        "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+        "shaping_residuals": [
+          5.575253541760999,
+          26.822501417934976,
+          11.118397776640002,
+          8.038957889552734
+        ],
+        "within_sampled_slip_limit": false
+      },
+      "contact_pattern": [
+        {
+          "group": "-Y | Sliding foot crosshead",
+          "actual": 0.1305592786284437,
+          "bound": 0.45194789447763684,
+          "loaded_fraction": 0.69140625,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 1.6911031522440138e-88,
+          "maximum_normal_force_n": 23.50238386129152
+        },
+        {
+          "group": "+X | Sliding foot crosshead",
+          "actual": 0.19245233867749523,
+          "bound": 0.32876267708805024,
+          "loaded_fraction": 0.56640625,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 2.631150211800826e-27,
+          "maximum_normal_force_n": 19.725485487383622
+        },
+        {
+          "group": "+Y | Sliding foot crosshead",
+          "actual": 0.728727057739272,
+          "bound": 1.391125070896749,
+          "loaded_fraction": 0.82421875,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 3.401423311814247e-32,
+          "maximum_normal_force_n": 21.987417041372918
+        },
+        {
+          "group": "-X | Sliding foot crosshead",
+          "actual": 0.3060292210654522,
+          "bound": 0.6059198888320009,
+          "loaded_fraction": 0.59765625,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 4.6364533355601014e-136,
+          "maximum_normal_force_n": 18.758789772872284
+        }
+      ],
+      "maximum_independent_slip_metric_difference": 6.661338147750939e-16,
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34482,
+        "initial_cost": 1127.0320427032882,
+        "cost": 631.1546779361682,
+        "last": {
+          "accepted": true,
+          "cost": 631.1546779361682,
+          "damping": 28.67971990792441,
+          "evaluations": 34482,
+          "iteration": 29,
+          "projected_gradient": 244069.87121933926
+        }
+      }
+    },
+    {
+      "name": "slip32-shaped02",
+      "slip_ratio_scale": 0.02,
+      "optimized": {
+        "samples": 144,
+        "force_error_n": 0.22127949972394667,
+        "moment_error_nm": 0.06156512314972562,
+        "minimum_torque_margin_nm": -0.00039207685643249945,
+        "maximum_point_penetration_m": 0.00011254068988264532,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000016321013619721624
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.3882722749952449,
+        "moment_error_nm": 0.13826939713598546,
+        "minimum_torque_margin_nm": -0.008773955187744445,
+        "maximum_point_penetration_m": 0.00011254444998148871,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000016321013619721624
+      },
+      "dense_slip": {
+        "body_path_m": 0.08348843493249515,
+        "displacement_m": 0.07960923285285043,
+        "duration_s": 0.39608749046768144,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.3083189833440861,
+            "sampled_loaded_slip_ratio": 0.18244615246950474
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 1.3338849988469998,
+            "sampled_loaded_slip_ratio": 0.7017509332337238
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.5493277543191024,
+            "sampled_loaded_slip_ratio": 0.28814951080228546
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.3541443848947576,
+            "sampled_loaded_slip_ratio": 0.09733376914861941
+          }
+        ],
+        "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+        "shaping_residuals": [
+          12.915949167204305,
+          64.19424994234998,
+          24.966387715955122,
+          15.20721924473788
+        ],
+        "within_sampled_slip_limit": false
+      },
+      "contact_pattern": [
+        {
+          "group": "-Y | Sliding foot crosshead",
+          "actual": 0.09733376914861941,
+          "bound": 0.3541443848947576,
+          "loaded_fraction": 0.673828125,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 3.33847297836378e-83,
+          "maximum_normal_force_n": 23.56664826894493
+        },
+        {
+          "group": "+X | Sliding foot crosshead",
+          "actual": 0.18244615246950474,
+          "bound": 0.30831898334408625,
+          "loaded_fraction": 0.55078125,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 1.2945187612764917e-20,
+          "maximum_normal_force_n": 20.03921513940332
+        },
+        {
+          "group": "+Y | Sliding foot crosshead",
+          "actual": 0.7017509332337238,
+          "bound": 1.3338849988470007,
+          "loaded_fraction": 0.8046875,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 5.126365114880359e-24,
+          "maximum_normal_force_n": 22.124381314449035
+        },
+        {
+          "group": "-X | Sliding foot crosshead",
+          "actual": 0.28814951080228546,
+          "bound": 0.5493277543191035,
+          "loaded_fraction": 0.58984375,
+          "touchdowns": 1,
+          "liftoffs": 1,
+          "minimum_normal_force_n": 8.317753779842403e-137,
+          "maximum_normal_force_n": 19.805982978791036
+        }
+      ],
+      "maximum_independent_slip_metric_difference": 1.1102230246251565e-15,
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34483,
+        "initial_cost": 6515.196559913188,
+        "cost": 2908.6593363178067,
+        "last": {
+          "accepted": true,
+          "cost": 2908.6593363178067,
+          "damping": 95.59906635974806,
+          "evaluations": 34483,
+          "iteration": 29,
+          "projected_gradient": 4576894.773280108
+        }
+      }
+    }
+  ]
+}

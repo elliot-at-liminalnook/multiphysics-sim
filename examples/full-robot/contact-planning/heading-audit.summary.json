@@ -1,0 +1,144 @@
+{
+  "rows": [
+    {
+      "name": "heading0",
+      "speed_m_s": 0.184176818657572,
+      "sampled_feasible": false,
+      "maximum_force_error_n": 0.045823623627174626,
+      "maximum_moment_error_nm": 0.0147419718326125,
+      "minimum_torque_margin_nm": -0.07359710283269835,
+      "maximum_penetration_m": 0.00003463416490162574,
+      "hips": [
+        {
+          "joint": "joint.-Y | Hip servo output",
+          "range_degrees": 18.436163984220208,
+          "peak_speed_rad_s": 3.907700335562663,
+          "minimum_torque_margin_nm": 0.6022104915084117
+        },
+        {
+          "joint": "joint.+X | Hip servo output",
+          "range_degrees": 1.2148368617733891,
+          "peak_speed_rad_s": 0.20459238872355315,
+          "minimum_torque_margin_nm": 2.7866391424225894
+        },
+        {
+          "joint": "joint.+Y | Hip servo output",
+          "range_degrees": 19.37478996431569,
+          "peak_speed_rad_s": 4.071214334953497,
+          "minimum_torque_margin_nm": 0.44759510529454083
+        },
+        {
+          "joint": "joint.-X | Hip servo output",
+          "range_degrees": 3.142958184735588,
+          "peak_speed_rad_s": 0.4955789147520005,
+          "minimum_torque_margin_nm": 2.5966280900290095
+        }
+      ]
+    },
+    {
+      "name": "heading-plus45",
+      "speed_m_s": 0.184176818657572,
+      "sampled_feasible": false,
+      "maximum_force_error_n": 0.5347497508547279,
+      "maximum_moment_error_nm": 0.17302489978291336,
+      "minimum_torque_margin_nm": -0.08318861966245877,
+      "maximum_penetration_m": 0.00019746036513257348,
+      "hips": [
+        {
+          "joint": "joint.-Y | Hip servo output",
+          "range_degrees": 14.330343304878971,
+          "peak_speed_rad_s": 2.8881984517549304,
+          "minimum_torque_margin_nm": 1.1827506575359115
+        },
+        {
+          "joint": "joint.+X | Hip servo output",
+          "range_degrees": 8.614428760800047,
+          "peak_speed_rad_s": 1.8405067612499428,
+          "minimum_torque_margin_nm": 1.593656521888489
+        },
+        {
+          "joint": "joint.+Y | Hip servo output",
+          "range_degrees": 16.76897053805835,
+          "peak_speed_rad_s": 3.3435344709107198,
+          "minimum_torque_margin_nm": 0.9346441885450278
+        },
+        {
+          "joint": "joint.-X | Hip servo output",
+          "range_degrees": 9.939695358855833,
+          "peak_speed_rad_s": 2.3891807133649574,
+          "minimum_torque_margin_nm": 1.4807250394411886
+        }
+      ]
+    },
+    {
+      "name": "heading-minus45",
+      "speed_m_s": 0.184176818657572,
+      "sampled_feasible": false,
+      "maximum_force_error_n": 0.5323251667313907,
+      "maximum_moment_error_nm": 0.17224245855241724,
+      "minimum_torque_margin_nm": -0.08338857069601625,
+      "maximum_penetration_m": 0.00020023517110834277,
+      "hips": [
+        {
+          "joint": "joint.-Y | Hip servo output",
+          "range_degrees": 15.257307751175535,
+          "peak_speed_rad_s": 3.164804887732223,
+          "minimum_torque_margin_nm": 0.9949784157586207
+        },
+        {
+          "joint": "joint.+X | Hip servo output",
+          "range_degrees": 8.861817664231914,
+          "peak_speed_rad_s": 1.8993248424687956,
+          "minimum_torque_margin_nm": 1.5420906142279451
+        },
+        {
+          "joint": "joint.+Y | Hip servo output",
+          "range_degrees": 15.154596193851615,
+          "peak_speed_rad_s": 3.0557019519791546,
+          "minimum_torque_margin_nm": 1.0397707463665147
+        },
+        {
+          "joint": "joint.-X | Hip servo output",
+          "range_degrees": 10.033644843396484,
+          "peak_speed_rad_s": 2.440828219955269,
+          "minimum_torque_margin_nm": 1.3965878331635824
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/contact-planning/heading0-audit.recipe.json",
+      "sha256": "ec516442095d62685dbf505f80bfd46cb5a4857de0ea2a15388bb9ac1d098660"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading0-audit.result.json",
+      "sha256": "7505a014ed1ed66e4925ed029362e7c7caf6a8b2984bb6ab139a70fe3d98bf52"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-plus45-audit.recipe.json",
+      "sha256": "c76f3d4ce74a7ab6e478fa35e25b90c2564bce8c0f5d415ea3a1fc9b4ead3a09"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-plus45-audit.result.json",
+      "sha256": "de2367142342ce60ffea0595f694ad945810af24dc64f9aaf4f9181069c5d014"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-minus45-audit.recipe.json",
+      "sha256": "fb1af47c0b4894b5764f3c7d7b3396d85cd66e7e005153a9c1d10422cf8a6819"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-minus45-audit.result.json",
+      "sha256": "789cf82a5a13e1632f26cf210fb4190ba59512291ed09db131944c0eed5f3083"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/analyze_heading_trials.mjs",
+      "sha256": "66db26aae62b2445c3fa9ed9ea64931d25638b9a43826938b9d9d58159970bd7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-trials.json",
+      "sha256": "dfca1bc64850c5685b8e26bc0d339a4b47866c6a88f50195ed37f043900fedd4"
+    }
+  ],
+  "scope": "Same unretuned warm-start body and foot schedule at three travel headings relative to CAD chassis. Forward and reverse torque gates both active. Hip range is commanded kinematic range; no live gait or heading-specific maximum speed claim."
+}

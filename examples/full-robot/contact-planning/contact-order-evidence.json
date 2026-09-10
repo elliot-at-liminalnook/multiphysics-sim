@@ -1,0 +1,1456 @@
+{
+  "version": 1,
+  "recorded_at": "2026-09-09T21:07:30.481Z",
+  "base_commit": "0f8c3315dcfaa0d39a391b17e09469478f8aea5f",
+  "code": [
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 49928,
+      "sha256": "8ff0bfe74376054cec1009079f7e76096c7b3914125969a9c2a962baf75c59f5"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 62480,
+      "sha256": "72efbc23ac21ca864aafa4bce6e2790536e41da268dfd9624ba7e9228892b61b"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint_timing.rs",
+      "bytes": 11170,
+      "sha256": "5d2a14ffa9a4940eb970458b417d88d628945ba287ed3b9fda4d11f1ad0783ce"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint_orders.rs",
+      "bytes": 14776,
+      "sha256": "436b62cdf1eb68d9edff9d99264ed94923cb9963b154b64e0cf335a87ccad037"
+    },
+    {
+      "path": "crates/sim-runtime/examples/prepare_contact_order_neighbors.rs",
+      "bytes": 6723,
+      "sha256": "b159c44975099ce53b09874fffd97b10c247461da10b179c5426ed4e15b017b7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/run_contact_order_refinements.mjs",
+      "bytes": 4760,
+      "sha256": "5f3a96ec526e0b58d0beac60983cc58345a1af7ff3083a3dee7158823209822b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/record_contact_orders.mjs",
+      "bytes": 5207,
+      "sha256": "af0f44b5a0344c67b86642441f6ca1b119c2c60d3a07bc5ab237b18375111230"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-source.recipe.json",
+      "bytes": 163010,
+      "sha256": "5776f79343f118651a5f629843d7494f61bd26fc434d1ddae11031aa6a16862f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-source.snapshot.json.gz",
+      "bytes": 491578,
+      "sha256": "807ee26974b6bee355913f02bac3c8c8787fe3c4e5375e5dde6ac687586b1909"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-refinement.search.json",
+      "bytes": 317,
+      "sha256": "834b65b6a22611d0910acb65ec2baac067c32e8d9477387bc936a2ddb32388d3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-refinement.spec.json",
+      "bytes": 469,
+      "sha256": "2f88877d3749bad636c9aad891e0fe01a6e95a25509297a9c0441351dd0465b5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-refined-control.spec.json",
+      "bytes": 485,
+      "sha256": "76294f83f94a22d80260f47e1d9840740d894a8cdb123bbd7516a36dd38222fe"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-prepare-v1.rs",
+      "bytes": 5893,
+      "sha256": "af730789692ba4a4fc3fd4b9bef821ccf8cad65ff0715800e225ce66944cb40f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-prepare-v1.provenance.json",
+      "bytes": 578,
+      "sha256": "9cf668294ce31ecfd10ade09b5c527f153ea51d57b207846455b4451131903ea"
+    }
+  ],
+  "logs": [
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-tests.log",
+      "bytes": 2519,
+      "sha256": "0e2ff475a57073b03bdb5e53e931a3c2a6e0528f1011a838cc8a5423c7253892"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-build.log",
+      "bytes": 581,
+      "sha256": "96a7c1b96e1b104f349d3be49d3ede0e3b5897d68d62470aaa47ccf55d187917"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-prepare.result.json",
+      "bytes": 30,
+      "sha256": "df6ec1aea86b0f60889a91cc22b27d5588414c4db9662be2450bf4a1288e2e25"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-prepare.log",
+      "bytes": 1820,
+      "sha256": "d6cb2f2bbd2764c19afa28210221158f7194bdeb4ac5448e33febb21094822f4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-matched-build.log",
+      "bytes": 165,
+      "sha256": "cb64d8fa316bfc5b9cf4b47f2c943253b1443dee0d622144b7fae2854f1e6526"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-matched-prepare.result.json",
+      "bytes": 30,
+      "sha256": "3a5d9b928bc9c2c0277ce9a2634f8827f2e63bdec96991113155b14a240843f6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-order-matched-prepare.log",
+      "bytes": 2216,
+      "sha256": "836d46a652825c7ab7e988829ebe2354140b5abdb411ed7c90292781d0c75b51"
+    }
+  ],
+  "archives": [
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/control.conic.json",
+        "bytes": 2208431,
+        "sha256": "fd57d653bf92ada08683001c0d38705aebdc3b458c770dd6f519ac32d3b2c22b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/fd57d653bf92ada08683001c0d38705aebdc3b458c770dd6f519ac32d3b2c22b.gz",
+        "bytes": 565931,
+        "sha256": "cc4243a1ac64676047863587eafefd4138b5043140dda93df997c1337e21c480"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/control.recipe.json",
+        "bytes": 82964,
+        "sha256": "1fb66f781657cbfb72138e86521f8b72cb6f280d7147660a629e606805de303a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/1fb66f781657cbfb72138e86521f8b72cb6f280d7147660a629e606805de303a.gz",
+        "bytes": 9415,
+        "sha256": "1d1db4b1d048442181c4e39000326fe378b8160fa03b76ff34e68a0976f55db4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-000.conic.json",
+        "bytes": 3123359,
+        "sha256": "3ea7ad97802fddfd28c7123b8a2d5a49f0a3a153d8b286749e88bb2597242786"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/3ea7ad97802fddfd28c7123b8a2d5a49f0a3a153d8b286749e88bb2597242786.gz",
+        "bytes": 855409,
+        "sha256": "c5615dfb6d6be61da5640431ea86b6723cb848140e19a6e27fc17c4e8eee9f73"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-000.recipe.json",
+        "bytes": 139568,
+        "sha256": "271b5337ce7ecb644cbf9a6aa8459394f59b552827eda2550a3f023172b2bb09"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/271b5337ce7ecb644cbf9a6aa8459394f59b552827eda2550a3f023172b2bb09.gz",
+        "bytes": 14854,
+        "sha256": "caee721dce2797e02587c629162704042e92b23327e764a2b6a3954b12938f4a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-001.conic.json",
+        "bytes": 2939603,
+        "sha256": "89d9aaa5bb3e53e291bb2619024331a1019a84cc0d42246c25ee2054788f580d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/89d9aaa5bb3e53e291bb2619024331a1019a84cc0d42246c25ee2054788f580d.gz",
+        "bytes": 795299,
+        "sha256": "4f9b1e97e2a86b80ee45c51fb53cc9bd1eeb41ed1a5d15a94765e1f09ec7c354"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-001.recipe.json",
+        "bytes": 128850,
+        "sha256": "971051e3a1444edc62f29a962a8a934259b6bba74889192ed1138796a7915569"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/971051e3a1444edc62f29a962a8a934259b6bba74889192ed1138796a7915569.gz",
+        "bytes": 13954,
+        "sha256": "a702c580d460679c07821481b91134f501fe6e8cee0f4379c5ae5d4850d4d67b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-002.conic.json",
+        "bytes": 2992674,
+        "sha256": "a6a4bce94d3430aba4005ce7d262846cb7ff3d61bb8c283918fb8eaefd6857e6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/a6a4bce94d3430aba4005ce7d262846cb7ff3d61bb8c283918fb8eaefd6857e6.gz",
+        "bytes": 805946,
+        "sha256": "19ae7557db6470e4fa499bbdd055aeb29e2c96b753d054e117cc50cc8d62313b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-002.recipe.json",
+        "bytes": 131071,
+        "sha256": "3a1b15461eb7c93dedad549d61f6fe4d010ef6583c26c44a2398578a837db833"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/3a1b15461eb7c93dedad549d61f6fe4d010ef6583c26c44a2398578a837db833.gz",
+        "bytes": 14032,
+        "sha256": "62004c308468e528a94c1078072faf9c53b230fe8b046a3c6a6568fcb10bd100"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-004.conic.json",
+        "bytes": 2991646,
+        "sha256": "6cf8fb67c17b474365770e6bafe60750d3cfeb58cb6cffb2fbed8f465ec67370"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/6cf8fb67c17b474365770e6bafe60750d3cfeb58cb6cffb2fbed8f465ec67370.gz",
+        "bytes": 798015,
+        "sha256": "58b776bd7859cfee24d94244f68680644f4cc98d154c5d2835d8186b94de84ca"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-004.recipe.json",
+        "bytes": 131097,
+        "sha256": "6a49d26c79ea271f5e0487d67fa3f6c3209a807fe65e08b4b8f231e031949fca"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/6a49d26c79ea271f5e0487d67fa3f6c3209a807fe65e08b4b8f231e031949fca.gz",
+        "bytes": 13917,
+        "sha256": "0006098ab366232038a9d50e03df845dabec2fa41a7c04a6f0b10796095c1e1a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-005.conic.json",
+        "bytes": 2941260,
+        "sha256": "9a88faddd93f9aa2f9147d6bf2faf8ed75aee19cabe872a65cfed49c454873f7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/9a88faddd93f9aa2f9147d6bf2faf8ed75aee19cabe872a65cfed49c454873f7.gz",
+        "bytes": 799268,
+        "sha256": "c5695986a623c02068047eae6e0cd2106721a549c21aa4f2c04cf120ab947232"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-005.recipe.json",
+        "bytes": 128902,
+        "sha256": "bdce390a5116af0a4575d4ae61c97a81ace263fd9ee8ce52b671662fc55d678c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/bdce390a5116af0a4575d4ae61c97a81ace263fd9ee8ce52b671662fc55d678c.gz",
+        "bytes": 13950,
+        "sha256": "374b08b5a0862458cc10ac10c41e1b736efea4f6a169c073c44cb40519ff7c6f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-006.conic.json",
+        "bytes": 3024039,
+        "sha256": "6e75bee3fa7f2eed0ba6b9a2757439de99a42072d9540b55eee811230a651a42"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/6e75bee3fa7f2eed0ba6b9a2757439de99a42072d9540b55eee811230a651a42.gz",
+        "bytes": 808830,
+        "sha256": "304445855ca68cbddac101b1b0cc366c910d69f9f4b4182f97cda355e032b4c0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/edge-006.recipe.json",
+        "bytes": 133198,
+        "sha256": "d41b21273f437e426711c2f4764d12fdb607e69ad4a8f6f1bc713866f55f515a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/d41b21273f437e426711c2f4764d12fdb607e69ad4a8f6f1bc713866f55f515a.gz",
+        "bytes": 14232,
+        "sha256": "bdcd57f755d540447aeb6ab9218cdd04bb7e0e7f59a3f922dfd2182e5900fa8b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/neighbors.json",
+        "bytes": 761194,
+        "sha256": "3b1398e16e6eedbe50c2a9167ebff233ac8a370e0e4c70e365f679dca44d9e43"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/3b1398e16e6eedbe50c2a9167ebff233ac8a370e0e4c70e365f679dca44d9e43.gz",
+        "bytes": 76322,
+        "sha256": "3fb38d61106aae22880c92899a75ac253aa2f73fc03cf3666fc54438762bc9d5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/queue.json",
+        "bytes": 2863,
+        "sha256": "5a1268990ad44fd94e7617730164098bf02a52e4caea2b69cb592ed22b87de44"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/5a1268990ad44fd94e7617730164098bf02a52e4caea2b69cb592ed22b87de44.gz",
+        "bytes": 872,
+        "sha256": "16b38b383b9022962927e0011798a7175aec0608770897ddb42cb449fca9a2f3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors/source.recipe.json",
+        "bytes": 82918,
+        "sha256": "9fb1fca7cdd872d5bb402d425dd0a3310f9ae85ee7710e184d9cd5cd8bbb11ce"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/9fb1fca7cdd872d5bb402d425dd0a3310f9ae85ee7710e184d9cd5cd8bbb11ce.gz",
+        "bytes": 9421,
+        "sha256": "8774d8cdbcc75adeb7c36f1b1206a9fcfdfd2076bc8b8a3a49760c7e8f4e9f76"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/control-refined.conic.json",
+        "bytes": 2650732,
+        "sha256": "6be7275c58ceaf5a55a8de1e4c8af3df0a14f80f9b8ca1eb13a67ba906919524"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/6be7275c58ceaf5a55a8de1e4c8af3df0a14f80f9b8ca1eb13a67ba906919524.gz",
+        "bytes": 699031,
+        "sha256": "adccddc4353aa707677a5fbec461d7bc319c2b96b5bfad421d28b8b98275b1da"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/control-refined.recipe.json",
+        "bytes": 110083,
+        "sha256": "9a29bcfe361c1d231cac6470cf0b3caad8fed556155b07ceafc15c8817107ede"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/9a29bcfe361c1d231cac6470cf0b3caad8fed556155b07ceafc15c8817107ede.gz",
+        "bytes": 11895,
+        "sha256": "c69ac41ad63ba9911f69cf1c03e4749717034f3838c3ba8c5cdc3a96b6e4a6df"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/control.conic.json",
+        "bytes": 2208431,
+        "sha256": "fd57d653bf92ada08683001c0d38705aebdc3b458c770dd6f519ac32d3b2c22b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/fd57d653bf92ada08683001c0d38705aebdc3b458c770dd6f519ac32d3b2c22b.gz",
+        "bytes": 565931,
+        "sha256": "cc4243a1ac64676047863587eafefd4138b5043140dda93df997c1337e21c480"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/control.recipe.json",
+        "bytes": 82964,
+        "sha256": "1fb66f781657cbfb72138e86521f8b72cb6f280d7147660a629e606805de303a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/1fb66f781657cbfb72138e86521f8b72cb6f280d7147660a629e606805de303a.gz",
+        "bytes": 9415,
+        "sha256": "1d1db4b1d048442181c4e39000326fe378b8160fa03b76ff34e68a0976f55db4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-000.conic.json",
+        "bytes": 3123359,
+        "sha256": "3ea7ad97802fddfd28c7123b8a2d5a49f0a3a153d8b286749e88bb2597242786"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/3ea7ad97802fddfd28c7123b8a2d5a49f0a3a153d8b286749e88bb2597242786.gz",
+        "bytes": 855409,
+        "sha256": "c5615dfb6d6be61da5640431ea86b6723cb848140e19a6e27fc17c4e8eee9f73"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-000.recipe.json",
+        "bytes": 139568,
+        "sha256": "271b5337ce7ecb644cbf9a6aa8459394f59b552827eda2550a3f023172b2bb09"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/271b5337ce7ecb644cbf9a6aa8459394f59b552827eda2550a3f023172b2bb09.gz",
+        "bytes": 14854,
+        "sha256": "caee721dce2797e02587c629162704042e92b23327e764a2b6a3954b12938f4a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-001.conic.json",
+        "bytes": 2939603,
+        "sha256": "89d9aaa5bb3e53e291bb2619024331a1019a84cc0d42246c25ee2054788f580d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/89d9aaa5bb3e53e291bb2619024331a1019a84cc0d42246c25ee2054788f580d.gz",
+        "bytes": 795299,
+        "sha256": "4f9b1e97e2a86b80ee45c51fb53cc9bd1eeb41ed1a5d15a94765e1f09ec7c354"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-001.recipe.json",
+        "bytes": 128850,
+        "sha256": "971051e3a1444edc62f29a962a8a934259b6bba74889192ed1138796a7915569"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/971051e3a1444edc62f29a962a8a934259b6bba74889192ed1138796a7915569.gz",
+        "bytes": 13954,
+        "sha256": "a702c580d460679c07821481b91134f501fe6e8cee0f4379c5ae5d4850d4d67b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-002.conic.json",
+        "bytes": 2992674,
+        "sha256": "a6a4bce94d3430aba4005ce7d262846cb7ff3d61bb8c283918fb8eaefd6857e6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/a6a4bce94d3430aba4005ce7d262846cb7ff3d61bb8c283918fb8eaefd6857e6.gz",
+        "bytes": 805946,
+        "sha256": "19ae7557db6470e4fa499bbdd055aeb29e2c96b753d054e117cc50cc8d62313b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-002.recipe.json",
+        "bytes": 131071,
+        "sha256": "3a1b15461eb7c93dedad549d61f6fe4d010ef6583c26c44a2398578a837db833"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/3a1b15461eb7c93dedad549d61f6fe4d010ef6583c26c44a2398578a837db833.gz",
+        "bytes": 14032,
+        "sha256": "62004c308468e528a94c1078072faf9c53b230fe8b046a3c6a6568fcb10bd100"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-004.conic.json",
+        "bytes": 2991646,
+        "sha256": "6cf8fb67c17b474365770e6bafe60750d3cfeb58cb6cffb2fbed8f465ec67370"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/6cf8fb67c17b474365770e6bafe60750d3cfeb58cb6cffb2fbed8f465ec67370.gz",
+        "bytes": 798015,
+        "sha256": "58b776bd7859cfee24d94244f68680644f4cc98d154c5d2835d8186b94de84ca"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-004.recipe.json",
+        "bytes": 131097,
+        "sha256": "6a49d26c79ea271f5e0487d67fa3f6c3209a807fe65e08b4b8f231e031949fca"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/6a49d26c79ea271f5e0487d67fa3f6c3209a807fe65e08b4b8f231e031949fca.gz",
+        "bytes": 13917,
+        "sha256": "0006098ab366232038a9d50e03df845dabec2fa41a7c04a6f0b10796095c1e1a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-005.conic.json",
+        "bytes": 2941260,
+        "sha256": "9a88faddd93f9aa2f9147d6bf2faf8ed75aee19cabe872a65cfed49c454873f7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/9a88faddd93f9aa2f9147d6bf2faf8ed75aee19cabe872a65cfed49c454873f7.gz",
+        "bytes": 799268,
+        "sha256": "c5695986a623c02068047eae6e0cd2106721a549c21aa4f2c04cf120ab947232"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-005.recipe.json",
+        "bytes": 128902,
+        "sha256": "bdce390a5116af0a4575d4ae61c97a81ace263fd9ee8ce52b671662fc55d678c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/bdce390a5116af0a4575d4ae61c97a81ace263fd9ee8ce52b671662fc55d678c.gz",
+        "bytes": 13950,
+        "sha256": "374b08b5a0862458cc10ac10c41e1b736efea4f6a169c073c44cb40519ff7c6f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-006.conic.json",
+        "bytes": 3024039,
+        "sha256": "6e75bee3fa7f2eed0ba6b9a2757439de99a42072d9540b55eee811230a651a42"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/6e75bee3fa7f2eed0ba6b9a2757439de99a42072d9540b55eee811230a651a42.gz",
+        "bytes": 808830,
+        "sha256": "304445855ca68cbddac101b1b0cc366c910d69f9f4b4182f97cda355e032b4c0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/edge-006.recipe.json",
+        "bytes": 133198,
+        "sha256": "d41b21273f437e426711c2f4764d12fdb607e69ad4a8f6f1bc713866f55f515a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/d41b21273f437e426711c2f4764d12fdb607e69ad4a8f6f1bc713866f55f515a.gz",
+        "bytes": 14232,
+        "sha256": "bdcd57f755d540447aeb6ab9218cdd04bb7e0e7f59a3f922dfd2182e5900fa8b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/neighbors.json",
+        "bytes": 761194,
+        "sha256": "3b1398e16e6eedbe50c2a9167ebff233ac8a370e0e4c70e365f679dca44d9e43"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/3b1398e16e6eedbe50c2a9167ebff233ac8a370e0e4c70e365f679dca44d9e43.gz",
+        "bytes": 76322,
+        "sha256": "3fb38d61106aae22880c92899a75ac253aa2f73fc03cf3666fc54438762bc9d5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/queue.json",
+        "bytes": 3259,
+        "sha256": "246f3a0ad730e4d1cbe4c29228a218c445dccec23dddd68a30e1a696bd75b256"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/246f3a0ad730e4d1cbe4c29228a218c445dccec23dddd68a30e1a696bd75b256.gz",
+        "bytes": 904,
+        "sha256": "fa084c88cde71037c84ada7e9914629b5332640f04b5d489a5ca9d1b8640830e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-neighbors-matched/source.recipe.json",
+        "bytes": 82918,
+        "sha256": "9fb1fca7cdd872d5bb402d425dd0a3310f9ae85ee7710e184d9cd5cd8bbb11ce"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/9fb1fca7cdd872d5bb402d425dd0a3310f9ae85ee7710e184d9cd5cd8bbb11ce.gz",
+        "bytes": 9421,
+        "sha256": "8774d8cdbcc75adeb7c36f1b1206a9fcfdfd2076bc8b8a3a49760c7e8f4e9f76"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-refined-control-queue/queue.json",
+        "bytes": 1398,
+        "sha256": "234a247143bc02503833fd1a66453a44bdbb475e43a824d896baefd67a89759e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/234a247143bc02503833fd1a66453a44bdbb475e43a824d896baefd67a89759e.gz",
+        "bytes": 526,
+        "sha256": "028c3990c61d3a9cee6a0f4db28970b678da05139bf789d0c6277ad97e9f81fc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-order-refined-control-queue/source.recipe.json",
+        "bytes": 82918,
+        "sha256": "9fb1fca7cdd872d5bb402d425dd0a3310f9ae85ee7710e184d9cd5cd8bbb11ce"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/contact-order-evidence-files/9fb1fca7cdd872d5bb402d425dd0a3310f9ae85ee7710e184d9cd5cd8bbb11ce.gz",
+        "bytes": 9421,
+        "sha256": "8774d8cdbcc75adeb7c36f1b1206a9fcfdfd2076bc8b8a3a49760c7e8f4e9f76"
+      }
+    }
+  ],
+  "preparer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/prepare_contact_order_neighbors",
+    "bytes": 9828556,
+    "sha256": "1da545460a70e7a2ebbc6124efd49542f0f1f5f7031eed67d68f3e7d4e4f6593"
+  },
+  "scene": {
+    "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "bytes": 8051250,
+    "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+  },
+  "markers": {
+    "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+    "bytes": 901,
+    "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+  },
+  "scene_archive_index": "examples/full-robot/speed-ceiling/evidence-v8-index.json",
+  "verification": {
+    "planner_tests": 14,
+    "original_replays_equal": 7,
+    "refined_motion_equal": true
+  },
+  "prepared": [
+    {
+      "id": "control",
+      "variables": 443,
+      "force_variables": 366,
+      "conic_status": "Solved",
+      "feasible": true,
+      "maximum_inequality": 0
+    },
+    {
+      "id": "control-refined",
+      "variables": 599,
+      "force_variables": 522,
+      "conic_status": "Solved",
+      "feasible": true,
+      "maximum_inequality": 0
+    },
+    {
+      "id": "edge-002",
+      "variables": 719,
+      "force_variables": 642,
+      "conic_status": "Solved",
+      "feasible": false,
+      "maximum_inequality": 1.149751064707126
+    },
+    {
+      "id": "edge-006",
+      "variables": 731,
+      "force_variables": 654,
+      "conic_status": "Solved",
+      "feasible": false,
+      "maximum_inequality": 2.0007190391217664
+    },
+    {
+      "id": "edge-004",
+      "variables": 719,
+      "force_variables": 642,
+      "conic_status": "Solved",
+      "feasible": false,
+      "maximum_inequality": 2.269752248788511
+    },
+    {
+      "id": "edge-000",
+      "variables": 767,
+      "force_variables": 690,
+      "conic_status": "Solved",
+      "feasible": false,
+      "maximum_inequality": 3.449846519859106
+    },
+    {
+      "id": "edge-001",
+      "variables": 707,
+      "force_variables": 630,
+      "conic_status": "Solved",
+      "feasible": false,
+      "maximum_inequality": 135.0163603634698
+    },
+    {
+      "id": "edge-005",
+      "variables": 707,
+      "force_variables": 630,
+      "conic_status": "Solved",
+      "feasible": false,
+      "maximum_inequality": 135.76450096198786
+    }
+  ],
+  "unprepared": [
+    {
+      "edge": 3,
+      "error": "neighbor initializer outside existing search box at variable 9; this is not a physical exclusion",
+      "swapped": [
+        {
+          "foot": 1,
+          "kind": "liftoff"
+        },
+        {
+          "foot": 3,
+          "kind": "touchdown"
+        }
+      ]
+    },
+    {
+      "edge": 7,
+      "error": "neighbor initializer outside existing search box at variable 2; this is not a physical exclusion",
+      "swapped": [
+        {
+          "foot": 0,
+          "kind": "liftoff"
+        },
+        {
+          "foot": 0,
+          "kind": "touchdown"
+        }
+      ]
+    }
+  ],
+  "launches": [
+    {
+      "output_root": "runs/contact-order-refinements",
+      "spec": {
+        "queue": "runs/contact-order-neighbors/queue.json",
+        "binary": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_steps",
+        "binary_sha256": "1056b56c0cf5978d7a1828b1f188680de3f8f0211965d4e81e869c7929a5d4bc",
+        "library": "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+        "search": "examples/full-robot/contact-planning/contact-order-refinement.search.json",
+        "output_root": "runs/contact-order-refinements"
+      },
+      "context": {
+        "driver_sha256": "5f3a96ec526e0b58d0beac60983cc58345a1af7ff3083a3dee7158823209822b",
+        "queue_sha256": "5a1268990ad44fd94e7617730164098bf02a52e4caea2b69cb592ed22b87de44",
+        "binary_sha256": "1056b56c0cf5978d7a1828b1f188680de3f8f0211965d4e81e869c7929a5d4bc",
+        "library_sha256": "78bad0de2784d8e3f8fd2465d04f61779b7d7435579aba53c911d0db70d28b7c",
+        "search_sha256": "834b65b6a22611d0910acb65ec2baac067c32e8d9477387bc936a2ddb32388d3",
+        "scene_sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8",
+        "markers_sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f",
+        "source_robot": {
+          "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+          "independent_coordinates": [
+            "joint.-Y | Hip servo output",
+            "joint.-Y | Worm servo output",
+            "joint.-Y | Foot servo output",
+            "joint.+X | Hip servo output",
+            "joint.+X | Worm servo output",
+            "joint.+X | Foot servo output",
+            "joint.+Y | Hip servo output",
+            "joint.+Y | Worm servo output",
+            "joint.+Y | Foot servo output",
+            "joint.-X | Hip servo output",
+            "joint.-X | Worm servo output",
+            "joint.-X | Foot servo output"
+          ],
+          "initial_coordinates": [
+            0,
+            -0.00008346418847292681,
+            -1.0471975511965976,
+            0,
+            -0.27612813350949833,
+            -1.0471975511965976,
+            0,
+            -0.00008346425388696227,
+            -1.0471975511965976,
+            0.17453292519943295,
+            -0.00007650604473797781,
+            -1.0471975511965976
+          ],
+          "initial_base_translation_m": [
+            0,
+            0,
+            -0.06906212053309974
+          ],
+          "joint_search_bounds": [
+            {
+              "lower": -1.0471975511965976,
+              "upper": 1.0471975511965976,
+              "max_step": 0.05
+            },
+            {
+              "lower": -2.6180773421799675,
+              "upper": 2.6179104138030214,
+              "max_step": 0.1
+            },
+            {
+              "lower": -2.5,
+              "upper": -0.02,
+              "max_step": 0.1
+            },
+            {
+              "lower": -1.0471975511965976,
+              "upper": 1.0471975511965976,
+              "max_step": 0.05
+            },
+            {
+              "lower": -2.894122011500993,
+              "upper": 2.341865744481996,
+              "max_step": 0.1
+            },
+            {
+              "lower": -2.5,
+              "upper": -0.02,
+              "max_step": 0.1
+            },
+            {
+              "lower": -1.0471975511965976,
+              "upper": 1.0471975511965976,
+              "max_step": 0.05
+            },
+            {
+              "lower": -2.6180773422453814,
+              "upper": 2.6179104137376075,
+              "max_step": 0.1
+            },
+            {
+              "lower": -2.5,
+              "upper": -0.02,
+              "max_step": 0.1
+            },
+            {
+              "lower": -1.0471975511965976,
+              "upper": 1.0471975511965976,
+              "max_step": 0.05
+            },
+            {
+              "lower": -2.6180703840362325,
+              "upper": 2.6179173719467563,
+              "max_step": 0.1
+            },
+            {
+              "lower": -2.5,
+              "upper": -0.02,
+              "max_step": 0.1
+            }
+          ],
+          "embedding": {
+            "direct_closure_jacobian": true,
+            "dependent_solve": "pivoted_qr",
+            "block_dependent_factorization": true,
+            "analytic_mechanism_positions": true,
+            "length_scale_m": 0.1,
+            "angle_scale_rad": 1,
+            "scaled_closure_tolerance": 1e-8,
+            "scaled_position_tolerance": 1e-11,
+            "relative_rank_tolerance": 1e-10,
+            "absolute_rank_tolerance": 1e-12,
+            "max_iterations": 30,
+            "max_scaled_correction": 0.25
+          },
+          "placement": {
+            "tolerance_m": 1e-9,
+            "damping_m": 0.000001,
+            "max_iterations": 40
+          },
+          "actuators": {
+            "joint.+X | Foot servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+X | Hip servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+X | Worm servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+Y | Foot servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+Y | Hip servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+Y | Worm servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-X | Foot servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-X | Hip servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-X | Worm servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-Y | Foot servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-Y | Hip servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-Y | Worm servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            }
+          },
+          "servo_command_limits": {
+            "bounds_rad": [
+              [
+                -1.0471975511965976,
+                1.0471975511965976
+              ],
+              [
+                -2.6180773421799675,
+                2.6179104138030214
+              ],
+              [
+                -2.5,
+                -0.02
+              ],
+              [
+                -1.0471975511965976,
+                1.0471975511965976
+              ],
+              [
+                -2.894122011500993,
+                2.341865744481996
+              ],
+              [
+                -2.5,
+                -0.02
+              ],
+              [
+                -1.0471975511965976,
+                1.0471975511965976
+              ],
+              [
+                -2.6180773422453814,
+                2.6179104137376075
+              ],
+              [
+                -2.5,
+                -0.02
+              ],
+              [
+                -1.0471975511965976,
+                1.0471975511965976
+              ],
+              [
+                -2.6180703840362325,
+                2.6179173719467563
+              ],
+              [
+                -2.5,
+                -0.02
+              ]
+            ],
+            "residual_scale_rad": 0.01
+          },
+          "uniform_samples": 16,
+          "sampling": "contact_intervals",
+          "additional_phases": [
+            0.18549999999999997,
+            0.1865,
+            0.1875,
+            0.18849999999999997,
+            0.1895,
+            0.1905,
+            0.19149999999999998,
+            0.1925
+          ],
+          "include_body_knots": true,
+          "phase_rate": 1,
+          "phase_acceleration_per_s": 0,
+          "additional_clocks": [
+            {
+              "phase_rate": -1,
+              "phase_acceleration_per_s": 0
+            }
+          ],
+          "extend_motoring_penalty_past_no_load": true,
+          "force_allocation": {
+            "regularization": 0.0001,
+            "maximum_iterations": 20000,
+            "gradient_tolerance_n": 0.000001
+          },
+          "moment_length_scale_m": 0.35,
+          "force_tolerance_n": 0.05,
+          "moment_tolerance_nm": 0.02,
+          "torque_tolerance_nm": 0.01,
+          "penetration_tolerance_m": 0.0001,
+          "velocity_tolerance_m_s": 1e-7,
+          "acceleration_tolerance_m_s2": 0.000001,
+          "direction_world": [
+            0.7071067811865476,
+            0.7071067811865475,
+            0
+          ],
+          "target_speed_m_s": 0.3,
+          "speed_residual_scale_m_s": 0.05
+        }
+      },
+      "queue": {
+        "items": [
+          {
+            "conic": "runs/contact-order-neighbors/edge-002.conic.json",
+            "conic_error": null,
+            "conic_status": "Solved",
+            "id": "edge-002",
+            "preparation_wall_s": 3.831137333,
+            "priority_maximum_inequality": 1.149751064707126,
+            "recipe": "runs/contact-order-neighbors/edge-002.recipe.json"
+          },
+          {
+            "conic": "runs/contact-order-neighbors/control.conic.json",
+            "conic_error": null,
+            "conic_status": "Solved",
+            "id": "control",
+            "preparation_wall_s": 2.720924101,
+            "priority_maximum_inequality": 0,
+            "recipe": "runs/contact-order-neighbors/control.recipe.json"
+          },
+          {
+            "conic": "runs/contact-order-neighbors/edge-006.conic.json",
+            "conic_error": null,
+            "conic_status": "Solved",
+            "id": "edge-006",
+            "preparation_wall_s": 3.875377796,
+            "priority_maximum_inequality": 2.0007190391217664,
+            "recipe": "runs/contact-order-neighbors/edge-006.recipe.json"
+          },
+          {
+            "conic": "runs/contact-order-neighbors/edge-004.conic.json",
+            "conic_error": null,
+            "conic_status": "Solved",
+            "id": "edge-004",
+            "preparation_wall_s": 3.911746088,
+            "priority_maximum_inequality": 2.269752248788511,
+            "recipe": "runs/contact-order-neighbors/edge-004.recipe.json"
+          },
+          {
+            "conic": "runs/contact-order-neighbors/edge-000.conic.json",
+            "conic_error": null,
+            "conic_status": "Solved",
+            "id": "edge-000",
+            "preparation_wall_s": 4.071402167,
+            "priority_maximum_inequality": 3.449846519859106,
+            "recipe": "runs/contact-order-neighbors/edge-000.recipe.json"
+          },
+          {
+            "conic": "runs/contact-order-neighbors/edge-001.conic.json",
+            "conic_error": null,
+            "conic_status": "Solved",
+            "id": "edge-001",
+            "preparation_wall_s": 3.720985619,
+            "priority_maximum_inequality": 135.0163603634698,
+            "recipe": "runs/contact-order-neighbors/edge-001.recipe.json"
+          },
+          {
+            "conic": "runs/contact-order-neighbors/edge-005.conic.json",
+            "conic_error": null,
+            "conic_status": "Solved",
+            "id": "edge-005",
+            "preparation_wall_s": 3.724782331,
+            "priority_maximum_inequality": 135.76450096198786,
+            "recipe": "runs/contact-order-neighbors/edge-005.recipe.json"
+          }
+        ],
+        "markers": "examples/full-robot/gait-exploration/workspace-markers.json",
+        "scene": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "scope": "Adjacent cyclic contact-order starts, retaining model and search bounds. Fixed-motion conic residuals order the queue; every prepared start remains eligible for a coupled motion/force NLP, including failed conic solves. Preparation/NLP failure does not exclude a physical gait family. This is one graph neighborhood, not MCTS, INSAT or a global-optimality certificate.",
+        "source": "examples/full-robot/contact-planning/contact-order-source.recipe.json",
+        "unprepared_edges": [
+          {
+            "edge": 3,
+            "error": "neighbor initializer outside existing search box at variable 9; this is not a physical exclusion",
+            "swapped": [
+              {
+                "foot": 1,
+                "kind": "liftoff"
+              },
+              {
+                "foot": 3,
+                "kind": "touchdown"
+              }
+            ]
+          },
+          {
+            "edge": 7,
+            "error": "neighbor initializer outside existing search box at variable 2; this is not a physical exclusion",
+            "swapped": [
+              {
+                "foot": 0,
+                "kind": "liftoff"
+              },
+              {
+                "foot": 0,
+                "kind": "touchdown"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      },
+      "status": "launched; results incomplete at evidence capture"
+    },
+    {
+      "output_root": "runs/contact-order-refined-control",
+      "spec": {
+        "queue": "runs/contact-order-refined-control-queue/queue.json",
+        "binary": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_steps",
+        "binary_sha256": "1056b56c0cf5978d7a1828b1f188680de3f8f0211965d4e81e869c7929a5d4bc",
+        "library": "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+        "search": "examples/full-robot/contact-planning/contact-order-refinement.search.json",
+        "output_root": "runs/contact-order-refined-control"
+      },
+      "context": {
+        "driver_sha256": "5f3a96ec526e0b58d0beac60983cc58345a1af7ff3083a3dee7158823209822b",
+        "queue_sha256": "234a247143bc02503833fd1a66453a44bdbb475e43a824d896baefd67a89759e",
+        "binary_sha256": "1056b56c0cf5978d7a1828b1f188680de3f8f0211965d4e81e869c7929a5d4bc",
+        "library_sha256": "78bad0de2784d8e3f8fd2465d04f61779b7d7435579aba53c911d0db70d28b7c",
+        "search_sha256": "834b65b6a22611d0910acb65ec2baac067c32e8d9477387bc936a2ddb32388d3",
+        "scene_sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8",
+        "markers_sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f",
+        "source_robot": {
+          "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+          "independent_coordinates": [
+            "joint.-Y | Hip servo output",
+            "joint.-Y | Worm servo output",
+            "joint.-Y | Foot servo output",
+            "joint.+X | Hip servo output",
+            "joint.+X | Worm servo output",
+            "joint.+X | Foot servo output",
+            "joint.+Y | Hip servo output",
+            "joint.+Y | Worm servo output",
+            "joint.+Y | Foot servo output",
+            "joint.-X | Hip servo output",
+            "joint.-X | Worm servo output",
+            "joint.-X | Foot servo output"
+          ],
+          "initial_coordinates": [
+            0,
+            -0.00008346418847292681,
+            -1.0471975511965976,
+            0,
+            -0.27612813350949833,
+            -1.0471975511965976,
+            0,
+            -0.00008346425388696227,
+            -1.0471975511965976,
+            0.17453292519943295,
+            -0.00007650604473797781,
+            -1.0471975511965976
+          ],
+          "initial_base_translation_m": [
+            0,
+            0,
+            -0.06906212053309974
+          ],
+          "joint_search_bounds": [
+            {
+              "lower": -1.0471975511965976,
+              "upper": 1.0471975511965976,
+              "max_step": 0.05
+            },
+            {
+              "lower": -2.6180773421799675,
+              "upper": 2.6179104138030214,
+              "max_step": 0.1
+            },
+            {
+              "lower": -2.5,
+              "upper": -0.02,
+              "max_step": 0.1
+            },
+            {
+              "lower": -1.0471975511965976,
+              "upper": 1.0471975511965976,
+              "max_step": 0.05
+            },
+            {
+              "lower": -2.894122011500993,
+              "upper": 2.341865744481996,
+              "max_step": 0.1
+            },
+            {
+              "lower": -2.5,
+              "upper": -0.02,
+              "max_step": 0.1
+            },
+            {
+              "lower": -1.0471975511965976,
+              "upper": 1.0471975511965976,
+              "max_step": 0.05
+            },
+            {
+              "lower": -2.6180773422453814,
+              "upper": 2.6179104137376075,
+              "max_step": 0.1
+            },
+            {
+              "lower": -2.5,
+              "upper": -0.02,
+              "max_step": 0.1
+            },
+            {
+              "lower": -1.0471975511965976,
+              "upper": 1.0471975511965976,
+              "max_step": 0.05
+            },
+            {
+              "lower": -2.6180703840362325,
+              "upper": 2.6179173719467563,
+              "max_step": 0.1
+            },
+            {
+              "lower": -2.5,
+              "upper": -0.02,
+              "max_step": 0.1
+            }
+          ],
+          "embedding": {
+            "direct_closure_jacobian": true,
+            "dependent_solve": "pivoted_qr",
+            "block_dependent_factorization": true,
+            "analytic_mechanism_positions": true,
+            "length_scale_m": 0.1,
+            "angle_scale_rad": 1,
+            "scaled_closure_tolerance": 1e-8,
+            "scaled_position_tolerance": 1e-11,
+            "relative_rank_tolerance": 1e-10,
+            "absolute_rank_tolerance": 1e-12,
+            "max_iterations": 30,
+            "max_scaled_correction": 0.25
+          },
+          "placement": {
+            "tolerance_m": 1e-9,
+            "damping_m": 0.000001,
+            "max_iterations": 40
+          },
+          "actuators": {
+            "joint.+X | Foot servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+X | Hip servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+X | Worm servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+Y | Foot servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+Y | Hip servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.+Y | Worm servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-X | Foot servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-X | Hip servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-X | Worm servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-Y | Foot servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-Y | Hip servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            },
+            "joint.-Y | Worm servo output": {
+              "damping": 0.6742555873943625,
+              "no_load_speed": 5.5115660589294615,
+              "stall_torque": 2.941995,
+              "stiffness": 33.71277936971813
+            }
+          },
+          "servo_command_limits": {
+            "bounds_rad": [
+              [
+                -1.0471975511965976,
+                1.0471975511965976
+              ],
+              [
+                -2.6180773421799675,
+                2.6179104138030214
+              ],
+              [
+                -2.5,
+                -0.02
+              ],
+              [
+                -1.0471975511965976,
+                1.0471975511965976
+              ],
+              [
+                -2.894122011500993,
+                2.341865744481996
+              ],
+              [
+                -2.5,
+                -0.02
+              ],
+              [
+                -1.0471975511965976,
+                1.0471975511965976
+              ],
+              [
+                -2.6180773422453814,
+                2.6179104137376075
+              ],
+              [
+                -2.5,
+                -0.02
+              ],
+              [
+                -1.0471975511965976,
+                1.0471975511965976
+              ],
+              [
+                -2.6180703840362325,
+                2.6179173719467563
+              ],
+              [
+                -2.5,
+                -0.02
+              ]
+            ],
+            "residual_scale_rad": 0.01
+          },
+          "uniform_samples": 16,
+          "sampling": "contact_intervals",
+          "additional_phases": [
+            0.18549999999999997,
+            0.1865,
+            0.1875,
+            0.18849999999999997,
+            0.1895,
+            0.1905,
+            0.19149999999999998,
+            0.1925
+          ],
+          "include_body_knots": true,
+          "phase_rate": 1,
+          "phase_acceleration_per_s": 0,
+          "additional_clocks": [
+            {
+              "phase_rate": -1,
+              "phase_acceleration_per_s": 0
+            }
+          ],
+          "extend_motoring_penalty_past_no_load": true,
+          "force_allocation": {
+            "regularization": 0.0001,
+            "maximum_iterations": 20000,
+            "gradient_tolerance_n": 0.000001
+          },
+          "moment_length_scale_m": 0.35,
+          "force_tolerance_n": 0.05,
+          "moment_tolerance_nm": 0.02,
+          "torque_tolerance_nm": 0.01,
+          "penetration_tolerance_m": 0.0001,
+          "velocity_tolerance_m_s": 1e-7,
+          "acceleration_tolerance_m_s2": 0.000001,
+          "direction_world": [
+            0.7071067811865476,
+            0.7071067811865475,
+            0
+          ],
+          "target_speed_m_s": 0.3,
+          "speed_residual_scale_m_s": 0.05
+        }
+      },
+      "queue": {
+        "items": [
+          {
+            "conic": "runs/contact-order-neighbors-matched/control-refined.conic.json",
+            "conic_error": null,
+            "conic_status": "Solved",
+            "id": "control-refined",
+            "preparation_wall_s": 3.293742242,
+            "priority_maximum_inequality": 0,
+            "recipe": "runs/contact-order-neighbors-matched/control-refined.recipe.json"
+          }
+        ],
+        "markers": "examples/full-robot/gait-exploration/workspace-markers.json",
+        "scene": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+        "scope": "Same-order force-refinement companion control for the initial contact-order neighborhood.",
+        "source": "examples/full-robot/contact-planning/contact-order-source.recipe.json",
+        "unprepared_edges": [
+          {
+            "edge": 3,
+            "error": "neighbor initializer outside existing search box at variable 9; this is not a physical exclusion",
+            "swapped": [
+              {
+                "foot": 1,
+                "kind": "liftoff"
+              },
+              {
+                "foot": 3,
+                "kind": "touchdown"
+              }
+            ]
+          },
+          {
+            "edge": 7,
+            "error": "neighbor initializer outside existing search box at variable 2; this is not a physical exclusion",
+            "swapped": [
+              {
+                "foot": 0,
+                "kind": "liftoff"
+              },
+              {
+                "foot": 0,
+                "kind": "touchdown"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      },
+      "status": "launched; results incomplete at evidence capture"
+    }
+  ],
+  "scope": "One adjacent contact-order neighborhood and a same-order refinement control. Knot counts differ by order. Full preparation outputs archived; live solver outputs excluded. No MCTS, INSAT, CEM, faster executed gait, or global maximum is claimed."
+}

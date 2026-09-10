@@ -1,0 +1,29 @@
+{
+  "id": "front-smooth",
+  "cases": [
+    {
+      "name": "smooth-front10-v150-human-fine",
+      "source": "runs/speed-ceiling/clearance/front10-flat-v150",
+      "speed": 0.15,
+      "step_s": 0.000625,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_speed": 0.065
+    },
+    {
+      "name": "smooth-front12-v150-human-fine",
+      "source": "runs/speed-ceiling/clearance/front12-flat-v150",
+      "speed": 0.15,
+      "step_s": 0.000625,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_speed": 0.065
+    },
+    {
+      "name": "smooth-front10-v165-human-fine",
+      "source": "runs/speed-ceiling/clearance/front10-flat-v150",
+      "speed": 0.165,
+      "step_s": 0.000625,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_speed": 0.065
+    }
+  ]
+}

@@ -1,0 +1,1599 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.actions.json",
+        "bytes": 62055,
+        "sha256": "8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae.gz",
+        "bytes": 2769,
+        "sha256": "ad07ca2852090db449da546ca6a43df8f8fc0fa0e9f7be3f4be60a6f670b2d55"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.clearance.execution.json",
+        "bytes": 345,
+        "sha256": "e9a9b764158317f8631a2d5175c6e25e275d664375bb85ef20f6d79c82f1be2f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e9a9b764158317f8631a2d5175c6e25e275d664375bb85ef20f6d79c82f1be2f.gz",
+        "bytes": 212,
+        "sha256": "d26f8e42f7d0eb949609dcd8c6f10697548a9d6564107f159ba2ae5d2ba237ac"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.clearance.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.clearance.spec.json",
+        "bytes": 151,
+        "sha256": "4db3e91cc7589b42cc3b2c352fcddc03e2e2acdd58d17de0eacaa74dcedcb678"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/4db3e91cc7589b42cc3b2c352fcddc03e2e2acdd58d17de0eacaa74dcedcb678.gz",
+        "bytes": 130,
+        "sha256": "87b38703f2d241a8440526c64a6c6f0a9766106e6c3e99d14ce8e66d672c5cf1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.clearance.stdout.json",
+        "bytes": 317,
+        "sha256": "30742bbd7d246e90d88cd79e8d16bccbc159bc3d3ea984c69c92ade819d1c055"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/30742bbd7d246e90d88cd79e8d16bccbc159bc3d3ea984c69c92ade819d1c055.gz",
+        "bytes": 234,
+        "sha256": "1b50f10d173fa94a7179e39307df176bdb479a0d54c5f31b6870fbc5a069ffcd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.clearance.summary.json",
+        "bytes": 3213,
+        "sha256": "20895406edc090cb104a98fd3275a65da8f92555dc1c846b78de79c67b309e17"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/20895406edc090cb104a98fd3275a65da8f92555dc1c846b78de79c67b309e17.gz",
+        "bytes": 1086,
+        "sha256": "43074282a23665a8177cef95e7afe40cb98f07d503f66ec9d25e794650f65927"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.config.json",
+        "bytes": 130277,
+        "sha256": "a1ae9c40198cb16f6e18b39d276731cdf9ed19323406a62e0896ceee31f0a3bd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/a1ae9c40198cb16f6e18b39d276731cdf9ed19323406a62e0896ceee31f0a3bd.gz",
+        "bytes": 8138,
+        "sha256": "b7864cbe6ddb219106946d042c0d525e814d8433c928a4affbb781520cab5ad8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.contact-clearance-requirements.json",
+        "bytes": 24285,
+        "sha256": "82ccf659a6bff0a58ff7a9fa1236ae47f4355753a8b966b34f24bb0c4abd12de"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/82ccf659a6bff0a58ff7a9fa1236ae47f4355753a8b966b34f24bb0c4abd12de.gz",
+        "bytes": 779,
+        "sha256": "c854007589802737b9e4e9b26589754660c342397b6c6cb601c676d5d7ba288c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.contact-geometry.json",
+        "bytes": 1540357,
+        "sha256": "4f2cee37af38950b9bdcee57589350f52000e3f1d3883ce12f528165814cc003"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/4f2cee37af38950b9bdcee57589350f52000e3f1d3883ce12f528165814cc003.gz",
+        "bytes": 185650,
+        "sha256": "3b9c48959e2157accbee98ea581f428c7407dbf3d583a3422f65ea3422f4ca30"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.native.execution.json",
+        "bytes": 444,
+        "sha256": "820368ffa6b66a0e8b74fbf81ba3855ba9040bdc6c95d5f2bfb0cf06949c5ea4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/820368ffa6b66a0e8b74fbf81ba3855ba9040bdc6c95d5f2bfb0cf06949c5ea4.gz",
+        "bytes": 256,
+        "sha256": "dc4ece561445f5043ddb6daf104b3f0929be6c98595c21382784e79c1ab3f647"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.native.json",
+        "bytes": 47289613,
+        "sha256": "621dbac06cc8a08e9d2c0575eb3d30087403f940046fb8357c7b413a473eae31"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/621dbac06cc8a08e9d2c0575eb3d30087403f940046fb8357c7b413a473eae31.gz",
+        "bytes": 10848002,
+        "sha256": "424f4d1631b8c6465da9ae1d9dc63aa24000c03e5a4f2f3365b33f611ec03148"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.policy-state.json",
+        "bytes": 294184,
+        "sha256": "1d2d37e10fdfbdfe0f5980055f6f39eef98289125347732a3b78d10a8271f25b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/1d2d37e10fdfbdfe0f5980055f6f39eef98289125347732a3b78d10a8271f25b.gz",
+        "bytes": 34325,
+        "sha256": "9211b63852f43550b2b383c2b9a1b12cb13ca4f83cd76b99d4713bde24e24a88"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-1p25ms.scene.json",
+        "bytes": 12811482,
+        "sha256": "fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3.gz",
+        "bytes": 3602580,
+        "sha256": "a1ed067f49cd447515df0a33ebbb7bfc7920ef7aa244a464d6963799752c4cd2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.actions.json",
+        "bytes": 62055,
+        "sha256": "8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae.gz",
+        "bytes": 2769,
+        "sha256": "ad07ca2852090db449da546ca6a43df8f8fc0fa0e9f7be3f4be60a6f670b2d55"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.clearance.execution.json",
+        "bytes": 347,
+        "sha256": "b88184df9781835230268ba8ba6cb60d4eb98aafe1ab099821ab4b451acbb39d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/b88184df9781835230268ba8ba6cb60d4eb98aafe1ab099821ab4b451acbb39d.gz",
+        "bytes": 211,
+        "sha256": "831364d3ea441288ba455c1112d70b8451c9e3bc70ee49b07a4c473413744bdb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.clearance.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.clearance.spec.json",
+        "bytes": 152,
+        "sha256": "a40cd73b05e023fc2560c38f232ba10a98f875efc80aa178f003357ca5cc8efb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/a40cd73b05e023fc2560c38f232ba10a98f875efc80aa178f003357ca5cc8efb.gz",
+        "bytes": 131,
+        "sha256": "6819f8483ec16a9b7a977516e36b87d6bab3d0cc8803cb1957e315879c48ebf4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.clearance.stdout.json",
+        "bytes": 317,
+        "sha256": "30742bbd7d246e90d88cd79e8d16bccbc159bc3d3ea984c69c92ade819d1c055"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/30742bbd7d246e90d88cd79e8d16bccbc159bc3d3ea984c69c92ade819d1c055.gz",
+        "bytes": 234,
+        "sha256": "1b50f10d173fa94a7179e39307df176bdb479a0d54c5f31b6870fbc5a069ffcd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.clearance.summary.json",
+        "bytes": 3219,
+        "sha256": "14e765b720bce7d196a16a5f4def3c8b9fa39dba9a517963e171ed68ecec83e6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/14e765b720bce7d196a16a5f4def3c8b9fa39dba9a517963e171ed68ecec83e6.gz",
+        "bytes": 1088,
+        "sha256": "4f1a8f6d174c012cfe9c68a8a225813400a59df43602428a00f7737f19882e65"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.config.json",
+        "bytes": 130278,
+        "sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d.gz",
+        "bytes": 8138,
+        "sha256": "d1bd77075211783116473cb1d09a43ee0b7fa495dfbece1992977a0abdb03ac9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.contact-clearance-requirements.json",
+        "bytes": 24285,
+        "sha256": "82ccf659a6bff0a58ff7a9fa1236ae47f4355753a8b966b34f24bb0c4abd12de"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/82ccf659a6bff0a58ff7a9fa1236ae47f4355753a8b966b34f24bb0c4abd12de.gz",
+        "bytes": 779,
+        "sha256": "c854007589802737b9e4e9b26589754660c342397b6c6cb601c676d5d7ba288c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.contact-geometry.json",
+        "bytes": 1540388,
+        "sha256": "f08b3c4b35b9513bb8e6c1f4f2f1e973b410ffdd494b0a64c10a836ab02145f9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/f08b3c4b35b9513bb8e6c1f4f2f1e973b410ffdd494b0a64c10a836ab02145f9.gz",
+        "bytes": 185598,
+        "sha256": "7520a348669e87014972e6517d4e99add5e3058e6b5bc7c0efafc23470b82e19"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.native.execution.json",
+        "bytes": 452,
+        "sha256": "fb57fc7d25ef7a2c5d45078648d9b33694eaff4d1891ed67cb7c1061a286a4c0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/fb57fc7d25ef7a2c5d45078648d9b33694eaff4d1891ed67cb7c1061a286a4c0.gz",
+        "bytes": 259,
+        "sha256": "627107d49073c92348c409ba6cd70c3891155f82d3b102b0ebc03b0f6beb80ef"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.native.json",
+        "bytes": 47296577,
+        "sha256": "986072e0fa4856ddc157619504c907629057e923b3f1ab29c06abd50ebd16bcd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/986072e0fa4856ddc157619504c907629057e923b3f1ab29c06abd50ebd16bcd.gz",
+        "bytes": 10851911,
+        "sha256": "a53a43e35062386cfcc0f2899453e848f8c5927a44225446a05da5720ea0f8ed"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.policy-state.json",
+        "bytes": 294185,
+        "sha256": "bffbbc30e5addbcedf465eab740280673e787e8999cc77be2dbaee67af267678"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/bffbbc30e5addbcedf465eab740280673e787e8999cc77be2dbaee67af267678.gz",
+        "bytes": 34326,
+        "sha256": "f3f6a790239dee63b0270be30e6a6272768c7d83e7042feecee42acb735a9dee"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p625ms.scene.json",
+        "bytes": 12811482,
+        "sha256": "fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3.gz",
+        "bytes": 3602580,
+        "sha256": "a1ed067f49cd447515df0a33ebbb7bfc7920ef7aa244a464d6963799752c4cd2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.actions.json",
+        "bytes": 36154,
+        "sha256": "2be124c2d708e22c291e160c9b2b10ba94c5a6098fd58138b5ea23aae3e03d76"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/2be124c2d708e22c291e160c9b2b10ba94c5a6098fd58138b5ea23aae3e03d76.gz",
+        "bytes": 1297,
+        "sha256": "128070d9153b45d9864bc51e877a494a5f0936deb4c4fd00f559303b6bf1609f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.clearance.execution.json",
+        "bytes": 352,
+        "sha256": "1a3e96e82e1619539624a58725ca031ff6fb0c8dd3b67d028f7242cefcf2435b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/1a3e96e82e1619539624a58725ca031ff6fb0c8dd3b67d028f7242cefcf2435b.gz",
+        "bytes": 215,
+        "sha256": "a8909c80317e3cb2a7cc7859f70cade02c105b15021b5457a3f6cdc92bf68a25"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.clearance.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.clearance.spec.json",
+        "bytes": 152,
+        "sha256": "a4655c19b0edaaf908bfb5f3f07f0121cd4763c9c28acd53329d89d3904d3f7a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/a4655c19b0edaaf908bfb5f3f07f0121cd4763c9c28acd53329d89d3904d3f7a.gz",
+        "bytes": 130,
+        "sha256": "31267f29354a7d7f99e7a8cc6dc06720f5f86c97c502d0ee605b95edf3a89a16"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.clearance.stdout.json",
+        "bytes": 316,
+        "sha256": "04d8ab14616ea9e2008034babf22526c6ebe9c4f75c87270aa34d45edad2f4a8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/04d8ab14616ea9e2008034babf22526c6ebe9c4f75c87270aa34d45edad2f4a8.gz",
+        "bytes": 233,
+        "sha256": "b57928dae4d6bf28167b26bec0c263b35bf87e7259d457d2abfa320375bdb862"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.clearance.summary.json",
+        "bytes": 3217,
+        "sha256": "7e59428cc9b896a7fa2525c58a7ef74ac54e8fa67e52f08fda51171d9d6b7eba"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/7e59428cc9b896a7fa2525c58a7ef74ac54e8fa67e52f08fda51171d9d6b7eba.gz",
+        "bytes": 1090,
+        "sha256": "6084dea47ee70eb8c45f45c15fc41581d5d52891698e05b6a39800d1066d961e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.config.json",
+        "bytes": 130278,
+        "sha256": "df17c840edb9c9d368098f0abc2a3e5285d3c632918bc6d58638637cfc8d1c2a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/df17c840edb9c9d368098f0abc2a3e5285d3c632918bc6d58638637cfc8d1c2a.gz",
+        "bytes": 8138,
+        "sha256": "2aae1bb122c23f75a2bc9dfa2ae0028205ae06f596f72a3bc9d23d4490097847"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.contact-clearance-requirements.json",
+        "bytes": 9027,
+        "sha256": "9cf272e9aa56a5f4589c9b4f36a485f1033d95341830ae657e778062f94b68c6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/9cf272e9aa56a5f4589c9b4f36a485f1033d95341830ae657e778062f94b68c6.gz",
+        "bytes": 436,
+        "sha256": "66863aa3fa7fa6c4261ddee4c5f8b368c35157f3cd73041c8e80c739a60e2d43"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.contact-geometry.json",
+        "bytes": 920363,
+        "sha256": "5bd79816da8bf78f948dbd73796241f1e1fd48f744380cd0a16801cf8753b9f3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/5bd79816da8bf78f948dbd73796241f1e1fd48f744380cd0a16801cf8753b9f3.gz",
+        "bytes": 116467,
+        "sha256": "3a3d7ee2f09023fa510e6f875530009dcca70c6cd195d0049f2c32895b108c8e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.native.execution.json",
+        "bytes": 458,
+        "sha256": "556af6a322adc1a72477957220709977de0c13380e5d09e62df9019bf0cda3f8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/556af6a322adc1a72477957220709977de0c13380e5d09e62df9019bf0cda3f8.gz",
+        "bytes": 261,
+        "sha256": "5f382093fdf4c6c12377fc7474c47d896204a6a0d4f77714eec32cc7c5587d54"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.native.json",
+        "bytes": 33771875,
+        "sha256": "eced5029a3c28cc55cb876636de40fc47fd16b1f8f20f027a09afae7a02d3b60"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/eced5029a3c28cc55cb876636de40fc47fd16b1f8f20f027a09afae7a02d3b60.gz",
+        "bytes": 8185196,
+        "sha256": "2bf15f2a79d4d16c9846d619645863201a9dac12b5a78b5d4aa8789c15e196fe"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.policy-state.json",
+        "bytes": 142460,
+        "sha256": "f3f62d5a78396f55222807c734350e0e2e306462445ad243ed93fb60adcca093"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/f3f62d5a78396f55222807c734350e0e2e306462445ad243ed93fb60adcca093.gz",
+        "bytes": 10900,
+        "sha256": "7645492904d282076ae404a30b1a5a9ffa1e503d0f85656fc7d61bb944b8df8b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-dropout-0p625ms.scene.json",
+        "bytes": 12811482,
+        "sha256": "b5f30b3a0c3e51860837b41250e57b25f3806fba9b2818a32051d934818e7ac6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/b5f30b3a0c3e51860837b41250e57b25f3806fba9b2818a32051d934818e7ac6.gz",
+        "bytes": 3602579,
+        "sha256": "97ac75d4ff1f99444124ca4afb1b6276107b7d74d1804e6888222277d1530d43"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.actions.json",
+        "bytes": 62055,
+        "sha256": "8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae.gz",
+        "bytes": 2769,
+        "sha256": "ad07ca2852090db449da546ca6a43df8f8fc0fa0e9f7be3f4be60a6f670b2d55"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.clearance.execution.json",
+        "bytes": 349,
+        "sha256": "ee416c08d21d76e44ac3c79695f3e312baeeba0fa90896d7052371fc7bdc60b7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/ee416c08d21d76e44ac3c79695f3e312baeeba0fa90896d7052371fc7bdc60b7.gz",
+        "bytes": 216,
+        "sha256": "eae3084aabea61cf3bd39527d0bc3b81fd4a72d45ee2fc9aba22dffc3b65b3cd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.clearance.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.clearance.spec.json",
+        "bytes": 153,
+        "sha256": "f720299170438c4b5afc7a8c5cc5b8ea9143997407b4453d9a2717bef3f0b231"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/f720299170438c4b5afc7a8c5cc5b8ea9143997407b4453d9a2717bef3f0b231.gz",
+        "bytes": 132,
+        "sha256": "0c4464a838cfdb1e345b22b305d23631986f12ade7cfd422556b9d559e274b8e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.clearance.stdout.json",
+        "bytes": 317,
+        "sha256": "30742bbd7d246e90d88cd79e8d16bccbc159bc3d3ea984c69c92ade819d1c055"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/30742bbd7d246e90d88cd79e8d16bccbc159bc3d3ea984c69c92ade819d1c055.gz",
+        "bytes": 234,
+        "sha256": "1b50f10d173fa94a7179e39307df176bdb479a0d54c5f31b6870fbc5a069ffcd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.clearance.summary.json",
+        "bytes": 3225,
+        "sha256": "44d4d8f5d683b0250e3b0d3837476bdb155fa92eba25bda110063d94d5c1d2a0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/44d4d8f5d683b0250e3b0d3837476bdb155fa92eba25bda110063d94d5c1d2a0.gz",
+        "bytes": 1089,
+        "sha256": "bedd902fa2089bdbc342f5d2e2130d8dc5d4452d9ca985a24a2fcbcc3568ada1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.config.json",
+        "bytes": 130279,
+        "sha256": "2dab395966ac830f938df860a3bf9fa865affddc4a86661126f4cd389024447b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/2dab395966ac830f938df860a3bf9fa865affddc4a86661126f4cd389024447b.gz",
+        "bytes": 8139,
+        "sha256": "4e618c2725a1848fdd95e553e79fa53e11e06eec495450ee2d2ad4756142654a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.contact-clearance-requirements.json",
+        "bytes": 24285,
+        "sha256": "82ccf659a6bff0a58ff7a9fa1236ae47f4355753a8b966b34f24bb0c4abd12de"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/82ccf659a6bff0a58ff7a9fa1236ae47f4355753a8b966b34f24bb0c4abd12de.gz",
+        "bytes": 779,
+        "sha256": "c854007589802737b9e4e9b26589754660c342397b6c6cb601c676d5d7ba288c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.contact-geometry.json",
+        "bytes": 1540297,
+        "sha256": "f3090c097eaf10435edc801beaf7967081fc58189332f94d5cc3391b586c5b08"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/f3090c097eaf10435edc801beaf7967081fc58189332f94d5cc3391b586c5b08.gz",
+        "bytes": 185356,
+        "sha256": "872186bb4a4936c99a3c1ac2c733c78ea9564352243e717909004e3e94312fc6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.native.execution.json",
+        "bytes": 451,
+        "sha256": "8b923c48ab21583ef8815795c0350dcbcd92537ff61a666a6c236db71cbe1693"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/8b923c48ab21583ef8815795c0350dcbcd92537ff61a666a6c236db71cbe1693.gz",
+        "bytes": 258,
+        "sha256": "2c61ea45c0152c2506e11e793b867d90e6fd3cc99b9b79e71308fba0cfb462c9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.native.json",
+        "bytes": 47300055,
+        "sha256": "301bb1fbe89d46eb9bfb203e996fd092ee49642b2e02ace3c0f08547e93e89fb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/301bb1fbe89d46eb9bfb203e996fd092ee49642b2e02ace3c0f08547e93e89fb.gz",
+        "bytes": 10859716,
+        "sha256": "fa129c8a4d928b8944fbae0df94b7c380e1e75d3d3a0121a58abb115971a6467"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.policy-state.json",
+        "bytes": 294186,
+        "sha256": "e154c24bff232cdf8368c58b07acf2ab888cbb0948d34ca6b3913859011cb5ef"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e154c24bff232cdf8368c58b07acf2ab888cbb0948d34ca6b3913859011cb5ef.gz",
+        "bytes": 34327,
+        "sha256": "9663aff17d32cf2fcb1de9eb0b7ad7f94c816a54113e345e5f35055eb5e77c09"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal81-human-0p3125ms.scene.json",
+        "bytes": 12811482,
+        "sha256": "fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3.gz",
+        "bytes": 3602580,
+        "sha256": "a1ed067f49cd447515df0a33ebbb7bfc7920ef7aa244a464d6963799752c4cd2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.actions.json",
+        "bytes": 30094,
+        "sha256": "deae181f442495c6a71358c8006ea367656452742847d62f61042ec3eb722a11"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/deae181f442495c6a71358c8006ea367656452742847d62f61042ec3eb722a11.gz",
+        "bytes": 1157,
+        "sha256": "deb5cbc4d2534208c9a8d80132a12e7c84f271513b1b3004064ca05d9e96758e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.clearance.spec.json",
+        "bytes": 91,
+        "sha256": "f40dd6536dcbbb6aa16098421438ecd7fff605852952a70f1946662cf388ee95"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/f40dd6536dcbbb6aa16098421438ecd7fff605852952a70f1946662cf388ee95.gz",
+        "bytes": 107,
+        "sha256": "ccb2fae7e7769a474a380c761bf52c7b7361f2fbec0fccf205159007b8235bda"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.clearance.summary.json",
+        "bytes": 3207,
+        "sha256": "0603ee25f4f7b4c5c58eba4f3de61af66f85728b6309518e2de9cbaa9f6fa71a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/0603ee25f4f7b4c5c58eba4f3de61af66f85728b6309518e2de9cbaa9f6fa71a.gz",
+        "bytes": 1095,
+        "sha256": "c295482e22005603a03b19a4464b79adcafc356d173ffef4a6b67dc700182a0f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.config.json",
+        "bytes": 130278,
+        "sha256": "c4ec8d19814bd3c74bb796e3d016400996c5039d87a2b297e053f033c828186e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/c4ec8d19814bd3c74bb796e3d016400996c5039d87a2b297e053f033c828186e.gz",
+        "bytes": 8138,
+        "sha256": "a5681cbedf4f35a1a1e4554c3a4479d547045c211dcc383197450d6053268bf2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.contact-clearance-requirements.json",
+        "bytes": 9557,
+        "sha256": "678ed90deea8441cec40f437551e4624a6567fbf1c346def7963a346c605574f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/678ed90deea8441cec40f437551e4624a6567fbf1c346def7963a346c605574f.gz",
+        "bytes": 442,
+        "sha256": "d47e1e2924413f3284cce3f024347724975c882846268b7259dc4176b0b69c99"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.contact-geometry.json",
+        "bytes": 626824,
+        "sha256": "f30bfacab15d1729b2f5f8079bc5e8a6dcc403361a1e03bedc9a39d1fed71146"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/f30bfacab15d1729b2f5f8079bc5e8a6dcc403361a1e03bedc9a39d1fed71146.gz",
+        "bytes": 80854,
+        "sha256": "32a2f778e1b362dbeb5b8c6eb45cd0cc34463d841fccf7e851312e41edead966"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.evaluation.json",
+        "bytes": 772,
+        "sha256": "5248a47aa15cab15db208d1993134e53dc7ac71a5e68a2ea23783b4be5de93ec"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/5248a47aa15cab15db208d1993134e53dc7ac71a5e68a2ea23783b4be5de93ec.gz",
+        "bytes": 513,
+        "sha256": "d9caccd0e727f33f68653e2601744deec874602e23339a6e0dd8eca360a1a34c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.native.json",
+        "bytes": 26822245,
+        "sha256": "a9f777a6eaf7fdec576c0bae3abfc03d97bbcd296a950fc2d79dbb36b656ecae"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/a9f777a6eaf7fdec576c0bae3abfc03d97bbcd296a950fc2d79dbb36b656ecae.gz",
+        "bytes": 6646896,
+        "sha256": "4a81c091fac58758ac2b8a7daa493e655899b7e48ec584ff90b856909d16ff85"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.policy-state.json",
+        "bytes": 96297,
+        "sha256": "fb56b7a1cfce4c75931656cda88facf707a177df302c3b843965f6dadcb4d9bb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/fb56b7a1cfce4c75931656cda88facf707a177df302c3b843965f6dadcb4d9bb.gz",
+        "bytes": 8246,
+        "sha256": "9a453d60092931063ab4fbbd018d24faefd8cb45dbb6ebf6591becce1e590b5f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.scene.json",
+        "bytes": 12811486,
+        "sha256": "3124039efe9315c894e9f13ebec910ec654f8a14f4b64cacac8b0f8be504588a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/3124039efe9315c894e9f13ebec910ec654f8a14f4b64cacac8b0f8be504588a.gz",
+        "bytes": 3602583,
+        "sha256": "6d8e41a20368f8bd86861b22e97961f5993ef940cdaaa5ff051a6932f0015397"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-diagonal68-pilot/evaluation-025.summary.json",
+        "bytes": 2559,
+        "sha256": "bc86c3d23629bfe2c4ecc5cae13ccdbfc9dc41b53c252781d93851a2995ddc99"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/bc86c3d23629bfe2c4ecc5cae13ccdbfc9dc41b53c252781d93851a2995ddc99.gz",
+        "bytes": 1044,
+        "sha256": "0c5f96373365b84943300dd7bfc98091d1e1abc9e567f2cfc9b863ffbc2ece2d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.actions.json",
+        "bytes": 64835,
+        "sha256": "d6551f759e34b356d6c9ae5b87237bf28eb7e4781bdf7ec09e2b96395fe5de1b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/d6551f759e34b356d6c9ae5b87237bf28eb7e4781bdf7ec09e2b96395fe5de1b.gz",
+        "bytes": 2810,
+        "sha256": "376d1d395f17f1d1a031acab32c9526120fe523ce483fde14f59c4b43596dbe4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.config.json",
+        "bytes": 130278,
+        "sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d.gz",
+        "bytes": 8138,
+        "sha256": "d1bd77075211783116473cb1d09a43ee0b7fa495dfbece1992977a0abdb03ac9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.contact-clearance-requirements.json",
+        "bytes": 24765,
+        "sha256": "cc630bea843fa1cbcbc68e19fa3c6c959a2f5914a4e9429ffaceaa2a7a5c5f42"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/cc630bea843fa1cbcbc68e19fa3c6c959a2f5914a4e9429ffaceaa2a7a5c5f42.gz",
+        "bytes": 782,
+        "sha256": "583f181569f1c53d2386b3086ececd4615cba484f337b113d1539497a34da81c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.contact-geometry.json",
+        "bytes": 1539459,
+        "sha256": "cdd7f41887c1ab6bccacaba1e73afd9332459498bf6d8360eba29cfaa9e0fddb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/cdd7f41887c1ab6bccacaba1e73afd9332459498bf6d8360eba29cfaa9e0fddb.gz",
+        "bytes": 181459,
+        "sha256": "972c970b3d124a00ffd4cb659a87b59f65176d4a688bb7e4d071401a8636754a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.native.json",
+        "bytes": 47408733,
+        "sha256": "b49a164f2af1ba37b8267c9e5c3e55828757b1f3843f0bb19954c691224b7d67"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/b49a164f2af1ba37b8267c9e5c3e55828757b1f3843f0bb19954c691224b7d67.gz",
+        "bytes": 11211986,
+        "sha256": "690152de503a4aeda39e35f2e40a447f675b03861f988248d1b561e7aee0b688"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.policy-state.json",
+        "bytes": 289436,
+        "sha256": "590c5f5d1293770c2c913a2803d5b059daa7dd91aa1f10e3da7fcf7f6eaf610e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/590c5f5d1293770c2c913a2803d5b059daa7dd91aa1f10e3da7fcf7f6eaf610e.gz",
+        "bytes": 29804,
+        "sha256": "81dbcd0c847b4c9870ff7e4a04fe16ed703568056b37b32499a7ac80a525e9eb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/diagonal68-human-0p625ms.scene.json",
+        "bytes": 12811326,
+        "sha256": "754f8f48c09d21d5adf8719a700ef8cb2baf96718abde1aa7091631652708227"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/mixed-search-evidence-files/754f8f48c09d21d5adf8719a700ef8cb2baf96718abde1aa7091631652708227.gz",
+        "bytes": 3602568,
+        "sha256": "00d0edcc9e283057ca8a6dda55548809f3ff1848484f1d56a048bf2d2438e491"
+      }
+    }
+  ],
+  "validation": {
+    "rows": [
+      {
+        "name": "diagonal81-human-1p25ms",
+        "kind": "human",
+        "prefix": "runs/contact-planning/diagonal81-human-1p25ms",
+        "duration_s": 20,
+        "step_s": 0.00125,
+        "command_speed_m_s": 0.0811657091320938,
+        "family": "diagonal81",
+        "source": "runs/bayesian-diagonal68-pilot/evaluation-018",
+        "travel_heading_offset_rad": 0.7853981633974482,
+        "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+        "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+        "validation_settings": {
+          "path": "examples/full-robot/contact-planning/diagonal81-validation-settings.json",
+          "sha256": "dee5ef1bc9d216f81ba5695243a6a0febaa1f370862cfacd1788d2c762a7848e"
+        },
+        "scene_sha256": "fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3",
+        "config_sha256": "a1ae9c40198cb16f6e18b39d276731cdf9ed19323406a62e0896ceee31f0a3bd",
+        "actions_sha256": "8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae",
+        "completed": true,
+        "error": null,
+        "simulated_s": 20,
+        "windows": [
+          {
+            "start_s": 1.4,
+            "end_s": 6,
+            "speed_m_s": 0.08041304725869212,
+            "lateral_speed_m_s": -0.00013505642354238046,
+            "direction_error_rad": -0.001679532130122531
+          },
+          {
+            "start_s": 11,
+            "end_s": 16,
+            "speed_m_s": 0.08126261704110771,
+            "lateral_speed_m_s": 0.0007652647419849834,
+            "direction_error_rad": 0.009416902248377193
+          }
+        ],
+        "stops": [
+          {
+            "request_or_packet_loss_s": 16,
+            "permanently_below_1mm_s_at": 16.28,
+            "release_travel_m": 0.00822937643072761,
+            "late_drift_m": 0.00006482740417367327
+          }
+        ],
+        "feet": [
+          {
+            "link": "-Y | Sliding foot crosshead",
+            "loaded_material_path_m": 0.03349820523972174,
+            "ratio_to_total_body_path": 0.02526736140541457
+          },
+          {
+            "link": "+X | Sliding foot crosshead",
+            "loaded_material_path_m": 0.022428147133961126,
+            "ratio_to_total_body_path": 0.016917327218940764
+          },
+          {
+            "link": "+Y | Sliding foot crosshead",
+            "loaded_material_path_m": 0.026068798894772573,
+            "ratio_to_total_body_path": 0.019663434454638324
+          },
+          {
+            "link": "-X | Sliding foot crosshead",
+            "loaded_material_path_m": 0.12052633471319246,
+            "ratio_to_total_body_path": 0.09091180964098405
+          }
+        ],
+        "total_body_path_m": 1.3257500338972226,
+        "maximum_slip_ratio": 0.09091180964098405,
+        "maximum_tilt_rad": 0.06374495568971572,
+        "turn_rad": 0.1939550116912656,
+        "passed_turn_response": true,
+        "passed_travel_heading": true,
+        "passed_control_checks": true,
+        "passed_contact_quality": false,
+        "passed_motion_checks": false,
+        "capture_sha256": "621dbac06cc8a08e9d2c0575eb3d30087403f940046fb8357c7b413a473eae31"
+      },
+      {
+        "name": "diagonal81-human-0p625ms",
+        "kind": "human",
+        "prefix": "runs/contact-planning/diagonal81-human-0p625ms",
+        "duration_s": 20,
+        "step_s": 0.000625,
+        "command_speed_m_s": 0.0811657091320938,
+        "family": "diagonal81",
+        "source": "runs/bayesian-diagonal68-pilot/evaluation-018",
+        "travel_heading_offset_rad": 0.7853981633974482,
+        "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+        "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+        "validation_settings": {
+          "path": "examples/full-robot/contact-planning/diagonal81-validation-settings.json",
+          "sha256": "dee5ef1bc9d216f81ba5695243a6a0febaa1f370862cfacd1788d2c762a7848e"
+        },
+        "scene_sha256": "fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3",
+        "config_sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d",
+        "actions_sha256": "8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae",
+        "completed": true,
+        "error": null,
+        "simulated_s": 20,
+        "windows": [
+          {
+            "start_s": 1.4,
+            "end_s": 6,
+            "speed_m_s": 0.08019807459550846,
+            "lateral_speed_m_s": -0.00031773350428945563,
+            "direction_error_rad": -0.003961838778435979
+          },
+          {
+            "start_s": 11,
+            "end_s": 16,
+            "speed_m_s": 0.08107089819699395,
+            "lateral_speed_m_s": 0.0006596959415375192,
+            "direction_error_rad": 0.008137092300142637
+          }
+        ],
+        "stops": [
+          {
+            "request_or_packet_loss_s": 16,
+            "permanently_below_1mm_s_at": 16.26,
+            "release_travel_m": 0.008219295892270531,
+            "late_drift_m": 0.00006687583119559528
+          }
+        ],
+        "feet": [
+          {
+            "link": "-Y | Sliding foot crosshead",
+            "loaded_material_path_m": 0.032863166243839406,
+            "ratio_to_total_body_path": 0.024870068994809705
+          },
+          {
+            "link": "+X | Sliding foot crosshead",
+            "loaded_material_path_m": 0.022698236670609804,
+            "ratio_to_total_body_path": 0.017177490077189658
+          },
+          {
+            "link": "+Y | Sliding foot crosshead",
+            "loaded_material_path_m": 0.02597555229558906,
+            "ratio_to_total_body_path": 0.019657685232648284
+          },
+          {
+            "link": "-X | Sliding foot crosshead",
+            "loaded_material_path_m": 0.10517403808985279,
+            "ratio_to_total_body_path": 0.07959323104625454
+          }
+        ],
+        "total_body_path_m": 1.3213942530958733,
+        "maximum_slip_ratio": 0.07959323104625454,
+        "maximum_tilt_rad": 0.06382031179566651,
+        "turn_rad": 0.1922671317656483,
+        "passed_turn_response": true,
+        "passed_travel_heading": true,
+        "passed_control_checks": true,
+        "passed_contact_quality": false,
+        "passed_motion_checks": false,
+        "capture_sha256": "986072e0fa4856ddc157619504c907629057e923b3f1ab29c06abd50ebd16bcd"
+      },
+      {
+        "name": "diagonal81-dropout-0p625ms",
+        "kind": "dropout",
+        "prefix": "runs/contact-planning/diagonal81-dropout-0p625ms",
+        "duration_s": 12,
+        "step_s": 0.000625,
+        "command_speed_m_s": 0.0811657091320938,
+        "family": "diagonal81",
+        "source": "runs/bayesian-diagonal68-pilot/evaluation-018",
+        "travel_heading_offset_rad": 0.7853981633974482,
+        "actions_source": "examples/full-robot/fast-wasd/dropout.actions.json",
+        "actions_source_sha256": "59ec22dc77e0e2c04fc6c212f2c1bc981d95ffaa047ca89cda05efe7943229a5",
+        "validation_settings": {
+          "path": "examples/full-robot/contact-planning/diagonal81-validation-settings.json",
+          "sha256": "dee5ef1bc9d216f81ba5695243a6a0febaa1f370862cfacd1788d2c762a7848e"
+        },
+        "scene_sha256": "b5f30b3a0c3e51860837b41250e57b25f3806fba9b2818a32051d934818e7ac6",
+        "config_sha256": "df17c840edb9c9d368098f0abc2a3e5285d3c632918bc6d58638637cfc8d1c2a",
+        "actions_sha256": "2be124c2d708e22c291e160c9b2b10ba94c5a6098fd58138b5ea23aae3e03d76",
+        "completed": true,
+        "error": null,
+        "simulated_s": 12,
+        "windows": [
+          {
+            "start_s": 0.8,
+            "end_s": 3,
+            "speed_m_s": 0.0794298332161665,
+            "lateral_speed_m_s": 0.0010369037648067273,
+            "direction_error_rad": 0.013053594943939826
+          },
+          {
+            "start_s": 6.8,
+            "end_s": 9,
+            "speed_m_s": 0.08105929220528031,
+            "lateral_speed_m_s": -0.001190292165247025,
+            "direction_error_rad": -0.014683160822239838
+          }
+        ],
+        "stops": [
+          {
+            "request_or_packet_loss_s": 3,
+            "permanently_below_1mm_s_at": 3.46,
+            "release_travel_m": 0.027104291801359846,
+            "late_drift_m": 0.00003267906660476645
+          },
+          {
+            "request_or_packet_loss_s": 9,
+            "permanently_below_1mm_s_at": 9.4,
+            "release_travel_m": 0.01714241426721707,
+            "late_drift_m": 0.00008699364273251635
+          }
+        ],
+        "feet": [
+          {
+            "link": "-Y | Sliding foot crosshead",
+            "loaded_material_path_m": 0.009362568901071185,
+            "ratio_to_total_body_path": 0.01830697508640343
+          },
+          {
+            "link": "+X | Sliding foot crosshead",
+            "loaded_material_path_m": 0.0058477559165669895,
+            "ratio_to_total_body_path": 0.011434332073509424
+          },
+          {
+            "link": "+Y | Sliding foot crosshead",
+            "loaded_material_path_m": 0.007000463142698304,
+            "ratio_to_total_body_path": 0.013688262879646276
+          },
+          {
+            "link": "-X | Sliding foot crosshead",
+            "loaded_material_path_m": 0.02100830050969054,
+            "ratio_to_total_body_path": 0.04107830213079434
+          }
+        ],
+        "total_body_path_m": 0.5114208577267773,
+        "maximum_slip_ratio": 0.04107830213079434,
+        "maximum_tilt_rad": 0.06289443051833729,
+        "turn_rad": null,
+        "passed_turn_response": true,
+        "passed_travel_heading": true,
+        "passed_control_checks": true,
+        "passed_contact_quality": true,
+        "passed_motion_checks": true,
+        "capture_sha256": "eced5029a3c28cc55cb876636de40fc47fd16b1f8f20f027a09afae7a02d3b60"
+      },
+      {
+        "name": "diagonal81-human-0p3125ms",
+        "kind": "human",
+        "prefix": "runs/contact-planning/diagonal81-human-0p3125ms",
+        "duration_s": 20,
+        "step_s": 0.0003125,
+        "command_speed_m_s": 0.0811657091320938,
+        "family": "diagonal81",
+        "source": "runs/bayesian-diagonal68-pilot/evaluation-018",
+        "travel_heading_offset_rad": 0.7853981633974482,
+        "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+        "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+        "validation_settings": {
+          "path": "examples/full-robot/contact-planning/diagonal81-validation-settings.json",
+          "sha256": "dee5ef1bc9d216f81ba5695243a6a0febaa1f370862cfacd1788d2c762a7848e"
+        },
+        "scene_sha256": "fca43abf58f76a064ba0767fbe492b3e7d55f53d133d2884c09d7b7b2c17aff3",
+        "config_sha256": "2dab395966ac830f938df860a3bf9fa865affddc4a86661126f4cd389024447b",
+        "actions_sha256": "8d3a323c111788c7cd9364396f094b983ddbc71c7fedc86460187af69a83c8ae",
+        "completed": true,
+        "error": null,
+        "simulated_s": 20,
+        "windows": [
+          {
+            "start_s": 1.4,
+            "end_s": 6,
+            "speed_m_s": 0.08008426879113247,
+            "lateral_speed_m_s": -0.0004295050073515376,
+            "direction_error_rad": -0.005363111830582956
+          },
+          {
+            "start_s": 11,
+            "end_s": 16,
+            "speed_m_s": 0.0809611817827024,
+            "lateral_speed_m_s": 0.0005950840653439204,
+            "direction_error_rad": 0.007350107000836167
+          }
+        ],
+        "stops": [
+          {
+            "request_or_packet_loss_s": 16,
+            "permanently_below_1mm_s_at": 16.26,
+            "release_travel_m": 0.008214093551970777,
+            "late_drift_m": 0.00006661102866528991
+          }
+        ],
+        "feet": [
+          {
+            "link": "-Y | Sliding foot crosshead",
+            "loaded_material_path_m": 0.036714514735019736,
+            "ratio_to_total_body_path": 0.02783200306949267
+          },
+          {
+            "link": "+X | Sliding foot crosshead",
+            "loaded_material_path_m": 0.022685184853631482,
+            "ratio_to_total_body_path": 0.01719685358869937
+          },
+          {
+            "link": "+Y | Sliding foot crosshead",
+            "loaded_material_path_m": 0.026042907049957438,
+            "ratio_to_total_body_path": 0.019742226587610597
+          },
+          {
+            "link": "-X | Sliding foot crosshead",
+            "loaded_material_path_m": 0.10271666614711925,
+            "ratio_to_total_body_path": 0.07786594996904131
+          }
+        ],
+        "total_body_path_m": 1.3191474089503605,
+        "maximum_slip_ratio": 0.07786594996904131,
+        "maximum_tilt_rad": 0.06385804860060591,
+        "turn_rad": 0.19146357056758068,
+        "passed_turn_response": true,
+        "passed_travel_heading": true,
+        "passed_control_checks": true,
+        "passed_contact_quality": false,
+        "passed_motion_checks": false,
+        "capture_sha256": "301bb1fbe89d46eb9bfb203e996fd092ee49642b2e02ace3c0f08547e93e89fb"
+      }
+    ],
+    "comparisons": [
+      {
+        "reference": "diagonal81-human-0p625ms",
+        "candidate": "diagonal81-human-1p25ms",
+        "maximum_body_difference_m": 0.0034700979425772794,
+        "maximum_speed_fraction": 0.0026805214996484237,
+        "absolute_slip_ratio_difference": 0.011318578594729511,
+        "both_motion_checks_passed": false,
+        "passed": false
+      },
+      {
+        "reference": "diagonal81-human-0p625ms",
+        "candidate": "diagonal81-human-0p3125ms",
+        "maximum_body_difference_m": 0.0018384476290115854,
+        "maximum_speed_fraction": 0.0014190590603326621,
+        "absolute_slip_ratio_difference": 0.001727281077213233,
+        "both_motion_checks_passed": false,
+        "passed": true
+      }
+    ],
+    "scope": "Command-driven native recordings. Control gates require ±5% speed tracking, <=0.1 rad travel-heading error relative to the declared chassis offset at each window start, <=0.1 rad tilt, human-schedule yaw change 0.24±0.06 rad, settling below 1 mm/s within 0.8 s and <=3 mm late drift. Contact quality separately requires <=5% loaded material slip; combined motion checks require both. These development thresholds are not physical speed limits. Collision, periodic lift and browser checks remain separate."
+  },
+  "trial": {
+    "observation": {
+      "context_id": "1de4fd2165fb92c07bad54215bc93cdc7ada0e51e283ed77b791948100754624",
+      "values": [
+        0.0777802340373378,
+        0.8232345059742177,
+        0.7868099945488141
+      ],
+      "outcome": {
+        "status": "complete",
+        "objective": -0.07577163107924867,
+        "residuals": [
+          -0.6036483725281889,
+          -0.48351840722800654,
+          -0.554567003526376,
+          -0.37658751835365123,
+          -0.7000000003749998,
+          -0.9909518538505662,
+          0,
+          0
+        ]
+      },
+      "evidence": "runs/bayesian-diagonal68-pilot/evaluation-025.evaluation.json"
+    },
+    "method": "latin-hypercube-control",
+    "metrics": {
+      "speeds_m_s": [
+        0.07586174862959282,
+        0.07577163107924867
+      ],
+      "slip": 0.01981758137359056,
+      "control": true,
+      "planned_lifts": 30,
+      "passed_lifts": 30,
+      "overlap_m": 0
+    },
+    "wall_s": 34.69340878399997,
+    "native_exit_code": 0,
+    "capture_sha256": "a9f777a6eaf7fdec576c0bae3abfc03d97bbcd296a950fc2d79dbb36b656ecae"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/record_mixed_validation_extension.mjs",
+    "bytes": 1971,
+    "sha256": "93c6e87cb4b447fcab57c08c509d0b34a4de3f62ea2ed49d7acb2897b56c09ff"
+  },
+  "diagnostic": {
+    "spec": {
+      "prefixes": [
+        "runs/contact-planning/diagonal68-human-0p625ms",
+        "runs/contact-planning/diagonal77-human-0p625ms",
+        "runs/contact-planning/diagonal81-human-0p625ms"
+      ],
+      "windows": [
+        {
+          "name": "forward",
+          "start_s": 0,
+          "end_s": 6
+        },
+        {
+          "name": "turn",
+          "start_s": 6,
+          "end_s": 10
+        },
+        {
+          "name": "reverse",
+          "start_s": 10,
+          "end_s": 16
+        },
+        {
+          "name": "stop",
+          "start_s": 16,
+          "end_s": 20
+        }
+      ]
+    },
+    "rows": [
+      {
+        "prefix": "runs/contact-planning/diagonal68-human-0p625ms",
+        "capture_sha256": "b49a164f2af1ba37b8267c9e5c3e55828757b1f3843f0bb19954c691224b7d67",
+        "body_path_m": 1.1113118403985203,
+        "worst_foot": "-X | Sliding foot crosshead",
+        "slip_ratio": 0.04512176572916695,
+        "windows": [
+          {
+            "name": "forward",
+            "start_s": 0,
+            "end_s": 6,
+            "body_path_m": 0.390947555038221,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.0032339738512167293,
+              "+X | Sliding foot crosshead": 0.00196119574209485,
+              "+Y | Sliding foot crosshead": 0.0025911377025018348,
+              "-X | Sliding foot crosshead": 0.004661715324533525
+            },
+            "worst_foot_fraction_of_loaded_path": 0.09296590923543105
+          },
+          {
+            "name": "turn",
+            "start_s": 6,
+            "end_s": 10,
+            "body_path_m": 0.29379425173840396,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.004886360856471662,
+              "+X | Sliding foot crosshead": 0.005509487222072258,
+              "+Y | Sliding foot crosshead": 0.00674283113283553,
+              "-X | Sliding foot crosshead": 0.043095280585572535
+            },
+            "worst_foot_fraction_of_loaded_path": 0.8594244102185004
+          },
+          {
+            "name": "reverse",
+            "start_s": 10,
+            "end_s": 16,
+            "body_path_m": 0.4141259102236389,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.009498495247796638,
+              "+X | Sliding foot crosshead": 0.0015733975967915168,
+              "+Y | Sliding foot crosshead": 0.0020004234577720567,
+              "-X | Sliding foot crosshead": 0.0021362909970733075
+            },
+            "worst_foot_fraction_of_loaded_path": 0.042602823447667026
+          },
+          {
+            "name": "stop",
+            "start_s": 16,
+            "end_s": 20,
+            "body_path_m": 0.012444123398254939,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.0004585565977343128,
+              "+X | Sliding foot crosshead": 0.0003582203387109926,
+              "+Y | Sliding foot crosshead": 0.00027801711920511944,
+              "-X | Sliding foot crosshead": 0.0002510656073320916
+            },
+            "worst_foot_fraction_of_loaded_path": 0.005006857098402758
+          }
+        ]
+      },
+      {
+        "prefix": "runs/contact-planning/diagonal77-human-0p625ms",
+        "capture_sha256": "7e27fd32f890bac88c63b326d0895569311668ca4e263d94775fb85c1bac0084",
+        "body_path_m": 1.254047526250902,
+        "worst_foot": "-X | Sliding foot crosshead",
+        "slip_ratio": 0.06457295441988596,
+        "windows": [
+          {
+            "name": "forward",
+            "start_s": 0,
+            "end_s": 6,
+            "body_path_m": 0.4412368286376187,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.0057909427308761845,
+              "+X | Sliding foot crosshead": 0.007074325766601569,
+              "+Y | Sliding foot crosshead": 0.003919107791528934,
+              "-X | Sliding foot crosshead": 0.03634613918211014
+            },
+            "worst_foot_fraction_of_loaded_path": 0.4488421481956284
+          },
+          {
+            "name": "turn",
+            "start_s": 6,
+            "end_s": 10,
+            "body_path_m": 0.3321497947809844,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.007699633687149864,
+              "+X | Sliding foot crosshead": 0.01058841337494794,
+              "+Y | Sliding foot crosshead": 0.010603588966379683,
+              "-X | Sliding foot crosshead": 0.040729238910077535
+            },
+            "worst_foot_fraction_of_loaded_path": 0.5029694899691087
+          },
+          {
+            "name": "reverse",
+            "start_s": 10,
+            "end_s": 16,
+            "body_path_m": 0.47371820995802927,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.0048480653009557945,
+              "+X | Sliding foot crosshead": 0.0019420105932807933,
+              "+Y | Sliding foot crosshead": 0.00494408654394285,
+              "-X | Sliding foot crosshead": 0.0038619349160067735
+            },
+            "worst_foot_fraction_of_loaded_path": 0.04769142480875595
+          },
+          {
+            "name": "stop",
+            "start_s": 16,
+            "end_s": 20,
+            "body_path_m": 0.006942692874268936,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.00014627764336923505,
+              "+X | Sliding foot crosshead": 0.00006330656729884675,
+              "+Y | Sliding foot crosshead": 0.00029417674309185855,
+              "-X | Sliding foot crosshead": 0.00004024074477583652
+            },
+            "worst_foot_fraction_of_loaded_path": 0.0004969370265073053
+          }
+        ]
+      },
+      {
+        "prefix": "runs/contact-planning/diagonal81-human-0p625ms",
+        "capture_sha256": "986072e0fa4856ddc157619504c907629057e923b3f1ab29c06abd50ebd16bcd",
+        "body_path_m": 1.3213942530958733,
+        "worst_foot": "-X | Sliding foot crosshead",
+        "slip_ratio": 0.07959323104625454,
+        "windows": [
+          {
+            "name": "forward",
+            "start_s": 0,
+            "end_s": 6,
+            "body_path_m": 0.4661120620526885,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.011805466716601301,
+              "+X | Sliding foot crosshead": 0.006826822322820879,
+              "+Y | Sliding foot crosshead": 0.005889847955048808,
+              "-X | Sliding foot crosshead": 0.026640146316130254
+            },
+            "worst_foot_fraction_of_loaded_path": 0.2532958399236408
+          },
+          {
+            "name": "turn",
+            "start_s": 6,
+            "end_s": 10,
+            "body_path_m": 0.34896257792492663,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.010375388998038668,
+              "+X | Sliding foot crosshead": 0.013813483512710513,
+              "+Y | Sliding foot crosshead": 0.010353217382652631,
+              "-X | Sliding foot crosshead": 0.06382095342986484
+            },
+            "worst_foot_fraction_of_loaded_path": 0.6068128084550772
+          },
+          {
+            "name": "reverse",
+            "start_s": 10,
+            "end_s": 16,
+            "body_path_m": 0.4963508834127574,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.009119965875375053,
+              "+X | Sliding foot crosshead": 0.0018495677152708346,
+              "+Y | Sliding foot crosshead": 0.008730739592561725,
+              "-X | Sliding foot crosshead": 0.01441240262719366
+            },
+            "worst_foot_fraction_of_loaded_path": 0.13703384303720265
+          },
+          {
+            "name": "stop",
+            "start_s": 16,
+            "end_s": 20,
+            "body_path_m": 0.009968729705502891,
+            "feet": {
+              "-Y | Sliding foot crosshead": 0.0015623446538243753,
+              "+X | Sliding foot crosshead": 0.0002083631198076014,
+              "+Y | Sliding foot crosshead": 0.0010017473653258857,
+              "-X | Sliding foot crosshead": 0.0003005357166641011
+            },
+            "worst_foot_fraction_of_loaded_path": 0.0028575085840799037
+          }
+        ]
+      }
+    ],
+    "scope": "Partition of the existing loaded-material path metric. Fractions identify when the worst foot slips; they do not prove causation or alter acceptance thresholds."
+  },
+  "scope": "Additional complete captures, inputs and audit results for rejected 81-command cases, sampled control winner 025 and the 68-command phase comparison. The 78-command validation remains live and is not claimed complete."
+}

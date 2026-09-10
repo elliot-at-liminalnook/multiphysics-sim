@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "nominal_300s": {
+    "step_s": 0.000625,
+    "seed": 2301,
+    "yaw_rate_rad_s": 0.0752386367049776,
+    "distance_m": 164.01249175175806,
+    "speed_m_s": 0.5467083058391935,
+    "sampled_falls": 0,
+    "prefix_parity_frames": 1001
+  },
+  "scope": "Measured nominal sustained steering improvement. Separate fine-calibrated full run and ideal-heading feedback trials remain live. Dense gyro audit establishes sparse-integration sampling error on one unchanged trajectory. No matched new-controller300s convergence, hardware accuracy, PLANC implementation or global speed ceiling is established.",
+  "files": [
+    {
+      "path": "runs/steering-validation-v1/sustained300/spec.json",
+      "sha256": "bab91bf66b6dfaf8be8d4ebc0e1f89f17bec99d94f9f8705eaa032cebf08b26a"
+    },
+    {
+      "path": "runs/steering-validation-v1/sustained300/replay-input.json",
+      "sha256": "60ce4cedd5900eea4ae43f49f7e7f3e6856449c558ea0c9d23a9c29112a93fb2"
+    },
+    {
+      "path": "runs/steering-validation-v1/sustained300/summary.json",
+      "sha256": "043c0fe9cd73fe2dacb47042102a6512c3cf5fa6763298fe9582791f68b0fa42"
+    },
+    {
+      "path": "runs/steering-validation-v1/sustained-parity.json",
+      "sha256": "9a5951ca856f2e49c7c85acb2b092b6e1eaef03376db03baf7f580f2cb749d3f"
+    },
+    {
+      "path": "runs/steering-response-v1/original_root/summary.json",
+      "sha256": "4f0fc90f681961f59e4cb999b6e734d8009bf97eabf873a207262bb9f804d9d1"
+    },
+    {
+      "path": "runs/steering-fine-root-v1/quarter20/summary.json",
+      "sha256": "5085477715b305d5fc77001f2f63051b24a5ae8ce74ba36d54acf00512446fbc"
+    },
+    {
+      "path": "runs/gyro-window-v1/results.json",
+      "sha256": "cc9f72ff644bf942a7440537fdf8522e1e58d40d430fa9d1bf25895667b42a7d"
+    },
+    {
+      "path": "runs/heading-feedback-v1/disabled-parity.json",
+      "sha256": "3dcc7c00e957e6ddea61f2ba3ca2e8a077b128408c62de4212a9b3ebc1724af6"
+    }
+  ]
+}

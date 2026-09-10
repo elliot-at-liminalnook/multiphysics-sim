@@ -1,10 +1,75 @@
-//! Numerical derivatives for a caller-declared block-diagonal residual.
-//! Structure must hold throughout the solve, not just at one sampled pose.
+//! Numerical derivative grouping from caller-declared residual structure.
+//! Each declaration must hold throughout its associated probe domain.
 use crate::{
     NewtonAudit, NewtonConfig, SolveDiagnostics, SolveError, SparseJacobian,
     solve_newton_cached_audited,
 };
 use std::ops::Range;
+
+/// Greedy groups with at most one participating column per residual row.
+/// The caller must derive support from equations throughout each simultaneous
+/// probe. Numerical zeros at one point do not establish independence. Groups
+/// may be rebuilt for fixed-time probes without changing an NLP's global pattern.
+pub fn group_disjoint_columns(
+    column_rows: &[Vec<usize>],
+    row_count: usize,
+) -> Result<Vec<Vec<usize>>, &'static str> {
+    let mut occupied: Vec<Vec<bool>> = Vec::new();
+    let mut groups: Vec<Vec<usize>> = Vec::new();
+    for (column, rows) in column_rows.iter().enumerate() {
+        if rows.iter().any(|r| *r >= row_count)
+            || rows
+                .iter()
+                .copied()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len()
+                != rows.len()
+        {
+            return Err("invalid or duplicate column-support row");
+        }
+        let group = occupied
+            .iter()
+            .position(|used| rows.iter().all(|r| !used[*r]));
+        let group = group.unwrap_or_else(|| {
+            occupied.push(vec![false; row_count]);
+            groups.push(Vec::new());
+            groups.len() - 1
+        });
+        for &row in rows {
+            occupied[group][row] = true;
+        }
+        groups[group].push(column);
+    }
+    Ok(groups)
+}
+
+#[cfg(test)]
+mod disjoint_tests {
+    use super::*;
+    #[test]
+    fn nonlinear_grouped_probes_match_individual_columns() {
+        let groups = group_disjoint_columns(&[vec![0], vec![0], vec![1], vec![1]], 2).unwrap();
+        assert_eq!(groups, vec![vec![0, 2], vec![1, 3]]);
+        let x = [0.2_f64, 0.3, 0.4, 0.5];
+        let f = |v: [f64; 4]| [v[0].sin() + v[1].exp(), v[2] * v[2] + v[3].powi(3)];
+        for group in groups {
+            for sign in [-1., 1.] {
+                let mut combined = x;
+                for &col in &group {
+                    combined[col] += sign * 1e-4 * (col + 1) as f64;
+                }
+                for &col in &group {
+                    let mut single = x;
+                    single[col] = combined[col];
+                    assert_eq!(f(single)[col / 2], f(combined)[col / 2]);
+                }
+            }
+        }
+        assert!(group_disjoint_columns(&[vec![0, 0]], 2).is_err());
+        assert!(group_disjoint_columns(&[vec![2]], 2).is_err());
+        assert!(group_disjoint_columns(&[], 0).unwrap().is_empty());
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct BlockDiagonalColoring {

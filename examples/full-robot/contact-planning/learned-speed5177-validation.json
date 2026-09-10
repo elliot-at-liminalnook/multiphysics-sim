@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "nominal": {
+    "path": "runs/ppo-speed517-current-dynamics/iteration-001-validation.json",
+    "distance_m": 31.062473800777763,
+    "speed_m_s": 0.5177078966796294
+  },
+  "validation": [
+    {
+      "name": "fine60",
+      "path": "runs/learned-speed5177-validation/fine60.json",
+      "distance_m": 31.142426242237335,
+      "speed_m_s": 0.5190404373706222
+    },
+    {
+      "name": "contact60",
+      "path": "runs/learned-speed5177-validation/contact60.json",
+      "distance_m": 31.062471754137572,
+      "speed_m_s": 0.5177078625689595
+    }
+  ],
+  "scope": "Second current-dynamics-only PPO update, full-minute net speed with no sampled falls. Independent finer-step and inter-link-contact conditions both retain a speed improvement. Neither hardware calibration nor a physical maximum is established."
+}

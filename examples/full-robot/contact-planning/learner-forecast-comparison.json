@@ -1,0 +1,20 @@
+{
+  "independent_seed75": [
+    {
+      "horizon_ms": 20,
+      "v3_cartesian_component_rmse_m": 0.0012973536732565404,
+      "v4_cartesian_component_rmse_m": 0.0010605850860947435
+    },
+    {
+      "horizon_ms": 100,
+      "v3_cartesian_component_rmse_m": 0.008013968493295973,
+      "v4_cartesian_component_rmse_m": 0.006661776202875055
+    },
+    {
+      "horizon_ms": 200,
+      "v3_cartesian_component_rmse_m": 0.01586371147632034,
+      "v4_cartesian_component_rmse_m": 0.012991929941798758
+    }
+  ],
+  "scope": "V4 adds seed74 seconds0-40 to training; seed75 is excluded from all training. Both model generations use identical actual seed75 action/state windows. This is predictive validation; no improved controller score is inferred."
+}

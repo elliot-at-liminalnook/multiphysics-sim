@@ -60,3 +60,18 @@ fn distillation_learns_held_out_values_of_a_known_controller() {
     let heldout=[SupervisedSample{inputs:vec![0.345],targets:vec![(0.7f64*0.345-0.2).tanh()]}];
     assert!(r.policy.supervised_gradient(&heldout).unwrap().0<1e-8);
 }
+
+#[test]
+fn input_gradients_cover_linear_and_tanh_outputs_and_multiple_layers() {
+    let mut n=network();n.features.push(n.features[0].clone());n.features[1].source="second".into();
+    n.layers=vec![Layer{weights:vec![vec![0.3,-0.2],vec![-0.7,0.8]],biases:vec![0.1,-0.2]},Layer{weights:vec![vec![0.4,-0.8]],biases:vec![0.15]}];
+    for linear in [false,true] {for depth in [1,2] {
+        let mut m=n.clone();if depth==1{m.layers=vec![Layer{weights:vec![vec![0.4,-0.8]],biases:vec![0.15]}];}
+        let x=vec![0.345,-0.625];let g=m.input_gradient(&x,&[1.7],linear).unwrap();
+        for i in 0..x.len(){let mut plus=x.clone();let mut minus=x.clone();plus[i]+=1e-6;minus[i]-=1e-6;
+            let difference=1.7*(m.normalized_output(&plus,linear).unwrap()[0]-m.normalized_output(&minus,linear).unwrap()[0])/2e-6;
+            assert!((g[i]-difference).abs()<1e-9,"depth {depth}, linear {linear}, input {i}");}
+    }}
+    assert!(n.input_gradient(&[0.1,0.2],&[f64::NAN],true).is_err());
+    assert!(n.input_gradient(&[0.1,0.2],&[],true).is_err());
+}

@@ -1,0 +1,13 @@
+{
+  "termination": "dense_sampled_feasible",
+  "rounds": [
+    {
+      "selected_speed_m_s": 0.041108564779377785,
+      "dense_feasible": true,
+      "final_iterate_speed_m_s": 0.07874886410938965,
+      "final_iterate_torque_margin_nm": -0.08689280371039368,
+      "evaluations": 1703
+    }
+  ],
+  "scope": "Speed continuation retained only a negligible gain in dense-feasible speed. Its faster 0.07875 m/s final iterate violates motor torque and is a feasibility-restoration seed, not a usable gait or demonstrated physical maximum."
+}

@@ -1,0 +1,14 @@
+{
+  "frames": 401,
+  "fields": [
+    "servo_targets_rad",
+    "joint_positions",
+    "joint_velocities",
+    "poses",
+    "motor_states",
+    "contacts",
+    "contact_history"
+  ],
+  "exact_match": true,
+  "scope": "Both source and simplified configurations already set feedback_observations=false. Removing unused recipe payloads changes no calculation and is not evidence of a runtime speedup."
+}

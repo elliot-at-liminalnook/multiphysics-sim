@@ -1,0 +1,25 @@
+{
+  "id": "front150",
+  "output": "runs/speed-ceiling/viewer-front150",
+  "wasm": "/Users/elliot/physics-simulator/target/gait-exploration/wasm32-unknown-unknown/release/sim_web.wasm",
+  "profiles": [
+    {
+      "id": "physics-front150-5ms",
+      "label": "Experimental · 150 mm/s command · 5 ms preview",
+      "scene": "runs/speed-ceiling/validation/front150-preview-5ms.scene.json",
+      "config": "runs/speed-ceiling/validation/front150-preview-5ms.config.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "Experimental faster gait with slipping. Preview accuracy and realtime performance are being measured.",
+      "evidence": "Detailed 20 s / 0.625 ms run: 154.6–155.0 mm/s, 11.55% loaded-foot slip, 150/150 planned lifts; no sampled inter-leg overlap. This 5 ms numerical preview has separate accuracy and browser checks. Provisional actuator model and ideal observations; no hardware speed claim."
+    },
+    {
+      "id": "physics-front150-10ms",
+      "label": "Experimental · 150 mm/s command · 10 ms preview",
+      "scene": "runs/speed-ceiling/validation/front150-preview-10ms.scene.json",
+      "config": "runs/speed-ceiling/validation/front150-preview-10ms.config.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "Experimental faster gait with slipping. Preview accuracy and realtime performance are being measured.",
+      "evidence": "Detailed 20 s / 0.625 ms run: 154.6–155.0 mm/s, 11.55% loaded-foot slip, 150/150 planned lifts; no sampled inter-leg overlap. This 10 ms numerical preview has separate accuracy and browser checks. Provisional actuator model and ideal observations; no hardware speed claim."
+    }
+  ]
+}

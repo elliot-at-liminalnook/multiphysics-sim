@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-09-09T21:41:22.220Z",
+  "processes": [
+    {
+      "pid": 60322,
+      "ppid": 78522,
+      "command": "node examples/full-robot/contact-planning/run_bayesian_controller_screen.mjs examples/full-robot/contact-planning/bayesian-human20-pilot.spec.json"
+    },
+    {
+      "pid": 60413,
+      "ppid": 60322,
+      "command": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment runs/bayesian-human20-pilot/evaluation-002.scene.json runs/bayesian-human20-pilot/evaluation-002.config.json examples/full-robot/fast-wasd/task.json runs/bayesian-human20-pilot/evaluation-002.actions.json"
+    }
+  ],
+  "reason": "New human20 lift windows omitted turning. Stop before selector fitting; retain completed and partial trials. Correct to historical [1.4,9.8] and [11,15.8] in fresh context.",
+  "action": "SIGTERM to dedicated experiment process tree; cancellation is not a physical failure."
+}

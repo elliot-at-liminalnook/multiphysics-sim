@@ -1,0 +1,386 @@
+{
+  "report": [
+    {
+      "name": "synchronized-human-0p3125ms",
+      "capture_sha256": "d5c243365faf3bae9792a8cadb548be7882128580bdedb68267d8ebc43d78f69",
+      "maximum_command_replay_error_rad": 0,
+      "motors": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": -0.0011368953224144514,
+          "rms_error_rad": 0.006807615070037383,
+          "loaded_mean_error_rad": -0.002502177003928068,
+          "unloaded_mean_error_rad": 0.0018591394786848733,
+          "velocity_error_correlation": 0.4409187489366711,
+          "acceleration_proxy_error_correlation": 0.7998412965021472
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.001891253051722629,
+          "rms_error_rad": 0.0029357820993917596,
+          "loaded_mean_error_rad": 0.0032349601448812553,
+          "unloaded_mean_error_rad": -0.0010574375138199103,
+          "velocity_error_correlation": 0.6277207360103758,
+          "acceleration_proxy_error_correlation": 0.09949195579394332
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.01749500855696537,
+          "rms_error_rad": 0.023212031367207037,
+          "loaded_mean_error_rad": 0.022856137120517882,
+          "unloaded_mean_error_rad": 0.0057303097647251645,
+          "velocity_error_correlation": 0.3031407201189363,
+          "acceleration_proxy_error_correlation": -0.13942543378609976
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": 0.00011899205619361934,
+          "rms_error_rad": 0.00017259267991590714,
+          "loaded_mean_error_rad": 0.0001300396076721463,
+          "unloaded_mean_error_rad": 0.00009374050995698612,
+          "velocity_error_correlation": null,
+          "acceleration_proxy_error_correlation": null
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0013219895382637064,
+          "rms_error_rad": 0.013390777198958903,
+          "loaded_mean_error_rad": 0.007104928786680594,
+          "unloaded_mean_error_rad": -0.011896157315260609,
+          "velocity_error_correlation": 0.7736203386452124,
+          "acceleration_proxy_error_correlation": 0.52034690986717
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.017252568531431936,
+          "rms_error_rad": 0.022741496754824585,
+          "loaded_mean_error_rad": 0.022416864936629383,
+          "unloaded_mean_error_rad": 0.0054484624624092015,
+          "velocity_error_correlation": -0.11556424537233984,
+          "acceleration_proxy_error_correlation": -0.058457563292930836
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0011159867559721462,
+          "rms_error_rad": 0.006853116101168943,
+          "loaded_mean_error_rad": 0.0024782087358855925,
+          "unloaded_mean_error_rad": -0.0018733336999490241,
+          "velocity_error_correlation": 0.439835425185452,
+          "acceleration_proxy_error_correlation": 0.8014583692573104
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0018992011222911935,
+          "rms_error_rad": 0.0029377991088830884,
+          "loaded_mean_error_rad": 0.0032519845846899847,
+          "unloaded_mean_error_rad": -0.0010694070313061544,
+          "velocity_error_correlation": 0.6347356402871553,
+          "acceleration_proxy_error_correlation": 0.098456831421809
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.01751091491338028,
+          "rms_error_rad": 0.023269200992077348,
+          "loaded_mean_error_rad": 0.02287812718846734,
+          "unloaded_mean_error_rad": 0.00573286575416145,
+          "velocity_error_correlation": 0.30538609353001767,
+          "acceleration_proxy_error_correlation": -0.1527474479766075
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": -0.00004754472382348235,
+          "rms_error_rad": 0.00012300179553541762,
+          "loaded_mean_error_rad": -0.00006538676812618157,
+          "unloaded_mean_error_rad": -0.000006762908274455544,
+          "velocity_error_correlation": null,
+          "acceleration_proxy_error_correlation": null
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.004469530218816674,
+          "rms_error_rad": 0.010891386661607187,
+          "loaded_mean_error_rad": 0.003460610588591166,
+          "unloaded_mean_error_rad": 0.006775632230760696,
+          "velocity_error_correlation": 0.30119409607630765,
+          "acceleration_proxy_error_correlation": 0.7955159079946137
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.01751288857768265,
+          "rms_error_rad": 0.023726987414816218,
+          "loaded_mean_error_rad": 0.024175943959826147,
+          "unloaded_mean_error_rad": 0.002283047704211795,
+          "velocity_error_correlation": 0.6835520029053186,
+          "acceleration_proxy_error_correlation": -0.21181170344082179
+        }
+      ]
+    },
+    {
+      "name": "synchronized-cadence-150-human-fine",
+      "capture_sha256": "c7bed484da1924ce5c20a3d0302933c079b88a6d40552c79125055fa237f548a",
+      "maximum_command_replay_error_rad": 0,
+      "motors": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": 0.000006561623674482506,
+          "rms_error_rad": 0.0143042441491602,
+          "loaded_mean_error_rad": -0.001006629084276268,
+          "unloaded_mean_error_rad": 0.002275537997817713,
+          "velocity_error_correlation": 0.49813931740271916,
+          "acceleration_proxy_error_correlation": 0.6147255961940008
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0014515919104976622,
+          "rms_error_rad": 0.0028897280647026086,
+          "loaded_mean_error_rad": 0.0025584093611619326,
+          "unloaded_mean_error_rad": -0.0010270556198631684,
+          "velocity_error_correlation": 0.7559897668782164,
+          "acceleration_proxy_error_correlation": 0.25135343367195645
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.016707132554432,
+          "rms_error_rad": 0.024856474968917595,
+          "loaded_mean_error_rad": 0.018571699181913034,
+          "unloaded_mean_error_rad": 0.012531553768946328,
+          "velocity_error_correlation": 0.5573719904431521,
+          "acceleration_proxy_error_correlation": -0.36760157000649785
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": 0.00003158502847126003,
+          "rms_error_rad": 0.00005642130383026647,
+          "loaded_mean_error_rad": 0.00003654686047811279,
+          "unloaded_mean_error_rad": 0.00001752650445184382,
+          "velocity_error_correlation": null,
+          "acceleration_proxy_error_correlation": null
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": -0.014796821243770545,
+          "rms_error_rad": 0.044249056300341885,
+          "loaded_mean_error_rad": 0.002597871807976055,
+          "unloaded_mean_error_rad": -0.06408178489038592,
+          "velocity_error_correlation": 0.8903880412784637,
+          "acceleration_proxy_error_correlation": -0.33378340998535627
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.01785364449848614,
+          "rms_error_rad": 0.02337470473696404,
+          "loaded_mean_error_rad": 0.01798958517007465,
+          "unloaded_mean_error_rad": 0.01746847926231869,
+          "velocity_error_correlation": 0.3034652992917871,
+          "acceleration_proxy_error_correlation": -0.28922871374012427
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": -0.000022948709362340838,
+          "rms_error_rad": 0.014432545221417454,
+          "loaded_mean_error_rad": 0.0010156709436352196,
+          "unloaded_mean_error_rad": -0.0023488715942442014,
+          "velocity_error_correlation": 0.5009542742467689,
+          "acceleration_proxy_error_correlation": 0.611726684706053
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0014473055747291914,
+          "rms_error_rad": 0.0028913615791567172,
+          "loaded_mean_error_rad": 0.0025564507529565713,
+          "unloaded_mean_error_rad": -0.0010365547539771935,
+          "velocity_error_correlation": 0.7552342287526468,
+          "acceleration_proxy_error_correlation": 0.25563997838170716
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.01675352983923109,
+          "rms_error_rad": 0.024848409633443973,
+          "loaded_mean_error_rad": 0.01863504164473629,
+          "unloaded_mean_error_rad": 0.012540003401550441,
+          "velocity_error_correlation": 0.5596180573720166,
+          "acceleration_proxy_error_correlation": -0.3721134343323346
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": -0.000025875476740865456,
+          "rms_error_rad": 0.000056768164587836676,
+          "loaded_mean_error_rad": -0.000035533717697603076,
+          "unloaded_mean_error_rad": -0.000003339581175144361,
+          "velocity_error_correlation": null,
+          "acceleration_proxy_error_correlation": null
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.008486790493724491,
+          "rms_error_rad": 0.02631443696403986,
+          "loaded_mean_error_rad": 0.0019878560784470636,
+          "unloaded_mean_error_rad": 0.023650970796038475,
+          "velocity_error_correlation": 0.7631440956546744,
+          "acceleration_proxy_error_correlation": 0.37044989409736895
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.018360585924118548,
+          "rms_error_rad": 0.02960242089944095,
+          "loaded_mean_error_rad": 0.023338775169532793,
+          "unloaded_mean_error_rad": 0.006744811018151945,
+          "velocity_error_correlation": 0.8108181880670581,
+          "acceleration_proxy_error_correlation": -0.1707747499886888
+        }
+      ]
+    },
+    {
+      "name": "flat-return-hip0-v110-human-fine",
+      "capture_sha256": "8348dab562d3275d58252b42536a9ceccafbb6c314c46571ab7504d8aca0ce6c",
+      "maximum_command_replay_error_rad": 0,
+      "motors": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": -0.0013802966489228046,
+          "rms_error_rad": 0.006612530091646508,
+          "loaded_mean_error_rad": -0.0031701464187405223,
+          "unloaded_mean_error_rad": 0.002469106280685162,
+          "velocity_error_correlation": 0.540226698501942,
+          "acceleration_proxy_error_correlation": 0.4877023512515048
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0018562570104868107,
+          "rms_error_rad": 0.00319658691122609,
+          "loaded_mean_error_rad": 0.0033527090468333394,
+          "unloaded_mean_error_rad": -0.0013621398348064074,
+          "velocity_error_correlation": 0.6520970085350349,
+          "acceleration_proxy_error_correlation": 0.1595319510679729
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.016470388041860285,
+          "rms_error_rad": 0.02290626598641566,
+          "loaded_mean_error_rad": 0.021245336709469948,
+          "unloaded_mean_error_rad": 0.0062009778937134495,
+          "velocity_error_correlation": 0.3652802350103073,
+          "acceleration_proxy_error_correlation": -0.16123539819703736
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": 0.00014107601780893788,
+          "rms_error_rad": 0.00021359466891553017,
+          "loaded_mean_error_rad": 0.00015273867532330352,
+          "unloaded_mean_error_rad": 0.00011209608095505962,
+          "velocity_error_correlation": null,
+          "acceleration_proxy_error_correlation": null
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0028078478266643295,
+          "rms_error_rad": 0.012770581118120836,
+          "loaded_mean_error_rad": 0.007101174545608078,
+          "unloaded_mean_error_rad": -0.007860418565862557,
+          "velocity_error_correlation": 0.68979621574459,
+          "acceleration_proxy_error_correlation": 0.49589364547573656
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.016557283708895244,
+          "rms_error_rad": 0.021972628791484948,
+          "loaded_mean_error_rad": 0.020869349721455627,
+          "unloaded_mean_error_rad": 0.005842453011017893,
+          "velocity_error_correlation": -0.14550827861410656,
+          "acceleration_proxy_error_correlation": -0.12004147075711007
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0013296004037676727,
+          "rms_error_rad": 0.006593218580148338,
+          "loaded_mean_error_rad": 0.0031181423525727344,
+          "unloaded_mean_error_rad": -0.0024408393801997525,
+          "velocity_error_correlation": 0.5394632027662846,
+          "acceleration_proxy_error_correlation": 0.4868457822203196
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0018648070315157674,
+          "rms_error_rad": 0.0031969521306482868,
+          "loaded_mean_error_rad": 0.003391545773667566,
+          "unloaded_mean_error_rad": -0.001353723289777214,
+          "velocity_error_correlation": 0.6605780866764969,
+          "acceleration_proxy_error_correlation": 0.15784388642773572
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.016516042343308956,
+          "rms_error_rad": 0.022956155963798314,
+          "loaded_mean_error_rad": 0.02144460066316628,
+          "unloaded_mean_error_rad": 0.006126108587934051,
+          "velocity_error_correlation": 0.3698727344444282,
+          "acceleration_proxy_error_correlation": -0.1737958022051578
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "samples": 230,
+          "mean_error_rad": -0.00003739505513676858,
+          "rms_error_rad": 0.00010936310682910832,
+          "loaded_mean_error_rad": -0.000048095491993364654,
+          "unloaded_mean_error_rad": -0.00001080609082643883,
+          "velocity_error_correlation": null,
+          "acceleration_proxy_error_correlation": null
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "samples": 230,
+          "mean_error_rad": 0.0038538869416394317,
+          "rms_error_rad": 0.010155351076062621,
+          "loaded_mean_error_rad": 0.003214445841410549,
+          "unloaded_mean_error_rad": 0.005442801190693012,
+          "velocity_error_correlation": 0.24923372950162295,
+          "acceleration_proxy_error_correlation": 0.7131390752339268
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "samples": 230,
+          "mean_error_rad": 0.01714774111090714,
+          "rms_error_rad": 0.02459760349654773,
+          "loaded_mean_error_rad": 0.02321273692097488,
+          "unloaded_mean_error_rad": 0.002077145461647881,
+          "velocity_error_correlation": 0.7383140073118803,
+          "acceleration_proxy_error_correlation": -0.15993497626088912
+        }
+      ]
+    }
+  ],
+  "scope": "Forward window [1.4,6) s only. Exact Rhai replay aligns reference phase with original policy observations. Correlations are diagnostics, not a fitted controller or proof of causation. Acceleration is a neighboring-slope proxy; continuous inverse feedforward requires a differentiable reference."
+}

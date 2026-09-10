@@ -1,0 +1,136 @@
+{
+  "rows": [
+    {
+      "name": "smooth-dynamic-v125-scale0.5-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-dynamic-v125-scale0.5-human-fine",
+      "source": "runs/speed-ceiling/validation/smooth-hip0-v125-human-fine",
+      "kind": "human",
+      "family": "dynamic125-0.5",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.125,
+      "scale": 0.5,
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/dynamic-v125.forward.load-recipe.json",
+          "recipe_sha256": "5f2aa6e11d135f1207249f8c219e94fae215271c234917a2f95b454484ee04cd",
+          "table": "runs/speed-ceiling/validation/dynamic-v125.forward.load-table.json",
+          "table_sha256": "43fd0760d4a75b12a6bfd04aedca0fd22df255f89dea9c55545c615739c40c6a",
+          "maximum_offset_rad": 0.018770253283653174,
+          "maximum_unbalanced_moment_nm": 2.964843238082989
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/dynamic-v125.reverse.load-recipe.json",
+          "recipe_sha256": "fd471c678f4360a3306e84c8af983588335934d5eedaeb11e4f4179284b74008",
+          "table": "runs/speed-ceiling/validation/dynamic-v125.reverse.load-table.json",
+          "table_sha256": "bbe0b5b39891d1a337b650620c36b29539f8d3103ba9db4743c7e51f673addfc",
+          "maximum_offset_rad": 0.016201191991278088,
+          "maximum_unbalanced_moment_nm": 2.9648432380829894
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "e0a8e505425899e53ee9aa7b0d17f77051944060425f01786d3549212169871b",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "782ed8e571965e18d7b08c70e08df064b0ac916a9861ff586e236881e11c7fa4"
+    },
+    {
+      "name": "smooth-dynamic-v125-scale1-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-dynamic-v125-scale1-human-fine",
+      "source": "runs/speed-ceiling/validation/smooth-hip0-v125-human-fine",
+      "kind": "human",
+      "family": "dynamic125-1",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.125,
+      "scale": 1,
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/dynamic-v125.forward.load-recipe.json",
+          "recipe_sha256": "5f2aa6e11d135f1207249f8c219e94fae215271c234917a2f95b454484ee04cd",
+          "table": "runs/speed-ceiling/validation/dynamic-v125.forward.load-table.json",
+          "table_sha256": "43fd0760d4a75b12a6bfd04aedca0fd22df255f89dea9c55545c615739c40c6a",
+          "maximum_offset_rad": 0.018770253283653174,
+          "maximum_unbalanced_moment_nm": 2.964843238082989
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/dynamic-v125.reverse.load-recipe.json",
+          "recipe_sha256": "fd471c678f4360a3306e84c8af983588335934d5eedaeb11e4f4179284b74008",
+          "table": "runs/speed-ceiling/validation/dynamic-v125.reverse.load-table.json",
+          "table_sha256": "bbe0b5b39891d1a337b650620c36b29539f8d3103ba9db4743c7e51f673addfc",
+          "maximum_offset_rad": 0.016201191991278088,
+          "maximum_unbalanced_moment_nm": 2.9648432380829894
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "ebcec4506c173011859f3f6693776363cedee45af4defcd5b0aeb51792eadbb5",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "782ed8e571965e18d7b08c70e08df064b0ac916a9861ff586e236881e11c7fa4"
+    },
+    {
+      "name": "smooth-dynamic-v150-scale0.5-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-dynamic-v150-scale0.5-human-fine",
+      "source": "runs/speed-ceiling/validation/smooth-hip0-v150-human-fine",
+      "kind": "human",
+      "family": "dynamic150-0.5",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.15,
+      "scale": 0.5,
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/dynamic-v150.forward.load-recipe.json",
+          "recipe_sha256": "615b8b3798c485f0b26a833a647f37453b6bf4acb7c9891e8bcb22f7399011f2",
+          "table": "runs/speed-ceiling/validation/dynamic-v150.forward.load-table.json",
+          "table_sha256": "87ceff08e8fc7f1d599bd6ddef69f0cfc26004e1f19508cc9ea6a45330b3d69e",
+          "maximum_offset_rad": 0.02536345835170405,
+          "maximum_unbalanced_moment_nm": 3.9603958756000863
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/dynamic-v150.reverse.load-recipe.json",
+          "recipe_sha256": "69a3fbcc03e03b0ccfc8caa41a57dfca83279fbb16e824ae54921658b57d1f11",
+          "table": "runs/speed-ceiling/validation/dynamic-v150.reverse.load-table.json",
+          "table_sha256": "eebfde658c1880d8c9545368df3585212e2ca08f50d45778726a0fbedcb396f4",
+          "maximum_offset_rad": 0.022235440940235687,
+          "maximum_unbalanced_moment_nm": 3.9603958756000863
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "151a2cae409ae59f8021e18bb2e51805b8123af83d6f1b5bb7cd562e3210027f",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "0d1963f8695e729f6ac4885c21bfb6b4b8437f813ffa02961f637e4902de9c50"
+    },
+    {
+      "name": "smooth-dynamic-v150-scale1-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-dynamic-v150-scale1-human-fine",
+      "source": "runs/speed-ceiling/validation/smooth-hip0-v150-human-fine",
+      "kind": "human",
+      "family": "dynamic150-1",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.15,
+      "scale": 1,
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/dynamic-v150.forward.load-recipe.json",
+          "recipe_sha256": "615b8b3798c485f0b26a833a647f37453b6bf4acb7c9891e8bcb22f7399011f2",
+          "table": "runs/speed-ceiling/validation/dynamic-v150.forward.load-table.json",
+          "table_sha256": "87ceff08e8fc7f1d599bd6ddef69f0cfc26004e1f19508cc9ea6a45330b3d69e",
+          "maximum_offset_rad": 0.02536345835170405,
+          "maximum_unbalanced_moment_nm": 3.9603958756000863
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/dynamic-v150.reverse.load-recipe.json",
+          "recipe_sha256": "69a3fbcc03e03b0ccfc8caa41a57dfca83279fbb16e824ae54921658b57d1f11",
+          "table": "runs/speed-ceiling/validation/dynamic-v150.reverse.load-table.json",
+          "table_sha256": "eebfde658c1880d8c9545368df3585212e2ca08f50d45778726a0fbedcb396f4",
+          "maximum_offset_rad": 0.022235440940235687,
+          "maximum_unbalanced_moment_nm": 3.9603958756000863
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "d452cd76736f3a815c8a6f64cd64eae496cc86cef6db8c6d0e054a7d9545c92a",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "0d1963f8695e729f6ac4885c21bfb6b4b8437f813ffa02961f637e4902de9c50"
+    }
+  ]
+}

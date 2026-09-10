@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "fit": {
+    "final_training_loss": 0.00021670476835748968,
+    "final_validation_loss": 0.00018302061056014226,
+    "initial_training_loss": 0.2758902369761238,
+    "initial_validation_loss": 0.2779534092114015,
+    "scope": "Checkpoint selected by training loss only. Supervised teacher-action imitation on held-out teacher states; not closed-loop stability, walking acceptance, sensor calibration or hardware transfer.",
+    "selected_epoch": 277,
+    "training_samples": 2000,
+    "validation_physical_errors": [
+      {
+        "maximum": 0.0401473897541242,
+        "name": "-Y | Hip servo output.target",
+        "rms": 0.011015241475220709,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.131076208729383,
+        "name": "-Y | Worm servo output.target",
+        "rms": 0.027232952040445655,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.06706070849775923,
+        "name": "-Y | Foot servo output.target",
+        "rms": 0.019291134965015715,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.05357177845439054,
+        "name": "+X | Hip servo output.target",
+        "rms": 0.013647492143358073,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.08737528669849337,
+        "name": "+X | Worm servo output.target",
+        "rms": 0.0331767279907076,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.09114444160893831,
+        "name": "+X | Foot servo output.target",
+        "rms": 0.01828792391005651,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.04020282569981121,
+        "name": "+Y | Hip servo output.target",
+        "rms": 0.012098538163836013,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.12277819962790751,
+        "name": "+Y | Worm servo output.target",
+        "rms": 0.03826148367396256,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.08281240993632234,
+        "name": "+Y | Foot servo output.target",
+        "rms": 0.023220971654262484,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.05033514274268283,
+        "name": "-X | Hip servo output.target",
+        "rms": 0.016431260429442866,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.0806915255162852,
+        "name": "-X | Worm servo output.target",
+        "rms": 0.02600525771898129,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.04360030296683169,
+        "name": "-X | Foot servo output.target",
+        "rms": 0.014920790657692399,
+        "unit": "rad"
+      }
+    ],
+    "validation_samples": 4000,
+    "version": 1
+  },
+  "closed_loop": {
+    "completed": true,
+    "error": null,
+    "frames": 1001,
+    "final_time_s": 20,
+    "metrics": {
+      "net_distance_m": 0.3161242665564337,
+      "displacement_xy_m": [
+        -0.10230186258620788,
+        -0.2991134915332904
+      ],
+      "elapsed_s": 20,
+      "requested_duration_s": 20,
+      "speed_m_s": 0.015806213327821686,
+      "minimum_chassis_up_z": 0.9873026631520356,
+      "minimum_chassis_ground_clearance_m": 0.274605003057073,
+      "chassis_floor_contact": false,
+      "fallen": false,
+      "completed": true,
+      "scope": "Net horizontal chassis displacement divided by the full trial duration. Falling means chassis ground contact or overturning. CAD hull clearance and orientation are sampled at recorded frames; no slip, tracking, lift, steering or stop threshold."
+    }
+  },
+  "label_verification": {
+    "teacher_samples": 1000,
+    "maximum_teacher_replay_error_rad": 0,
+    "student_samples": 1000,
+    "saturated_teacher_advice": 0,
+    "maximum_teacher_student_command_difference_rad": 1.6939633160661873
+  },
+  "physics_verification": {
+    "scene_except_controller_identical": true,
+    "config_except_policy_identical": true,
+    "actuator_command_bounds_identical": true
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-neural-imitation-v1/teacher-replay-labels.json",
+      "sha256": "c296a2d08648e8a0303aac727855cb5dc509fcd3c7f58016a5c7e82c30f36482"
+    },
+    {
+      "path": "runs/speed-neural-imitation-v1/student-teacher-labels.json",
+      "sha256": "6d5ed2a15ef34ebaf5aabdc693e3197c853d94a18e21dc8a3569c46903814167"
+    },
+    {
+      "path": "runs/speed-neural-imitation-v1/evaluation/student.native.json",
+      "sha256": "68cbfac7fae23693635bfc53476d75dfad671b89f243a8050de5abda90b39ab4"
+    },
+    {
+      "path": "runs/speed-neural-imitation-v1/teacher-controller.json",
+      "sha256": "56b3c5eb35fe960ab29db2b691a3c5f380c09db1bde467064dce580e1463559f"
+    },
+    {
+      "path": "crates/sim-script/examples/label_policy_observations.rs",
+      "sha256": "29c1ad623d454bae1c7cb26f2dc3713f246010193c50d7fc14a7f23425b7973b"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/label_policy_observations",
+      "sha256": "aa8d70ac269f6b143a20c87ec37f6f986ae1df2927a1cf13dfeb008dc09dd1e9"
+    }
+  ],
+  "scope": "Imitation initialization failed to retain teacher speed. Counterfactual teacher labels on actual student states are available for further learning; no PPO/CLF training or improved learned gait is claimed."
+}

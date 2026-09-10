@@ -7,6 +7,68 @@ fn error(e: impl ToString) -> JsValue {
     JsValue::from_str(&e.to_string())
 }
 
+/// Pure preparation for the ordinary shared environment; call from a worker.
+#[wasm_bindgen]
+pub fn materialize_motion(scene_json: &str, actions_json: &str, recipe_json: &str, values_json: &str) -> Result<String, JsValue> {
+    let recipe: sim_runtime::motion_parameters::MotionParameterization = serde_json::from_str(recipe_json).map_err(error)?;
+    let variant = recipe.materialize(&serde_json::from_str(scene_json).map_err(error)?,
+        &serde_json::from_str::<Vec<Vec<f64>>>(actions_json).map_err(error)?,
+        &serde_json::from_str(values_json).map_err(error)?).map_err(error)?;
+    serde_json::to_string(&serde_json::json!({"variant":variant,"metadata":recipe.metadata()})).map_err(error)
+}
+
+/// Validate and bind an immutable motion experiment to current library sources.
+#[wasm_bindgen]
+pub fn bind_motion_experiment(spec_json: &str) -> Result<String, JsValue> {
+    let experiment=sim_runtime::experiment::Experiment::bind(serde_json::from_str(spec_json).map_err(error)?).map_err(error)?;
+    serde_json::to_string(&experiment).map_err(error)
+}
+
+/// Host-driven motion trial, including incremental checkpoint reconstruction.
+#[wasm_bindgen]
+pub struct MotionEvaluation { evaluation: sim_runtime::experiment::Evaluation }
+#[wasm_bindgen]
+impl MotionEvaluation {
+    #[wasm_bindgen(constructor)]
+    pub fn new(experiment_json: &str, proposal_json: &str) -> Result<Self, JsValue> {
+        let experiment:sim_runtime::experiment::Experiment=serde_json::from_str(experiment_json).map_err(error)?;
+        Ok(Self {evaluation:experiment.start(serde_json::from_str(proposal_json).map_err(error)?).map_err(error)?})
+    }
+    pub fn resume(experiment_json: &str, checkpoint_json: &str) -> Result<Self, JsValue> {
+        let experiment:sim_runtime::experiment::Experiment=serde_json::from_str(experiment_json).map_err(error)?;
+        Ok(Self {evaluation:experiment.resume(serde_json::from_str(checkpoint_json).map_err(error)?).map_err(error)?})
+    }
+    pub fn advance(&mut self, maximum_actions: u32) -> Result<String, JsValue> {
+        let status=self.evaluation.advance(maximum_actions as usize).map_err(error)?;
+        serde_json::to_string(&serde_json::json!({"status":status})).map_err(error)
+    }
+    pub fn checkpoint(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.evaluation.checkpoint().map_err(error)?).map_err(error)
+    }
+    pub fn frame(&self) -> Result<String, JsValue> { serde_json::to_string(&self.evaluation.frame().map_err(error)?).map_err(error) }
+    pub fn metadata(&self) -> Result<String, JsValue> { serde_json::to_string(&self.evaluation.metadata()).map_err(error) }
+}
+
+/// Inspect original CAD JSON before model parsing supplies legacy defaults.
+/// Call from a worker; no simulation session or source geometry is modified.
+#[wasm_bindgen]
+pub fn inspect_robot_contract(document_json: &str) -> Result<String, JsValue> {
+    let document = serde_json::from_str(document_json).map_err(error)?;
+    let inspection = sim_runtime::robot_contract::inspect(document).map_err(error)?;
+    serde_json::to_string(&inspection).map_err(error)
+}
+
+/// Read-only comparison using the same typed fidelity API as native experiments.
+#[wasm_bindgen]
+pub fn compare_environment_fidelity(reference_json: &str, candidate_json: &str, plan_json: &str) -> Result<String, JsValue> {
+    let report = sim_runtime::fidelity::compare(
+        &serde_json::from_str(reference_json).map_err(error)?,
+        &serde_json::from_str(candidate_json).map_err(error)?,
+        &serde_json::from_str(plan_json).map_err(error)?,
+    ).map_err(error)?;
+    serde_json::to_string(&report).map_err(error)
+}
+
 /// Teacher training transitions use exactly the native environment adapter.
 /// Invoke from a worker: one action interval can take longer than a display frame.
 #[wasm_bindgen]
@@ -45,6 +107,14 @@ impl EnvironmentSimulation {
     }
     pub fn contract(&self) -> Result<String, JsValue> {
         serde_json::to_string(&self.environment.contract()).map_err(error)
+    }
+    /// Same typed, read-only forecast query as the native environment.
+    pub fn predict_controller_trajectory(&self, model_json:&str, previous_json:&str, actions_json:&str)->Result<String,JsValue>{
+        let result=self.environment.predict_controller_trajectory(
+            &serde_json::from_str(model_json).map_err(error)?,
+            &serde_json::from_str(previous_json).map_err(error)?,
+            &serde_json::from_str::<Vec<Vec<f64>>>(actions_json).map_err(error)?).map_err(error)?;
+        serde_json::to_string(&result).map_err(error)
     }
     pub fn recording(&self) -> Result<String, JsValue> {
         if !self.replay_actions.is_empty() { return Err(error("finish replay before recording")); }

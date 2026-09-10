@@ -135,9 +135,14 @@ fn lag_chain(p: &Params) -> Made {
 }
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
+    crate::motion_parameters::register(registry)?;
+    crate::displacement::register(registry)?;
     crate::support_preload::register(registry)?;
     crate::angle_integral::register(registry)?;
     crate::load_damping::register(registry)?;
+    crate::contact_slip::register(registry)?;
+    crate::smooth_return::register(registry)?;
+    crate::command_lease::register(registry)?;
     use sim_core::ParameterDeclaration as P;
     use QuantityKind::Dimensionless as D;
     for descriptor in [

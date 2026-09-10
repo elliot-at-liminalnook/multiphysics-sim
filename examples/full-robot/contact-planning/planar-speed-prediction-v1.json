@@ -1,0 +1,421 @@
+{
+  "version": 1,
+  "predictions": [
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/affine003-10-20.result.json",
+        "sha256": "4bfc6e5d674b602b8b9edc891a2ba7aa9cba4ded1887cd31038ef81ea005d1a0"
+      },
+      "fit_end_s": 20,
+      "fit_start_s": 10,
+      "forecasts": [
+        {
+          "endpoint_error_m": 2.4354397029356236,
+          "linear_baseline_endpoint_error_m": 33.32365151302637,
+          "linear_baseline_position_m": [
+            3.4713310251533116,
+            32.05981668487422
+          ],
+          "observed_net_speed_m_s": 0.0061026308690990605,
+          "predicted_net_speed_m_s": 0.013487991735930448,
+          "predicted_pose": [
+            -3.9689838719922177,
+            -0.5743230501829935,
+            10.973468561144335
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 10,
+        "intervals": 500,
+        "observed_path_length_m": 1.479761540596324,
+        "observed_yaw_change_rad": 0.36717634434569985,
+        "twist": [
+          0.06126135447942934,
+          0.0870835213329266,
+          0.03671763443456998
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    },
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/affine003-5-10.result.json",
+        "sha256": "2954dfab80e2a5e7269e188f89880ed358511094dc96a3e77a88c1ac208e912b"
+      },
+      "fit_end_s": 10,
+      "fit_start_s": 5,
+      "forecasts": [
+        {
+          "endpoint_error_m": 0.10911606274822118,
+          "linear_baseline_endpoint_error_m": 0.4029767040358913,
+          "linear_baseline_position_m": [
+            1.0051309531485153,
+            1.8152129696482415
+          ],
+          "observed_net_speed_m_s": 0.10245514835211553,
+          "predicted_net_speed_m_s": 0.09829570842877346,
+          "predicted_pose": [
+            0.6829562080525315,
+            1.8889630100621955,
+            0.7869712087931852
+          ],
+          "time_s": 20
+        },
+        {
+          "endpoint_error_m": 4.058917312920002,
+          "linear_baseline_endpoint_error_m": 31.915464206674837,
+          "linear_baseline_position_m": [
+            13.99916731136525,
+            26.986864732505232
+          ],
+          "observed_net_speed_m_s": 0.0061026308690990605,
+          "predicted_net_speed_m_s": 0.008779073932528244,
+          "predicted_pose": [
+            0.4817791482637928,
+            2.6290880539180077,
+            13.712236951669244
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 5,
+        "intervals": 250,
+        "observed_path_length_m": 0.7134799832039751,
+        "observed_yaw_change_rad": 0.2308083168370725,
+        "twist": [
+          0.06397154997129802,
+          0.07579326921991296,
+          0.0461616633674145
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    },
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/affine003-5-20.result.json",
+        "sha256": "dc5a3d1f1cb37165365355beca36f1b7753e49dda92a93ff86220018981600af"
+      },
+      "fit_end_s": 20,
+      "fit_start_s": 5,
+      "forecasts": [
+        {
+          "endpoint_error_m": 0.24808238442630975,
+          "linear_baseline_endpoint_error_m": 32.42053549538359,
+          "linear_baseline_position_m": [
+            6.859600174738763,
+            30.42714249330719
+          ],
+          "observed_net_speed_m_s": 0.0061026308690990605,
+          "predicted_net_speed_m_s": 0.005338839565505384,
+          "predicted_pose": [
+            -1.397238607358522,
+            -0.6899097153328859,
+            11.854911261543158
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 15,
+        "intervals": 750,
+        "observed_path_length_m": 2.1932415238002982,
+        "observed_yaw_change_rad": 0.5979846611827724,
+        "twist": [
+          0.06216475297671891,
+          0.08332010396192209,
+          0.039865644078851493
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    },
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/phase0-10-20.result.json",
+        "sha256": "5f19d8dfdcfcf4aaf55be67f06752c60e708ca8cdc6d44992231604accbb05a2"
+      },
+      "fit_end_s": 20,
+      "fit_start_s": 10,
+      "forecasts": [
+        {
+          "endpoint_error_m": 0.7706265638038828,
+          "linear_baseline_endpoint_error_m": 5.906507709635032,
+          "linear_baseline_position_m": [
+            -6.074924591366506,
+            1.4744536450431314
+          ],
+          "observed_net_speed_m_s": 0.0013220946088445499,
+          "predicted_net_speed_m_s": 0.002937408224622839,
+          "predicted_pose": [
+            0.11765170473104718,
+            0.9111512579632313,
+            -191.91900482093158
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 10,
+        "intervals": 500,
+        "observed_path_length_m": 3.221433034232349,
+        "observed_yaw_change_rad": -6.829105724194159,
+        "twist": [
+          -0.2882339073104402,
+          -0.06169522714913407,
+          -0.6829105724194159
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    },
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/phase0-5-10.result.json",
+        "sha256": "8352e6684b06b54d456c50385051e5e05c2c7ad75f7e796614299bef62d5c8cf"
+      },
+      "fit_end_s": 10,
+      "fit_start_s": 5,
+      "forecasts": [
+        {
+          "endpoint_error_m": 0.15264361674347973,
+          "linear_baseline_endpoint_error_m": 1.8557278765703913,
+          "linear_baseline_position_m": [
+            0.36925154534931903,
+            -1.6903853248201903
+          ],
+          "observed_net_speed_m_s": 0.008140193098419391,
+          "predicted_net_speed_m_s": 0.0009089071846385294,
+          "predicted_pose": [
+            0.027416809853546414,
+            0.05189595370105546,
+            -6.590361989076149
+          ],
+          "time_s": 20
+        },
+        {
+          "endpoint_error_m": 0.8910795860526308,
+          "linear_baseline_endpoint_error_m": 51.39846860327892,
+          "linear_baseline_position_m": [
+            8.035320362111813,
+            -50.45891243962638
+          ],
+          "observed_net_speed_m_s": 0.0013220946088445499,
+          "predicted_net_speed_m_s": 0.0026916026600508434,
+          "predicted_pose": [
+            0.47531625924811094,
+            0.7086706053818557,
+            -186.69302214175318
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 5,
+        "intervals": 250,
+        "observed_path_length_m": 1.6093272861649501,
+        "observed_yaw_change_rad": -3.216118931297804,
+        "twist": [
+          -0.2865485333353419,
+          -0.0654617246090087,
+          -0.6432237862595608
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    },
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/phase0-5-20.result.json",
+        "sha256": "62db423895c95615cdc2b046a988311ea4a87297eb13676389e032e7db2e8d8c"
+      },
+      "fit_end_s": 20,
+      "fit_start_s": 5,
+      "forecasts": [
+        {
+          "endpoint_error_m": 0.6137236212022151,
+          "linear_baseline_endpoint_error_m": 15.54924976023183,
+          "linear_baseline_position_m": [
+            -1.533696330476932,
+            -15.239733140827513
+          ],
+          "observed_net_speed_m_s": 0.0013220946088445499,
+          "predicted_net_speed_m_s": 0.000918277314293367,
+          "predicted_pose": [
+            0.2984073464007249,
+            0.10197399171719354,
+            -188.21490477934498
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 15,
+        "intervals": 750,
+        "observed_path_length_m": 4.830760320397305,
+        "observed_yaw_change_rad": -10.045224655491957,
+        "twist": [
+          -0.287672115985407,
+          -0.06295072630242565,
+          -0.6696816436994638
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    },
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/teacher-20-60.result.json",
+        "sha256": "6a4a2d8b83af9917461a907cc91b886f19377f47db80788239c231db15d06a47"
+      },
+      "fit_end_s": 60,
+      "fit_start_s": 20,
+      "forecasts": [
+        {
+          "endpoint_error_m": 1.1772973266801496,
+          "linear_baseline_endpoint_error_m": 27.75322081936765,
+          "linear_baseline_position_m": [
+            100.27256790758807,
+            119.21487117192332
+          ],
+          "observed_net_speed_m_s": 0.5143375634243865,
+          "predicted_net_speed_m_s": 0.5132354431608518,
+          "predicted_pose": [
+            77.54823921022927,
+            133.0683496407213,
+            0.3859097808085238
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 40,
+        "intervals": 2000,
+        "observed_path_length_m": 21.485244080079077,
+        "observed_yaw_change_rad": 0.05015611436914121,
+        "twist": [
+          0.33960191350565955,
+          0.38991161803398233,
+          0.0012539028592285302
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    },
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/teacher-5-20.result.json",
+        "sha256": "64690249efaca8758277263cff345848366cacd47899152c6d4105ef2cf8413d"
+      },
+      "fit_end_s": 20,
+      "fit_start_s": 5,
+      "forecasts": [
+        {
+          "endpoint_error_m": 1.0708654797504227,
+          "linear_baseline_endpoint_error_m": 1.0359443197557736,
+          "linear_baseline_position_m": [
+            21.14234105353599,
+            22.82013590717372
+          ],
+          "observed_net_speed_m_s": 0.5168687755290206,
+          "predicted_net_speed_m_s": 0.5151939814399766,
+          "predicted_pose": [
+            19.45599208506804,
+            24.08025499641181,
+            0.10746321956792848
+          ],
+          "time_s": 60
+        },
+        {
+          "endpoint_error_m": 11.230228526062684,
+          "linear_baseline_endpoint_error_m": 34.96092397213115,
+          "linear_baseline_position_m": [
+            105.90186155640644,
+            114.64355800572574
+          ],
+          "observed_net_speed_m_s": 0.5143375634243865,
+          "predicted_net_speed_m_s": 0.5107226626541526,
+          "predicted_pose": [
+            66.33664948474173,
+            138.16091865985248,
+            0.5433406556282874
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 15,
+        "intervals": 750,
+        "observed_path_length_m": 8.071178377112286,
+        "observed_yaw_change_rad": 0.027242339753772438,
+        "twist": [
+          0.3397283026117239,
+          0.3910327913659723,
+          0.001816155983584829
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    },
+    {
+      "result": {
+        "path": "runs/planar-speed-prediction-v1/teacher-5-40.result.json",
+        "sha256": "3d409fcd99b11047b236942321ab65dbafac11bab9c57f9b13c7da2e1564e7db"
+      },
+      "fit_end_s": 40,
+      "fit_start_s": 5,
+      "forecasts": [
+        {
+          "endpoint_error_m": 0.7148072984078531,
+          "linear_baseline_endpoint_error_m": 0.48176975595982513,
+          "linear_baseline_position_m": [
+            20.69908045723409,
+            23.15406340670131
+          ],
+          "observed_net_speed_m_s": 0.5168687755290206,
+          "predicted_net_speed_m_s": 0.5151472746443555,
+          "predicted_pose": [
+            19.731583602250254,
+            23.851359308045144,
+            0.12678198660456236
+          ],
+          "time_s": 60
+        },
+        {
+          "endpoint_error_m": 18.338723799648037,
+          "linear_baseline_endpoint_error_m": 31.990464182480366,
+          "linear_baseline_position_m": [
+            103.52437290351442,
+            116.43462368501007
+          ],
+          "observed_net_speed_m_s": 0.5143375634243865,
+          "predicted_net_speed_m_s": 0.5067686614859959,
+          "predicted_pose": [
+            59.42750896687252,
+            139.98202607454874,
+            0.6469594970065963
+          ],
+          "time_s": 300
+        }
+      ],
+      "model": {
+        "duration_s": 35,
+        "intervals": 1750,
+        "observed_path_length_m": 18.80418001944251,
+        "observed_yaw_change_rad": 0.07585922026696328,
+        "twist": [
+          0.33955437942221633,
+          0.39009562304187195,
+          0.002167406293341808
+        ]
+      },
+      "scope": "Empirical constant body-frame twist extrapolation using past planar poses only. Future observations are scoring labels. No contact/actuator dynamics, fall prediction, speed bound or demonstrated search improvement.",
+      "version": 1
+    }
+  ],
+  "scope": "Causal constant-body-twist fits from recorded planar motion, including20s authored physical prefix replays of two completed300s candidates. All future observations are scoring labels only. Window sensitivity is retained; this is a kinematic proposal surrogate, not a learned contact model, a fall predictor, a speed bound, or demonstrated search/sample-efficiency gain."
+}

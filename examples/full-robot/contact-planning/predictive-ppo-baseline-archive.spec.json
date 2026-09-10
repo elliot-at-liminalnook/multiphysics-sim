@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "files": [
+    "runs/speed-ppo-predictive-v2/baseline.json",
+    "runs/learner-forecast-data-tests.log",
+    "runs/learner-forecast-data-build.log",
+    "runs/learner-forecast-evaluator-build.log",
+    "runs/ppo-baseline-guard-smoke.spec.json",
+    "runs/ppo-baseline-guard-smoke/baseline.json",
+    "runs/ppo-baseline-guard-smoke/check.json",
+    "runs/ppo-baseline-guard-smoke/experiment.json",
+    "runs/ppo-baseline-guard-smoke/initial-state.json",
+    "runs/ppo-baseline-guard-smoke/stderr.log"
+  ],
+  "blob_directory": "examples/full-robot/contact-planning/speed-objective-evidence-files",
+  "manifest": "examples/full-robot/contact-planning/predictive-ppo-baseline-evidence.json",
+  "terminal_evidence": {
+    "baseline_stage": "Corrected baseline.json closed before live trainer entered iteration 0 episode 0. Score 30.530870820514558 m; expectation passed. Overall PPO experiment remains running.",
+    "guard_smoke": "Session 35066 exited 0 after asserting child exit 1, saved baseline, expected mismatch diagnostic, and no rollout start file.",
+    "data_tests": "Motion-forecast and PPO-training tests passed (5), including exact applied command/physical label extraction and discontinuity/numerical-error rejection."
+  },
+  "scope": "Completed startup verification and shared learner-dynamics data support. No PPO speed improvement claimed; only closed artifacts from the still-running experiment are archived."
+}

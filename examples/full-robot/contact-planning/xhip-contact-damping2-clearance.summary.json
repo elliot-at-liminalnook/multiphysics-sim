@@ -1,0 +1,183 @@
+{
+  "prefix": "runs/contact-planning/xhip-contact-damping2",
+  "counts": [
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        4.2,
+        6.4
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        4.2,
+        6.4
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 6
+    },
+    {
+      "window_s": [
+        4.2,
+        6.4
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        4.2,
+        6.4
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 6
+    }
+  ],
+  "policy_replay_samples": 400,
+  "maximum_command_error_rad": 0,
+  "planned_foot_clearances": 42,
+  "passed_foot_clearances": 39,
+  "failed_foot_clearances": [
+    {
+      "report": {
+        "failed_clearance_samples": 6,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 3,
+        "longest_qualifying_span_s": 0,
+        "minimum_swing_force_n": 0,
+        "passed": false,
+        "peak_clearance_m": 0.002945427535765932,
+        "qualifying_start_s": null,
+        "samples": 7,
+        "scope": "Consecutive reporting samples meet declared foot clearance and unloading only. Support and body balance are unassessed by this check and require separate dynamic evidence. No between-sample, landing, collision or walking certificate."
+      },
+      "requirements": {
+        "end_s": 2.32,
+        "maximum_sample_gap_s": 0.021,
+        "maximum_swing_force_n": 1,
+        "minimum_clearance_m": 0.002,
+        "minimum_support_forces_n": {},
+        "qualifying_duration_s": 0.019999999,
+        "start_s": 2.2,
+        "support_check": "clearance_only",
+        "swing_link": "+X | Sliding foot crosshead"
+      }
+    },
+    {
+      "report": {
+        "failed_clearance_samples": 6,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 3,
+        "longest_qualifying_span_s": 0,
+        "minimum_swing_force_n": 0,
+        "passed": false,
+        "peak_clearance_m": 0.0029023931867036,
+        "qualifying_start_s": null,
+        "samples": 7,
+        "scope": "Consecutive reporting samples meet declared foot clearance and unloading only. Support and body balance are unassessed by this check and require separate dynamic evidence. No between-sample, landing, collision or walking certificate."
+      },
+      "requirements": {
+        "end_s": 5.94,
+        "maximum_sample_gap_s": 0.021,
+        "maximum_swing_force_n": 1,
+        "minimum_clearance_m": 0.002,
+        "minimum_support_forces_n": {},
+        "qualifying_duration_s": 0.019999999,
+        "start_s": 5.82,
+        "support_check": "clearance_only",
+        "swing_link": "-X | Sliding foot crosshead"
+      }
+    },
+    {
+      "report": {
+        "failed_clearance_samples": 6,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 4,
+        "longest_qualifying_span_s": 0,
+        "minimum_swing_force_n": 0,
+        "passed": false,
+        "peak_clearance_m": 0.0026661421110363848,
+        "qualifying_start_s": null,
+        "samples": 7,
+        "scope": "Consecutive reporting samples meet declared foot clearance and unloading only. Support and body balance are unassessed by this check and require separate dynamic evidence. No between-sample, landing, collision or walking certificate."
+      },
+      "requirements": {
+        "end_s": 6.3,
+        "maximum_sample_gap_s": 0.021,
+        "maximum_swing_force_n": 1,
+        "minimum_clearance_m": 0.002,
+        "minimum_support_forces_n": {},
+        "qualifying_duration_s": 0.019999999,
+        "start_s": 6.18,
+        "support_check": "clearance_only",
+        "swing_link": "-X | Sliding foot crosshead"
+      }
+    }
+  ],
+  "inter_link_geometry_audit": {
+    "frames": 401,
+    "maximum_penetration_m": 0,
+    "penetrating_samples": 0,
+    "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+  },
+  "sources": [
+    {
+      "path": "examples/full-robot/contact-planning/xhip-contact-damping2-trial.json",
+      "sha256": "ec41c82b7464351aff5586e9c3abe8188ffea88884bce10167fcfe4e71b2b829"
+    },
+    {
+      "path": "runs/contact-planning/xhip-contact-damping2.native.json",
+      "sha256": "314a184a31ebcddf29d6ac02c1e3015ddbf1c774b8675d77be092f0f8f4a2502"
+    },
+    {
+      "path": "runs/contact-planning/xhip-contact-damping2.policy-state.json",
+      "sha256": "e61f3ece3833acb6ea13cf10b186af9775fb47d590b066d2c2e4d8ec20639c79"
+    },
+    {
+      "path": "runs/contact-planning/xhip-contact-damping2.contact-clearance-requirements.json",
+      "sha256": "db52af5fac5cbf6e8c12d506423676d8a3a815114a9257f08b75287f57889ca6"
+    },
+    {
+      "path": "runs/contact-planning/xhip-contact-damping2.contact-geometry.json",
+      "sha256": "f0e143a9793efa67fc81c35f856816032235dcd76736f94afaff1cb9da94b386"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/audit_contact_controller.mjs",
+      "sha256": "34c52d0905eae2264bb9a48760c4b858925c1a859521f758dea84db28e22dd94"
+    }
+  ],
+  "scope": "All complete independent planned swing intervals within explicit windows, reconstructed by exact Rhai replay. Shared Rust checks 2 mm clearance, <=1 N swing force and 20 ms qualifying duration. Clearance-only mode does not certify support or balance; closed-loop control and timestep tests are separate. Full CAD interlink geometry is checked at recorded poses; no between-sample guarantee."
+}

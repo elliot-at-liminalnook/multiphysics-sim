@@ -1,0 +1,132 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm.recipe.json",
+      "sha256": "8f1a8aa860ef257e9972a3fe8134f8b875404e455db236135d404869160e5bc6"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-summary.json",
+      "sha256": "dc2e9226daa57eff172eaf703813ad1ec0d5d29cb13925aa28361f012156f53e"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-provenance.json",
+      "sha256": "c32f42f2d22dda798d2678faeed1b9b8f7b2caa120cdd3923a7813bd9378f5c4"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+      "sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+    },
+    {
+      "path": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+      "sha256": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b"
+    }
+  ],
+  "output": {
+    "path": "examples/full-robot/contact-planning/joint-workspace-speed.recipe.json",
+    "sha256": "86f4ba64e79bd640a501c7a93921ffda45a7185ed04d798652006609268b1717"
+  },
+  "changes": [
+    {
+      "foot": 0,
+      "axis": 0,
+      "previous": {
+        "lower": -0.01313294028561143,
+        "upper": 0.02686705971438857
+      },
+      "next": {
+        "lower": -0.28115601622728903,
+        "upper": 0.27639301627276086
+      }
+    },
+    {
+      "foot": 0,
+      "axis": 1,
+      "previous": {
+        "lower": -0.3420619630438515,
+        "upper": -0.30206196304385147
+      },
+      "next": {
+        "lower": -0.4219010840003192,
+        "upper": -0.20415234330944187
+      }
+    },
+    {
+      "foot": 1,
+      "axis": 0,
+      "previous": {
+        "lower": 0.3125862718064657,
+        "upper": 0.35258627180646573
+      },
+      "next": {
+        "lower": 0.21396620843033204,
+        "upper": 0.44019518621497344
+      }
+    },
+    {
+      "foot": 1,
+      "axis": 1,
+      "previous": {
+        "lower": -0.021379932656932252,
+        "upper": 0.01862006734306775
+      },
+      "next": {
+        "lower": -0.29461767350234164,
+        "upper": 0.29461767351234763
+      }
+    },
+    {
+      "foot": 2,
+      "axis": 0,
+      "previous": {
+        "lower": -0.03109969404604185,
+        "upper": 0.00890030595395815
+      },
+      "next": {
+        "lower": -0.2811555162772109,
+        "upper": 0.2763935162321115
+      }
+    },
+    {
+      "foot": 2,
+      "axis": 1,
+      "previous": {
+        "lower": 0.2934380550083265,
+        "upper": 0.3334380550083265
+      },
+      "next": {
+        "lower": 0.146795044034559,
+        "upper": 0.4219010840056727
+      }
+    },
+    {
+      "foot": 3,
+      "axis": 0,
+      "previous": {
+        "lower": -0.31795599691543136,
+        "upper": -0.2779559969154313
+      },
+      "next": {
+        "lower": -0.42650120030766503,
+        "upper": -0.17526321871981426
+      }
+    },
+    {
+      "foot": 3,
+      "axis": 1,
+      "previous": {
+        "lower": -0.05209596683963781,
+        "upper": -0.012095966839637807
+      },
+      "next": {
+        "lower": -0.23087121282321135,
+        "upper": -2.8445740907276872e-11
+      }
+    }
+  ],
+  "target_speed_m_s": 0.3,
+  "scope": "Same initial motion and force seed, with XY foot-center intervals taken from the recorded CAD workspace screen. These boxes contain untested/unreachable combinations and are not certified whole-workspace bounds. Native IK, actuator, friction and collision checks remain mandatory. Hardware limits and all physical acceptance tolerances are unchanged. Larger inner evaluation budget permits several actual solver steps for 173 variables; this remains a local gait-family search, not global exhaustion."
+}

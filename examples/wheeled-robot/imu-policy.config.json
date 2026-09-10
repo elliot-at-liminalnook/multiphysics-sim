@@ -1,0 +1,27 @@
+{
+  "independent_coordinates": ["joint.passive axle", "joint.right axle", "joint.left axle"],
+  "step_s": 0.003,
+  "steps": 10,
+  "report_every": 1,
+  "applied_generalized_loads": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  "implicit": {},
+  "motors": {
+    "residual_scales": [1, 1, 1],
+    "events": {},
+    "servos": [
+      {"target_rad": 0.01, "supply_voltage_v": 6, "winding_temperature_k": 298.15},
+      {"target_rad": -0.02, "supply_voltage_v": 6, "winding_temperature_k": 298.15}
+    ],
+    "target_coordinates": ["joint.left axle", "joint.right axle"],
+    "expected_cad_sha256": "9cd32aa97d620cf7e342fe994eccd5904cd0a2b235e60092e877d516d8a17a7a",
+    "target_trajectory": {"keyframes": [
+      {"time_s": 0, "values": [0.01, -0.02]},
+      {"time_s": 0.03, "values": [0.01, -0.02]}
+    ]}
+  },
+  "policy": {
+    "observation_source": "ideal_joint_state_diagnostics",
+    "imu_observations": ["body imu"],
+    "target_bounds_rad": {"joint.left axle": [-1, 1], "joint.right axle": [-1, 1]}
+  }
+}

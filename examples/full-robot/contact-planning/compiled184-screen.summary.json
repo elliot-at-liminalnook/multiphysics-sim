@@ -1,0 +1,71 @@
+{
+  "completed": true,
+  "error": null,
+  "physics_step_s": 0.000625,
+  "frames": 401,
+  "wall_s": 27.164269943,
+  "segments": [
+    {
+      "window_s": [
+        1.4,
+        3
+      ],
+      "net_forward_speed_m_s": 0.18380460241835558,
+      "mean_world_speed_m_s": 0.1803055026821714,
+      "maximum_tilt_rad": 0.06424500283381404
+    },
+    {
+      "window_s": [
+        4.8,
+        6.4
+      ],
+      "net_forward_speed_m_s": -0.1827245933235398,
+      "mean_world_speed_m_s": -0.18012095359050845,
+      "maximum_tilt_rad": 0.061200354932128734
+    }
+  ],
+  "stops": [
+    {
+      "window_s": [
+        3,
+        4
+      ],
+      "settled_after_s": 0.5800000000000001,
+      "late_drift_m": 0.000005430777779334277
+    },
+    {
+      "window_s": [
+        6.4,
+        8
+      ],
+      "settled_after_s": 0.6399999999999997,
+      "late_drift_m": 0.00008010102185546943
+    }
+  ],
+  "maximum_episode_tilt_rad": 0.06424500283381404,
+  "scope": "First short closed-loop screen only; geometry, schedule-specific foot clearance, timestep sensitivity, sustained performance and steering remain separate gates.",
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_path_m": 0.01571580125179909,
+      "ratio_to_total_body_path": 0.0166239776463732
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_path_m": 0.1094666333156688,
+      "ratio_to_total_body_path": 0.1157924331128258
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_path_m": 0.01735260165017108,
+      "ratio_to_total_body_path": 0.0183553645987881
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_path_m": 0.05656514144713707,
+      "ratio_to_total_body_path": 0.059833897865913664
+    }
+  ],
+  "total_body_path_m": 0.9453694889458514,
+  "maximum_slip_ratio": 0.1157924331128258
+}

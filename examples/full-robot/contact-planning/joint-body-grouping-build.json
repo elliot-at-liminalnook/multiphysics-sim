@@ -1,0 +1,186 @@
+{
+  "base_commit": "b05fc2fbe25a741082d754ab74fe49dc8ed1d3aa",
+  "recorded_at": "2026-09-09T15:49:13.386Z",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-body-grouping-sources.tar.gz",
+    "bytes": 25320,
+    "sha256": "1473fbb33b1a35064d86dc2e871f34b64118397878a4272896a8bc722eb8068a"
+  },
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/coloring.rs",
+      "bytes": 9126,
+      "sha256": "0da0d0abf6b9747cdf22c54ca5e958a5fb34a25b044a4e8873aaa2f9a565e330"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47371,
+      "sha256": "8940b2b3c750f15f92a907084fa0b551ea766f9d2d66e7d8fd5c2ab1b7c604db"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint_ipopt.rs",
+      "bytes": 27795,
+      "sha256": "db2be7482070fb2d2bc54fb97d6d2528ccd3420eed3caf0ab684a10114d4f5b3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_body_grouping.mjs",
+      "bytes": 3333,
+      "sha256": "4329268c8d308b79a4ff40000937b1ddb91a521f66007b6901124a9712855df7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/summarize_joint_ipopt.mjs",
+      "bytes": 2423,
+      "sha256": "4f046d25a269f9ac72f2523b612506ad4c0c618afe2d9fc8acf36ce0c3f6fa93"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/record_joint_body_grouping.mjs",
+      "bytes": 3417,
+      "sha256": "5cd9dbed49832793ff72cade077c82377ce5476851fae7cbe8ec125f105d509b"
+    }
+  ],
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt",
+    "bytes": 9192964,
+    "sha256": "792bc518d5aef6b98c1bd64eee3d38b5543524db4bc2747f5c53202d718d310e"
+  },
+  "completed_search_binary_backup": {
+    "path": "runs/joint-body-grouping/optimize_joint_ipopt-before",
+    "bytes": 9137996,
+    "sha256": "64976375fd16c84f5a1d8f8dac0e0e7cd669225ad1da915f85b25f371bfcc439"
+  },
+  "unchanged_running_warm_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt",
+    "bytes": 9150316,
+    "sha256": "1f6b6edc4dd491c30f9d791016f277b83f5484a1d0704fcf93498fe5385dc3fd"
+  },
+  "build_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --release -p sim-runtime --features native-ipopt --example optimize_joint_ipopt",
+  "cargo_lock": {
+    "path": "Cargo.lock",
+    "bytes": 163518,
+    "sha256": "2315b7fe8ba43e235355ffdcf823e018a6f17a0b828f83d8d0954a50216e47bf"
+  },
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "environment": {
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+      "bytes": 161647,
+      "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+    }
+  ],
+  "durable_scene": {
+    "index": "examples/full-robot/speed-ceiling/evidence-v8-index.json",
+    "entry": "validation/constrained-front165-scale1-human-fine.scene.json"
+  },
+  "native_library_manifest": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-native-library.json",
+    "bytes": 5450,
+    "sha256": "1d5bb98f34fdceb3384f730f61a41ef15be68ec9896837471403bc941a6583a4"
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-build.log",
+      "bytes": 581,
+      "sha256": "5eabce20f779812f75b4919b10ce6400435e70ac604629e6714508c7336bd6f2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-solver-tests.log",
+      "bytes": 3536,
+      "sha256": "58d349a02e8bc2e1967941110f549a68161c471ff14cf9cf46e25b8be55f7283"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-planner-tests.log",
+      "bytes": 1627,
+      "sha256": "50a3d2621a92c88f89ec2ea1de54efbaf25e26777a463b678ee848152f797927"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-verification.json",
+      "bytes": 2145,
+      "sha256": "a836a5b69e412d1d2471963b77787700ae73939b6a2e29bf1d5dded68f704dd3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-speed.result.json",
+      "bytes": 2977836,
+      "sha256": "8689303eb4d01b37b89088cc1eba5365768e5a218ab18b1f54bb4606866f7b8f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-speed.log",
+      "bytes": 111765,
+      "sha256": "8b290a029bf311eb8892a22583cccd9c97ac19c8bf8c7d78e78c63c995cca571"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-speed.summary.json",
+      "bytes": 16143,
+      "sha256": "574e66471265bf6cd7180df94e88195734b9bcedb0db7d8e649cad505d182a21"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-speed-launch.json",
+      "bytes": 1761,
+      "sha256": "78f70c3be36dd814dd461fffa972abe33bc67975ce14f5935df6ed0478db4e5f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-one-step.search.json",
+      "bytes": 314,
+      "sha256": "5daa2e664417ba94114f4f53528fcc5fcecfb27bdfa07c9c256a25199bae629f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-one-step.result.json",
+      "bytes": 3107882,
+      "sha256": "bc8c659b33ecad1071da44f566151538d0b9f509e6039f5ea64f4529a645b1d7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-one-step.log",
+      "bytes": 3117,
+      "sha256": "c7c77b4e3bfd2a2c04f0f397699168ed45cbe859ee53604a62d03777e6e30e21"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-budget.search.json",
+      "bytes": 313,
+      "sha256": "bae686526797248ee99f3e7dfa79b555445a01fa16f900569f846f3fe9737065"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-budget.result.json",
+      "bytes": 2977678,
+      "sha256": "3203a56989fc7883abe2c062964964e797ced04efafecb6dbf2b68e44d5e1297"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-budget.log",
+      "bytes": 269,
+      "sha256": "99d9928bf3999fcd25aa7010b362539b1a7b5db3de666acd1ce007077feb82a4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-fallback.search.json",
+      "bytes": 311,
+      "sha256": "46c845b15dd08a8ab213120871f8c9b4d4f4c9323f8499f57417aa434d1f56d6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-fallback.result.json",
+      "bytes": 2977826,
+      "sha256": "6d38c114b946c635788e91fc08fdfe7a71a572b5bdf6a123d7e9e2c0149a3864"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-fallback.log",
+      "bytes": 1639,
+      "sha256": "c1438673f0d380f39b08dfcab4d46a6e17290ca1b58c52c6049ef15116d91af3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-grouping-fallback.recipe.json",
+      "bytes": 161231,
+      "sha256": "645fafeb69c797237b87f4bb6160bb80ebb8224545c9020e05c071419d6c9204"
+    }
+  ],
+  "scope": "Opt-in shared disjoint-column grouping integrated into joint native derivatives. Ordinary pilot matches prior result with 220 versus 316 model attempts; budget and invalid-probe fallback cases completed. Original fast-start search completed infeasible, warm comparison remains live. No new runtime speed or global ceiling."
+}

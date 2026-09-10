@@ -37,8 +37,22 @@ jobs:
       - run: cargo test --locked -p sim-solve --test coloring
       - run: cargo test --locked -p sim-runtime --test posture
       - run: cargo test --locked -p sim-domain-control --test trajectory
+      - name: Named motion parameters and shared controller materialization
+        run: |
+          cargo test --locked -p sim-domain-control --test motion_parameters --test trajectory_affine --test trajectory_phase
+          cargo test --locked -p sim-runtime --test motion_parameters
+          cargo test --locked -p sim-script --test trajectory
+      - name: Shared net displacement and task-specific progress
+        run: |
+          cargo test --locked -p sim-domain-control --lib displacement
+          cargo test --locked -p sim-script --test displacement
+      - name: Authored robot contracts and morphology identities
+        run: |
+          cargo test --locked -p sim-domain-robot --lib contract
+          cargo test --locked -p sim-runtime --test robot_contract
       - run: cargo test --locked -p sim-domain-control --test neural
       - run: node --test web/tests/residual-distillation.mjs
+      - run: node --test examples/interactive/prepare_direct_distillation.test.mjs
       - run: node --test examples/interactive/test_causal_response.mjs
       - run: node --test examples/interactive/test_feedback_contributions.mjs
       - run: node --test examples/interactive/test_walking_audit.mjs
@@ -48,10 +62,15 @@ jobs:
       - run: cargo test --locked -p sim-runtime --test planning
       - run: cargo test --locked -p sim-runtime --test lift
       - run: cargo test --locked -p sim-runtime --test embedded_session --test task_observation
+      - run: cargo test --locked -p sim-runtime --test passive_coordinates
       - run: cargo test --locked -p sim-runtime --test drive_backlash
       - run: cargo test --locked -p sim-runtime --test environment
+      - run: cargo test --locked -p sim-runtime --lib speed_task::tests
       - run: cargo test --locked -p sim-runtime --test residual_policy
       - run: cargo test --locked -p sim-runtime --test neural_policy
+      - run: cargo test --locked -p sim-domain-control --test ppo --test neural
+      - run: cargo test --locked -p sim-runtime --test ppo_training --test motion_forecast
+      - run: cargo check --locked -p sim-runtime --example train_ppo_policy --example train_motion_forecast --example evaluate_motion_forecast
       - run: cargo test --locked -p sim-runtime --test body_feedback --test point_feedback
       - run: cargo test --locked -p sim-runtime --lib support::tests
       - run: cargo check --locked -p sim-runtime --example plan_marker_motion --example summarize_marker_clearance --example evaluate_lift
@@ -130,11 +149,79 @@ jobs:
           node web/tests/environment.mjs runs/interactive/viewer pendulum-environment runs/interactive/pendulum-environment-native.json runs/interactive/pendulum-environment-browser.json
           target/release/examples/run_environment examples/interactive/pendulum.scene.json examples/interactive/pendulum.policy.json examples/interactive/pendulum.environment.json --profile runs/interactive/pendulum-environment-profile.json > runs/interactive/pendulum-environment-profiled.json
           node examples/interactive/check_profile_capture.mjs runs/interactive/pendulum-environment-native.json runs/interactive/pendulum-environment-profiled.json
+      - name: Passive coordinates and authored IMU clocks in native and WASM
+        run: |
+          node examples/wheeled-robot/prepare_sensor_smoke.mjs runs/interactive/wheeled-sensors runs/interactive/viewer
+          cargo run --locked --release -p sim-runtime --example integrate_embedding -- runs/interactive/wheeled-sensors/scene.json runs/interactive/wheeled-sensors/config.json > runs/interactive/wheeled-sensors-native.json
+          node web/tests/embedded.mjs runs/interactive/viewer wheeled-sensors runs/interactive/wheeled-sensors-native.json runs/interactive/wheeled-sensors-browser.json
+          node examples/wheeled-robot/prepare_sensor_smoke.mjs runs/interactive/wheeled-contact runs/interactive/viewer contact
+          target/release/examples/integrate_embedding runs/interactive/wheeled-contact/scene.json runs/interactive/wheeled-contact/config.json > runs/interactive/wheeled-contact-native.json
+          node web/tests/embedded.mjs runs/interactive/viewer wheeled-contact runs/interactive/wheeled-contact-native.json runs/interactive/wheeled-contact-browser.json
+      - name: Authored IMU controller, prediction and environment bindings
+        run: |
+          cargo test --locked -p sim-runtime --test imu_policy
+          node examples/wheeled-robot/prepare_imu_policy.mjs runs/interactive/wheeled-imu-policy runs/interactive/viewer
+          target/release/examples/run_environment runs/interactive/wheeled-imu-policy/scene.json runs/interactive/wheeled-imu-policy/config.json runs/interactive/wheeled-imu-policy/task.json > runs/interactive/wheeled-imu-policy-native.json
+          node web/tests/environment.mjs runs/interactive/viewer wheeled-imu-policy runs/interactive/wheeled-imu-policy-native.json runs/interactive/wheeled-imu-policy-browser.json
+      - name: Typed controller forecasts on wheeled and quadruped robots
+        run: |
+          cargo test --locked -p sim-runtime --lib --test controller_forecast --test predictive_policy --test ppo_training --test fidelity
+          cargo build --locked --release -p sim-runtime --example prepare_controller_forecast --example check_controller_forecast --example compare_environment_fidelity
+          node examples/wheeled-robot/prepare_imu_policy.mjs runs/interactive/wheeled-velocity runs/interactive/viewer velocity
+          target/release/examples/run_environment runs/interactive/wheeled-velocity/scene.json runs/interactive/wheeled-velocity/config.json runs/interactive/wheeled-velocity/task.json examples/wheeled-robot/velocity-controller.actions.json > runs/interactive/wheeled-velocity-native.json
+          node - <<'JS'
+          const fs=require('fs'),c=JSON.parse(fs.readFileSync('runs/interactive/wheeled-velocity-native.json'));
+          fs.writeFileSync('runs/interactive/wheeled-velocity-recording.json',JSON.stringify({version:1,kind:'sampled_environment_recording',task:c.task,runtime:c.recording,error:c.error}),{flag:'wx'});
+          JS
+          target/release/examples/prepare_controller_forecast runs/interactive/wheeled-velocity-recording.json runs/interactive/wheeled-forecast chassis
+          target/release/examples/check_controller_forecast runs/interactive/wheeled-velocity-native.json runs/interactive/wheeled-forecast/recipe.json runs/interactive/wheeled-forecast-case.json
+          node examples/interactive/prepare_fidelity_parity_plan.mjs runs/interactive/wheeled-velocity-native.json runs/interactive/wheeled-fidelity-capture.json target/release/examples/run_environment runs/interactive/viewer/sim_web_bg.wasm "$GITHUB_SHA" runs/interactive/wheeled-fidelity-plan.json
+          FIDELITY_PLAN_PATH=runs/interactive/wheeled-fidelity-plan.json FIDELITY_CAPTURE_PATH=runs/interactive/wheeled-fidelity-capture.json FIDELITY_REPORT_PATH=runs/interactive/wheeled-fidelity-browser.json FORECAST_CASE_PATH=runs/interactive/wheeled-forecast-case.json node web/tests/environment.mjs runs/interactive/viewer wheeled-velocity-policy runs/interactive/wheeled-velocity-native.json runs/interactive/wheeled-forecast-browser.json
+          target/release/examples/compare_environment_fidelity runs/interactive/wheeled-velocity-native.json runs/interactive/wheeled-fidelity-capture.json runs/interactive/wheeled-fidelity-plan.json runs/interactive/wheeled-fidelity-native.json
+          node examples/interactive/check_fidelity_report_parity.mjs runs/interactive/wheeled-fidelity-native.json runs/interactive/wheeled-fidelity-browser.json runs/interactive/wheeled-fidelity-parity.json
+          node examples/interactive/restore_evidence_file.mjs examples/interactive/imu-policy-evidence-v1.json runs/shared-robot-learning-v1/quadruped-legacy-input.json runs/interactive/quadruped-forecast-source.json
+          target/release/examples/prepare_controller_forecast runs/interactive/quadruped-forecast-source.json runs/interactive/quadruped-forecast 'Robot | Chassis and hip mounts'
+          target/release/examples/run_environment --replay runs/interactive/quadruped-forecast/recording.json > runs/interactive/quadruped-forecast-native.json
+          target/release/examples/check_controller_forecast runs/interactive/quadruped-forecast-native.json runs/interactive/quadruped-forecast/recipe.json runs/interactive/quadruped-forecast-case.json
+          node - <<'JS'
+          const fs=require('fs'),root='runs/interactive/viewer',catalog=JSON.parse(fs.readFileSync(root+'/catalog.json'));
+          fs.copyFileSync('runs/interactive/quadruped-forecast/data.json',root+'/data/quadruped-controller-forecast.json',fs.constants.COPYFILE_EXCL);
+          catalog.presets.push({id:'quadruped-controller-forecast',mode:'embedded',task:true,path:'data/quadruped-controller-forecast.json'});
+          fs.writeFileSync(root+'/catalog.json',JSON.stringify(catalog));
+          JS
+          node examples/interactive/prepare_fidelity_parity_plan.mjs runs/interactive/quadruped-forecast-native.json runs/interactive/quadruped-fidelity-capture.json target/release/examples/run_environment runs/interactive/viewer/sim_web_bg.wasm "$GITHUB_SHA" runs/interactive/quadruped-fidelity-plan.json
+          FIDELITY_PLAN_PATH=runs/interactive/quadruped-fidelity-plan.json FIDELITY_CAPTURE_PATH=runs/interactive/quadruped-fidelity-capture.json FIDELITY_REPORT_PATH=runs/interactive/quadruped-fidelity-browser.json FORECAST_CASE_PATH=runs/interactive/quadruped-forecast-case.json node web/tests/environment.mjs runs/interactive/viewer quadruped-controller-forecast runs/interactive/quadruped-forecast-native.json runs/interactive/quadruped-forecast-browser.json
+          target/release/examples/compare_environment_fidelity runs/interactive/quadruped-forecast-native.json runs/interactive/quadruped-fidelity-capture.json runs/interactive/quadruped-fidelity-plan.json runs/interactive/quadruped-fidelity-native.json
+          node examples/interactive/check_fidelity_report_parity.mjs runs/interactive/quadruped-fidelity-native.json runs/interactive/quadruped-fidelity-browser.json runs/interactive/quadruped-fidelity-parity.json
+      - name: Motion variants on both robot forms in native and WASM
+        run: |
+          cargo build --locked --release -p sim-runtime --example prepare_motion_experiment --example materialize_motion --example run_environment
+          for robot in wheeled quadruped; do
+            capture="runs/interactive/quadruped-forecast-native.json"
+            if [ "$robot" = wheeled ]; then capture="runs/interactive/wheeled-velocity-native.json"; fi
+            for input in parameterization identity-values changed-values; do
+              node examples/interactive/restore_evidence_file.mjs examples/interactive/motion-parameterization-evidence-v1.json "runs/shared-motion-parameters-v1/$robot/$input.json" "runs/interactive/motion-inputs/$robot/$input.json"
+            done
+            node examples/interactive/run_motion_case.mjs "$capture" "runs/interactive/motion-inputs/$robot/parameterization.json" "runs/interactive/motion-inputs/$robot/identity-values.json" "runs/interactive/motion-inputs/$robot/changed-values.json" "runs/interactive/motion-$robot" runs/interactive/viewer "motion-$robot"
+            for candidate in identity changed; do
+              MOTION_CASE_PATH="runs/interactive/motion-$robot/$candidate-browser-case.json" node web/tests/environment.mjs runs/interactive/viewer "motion-$robot-$candidate" "runs/interactive/motion-$robot/$candidate-native.json" "runs/interactive/motion-$robot/$candidate-browser.json"
+            done
+          done
+      - name: Shape-independent progress and replay in native and WASM
+        run: |
+          target/release/examples/run_environment examples/interactive/pendulum.scene.json examples/interactive/pendulum.policy.json examples/interactive/pendulum.progress.environment.json > runs/interactive/pendulum-progress-native.json
+          node web/tests/progress.mjs runs/interactive/viewer runs/interactive/pendulum-progress-browser.json runs/interactive/pendulum-progress-native.json
       - name: Versioned quadruped environment in native and WASM
         run: |
           node web/build-viewer.mjs runs/interactive/teacher-viewer --environment-only
           cargo run --locked --release -p sim-runtime --example run_environment -- examples/full-robot/teacher-baseline/scene.json examples/full-robot/teacher-baseline/config.json examples/full-robot/teacher-environment.json > runs/interactive/robot-environment-native.json
           node web/tests/environment.mjs runs/interactive/teacher-viewer robot-teacher-environment runs/interactive/robot-environment-native.json runs/interactive/robot-environment-browser.json
+      - name: CAD contracts for quadruped and wheeled robot in native and WASM
+        run: |
+          python3 cad/scripts/check_wheeled_fixture.py examples/wheeled-robot/baseline runs/interactive/wheeled-cad-analytic.json
+          cargo run --locked --release -p sim-runtime --example inspect_robot_contract -- examples/full-robot/teacher-baseline/scene.json > runs/interactive/quadruped-contract.json
+          target/release/examples/inspect_robot_contract examples/wheeled-robot/baseline/robot.simrobot.json > runs/interactive/wheeled-contract.json
+          node web/tests/robot-contract.mjs runs/interactive/viewer runs/interactive/robot-contract-browser.json examples/full-robot/teacher-baseline/scene.json runs/interactive/quadruped-contract.json examples/wheeled-robot/baseline/robot.simrobot.json runs/interactive/wheeled-contract.json
       - name: Controller leaderboard integrity, exact loading, replay and video
         run: |
           node --test web/tests/leaderboard-model.mjs web/tests/worker-message.mjs

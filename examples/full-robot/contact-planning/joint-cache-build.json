@@ -1,0 +1,76 @@
+{
+  "base_commit": "2b6c3513a5fda719778d524b8913d89590f93902",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-cache-build-sources.tar.gz",
+    "bytes": 70458,
+    "sha256": "a30649f4fb1dd540c1a4d4114ac305e52d8f416b61b8f9dfa660bf1403e19c70"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/motion_capability.rs",
+      "bytes": 33732,
+      "sha256": "a9b40dceea9c18d5654ccb7391d99579520bb2b139d57289a9a785520463524b"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_audit.rs",
+      "bytes": 25310,
+      "sha256": "ca1c4040cb0208f6f93cee438c3365b404c33fb838bcc1cd9333107ada2b4490"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 43974,
+      "sha256": "469705ed0dcb59f5605dd3ad4488ea82ac43d73635d2097f5909e726177b0991"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 24890,
+      "sha256": "9625071bb8cf73b08c83b32705ceff31b2ec6fd08538d4488b35e7e99658b6a2"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_force_cache.rs",
+      "bytes": 5072,
+      "sha256": "05319e75084d3430bbd4bd98258ff505bc1296ad9d71791c89935a7ca92fdb73"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+      "bytes": 9024684,
+      "sha256": "e24cb5fa554e51dede351a24304a5a99d1415a0856e8d3350b0b26b73bc847c7"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_force_cache",
+      "bytes": 8946068,
+      "sha256": "d3d3c41c876eab3d3f140f449587c077b9d5d69e60b935a1e41f649f7b9a632c"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_reference",
+      "bytes": 8885868,
+      "sha256": "0b7c50c5a042116a33d77a7754fbe6a88fd725e8fa1e321daf8dc870df806ec5"
+    }
+  ],
+  "full_optimizer_replay_byte_identical": true,
+  "replay_inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm.result.json",
+      "bytes": 1168944,
+      "sha256": "b909394f05ea9167c5a172fdaa27903ee8cc41c98a7d7ec0e0ac69bae90093ab"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm-cached.result.json",
+      "bytes": 1168944,
+      "sha256": "b909394f05ea9167c5a172fdaa27903ee8cc41c98a7d7ec0e0ac69bae90093ab"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm.recipe.json",
+      "bytes": 63322,
+      "sha256": "8f1a8aa860ef257e9972a3fe8134f8b875404e455db236135d404869160e5bc6"
+    }
+  ],
+  "scope": "CAD force cache build and identical complete 1400-evaluation optimization replay; no physics simplification or speed qualification."
+}

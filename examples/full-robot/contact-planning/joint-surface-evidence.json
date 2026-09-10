@@ -1,0 +1,228 @@
+{
+  "base_commit": "59e3b46302546c587502bc266daa29e6eac93c73",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-surface-sources.tar.gz",
+    "bytes": 60004,
+    "sha256": "ad018d2e6493c9cd62d676eaba761479334d98e216e22f2acf4ace0229a98c20"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 44388,
+      "sha256": "680caff15c80dc106ed8abb9b37b2a25d5af37564773993ed213f56c96843627"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 31548,
+      "sha256": "9fc9e66d2b5b6df2ef89093a4313bc65b562bb97d6384484bdbbdc4397d060cd"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_surface_support.rs",
+      "bytes": 7742,
+      "sha256": "66ad7a1be477e54c617d381c99aa6a4f606d76e7d5ecbbddc91f2173058f6601"
+    },
+    {
+      "path": "crates/sim-runtime/examples/screen_joint_contact_starts.rs",
+      "bytes": 3341,
+      "sha256": "79cedc55cd79176c8945cf3a51413bcfca809758f6b5b3cb47c61e032c061311"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_surface_support",
+      "bytes": 8859156,
+      "sha256": "1fa390259c4f4fd2952b9a8d22147bc3fe1420426e51eb144eb99da94b1d36fe"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_support_space",
+      "bytes": 9020236,
+      "sha256": "c42e02bc8328c4b7503309084b3ebb83e0292db17ee17755bde6b181f0ac68a5"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/screen_joint_contact_starts",
+      "bytes": 8842860,
+      "sha256": "23e17e8ecc0152fd2f0b8664ffcec0b440fee267f0e43477facc045d920b0a7c"
+    }
+  ],
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9024684,
+    "sha256": "e24cb5fa554e51dede351a24304a5a99d1415a0856e8d3350b0b26b73bc847c7"
+  },
+  "optimizer_build_reference": {
+    "path": "examples/full-robot/contact-planning/joint-cache-build.json",
+    "bytes": 2903,
+    "sha256": "a7b06bbf1d903756689be0cc23c045daf95ff512c38fb6c2900e6fdee27da6c0"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-markers.json",
+      "bytes": 12596,
+      "sha256": "87852fc9203e680b77b144cdfe5778e62790ff4fa121652611b9ae33fc6b2aac"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm.recipe.json",
+      "bytes": 63322,
+      "sha256": "8f1a8aa860ef257e9972a3fe8134f8b875404e455db236135d404869160e5bc6"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/FINITE_SURFACE_SUPPORT.md",
+      "bytes": 5144,
+      "sha256": "78e5fe0c2b6995dcf317283d281ebd211d23fbc069d3c996ccf09f605e969649"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/INSTANTANEOUS_SUPPORT.md",
+      "bytes": 3736,
+      "sha256": "a93b7ab57bc3af6ffda7f41c77aa0a9be80ae08e956b5f0837a6b247796fe9fa"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/README.md",
+      "bytes": 23615,
+      "sha256": "e80b5b8dda1532adf4337e3560cd72554a8bd7e293711f6d8687f738e4bf58db"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-constant_mean-d0.5.recipe.json",
+      "bytes": 63163,
+      "sha256": "fdc50f0b6142e6162e917b8ec3fac16c79cc46f4c8cfd8398cfd4ded6a7fa719"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-constant_mean-d0.75.recipe.json",
+      "bytes": 63044,
+      "sha256": "6e606048941b5c669ba754e85254640095d594c0f485593c2cce24eb8a1dcd80"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-preparation.json",
+      "bytes": 1795,
+      "sha256": "227126a19087083c2f522653caa3b74eb4b4b72fee5bfbd76e61f904f053879b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.recipe.json",
+      "bytes": 63150,
+      "sha256": "6d3e971d7bcef5d9d6c6d741fa82c6b361e386aa67f297b80c03bf7325ce47ad"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.recipe.json",
+      "bytes": 63043,
+      "sha256": "71819f3a68933a4c26dc32bba7d29934867c0907a62f35f2a33edbf196150baf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-start-screen-build.log",
+      "bytes": 165,
+      "sha256": "c42803d85d3b127279dd5adbffa30f4788064eff9707475ef1d8bde6d2e28f59"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-start-screen-preparation.json",
+      "bytes": 1274,
+      "sha256": "32c3811f0adb35655da9ac131106100bca95ff51a44ad3438876b825d387f146"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-start-screen.batch.json",
+      "bytes": 1601597,
+      "sha256": "33539af0c0ff3520c9cef591e9540e7a7248ff281243eb8e05cc8c227e314c0b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-start-screen.log",
+      "bytes": 12848,
+      "sha256": "7cec40cdd4d8fa301ac434cf6fc7cea055c616175412d8e917fc36d435c0866b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-start-screen.result.jsonl.gz",
+      "bytes": 4801206,
+      "sha256": "2e7dc37c48d44b2c104f453ff3662f8b7e44bec46d6723d2107b030226fbfe79"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-start-screen.summary.json",
+      "bytes": 9324,
+      "sha256": "eccaf5d6f1c1f4cd1f126cdffdf56417930c2439471f1b74ecedbe13a08a6522"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-surface-1mm.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-surface-1mm.result.json",
+      "bytes": 350294,
+      "sha256": "0a42e6211af13d96477ce354adaff9e45a0b0806b233c8f696df4e801b3b7ea1"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-surface-build.log",
+      "bytes": 165,
+      "sha256": "4c66953a9dfd4a358c218879ce343ac7ddf83ad69c4d0f3bccd9780bf50952de"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-surface-point-regression.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-surface-point-regression.result.json",
+      "bytes": 91092,
+      "sha256": "ebcaa8cde72f10bc83d7ad9f09149ed5cc211e450266edef63cebd431dd14524"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-surface-tests.log",
+      "bytes": 1253,
+      "sha256": "960d18129313cfa823f6f3fbdb6b281d7f5c33fb3bd7d35b26876490db2ae0d5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed.log",
+      "bytes": 117008,
+      "sha256": "71e8dfee1d8ae799a8407d58f3aa034ade9ca3141d99da9147d70c881f0832af"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed.result.json",
+      "bytes": 1183116,
+      "sha256": "142f1c600aab2009d6cc29550594f0ac5b8ba643a12fd98ce9d60acbe4658457"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed.summary.json",
+      "bytes": 3237,
+      "sha256": "266d4573a214f9799756e66739c4d056822398131a88d84c910f279466e04b45"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_joint_multistart.mjs",
+      "bytes": 1837,
+      "sha256": "afba29f799ef8a938b6e020e60fbbbd73c33e2cde291f16835179b498e7ed0dd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_joint_starts.mjs",
+      "bytes": 2716,
+      "sha256": "fbee6b1e98784df2ede401beb5a64324fa673c0f69b65099cda1723ff5cf319d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/summarize_joint_starts.mjs",
+      "bytes": 2939,
+      "sha256": "4f6701da1b334739de3041bf36fc69a2c2fea6a24ef6f9248f43299f5a152a13"
+    }
+  ],
+  "checks": {
+    "source_archive_extraction_verified": true,
+    "point_support_regression_byte_identical": true,
+    "surface_geometry_error_m": 0,
+    "surface_clearance_error_m": 0,
+    "phase_planner_tests_passed": 4,
+    "screen_starts_completed": 257,
+    "screen_reference_inequalities_identical": true,
+    "screen_raw_gzip_round_trip_identical": true,
+    "optimizer_matches_recorded_build": true
+  },
+  "scope": "Completed CAD finite-surface audit, 8000-evaluation workspace joint solve, and 257-start initial screen. Four multistart recipes are prepared; their optimizations are not represented by this evidence index."
+}

@@ -1,0 +1,29 @@
+{
+  "prefixes": [
+    "runs/contact-planning/diagonal68-human-0p625ms",
+    "runs/contact-planning/diagonal77-human-0p625ms",
+    "runs/contact-planning/diagonal81-human-0p625ms"
+  ],
+  "windows": [
+    {
+      "name": "forward",
+      "start_s": 0,
+      "end_s": 6
+    },
+    {
+      "name": "turn",
+      "start_s": 6,
+      "end_s": 10
+    },
+    {
+      "name": "reverse",
+      "start_s": 10,
+      "end_s": 16
+    },
+    {
+      "name": "stop",
+      "start_s": 16,
+      "end_s": 20
+    }
+  ]
+}

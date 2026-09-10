@@ -1,0 +1,39 @@
+{
+  "scope": "Independent dense audit of the fastest event-sampled feasible candidate. This plan fails; no new dynamic walking result.",
+  "frames": 1029,
+  "report": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.18789494011744332,
+    "sampled_feasible": false,
+    "maximum_force_error_n": 0.07812619858163905,
+    "maximum_moment_error_nm": 0.025121352911014305,
+    "minimum_torque_margin_nm": -0.012537349900750845,
+    "maximum_penetration_m": 0.00004802470834591732
+  },
+  "worst_force": {
+    "time_s": 0.20454549866759067,
+    "phase": 0.4995,
+    "planned_contacts": [
+      true,
+      false,
+      true,
+      false
+    ],
+    "wrench_residual": [
+      -0.07812619858163905,
+      -0.0004396307283345696,
+      0.0025091776331862548,
+      0.00014115792454394427,
+      -0.025121352911014305,
+      0.00000771146599892747
+    ]
+  },
+  "worst_torque": {
+    "time_s": 0.09889437022667297,
+    "phase": 0.24150000000000002,
+    "coordinate": "joint.-X | Worm servo output",
+    "margin_nm": -0.012537349900750845,
+    "speed_rad_s": 5.527039325015855,
+    "required_torque_nm": 0.012537349900750845
+  }
+}

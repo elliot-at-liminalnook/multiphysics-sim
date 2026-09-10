@@ -1,0 +1,128 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control)
+    Finished `test` profile [optimized + debuginfo] target(s) in 5.71s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_domain_control-a95756fb84132527)
+
+running 13 tests
+test contact_phase::tests::periodic_progress_and_stationary_stance ... ok
+test contact_phase::tests::derivatives_and_c2_phase_boundaries ... ok
+test contact_phase::tests::retimed_derivatives_include_reversal_and_clock_acceleration ... ok
+test contact_slip::tests::invalid_units_loads_and_nonfinite_inputs_are_rejected ... ok
+test contact_slip::tests::constant_slip_is_exact_and_unloaded_swing_contributes_zero ... ok
+test contact_slip::tests::weighted_bound_includes_low_load_motion_and_handles_mixed_directions ... ok
+test contact_phase::tests::smooth_return_keeps_stance_and_c2_derivatives ... ok
+test periodic_drift::tests::translating_reference_closes_derivatives_and_matches_finite_differences ... ok
+test contact_slip::tests::mean_path_is_continuous_at_load_cutoff_and_exact_for_constant_slip ... ok
+test smooth_return::tests::registry_and_domain_validation ... ok
+test contact_phase::tests::intervals_expose_short_flight_and_preserve_coincident_events ... ok
+test smooth_return::tests::analytic_rates_area_and_c2_joins ... ok
+test periodic_drift::tests::periodic_knot_insertion_preserves_position_velocity_and_acceleration ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/angle_integral.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/angle_integral-fd9706bf96ef7852)
+
+running 4 tests
+test bias_saturates_without_windup_and_releases_at_bounded_rate ... ok
+test invalid_updates_leave_caller_state_unchanged_and_bad_scales_fail ... ok
+test registry_ports_units_events_and_state_match_direct_updates ... ok
+test sampled_bias_rejects_constant_disturbance_in_an_analytic_first_order_plant ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/command_lease.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/command_lease-6e6a57827c528c19)
+
+running 2 tests
+test duplicate_and_reordered_packets_expire_and_only_a_new_packet_recovers ... ok
+test registry_schedule_and_units_use_the_same_freshness_kernel ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/load_damping.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/load_damping-43cf9d51f1641aa9)
+
+running 2 tests
+test signed_velocity_is_opposed_only_to_the_extent_of_support ... ok
+test registry_exposes_the_same_validation_units_and_memoryless_correction ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/motion_clock.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/motion_clock-7a3947bef93157cc)
+
+running 4 tests
+test qualified_progress_pause_resume_and_completion_follow_simulation_time ... ok
+test progress_explains_waiting_qualification_timeout_and_completion_without_advancing ... ok
+test timeout_latches_and_invalid_calls_leave_checkpoint_unchanged ... ok
+test registry_exposes_units_and_checkpointed_clock_matches_direct_use ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/neural.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/neural-eb6c93dfc721fad6)
+
+running 4 tests
+test typed_named_normalization_and_bounded_inference ... ok
+test supervised_gradient_matches_independent_central_differences_and_inference ... ok
+test paired_search_improves_a_known_objective_and_rejects_failed_trials ... ok
+test distillation_learns_held_out_values_of_a_known_controller ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/stepping.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/stepping-5547953f79ba5ca3)
+
+running 20 tests
+test a_turn_request_updates_before_lift_without_jumping_planted_positions ... ok
+test planar_twist_matches_circular_arc_and_small_angle_limit ... ok
+test lowering_waits_for_landing_before_body_transfer ... ok
+test stop_before_lift_recenters_without_moving_feet_or_counting_a_transfer ... ok
+test direct_transfer_reversal_restarts_order_from_the_held_support_pose ... ok
+test airborne_stop_preserves_the_committed_landing ... ok
+test horizontal_swing_spans_apex_without_changing_clearance_support_or_endpoints ... ok
+test prelift_reversal_keeps_the_committed_transfer_and_then_restarts_order ... ok
+test stop_finishes_transfer_then_holds_and_resume_is_continuous ... ok
+test velocity_posture_interpolates_and_latches_without_moving_planted_feet ... ok
+test constant_command_reproduces_crawl_geometry_and_keeps_stance_feet_planted ... ok
+test direct_transfer_stops_recenter_and_resume_without_moving_planted_references ... ok
+test early_horizontal_finish_holds_landing_xy_and_retains_vertical_clearance ... ok
+test swing_body_advance_preserves_feet_endpoints_and_landing_waits ... ok
+test reversal_restarts_order_at_transfer_boundary_and_preserves_planted_positions ... ok
+test prelift_updates_preserve_constant_command_reference_exactly ... ok
+test direct_transfer_preserves_landings_and_holds_until_the_next_support_shift ... ok
+test direct_recenter_readiness_failure_rolls_back_and_default_serialization_is_unchanged ... ok
+test support_and_landing_guards_wait_and_timeout_without_advancing_state ... ok
+test recenter_waits_for_four_foot_support_and_timeout_is_transactional ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/support_preload.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/support_preload-960f83f25e7e87db)
+
+running 4 tests
+test invalid_loads_and_scales_are_rejected ... ok
+test load_deficit_extends_excess_retracts_and_saturation_does_not_wind_up ... ok
+test constant_force_error_integrates_on_simulation_time ... ok
+test registered_component_matches_direct_feedback_and_replays_from_state ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/trajectory.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/trajectory-0016bfced091143b)
+
+running 13 tests
+test linear_interpolation_retains_endpoint_holds_and_channel_order ... ok
+test periodic_spline_has_analytic_values_and_continuous_cycle_derivatives ... ok
+test authored_value_bounds_cover_all_reference_segments ... ok
+test quintic_has_analytic_midpoint_rest_endpoints_and_checked_derivatives ... ok
+test rejects_nonfinite_unsorted_and_dimension_mismatched_input ... ok
+test traversal_rejects_invalid_budgets_and_unbounded_work ... ok
+test periodic_spline_validates_closure_timing_and_control_hull_bounds ... ok
+test traversal_bounds_match_analytic_linear_and_quintic_paths ... ok
+test periodic_traversal_brackets_total_variation_and_refines ... ok
+test rate_bounds_include_interior_spline_extrema ... ok
+test redistributed_periodic_reference_preserves_phase_anchors_and_is_c2 ... ok
+test selective_redistribution_keeps_inactive_channel_controls_on_original_phase ... ok
+test traversal_cells_cover_rate_switches_without_missing_interior_peaks ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests sim_domain_control
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

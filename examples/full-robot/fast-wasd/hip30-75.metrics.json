@@ -1,0 +1,122 @@
+{
+  "name": "hip30-75",
+  "method": "CAD hip rotation shares forward stroke between belt and worm",
+  "hip_initial_deg": 30,
+  "command_speed_m_s": 0.075,
+  "period_s": 0.8,
+  "stride_m": 0.06,
+  "lift_m": 0.008,
+  "swing_s": 0.32,
+  "source_plan": "examples/full-robot/fast-wasd/hip30-75.plan.json",
+  "completed": true,
+  "error": null,
+  "capture_sha256": "869916385c071b64cabf4d7fef7c05ba1f9c77aaca64b1f9010444d7b48f399e",
+  "simulated_s": 6,
+  "measured_forward_speed_mm_s": 73.19999720299282,
+  "stop_drift_m": 0.002719733436779141,
+  "maximum_tilt_rad": 0.013865378600051078,
+  "maximum_heading_rad": 0.05431367809494374,
+  "maximum_slip_ratio": 0.129654141634521,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.04579370837296422,
+      "motion_to_net_body_advance_ratio": 0.129654141634521
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.02548052324673876,
+      "motion_to_net_body_advance_ratio": 0.07214212360894516
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.014562054200192692,
+      "motion_to_net_body_advance_ratio": 0.04122904007651876
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.020897599903799278,
+      "motion_to_net_body_advance_ratio": 0.05916665135921511
+    }
+  ],
+  "motor": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "maximum_speed_rad_s": 1.0148565417376825,
+      "maximum_torque_nm": 0.6023746497558657,
+      "angle_span_rad": 0.15010485382330496
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "maximum_speed_rad_s": 1.2385652470042887,
+      "maximum_torque_nm": 0.32268743863665117,
+      "angle_span_rad": 0.28779225861970437
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "maximum_speed_rad_s": 1.3789640671948584,
+      "maximum_torque_nm": 2.144457327765477,
+      "angle_span_rad": 0.1410402776830293
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "maximum_speed_rad_s": 0.6549236603906212,
+      "maximum_torque_nm": 0.7552089351455015,
+      "angle_span_rad": 0.10251350621449162
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "maximum_speed_rad_s": 1.993368956443361,
+      "maximum_torque_nm": 0.4469582882853528,
+      "angle_span_rad": 0.4576879852640378
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "maximum_speed_rad_s": 1.1707208462943333,
+      "maximum_torque_nm": 2.046236949263061,
+      "angle_span_rad": 0.1837378083760972
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "maximum_speed_rad_s": 1.1183698813973912,
+      "maximum_torque_nm": 0.31181559566377876,
+      "angle_span_rad": 0.1752508614050854
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "maximum_speed_rad_s": 1.1090347328650674,
+      "maximum_torque_nm": 0.3335388618882332,
+      "angle_span_rad": 0.25422767674568414
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "maximum_speed_rad_s": 1.1319230455618114,
+      "maximum_torque_nm": 2.023898847003653,
+      "angle_span_rad": 0.13554154115994677
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "maximum_speed_rad_s": 0.5529746614966031,
+      "maximum_torque_nm": 0.5790833878825763,
+      "angle_span_rad": 0.08089586335755367
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "maximum_speed_rad_s": 2.025564339923143,
+      "maximum_torque_nm": 0.5098180229967486,
+      "angle_span_rad": 0.4684150265548481
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "maximum_speed_rad_s": 1.2001456983828998,
+      "maximum_torque_nm": 2.008283490120192,
+      "angle_span_rad": 0.19918851732316645
+    }
+  ],
+  "positive_mechanical_work_j": 3.5470282792955103,
+  "native": {
+    "wall_s": 14.161228674,
+    "simulation_per_wall": 0.4236920494770339,
+    "p95_transition_s": 0.088717035
+  }
+}

@@ -1,0 +1,347 @@
+{
+  "rows": [
+    {
+      "name": "diagonal78-human-1p25ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal78-human-1p25ms",
+      "duration_s": 20,
+      "step_s": 0.00125,
+      "command_speed_m_s": 0.0777802340373378,
+      "family": "diagonal78",
+      "source": "runs/bayesian-diagonal68-pilot/evaluation-025",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/diagonal78-validation-settings.json",
+        "sha256": "efd730ce5f0ee7d2b1a0ff1321820987c3d26cc881b3837ee85d5abd4b5db601"
+      },
+      "scene_sha256": "66c8f4222f426e3a25b0337de77dcfed5813c72452f59ec61c37d973c450040d",
+      "config_sha256": "a1ae9c40198cb16f6e18b39d276731cdf9ed19323406a62e0896ceee31f0a3bd",
+      "actions_sha256": "f2fd07f709ed050592421d805bff448a28c0793eaaf30f0c39adb7ae1337143c",
+      "completed": true,
+      "error": null,
+      "simulated_s": 20,
+      "windows": [
+        {
+          "start_s": 1.4,
+          "end_s": 6,
+          "speed_m_s": 0.07645472573646726,
+          "lateral_speed_m_s": 0.0010762751094734084,
+          "direction_error_rad": 0.014076357117369378
+        },
+        {
+          "start_s": 11,
+          "end_s": 16,
+          "speed_m_s": 0.0779976993540921,
+          "lateral_speed_m_s": 0.0005338217619355989,
+          "direction_error_rad": 0.006843963753053353
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.36,
+          "release_travel_m": 0.012840182562970835,
+          "late_drift_m": 0.00012148519372728582
+        }
+      ],
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.033001341353963994,
+          "ratio_to_total_body_path": 0.0257731158324171
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.019806563118167003,
+          "ratio_to_total_body_path": 0.015468366573690258
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.018493621341537824,
+          "ratio_to_total_body_path": 0.014442996115946159
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.08913987799559188,
+          "ratio_to_total_body_path": 0.0696157279253124
+        }
+      ],
+      "total_body_path_m": 1.2804560212489062,
+      "maximum_slip_ratio": 0.0696157279253124,
+      "maximum_tilt_rad": 0.06320116746538797,
+      "turn_rad": 0.2060480591621111,
+      "passed_turn_response": true,
+      "passed_travel_heading": true,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_motion_checks": false,
+      "capture_sha256": "d5dc76ceed44795a5a4335e20a6aac711917943aa6478b7780dd2a29c90f6911"
+    },
+    {
+      "name": "diagonal78-human-0p625ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal78-human-0p625ms",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.0777802340373378,
+      "family": "diagonal78",
+      "source": "runs/bayesian-diagonal68-pilot/evaluation-025",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/diagonal78-validation-settings.json",
+        "sha256": "efd730ce5f0ee7d2b1a0ff1321820987c3d26cc881b3837ee85d5abd4b5db601"
+      },
+      "scene_sha256": "66c8f4222f426e3a25b0337de77dcfed5813c72452f59ec61c37d973c450040d",
+      "config_sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d",
+      "actions_sha256": "f2fd07f709ed050592421d805bff448a28c0793eaaf30f0c39adb7ae1337143c",
+      "completed": true,
+      "error": null,
+      "simulated_s": 20,
+      "windows": [
+        {
+          "start_s": 1.4,
+          "end_s": 6,
+          "speed_m_s": 0.07624974509306345,
+          "lateral_speed_m_s": 0.0008955304493615149,
+          "direction_error_rad": 0.011744160925171483
+        },
+        {
+          "start_s": 11,
+          "end_s": 16,
+          "speed_m_s": 0.0777864872570859,
+          "lateral_speed_m_s": 0.0004238827784945054,
+          "direction_error_rad": 0.0054492572911321105
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.36,
+          "release_travel_m": 0.012812349562631761,
+          "late_drift_m": 0.00013261120386199029
+        }
+      ],
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.03528014421264122,
+          "ratio_to_total_body_path": 0.027644370287802568
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.020050426773042064,
+          "ratio_to_total_body_path": 0.0157108604432473
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.018550632189552545,
+          "ratio_to_total_body_path": 0.014535670325776944
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.08016027011826611,
+          "ratio_to_total_body_path": 0.06281097311177136
+        }
+      ],
+      "total_body_path_m": 1.276214427941148,
+      "maximum_slip_ratio": 0.06281097311177136,
+      "maximum_tilt_rad": 0.0633372239166546,
+      "turn_rad": 0.20357154266590363,
+      "passed_turn_response": true,
+      "passed_travel_heading": true,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_motion_checks": false,
+      "capture_sha256": "a97e851bf0719206fd247b77d2c710d89616ebb369594eacb41cc9994e5398e3"
+    },
+    {
+      "name": "diagonal78-dropout-0p625ms",
+      "kind": "dropout",
+      "prefix": "runs/contact-planning/diagonal78-dropout-0p625ms",
+      "duration_s": 12,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.0777802340373378,
+      "family": "diagonal78",
+      "source": "runs/bayesian-diagonal68-pilot/evaluation-025",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/dropout.actions.json",
+      "actions_source_sha256": "59ec22dc77e0e2c04fc6c212f2c1bc981d95ffaa047ca89cda05efe7943229a5",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/diagonal78-validation-settings.json",
+        "sha256": "efd730ce5f0ee7d2b1a0ff1321820987c3d26cc881b3837ee85d5abd4b5db601"
+      },
+      "scene_sha256": "c1c97ba01ec10b767ad0d4e1dd11a60d9477d3f30d3016a4bcb4cf092646217a",
+      "config_sha256": "df17c840edb9c9d368098f0abc2a3e5285d3c632918bc6d58638637cfc8d1c2a",
+      "actions_sha256": "631899c677f6e7ee3ccc0b700ae74d9e9a9f11e18d07e35f773862ab440866ae",
+      "completed": true,
+      "error": null,
+      "simulated_s": 12,
+      "windows": [
+        {
+          "start_s": 0.8,
+          "end_s": 3,
+          "speed_m_s": 0.07718072941056182,
+          "lateral_speed_m_s": -0.0007144391297022398,
+          "direction_error_rad": -0.00925643914308118
+        },
+        {
+          "start_s": 6.8,
+          "end_s": 9,
+          "speed_m_s": 0.07688622138663584,
+          "lateral_speed_m_s": 0.0007631086337662197,
+          "direction_error_rad": 0.009924841718161763
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 3,
+          "permanently_below_1mm_s_at": 3.54,
+          "release_travel_m": 0.026437497622472102,
+          "late_drift_m": 0.0000873408830334171
+        },
+        {
+          "request_or_packet_loss_s": 9,
+          "permanently_below_1mm_s_at": 9.24,
+          "release_travel_m": 0.0017179968128664923,
+          "late_drift_m": 0.00010329631436938692
+        }
+      ],
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.008293505916094393,
+          "ratio_to_total_body_path": 0.01731463662928721
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.008599478890602773,
+          "ratio_to_total_body_path": 0.01795342689791339
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.004785014680744104,
+          "ratio_to_total_body_path": 0.009989839194798006
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.010268059560540551,
+          "ratio_to_total_body_path": 0.021436979966894698
+        }
+      ],
+      "total_body_path_m": 0.478988158611782,
+      "maximum_slip_ratio": 0.021436979966894698,
+      "maximum_tilt_rad": 0.06234124798648311,
+      "turn_rad": null,
+      "passed_turn_response": true,
+      "passed_travel_heading": true,
+      "passed_control_checks": true,
+      "passed_contact_quality": true,
+      "passed_motion_checks": true,
+      "capture_sha256": "18643f8ea2732a4f33b6519fcfdbf96ca0252d907c618306b4fd7c925183aa11"
+    },
+    {
+      "name": "diagonal78-human-0p3125ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal78-human-0p3125ms",
+      "duration_s": 20,
+      "step_s": 0.0003125,
+      "command_speed_m_s": 0.0777802340373378,
+      "family": "diagonal78",
+      "source": "runs/bayesian-diagonal68-pilot/evaluation-025",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/diagonal78-validation-settings.json",
+        "sha256": "efd730ce5f0ee7d2b1a0ff1321820987c3d26cc881b3837ee85d5abd4b5db601"
+      },
+      "scene_sha256": "66c8f4222f426e3a25b0337de77dcfed5813c72452f59ec61c37d973c450040d",
+      "config_sha256": "2dab395966ac830f938df860a3bf9fa865affddc4a86661126f4cd389024447b",
+      "actions_sha256": "f2fd07f709ed050592421d805bff448a28c0793eaaf30f0c39adb7ae1337143c",
+      "completed": true,
+      "error": null,
+      "simulated_s": 20,
+      "windows": [
+        {
+          "start_s": 1.4,
+          "end_s": 6,
+          "speed_m_s": 0.07613451071217812,
+          "lateral_speed_m_s": 0.0007871319833604464,
+          "direction_error_rad": 0.010338333202797456
+        },
+        {
+          "start_s": 11,
+          "end_s": 16,
+          "speed_m_s": 0.07767744750083397,
+          "lateral_speed_m_s": 0.0003582401428989246,
+          "direction_error_rad": 0.004611861159016969
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.36,
+          "release_travel_m": 0.012794461988728816,
+          "late_drift_m": 0.00013658938547177253
+        }
+      ],
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.031440435174953235,
+          "ratio_to_total_body_path": 0.024678813709149813
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.020086001242691446,
+          "ratio_to_total_body_path": 0.015766279317438587
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.01762833429868454,
+          "ratio_to_total_body_path": 0.013837161468630944
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.0809864113114738,
+          "ratio_to_total_body_path": 0.06356936685534977
+        }
+      ],
+      "total_body_path_m": 1.273984865945826,
+      "maximum_slip_ratio": 0.06356936685534977,
+      "maximum_tilt_rad": 0.06340754435965992,
+      "turn_rad": 0.2022111735565242,
+      "passed_turn_response": true,
+      "passed_travel_heading": true,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_motion_checks": false,
+      "capture_sha256": "96986c3e006f80af3529f9cb76ccfda2af1351bcc9de716a603a7232c6f8be6e"
+    }
+  ],
+  "comparisons": [
+    {
+      "reference": "diagonal78-human-0p625ms",
+      "candidate": "diagonal78-human-1p25ms",
+      "maximum_body_difference_m": 0.0034439829710035137,
+      "maximum_speed_fraction": 0.0027152800499674282,
+      "absolute_slip_ratio_difference": 0.006804754813541036,
+      "both_motion_checks_passed": false,
+      "passed": false
+    },
+    {
+      "reference": "diagonal78-human-0p625ms",
+      "candidate": "diagonal78-human-0p3125ms",
+      "maximum_body_difference_m": 0.0018989085667181567,
+      "maximum_speed_fraction": 0.0015112756212454805,
+      "absolute_slip_ratio_difference": 0.0007583937435784033,
+      "both_motion_checks_passed": false,
+      "passed": true
+    }
+  ],
+  "scope": "Command-driven native recordings. Control gates require ±5% speed tracking, <=0.1 rad travel-heading error relative to the declared chassis offset at each window start, <=0.1 rad tilt, human-schedule yaw change 0.24±0.06 rad, settling below 1 mm/s within 0.8 s and <=3 mm late drift. Contact quality separately requires <=5% loaded material slip; combined motion checks require both. These development thresholds are not physical speed limits. Collision, periodic lift and browser checks remain separate."
+}

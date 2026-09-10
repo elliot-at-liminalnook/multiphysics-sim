@@ -1,0 +1,39 @@
+{
+  "source": "runs/contact-planning/xhip-lift-v230",
+  "prefix": "runs/contact-planning/xhip-contact-damping2",
+  "inputs": [
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.scene.json",
+      "sha256": "4f45a5e4de86eeecdab329b79d34e3cee3f2cb3981aac596800fe4a65e869cc0"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.config.json",
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.actions.json",
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    }
+  ],
+  "source_policy_sha256": "bd2b3317b1e4cab747966982216d9d9086d3d9b34c338c787036d9b06c3b0330",
+  "mass_kg": 3.976239082561776,
+  "weight_n": 39.00690539993103,
+  "velocity_damping_s": 0.04,
+  "damping_multiplier": 2,
+  "windows_s": [
+    [
+      0.8,
+      3
+    ],
+    [
+      4.2,
+      6.4
+    ]
+  ],
+  "command_speed_m_s": 0.23,
+  "full_support_force_n": 9.751726349982757,
+  "position_gain": 0,
+  "maximum_correction_rad": 0.05,
+  "damping_m_per_rad": 0.001,
+  "scope": "Replaces the inherited unused point-feedback observation recipe, which the source policy did not consume. Diagnostic teacher feedback from privileged actual loaded contact material velocity. Time constant is effective servo damping/stiffness times the explicit controller multiplier; full-support load is CAD model weight/foot count. 0.001 m/rad inverse-Jacobian damping and 0.05 rad command cap are explicit numerical/controller choices, not robot properties. No position-path attraction, pose mutation or additional physical damping; policy changes ordinary servo targets. Contact model, actuators, geometry, actions and timestep are unchanged. Hardware sensing and transfer remain uncalibrated."
+}

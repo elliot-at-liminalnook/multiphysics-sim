@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "browser_url": "http://127.0.0.1:62425/?preset=fastest573-preview&build=2",
+  "source_native_speed_m_s": 0.5735639102596267,
+  "source_duration_s": 300,
+  "source_physics_step_s": 0.00015625,
+  "preview_step_s": 0.005,
+  "wasd_requests": [
+    0.23676486909409844,
+    0,
+    0.1031773451737574
+  ],
+  "tests": {
+    "mapping": "node web/tests/motion_commands.mjs",
+    "native_wasm": {
+      "passed": true,
+      "transitions": 5,
+      "simulated_s": 0.1,
+      "numeric_values": 1184848,
+      "maximum_tolerance_fraction": 0.0001727548500107296,
+      "differences": [],
+      "difference_count": 0,
+      "scope": "Exact winning recipe and commands, production browser worker versus native runtime for first0.1s at0.15625ms. All native frame/transition/recording fields compared except wall time;1e-7 absolute+1e-8 relative portability tolerance. This short comparison is not sustained browser qualification."
+    },
+    "ui": {
+      "passed": true,
+      "held_W_simulated_s": 2.02,
+      "reset_time_s": 0
+    }
+  },
+  "evidence": "fastest573-browser-evidence-v1.json",
+  "scope": "Fastest completed native gait made available as a live WASD browser preview and exact-timestep option. Preview timestep is32x larger; source speed is not a measured browser speed. A short rendered test passes; realtime performance, sustained browser speed and general turns/reversals/stopping remain unqualified. Camera is fixed; F refits the moving robot."
+}

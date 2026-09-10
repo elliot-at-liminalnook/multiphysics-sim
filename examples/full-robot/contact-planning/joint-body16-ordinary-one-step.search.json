@@ -1,0 +1,13 @@
+{
+  "solver": {
+    "maximum_iterations": 1,
+    "maximum_callback_evaluations": 40,
+    "tolerance": 1e-7,
+    "constraint_tolerance": 1e-7,
+    "initial_bound_push": 1e-8,
+    "initial_bound_fraction": 1e-8
+  },
+  "maximum_model_evaluations": 700,
+  "difference_step": 0.0001,
+  "group_body_derivatives": false
+}

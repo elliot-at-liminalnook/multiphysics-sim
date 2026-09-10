@@ -1,0 +1,63 @@
+{
+  "reason": "User prioritized measured distance/time without preemptive gait-quality constraints. Stop planner-only searches with prescribed non-sliding stance references and experimental trajectory/force boxes; retain all checkpoints for potential seed reuse. This is resource reallocation, not contact-family infeasibility or physical-maximum evidence. Boundary replay already reached auditable physics evaluations after the tested sampler fix.",
+  "targets": [
+    {
+      "pid": 57863,
+      "match": "optimize_joint_ipopt_steps",
+      "path": "joint-step-conic-speed.recipe.json",
+      "before": "57863 78522 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_steps runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-step-conic-speed.recipe.json runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/joint-step-speed.search.json runs/joint-checkpoints/multi-step-speed"
+    },
+    {
+      "pid": 60027,
+      "match": "run_mixed_contact_search.mjs",
+      "path": "mixed-contact-cem-pilot-v2.spec.json",
+      "before": "60027 78522 node examples/full-robot/contact-planning/run_mixed_contact_search.mjs examples/full-robot/contact-planning/mixed-contact-cem-pilot-v2.spec.json"
+    },
+    {
+      "pid": 60407,
+      "parent": 60027,
+      "match": "optimize_joint_ipopt_steps",
+      "path": "g0-trial-2.recipe.json",
+      "before": null
+    },
+    {
+      "pid": 61214,
+      "match": "run_boundary_replay.mjs",
+      "path": "runs/contact-boundary-replay",
+      "before": "61214 78522 node examples/full-robot/contact-planning/run_boundary_replay.mjs runs/mixed-contact-cem-pilot-v2/g0-trial-1.observation.json /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_events runs/contact-boundary-replay"
+    },
+    {
+      "pid": 61216,
+      "parent": 61214,
+      "match": "optimize_joint_ipopt_events",
+      "path": "runs/contact-boundary-replay/checkpoints",
+      "before": "61216 61214 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_events runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json runs/mixed-contact-cem-pilot-v2/g0-trial-1.recipe.json runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/contact-order-refinement.search.json runs/contact-boundary-replay/checkpoints"
+    }
+  ],
+  "signals": [
+    {
+      "pid": 57863,
+      "signal": "SIGTERM",
+      "observed": "57863 78522 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_steps runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-step-conic-speed.recipe.json runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/joint-step-speed.search.json runs/joint-checkpoints/multi-step-speed"
+    },
+    {
+      "pid": 60027,
+      "signal": "SIGTERM",
+      "observed": "60027 78522 node examples/full-robot/contact-planning/run_mixed_contact_search.mjs examples/full-robot/contact-planning/mixed-contact-cem-pilot-v2.spec.json"
+    },
+    {
+      "pid": 60407,
+      "status": "already terminal"
+    },
+    {
+      "pid": 61214,
+      "signal": "SIGTERM",
+      "observed": "61214 78522 node examples/full-robot/contact-planning/run_boundary_replay.mjs runs/mixed-contact-cem-pilot-v2/g0-trial-1.observation.json /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_events runs/contact-boundary-replay"
+    },
+    {
+      "pid": 61216,
+      "signal": "SIGTERM",
+      "observed": "61216 61214 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_events runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json runs/mixed-contact-cem-pilot-v2/g0-trial-1.recipe.json runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/contact-order-refinement.search.json runs/contact-boundary-replay/checkpoints"
+    }
+  ]
+}

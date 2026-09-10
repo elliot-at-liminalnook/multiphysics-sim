@@ -1,0 +1,53 @@
+{
+  "recorded_at": "2026-09-09T19:17:33.394Z",
+  "session_id": 51018,
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_checkpoint",
+    "bytes": 9386268,
+    "sha256": "64ff92a73eacb4467eadc57b9abcf16684f022a495a729be01fc05853a0eaab9"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-speed.recipe.json",
+      "bytes": 82320,
+      "sha256": "473a6458a55088140e71bc407cde28343cf408e2d61a4c076ae0eca21c7e7f11"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-speed.search.json",
+      "bytes": 320,
+      "sha256": "77c941ec853d4214409cd614c0e6bde692b1d4f71a136d0475371c2f9c3466a8"
+    }
+  ],
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/joint-checkpoint-build.json",
+    "bytes": 16721,
+    "sha256": "9f8d3ebfa60f8679f4901788b9e6fb0660675cb1554c21e532b54dcddc80d92c"
+  },
+  "command": [
+    "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_checkpoint",
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-mesh-command-speed.recipe.json",
+    "/Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+    "examples/full-robot/contact-planning/joint-mesh-command-speed.search.json",
+    "runs/joint-checkpoints/mesh-command-speed"
+  ],
+  "environment": {
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "stdout": "examples/full-robot/contact-planning/joint-mesh-command-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-mesh-command-speed.log",
+  "status": "Launched and observed live; terminal output not parsed or archived.",
+  "scope": "Eight-control joint speed search from the conic-repaired current-command-bounded motion, with live candidate output. Numerical run budget is not a physical stopping certificate."
+}

@@ -18,7 +18,7 @@ pub use step::EmbeddedStep;
 mod placement;
 pub use placement::{
     CoordinateInterval, EmbeddedPoint, PlanePlacement, PlanePlacementConfig, PointPlacement,
-    PointPlaneTarget, PointTarget,
+    PointPlaneTarget, PointTarget, PointMotionTarget, PointMotionPlacement,
 };
 mod implicit;
 mod mechanical_advance;

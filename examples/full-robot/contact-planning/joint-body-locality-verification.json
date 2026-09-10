@@ -1,0 +1,216 @@
+{
+  "cases": [
+    {
+      "audit_evaluations": 145,
+      "body_controls": 8,
+      "body_variables": 48,
+      "frame_checks": 12000,
+      "grouped_two_sided_probes": 48,
+      "groups": 24,
+      "ordinary_two_sided_probes": 96,
+      "scope": "Equation-derived periodic cubic support, validated with independent and simultaneous body-control perturbations in full uncached CAD, both signs and every sampled operating clock. All frame fields must be byte-identical outside support and between grouped and independent probes. Timing is fixed within each group; no claim of global NLP sparsity, continuous-time completeness, solver speedup or improved runtime gait. Grouped differentiation is not yet integrated into optimization.",
+      "seconds": 56.813664448,
+      "baseline_full_report_identical": true
+    },
+    {
+      "audit_evaluations": 145,
+      "body_controls": 8,
+      "body_variables": 48,
+      "frame_checks": 12000,
+      "grouped_two_sided_probes": 48,
+      "groups": 24,
+      "ordinary_two_sided_probes": 96,
+      "scope": "Equation-derived periodic cubic support, validated with independent and simultaneous body-control perturbations in full uncached CAD, both signs and every sampled operating clock. All frame fields must be byte-identical outside support and between grouped and independent probes. Timing is fixed within each group; no claim of global NLP sparsity, continuous-time completeness, solver speedup or improved runtime gait. Grouped differentiation is not yet integrated into optimization.",
+      "seconds": 71.117759099,
+      "baseline_full_report_identical": true
+    }
+  ],
+  "body_bounds": [
+    {
+      "channel": 0,
+      "values": [
+        {
+          "control": 0,
+          "value": -0.005678522203074804,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.3107159265641732
+        },
+        {
+          "control": 1,
+          "value": -0.0036736928870132936,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.3775435704328902
+        },
+        {
+          "control": 2,
+          "value": -0.00666503138795993,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.27783228706800234
+        },
+        {
+          "control": 3,
+          "value": -0.0041434082832133585,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.36188639055955474
+        },
+        {
+          "control": 4,
+          "value": -0.002913211532086407,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.4028929489304531
+        },
+        {
+          "control": 5,
+          "value": -0.001975810376191812,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.4341396541269396
+        },
+        {
+          "control": 6,
+          "value": -0.00034071106241128843,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.48864296458629036
+        },
+        {
+          "control": 7,
+          "value": 0.0000020009787133502127,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.500066699290445
+        }
+      ],
+      "minimum_normalized": 0.27783228706800234,
+      "maximum_normalized": 0.500066699290445
+    },
+    {
+      "channel": 1,
+      "values": [
+        {
+          "control": 0,
+          "value": -0.0065069693718728516,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.2831010209375716
+        },
+        {
+          "control": 1,
+          "value": -0.000632599902417888,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.4789133365860704
+        },
+        {
+          "control": 2,
+          "value": 0.008481152093849042,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.7827050697949681
+        },
+        {
+          "control": 3,
+          "value": 0.004759429018892827,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.6586476339630942
+        },
+        {
+          "control": 4,
+          "value": 0.007908669575092668,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.7636223191697556
+        },
+        {
+          "control": 5,
+          "value": -0.0015649951774284812,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.44783349408571727
+        },
+        {
+          "control": 6,
+          "value": -0.008466731101692687,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.21777562994357708
+        },
+        {
+          "control": 7,
+          "value": -0.007088542209184406,
+          "bound": {
+            "lower": -0.015,
+            "upper": 0.015
+          },
+          "normalized": 0.2637152596938531
+        }
+      ],
+      "minimum_normalized": 0.21777562994357708,
+      "maximum_normalized": 0.7827050697949681
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-locality-fast.result.json",
+      "bytes": 1465656,
+      "sha256": "0136b302480cdb16d97b4ae11c470c6dbcb1439408051d1d85ab26380160599e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-locality-warm.result.json",
+      "bytes": 1476116,
+      "sha256": "48b68515cc465587779c85134584957b517e0015fc89dff6bebc8481faee70cf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-locality-control-tests.log",
+      "bytes": 1673,
+      "sha256": "5337157ce8a1ce8a24304f4bd29bf860facb32f0d4e8cc98e4fcfab1e031ebfb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-locality-trajectory-tests.log",
+      "bytes": 1374,
+      "sha256": "916c8de5d0624b18877a4947f214728ce970deed5547f27a172d11e2a29fb9df"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_body_locality.mjs",
+      "bytes": 2673,
+      "sha256": "81ddee7ed4a4dc606983f2b235c9b0e05d26f87825e9addc9a8a5d926c330b69"
+    }
+  ],
+  "scope": "Full uncached CAD comparison establishes sampled locality and grouped-probe equivalence on two recorded motions. No change to live optimizers; predicted probe reduction is not a measured speedup, new gait or physical speed bound."
+}

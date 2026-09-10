@@ -1,0 +1,127 @@
+{
+  "source_scene": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "links": [
+    {
+      "name": "-X | Hip motor pulley and shaft 3090",
+      "id": "3090f621a4b8",
+      "members": [
+        "5fdf44a72414",
+        "3090f621a4b8"
+      ],
+      "member_names": [
+        "-X | Hip motor pulley and shaft",
+        "-X | Hip motor pulley and shaft 3090"
+      ],
+      "com_m": [
+        -0.06343955129927978,
+        0.000048361959501380116,
+        0.005255423760191947
+      ],
+      "bbox": [
+        [
+          -0.007988524259188293,
+          -0.00808285314501334,
+          -0.015245209128661986
+        ],
+        [
+          0.008080284024323647,
+          0.00798595513849866,
+          0.023237106950696283
+        ]
+      ],
+      "sdf": {
+        "origin": [
+          -0.009954120117432323,
+          -0.01004844900325737,
+          -0.017005423759759795
+        ],
+        "cell_m": 0.001,
+        "dims": [
+          21,
+          22,
+          44
+        ]
+      },
+      "mesh_vertices": 992,
+      "mesh_triangles": 2592,
+      "sign_derivation": null
+    },
+    {
+      "name": "Robot | Chassis and hip mounts",
+      "id": "93c3343067fe",
+      "members": [
+        "1db84241242c",
+        "b17c2308ff96",
+        "0702845b41d3",
+        "8cf3e6bcf5ec",
+        "15e201e53da1",
+        "bc7a7393c49f",
+        "6b83e4df04c2",
+        "3389914a4e72",
+        "90aaa1a07b41",
+        "4f13ca1d8689",
+        "da27110977cd",
+        "8c1efc29fefd",
+        "f5009ce295f6",
+        "93c3343067fe"
+      ],
+      "member_names": [
+        "-Y | Timing belt",
+        "-Y | Hip servo internal geometry",
+        "-Y · Hip swing (belt) · HX-30HM",
+        "+X | Hip servo internal geometry",
+        "+X | Timing belt",
+        "+X · Hip swing (belt) · HX-30HM",
+        "+Y | Timing belt",
+        "+Y | Hip servo internal geometry",
+        "+Y | Hip support surface",
+        "+Y · Hip swing (belt) · HX-30HM",
+        "-X | Timing belt",
+        "-X | Hip servo internal geometry",
+        "-X · Hip swing (belt) · HX-30HM",
+        "Robot | Chassis and hip mounts"
+      ],
+      "com_m": [
+        -0.0010288620079104774,
+        -0.00043110419989131696,
+        0.006679533299949643
+      ],
+      "bbox": [
+        [
+          -0.11857972796368031,
+          -0.11917748577169948,
+          -0.09329031868579193
+        ],
+        [
+          0.12063745197950128,
+          0.12003969417148211,
+          0.07993125208589225
+        ]
+      ],
+      "sdf": {
+        "origin": [
+          -0.117015249981164,
+          -0.11761300778918317,
+          -0.09172584070327564
+        ],
+        "cell_m": 0.005023153701662744,
+        "dims": [
+          48,
+          48,
+          35
+        ]
+      },
+      "mesh_vertices": 1497,
+      "mesh_triangles": 5573,
+      "sign_derivation": {
+        "algorithm": "solid_union_ray_v1",
+        "solid_count": 84,
+        "non_solid_surfaces": "unsigned_distance_only"
+      }
+    }
+  ],
+  "exporter": "cad/robocad/physical.py",
+  "exporter_tessellation_tolerance_mm": 0.15,
+  "scope": "Read-only compiled geometry provenance for the reported pulley/mount pair. Grid interpolation and tessellation do not certify a 16-micrometre hardware clearance; exact or locally refined CAD checking remains required. No collision exemption or geometry modification."
+}

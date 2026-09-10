@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "path": "runs/speed-neural-predictive-507/ppo-experiment-v2.json",
+      "sha256": "66961e48158b6bf630c8fa0e61c61412fa4a83a1fb5949e23097f9fee76fef33"
+    },
+    {
+      "path": "runs/train_ppo_policy-predictive-v2",
+      "sha256": "425f2d9a8bf8c6981628308cf5cd2b439b35075c47806b69ed5e1a06545717f4"
+    },
+    {
+      "path": "runs/speed-only-507-validation/long60.actions.json",
+      "sha256": "5bd59967a3600f98f9aeea6f67e35663effa57d6642e59ab6cdac52bad756c97"
+    }
+  ],
+  "source_binary": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/train_ppo_policy",
+  "command": [
+    "runs/train_ppo_policy-predictive-v2",
+    "runs/speed-neural-predictive-507/ppo-experiment-v2.json",
+    "runs/speed-ppo-predictive-v2"
+  ],
+  "objective": "Full60 net displacement per second, no sampled falls; no slip/tracking/effort reward.",
+  "baseline_expectation": {
+    "score": 30.53087082051456,
+    "absolute_tolerance": 1e-8
+  },
+  "scope": "Corrected complete recorded heartbeat/action schedule. Baseline must reproduce its measured net distance before any stochastic rollout. Forecast heads frozen; four initial PPO updates, two episodes each.",
+  "commit": "15d6e5f6"
+}

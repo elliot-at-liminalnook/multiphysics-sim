@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "fit": {
+    "final_training_loss": 0.006047116282121204,
+    "final_validation_loss": 0.0005990729131377915,
+    "initial_training_loss": 0.01861278602085005,
+    "initial_validation_loss": 0.00018302061056014226,
+    "scope": "Checkpoint selected by training loss only. Supervised teacher-action imitation on held-out teacher states; not closed-loop stability, walking acceptance, sensor calibration or hardware transfer.",
+    "selected_epoch": 287,
+    "training_samples": 3000,
+    "validation_physical_errors": [
+      {
+        "maximum": 0.08037977829746501,
+        "name": "-Y | Hip servo output.target",
+        "rms": 0.027424062369112927,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.12171812817276705,
+        "name": "-Y | Worm servo output.target",
+        "rms": 0.04959133949992681,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.10376912086064446,
+        "name": "-Y | Foot servo output.target",
+        "rms": 0.040899555333129806,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.06675503012813372,
+        "name": "+X | Hip servo output.target",
+        "rms": 0.02258084171339288,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.16707453658085852,
+        "name": "+X | Worm servo output.target",
+        "rms": 0.06373421370542628,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.06223800953017805,
+        "name": "+X | Foot servo output.target",
+        "rms": 0.02507118985004495,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.06994792771756703,
+        "name": "+Y | Hip servo output.target",
+        "rms": 0.024539818795995594,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.17461674500232494,
+        "name": "+Y | Worm servo output.target",
+        "rms": 0.051880818903691346,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.09836755841181716,
+        "name": "+Y | Foot servo output.target",
+        "rms": 0.03770151129261497,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.07704227813350054,
+        "name": "-X | Hip servo output.target",
+        "rms": 0.026484172453339755,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.15920881941011725,
+        "name": "-X | Worm servo output.target",
+        "rms": 0.06390735967693409,
+        "unit": "rad"
+      },
+      {
+        "maximum": 0.07372946693335192,
+        "name": "-X | Foot servo output.target",
+        "rms": 0.027395807852961754,
+        "unit": "rad"
+      }
+    ],
+    "validation_samples": 4000,
+    "version": 1
+  },
+  "closed_loop": {
+    "completed": true,
+    "error": null,
+    "frames": 1001,
+    "final_time_s": 20,
+    "metrics": {
+      "net_distance_m": 0.05703288400629557,
+      "displacement_xy_m": [
+        -0.0007177228553651542,
+        0.05702836778287146
+      ],
+      "elapsed_s": 20,
+      "requested_duration_s": 20,
+      "speed_m_s": 0.002851644200314778,
+      "minimum_chassis_up_z": 0.9815039220437405,
+      "minimum_chassis_ground_clearance_m": 0.28565243896366715,
+      "chassis_floor_contact": false,
+      "fallen": false,
+      "completed": true,
+      "scope": "Net horizontal chassis displacement divided by the full trial duration. Falling means chassis ground contact or overturning. CAD hull clearance and orientation are sampled at recorded frames; no slip, tracking, lift, steering or stop threshold."
+    }
+  },
+  "comparison": {
+    "only_network_changed": true,
+    "v1_speed_m_s": 0.015806213327821686
+  },
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/speed-neural-aggregation-v2.spec.json",
+      "sha256": "ae5e8925492c9e6541425a3695232ff985abb59421f7acbb41ec08b4bb21c4b0"
+    },
+    {
+      "path": "runs/speed-neural-aggregation-v2/input/manifest.json",
+      "sha256": "a3af7a89ddbc7d5b80a0d08f62fcc56c700b72041da55de6e9028c8d6d3fbdce"
+    },
+    {
+      "path": "runs/speed-neural-aggregation-v2/fit-launch.json",
+      "sha256": "54328d480cd4aeb0015b2111651893c3d1d54f922e0c541ed997694979071ce6"
+    },
+    {
+      "path": "runs/speed-neural-aggregation-v2/evaluation/student.native.json",
+      "sha256": "13cf85493b491ca3fdab3b3a5af3187690170d6b84f9d728a5e4658f14637f47"
+    },
+    {
+      "path": "runs/speed-neural-aggregation-v2/evaluation/student.config.json",
+      "sha256": "4d9b5b98de38e0a11229c5a24a6d6dd219bdafb4cad75af279a3fb2d962447b6"
+    },
+    {
+      "path": "examples/interactive/prepare_direct_distillation.mjs",
+      "sha256": "292946423b1589bca7a68969fe8a949102dc7adceafaa45e4bfd4687d7e50bae"
+    },
+    {
+      "path": "examples/interactive/materialize_direct_student.mjs",
+      "sha256": "e05f8bb9ab3b0f4f64aa4faa99c788189e436bc7ceef3e08926f8682d493954b"
+    }
+  ],
+  "scope": "One teacher-label aggregation round, same simulation and motion schedule as v1. Reduced training loss did not preserve walking; the student is not a promoted candidate."
+}

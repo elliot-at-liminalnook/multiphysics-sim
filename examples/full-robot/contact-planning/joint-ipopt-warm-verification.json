@@ -1,0 +1,93 @@
+{
+  "initial_full_reports_identical": true,
+  "native_final_equals_independent_full_cad": true,
+  "unchanged_native_regression_cases": 7,
+  "initial_distance_cases": 2,
+  "default_initialization": {
+    "native_status": -1,
+    "model_evaluations": 316,
+    "initial": 0.024999999999999998,
+    "initial_force_error_n": 0.07916036393500692,
+    "final_speed_m_s": 0.02646581304135861,
+    "force_error_n": 0.4126222250472509,
+    "moment_error_nm": 0.12929274864371287,
+    "torque_margin_nm": 0.6810864151710274,
+    "maximum_inequality": 7.252444500945018,
+    "feasible": false,
+    "iterations": [
+      {
+        "restoration": false,
+        "iteration": 0,
+        "objective": 14.940387441824909,
+        "primal_infeasibility": 7.426431743508639,
+        "dual_infeasibility": 2.5178364945715552,
+        "barrier_parameter": 1,
+        "step_norm": 0
+      },
+      {
+        "restoration": false,
+        "iteration": 1,
+        "objective": 14.964190287024998,
+        "primal_infeasibility": 28.15221586478333,
+        "dual_infeasibility": 4149.587667036585,
+        "barrier_parameter": 0.8108762787214373,
+        "step_norm": 48.92482722202878
+      }
+    ]
+  },
+  "close_initialization": {
+    "native_status": -1,
+    "model_evaluations": 316,
+    "initial": 0.024999999999999998,
+    "initial_force_error_n": 0.07916036393500692,
+    "final_speed_m_s": 0.02527278542350563,
+    "force_error_n": 0.07908250035030862,
+    "moment_error_nm": 0.02405498065286127,
+    "torque_margin_nm": 0.6864320921065246,
+    "maximum_inequality": 0.5816500070061723,
+    "feasible": false,
+    "iterations": [
+      {
+        "restoration": false,
+        "iteration": 0,
+        "objective": 15.124999816093746,
+        "primal_infeasibility": 0.5832082609173429,
+        "dual_infeasibility": 2.485076503783688,
+        "barrier_parameter": 1,
+        "step_norm": 0
+      },
+      {
+        "restoration": false,
+        "iteration": 1,
+        "objective": 15.095008485791833,
+        "primal_infeasibility": 45.543640120697034,
+        "dual_infeasibility": 163592.44952820445,
+        "barrier_parameter": 0.8100624392141353,
+        "step_norm": 942.4755301336808
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-one-step.result.json",
+      "bytes": 3104941,
+      "sha256": "9127e3923235827556948a04fea3efaef55190f36972e376241ca2762c4c682e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-close-one-step.result.json",
+      "bytes": 3107832,
+      "sha256": "0d40f2cc447dc4da1ca28c33ac5282e7c8ca0a8d5381fb2c98826b33d0e8b0c8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-native-audit.result.json",
+      "bytes": 11068,
+      "sha256": "e017196c42c169b90644fe99c7b80465bcef9af486364d3fe0f7e69e6efdd046"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_ipopt_warm.mjs",
+      "bytes": 3126,
+      "sha256": "195a963bb0b51e201c28a648a4f459dd1ff0f33391d71b41a280d9824fd4f326"
+    }
+  ],
+  "scope": "Primal initialization comparison at the same .30 m/s target, physical limits, variables and bounds. Neither pilot establishes convergence, runtime speed or a global physical maximum."
+}

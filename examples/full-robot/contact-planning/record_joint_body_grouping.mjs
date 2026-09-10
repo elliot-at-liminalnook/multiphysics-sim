@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+const d='examples/full-robot/contact-planning/';
+const identity=path=>{const bytes=fs.readFileSync(path);return {path,bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')};};
+const sources=['crates/sim-solve/src/coloring.rs','crates/sim-solve/src/lib.rs','crates/sim-runtime/src/contact_planning/joint_ipopt.rs',d+'check_joint_body_grouping.mjs',d+'summarize_joint_ipopt.mjs',d+'record_joint_body_grouping.mjs'];
+const archive=d+'joint-body-grouping-sources.tar.gz';assert(!fs.existsSync(archive));execFileSync('tar',['-czf',archive,...sources]);
+const old=identity('runs/joint-body-grouping/optimize_joint_ipopt-before'),warm=identity('/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt');
+assert.equal(old.sha256,'64976375fd16c84f5a1d8f8dac0e0e7cd669225ad1da915f85b25f371bfcc439');
+assert.equal(warm.sha256,'1f6b6edc4dd491c30f9d791016f277b83f5484a1d0704fcf93498fe5385dc3fd');
+const artifacts=['joint-body-grouping-build.log','joint-body-grouping-solver-tests.log','joint-body-grouping-planner-tests.log','joint-body-grouping-verification.json','joint-ipopt-speed.result.json','joint-ipopt-speed.log','joint-ipopt-speed.summary.json','joint-ipopt-speed-launch.json'];
+for(const c of ['one-step','budget','fallback']) artifacts.push(`joint-body-grouping-${c}.search.json`,`joint-body-grouping-${c}.result.json`,`joint-body-grouping-${c}.log`);
+artifacts.push('joint-body-grouping-fallback.recipe.json');
+const result={base_commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),recorded_at:new Date().toISOString(),source_archive:identity(archive),sources:sources.map(identity),binary:identity('/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt'),completed_search_binary_backup:old,unchanged_running_warm_binary:warm,build_command:'CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --release -p sim-runtime --features native-ipopt --example optimize_joint_ipopt',cargo_lock:identity('Cargo.lock'),rustc:execFileSync('/Users/elliot/.cargo/bin/rustc',['-Vv']).toString(),environment:{VECLIB_MAXIMUM_THREADS:'1',OMP_NUM_THREADS:'1'},inputs:['runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json','examples/full-robot/gait-exploration/workspace-markers.json',d+'joint-ipopt-warm.recipe.json'].map(identity),durable_scene:{index:'examples/full-robot/speed-ceiling/evidence-v8-index.json',entry:'validation/constrained-front165-scale1-human-fine.scene.json'},native_library_manifest:identity(d+'joint-ipopt-native-library.json'),artifacts:artifacts.map(n=>identity(d+n)),scope:'Opt-in shared disjoint-column grouping integrated into joint native derivatives. Ordinary pilot matches prior result with 220 versus 316 model attempts; budget and invalid-probe fallback cases completed. Original fast-start search completed infeasible, warm comparison remains live. No new runtime speed or global ceiling.'};
+fs.writeFileSync(d+'joint-body-grouping-build.json',JSON.stringify(result,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({binary_sha256:result.binary.sha256,base_commit:result.base_commit,artifacts:result.artifacts.length}));

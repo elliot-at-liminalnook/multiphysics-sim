@@ -1,0 +1,90 @@
+{
+  "source": "periodic-perturbed-refinement.result.json",
+  "actuators": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "span_rad": 0.04965798168882052,
+      "total_variation_rad": 0.40115843108365246,
+      "direction_reversals": 16,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "span_rad": 0.14245823886550735,
+      "total_variation_rad": 1.144605497019091,
+      "direction_reversals": 16,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "span_rad": 0.07510993196842097,
+      "total_variation_rad": 0.39969122726877826,
+      "direction_reversals": 16,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "span_rad": 0.07073696950495201,
+      "total_variation_rad": 0.3551736985746765,
+      "direction_reversals": 16,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "span_rad": 0.18197283921052154,
+      "total_variation_rad": 0.9977458838053366,
+      "direction_reversals": 14,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "span_rad": 0.10946629205910541,
+      "total_variation_rad": 0.5886662139340433,
+      "direction_reversals": 14,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "span_rad": 0.06919206440560544,
+      "total_variation_rad": 0.4760848682690102,
+      "direction_reversals": 16,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "span_rad": 0.29784082430761316,
+      "total_variation_rad": 1.5354182663593496,
+      "direction_reversals": 10,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "span_rad": 0.08033665834604342,
+      "total_variation_rad": 0.3021556881783214,
+      "direction_reversals": 12,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "span_rad": 0.060769509707572,
+      "total_variation_rad": 0.42474223371269293,
+      "direction_reversals": 18,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "span_rad": 0.15431429087810455,
+      "total_variation_rad": 1.4149801311609789,
+      "direction_reversals": 22,
+      "period_s": 0.39608749046768144
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "span_rad": 0.0955460238974668,
+      "total_variation_rad": 0.8575082115191774,
+      "direction_reversals": 18,
+      "period_s": 0.39608749046768144
+    }
+  ],
+  "scope": "Knot-to-knot variation of an infeasible periodic planning candidate, not measured hardware motion or a continuous-frequency/bandwidth certificate."
+}

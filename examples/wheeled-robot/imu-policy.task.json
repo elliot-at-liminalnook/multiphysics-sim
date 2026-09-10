@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "observation_source": "ideal_runtime_teacher_only",
+  "period_s": 0.003,
+  "observations": [
+    {"name": "passive", "source": {"kind": "coordinate_position", "coordinate": "joint.passive axle"}},
+    {"name": "left", "source": {"kind": "coordinate_position", "coordinate": "joint.left axle"}},
+    {"name": "right", "source": {"kind": "coordinate_position", "coordinate": "joint.right axle"}},
+    {"name": "left.reference", "source": {"kind": "reference_position", "coordinate": "joint.left axle"}},
+    {"name": "right.reference", "source": {"kind": "reference_position", "coordinate": "joint.right axle"}}
+  ],
+  "rewards": [{"name": "api.error", "observation": "left", "target": {"kind": "constant", "value": 0}, "scale": 1, "weight_per_s": 1}],
+  "termination_bounds": []
+}

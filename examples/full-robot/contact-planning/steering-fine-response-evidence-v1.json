@@ -1,0 +1,711 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/steering-fine-response-v1/prepare.cjs",
+        "bytes": 1745,
+        "sha256": "f5b6c606c1ae1b3e3938a0219c101f5fc914095c5581de8db62d15ee0967d2a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f5b6c606c1ae1b3e3938a0219c101f5fc914095c5581de8db62d15ee0967d2a9.gz",
+        "bytes": 884,
+        "sha256": "b6f2a41f00a9bc4a08aed5f956cecb94742719eec673d19a77f57e4ca3a260ee"
+      }
+    },
+    {
+      "original": {
+        "path": "/Users/elliot/physics-simulator-gait-exploration/runs/steering-fine-root-v1/prepare.cjs",
+        "bytes": 3060,
+        "sha256": "0de0c83117d05d95d51777567af8982e3a03694153212fbea86e8c39a8c22091"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0de0c83117d05d95d51777567af8982e3a03694153212fbea86e8c39a8c22091.gz",
+        "bytes": 1324,
+        "sha256": "dd6c70b1be0507cfe97d82aec1dc6505df91a5cd7c5c8d0edfa81e1ae0ca2ba9"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/STEERING_RESPONSE.md",
+        "bytes": 7741,
+        "sha256": "ba7151cc28b3fe6972c323c2870b051b75e7a68cec084cf9fa5ae406bab101b0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ba7151cc28b3fe6972c323c2870b051b75e7a68cec084cf9fa5ae406bab101b0.gz",
+        "bytes": 3420,
+        "sha256": "54054ea123d5eb1cbf292fdb3dd0e3537fbaf918c73c18c9037750afdfbb51e6"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/full-robot/contact-planning/steering-response-evidence-v1.json",
+        "bytes": 292881,
+        "sha256": "9104409caeee610a724cf6b5e474ad5552e9670ea88dabf56f562d4aaaa62a0d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9104409caeee610a724cf6b5e474ad5552e9670ea88dabf56f562d4aaaa62a0d.gz",
+        "bytes": 41353,
+        "sha256": "6516859935a8a6d6dd4f132df5e4ccf7ad292c1cbcd5d5c325017921ef9b158a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/calibrate_scalar_response-v1",
+        "bytes": 13312656,
+        "sha256": "54f6fad9d5e5d42ff54a725784b45378b30a0bcafaad0e75e612ad79218685da"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/54f6fad9d5e5d42ff54a725784b45378b30a0bcafaad0e75e612ad79218685da.gz",
+        "bytes": 2932377,
+        "sha256": "66acb902dbc128dea9e592494dc1973d3fa4033b137b363de24a6224309915d0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/predict_planar_motion-trend-v1",
+        "bytes": 633168,
+        "sha256": "63c9bfbe80cb142810808f7eac13954708b2e4b600edc3772496c2d5b7b912a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/63c9bfbe80cb142810808f7eac13954708b2e4b600edc3772496c2d5b7b912a9.gz",
+        "bytes": 276002,
+        "sha256": "724db45a9160673759473c71ac3dfc81a5d96e22adfc321e70ad08186cc100cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/run_environment-long-episode-v1",
+        "bytes": 15877072,
+        "sha256": "1e30e3ffb13855b9ebace260a8bf2889c4ce71b1655b5810fcd2f4e9344849e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1e30e3ffb13855b9ebace260a8bf2889c4ce71b1655b5810fcd2f4e9344849e0.gz",
+        "bytes": 4726377,
+        "sha256": "18910b91e95e7df0ad3fa8bccd4b7f70019ad04ed2c9d7270507f3c9a9b04611"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/calibrate.cjs",
+        "bytes": 1341,
+        "sha256": "065450badfd798a41e563c4ae0526f232596598aa5247861fcbffbb912c89b54"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/065450badfd798a41e563c4ae0526f232596598aa5247861fcbffbb912c89b54.gz",
+        "bytes": 655,
+        "sha256": "3aeabed9f769ee19348ca084323ba80227a714aef88e731dc6bc98efa7c6a1d4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/calibrations.json",
+        "bytes": 1513,
+        "sha256": "41a42de0b03c3c3c8b063add1cb1c28df3022bc040fc88bba81cde077109dd90"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/41a42de0b03c3c3c8b063add1cb1c28df3022bc040fc88bba81cde077109dd90.gz",
+        "bytes": 489,
+        "sha256": "73f42eb67563410dd1bb35b09d7cf4a13ebd03a4376969d470daa798568b4dd7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/execution.json",
+        "bytes": 46,
+        "sha256": "647d4a7885de0a8c8c19656bcd67939557375d8099b14eafb5f320df55c4c27c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/647d4a7885de0a8c8c19656bcd67939557375d8099b14eafb5f320df55c4c27c.gz",
+        "bytes": 66,
+        "sha256": "025281feb94a8795b886356910b12c7628cffc0995a7db61192ee1c9eaff6340"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/fit-10.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/fit-10.request.json",
+        "bytes": 42289,
+        "sha256": "f9c58faaf0b0a7be84325c92374ee4bf45f0d043f5f1be7b7a8bdab9e36979dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f9c58faaf0b0a7be84325c92374ee4bf45f0d043f5f1be7b7a8bdab9e36979dd.gz",
+        "bytes": 15622,
+        "sha256": "5e56ff90b20e2df0d5cc7fd8e5055438b1a28796d628b7728bba8a29b8cdfec2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/fit-10.result.json",
+        "bytes": 1520,
+        "sha256": "c8caf3785ea840dfe3149d34ab9903d67d766d1a63d2af019ad60136d2232d90"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c8caf3785ea840dfe3149d34ab9903d67d766d1a63d2af019ad60136d2232d90.gz",
+        "bytes": 663,
+        "sha256": "3e8f9e0b1756ab2e07a15e604e34fbdb727e491708c65243d63051e6a566b29b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/fit-5.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/fit-5.request.json",
+        "bytes": 63436,
+        "sha256": "d5f59dd7b5cac09ee5c5df70b15f56ae3bfb4ddb50bcce89cc89b9420a46ac54"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d5f59dd7b5cac09ee5c5df70b15f56ae3bfb4ddb50bcce89cc89b9420a46ac54.gz",
+        "bytes": 23530,
+        "sha256": "fab6d6380650e07fec83e67ac791de4e15ec9134530af4e8e5f24f20eb1dbaef"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/fit-5.result.json",
+        "bytes": 1517,
+        "sha256": "fd3a3c0d3e25afb44a223b4af3e63abb831dc4d68da835310141dc88d2e5206a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fd3a3c0d3e25afb44a223b4af3e63abb831dc4d68da835310141dc88d2e5206a.gz",
+        "bytes": 661,
+        "sha256": "b6650a7648c673615226cd90af1579a0354a0dc30c1c9017c8d055f1f38583ec"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/launch.json",
+        "bytes": 132,
+        "sha256": "d396a9fa18da01a7123943851cd91044abf9c70bd15a92b4a5e57ea5d854bfd0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d396a9fa18da01a7123943851cd91044abf9c70bd15a92b4a5e57ea5d854bfd0.gz",
+        "bytes": 133,
+        "sha256": "0ceaada9345525d62c628bffd3daa7fe7a9dbbf1b039734c3e3d9f9bcb2f7635"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/native.json",
+        "bytes": 46162717,
+        "sha256": "c38bed8a8e2c24af6db7ead702cd20c8c074acf2a85c8864ae239a6a5cb95a7d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c38bed8a8e2c24af6db7ead702cd20c8c074acf2a85c8864ae239a6a5cb95a7d.gz",
+        "bytes": 10946331,
+        "sha256": "f59a91139df42f67123c9211d22660809c3a0ec5eedbb283127a9820a4a5069c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/replay-input.json",
+        "bytes": 13012029,
+        "sha256": "682fcfe0336981782947f471396689152412f3a400edd310753af4466486135d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/682fcfe0336981782947f471396689152412f3a400edd310753af4466486135d.gz",
+        "bytes": 3659413,
+        "sha256": "0f1645422b5b9b6fcaaf13ebfb5a3ff5d2783a897b9062fcf830e22cb536cecc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/spec.json",
+        "bytes": 1652,
+        "sha256": "da281704c49dc7950ed271914d3d94c8f58fbed210e1d3d76f1d2f19c09b3f0a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/da281704c49dc7950ed271914d3d94c8f58fbed210e1d3d76f1d2f19c09b3f0a.gz",
+        "bytes": 837,
+        "sha256": "68a36f178db488db9f08d710572410ff8182f61d48bbb322a149f65637289981"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/negative/summary.json",
+        "bytes": 514,
+        "sha256": "2a7a2bf97ef400207b4a07703888501071810f5c22b508282247ca946428e47d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2a7a2bf97ef400207b4a07703888501071810f5c22b508282247ca946428e47d.gz",
+        "bytes": 324,
+        "sha256": "cb3da5c42dd9c7dccd11f3a78ba774bb86b3c39ef57a50fb60967cd9824645d8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/execution.json",
+        "bytes": 46,
+        "sha256": "93874f36b8384922ea57dd31058de05983aaa7f02ebc588b6b8d7a0221604644"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/93874f36b8384922ea57dd31058de05983aaa7f02ebc588b6b8d7a0221604644.gz",
+        "bytes": 66,
+        "sha256": "71524e998881c0faa26aa7896aef11372fce9030f32bcbd5c802aec4fe0f7e46"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/fit-10.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/fit-10.request.json",
+        "bytes": 42544,
+        "sha256": "0824f7d420fd8e82fdfea856fc96fb0b25db3a7ead0968d4338753f47ca31091"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0824f7d420fd8e82fdfea856fc96fb0b25db3a7ead0968d4338753f47ca31091.gz",
+        "bytes": 15645,
+        "sha256": "e9086b888df8066f570ec9615ffd1f25cc8dd6d92455eb7aaff4ad39cc90a12e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/fit-10.result.json",
+        "bytes": 1524,
+        "sha256": "095834626088704eea6d99ac0aabb02c0efe5aa68df72b65b06b5e28def323ed"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/095834626088704eea6d99ac0aabb02c0efe5aa68df72b65b06b5e28def323ed.gz",
+        "bytes": 662,
+        "sha256": "6767c1a906e8001503ff3a844c80cdcd3a5e2e26c6b4d74828a107535f8e9f52"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/fit-5.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/fit-5.request.json",
+        "bytes": 63711,
+        "sha256": "0ccdc99b3894d3c271f9817be495c8a9a13295f76911fef67ff020736c430bb2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0ccdc99b3894d3c271f9817be495c8a9a13295f76911fef67ff020736c430bb2.gz",
+        "bytes": 23539,
+        "sha256": "6d1cdae1d395c23c9a7b0f42e1e26bccbd8a10887f098a7d0d6bb4dccea1ed07"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/fit-5.result.json",
+        "bytes": 1526,
+        "sha256": "c33b7b254e7baab566be8727338135d33794492ed3f4eab7240ffbe2a227b177"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c33b7b254e7baab566be8727338135d33794492ed3f4eab7240ffbe2a227b177.gz",
+        "bytes": 666,
+        "sha256": "4d7da711f367bd5c68bf6b7a564553b391cb37756d1a14dc81a89a436805b4cf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/launch.json",
+        "bytes": 132,
+        "sha256": "f03c1f68dcb20bf447e3e5aacbf983627445e63b55be8fa0c881c136afdb1d69"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f03c1f68dcb20bf447e3e5aacbf983627445e63b55be8fa0c881c136afdb1d69.gz",
+        "bytes": 134,
+        "sha256": "00a0baf7fc32373c07115065c14cb60c41414f6729d7ff9fcc35f5add09454e8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/native.json",
+        "bytes": 46170208,
+        "sha256": "375f8b058d292e6730cf899564a6185fb0ea033b017510a8f416e550ccb2db1e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/375f8b058d292e6730cf899564a6185fb0ea033b017510a8f416e550ccb2db1e.gz",
+        "bytes": 10946245,
+        "sha256": "60d062777712cc72d931602d75367b15e33ef8e4d2eae3cd35baca6193c3eb26"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/replay-input.json",
+        "bytes": 13012029,
+        "sha256": "de8b3ea0b8f249e340ce362ce7e205ee385824d13282f80aad330166f5a48897"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/de8b3ea0b8f249e340ce362ce7e205ee385824d13282f80aad330166f5a48897.gz",
+        "bytes": 3659413,
+        "sha256": "2d71771d9e949a5119625887e98b4624cca3a847447dd570518525d28079c52c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/spec.json",
+        "bytes": 1651,
+        "sha256": "6afd9d580c66dec3711a0f6134961449307517105f08246a121661614a44686c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6afd9d580c66dec3711a0f6134961449307517105f08246a121661614a44686c.gz",
+        "bytes": 834,
+        "sha256": "17e4b51799a28fa9a9382921f3528005e8e895f6bb3d529f47b62395a11bf70f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/positive/summary.json",
+        "bytes": 518,
+        "sha256": "3774bf1cf7aa5617d4f349b550224bf406d9f094703d95f363fe0cd2dba9d436"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3774bf1cf7aa5617d4f349b550224bf406d9f094703d95f363fe0cd2dba9d436.gz",
+        "bytes": 326,
+        "sha256": "043fb168e83e7fc04a45dc199fff38cd6fb9f1b357ee789583205ff52cfb8faf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/prepare.cjs",
+        "bytes": 1745,
+        "sha256": "f5b6c606c1ae1b3e3938a0219c101f5fc914095c5581de8db62d15ee0967d2a9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f5b6c606c1ae1b3e3938a0219c101f5fc914095c5581de8db62d15ee0967d2a9.gz",
+        "bytes": 884,
+        "sha256": "b6f2a41f00a9bc4a08aed5f956cecb94742719eec673d19a77f57e4ca3a260ee"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/response-0.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/response-0.request.json",
+        "bytes": 233,
+        "sha256": "5bf6f4de48ea74aa7b03c12ca3935807b8794118dc052919f0d70b500a6cf2a5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5bf6f4de48ea74aa7b03c12ca3935807b8794118dc052919f0d70b500a6cf2a5.gz",
+        "bytes": 164,
+        "sha256": "91f6e3b379799662cd5816a3d37629464d21ca885b772d8307500fcdd08c4492"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/response-0.result.json",
+        "bytes": 688,
+        "sha256": "ac603bda7cf5d5034364d887c9a0df7e9dee6c5cf35965402e5cc1c38cb53924"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ac603bda7cf5d5034364d887c9a0df7e9dee6c5cf35965402e5cc1c38cb53924.gz",
+        "bytes": 404,
+        "sha256": "e7d57e598cf09f329e82d4aa0b883a4a06012198b4aae6f4db7b868535dfa4b5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/response-1.execution.json",
+        "bytes": 41,
+        "sha256": "4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4f96d67c62e2242f96eea1abacbdda4793a792493deedd2796f8b0881da9e8b5.gz",
+        "bytes": 61,
+        "sha256": "c34a5028df4212b228e3b3abc086f4139847e841540a17a73818835cf78b1ea5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/response-1.request.json",
+        "bytes": 231,
+        "sha256": "cc681d431adf2f6296c5234a5df0c5eec7ccbed21fc9e81f91c60561460f3014"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/cc681d431adf2f6296c5234a5df0c5eec7ccbed21fc9e81f91c60561460f3014.gz",
+        "bytes": 163,
+        "sha256": "2030709e884cbdfb8f286c358ef699771522464081056757c76500836f5a7645"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/response-1.result.json",
+        "bytes": 688,
+        "sha256": "6b6539853a31f38bb9fc35565b46fb0391dcb85a83cea015450b2027ad193420"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6b6539853a31f38bb9fc35565b46fb0391dcb85a83cea015450b2027ad193420.gz",
+        "bytes": 405,
+        "sha256": "f50625e379a08d56131b853bd3a5f15daeb0789d9d15f885e9bef10a0dc9557d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/run.cjs",
+        "bytes": 2590,
+        "sha256": "33a97fc89d26296a3fb88a4ffea7b317da207110f4265d8b0dfedcd9fe2d6bf8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33a97fc89d26296a3fb88a4ffea7b317da207110f4265d8b0dfedcd9fe2d6bf8.gz",
+        "bytes": 1183,
+        "sha256": "16566711284a1f84f3c92848dfe10087ae666c8d7e63f50d063bcffde2b19fbd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-response-v1/stdout.log",
+        "bytes": 1010,
+        "sha256": "6757dd1d75aa56e0706842e6cb7016dc81e5663d288fb175d81e6465c1a607b9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6757dd1d75aa56e0706842e6cb7016dc81e5663d288fb175d81e6465c1a607b9.gz",
+        "bytes": 437,
+        "sha256": "1206a3d51d83b75c98097a53899228ca9721da8afb24f627034c9958c698c9b1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/prepare.cjs",
+        "bytes": 3060,
+        "sha256": "0de0c83117d05d95d51777567af8982e3a03694153212fbea86e8c39a8c22091"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0de0c83117d05d95d51777567af8982e3a03694153212fbea86e8c39a8c22091.gz",
+        "bytes": 1324,
+        "sha256": "dd6c70b1be0507cfe97d82aec1dc6505df91a5cd7c5c8d0edfa81e1ae0ca2ba9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/quarter20/launch.json",
+        "bytes": 129,
+        "sha256": "40954d86128f32088d2bdcfe67197932602d9115d062da1e1b931aa2a56d4d29"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/40954d86128f32088d2bdcfe67197932602d9115d062da1e1b931aa2a56d4d29.gz",
+        "bytes": 133,
+        "sha256": "5ba186e379cc2f871422baaa416ad0015279f415cb288d98d1348ed30459ddbe"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/quarter20/replay-input.json",
+        "bytes": 13013338,
+        "sha256": "fccc45132c3e8bb8ecc01d6a7bdfeeb75a477181ec235258faacca48383b6c78"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fccc45132c3e8bb8ecc01d6a7bdfeeb75a477181ec235258faacca48383b6c78.gz",
+        "bytes": 3659589,
+        "sha256": "b8217339137b41029258f56dc6b3dad018183a809986c510bf3778768bdf0d90"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/quarter20/spec.json",
+        "bytes": 1778,
+        "sha256": "98332c6148cc3bd76f3beaf584ddd3baa26e1d67c6275efff8a333442066a2b0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/98332c6148cc3bd76f3beaf584ddd3baa26e1d67c6275efff8a333442066a2b0.gz",
+        "bytes": 901,
+        "sha256": "222020ab5044fe3570de05e538269c0e5b21f0ec840fd047f8099d98f57a68ac"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/quarter20/stderr.log",
+        "bytes": 802,
+        "sha256": "b5cb75423198d2d59317fd5f033b616a23d38d640724ad50d09c481710718d21"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b5cb75423198d2d59317fd5f033b616a23d38d640724ad50d09c481710718d21.gz",
+        "bytes": 393,
+        "sha256": "e0450be60ba379ce9ddae765e173e0fe8679f6998febd1d29fa2fe4691b6828a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/quarter20/stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/run-one.cjs",
+        "bytes": 2935,
+        "sha256": "a3714c19434d68e63b425d5d7b850a3da0004cf1d425c4cbe5a036526e56dc72"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a3714c19434d68e63b425d5d7b850a3da0004cf1d425c4cbe5a036526e56dc72.gz",
+        "bytes": 1315,
+        "sha256": "f9f16c388033a585ba3292cd79603b4c409d79ee61fa4196f834527347000169"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/sustained300/launch.json",
+        "bytes": 132,
+        "sha256": "d57d04328258e0e7c80f4435713673fdd2e5c83a82824c1015176b2c5f93c13d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d57d04328258e0e7c80f4435713673fdd2e5c83a82824c1015176b2c5f93c13d.gz",
+        "bytes": 134,
+        "sha256": "4ea6829d9c380d0b4589e621acba7ea63a5ed6a6676b0d433494c63937263399"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/sustained300/replay-input.json",
+        "bytes": 14865468,
+        "sha256": "20c50ecdffa38a7a68cfcc6a8a1659e6f29ef651a1780349ac2b797f319d8a41"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/20c50ecdffa38a7a68cfcc6a8a1659e6f29ef651a1780349ac2b797f319d8a41.gz",
+        "bytes": 3748522,
+        "sha256": "618568cfce60b22a51e6571c345504e894b4f9d116ed074d3de8c265c982f357"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-root-v1/sustained300/spec.json",
+        "bytes": 1784,
+        "sha256": "d9fc441dedd794f982036bfd671c3393d43c1bd4735629522f73f69b53247d16"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d9fc441dedd794f982036bfd671c3393d43c1bd4735629522f73f69b53247d16.gz",
+        "bytes": 899,
+        "sha256": "400a75b4b8d88dcc77c8745df6c94c7168ebfac275fc8bf6a38e43b01e535b0c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-fine-study-v1/archive.cjs",
+        "bytes": 2454,
+        "sha256": "01473ec17fa9068aaf9c583cf31fcea6b632931a0b15fd131d195c9ef923310a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/01473ec17fa9068aaf9c583cf31fcea6b632931a0b15fd131d195c9ef923310a.gz",
+        "bytes": 1172,
+        "sha256": "04690a99acaf800fed7fb43fdc8a56a791957973b65d45113aa93947c5c67410"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-validation-v1/fine20/replay-input.json",
+        "bytes": 13012029,
+        "sha256": "cc5a5b524cdd92f276fe9f5bcdb04df8ad28d979bf19cd134416121fb5a7c5e1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/cc5a5b524cdd92f276fe9f5bcdb04df8ad28d979bf19cd134416121fb5a7c5e1.gz",
+        "bytes": 3659410,
+        "sha256": "38294ae13206888559472e63c4f6d29066e4b3a7d6e4fc25030cf8882524d488"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/steering-validation-v1/fine20/summary.json",
+        "bytes": 724,
+        "sha256": "0348e69d41e0507e36ae9162eec256ef66f39cb5c27a81e1a88177e685a41ee3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0348e69d41e0507e36ae9162eec256ef66f39cb5c27a81e1a88177e685a41ee3.gz",
+        "bytes": 425,
+        "sha256": "30af00146f4844e94eaf94de733f07f8a6202eb67088f1b4ce8f649ddabf4ec6"
+      }
+    }
+  ],
+  "scope": "Completed two additional fine-timestep steering prefixes and three-point response fits including prior fine root. Proposed root0.0963787796rad/s is a small extrapolation; retain immutable fine300s and quarter20s validation inputs while excluding their growing outputs. Prior nominal300s uses a different yaw command; no matched-controller convergence, sustained speed record or global maximum is claimed.",
+  "terminal_evidence": "Fine-response driver session20633 verified terminal exit0; both prefixes complete20s without sampled fall, and two calibration CLI calls exit0. Fine-root300 session50665 and quarter20 retry remain active, as does prior nominal300 session21525. Initial quarter20 launcher failed before simulation due preparation race; closed error/stdout logs are included and retry outputs excluded.",
+  "specification": {
+    "path": "runs/steering-fine-response-archive.spec.json",
+    "sha256": "8a5ef527f289901a0d5cace5790e8e8638aa4f4d30b14af9cec2d7255d792b8a"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/archive_evidence_files.mjs",
+    "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+  }
+}

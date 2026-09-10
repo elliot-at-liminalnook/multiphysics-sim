@@ -1,0 +1,89 @@
+{
+  "motors": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "angle_min_rad": -0.04917904961617956,
+      "angle_max_rad": 0.16909139119484348,
+      "peak_speed_rad_s": 1.0770053989456085,
+      "peak_torque_nm": 0.5233039726378068
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "angle_min_rad": -0.022703764983363097,
+      "angle_max_rad": 0.0016561980670827608,
+      "peak_speed_rad_s": 0.15709480384627042,
+      "peak_torque_nm": 0.6077282321215776
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "angle_min_rad": -1.1276684385249107,
+      "angle_max_rad": -1.0471975511965976,
+      "peak_speed_rad_s": 1.1948858254454724,
+      "peak_torque_nm": 2.070240381157715
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "angle_min_rad": -0.04034527253383126,
+      "angle_max_rad": 0.03995248099166435,
+      "peak_speed_rad_s": 0.45515172143328564,
+      "peak_torque_nm": 0.36747118965658127
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "angle_min_rad": -0.3363812069466788,
+      "angle_max_rad": 0.13218795568426955,
+      "peak_speed_rad_s": 2.318230462375885,
+      "peak_torque_nm": 0.4708547673896275
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "angle_min_rad": -1.234115061595017,
+      "angle_max_rad": -1.0471975511965976,
+      "peak_speed_rad_s": 1.3024064530025323,
+      "peak_torque_nm": 1.9980918087600354
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "angle_min_rad": -0.14205483568509586,
+      "angle_max_rad": 0.02812899105153327,
+      "peak_speed_rad_s": 1.0941866211612554,
+      "peak_torque_nm": 0.49751025044024044
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "angle_min_rad": -0.022574044889857897,
+      "angle_max_rad": 0.0016829521218294434,
+      "peak_speed_rad_s": 0.15893414302952,
+      "peak_torque_nm": 0.5921007343401775
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "angle_min_rad": -1.1276715268512831,
+      "angle_max_rad": -1.0471975511965976,
+      "peak_speed_rad_s": 1.1945798377827426,
+      "peak_torque_nm": 2.0372332296939146
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "angle_min_rad": -0.03968900428991362,
+      "angle_max_rad": 0.03946929468438651,
+      "peak_speed_rad_s": 0.48629041201541334,
+      "peak_torque_nm": 0.364430358869267
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "angle_min_rad": -0.4052642068622596,
+      "angle_max_rad": 0.06011857658261835,
+      "peak_speed_rad_s": 2.2656363338452365,
+      "peak_torque_nm": 0.4500416109878345
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "angle_min_rad": -1.13701820031788,
+      "angle_max_rad": -0.9387091590220782,
+      "peak_speed_rad_s": 1.2598691580554684,
+      "peak_torque_nm": 1.9896722357574452
+    }
+  ],
+  "scope": "Separate maxima, not simultaneous operating points. Existing provisional effective actuator model; not calibrated hardware limits."
+}

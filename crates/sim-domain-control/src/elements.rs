@@ -143,6 +143,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     crate::contact_slip::register(registry)?;
     crate::smooth_return::register(registry)?;
     crate::command_lease::register(registry)?;
+    crate::heading::register(registry)?;
     use sim_core::ParameterDeclaration as P;
     use QuantityKind::Dimensionless as D;
     for descriptor in [

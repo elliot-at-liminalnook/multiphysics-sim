@@ -56,8 +56,8 @@ jobs:
       - run: node --test examples/interactive/test_causal_response.mjs
       - run: node --test examples/interactive/test_feedback_contributions.mjs
       - run: node --test examples/interactive/test_walking_audit.mjs
-      - run: cargo test --locked -p sim-domain-control --test motion_clock --test stepping --test support_preload --test angle_integral --test load_damping
-      - run: cargo test --locked -p sim-script --test angle_integral --test load_damping
+      - run: cargo test --locked -p sim-domain-control --test motion_clock --test stepping --test support_preload --test angle_integral --test load_damping --test heading
+      - run: cargo test --locked -p sim-script --test angle_integral --test load_damping --test heading
       - run: cargo test --locked -p sim-runtime --test step_reference
       - run: cargo test --locked -p sim-runtime --test planning
       - run: cargo test --locked -p sim-runtime --test lift

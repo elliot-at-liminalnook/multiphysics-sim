@@ -208,6 +208,17 @@ fn engine(sources: Sources, parameters: Map, seed: u64) -> Engine {
         sim_domain_control::load_damping::LoadDamping::new(config).map_err(error)?
             .displacement(velocity, normal_force).map_err(error)
     });
+    engine.register_fn("heading_correction", |target: rhai::FLOAT, actual: rhai::FLOAT,
+        target_rate: rhai::FLOAT, actual_rate: rhai::FLOAT, mut parameters: Map| -> ScriptResult<rhai::FLOAT> {
+        for value in parameters.values_mut() {
+            if value.is::<rhai::INT>() {
+                *value = Dynamic::from_float(value.clone_cast::<rhai::INT>() as rhai::FLOAT);
+            }
+        }
+        let config = rhai::serde::from_dynamic(&Dynamic::from(parameters))?;
+        sim_domain_control::heading::HeadingFeedback::new(config).map_err(error)?
+            .correction(target, actual, target_rate, actual_rate).map_err(error)
+    });
     engine
 }
 

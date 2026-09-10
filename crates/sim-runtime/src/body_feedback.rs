@@ -1,10 +1,11 @@
-//! Bounded kinematic suggestions for stance-supported body translation.
+//! Bounded kinematic suggestions for stance-supported body translation and yaw.
 //! This does not move poses or apply forces. A policy may add the suggested
 //! angular correction to servo targets; the shared dynamics execute the result.
 use crate::tracking::{Marker, validate_markers};
 use nalgebra::{DMatrix, DVector, Vector3};
 use serde::{Deserialize, Serialize};
 use sim_domain_control::trajectory::{Trajectory, TrajectoryConfig};
+use sim_domain_control::heading::{HeadingFeedback, HeadingFeedbackConfig, shortest_angle_error, world_z_heading};
 use sim_domain_robot::{
     Articulated, Generalized,
     articulated::embedding::{EmbeddedPoint, RigidEmbedding},
@@ -27,6 +28,18 @@ pub struct BodyFeedbackConfig {
     /// Floor normal force at which a marker gets full least-squares weight.
     /// Zero/unloaded markers contribute no body-support correction.
     pub full_support_force_n: f64,
+    /// Optional privileged world-Z heading objective. The online step planner
+    /// supplies its current reference yaw; standalone paths use yaw_rad below.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub yaw_feedback: Option<BodyYawFeedbackConfig>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct BodyYawFeedbackConfig {
+    pub controller: HeadingFeedbackConfig,
+    /// One unwrapped world-Z angle. Explicit interpolation owns wrap choices.
+    pub yaw_rad: TrajectoryConfig,
 }
 
 pub struct BodyFeedback {
@@ -34,6 +47,18 @@ pub struct BodyFeedback {
     reference: usize,
     points: Vec<EmbeddedPoint>,
     path: Trajectory,
+    yaw: Option<(HeadingFeedback, Trajectory)>,
+}
+#[derive(Debug, Serialize)]
+pub struct BodyYawFeedbackSample {
+    pub target_yaw_rad: f64,
+    pub actual_yaw_rad: f64,
+    pub error_rad: f64,
+    pub target_yaw_rate_rad_s: f64,
+    pub actual_yaw_rate_rad_s: f64,
+    /// Before the common joint correction cap and the policy's body gain.
+    pub correction_rad: f64,
+    pub stance_displacements_world_m: Vec<[f64; 3]>,
 }
 #[derive(Debug, Serialize)]
 pub struct BodyFeedbackSample {
@@ -43,6 +68,8 @@ pub struct BodyFeedbackSample {
     pub position_error_world_m: [f64; 3],
     pub support_weights: Vec<f64>,
     pub correction_rad: Vec<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub yaw_feedback: Option<BodyYawFeedbackSample>,
 }
 impl BodyFeedback {
     pub fn new(art: &Articulated, config: BodyFeedbackConfig) -> Result<Self, String> {
@@ -110,11 +137,20 @@ impl BodyFeedback {
                 "body reference requires three world metre coordinates starting at zero".into(),
             );
         }
+        let yaw = config.yaw_feedback.as_ref().map(|c| -> Result<_, String> {
+            let controller = HeadingFeedback::new(c.controller.clone())?;
+            let path = Trajectory::new(c.yaw_rad.clone())?;
+            if path.dimension() != 1 || c.yaw_rad.keyframes[0].time_s != 0. {
+                return Err("body yaw reference requires one world-Z angle starting at zero".into());
+            }
+            Ok((controller, path))
+        }).transpose()?;
         Ok(Self {
             config,
             reference,
             points,
             path,
+            yaw,
         })
     }
     pub fn config(&self) -> &BodyFeedbackConfig {
@@ -131,7 +167,8 @@ impl BodyFeedback {
         let reference = self.path.sample(phase)?;
         let position = std::array::from_fn(|i| reference.values[i]);
         let velocity = std::array::from_fn(|i| if advancing { reference.rates[i] } else { 0. });
-        self.sample_target(art, map, g, phase, position, velocity)
+        let yaw = self.yaw_reference(phase, advancing)?;
+        self.sample_with_yaw(art, map, g, phase, position, velocity, yaw)
     }
     pub fn sample_target(
         &self,
@@ -141,6 +178,28 @@ impl BodyFeedback {
         phase: f64,
         position: [f64; 3],
         velocity: [f64; 3],
+    ) -> Result<BodyFeedbackSample, String> {
+        let yaw = self.yaw_reference(phase, true)?;
+        self.sample_with_yaw(art, map, g, phase, position, velocity, yaw)
+    }
+    /// The online planner supplies an explicit yaw reference. With yaw feedback
+    /// absent this preserves the translation-only execution and serialization.
+    pub fn sample_pose_target(
+        &self, art: &Articulated, map: &RigidEmbedding<'_>, g: &Generalized,
+        phase: f64, position: [f64; 3], velocity: [f64; 3], yaw: [f64; 2],
+    ) -> Result<BodyFeedbackSample, String> {
+        if yaw.iter().any(|v| !v.is_finite()) { return Err("finite body yaw target required".into()); }
+        self.sample_with_yaw(art, map, g, phase, position, velocity, self.yaw.as_ref().map(|_| yaw))
+    }
+    fn yaw_reference(&self, phase: f64, advancing: bool) -> Result<Option<[f64; 2]>, String> {
+        self.yaw.as_ref().map(|(_, path)| {
+            let sample = path.sample(phase)?;
+            Ok([sample.values[0], if advancing { sample.rates[0] } else { 0. }])
+        }).transpose()
+    }
+    fn sample_with_yaw(
+        &self, art: &Articulated, map: &RigidEmbedding<'_>, g: &Generalized,
+        phase: f64, position: [f64; 3], velocity: [f64; 3], yaw_target: Option<[f64; 2]>,
     ) -> Result<BodyFeedbackSample, String> {
         if !phase.is_finite()
             || phase < 0.
@@ -181,16 +240,35 @@ impl BodyFeedback {
                 (normal / self.config.full_support_force_n).clamp(0.0, 1.0)
             })
             .collect::<Vec<_>>();
+        let yaw_feedback = self.yaw.as_ref().map(|(controller, _)| {
+            let [target, target_rate] = yaw_target.ok_or("explicit body yaw reference required")?;
+            let [actual, actual_rate] = world_z_heading(body.r.column(0).into(), body.w.into())?;
+            let correction = controller.correction(target, actual, target_rate, actual_rate)?;
+            let displacements = point_values.iter().map(|(p, _)| {
+                let arm = Vector3::from(*p) - body.p;
+                // Planted feet oppose the requested rigid-body rotation.
+                (-Vector3::new(0., 0., correction).cross(&arm)).into()
+            }).collect::<Vec<_>>();
+            Ok::<_, String>(BodyYawFeedbackSample { target_yaw_rad: target, actual_yaw_rad: actual,
+                error_rad: shortest_angle_error(target, actual)?, target_yaw_rate_rad_s: target_rate,
+                actual_yaw_rate_rad_s: actual_rate, correction_rad: correction,
+                stance_displacements_world_m: displacements })
+        }).transpose()?;
         let jacobians = point_values.into_iter().map(|(_, j)| j).collect::<Vec<_>>();
         // With planted feet, their displacement relative to a fixed body must
         // oppose the requested body displacement. World axes match the Jacobian.
-        let corrections = stance_correction(
+        let corrections = if let Some(yaw) = &yaw_feedback {
+            let displacements = yaw.stance_displacements_world_m.iter()
+                .map(|p| Vector3::from(*p) - correction).collect::<Vec<_>>();
+            point_correction(&jacobians, &weights, &displacements,
+                self.config.damping_m_per_rad, self.config.maximum_correction_rad)?
+        } else { stance_correction(
             &jacobians,
             &weights,
             -correction,
             self.config.damping_m_per_rad,
             self.config.maximum_correction_rad,
-        )?;
+        )? };
         Ok(BodyFeedbackSample {
             reference_time_s: phase,
             target_position_world_m: position,
@@ -198,6 +276,7 @@ impl BodyFeedback {
             position_error_world_m: error.into(),
             support_weights: weights,
             correction_rad: corrections,
+            yaw_feedback,
         })
     }
 }

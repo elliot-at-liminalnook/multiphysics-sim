@@ -90,6 +90,26 @@ fn body_feedback_uses_reference_phase_and_current_floor_support_without_mutating
         g.states,
         art.states().iter().map(|s| s.initial).collect::<Vec<_>>()
     );
+    let mut yaw_config = config.clone();
+    yaw_config.yaw_feedback = Some(serde_json::from_value(serde_json::json!({
+        "controller":{"position_gain":1.0,"velocity_damping_s":0.1,"maximum_correction_rad":0.02},
+        "yaw_rad":{"keyframes":[{"time_s":0,"values":[0.0]},{"time_s":1,"values":[0.1]}]}
+    })).unwrap());
+    let yaw_helper = BodyFeedback::new(&art, yaw_config).unwrap();
+    let paused = yaw_helper.sample(&art, &map, &g, 0.5, false).unwrap();
+    let moving = yaw_helper.sample(&art, &map, &g, 0.5, true).unwrap();
+    assert_eq!(paused.yaw_feedback.unwrap().target_yaw_rate_rad_s, 0.);
+    assert!((moving.yaw_feedback.unwrap().target_yaw_rate_rad_s - 0.1).abs() < 1e-14);
+    let planned = yaw_helper.sample_pose_target(&art, &map, &g, 0.5, body.into(), [0.;3], [0.25, 0.03]).unwrap();
+    let yaw = planned.yaw_feedback.unwrap();
+    assert_eq!(yaw.target_yaw_rad, 0.25);
+    assert_eq!(yaw.target_yaw_rate_rad_s, 0.03);
+    assert!(yaw.correction_rad > 0. && yaw.correction_rad <= 0.02);
+    let foot = art.evaluate_kinematics_only(&g)[art.links.iter().position(|l| l.name == "pendulum").unwrap()].p;
+    let displacement = Vector3::from(yaw.stance_displacements_world_m[0]);
+    let tangent = Vector3::z().cross(&(foot - body));
+    assert!(displacement.dot(&tangent) < 0., "stance suggestion must oppose requested body yaw");
+    assert_eq!(g.states, art.states().iter().map(|s| s.initial).collect::<Vec<_>>());
     let mut bad = config.clone();
     bad.expected_cad_sha256 = "different".into();
     assert!(BodyFeedback::new(&art, bad).is_err());

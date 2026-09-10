@@ -16,6 +16,7 @@ pub mod support_preload;
 pub mod angle_integral;
 pub mod load_damping;
 pub mod command_lease;
+pub mod heading;
 pub mod neural;
 pub mod policy_search;
 pub mod distillation;

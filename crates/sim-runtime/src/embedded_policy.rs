@@ -385,7 +385,8 @@ impl SampledPolicy {
             .map(|feedback| {
                 sim_solve::profile::POLICY_BODY_FEEDBACK.time(|| match &online {
                     Some(p) => {
-                        feedback.sample_target(art, map, g, time, p.reference.body_world_m, [0.; 3])
+                        feedback.sample_pose_target(art, map, g, time, p.reference.body_world_m,
+                            [0.; 3], [p.reference.yaw_rad, 0.])
                     }
                     None => feedback.sample(art, map, g, reference_time, reference_advancing),
                 })

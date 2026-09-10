@@ -1,0 +1,59 @@
+# Trusted baseline and predictive controller
+
+This work follows the user's four tasks: establish a trusted fastest baseline;
+validate the physical model and measure influential uncertainties on hardware;
+train and evaluate an action-conditioned predictive controller; and demonstrate
+the same APIs on the wheeled robot. Work takes place on `main` in
+`/Users/elliot/physics-simulator`.
+
+| Task | Required evidence | Current state |
+|---|---|---|
+| Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Exact original input is versioned in `../full-robot/trusted-baseline/`. Current-runtime startup matches historical observations exactly. Full reproduction and two timestep prefixes launched; completion is unproved. |
+| Physical model | Trace actuator/transmission limits, contacts and sensors to CAD; rank influential uncertain parameters using explicit experimental perturbations, then obtain corresponding hardware measurements and promote accepted values through CAD. | Winning recipe uses uncalibrated effective servos, omits inter-link contact, and declares no sensors. Its observations are ideal simulator values. Hardware availability/interface requested from user. |
+| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Existing Rust policy/trajectory-learning components are available. New dataset, matched evaluations and trained-controller acceptance remain pending. Simulator-only teacher inputs must remain distinct from available hardware sensor inputs. |
+| Second morphology | Use the same observation, action, prediction and experiment contracts on the wheeled robot, including sustained locomotion and predictive evaluation. | Streaming runner reproduces the wheeled fixture's final transition exactly; this 30 ms fixture is a replay check, not locomotion acceptance. |
+
+Speed remains net displacement divided by the complete requested duration, with
+no eligible score for failed or incomplete episodes. Slippage is diagnostic;
+no separate slip, heading or gait-style penalty is introduced. Command response
+and recovery are measured separately so a high straight-line speed cannot conceal
+poor control behavior.
+
+The original 0.5735639103 m/s result used a 0.15625 ms physics step for 300 s.
+Its own coarser-step result differs by about 2% and has substantial endpoint
+divergence. Neither result establishes numerical convergence or hardware accuracy.
+The new sweep holds robot, controller, task, seed and physical command times fixed;
+only timestep and corresponding integer step indices change.
+
+`benchmark_environment` streams ordinary typed environment transitions, their
+held actions, metadata and a replay recording. It uses the same `EmbeddedEnvironment`
+as the browser, supports an explicit prefix and cancellation file, and provides
+wall-clock progress. Prefix/cancelled results cannot acquire an eligible speed.
+The source recording's full horizon remains unchanged during prefix inspection.
+
+```sh
+cargo build --locked --release -p sim-runtime --example benchmark_environment
+target/release/examples/benchmark_environment \
+  examples/full-robot/trusted-baseline/fastest573.input.json \
+  runs/fresh-baseline-output 300 runs/baseline.cancel
+```
+
+Initial execution records live under `runs/trusted-baseline-v1/`. The pinned
+binary/source hashes, run handles, cancellation paths and startup checks are in
+`execution.json`; a run is complete only when its terminal summary and process
+status prove it. Final evidence must be retained before making acceptance claims.
+
+The first 20 s checks completed without sampled falls at 0.3125, 0.15625 and
+0.078125 ms. Net speeds are respectively 0.5636470, 0.5636030 and 0.5636007 m/s;
+relative to 0.15625 ms, endpoints differ by 0.277 m and 0.133 m. These are prefix
+diagnostics, not sustained speed or convergence acceptance. The preserved CAD
+artifact hash matches the winning export's declared CAD hash. See
+`../full-robot/trusted-baseline/initial-checks.json`.
+
+`prepare_command_benchmark.mjs` uses the production viewer's keyboard mapping and
+heartbeat, retaining the winning robot, controller, fixed gains, seed and physics
+step. The 90 s protocol is versioned in `command-protocol.json`: forward, brake,
+restart, left/right while walking, reverse, and stop. Three read-only body-axis
+observations support projected-heading measurement. Its initial actions and all
+pre-existing physical observations match the baseline exactly in a 0.1 s check.
+The complete command-response result remains pending.

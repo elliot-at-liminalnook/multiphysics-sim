@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "scope": "Startup/replay/cancellation and first20s timestep evidence only. The300s reproduction and90s command-response evaluations are in progress, not accepted.",
+  "input": {
+    "path": "examples/full-robot/trusted-baseline/fastest573.input.json",
+    "sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6"
+  },
+  "cad": {
+    "path": "examples/full-robot/baseline/robot.rcad",
+    "sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+  },
+  "runtime": {
+    "features": [],
+    "library_source_blake3": "f883fed95408cd7dd91cb261970f41370927272084804e936e8684b1892a7e88",
+    "version": 1
+  },
+  "binary": {
+    "path": "runs/trusted-baseline-v1/benchmark_environment",
+    "sha256": "d9eac96aefd2721c1a931883f913b81ad5294ecbd71cf81615b2305f3213883c"
+  },
+  "host_source": {
+    "path": "crates/sim-runtime/examples/benchmark_environment.rs",
+    "sha256": "c55a06a2e07de1171ca320c5a5a278b5b9b7323a0b80e846e822a4e98c4ef41a"
+  },
+  "runner_checks": {
+    "passed": true,
+    "wheeled_final_transition_exact": true,
+    "quadruped_historical_startup_samples": 6,
+    "maximum_observation_difference": 0,
+    "prefix_ineligible": true,
+    "scope": "Short shared-environment replay checks; no sustained or convergence claim."
+  },
+  "cancellation": {
+    "completed_actions": 0,
+    "eligible_net_speed_m_s": null,
+    "episode_complete": false,
+    "error": null,
+    "final_transition": {
+      "completed_steps": 0,
+      "elapsed_s": 0,
+      "imu_samples": [
+        {
+          "angular_velocity_rad_s": [
+            0,
+            0,
+            0
+          ],
+          "link": "chassis",
+          "name": "body imu",
+          "next_sample_time_s": 0.005,
+          "sample_time_s": null,
+          "specific_force_m_s2": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "observations": [
+        0,
+        0,
+        0,
+        0.01,
+        -0.02,
+        1
+      ],
+      "progress": {
+        "displacement_world_m": [
+          0,
+          0,
+          0
+        ],
+        "net_distance_m": 0,
+        "net_speed_m_s": 0,
+        "progress_reward_m": 0
+      },
+      "reward": 0,
+      "reward_terms": [
+        {
+          "name": "progress.net_displacement",
+          "value": 0
+        }
+      ],
+      "terminated": false,
+      "termination_reasons": [],
+      "time_s": 0,
+      "truncated": false
+    },
+    "requested_steps_completed": false,
+    "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+    "simulated_seconds_per_wall_second": 0,
+    "stepping_and_streaming_wall_s": 0.00001001,
+    "stop": "cancelled",
+    "version": 1
+  },
+  "timestep_prefix": {
+    "version": 1,
+    "rows": [
+      {
+        "case": "fastest300",
+        "time_s": 20,
+        "net_speed_over_prefix_m_s": 0.5636030139253422,
+        "displacement_xy_m": [
+          7.415709426497575,
+          8.489204710928274
+        ],
+        "fallen": false,
+        "speed_difference_from_base_fraction": 0,
+        "endpoint_difference_from_base_m": 0
+      },
+      {
+        "case": "coarser20",
+        "time_s": 20,
+        "net_speed_over_prefix_m_s": 0.5636470087942846,
+        "displacement_xy_m": [
+          7.622837436240795,
+          8.304909971200388
+        ],
+        "fallen": false,
+        "speed_difference_from_base_fraction": 0.00007806003136145989,
+        "endpoint_difference_from_base_m": 0.2772481983919043
+      },
+      {
+        "case": "finer20",
+        "time_s": 20,
+        "net_speed_over_prefix_m_s": 0.5636007486117596,
+        "displacement_xy_m": [
+          7.315136087753473,
+          8.575960911288085
+        ],
+        "fallen": false,
+        "speed_difference_from_base_fraction": -0.000004019342563221784,
+        "endpoint_difference_from_base_m": 0.1328218158549553
+      }
+    ],
+    "command_preflight": {
+      "source_actions_and_existing_observations_exact": true,
+      "samples": 6
+    },
+    "scope": "Matched first20s only; no completed300s score and no convergence claim."
+  }
+}

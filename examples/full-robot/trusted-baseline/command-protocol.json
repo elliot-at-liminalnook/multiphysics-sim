@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "stages": [
+    {"name": "forward_start", "duration_s": 20, "keys": ["w"]},
+    {"name": "brake", "duration_s": 10, "keys": []},
+    {"name": "forward_restart", "duration_s": 10, "keys": ["w"]},
+    {"name": "left_while_walking", "duration_s": 10, "keys": ["w", "a"]},
+    {"name": "right_while_walking", "duration_s": 10, "keys": ["w", "d"]},
+    {"name": "reverse", "duration_s": 20, "keys": ["s"]},
+    {"name": "stop", "duration_s": 10, "keys": []}
+  ]
+}

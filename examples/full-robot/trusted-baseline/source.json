@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "input": {
+    "path": "examples/full-robot/trusted-baseline/fastest573.input.json",
+    "sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6"
+  },
+  "source_commit": "d8aac182",
+  "original_path": "/Users/elliot/physics-simulator-gait-exploration/runs/composite-quarter300-v2/negative300/replay-input.json",
+  "historical_reference": {
+    "version": 1,
+    "passed": true,
+    "source": "runs/composite-quarter300-v2/negative300",
+    "reference": "runs/composite-steering-sustained-v2/negative300",
+    "elapsed_s": 300,
+    "step_s": 0.00015625,
+    "steps": 1920000,
+    "actions": 15000,
+    "frames": 15001,
+    "net_distance_m": 172.06917307788802,
+    "net_speed_m_s": 0.5735639102596267,
+    "displacement_xy_m": [
+      110.67217692326957,
+      131.75533984917917
+    ],
+    "reference_speed_m_s": 0.5621811105020795,
+    "relative_speed_change": 0.02024756710054043,
+    "scope": "Matched300s refinement changes only timestep and associated step/report/command indices. Entire scene, commands, seed, requested steps and zero sampled falls verified. Different timesteps are not expected to produce identical trajectories; this comparison does not establish convergence or physical maximum speed."
+  },
+  "status": "Historical recipe preserved; current-runtime reproduction, command response and convergence remain unverified."
+}

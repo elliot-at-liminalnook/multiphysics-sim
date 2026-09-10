@@ -1,0 +1,39 @@
+{
+  "id": "fastest573-exact",
+  "label": "0.574 m/s candidate · measured timestep (slow)",
+  "mode": "embedded",
+  "path": "data/fastest573-exact.json",
+  "task": "recorded winning task",
+  "motion_commands": [
+    "command.forward_speed",
+    "command.lateral_speed",
+    "command.yaw_rate"
+  ],
+  "motion_heartbeat": "command.packet_sequence",
+  "motion_key_vectors": {
+    "w": [
+      0.23676486909409844,
+      0,
+      0.1031773451737574
+    ],
+    "s": [
+      -0.23676486909409844,
+      0,
+      -0.1031773451737574
+    ],
+    "a": [
+      0,
+      0,
+      0.1
+    ],
+    "d": [
+      0,
+      0,
+      -0.1
+    ]
+  },
+  "asset_sha256": "1365200fb23fa122ddeae83a6bb2795a932ab17e769eb0200fabfe7603df1440",
+  "description": "Press Play, then hold W/S to walk; add A/D to steer. W includes the winning steering trim. Release to request a stop. Reset starts again.",
+  "readiness": "Live WASD with the measured physics timestep · substantially slower than realtime.",
+  "evidence": "Winning native run: 172.069 m / 300 simulated s = 0.57356 m/s, no sampled fall, 0.15625 ms physics steps. WASD turns, reversals and stops are exploratory; hardware is uncalibrated."
+}

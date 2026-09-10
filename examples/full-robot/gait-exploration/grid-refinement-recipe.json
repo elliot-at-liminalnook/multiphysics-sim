@@ -1,0 +1,17 @@
+{
+  "cad": "examples/full-robot/baseline/robot.rcad",
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+  "scene_sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01",
+  "links": [
+    "-Y | Hip output shaft and pulley",
+    "+X | Hip output shaft and pulley b6c0",
+    "+Y | Hip output shaft and pulley",
+    "-X | Hip output shaft and pulley"
+  ],
+  "algorithm": "triangle_aabb_exact_v1",
+  "sign_algorithm": "solid_union_ray_v1",
+  "tolerance_mm": 0.15,
+  "cell_m": 0.001,
+  "maximum_grid_nodes_per_link": 1500000
+}

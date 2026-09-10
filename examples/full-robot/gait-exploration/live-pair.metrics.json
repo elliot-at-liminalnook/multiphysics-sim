@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "completed": true,
+  "error": null,
+  "scope": "Short offline-reference development trial, not sustained/steering/learning qualification. Recorded force-free inter-link contacts require a separate independent geometric audit.",
+  "capture_sha256": "14ee2239a3fc677a8dd1a9f727d01a077d7d6736ba943ba1c171c4346327830b",
+  "definition": "opposite-pair-clear-flight",
+  "simulated_s": 6,
+  "speed_window_s": [
+    1.2000000000000002,
+    5.2
+  ],
+  "measured_forward_speed_mm_s": 26.989819232021105,
+  "accepted_prefix_forward_speed_mm_s": 26.989819232021105,
+  "body_displacement_world_m": [
+    0.1291008005475516,
+    0.00017165073458717453,
+    -0.002134175333808004
+  ],
+  "stop_drift_m": 0.0008430008858633732,
+  "maximum_heading_error_rad": 0.0003110799497644014,
+  "maximum_tilt_rad": 0.0055616766702297265,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.004483777680745764,
+      "motion_to_body_advance_ratio": 0.03473079716407636
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.0070160374711271956,
+      "motion_to_body_advance_ratio": 0.054345373846624134
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.0044873364875588845,
+      "motion_to_body_advance_ratio": 0.034758363249277995
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.004571220345318324,
+      "motion_to_body_advance_ratio": 0.035408117420117874
+    }
+  ],
+  "motor": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "maximum_speed_rad_s": 1.0781547566089935,
+      "maximum_torque_nm": 0.35818227176442374,
+      "angle_span_rad": 0.08236161232067209
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "maximum_speed_rad_s": 0.09643811986243324,
+      "maximum_torque_nm": 0.21419946115417102,
+      "angle_span_rad": 0.005623175247862435
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "maximum_speed_rad_s": 1.2854269625117676,
+      "maximum_torque_nm": 2.06113671065331,
+      "angle_span_rad": 0.10103133672471376
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "maximum_speed_rad_s": 0.0025580530879887706,
+      "maximum_torque_nm": 0.008072594833918213,
+      "angle_span_rad": 0.00019064151482573176
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "maximum_speed_rad_s": 1.8976206718183657,
+      "maximum_torque_nm": 0.317712385946593,
+      "angle_span_rad": 0.22739553680563634
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "maximum_speed_rad_s": 1.4247289636638132,
+      "maximum_torque_nm": 1.983846771699477,
+      "angle_span_rad": 0.14626544558989307
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "maximum_speed_rad_s": 1.0835195981918202,
+      "maximum_torque_nm": 0.35820825875587925,
+      "angle_span_rad": 0.08248448424463437
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "maximum_speed_rad_s": 0.09692965186817395,
+      "maximum_torque_nm": 0.21289549100904756,
+      "angle_span_rad": 0.005645704834295616
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "maximum_speed_rad_s": 1.2853621098352128,
+      "maximum_torque_nm": 2.0611966438232288,
+      "angle_span_rad": 0.10103429957772936
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "maximum_speed_rad_s": 0.005371976135887944,
+      "maximum_torque_nm": 0.012188524461069394,
+      "angle_span_rad": 0.0002650011698724724
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "maximum_speed_rad_s": 1.9025145896096902,
+      "maximum_torque_nm": 0.4171021826823398,
+      "angle_span_rad": 0.2289209206224267
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "maximum_speed_rad_s": 1.2801559037555041,
+      "maximum_torque_nm": 1.9738365508912237,
+      "angle_span_rad": 0.141012729500813
+    }
+  ],
+  "positive_mechanical_work_j": 2.12631760941014,
+  "native": {
+    "wall_s": 10.820711563,
+    "simulation_per_wall": 0.554492185201222,
+    "p95_transition_s": 0.0769572
+  },
+  "passes_noncollision_preliminary_screens": false
+}

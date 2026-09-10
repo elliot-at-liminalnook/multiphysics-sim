@@ -1,0 +1,884 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/actions.json",
+        "bytes": 49694,
+        "sha256": "757322a997197ca0aa3d2cf074713ec2ada487a51bd95a03e1254394b9a5d891"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/757322a997197ca0aa3d2cf074713ec2ada487a51bd95a03e1254394b9a5d891.gz",
+        "bytes": 1719,
+        "sha256": "9010c236a03615cabc4cf225b18c00c63f0a72c4dcbb43d85ff5a396c4650011"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/config.json",
+        "bytes": 988362,
+        "sha256": "877e2be13c5f15b88784dce23bc3289060c291a9849a573d5f5af1d0743229b4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/877e2be13c5f15b88784dce23bc3289060c291a9849a573d5f5af1d0743229b4.gz",
+        "bytes": 305520,
+        "sha256": "9ac16ebf05007c5ad4f93296dd5e55686232e221dd4e14497f10933213a62478"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/execution.json",
+        "bytes": 1370,
+        "sha256": "57f2515c15cc8770526c75148dd8354fe24f149659f20844f7d59a6f08949800"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/57f2515c15cc8770526c75148dd8354fe24f149659f20844f7d59a6f08949800.gz",
+        "bytes": 659,
+        "sha256": "47c8379408170f4183e49740af13f770af75a45ebcf4dc6c13120ed6b1b3cc89"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/forecast-audit.json",
+        "bytes": 52134,
+        "sha256": "4069f99c64ae421831e7668e8550dedddcc37484d4bc29f87620de6e04a8789c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4069f99c64ae421831e7668e8550dedddcc37484d4bc29f87620de6e04a8789c.gz",
+        "bytes": 7247,
+        "sha256": "2d052ebbb405785a4af9463b462b8017ac358981ebd9a77d8fbb79635667f805"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/forecast-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/forecast-audit.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/inputs.json",
+        "bytes": 1273,
+        "sha256": "b558675a5fc0604046b79638a925a0ae0d59d81b4c719b1dec4b3529717f56b2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b558675a5fc0604046b79638a925a0ae0d59d81b4c719b1dec4b3529717f56b2.gz",
+        "bytes": 652,
+        "sha256": "73a42ce3a150ea96096c98fa896eb6d1402ee976a56577c59b1f84fd83558bc5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/native.json",
+        "bytes": 81038532,
+        "sha256": "a816b24315f63ec6c3e0941651754cce7ab53355256bf5d15448b2e738d047be"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a816b24315f63ec6c3e0941651754cce7ab53355256bf5d15448b2e738d047be.gz",
+        "bytes": 16728718,
+        "sha256": "2e549aab108408fe610f264ac064f4e43439b5eb9fa787946de52eed768a72b2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/replacement-audit-check.json",
+        "bytes": 184,
+        "sha256": "5a2c62dd7cc8d292fcff12c45659a54fc6e6c64902d7795bb867ea4b81a8c99f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5a2c62dd7cc8d292fcff12c45659a54fc6e6c64902d7795bb867ea4b81a8c99f.gz",
+        "bytes": 156,
+        "sha256": "6b62954c7091022e51931107239d2305c2f57cfcc334d0554cc0f0b9871e4c5f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/scene.json",
+        "bytes": 12746277,
+        "sha256": "246f1a666de32c6e6373a8f3a09b6ec8833f357ffab57d1abd2820d936ef72aa"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/246f1a666de32c6e6373a8f3a09b6ec8833f357ffab57d1abd2820d936ef72aa.gz",
+        "bytes": 3639980,
+        "sha256": "48d77c2ced954a6756c72d437446415861dab4bd9633fff86a1c4915a0db6eb3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/summary.json",
+        "bytes": 900,
+        "sha256": "ed7a96918137d0f61f457bad4f71291ca95862df6d297f0f0d62787bdc2738d1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ed7a96918137d0f61f457bad4f71291ca95862df6d297f0f0d62787bdc2738d1.gz",
+        "bytes": 421,
+        "sha256": "2ce6ad707a7bb764adc91e3afd7e4b6fd7edc001c707056a4635e50d39f86eee"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/task.json",
+        "bytes": 7519,
+        "sha256": "fca343a1981bd8492fd4e7c656394f0f35e62f1cbc4aee846312f2c738dc862f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fca343a1981bd8492fd4e7c656394f0f35e62f1cbc4aee846312f2c738dc862f.gz",
+        "bytes": 866,
+        "sha256": "29758f3447f7624cdad1835518fb8d2485f60406cc85987e7960928808d94311"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/v3-audit.json",
+        "bytes": 52240,
+        "sha256": "8c61a157c9e217726bb9eb44532457adb903241b789cf2d1ef44c8842ecc3671"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8c61a157c9e217726bb9eb44532457adb903241b789cf2d1ef44c8842ecc3671.gz",
+        "bytes": 7309,
+        "sha256": "039c4443ac013b91dea9be62b6f4ebf6307e15a3f2ea011945d59c4eff94e795"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/v3-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/v3-audit.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/v3.bundle.json",
+        "bytes": 676417,
+        "sha256": "d9ba73c02fb200d138f19e5dfd64e28fbbbf9114adfcf4c135fd82cc1ad4cc4d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d9ba73c02fb200d138f19e5dfd64e28fbbbf9114adfcf4c135fd82cc1ad4cc4d.gz",
+        "bytes": 263980,
+        "sha256": "15691147136b66a74e7393e99a96010ac954ae09e4de7720e8a4adc21f8a1a0e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/v4-audit.json",
+        "bytes": 52254,
+        "sha256": "5dba7e8ba3dcbcb772ee98d903d98c7d8d73d30f2ad810c14f3f014cbed545f6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5dba7e8ba3dcbcb772ee98d903d98c7d8d73d30f2ad810c14f3f014cbed545f6.gz",
+        "bytes": 7324,
+        "sha256": "b4a9cf9d46a6da4188a10c0d2641771c5f821508a2149718a31e937cbd241250"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/v4-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/v4-audit.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-held-command-probe/v4.bundle.json",
+        "bytes": 676421,
+        "sha256": "812ec23ec8c0122f69e4f974f20f8e32b767e4357befc45b632d32635f2ef969"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/812ec23ec8c0122f69e4f974f20f8e32b767e4357befc45b632d32635f2ef969.gz",
+        "bytes": 264003,
+        "sha256": "b78b969131cfe09d574a36cfdec66fb7e1bb2990382b66b9f4e2fb250db92d26"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/forecast-replacement-audit-build.log",
+        "bytes": 605,
+        "sha256": "bfe09097e35f988ad0a437ba7c5be24c9358d24657b90a1df31a139da27634f6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bfe09097e35f988ad0a437ba7c5be24c9358d24657b90a1df31a139da27634f6.gz",
+        "bytes": 385,
+        "sha256": "583de93e98a796cec78cc71843455a8fe5970465c751bf7325713011a5dfa1d0"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h1.stderr.log",
+        "bytes": 142,
+        "sha256": "33bddc7282cdd8e818239a7f88cb0487f86d7e46785bb50c5252658ee32d2ab0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33bddc7282cdd8e818239a7f88cb0487f86d7e46785bb50c5252658ee32d2ab0.gz",
+        "bytes": 140,
+        "sha256": "6b720afd864ce4e0ddec7fb682a79c3d8bf42793090c40bd0e4e2361ff9d5b31"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h1.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h1/experiment.json",
+        "bytes": 5851,
+        "sha256": "81dc17293f11ee870f53a0b46924fe49747dec10188c92cc80914495208efea7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/81dc17293f11ee870f53a0b46924fe49747dec10188c92cc80914495208efea7.gz",
+        "bytes": 852,
+        "sha256": "8933c5cbffc9cc004493d7d9e680a3b395bfc43fae36b15a8dcf3a9e9ade34ff"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h1/initial-model.json",
+        "bytes": 137720,
+        "sha256": "5eb52bab9fbab182c18be092edfe463aa15eb911f880e7a6e129505960c0c748"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/5eb52bab9fbab182c18be092edfe463aa15eb911f880e7a6e129505960c0c748.gz",
+        "bytes": 48157,
+        "sha256": "eac2399d91da29f3a62dd7d8121fff732f80e5c66bc72b2abe7e3e710cc8e287"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h1/model.json",
+        "bytes": 181840,
+        "sha256": "23ca0b6b262d11877ecfdb592145f4fc5d087b7962246650caa7dbad25ba1902"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/23ca0b6b262d11877ecfdb592145f4fc5d087b7962246650caa7dbad25ba1902.gz",
+        "bytes": 68714,
+        "sha256": "776ef56743dcdb3bdbaa81372a9547ac40484166232c454f2f5d8fdc195cd583"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h1/report.json",
+        "bytes": 13688,
+        "sha256": "6b1152c7de750d30bfd8db64ed3886d768e9589008926354267bd2b1ce795709"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6b1152c7de750d30bfd8db64ed3886d768e9589008926354267bd2b1ce795709.gz",
+        "bytes": 3064,
+        "sha256": "02c0ca091ea498f7758cb6336296fe9a8f37f19e861911e920b2afddd6919f93"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h10.stderr.log",
+        "bytes": 142,
+        "sha256": "b825924fbd332889c6a37f54ca8ceaabfe3a0e2af089b53aa51829f244fa376d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b825924fbd332889c6a37f54ca8ceaabfe3a0e2af089b53aa51829f244fa376d.gz",
+        "bytes": 139,
+        "sha256": "a18a3ca80235b1e4041a2c5ad8c5d23addb71cd6087c5c5eebb9c44c15fe7452"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h10.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h10/experiment.json",
+        "bytes": 5834,
+        "sha256": "aac8efc650b2871afc266db9cf176c9da1a2dac3afadf8b218bc22c3f690b38a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/aac8efc650b2871afc266db9cf176c9da1a2dac3afadf8b218bc22c3f690b38a.gz",
+        "bytes": 851,
+        "sha256": "a37e6cd80487df6c1402e5e414b09b0760262e7d94e7377c48dd669ebe7e44ee"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h10/initial-model.json",
+        "bytes": 228509,
+        "sha256": "8bfd074aca3d1158b418166f116ec2f0523adcbd2c37a3f97ba251d3ad9c30d7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8bfd074aca3d1158b418166f116ec2f0523adcbd2c37a3f97ba251d3ad9c30d7.gz",
+        "bytes": 82296,
+        "sha256": "fe044ea9f44a84f81638a7b8d7ef22b924e0ff2cfb166feb41728380be99daae"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h10/model.json",
+        "bytes": 272416,
+        "sha256": "c33187e0bd5aebd67ffa0ed138b1c8a8031caddc753e44d686f315d992f21ac4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c33187e0bd5aebd67ffa0ed138b1c8a8031caddc753e44d686f315d992f21ac4.gz",
+        "bytes": 107196,
+        "sha256": "919b323c59b56247bd3927f2a12f543fe4e2fa03fd1fce63b44356b80c5440bb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h10/report.json",
+        "bytes": 13690,
+        "sha256": "04a1b2dc2707eb0e32952ec322f0c5888f827a9e83d3b121de77b7261cbb762b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/04a1b2dc2707eb0e32952ec322f0c5888f827a9e83d3b121de77b7261cbb762b.gz",
+        "bytes": 3050,
+        "sha256": "f7bcd37314e3acefc1bf3a17a9327c994901a0ee9195efa9d65221d9da312880"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h5.stderr.log",
+        "bytes": 143,
+        "sha256": "98619379eced51fe20703fd11478ae70640877154630689bb4dce2dd112ae7f1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/98619379eced51fe20703fd11478ae70640877154630689bb4dce2dd112ae7f1.gz",
+        "bytes": 140,
+        "sha256": "c9ba8ca1a6ded42dae05c56dbb50cf6b9701cc0ef6d9ad64ed099c81426dbee9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h5.stdout.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h5/experiment.json",
+        "bytes": 5845,
+        "sha256": "59f890e8802b583476927be8cff5bb03ae40595ac4074effceb7a5d3d6a01e56"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/59f890e8802b583476927be8cff5bb03ae40595ac4074effceb7a5d3d6a01e56.gz",
+        "bytes": 851,
+        "sha256": "eb5124aa18d7f297e7080c0235028aae61522b9e48949bd35f3e6dbc73376cc3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h5/initial-model.json",
+        "bytes": 177919,
+        "sha256": "6325c4229c99a5e6128b73d7d6b2fd59d04b89d774fd265f4a6dde3a4a90e808"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6325c4229c99a5e6128b73d7d6b2fd59d04b89d774fd265f4a6dde3a4a90e808.gz",
+        "bytes": 63437,
+        "sha256": "bdb0cc12a3c74ec109cc2abd5ee4316019ddf59a4cbf3b29a5cdc9125359934f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h5/model.json",
+        "bytes": 222150,
+        "sha256": "d1752d0d4446715b8be0d347f173d2cede976c277b870febf6bb6da1e00ef76d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d1752d0d4446715b8be0d347f173d2cede976c277b870febf6bb6da1e00ef76d.gz",
+        "bytes": 88369,
+        "sha256": "935fcede70beaabf0e48ac8b16cb32f9e3c7192d6744a0b9a6fa2aaf42adbed1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/motion-forecast-v4-h5/report.json",
+        "bytes": 13628,
+        "sha256": "8a9f8f6fbe063fc681dc25b9ffcc14e776665f10cef13f67de4469fb431aae28"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8a9f8f6fbe063fc681dc25b9ffcc14e776665f10cef13f67de4469fb431aae28.gz",
+        "bytes": 3053,
+        "sha256": "884930cecbd59f83582d903a909dbb9a784cf0e2a48fb061de255a8bd233c65f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h1-forecast.json",
+        "bytes": 18422,
+        "sha256": "3001e8ae6cb61ba06c263e90cde82ca918f75426d18a1ee11a6d9f3c3fb68a59"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3001e8ae6cb61ba06c263e90cde82ca918f75426d18a1ee11a6d9f3c3fb68a59.gz",
+        "bytes": 4002,
+        "sha256": "9076bcd89cc8046a24c44f2f3a932f4d9ee387a1a80c4a647c6ab6ff37392c02"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h1-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h1-forecast.stdout.log",
+        "bytes": 151,
+        "sha256": "3f7a67829af3ccb6b9afa1a157753034ebb42e6b50ee743a3601fd19c06ce381"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3f7a67829af3ccb6b9afa1a157753034ebb42e6b50ee743a3601fd19c06ce381.gz",
+        "bytes": 136,
+        "sha256": "15eb281bd9de064b601a1f3c0085befaf390462849601d923a09ad4dc68b541b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h10-forecast.json",
+        "bytes": 18353,
+        "sha256": "83a7875b14e0cf647b8a2c967079d696c433912d7c809d5c4c6133ffcbb7257d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/83a7875b14e0cf647b8a2c967079d696c433912d7c809d5c4c6133ffcbb7257d.gz",
+        "bytes": 3999,
+        "sha256": "1c7b6d7f644cd15baeb127b09efe82b7a66c73d2de9a9834b6554275df5f7126"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h10-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h10-forecast.stdout.log",
+        "bytes": 152,
+        "sha256": "0010e5aa60cceb292c564bee0c2ef2f060b8791c9561848a83dbc6a7957fcaab"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0010e5aa60cceb292c564bee0c2ef2f060b8791c9561848a83dbc6a7957fcaab.gz",
+        "bytes": 138,
+        "sha256": "c44f191dc7ca4ac3d5c5df62d44fa39ff29d7fcf800d0094a9601134eed90186"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h5-forecast.json",
+        "bytes": 18299,
+        "sha256": "b5ff0da88d457614ff3ce1ff1892a3eebb65c9c6250fa982e65a943e73228980"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b5ff0da88d457614ff3ce1ff1892a3eebb65c9c6250fa982e65a943e73228980.gz",
+        "bytes": 4014,
+        "sha256": "7602692753229a3c112a1136c7dd8a6f26c14039fdf6e0d62657118f2c26077d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h5-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode000-h5-forecast.stdout.log",
+        "bytes": 149,
+        "sha256": "25f7dfe7f42a032a3935392b5a851f7922079520c31f4435e61c600deb648c4a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/25f7dfe7f42a032a3935392b5a851f7922079520c31f4435e61c600deb648c4a.gz",
+        "bytes": 136,
+        "sha256": "b3b736583c0ce0188b16c4ea528bb0f13d1d9d94d32f28b58d8a522a960d1f82"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h1-forecast.json",
+        "bytes": 18413,
+        "sha256": "c0cbaafffbd932a26bbd55a4fbd2ed47dc9c4d995f6812883963a57d8b2701d9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c0cbaafffbd932a26bbd55a4fbd2ed47dc9c4d995f6812883963a57d8b2701d9.gz",
+        "bytes": 3997,
+        "sha256": "cf55846d102ae70f44562e80b3dcbc8ce3ae66116a7988d6a86bbe1622837d09"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h1-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h1-forecast.stdout.log",
+        "bytes": 150,
+        "sha256": "35e33c16eabb89c3d76f44029c8baea43f12cad44ebad08873a6108fd963a76d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/35e33c16eabb89c3d76f44029c8baea43f12cad44ebad08873a6108fd963a76d.gz",
+        "bytes": 136,
+        "sha256": "e1438e356174b42d9f23fab7afb4fcadaaf633aa61c00ea5453d4caa62c03151"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h10-forecast.json",
+        "bytes": 18345,
+        "sha256": "85b33600abb2cec8751ccd48e3e0817b8243e8420762de4a8a70dc4bdf4816dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/85b33600abb2cec8751ccd48e3e0817b8243e8420762de4a8a70dc4bdf4816dd.gz",
+        "bytes": 4000,
+        "sha256": "bd722e774ebe1c9d16184b1fd0d41b536ed6a6f45077586b7e90bddc1a474f16"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h10-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h10-forecast.stdout.log",
+        "bytes": 151,
+        "sha256": "54cd23d976e36885044bdc5a4fb6e1782efdab6b5db5666baf0cb50face7946d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/54cd23d976e36885044bdc5a4fb6e1782efdab6b5db5666baf0cb50face7946d.gz",
+        "bytes": 136,
+        "sha256": "8042409a80d363d92fc074e1f0c049dbf68466a4088f1afba85079a6bb4158f9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h5-forecast.json",
+        "bytes": 18291,
+        "sha256": "8b983a27065f73b0d7f7838f617a42dd2f5adcc605129aab8e179b688aacab96"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8b983a27065f73b0d7f7838f617a42dd2f5adcc605129aab8e179b688aacab96.gz",
+        "bytes": 4007,
+        "sha256": "909093becc93e90d6aed77bd9b558649d58af546dc1b84441f14a60a6bb10a77"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h5-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v3-h5-forecast.stdout.log",
+        "bytes": 151,
+        "sha256": "6c855d9cacd362a73cbeab12f1ef4c64ae5cc4f02e1f244d344bae35f313d23e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6c855d9cacd362a73cbeab12f1ef4c64ae5cc4f02e1f244d344bae35f313d23e.gz",
+        "bytes": 137,
+        "sha256": "832272a40628802691a69cd764d8fa488fbdee971de7ea5ed7b818a57eab3b06"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h1-forecast.json",
+        "bytes": 18419,
+        "sha256": "9111010403e58211a5e9ad5d9cf4839f2d1b89e0e425b6defda3cb56d4de7156"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9111010403e58211a5e9ad5d9cf4839f2d1b89e0e425b6defda3cb56d4de7156.gz",
+        "bytes": 3992,
+        "sha256": "c80b39324526ce4434f66363aca79c95446390b803a59f6eb39a15c3dae9cf0e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h1-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h1-forecast.stdout.log",
+        "bytes": 151,
+        "sha256": "c4e258316ab9755198c3fe8a6e450c641cc347c216cb6a3a81c48cb310c99da0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c4e258316ab9755198c3fe8a6e450c641cc347c216cb6a3a81c48cb310c99da0.gz",
+        "bytes": 136,
+        "sha256": "3029358b7b2238b5ef0a3d81a951510988e3da274d45a65d2f8ff783deb06fc9"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h10-forecast.json",
+        "bytes": 18350,
+        "sha256": "f8ed59b2f3459482ea1dc239af5d3782c9b2276a2bfd395b4fcce3999ce2c1fd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f8ed59b2f3459482ea1dc239af5d3782c9b2276a2bfd395b4fcce3999ce2c1fd.gz",
+        "bytes": 3996,
+        "sha256": "48a96f9fcdf08bb02d281d02adf57e44263d863c4c7ec1167a4623d10892f46b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h10-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h10-forecast.stdout.log",
+        "bytes": 150,
+        "sha256": "86e7326fae8ebb5dfc283e49083e503a7bb3d2250398e8ffa76a6adbb4682241"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/86e7326fae8ebb5dfc283e49083e503a7bb3d2250398e8ffa76a6adbb4682241.gz",
+        "bytes": 136,
+        "sha256": "2cf2a13a8a68960b30973144135dd36e5f280b886cc9a8518016a5c7c0a5efbf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h5-forecast.json",
+        "bytes": 18300,
+        "sha256": "b96f74781ff156da820b4b94acc859dbe8fee70bb0407818a027ab6e3d138f56"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b96f74781ff156da820b4b94acc859dbe8fee70bb0407818a027ab6e3d138f56.gz",
+        "bytes": 4014,
+        "sha256": "a298191f04ceca79efb63d224b94dd50cecf937d81e1e6c57ec6a3cbffb7ea76"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h5-forecast.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/episode001-v4-h5-forecast.stdout.log",
+        "bytes": 149,
+        "sha256": "bc6be4a71c2673a3aa171a0a3e5bcf6814c851a4c51566e210b305433f6980b3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bc6be4a71c2673a3aa171a0a3e5bcf6814c851a4c51566e210b305433f6980b3.gz",
+        "bytes": 135,
+        "sha256": "0c4e527a528400d8911a17cd42d9208e62fd79840a2e7c03aee1f851ba903f83"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/iteration-000-episode-000.json",
+        "bytes": 164299681,
+        "sha256": "fc1f7d316dbdc1f9b6f7fa94a31ea41d8ffab9edb314b0a6ae539dad9ab0af8f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fc1f7d316dbdc1f9b6f7fa94a31ea41d8ffab9edb314b0a6ae539dad9ab0af8f.gz",
+        "bytes": 45245277,
+        "sha256": "47aa9115a8eaf27fe76c81b30cda5e3b3f62ea2ba34f92f9827d9493b8f1ad8d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/iteration-000-episode-001.json",
+        "bytes": 164235445,
+        "sha256": "4fc4e3b39a8b5c4e686fd40ec9f81cda4292244c93b574bdafb63632e9a52f13"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4fc4e3b39a8b5c4e686fd40ec9f81cda4292244c93b574bdafb63632e9a52f13.gz",
+        "bytes": 45251812,
+        "sha256": "deddadbc9b2a81276d42a41d2c3803b7b88d5b5613f94d1cc0b924627f32c162"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/iteration-000-start.json",
+        "bytes": 699899,
+        "sha256": "90086324160bad11593b974c8ec5720f98992205ee209efd6ee7edcbab898b76"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/90086324160bad11593b974c8ec5720f98992205ee209efd6ee7edcbab898b76.gz",
+        "bytes": 67619,
+        "sha256": "9aac079e19581342cfd4dc74338833800d81410ddacd717f86a3fcbb01e82920"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/iteration-000-state.json",
+        "bytes": 2492707,
+        "sha256": "71e1d58e232ac391e3dc4ac9bf63b0c5467ccd7b6c4a94518dfb716a0014fbc5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/71e1d58e232ac391e3dc4ac9bf63b0c5467ccd7b6c4a94518dfb716a0014fbc5.gz",
+        "bytes": 960782,
+        "sha256": "a67f3a1cc7fb8e5a1869b0efc046228a0338aecad535a5b9050c552642eebabf"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-ppo-predictive-v2/iteration-000-update.json",
+        "bytes": 582,
+        "sha256": "a2cf01be465a46a4f029ca6d3105ff07e91eb8e3a561a1a841f12438d02e6638"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a2cf01be465a46a4f029ca6d3105ff07e91eb8e3a561a1a841f12438d02e6638.gz",
+        "bytes": 298,
+        "sha256": "5ce9703a2023918980f830821bd84617cd1ea9a3d6515973f2d29af528938599"
+      }
+    }
+  ],
+  "scope": "Completed learner rollouts, first PPO update, expanded-data forecasters and command-held probe. No learned speed improvement or physical maximum is claimed. Live training logs are excluded.",
+  "terminal_evidence": {
+    "ppo": "Both iteration0 rollouts closed and completed full60 without falling. Update and state files closed before independent validation. Overall PPO experiment remains running.",
+    "forecast_training": "Session 23898 exited 0 after all three v4 fits.",
+    "held_probe": "Session 34642 exited 0. Session 95175 completed original audit; session 50485 completed replacement comparison and identity check.",
+    "independent_validation": "Session 41113 exited 0 for all v3/v4 seed75 forecast evaluations."
+  },
+  "specification": {
+    "path": "examples/full-robot/contact-planning/learner-dynamics-archive-v1.spec.json",
+    "sha256": "4adc0b3a3a38a56393aa4d3c09dd4c56a71515b8daa27613c230c07b22b82dd2"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/archive_evidence_files.mjs",
+    "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+  }
+}

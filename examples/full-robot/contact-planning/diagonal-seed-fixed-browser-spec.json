@@ -1,0 +1,16 @@
+{
+  "id": "diagonal-seed-fixed",
+  "output": "runs/speed-ceiling/viewer-diagonal-seed-fixed",
+  "wasm": "/Users/elliot/physics-simulator/target/gait-exploration/wasm32-unknown-unknown/release/sim_web.wasm",
+  "profiles": [
+    {
+      "id": "physics-diagonal-seed-5ms",
+      "label": "Experimental · 45° travel · 41 mm/s · 5 ms preview",
+      "scene": "runs/contact-planning/diagonal-seed-preview.scene.json",
+      "config": "runs/contact-planning/diagonal-seed-preview.config.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "First diagonal planning seed; speed search continues. W travels 45° relative to the chassis.",
+      "evidence": "Detailed 8 s test: 40.8/39.5 mm/s, stops 0.28/0.24 s, 2.65% loaded-foot slip, 16/16 planned clearances. No overlap in 401 sampled poses. Sustained, steering, dense geometry and browser qualification remain separate."
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "base_commit": "e32b26a",
+  "sources": [
+    {
+      "path": "crates/sim-domain-control/src/contact_slip.rs",
+      "bytes": 6903,
+      "sha256": "a7406be127133a5bfaf86ad7128f808151fc61d1c634762116711f78f4aa2112"
+    },
+    {
+      "path": "crates/sim-domain-control/src/lib.rs",
+      "bytes": 380,
+      "sha256": "80116313eacb3c45c276cd4ee44d6cc3d275d98077f117861abf309d40fbf702"
+    },
+    {
+      "path": "crates/sim-domain-control/src/elements.rs",
+      "bytes": 6532,
+      "sha256": "cb5af59a5522e7b0cae38941c5f322658cba2d85be7bc738ae5a7d4651535ce0"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 50449,
+      "sha256": "df695532cb5eaa157d50a96956efbb84a4a788098c73826f552e9a188e5cedcb"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 40435,
+      "sha256": "9c82ac5caa1b4cae555fdfb98957afca4300f1781959217b1437c4303e3e9f8a"
+    },
+    {
+      "path": "crates/sim-runtime/examples/restore_contact_feasibility.rs",
+      "bytes": 2922,
+      "sha256": "eadeffb8928bb4a98ccb3c7e24794f38e34b3e2ff11b51e4c70610278731468e"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 2257,
+      "sha256": "5b98904e61bedce96618989acd82268ba682858553fb07e4d05ba1fd458eb428"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/restore_contact_feasibility",
+      "bytes": 8708044,
+      "sha256": "92489741ee35625ca48aadda2b872b441ad30a5f88e427aef4b595bf98ad5c19"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8647348,
+      "sha256": "243f8fc8ab846ac27ad4ce41bc938281e4370ad941983fb50e256ca5d59d49b1"
+    }
+  ]
+}

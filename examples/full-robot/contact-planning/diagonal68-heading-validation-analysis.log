@@ -1,0 +1,39 @@
+[
+  {
+    name: 'diagonal68-human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.04648561765862383,
+    turn_rad: 0.2261043462422853,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'diagonal68-human-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.04512176572916695,
+    turn_rad: 0.22474752136983323,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'diagonal68-dropout-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.009807813519265914,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: true
+  }
+] [
+  {
+    reference: 'diagonal68-human-1p25ms',
+    candidate: 'diagonal68-human-0p625ms',
+    maximum_body_difference_m: 0.0021861089711077207,
+    maximum_speed_fraction: 0.0018866384555201318,
+    absolute_slip_ratio_difference: 0.0013638519294568788,
+    both_motion_checks_passed: true,
+    passed: true
+  }
+]

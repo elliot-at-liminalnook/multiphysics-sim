@@ -1,0 +1,102 @@
+{
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "provenance": {
+    "scope": "Exact extrema of the new shared cubic joint reference, with declared unchanged actuator no-load speeds. Conditional rate screen, not loaded gait feasibility.",
+    "source": "examples/full-robot/contact-planning/belt-three15-reference.result.json"
+  },
+  "reference_cycle_coordinates": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "peak_reference_rate_rad_s": 3.394783910510783,
+      "time_scaled_rate_budget_speed_m_s": 0.34371999486879595
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "peak_reference_rate_rad_s": 4.435109271152225,
+      "time_scaled_rate_budget_speed_m_s": 0.2630950078031094
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "peak_reference_rate_rad_s": 3.7768335646049196,
+      "time_scaled_rate_budget_speed_m_s": 0.30895062976477694
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "peak_reference_rate_rad_s": 3.1872431879905365,
+      "time_scaled_rate_budget_speed_m_s": 0.36610168709376245
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "peak_reference_rate_rad_s": 3.0820071935072155,
+      "time_scaled_rate_budget_speed_m_s": 0.3786023312209072
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "peak_reference_rate_rad_s": 4.24811555426293,
+      "time_scaled_rate_budget_speed_m_s": 0.27467593416344643
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "peak_reference_rate_rad_s": 3.3570640196141492,
+      "time_scaled_rate_budget_speed_m_s": 0.34758202449637887
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "peak_reference_rate_rad_s": 5.588295155258133,
+      "time_scaled_rate_budget_speed_m_s": 0.2088034142583756
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "peak_reference_rate_rad_s": 4.274697387716358,
+      "time_scaled_rate_budget_speed_m_s": 0.2729678857863663
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "peak_reference_rate_rad_s": 3.5044689336259722,
+      "time_scaled_rate_budget_speed_m_s": 0.3329620351618087
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "peak_reference_rate_rad_s": 5.4911944459414075,
+      "time_scaled_rate_budget_speed_m_s": 0.212495681911951
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "peak_reference_rate_rad_s": 3.014223240585452,
+      "time_scaled_rate_budget_speed_m_s": 0.38711635309228104
+    }
+  ],
+  "reference_cycle_interpolation": "periodic_cubic_b_spline",
+  "reference_cycle_rate_budget_speed_m_s": 0.2088034142583756,
+  "reference_cycle_retiming": null,
+  "rows": [
+    {
+      "authored_limit_violations": [],
+      "directions": [],
+      "error": null,
+      "id": "belt-three15",
+      "sampled_geometry_valid": false,
+      "sampled_penetrations": [
+        {
+          "link": 22,
+          "normal_world": [
+            -0.8328054179383965,
+            0.18505269062985458,
+            0.5217189258049817
+          ],
+          "other": 28,
+          "penetration_m": 8.283639205517959e-6,
+          "point_m": [
+            -0.06538864910169966,
+            0.004584917589274112,
+            0.022051423760191945
+          ]
+        }
+      ],
+      "static_support": []
+    }
+  ],
+  "scope": "Conditional shaft-rate budgets from the shared CAD closure Jacobian and effective actuator model. No-load speed is a design budget, not a hard backdrive limit. Frozen-pose return bounds omit varying geometry, lifting, acceleration, torque, friction and stability. Static support uses explicit point forces with contact disabled only for the audit: minimum-norm allocation is a candidate, not an optimized feasibility proof; contact height differences are reported, not resolved. Constant-static-torque rate screens omit velocity and acceleration loads. The declared polynomial joint-reference rate bound includes interior extrema and applies only to uniform time scaling of that reference. None is a global attainable speed proof.",
+  "sum_peak_positive_motor_power_w": 48.64499936262055,
+  "version": 1
+}

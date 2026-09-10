@@ -247,12 +247,15 @@ fn midpoint_audit_catches_insufficient_motor_command_sampling() {
 
 #[test]
 fn midpoint_collision_is_rejected_even_when_command_knots_pass() {
-    let (art, g, markers, config) = fixture_with_bracket(true);
+    let (mut art, g, markers, config) = fixture_with_bracket(true);
+    for omit_forces in [false, true] {
+    art.omit_inter_link_contact = omit_forces;
     let error = plan_marker_motion(&art, &g, &markers, &config)
         .err()
         .unwrap();
     assert!(error.contains("internal contact at 0.025s"), "{error}");
     assert!(error.contains("pendulum / ground"), "{error}");
+    }
 }
 
 #[test]
@@ -366,4 +369,46 @@ fn translated_base_reference_compensates_with_joint_motion_without_mutating_seed
         .keyframes[0]
         .values[0] = 0.1;
     assert!(plan_marker_motion(&art, &g, &markers, &config).is_err());
+}
+
+#[test]
+fn configuration_batch_matches_analytic_slide_without_mutating_seed() {
+    use sim_runtime::configuration_inspection::*;
+    let (art, g, markers, plan) = fixture();
+    let before = g.states.clone();
+    let mut config = ConfigurationInspection {
+        record_poses:true,
+        independent_coordinates:plan.independent_coordinates,
+        embedding:plan.embedding,
+        samples:[0.0,0.025,-0.02].iter().enumerate().map(|(i,q)| ConfigurationSample {
+            id:format!("sample-{i}"), coordinates:vec![*q],
+        }).collect(),
+    };
+    let rows=inspect_configurations(&art,&g,&markers,&config).unwrap();
+    for row in &rows {
+        assert!(row.error.is_none(),"{:?}",row.error);
+        let m=&row.markers[0];
+        assert!((m.position_world_m[0]-rows[0].markers[0].position_world_m[0]-row.coordinates[0]).abs()<1e-12);
+        assert!((m.jacobian[0][0]-1.0).abs()<1e-12);
+        assert!(m.jacobian[1][0].abs()<1e-12 && m.jacobian[2][0].abs()<1e-12);
+    }
+    config.samples.reverse();
+    let reverse=inspect_configurations(&art,&g,&markers,&config).unwrap();
+    assert_eq!(serde_json::to_value(&rows[0]).unwrap(),serde_json::to_value(&reverse[2]).unwrap());
+    assert_eq!(g.states,before);
+    // Floating-base velocity coordinates must not be mistaken for motor positions.
+    let mut model=(*art.model).clone();
+    model.links.iter_mut().find(|l|l.name=="ground").unwrap().ground=false;
+    let floating=Articulated::new(Arc::new(model),&Options{contact:true,flex:false,..Default::default()}).unwrap();
+    let seed=floating.generalized(floating.states().iter().map(|s|s.initial).collect(),
+        vec![0.;floating.state_count],&vec![0.;floating.port_names.len()+1],vec![]);
+    let free=inspect_configurations(&floating,&seed,&markers,&config).unwrap();
+    assert!(free.iter().all(|r|r.error.is_none()&&r.poses.as_ref().unwrap().len()==floating.links.len()));
+    config.samples[0].coordinates[0]=f64::NAN;
+    assert!(inspect_configurations(&art,&g,&markers,&config).is_err());
+    config.samples[0].coordinates[0]=0.0;
+    config.samples[0].id=config.samples[1].id.clone();
+    assert!(inspect_configurations(&art,&g,&markers,&config).is_err());
+    let mut wrong=markers;wrong.expected_cad_sha256=Some("other".into());
+    assert!(inspect_configurations(&art,&g,&wrong,&config).is_err());
 }

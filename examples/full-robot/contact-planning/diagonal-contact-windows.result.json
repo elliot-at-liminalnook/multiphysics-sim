@@ -1,0 +1,217 @@
+{
+  "spec": {
+    "prefixes": [
+      "runs/contact-planning/diagonal68-human-0p625ms",
+      "runs/contact-planning/diagonal77-human-0p625ms",
+      "runs/contact-planning/diagonal81-human-0p625ms"
+    ],
+    "windows": [
+      {
+        "name": "forward",
+        "start_s": 0,
+        "end_s": 6
+      },
+      {
+        "name": "turn",
+        "start_s": 6,
+        "end_s": 10
+      },
+      {
+        "name": "reverse",
+        "start_s": 10,
+        "end_s": 16
+      },
+      {
+        "name": "stop",
+        "start_s": 16,
+        "end_s": 20
+      }
+    ]
+  },
+  "rows": [
+    {
+      "prefix": "runs/contact-planning/diagonal68-human-0p625ms",
+      "capture_sha256": "b49a164f2af1ba37b8267c9e5c3e55828757b1f3843f0bb19954c691224b7d67",
+      "body_path_m": 1.1113118403985203,
+      "worst_foot": "-X | Sliding foot crosshead",
+      "slip_ratio": 0.04512176572916695,
+      "windows": [
+        {
+          "name": "forward",
+          "start_s": 0,
+          "end_s": 6,
+          "body_path_m": 0.390947555038221,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.0032339738512167293,
+            "+X | Sliding foot crosshead": 0.00196119574209485,
+            "+Y | Sliding foot crosshead": 0.0025911377025018348,
+            "-X | Sliding foot crosshead": 0.004661715324533525
+          },
+          "worst_foot_fraction_of_loaded_path": 0.09296590923543105
+        },
+        {
+          "name": "turn",
+          "start_s": 6,
+          "end_s": 10,
+          "body_path_m": 0.29379425173840396,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.004886360856471662,
+            "+X | Sliding foot crosshead": 0.005509487222072258,
+            "+Y | Sliding foot crosshead": 0.00674283113283553,
+            "-X | Sliding foot crosshead": 0.043095280585572535
+          },
+          "worst_foot_fraction_of_loaded_path": 0.8594244102185004
+        },
+        {
+          "name": "reverse",
+          "start_s": 10,
+          "end_s": 16,
+          "body_path_m": 0.4141259102236389,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.009498495247796638,
+            "+X | Sliding foot crosshead": 0.0015733975967915168,
+            "+Y | Sliding foot crosshead": 0.0020004234577720567,
+            "-X | Sliding foot crosshead": 0.0021362909970733075
+          },
+          "worst_foot_fraction_of_loaded_path": 0.042602823447667026
+        },
+        {
+          "name": "stop",
+          "start_s": 16,
+          "end_s": 20,
+          "body_path_m": 0.012444123398254939,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.0004585565977343128,
+            "+X | Sliding foot crosshead": 0.0003582203387109926,
+            "+Y | Sliding foot crosshead": 0.00027801711920511944,
+            "-X | Sliding foot crosshead": 0.0002510656073320916
+          },
+          "worst_foot_fraction_of_loaded_path": 0.005006857098402758
+        }
+      ]
+    },
+    {
+      "prefix": "runs/contact-planning/diagonal77-human-0p625ms",
+      "capture_sha256": "7e27fd32f890bac88c63b326d0895569311668ca4e263d94775fb85c1bac0084",
+      "body_path_m": 1.254047526250902,
+      "worst_foot": "-X | Sliding foot crosshead",
+      "slip_ratio": 0.06457295441988596,
+      "windows": [
+        {
+          "name": "forward",
+          "start_s": 0,
+          "end_s": 6,
+          "body_path_m": 0.4412368286376187,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.0057909427308761845,
+            "+X | Sliding foot crosshead": 0.007074325766601569,
+            "+Y | Sliding foot crosshead": 0.003919107791528934,
+            "-X | Sliding foot crosshead": 0.03634613918211014
+          },
+          "worst_foot_fraction_of_loaded_path": 0.4488421481956284
+        },
+        {
+          "name": "turn",
+          "start_s": 6,
+          "end_s": 10,
+          "body_path_m": 0.3321497947809844,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.007699633687149864,
+            "+X | Sliding foot crosshead": 0.01058841337494794,
+            "+Y | Sliding foot crosshead": 0.010603588966379683,
+            "-X | Sliding foot crosshead": 0.040729238910077535
+          },
+          "worst_foot_fraction_of_loaded_path": 0.5029694899691087
+        },
+        {
+          "name": "reverse",
+          "start_s": 10,
+          "end_s": 16,
+          "body_path_m": 0.47371820995802927,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.0048480653009557945,
+            "+X | Sliding foot crosshead": 0.0019420105932807933,
+            "+Y | Sliding foot crosshead": 0.00494408654394285,
+            "-X | Sliding foot crosshead": 0.0038619349160067735
+          },
+          "worst_foot_fraction_of_loaded_path": 0.04769142480875595
+        },
+        {
+          "name": "stop",
+          "start_s": 16,
+          "end_s": 20,
+          "body_path_m": 0.006942692874268936,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.00014627764336923505,
+            "+X | Sliding foot crosshead": 0.00006330656729884675,
+            "+Y | Sliding foot crosshead": 0.00029417674309185855,
+            "-X | Sliding foot crosshead": 0.00004024074477583652
+          },
+          "worst_foot_fraction_of_loaded_path": 0.0004969370265073053
+        }
+      ]
+    },
+    {
+      "prefix": "runs/contact-planning/diagonal81-human-0p625ms",
+      "capture_sha256": "986072e0fa4856ddc157619504c907629057e923b3f1ab29c06abd50ebd16bcd",
+      "body_path_m": 1.3213942530958733,
+      "worst_foot": "-X | Sliding foot crosshead",
+      "slip_ratio": 0.07959323104625454,
+      "windows": [
+        {
+          "name": "forward",
+          "start_s": 0,
+          "end_s": 6,
+          "body_path_m": 0.4661120620526885,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.011805466716601301,
+            "+X | Sliding foot crosshead": 0.006826822322820879,
+            "+Y | Sliding foot crosshead": 0.005889847955048808,
+            "-X | Sliding foot crosshead": 0.026640146316130254
+          },
+          "worst_foot_fraction_of_loaded_path": 0.2532958399236408
+        },
+        {
+          "name": "turn",
+          "start_s": 6,
+          "end_s": 10,
+          "body_path_m": 0.34896257792492663,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.010375388998038668,
+            "+X | Sliding foot crosshead": 0.013813483512710513,
+            "+Y | Sliding foot crosshead": 0.010353217382652631,
+            "-X | Sliding foot crosshead": 0.06382095342986484
+          },
+          "worst_foot_fraction_of_loaded_path": 0.6068128084550772
+        },
+        {
+          "name": "reverse",
+          "start_s": 10,
+          "end_s": 16,
+          "body_path_m": 0.4963508834127574,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.009119965875375053,
+            "+X | Sliding foot crosshead": 0.0018495677152708346,
+            "+Y | Sliding foot crosshead": 0.008730739592561725,
+            "-X | Sliding foot crosshead": 0.01441240262719366
+          },
+          "worst_foot_fraction_of_loaded_path": 0.13703384303720265
+        },
+        {
+          "name": "stop",
+          "start_s": 16,
+          "end_s": 20,
+          "body_path_m": 0.009968729705502891,
+          "feet": {
+            "-Y | Sliding foot crosshead": 0.0015623446538243753,
+            "+X | Sliding foot crosshead": 0.0002083631198076014,
+            "+Y | Sliding foot crosshead": 0.0010017473653258857,
+            "-X | Sliding foot crosshead": 0.0003005357166641011
+          },
+          "worst_foot_fraction_of_loaded_path": 0.0028575085840799037
+        }
+      ]
+    }
+  ],
+  "scope": "Partition of the existing loaded-material path metric. Fractions identify when the worst foot slips; they do not prove causation or alter acceptance thresholds."
+}

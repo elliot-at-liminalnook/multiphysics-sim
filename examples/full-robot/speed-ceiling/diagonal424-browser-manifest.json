@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "id": "diagonal424",
+  "wasm": {
+    "artifact_sha256": "dfc8f4a46f97487727f52c8cfa20f78cc74064258fae05674aeb39f915a151ab",
+    "browser_module_sha256": "9a6d3a5b3496b44b08ad158b64b49ef23dc80642a496a85a770e2457ceb066fd"
+  },
+  "inputs": {
+    "examples/full-robot/contact-planning/diagonal424-browser-spec.json": "cf9efed8fd6234cef551a157d1cc91cc0bb952a4791873d7cc7d517a535ef6e0",
+    "Cargo.lock": "a38a0fb773d040af5c4edcfa973b183c48e877d0e56e2150969d02e7aff562b4",
+    "crates/sim-domain-control/src/trajectory.rs": "ba9e428adac6e4083f6b9bd044c0e20edd7d7fa983c07da04460a8010899c910",
+    "crates/sim-script/src/lib.rs": "a15719dd0c98f6e518976514de6ac52b2cda096e69419f6a394ac20caa7bf31b",
+    "web/viewer/viewer.js": "69b3ba8559f6e9541cfd499c99d98233eb79aba8102b36ef4fbd45032893d0cb",
+    "web/viewer/motion-commands.mjs": "f3854b84dc9ffb58c04d0656e4287ccd96c0b74076f33b6e39cce0a939f025c7",
+    "web/worker.js": "56fcf9a7de4feddd05f24b6f13186376a6c332e0952acb4c4073e7a9ba5efdb9",
+    "web/worker-message.mjs": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f",
+    "examples/full-robot/speed-ceiling/package_browser_profiles.mjs": "3c6b384f2664fdb06436f29b2e44c1fd398411fcd2bd951522a6abf3e21b3562",
+    "runs/contact-planning/diagonal424-preview.scene.json": "6604b6ef883a072101e1a8b143ee72960964ad09f34d5f980dde1c57a395beaa",
+    "runs/contact-planning/diagonal424-preview-5ms.config.json": "6d56ed6b2db7007cfa7371c9d5c6af38ce8951bd38d3f6aa8bbf943c8daae009",
+    "examples/full-robot/contact-planning/speed-discovery-task.json": "684cbdd9c1ad95996122c58aeffa5cd6fe4c0a7a230de9260ee34da979146d48",
+    "runs/contact-planning/diagonal424-preview-0p625ms.config.json": "341dd8ccaef8348e064a6afc69b1bf929595e2ae3ce5905885fb6998baa814fb"
+  },
+  "presets": [
+    {
+      "id": "physics-diagonal424-5ms",
+      "label": "0.424 m/s candidate · WASD preview",
+      "mode": "embedded",
+      "path": "data/physics-diagonal424-5ms.json",
+      "task": "examples/full-robot/contact-planning/speed-discovery-task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "df5a8ef43fc9f49376904aaf752fe9442e68af17967276c7b6448ebb26b4a6c5",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "Press Play. Hold W/S to move; combine A/D to steer. Release to stop. W follows the diagonal gait.",
+      "evidence": "Native continuous run: 8.479 m in 20 s (0.424 m/s), no detected fall. Finer-step run: 0.422 m/s. Browser preview uses 5 ms steps; detailed mode is slower. Steering and stopping are available to try."
+    },
+    {
+      "id": "physics-diagonal424-0p625ms",
+      "label": "0.424 m/s candidate · detailed physics",
+      "mode": "embedded",
+      "path": "data/physics-diagonal424-0p625ms.json",
+      "task": "examples/full-robot/contact-planning/speed-discovery-task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "7c27a82f32d82e6bc5bbaa3fa37092090b2f49dfc5ad867dd677be6acd8674bb",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "Press Play. Hold W/S to move; combine A/D to steer. Release to stop. W follows the diagonal gait.",
+      "evidence": "Native continuous run: 8.479 m in 20 s (0.424 m/s), no detected fall. Finer-step run: 0.422 m/s. Browser preview uses 5 ms steps; detailed mode is slower. Steering and stopping are available to try."
+    }
+  ],
+  "scope": "Shared Rust/WASM runtime and explicit numerical profiles. Native physical qualification, cross-host parity and rendered browser performance are separate requirements. Building this bundle does not establish their acceptance."
+}

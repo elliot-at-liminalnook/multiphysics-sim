@@ -1,7 +1,28 @@
 //! Small, deterministic nonlinear solver used by the first coupling island.
 
 mod coloring;
-pub use coloring::{BlockDiagonalColoring, solve_newton_numeric_colored, solve_newton_numeric_colored_scaled_audited};
+#[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
+pub mod bayesian;
+#[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
+pub mod composite;
+pub mod affine_response;
+pub mod uncertainty;
+#[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
+pub mod local_global;
+#[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
+pub mod mixed_cem;
+pub mod domain_restore;
+#[cfg(feature = "conic")]
+pub mod conic;
+pub mod affine_feasibility;
+pub mod least_squares;
+pub mod equality_dogleg;
+pub mod inequality_augmented_lagrangian;
+pub mod inequality_barrier;
+pub mod derivative_audit;
+#[cfg(all(feature = "native-ipopt", not(target_arch = "wasm32")))]
+pub mod ipopt;
+pub use coloring::{BlockDiagonalColoring, group_disjoint_columns, solve_newton_numeric_colored, solve_newton_numeric_colored_scaled_audited};
 
 use nalgebra::DMatrix;
 use serde::{Deserialize, Serialize};

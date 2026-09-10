@@ -1,0 +1,861 @@
+{
+  "version": 2,
+  "base_commit": "ed94e5c18ecf48619ccdcc5113afc545b9754ff7",
+  "files": [
+    {
+      "path": "examples/full-robot/contact-planning/README.md",
+      "bytes": 12539,
+      "sha256": "c74d44ab4f1e483fff47017ddc5f30220b024e6babd23c7126b8ed2b9d06e633"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/adaptive-build.log",
+      "bytes": 165,
+      "sha256": "ce8428b33284facc1aa1cb09f2f0ee3efdd9e248a42860ddcf6fc861ec05f4f4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/adaptive-restoration.log",
+      "bytes": 29177,
+      "sha256": "5d00ccdbe30183b995d73bfaba3ebf96b10d57f7ed7afac2a18314a6e2e1f361"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/adaptive-restoration.recipe.json",
+      "bytes": 19420,
+      "sha256": "4566910252226cc1602051c47183e83913cff4d72624c9ded5de0d534358feb9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/adaptive-restoration.result.json",
+      "bytes": 13831209,
+      "sha256": "413fe9b9fb16fe5e9b69c17f8bbb10a3cf9259e22aaa82c6ee855f7bf655f3a5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/adaptive-tests.log",
+      "bytes": 929,
+      "sha256": "803ff398528a181ce211336a1191459933668758446a3388edd967f9b72e295e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/analyze_heading_trials.mjs",
+      "bytes": 1713,
+      "sha256": "66db26aae62b2445c3fa9ed9ea64931d25638b9a43826938b9d9d58159970bd7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/audit_contact_controller.mjs",
+      "bytes": 4310,
+      "sha256": "34c52d0905eae2264bb9a48760c4b858925c1a859521f758dea84db28e22dd94"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/baseline.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/baseline.recipe.json",
+      "bytes": 18160,
+      "sha256": "541d999d2e4f5fd495645b8819c9dd12cd534d94e714fc5f9612d6c81eb9003a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/baseline.result.json",
+      "bytes": 38065,
+      "sha256": "cbd7eb98b4ee5dad44e12dba884c5d0860f3ae0c581d4772193d249e2acd1ae3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bidirectional-audit.recipe.json",
+      "bytes": 19431,
+      "sha256": "3370ae13cf72b61dd31d3b6d85f043af934b6f17b339ee9989fd7f77a9bb74e1"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/bidirectional-restoration.recipe.json",
+      "bytes": 19594,
+      "sha256": "4023108e4c6a8a324eec404d4299022570a0bf56ccc22474ebf45219a8680531"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/browser-archive.log",
+      "bytes": 218,
+      "sha256": "5221c907ee058389314ec6424b9ad3b42e10396394f85c4be2dc85ff7a485cd1"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/browser-evidence/evidence-v1-index.json",
+      "bytes": 8679,
+      "sha256": "a25f3259927857c16e00d2711e0a007fde296747321d7b968f41c15d57e54a09"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/browser-evidence/evidence-v1.part-00",
+      "bytes": 6886849,
+      "sha256": "92dc0657350fbbd6cc89fa55457d24cd2bb4ec4b9c82f770d5ee2f1f5a6fe570"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-browser-delivery.json",
+      "bytes": 516,
+      "sha256": "8f3bcc9b0b2cb8c644bb51d60d5e757977cdd05af9929aed9b6d1875ebade0ef"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-browser-spec.json",
+      "bytes": 1650,
+      "sha256": "76217087d615f4da0169a3081c78156cc2dbb726ecd6ec4e5dd7d8978329943c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-human-audit.json",
+      "bytes": 154,
+      "sha256": "900275d83632dd1a319dec385af7c8b32c8d99f27486492ab99adaa6f7c76890"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-human-audit.log",
+      "bytes": 319,
+      "sha256": "e2f162abb5838c2de08a058d550d2273b7bfb99295ae46e1843bc806c5faf075"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-human-clearance.summary.json",
+      "bytes": 18122,
+      "sha256": "1c5662df4c8678de4022b9ad9341ae175594942e9e6b4e6993ad6255238a2865"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-preview.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-screen-audit.json",
+      "bytes": 146,
+      "sha256": "090f70ae45bbcb603966611cb79e47481dce83d1fd6d3f95c1021860b284999f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-screen-audit.log",
+      "bytes": 316,
+      "sha256": "d0f614bfb9cfd8fa43cdd3a5656ebe3486b9d8d7b64d80821f6d053770c37627"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-screen-clearance.summary.json",
+      "bytes": 6159,
+      "sha256": "077464b43a126ba1413402b7071d466c31d205ddea43c7393bc171a1101b3415"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-screen-replay.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-screen.log",
+      "bytes": 53,
+      "sha256": "eaa9ac2b437276c0a08713851f6d2e9b4e5d5e8ed7a1e0d890744b592c0b7f2c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-screen.summary.json",
+      "bytes": 1877,
+      "sha256": "0e1c0e18a36a24dc3e99ca0cd5b6b1c91b021df847c861193b7a4207fcddf95a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/compiled184-wasm-build.log",
+      "bytes": 1244,
+      "sha256": "9e9520c37564e62d895b12fff6954212aaf4010a5f6a2126b4f6aa0c5a2e6d3f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-audit-regression.log",
+      "bytes": 912,
+      "sha256": "452a7ad99517ecc4650b7ea29e99afd61535b4b405910889aba3bebbfcab0fd3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-planned.rhai",
+      "bytes": 3779,
+      "sha256": "54c882f28b7093039508a5381b41b275a3fc87afbcebfa172c4cc0c0b3255e65"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/continuation-binary-provenance.json",
+      "bytes": 396,
+      "sha256": "8f2b7ea237631b01b4959e2d4f6b4bebe599bdfc797ad87e16895b9f23069461"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/continuation-build.log",
+      "bytes": 165,
+      "sha256": "d4ca16d430152e919be5eb3fabbb30f376bcef484e262609ee3d581b2ed36cfa"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/controller-reference-build.log",
+      "bytes": 165,
+      "sha256": "097e8ece5b2ded47bcbb4d919a436ecd51650c7eda2987e0e6856f56a8ae5f24"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/controller-reference.log",
+      "bytes": 53,
+      "sha256": "1377d30f7e1b499db70cdd9ca081209c96a86de430dee5926f4e7749fa05d6eb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/controller-reference.recipe.json",
+      "bytes": 10536,
+      "sha256": "2b308f51693b1633e397f0deae58c7779fb904b9e0e1b7cd5648bdd6f8cdfd6d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/controller-reference.result.json",
+      "bytes": 911377,
+      "sha256": "4069ad16662c9f37d109162ecd8c945590199de6685a2275a1a6e3072abf73f9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/controller-runtime-final-build.log",
+      "bytes": 165,
+      "sha256": "1b270d6f7baa1a8b218244fa77e661b3773914b4aace339027f475aceb2e0421"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/controller-trial.json",
+      "bytes": 1708,
+      "sha256": "6f3b9930ae7f25952d8762a67c7e20b81565122344f3afd25cae95ed508b6eb9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/directional-build.log",
+      "bytes": 165,
+      "sha256": "e26beeb0e6f87bafc9f73d4aaae18641e2dad2c9f7327f59694edb791d3dcff1"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/directional-tests.log",
+      "bytes": 728,
+      "sha256": "94a9c2486f0165ec7c7d5ccf2cee6742a76c3fb0cacc5a90dc3ebd6c88bff2f5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/event-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/event-audit.recipe.json",
+      "bytes": 19227,
+      "sha256": "c99c4711985ef67a1a08f587389c1082bcc2362a29208ea4a09338dc6c16285d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/event-audit.result.json",
+      "bytes": 95687,
+      "sha256": "3442e3dcb8aafcb0b0c5e6660f0bf13b04a42e361fc65faf5403b3de8445b9b2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/event-audit.summary.json",
+      "bytes": 571,
+      "sha256": "e2de0b4bbac0a6244b5fd8a42b7207631a578c629c6d77ecfade1f08112ad43c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/event-binary-provenance.json",
+      "bytes": 446,
+      "sha256": "0c32c2e1a545aac9da069acb68029ba916c63e761e06fa88822565bb02790200"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/event-planner-build.log",
+      "bytes": 381,
+      "sha256": "99106ab1c87e1e950f926b6f1389a717c3864306ec35a96393d39b9a8d909dd4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/event-sampling-tests.log",
+      "bytes": 670,
+      "sha256": "cf1e83ce8cfcdcb43236af32d791ea0aab4f92969e69f950cea8f5759a73a52e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/evidence-index.json",
+      "bytes": 14730,
+      "sha256": "59d3d2f210d66649cac200f589f978af13645c409de8bc36a7962e8a54a1448d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/final-contact-audit-regression.log",
+      "bytes": 817,
+      "sha256": "f7c7cbeb60d070b1b0383680162b2244b4a796d4912150b0f13783717582d363"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/final-phase-regression.log",
+      "bytes": 2737,
+      "sha256": "3230289d0978739e6d9ab8a4b8ef51850bb35feac9b65cb57973e64241900103"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/final-runtime-regression-corrected.log",
+      "bytes": 2212,
+      "sha256": "d7b1f306404c3021c09c35b060afaa2fc4336af3126ceb661c8d6ae35011a359"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/final-runtime-regression.log",
+      "bytes": 445,
+      "sha256": "af16abf9e1b041c29ead451f5de2cf8075dd9bf04f5e9802a06dc6bfa8098ef0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/final-script-regression.log",
+      "bytes": 496,
+      "sha256": "8d2c50a926a591a516b95a81939c68876744bf2fdabcc54e23a2f4b014321611"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-audit.summary.json",
+      "bytes": 5527,
+      "sha256": "dfbdf02726557c29dc3f95b416b2de421524cb31e176854b6681d7ef732ed25b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-conditional-bounds.json",
+      "bytes": 2519,
+      "sha256": "71d8bf9ea4e53cd19d06ffefcf2805783e7b1f54044303552a97a2bb4db0be67"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-minus45-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-minus45-audit.recipe.json",
+      "bytes": 19481,
+      "sha256": "fb1af47c0b4894b5764f3c7d7b3396d85cd66e7e005153a9c1d10422cf8a6819"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-minus45-audit.result.json",
+      "bytes": 1808737,
+      "sha256": "789cf82a5a13e1632f26cf210fb4190ba59512291ed09db131944c0eed5f3083"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-plus45-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-plus45-audit.recipe.json",
+      "bytes": 19479,
+      "sha256": "c76f3d4ce74a7ab6e478fa35e25b90c2564bce8c0f5d415ea3a1fc9b4ead3a09"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-plus45-audit.result.json",
+      "bytes": 1808863,
+      "sha256": "de2367142342ce60ffea0595f694ad945810af24dc64f9aaf4f9181069c5d014"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-plus45-restoration.recipe.json",
+      "bytes": 19643,
+      "sha256": "9a3aea121113c83f1570a4184e88a0abce59b16e517cd532f8a01e0cb5679a8f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-trials.json",
+      "bytes": 1715,
+      "sha256": "dfca1bc64850c5685b8e26bc0d339a4b47866c6a88f50195ed37f043900fedd4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading0-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading0-audit.recipe.json",
+      "bytes": 19427,
+      "sha256": "ec516442095d62685dbf505f80bfd46cb5a4857de0ea2a15388bb9ac1d098660"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading0-audit.result.json",
+      "bytes": 1813909,
+      "sha256": "7505a014ed1ed66e4925ed029362e7c7caf6a8b2984bb6ab139a70fe3d98bf52"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/initial-base-pose-tests.log",
+      "bytes": 708,
+      "sha256": "5dd7a536780123174ffaf75091db43601f00948e9cfcc3861d55ce0af86e3d81"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-search-audit-256.log",
+      "bytes": 53,
+      "sha256": "897d4fc95461f92deff6b3e88ccb7eef4dec11022c6a7b863160a77673ffb647"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-search-audit-256.recipe.json",
+      "bytes": 19192,
+      "sha256": "15482cc741a2f353115bab176936e71cb1e9dc865e2857ef817215e793e7ca9b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-search-audit-256.result.json",
+      "bytes": 633524,
+      "sha256": "a42997d1ef871d1410cb90cd2992b5742111179a1d4d60db7f18f1bba81b48fe"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-search.decisions.json",
+      "bytes": 10519,
+      "sha256": "e94fcff7c6982685ea30d2b473a8f31fdd487568eb3881b61511683ebc1acd20"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-search.log",
+      "bytes": 6107,
+      "sha256": "1646464b80a9f0a84760d71f7a31c634aa91e4abcda1d9e754897cc09381cb6c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-search.recipe.json",
+      "bytes": 18162,
+      "sha256": "87f6580baca195bbab175c1f020af7cad44a882f0b65ddedfb28c5774128d1f4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-search.result.json",
+      "bytes": 42995,
+      "sha256": "8b75bbe457aa8f8efb44682f20255f2175ccf6bdef0abae8e06f361679aada2e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-case-build.log",
+      "bytes": 165,
+      "sha256": "e9d8a8545ba0f2161daeffe524b1f28dd63e93d805246869f540b8478aedadb3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-case-tests.log",
+      "bytes": 1255,
+      "sha256": "89106914c0d48edea90378b56a1f02b7e3419545626e2d5999b4128354eb55a0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-clock-forward.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-clock-forward.recipe.json",
+      "bytes": 19342,
+      "sha256": "2ad511ffb8137ad390935e7201cdb30781b269e8aa586a72285c8c23e8f48f3c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-clock-forward.result.json",
+      "bytes": 1782720,
+      "sha256": "158bb0ba93393ed3fc4510a342dd35a6aa715ab360e62ac8f89367ff752221a3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-clock-regression.json",
+      "bytes": 512,
+      "sha256": "02f11b0c6bf952aa25da5595e5151e04d834c7b6792d5e1d1a869890b9a254ee"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-clock-reverse.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-clock-reverse.recipe.json",
+      "bytes": 19343,
+      "sha256": "0ef3ed7b0e74dc582dab74386bb9b4cd4ce930daecb181de17d3c61890d2116d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/operating-clock-reverse.result.json",
+      "bytes": 909357,
+      "sha256": "a1fe030e93e6d570368ccbb97f8665bbbc20181f6053e59e89d14ca395146c6b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-neighbors.log",
+      "bytes": 11111,
+      "sha256": "d82850a4734241e740a876d772f77c0f9fe08aeea94c59e23b260b423f8ae624"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-neighbors.recipe.json",
+      "bytes": 18215,
+      "sha256": "a773c9506a6ae3a4326bf18db08ed8e21cfbcf135bfe79e49187c98ed32fa7fe"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-neighbors.result.json",
+      "bytes": 104027,
+      "sha256": "73d188efa46d4556b2a4b3186f214f8d23133dd5d222c6a15ca9f961fdfb3c91"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-neighbors.summary.json",
+      "bytes": 581,
+      "sha256": "b965925e05f3a0b92b6e5cd28640c2a4ab5f5f7e6ee06f3323ed46d60d19d83f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs-audit-512.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs-audit-512.recipe.json",
+      "bytes": 19203,
+      "sha256": "f0ac96e5e17afe59c258efe18a329bbe9158325ebd2b666cabbe97d3a17b9c01"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs-audit-512.result.json",
+      "bytes": 1352711,
+      "sha256": "d48e760bc1ff99ed8e5ed05ba8298e4d5f522bcd56db825a4e2832f47bd97b0d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs-audit-512.summary.json",
+      "bytes": 3400,
+      "sha256": "61d2e6ec2647fab615fc9a93cb7e4d67d94683d139b4dc5d2ca1626797ef8275"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs-derivative-audit.json",
+      "bytes": 2490,
+      "sha256": "fa6c3937c6fed26a7fbdaffacd5282d81bf459d83c0b6fd65d3330d2bd157084"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs.log",
+      "bytes": 14497,
+      "sha256": "05c41ee5f410a326daac02110764004a77189c0468ee50e951b884b803507af2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs.recipe.json",
+      "bytes": 18211,
+      "sha256": "3cd2f90753b64efadfb88c1e9200be35838008034cadeed57b7fc3370fb07f59"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs.result.json",
+      "bytes": 98839,
+      "sha256": "2810ab0a95898be43573690d44b04fb1b2ba7136318a0df4178922aeb15eb581"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-pairs.summary.json",
+      "bytes": 584,
+      "sha256": "f9d5f5b8a691a5e426f0f1330bd05339f0d22772d0426bdeefab27e4d84fd15c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-starts.json",
+      "bytes": 674,
+      "sha256": "f3ab812313b62533618ef74d9e72df05c3ed04b79869b755bc2c161ea2055ab4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-wave.log",
+      "bytes": 14507,
+      "sha256": "5cd7d25eeb34da01cda91b951dc02a0000168fc6c2469fa885ab3adcc6b51dce"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-wave.recipe.json",
+      "bytes": 18219,
+      "sha256": "b65555848234297de8b07fda126b7b16f4b306fcf44a2c88fa9416ab6f64e5ec"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-wave.result.json",
+      "bytes": 107201,
+      "sha256": "491a006ed5464b93eeb345c6f0b22d93336d62cc8ce97c8ef9d59702f02f7823"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/phase-wave.summary.json",
+      "bytes": 577,
+      "sha256": "aeaa5bd0c8a3a095e1e98a2735437b9b477fcff6d23114cc911568a80336e56d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/policy-replay-build.log",
+      "bytes": 162,
+      "sha256": "0af255cbafa7b357efcb6b017e82ef4dcdfdf2eecad93e5748e3b44a249c51ba"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/pose-provenance-regression.log",
+      "bytes": 1101,
+      "sha256": "b68e069e5010783faff3d93a66ea3db9374db5ea4bcda0a074f08eb8e2fbb43f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-hip30-foot-60.log",
+      "bytes": 14612,
+      "sha256": "c420c7650fa6e7a0ae5f5621938abfa75f973a8336851a16b5cbe1dcf066835c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-hip30-foot-60.recipe.json",
+      "bytes": 18264,
+      "sha256": "100d40446677604a8942978d40aa55e4dfa2ba59880955b5f1bd26355e1a460b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-hip30-foot-60.result.json",
+      "bytes": 442962,
+      "sha256": "2d99cead75e97fcbf8881ac2431c308551a081c106fbcbce49bbcc711c8d1e97"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-hip30-foot-60.summary.json",
+      "bytes": 810,
+      "sha256": "2d52ffc2b3339839a82c8ab6449a64f6c4fff9b3c24e539187e470a6bc8f5925"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-hip45-foot-60.log",
+      "bytes": 14497,
+      "sha256": "3ec4d1c14dfcacb2ba599b622afb143d1d88adbf85e8261ec274389e26fd3d1b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-hip45-foot-60.recipe.json",
+      "bytes": 18259,
+      "sha256": "419e6303a3c4012d5a07041033541182da78f4ea4929fcf6ad08c6d449600385"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-hip45-foot-60.result.json",
+      "bytes": 442664,
+      "sha256": "7c3dedd0bccdd5b62ff78373f4c304a6747d920457eb5769cf119ac7ab71f10e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-hip45-foot-60.summary.json",
+      "bytes": 815,
+      "sha256": "505e817028f19c77c9c4996776b3f43adeedc3665ab5a308684e0b7556deb933"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/posture-starts.json",
+      "bytes": 1205,
+      "sha256": "d272484e3c2e6270a2b4a286b0d39890d761961d87c3fcc0812786548d7e523e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_controller_trial.mjs",
+      "bytes": 4336,
+      "sha256": "391c0e294b7c56fa336f9f513469e3eb37e282490d30280f7d652f2f781a6c28"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_controller_validation.mjs",
+      "bytes": 1804,
+      "sha256": "2c7e9d7c0526ec56291c09e8b64824029365fce2d891c08f98180689f98d0038"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_heading_trials.mjs",
+      "bytes": 2041,
+      "sha256": "0d012bb99de4043c78fa6cb110fa747ef37b23838b4381510f6166faceb953dd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_posture_starts.mjs",
+      "bytes": 2820,
+      "sha256": "bc8d48ce590321a8084ede4627eaffdafb3ed56f540cbd8ba71f318bb2194a9a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/provenance.json",
+      "bytes": 646,
+      "sha256": "8c2e80788b66d5b2a523adddd33c4dea724aa337773d855195249e89b97792c1"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/refinement-32.log",
+      "bytes": 23863,
+      "sha256": "5d87199e90f8bbdf28f6d60abdb802a686bdb52323daa44956d9187068c67039"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/refinement-32.recipe.json",
+      "bytes": 19195,
+      "sha256": "cc5dc35bd56c977b8b582d2b1c81efc19eafe5877eb8a231edc67457905d262e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/refinement-32.result.json",
+      "bytes": 102530,
+      "sha256": "4b392a232a692c8ce931537e994c0812b71e42c3131d415030d5dcc95b3b5378"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/retimed-reference-tests.log",
+      "bytes": 764,
+      "sha256": "cf29d21aeff523a0337c9b868771e0bc84620d0d741e04d8cd51046b6a476da3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/reverse-audit-build.log",
+      "bytes": 165,
+      "sha256": "1676400bc7408ad6a43bb809f1f47013e51a4b18f9e730c657383f388d7cbced"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/reverse-load-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/reverse-load-audit.recipe.json",
+      "bytes": 20406,
+      "sha256": "124773549af7a72ea36c64953afec5f189b27baac829bdedf2abf278e9825bbd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/reverse-load-audit.result.json",
+      "bytes": 6067532,
+      "sha256": "2472c1b8d2986d439be2c503ecd5bcbca2c3492775adf46c829f4f2d7b456146"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/runtime-archive.log",
+      "bytes": 204,
+      "sha256": "656276a0bcfed728bcb98cbb7490eb867ee9d2e1858a55fe467a34eef02cac2f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/runtime-evidence/evidence-v1-index.json",
+      "bytes": 11731,
+      "sha256": "1ab184b6d24944e9d6d206587293a9e41cea1d79f8ca50db39a5f7f92d171971"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/runtime-evidence/evidence-v1.part-00",
+      "bytes": 47055543,
+      "sha256": "5fd1c007a946e0f79ef0b54daef9eb131fc0d266447a4f1c59064aebd73cbc63"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/schedule-audit-build.log",
+      "bytes": 164,
+      "sha256": "4e95f4c179d59211dc20e7feb3008aeba18c2ca5a55d41b0eb00f99c88485656"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/schedule-audit-tests.log",
+      "bytes": 1274,
+      "sha256": "ac93a5ca39d8e67fa496cf9f163bac02fcb6f68b16a32d52104391e9f1c3f43b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/script-contact-phase-final-tests.log",
+      "bytes": 489,
+      "sha256": "ce5cb63f92de9b5246cb1a98f12c72153305f69d7b05be96b016131530727a66"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/script-contact-phase-tests.log",
+      "bytes": 489,
+      "sha256": "b0fea667dc1e1fad4e072b76ed241a9d3cfb882d96616ea37b074e07107323c3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/solver-final-regression.log",
+      "bytes": 1108,
+      "sha256": "9931e4ffc96fed9a5d5f0ef626577beeb7f8c9cfe4ffdf5130baff4d36bff7fa"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-continuation.log",
+      "bytes": 18317,
+      "sha256": "39841ca5082896504ff893744bfccfb3172ec0fca9a70c371820b511bef897fb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-continuation.recipe.json",
+      "bytes": 19206,
+      "sha256": "f5665f076ac1442b4ae41958ece8aaeb63b9a3257e6dacdc8470a921ba483ceb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-continuation.result.json",
+      "bytes": 846233,
+      "sha256": "d7c97e78796f067250d4efa3b2bd2fb1158f5e26dfcb28e0b95ae8f0285e61f5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-restoration-audit-1000.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-restoration-audit-1000.recipe.json",
+      "bytes": 19196,
+      "sha256": "5a048428588f4ca56fed910967f4ba6d6b24913f9697c08e9d20370a6236e4b2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-restoration-audit-1000.result.json",
+      "bytes": 5679833,
+      "sha256": "8ed7eab6459084cc57d8f7d8e1a17c8cb43b4fa46d6622f037f3f27dcc077d18"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-restoration-audit-1000.summary.json",
+      "bytes": 1128,
+      "sha256": "42bde76b15ca250ec70abd0db3907de0a38d4c12159333a919c71df83f81ec19"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-restoration.log",
+      "bytes": 18273,
+      "sha256": "93cf57700232255d98a01d9f2076fcad8d68c7ba0bac8b624decdc1c8a22fd21"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-restoration.recipe.json",
+      "bytes": 19208,
+      "sha256": "2d553319abe9ff457bee4559c81bd70292e0b2ee491615e1314f967c4268c54f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-restoration.result.json",
+      "bytes": 844648,
+      "sha256": "4815aa01b2203277d5808f86376e04df8d72e1f891201fc80513626edf00e3dd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/speed-restoration.summary.json",
+      "bytes": 761,
+      "sha256": "5e759c0f7dda662dbd575e8c96f61c41aeefa0979a65b1947d3b7e00ab6da178"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/validation-analysis.log",
+      "bytes": 1045,
+      "sha256": "4b5f74f7d8ee44d4b65b2faf65f8786203b0c859dba741431240fe96880f7c30"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/validation-cases.json",
+      "bytes": 2390,
+      "sha256": "069d665f617822d0f0627f3bf40ae0263b89ebc490e1d822d9c5f217961d1063"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/validation-summary.json",
+      "bytes": 8617,
+      "sha256": "0ace2c47af2adce5de0e9a1bcbbb909ffa6c7c1181825f3b04facd8674d67886"
+    }
+  ],
+  "sources": [
+    {
+      "path": "crates/sim-domain-control/src/contact_phase.rs",
+      "bytes": 15637,
+      "sha256": "aa2919e1b72c6eae2d48bcf43ce6e83cf1ed661cb5566de9218936026093da20"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_motion.rs",
+      "bytes": 2652,
+      "sha256": "13a3d65ff97d2df46402f3e4ec35519865755399e21d5bdf9e52e500f7553dfb"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 41542,
+      "sha256": "dd5c12ec6fc36fb21cab64e1b44bee7b92a27b0f238aa5aeafda0c1ea83ca7a4"
+    },
+    {
+      "path": "crates/sim-runtime/src/embedded.rs",
+      "bytes": 63616,
+      "sha256": "ec02f791645bed78532e946ae057e1657b740356edbc16d9f3cb6b9dfb39e117"
+    },
+    {
+      "path": "crates/sim-runtime/src/lift.rs",
+      "bytes": 6786,
+      "sha256": "f88f74a2e3efb2adb9d876ea9417227feecbbc2cba2094630c8fda4e177ade1a"
+    },
+    {
+      "path": "crates/sim-runtime/src/motion_tracking.rs",
+      "bytes": 9382,
+      "sha256": "aa213453e1bd51f525a6205c928069c2cf00e3d74ad87859127a8f643020dc89"
+    },
+    {
+      "path": "crates/sim-runtime/src/walking_task.rs",
+      "bytes": 12796,
+      "sha256": "630ed737ac9a0b9f54b7abd32104170352fb225a57c2c7fdfd17188d30f2bc33"
+    },
+    {
+      "path": "crates/sim-runtime/tests/lift.rs",
+      "bytes": 3630,
+      "sha256": "6cce00b6a0ee261da855eea008517e3240301dd652305de1d9e2cf9162cbb9a8"
+    },
+    {
+      "path": "crates/sim-runtime/tests/motion_tracking.rs",
+      "bytes": 5674,
+      "sha256": "5f92a3e0becbccecbbeebe549bf9a826611b5570a3ec6ad13087f12f4bfcb697"
+    },
+    {
+      "path": "crates/sim-script/src/lib.rs",
+      "bytes": 27363,
+      "sha256": "3b7eefabb20c2d52768e4ac426ab4871aebe11bc7de8ead93de66909e76baa95"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/analyze_validation.mjs",
+      "bytes": 5727,
+      "sha256": "cc4cf925e45aca83c850c3f8539afc2832e768026fca4a218ca2c9df8dc2f8b0"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/archive_evidence.mjs",
+      "bytes": 4182,
+      "sha256": "7a1a94cfbd23fd5e8e7530ea2e8ae3a0c7206cf686e3da8b591e488a79e65c44"
+    },
+    {
+      "path": "crates/sim-runtime/examples/compile_contact_reference.rs",
+      "bytes": 9083,
+      "sha256": "139ea13c70d34730861427d20cfbaaae8a238628ed5b3c7fa7f0763fcea5685d"
+    },
+    {
+      "path": "crates/sim-runtime/tests/initial_base_pose.rs",
+      "bytes": 2770,
+      "sha256": "f1b78348013b406158d08ca4d0a8f629d097621396dfd47fc2eacbc2be973ac3"
+    },
+    {
+      "path": "crates/sim-script/tests/contact_phase.rs",
+      "bytes": 2644,
+      "sha256": "a9b8528b211b1c579d93a6fd20c015def7d5f333b830c28c7e3c9f757eac3c66"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_motion",
+      "bytes": 8830284,
+      "sha256": "c67170e973b2dfb5afe6c2518eeb431ff8a50937479d7f5d561ce6a9332df306"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_reference",
+      "bytes": 8650412,
+      "sha256": "7cf16a89206a8232c042ab9a3dc4bd26def0e31580eba97705f3e7b677541d30"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+      "bytes": 15423780,
+      "sha256": "af91f9b7c947ed9847a2c748922c792420a8ba9cce5738924470e2ad6ad4efd0"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_lift",
+      "bytes": 8470092,
+      "sha256": "a71a0c986f214b397e7284509b6b6d06e0d1a337a27441fcb5f8ec0d095a2450"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/replay_policy_state",
+      "bytes": 5249156,
+      "sha256": "200a576ebe899a8a4fc62ddfcff6b4f91e470dd76dbc714dad65c1169bd62f8e"
+    }
+  ],
+  "pending": [
+    {
+      "recipe": "examples/full-robot/contact-planning/heading-plus45-restoration.recipe.json",
+      "exec_session": 5191,
+      "outputs": [
+        "examples/full-robot/contact-planning/heading-plus45-restoration.result.json",
+        "examples/full-robot/contact-planning/heading-plus45-restoration.log"
+      ]
+    }
+  ],
+  "scope": "Stable direct evidence, exact archived runtime/browser inputs and captures, current source hashes and local binary identities. Live diagonal optimization output/log deliberately excluded; inspect its handle and record separately after completion. Earlier evidence-index.json refers to its containing historical commit. Controller/compiler binaries predate the subsequent additional-clock/directional planner extension; runtime physics and controller code were unchanged by that extension. This is not a claim of exact reconstruction of every historical uncommitted compiler state. Terminal untracked text logs had trailing blank lines normalized; diagnostics unchanged."
+}

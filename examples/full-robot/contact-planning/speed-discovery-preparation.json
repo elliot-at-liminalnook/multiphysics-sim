@@ -1,0 +1,36 @@
+{
+  "source": "runs/contact-planning/diagonal21-screen",
+  "source_inputs": [
+    {
+      "path": "runs/contact-planning/diagonal21-screen.scene.json",
+      "sha256": "92a709b10cd0dc8950b19828435f2584321f3b1a2368c31aab9a94da25175e89"
+    },
+    {
+      "path": "runs/contact-planning/diagonal21-screen.config.json",
+      "sha256": "a6e8a08ef39008bc86eb53366917e200b3e92c87da9a1a2306807153fd9bc233"
+    }
+  ],
+  "prepared_inputs": [
+    {
+      "path": "runs/contact-planning/speed-discovery-diagonal21.scene.json",
+      "sha256": "de91eea03f9248fc875bfbf0ebf3b16263ef57ed1bd83c11834b39c9312e8e6a"
+    },
+    {
+      "path": "runs/contact-planning/speed-discovery-diagonal21.config.json",
+      "sha256": "48c7e36e73bc6d5606612757fb6b8d859b32c02304a65ca2b425d5e594818479"
+    },
+    {
+      "path": "runs/contact-planning/speed-discovery-diagonal21.actions.json",
+      "sha256": "9b439b372b581df24a9ccd946912ab65b16a4ef618506f0d1262f28ab7607c44"
+    }
+  ],
+  "task": {
+    "path": "examples/full-robot/contact-planning/speed-discovery-task.json",
+    "sha256": "684cbdd9c1ad95996122c58aeffa5cd6fe4c0a7a230de9260ee34da979146d48"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/prepare_speed_discovery.mjs",
+    "sha256": "52e443c5fb841b6ce0ee0d6485c12d064bfa252148401d84ba914f923692cf12"
+  },
+  "changes": "Only duration, step count and action schedule changed in source simulation inputs. Task rewards removed and task bounds replaced by overturn/chassis-floor-contact detection. CAD physical model and actuator values unchanged."
+}

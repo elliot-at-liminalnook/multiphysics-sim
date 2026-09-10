@@ -1,0 +1,221 @@
+{
+  "definitions": [
+    {
+      "name": "stride-50",
+      "method": "stride",
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8000000000000002,
+      "source_plan": "examples/full-robot/fast-wasd/opposite-pair-50mm.plan.json"
+    },
+    {
+      "name": "stride-100",
+      "method": "stride",
+      "command_speed_m_s": 0.1,
+      "period_s": 0.8000000000000002,
+      "source_plan": "examples/full-robot/fast-wasd/opposite-pair-100mm.plan.json"
+    },
+    {
+      "name": "cadence-50",
+      "method": "cadence",
+      "command_speed_m_s": 0.05,
+      "period_s": 0.4000000000000001,
+      "source_plan": "examples/full-robot/gait-exploration/opposite-pair-clear-flight.plan.json"
+    },
+    {
+      "name": "cadence-100",
+      "method": "cadence",
+      "command_speed_m_s": 0.1,
+      "period_s": 0.20000000000000004,
+      "source_plan": "examples/full-robot/gait-exploration/opposite-pair-clear-flight.plan.json"
+    },
+    {
+      "name": "landing-50",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8,
+      "stride_m": 0.04000000000000001,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": false,
+      "peak_world_swing_speed_m_s": 0.23437500000000003,
+      "source_plan": "examples/full-robot/fast-wasd/landing-50.plan.json"
+    },
+    {
+      "name": "landing-75",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.075,
+      "period_s": 0.8,
+      "stride_m": 0.06,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": false,
+      "peak_world_swing_speed_m_s": 0.35156249999999994,
+      "source_plan": "examples/full-robot/fast-wasd/landing-75.plan.json"
+    },
+    {
+      "name": "landing-100",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.1,
+      "period_s": 0.8,
+      "stride_m": 0.08000000000000002,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": false,
+      "peak_world_swing_speed_m_s": 0.46875000000000006,
+      "source_plan": "examples/full-robot/fast-wasd/landing-100.plan.json"
+    },
+    {
+      "name": "landing-50-centered-transition",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8,
+      "stride_m": 0.04000000000000001,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": true,
+      "peak_world_swing_speed_m_s": 0.23437500000000003,
+      "source_plan": "examples/full-robot/fast-wasd/landing-50-centered-transition.plan.json"
+    },
+    {
+      "name": "landing-75-centered-transition",
+      "method": "longer swing with earlier lift and later landing",
+      "command_speed_m_s": 0.075,
+      "period_s": 0.8,
+      "stride_m": 0.06,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "centered_stroke": true,
+      "peak_world_swing_speed_m_s": 0.35156249999999994,
+      "source_plan": "examples/full-robot/fast-wasd/landing-75-centered-transition.plan.json"
+    },
+    {
+      "name": "hip0-60",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 0,
+      "command_speed_m_s": 0.06,
+      "period_s": 0.8,
+      "stride_m": 0.048,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip0-60.plan.json"
+    },
+    {
+      "name": "hip0-65",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 0,
+      "command_speed_m_s": 0.065,
+      "period_s": 0.8,
+      "stride_m": 0.052000000000000005,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip0-65.plan.json"
+    },
+    {
+      "name": "hip30-50",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 30,
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8,
+      "stride_m": 0.04000000000000001,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip30-50.plan.json"
+    },
+    {
+      "name": "hip30-75",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 30,
+      "command_speed_m_s": 0.075,
+      "period_s": 0.8,
+      "stride_m": 0.06,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip30-75.plan.json"
+    },
+    {
+      "name": "hip45-50",
+      "method": "CAD hip rotation shares forward stroke between belt and worm",
+      "hip_initial_deg": 45,
+      "command_speed_m_s": 0.05,
+      "period_s": 0.8,
+      "stride_m": 0.04000000000000001,
+      "lift_m": 0.008,
+      "swing_s": 0.32,
+      "source_plan": "examples/full-robot/fast-wasd/hip45-50.plan.json"
+    },
+    {
+      "name": "feedforward-65",
+      "method": "Nominal damping cancellation from effective CAD-derived actuator D/K",
+      "command_speed_m_s": 0.065,
+      "period_s": 0.8,
+      "source": "hip0-65",
+      "velocity_lead_s": [
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02
+      ],
+      "scope": "Uses the existing provisional actuator model, no gain/torque authority increase. Saturation and contact remain physical."
+    },
+    {
+      "name": "feedforward-75",
+      "method": "Nominal damping cancellation from effective CAD-derived actuator D/K",
+      "command_speed_m_s": 0.075,
+      "period_s": 0.8,
+      "source": "landing-75",
+      "velocity_lead_s": [
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02
+      ],
+      "scope": "Uses the existing provisional actuator model, no gain/torque authority increase. Saturation and contact remain physical."
+    },
+    {
+      "name": "feedforward-100",
+      "method": "Nominal damping cancellation from effective CAD-derived actuator D/K",
+      "command_speed_m_s": 0.1,
+      "period_s": 0.8,
+      "source": "landing-100",
+      "velocity_lead_s": [
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02
+      ],
+      "scope": "Uses the existing provisional actuator model, no gain/torque authority increase. Saturation and contact remain physical."
+    }
+  ],
+  "scope": "Live command-driven Rhai controller; no reference trajectory or privileged feedback consumed. 0.4 s hold, 4.8 s forward, 0.8 s stop. Development screening only.",
+  "gates": {
+    "completed": true,
+    "maximum_tilt_rad": 0.1,
+    "maximum_stop_drift_m": 0.003,
+    "maximum_loaded_material_motion_ratio": 0.05,
+    "independent_collision_audit": true
+  }
+}

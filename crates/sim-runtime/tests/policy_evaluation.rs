@@ -81,3 +81,20 @@ fn invalid_action_after_a_good_interval_preserves_partial_diagnostics_only() {
     assert!(failed.score.is_none());
     assert!(failed.error.is_some());
 }
+
+#[test]
+fn baseline_expectation_rejects_wrong_scores_and_incomplete_replays() {
+    use sim_runtime::policy_evaluation::BaselineExpectation;
+    let (s,c,t)=fixture();
+    let report=evaluate_episode(s.clone(),c.clone(),t.clone(),&vec![vec![0.2];3],0);
+    let expected=BaselineExpectation{score:0.12,absolute_tolerance:1e-12};
+    expected.verify(&report).unwrap();
+    let mut wrong=report.clone();wrong.score=Some(0.001);
+    assert!(expected.verify(&wrong).unwrap_err().contains("baseline replay mismatch"));
+    wrong.score=report.score;wrong.final_transition.as_mut().unwrap().truncated=false;
+    assert!(expected.verify(&wrong).is_err());
+    let short=evaluate_episode(s,c,t,&[vec![0.2]],0);
+    assert!(expected.verify(&short).is_err());
+    assert!(BaselineExpectation{score:f64::NAN,absolute_tolerance:1.}.validate().is_err());
+    assert!(BaselineExpectation{score:1.,absolute_tolerance:-1.}.validate().is_err());
+}

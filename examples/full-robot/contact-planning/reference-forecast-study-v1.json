@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "source_base_commit": "7c315fd0",
+  "controllers": [
+    {
+      "version": 1,
+      "model": "v3",
+      "time_s": 60,
+      "completed": true,
+      "error": null,
+      "fallen": false,
+      "distance_m": 12.231301317216447,
+      "speed_m_s": 0.20385502195360744,
+      "wall_s": 215.187181046,
+      "planning_samples": 2999,
+      "reference_selected": 868,
+      "warm_start_selected": 1544,
+      "mean_predicted_gain_over_held_m": 0.02317109353439225,
+      "online_position_rmse_20ms_m": 0.003405017104502727,
+      "online_cv_rmse_20ms_m": 0.0042291416368242735,
+      "action_matched_windows": [
+        {
+          "horizon_s": 0.02,
+          "count": 2999
+        },
+        {
+          "horizon_s": 0.1,
+          "count": 0
+        },
+        {
+          "horizon_s": 0.2,
+          "count": 0
+        }
+      ],
+      "capture": {
+        "path": "runs/reference-forecast-v3/native.json",
+        "sha256": "6091878dd1b7ae48da58759608620abef204e42c710cd99fd095f4e13b2f03f8"
+      }
+    },
+    {
+      "version": 1,
+      "model": "v6",
+      "time_s": 60,
+      "completed": true,
+      "error": null,
+      "fallen": false,
+      "distance_m": 14.608122693040759,
+      "speed_m_s": 0.2434687115506793,
+      "wall_s": 211.52762179,
+      "planning_samples": 2999,
+      "reference_selected": 677,
+      "warm_start_selected": 815,
+      "mean_predicted_gain_over_held_m": 0.016910074895333964,
+      "online_position_rmse_20ms_m": 0.0019265956405978214,
+      "online_cv_rmse_20ms_m": 0.0036805879440020206,
+      "action_matched_windows": [
+        {
+          "horizon_s": 0.02,
+          "count": 2999
+        },
+        {
+          "horizon_s": 0.1,
+          "count": 0
+        },
+        {
+          "horizon_s": 0.2,
+          "count": 0
+        }
+      ],
+      "capture": {
+        "path": "runs/reference-forecast-v6/native.json",
+        "sha256": "f07199857decc57ab33f1b32433516022ea031d8da704768b5b09ffc998e9310"
+      }
+    }
+  ],
+  "legacy_parity": {
+    "version": 1,
+    "frames": 101,
+    "scope": "All sampled joint motion, body poses, targets, contacts, policy predictions/plans, observations, progress rewards, distance and fall metrics match the old V6 net-distance planner exactly through2s. Each speed field correctly divides identical distance by its declared2s/60s horizon; truncation occurs only at the new2s endpoint. With no reference proposal, legacy physical and predictive behavior is preserved.",
+    "files": [
+      {
+        "path": "runs/net-forecast-v6/native.json",
+        "sha256": "fe3e5f8f8cab591a1be6a692f38ee529f55c2fc66e8de17a16e107bfe140d1c7"
+      },
+      {
+        "path": "runs/reference-forecast-legacy2/native.json",
+        "sha256": "57464ba7b5fdbf7b9fa4b2180f944faa620b0d19cec6867698f733687c73b433"
+      }
+    ]
+  },
+  "independent_command_preparation": {
+    "inputs": "runs/actuator-excitation-v1-inputs/inputs.json",
+    "generation": {
+      "version": 1,
+      "exits": [
+        {
+          "name": "s03-seed1701",
+          "status": 0,
+          "stderr": ""
+        },
+        {
+          "name": "s10-seed1701",
+          "status": 0,
+          "stderr": ""
+        },
+        {
+          "name": "s10-seed1702",
+          "status": 0,
+          "stderr": ""
+        }
+      ],
+      "repeated_seed_identical": true,
+      "reference_sha256": "77246eb6f2af75b9afd966cb5dad6fe7b0fd7299da5bfd46f4c3a4be08fdc178",
+      "scope": "Independent Gaussian samples are drawn in Rust before simulation, using exact bounds/order recorded by the shared runtime. Identical seed/spec reproduces the authored command trajectory exactly."
+    },
+    "baseline_parity": {
+      "version": 1,
+      "frames": 101,
+      "scope": "The independent-command adapter with the original unperturbed reference reproduces every sampled physical pose, joint position/velocity, applied target and contact exactly through2s. Only authored commands are replayed; no recorded future state is supplied to physics.",
+      "files": [
+        {
+          "path": "runs/bayesian-sustained60-507/evaluation-033.native.json",
+          "sha256": "aa996321352d1741c5faefd4488aa1bbfec9a94adbba9cd3bd96835e4e71e2ef"
+        },
+        {
+          "path": "runs/actuator-excitation-v1-baseline2/native.json",
+          "sha256": "a9529a8f6708643b5275ef8053f46528765735424dff37c9e936270341669b79"
+        }
+      ]
+    },
+    "scope": "Three full-minute fixed-command perturbation captures launched. Stop, command expiry, sensor independence and reset/replay are tested. Perturbations are independently drawn in Rust before simulation; their eventual physical outcomes remain pending here."
+  },
+  "ppo": [
+    {
+      "root": "runs/ppo-speed518-resume-sigma01",
+      "updates": [
+        {
+          "iteration": 0,
+          "distance_m": 30.703822471589678,
+          "speed_m_s": 0.5117303745264946,
+          "error": null,
+          "path": "runs/ppo-speed518-resume-sigma01/iteration-000-validation.json"
+        },
+        {
+          "iteration": 1,
+          "distance_m": 30.594799345576053,
+          "speed_m_s": 0.5099133224262675,
+          "error": null,
+          "path": "runs/ppo-speed518-resume-sigma01/iteration-001-validation.json"
+        },
+        {
+          "iteration": 2,
+          "distance_m": 30.443470490186748,
+          "speed_m_s": 0.5073911748364458,
+          "error": null,
+          "path": "runs/ppo-speed518-resume-sigma01/iteration-002-validation.json"
+        },
+        {
+          "iteration": 3,
+          "distance_m": 29.987416557033413,
+          "speed_m_s": 0.49979027595055686,
+          "error": null,
+          "path": "runs/ppo-speed518-resume-sigma01/iteration-003-validation.json"
+        }
+      ],
+      "terminal_result": {
+        "best_distance_m": 31.062473800777763,
+        "best_speed_m_s": 0.5177078966796294,
+        "scope": "Deterministic complete-horizon net speed with no sampled falls. Learned stochastic policy uses PPO-Lagrangian; only fall cost, no gait-quality reward. Detailed timestep/contact validation remains required for improvements."
+      }
+    },
+    {
+      "root": "runs/ppo-speed518-resume-sigma03",
+      "updates": [
+        {
+          "iteration": 0,
+          "distance_m": 29.989423803585144,
+          "speed_m_s": 0.4998237300597524,
+          "error": null,
+          "path": "runs/ppo-speed518-resume-sigma03/iteration-000-validation.json"
+        },
+        {
+          "iteration": 1,
+          "distance_m": 28.488394492333832,
+          "speed_m_s": 0.47480657487223055,
+          "error": null,
+          "path": "runs/ppo-speed518-resume-sigma03/iteration-001-validation.json"
+        },
+        {
+          "iteration": 2,
+          "distance_m": 28.212541335792768,
+          "speed_m_s": 0.4702090222632128,
+          "error": null,
+          "path": "runs/ppo-speed518-resume-sigma03/iteration-002-validation.json"
+        },
+        {
+          "iteration": 3,
+          "distance_m": 29.238924740991816,
+          "speed_m_s": 0.4873154123498636,
+          "error": null,
+          "path": "runs/ppo-speed518-resume-sigma03/iteration-003-validation.json"
+        }
+      ],
+      "terminal_result": {
+        "best_distance_m": 31.062473800777763,
+        "best_speed_m_s": 0.5177078966796294,
+        "scope": "Deterministic complete-horizon net speed with no sampled falls. Learned stochastic policy uses PPO-Lagrangian; only fall cost, no gait-quality reward. Detailed timestep/contact validation remains required for improvements."
+      }
+    }
+  ],
+  "leader_speed_m_s": 0.5177078966796294,
+  "scope": "Authored future-command proposals are optional optimization initializers; no tracking objective or restriction beyond existing actuator bounds is introduced. V6 improves over its prior slow planner, V3 worsens, and neither displaces the incumbent. Independent-command data collection addresses action coverage for future dynamics learning; no sample-efficiency gain or physical maximum has been established."
+}

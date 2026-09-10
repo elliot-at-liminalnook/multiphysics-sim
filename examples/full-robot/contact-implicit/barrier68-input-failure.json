@@ -1,0 +1,4 @@
+{
+  "reason": "Initial two terminal invocations accidentally supplied the runtime policy config in the capture-marker argument. Both exited 1 during input parsing, before constructing the planner or evaluating physics.",
+  "correction": "Use examples/full-robot/contact-implicit/surface-markers.json, as previous trials do."
+}

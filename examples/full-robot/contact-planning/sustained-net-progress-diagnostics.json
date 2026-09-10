@@ -1,0 +1,98 @@
+{
+  "rows": [
+    {
+      "id": "448",
+      "source": {
+        "path": "runs/speed-only-448-validation/long60.native.json",
+        "sha256": "f653351e0ae0b01a303439181f8eab08485f7137233a952777f010ac1a7f9014"
+      },
+      "net_speed_m_s": 0.44312355432679923,
+      "path_length_per_s": 0.48215341136960727,
+      "net_to_path_ratio": 0.9190509573873186,
+      "body_yaw_change_rad": -0.855567041950488,
+      "segments": [
+        {
+          "start_s": 0,
+          "end_s": 20,
+          "net_speed_m_s": 0.4483370316414533,
+          "travel_heading_rad": 0.6627375938009871
+        },
+        {
+          "start_s": 20,
+          "end_s": 40,
+          "net_speed_m_s": 0.4610004902503063,
+          "travel_heading_rad": 0.3634730152506933
+        },
+        {
+          "start_s": 40,
+          "end_s": 60,
+          "net_speed_m_s": 0.4604364106996794,
+          "travel_heading_rad": 0.06408722003440809
+        }
+      ]
+    },
+    {
+      "id": "462",
+      "source": {
+        "path": "runs/speed-only-462-validation/long60.native.json",
+        "sha256": "21ccd9932a708533976dd4c97fa447b9d116d72c1c3877ba1356d33fb5acfd88"
+      },
+      "net_speed_m_s": 0.42593475856369434,
+      "path_length_per_s": 0.49307226270312865,
+      "net_to_path_ratio": 0.8638384082459394,
+      "body_yaw_change_rad": 1.5606125573091263,
+      "segments": [
+        {
+          "start_s": 0,
+          "end_s": 20,
+          "net_speed_m_s": 0.4618210842456724,
+          "travel_heading_rad": 0.9659436983685085
+        },
+        {
+          "start_s": 20,
+          "end_s": 40,
+          "net_speed_m_s": 0.47150845651067386,
+          "travel_heading_rad": 1.4944448798710979
+        },
+        {
+          "start_s": 40,
+          "end_s": 60,
+          "net_speed_m_s": 0.4718123907634178,
+          "travel_heading_rad": 2.0228029584663103
+        }
+      ]
+    },
+    {
+      "id": "485",
+      "source": {
+        "path": "runs/speed-only-485-validation/long60.native.json",
+        "sha256": "96ab2d2d89bf49fb059b1da6771eb3e1088b27c11ab7aae4c66daf771e95eee0"
+      },
+      "net_speed_m_s": 0.41717810192312654,
+      "path_length_per_s": 0.5163972513885869,
+      "net_to_path_ratio": 0.8078627467542457,
+      "body_yaw_change_rad": 2.2203997994238813,
+      "segments": [
+        {
+          "start_s": 0,
+          "end_s": 20,
+          "net_speed_m_s": 0.4848248422845477,
+          "travel_heading_rad": 1.1020143658717543
+        },
+        {
+          "start_s": 20,
+          "end_s": 40,
+          "net_speed_m_s": 0.5001473165697907,
+          "travel_heading_rad": 1.5713026837150224
+        },
+        {
+          "start_s": 40,
+          "end_s": 60,
+          "net_speed_m_s": 0.47360174013130313,
+          "travel_heading_rad": 2.4246067419629993
+        }
+      ]
+    }
+  ],
+  "scope": "Net displacement/time remains the objective. Path length and block headings diagnose why short-screen ranking changes over a minute; they introduce no heading or slip acceptance gate."
+}

@@ -4,3 +4,4 @@ pub mod chain;
 pub mod contact;
 pub mod elements;
 pub mod planar;
+pub mod smooth_contact;

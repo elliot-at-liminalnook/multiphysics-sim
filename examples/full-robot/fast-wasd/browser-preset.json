@@ -1,0 +1,17 @@
+{
+  "id": "fast-wasd-paired",
+  "label": "Experimental · Fast WASD gait · 65 mm/s command",
+  "mode": "embedded",
+  "path": "data/fast-wasd-paired.json",
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "motion_commands": [
+    "command.forward_speed",
+    "command.lateral_speed",
+    "command.yaw_rate"
+  ],
+  "motion_heartbeat": "command.packet_sequence",
+  "asset_sha256": "8c9084008e9fce8d583fb859b5ca5cdd096f1e84e165c98574c584e7728c8c84",
+  "description": "Hold W/S for forward/reverse and combine with A/D to steer. Release to finish the foot transfer and brake. Walking turns; no pivot turn.",
+  "readiness": "60-second simulation checked. Browser realtime and latency targets remain unmet; hardware transfer is unvalidated.",
+  "evidence": "60 s test: 62.5–63.1 mm/s, 3.5% loaded-foot slip. A tested release stopped within 0.44 s / 17 mm. Frozen commands stopped within 0.42 s / 19 mm. Browser approximately 0.67× realtime / 71 ms p95. Provisional actuator model and ideal joint observations."
+}

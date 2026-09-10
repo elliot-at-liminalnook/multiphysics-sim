@@ -1,0 +1,33 @@
+{
+  "pilot": {
+    "native_status": -1,
+    "model_evaluations": 316,
+    "native_callback_evaluations": 6,
+    "model_budget_exhausted": false,
+    "speed_m_s": 0.2116282431399536,
+    "force_error_n": 12.464871765078648,
+    "moment_error_nm": 3.0800448089711545,
+    "torque_margin_nm": -0.2690158466363391,
+    "maximum_inequality": 248.29743530157296,
+    "sampled_feasible": false
+  },
+  "budget": {
+    "native_status": -13,
+    "model_evaluations": 12,
+    "native_callback_evaluations": 4,
+    "model_budget_exhausted": true,
+    "speed_m_s": 0.211710264528351,
+    "force_error_n": 12.488556777655852,
+    "moment_error_nm": 3.085908254129124,
+    "torque_margin_nm": -0.26953385872727537,
+    "maximum_inequality": 248.77113555311703,
+    "sampled_feasible": false
+  },
+  "jacobian_structural_entries": 1599232,
+  "dense_entries": 3001768,
+  "initial_native_report_equal_after_signed_zero_canonicalization": true,
+  "all_final_physical_inequalities_and_objective_match_uncached_audit": true,
+  "legacy_112_evaluation_replay_byte_identical": true,
+  "shared_planner_tests_passed": 5,
+  "scope": "Integration, sparse row transfer, model-budget and legacy-regression checks. No speed gain or robot feasibility established."
+}

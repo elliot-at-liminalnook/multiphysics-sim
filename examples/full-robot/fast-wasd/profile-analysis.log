@@ -1,0 +1,128 @@
+[
+  {
+    name: 'braked-5ms',
+    step_s: 0.005,
+    completed: true,
+    maximum_matched_body_difference_m: 0.002149115623036267,
+    maximum_directed_speed_difference_fraction: 0.0033637058515497463,
+    maximum_slip_ratio: 0.043592338177524226,
+    passes_physical_approximation: true,
+    passes_slip: true,
+    native: {
+      wall_s: 19.300990247,
+      simulation_per_wall: 1.0362162637281602,
+      p95_transition_s: 0.052859039
+    }
+  },
+  {
+    name: 'braked-5ms-loose',
+    step_s: 0.005,
+    tolerance: 0.0001,
+    completed: true,
+    maximum_matched_body_difference_m: 0.0021498199621478873,
+    maximum_directed_speed_difference_fraction: 0.00336369367992153,
+    maximum_slip_ratio: 0.04359224295696308,
+    passes_physical_approximation: true,
+    passes_slip: true,
+    native: {
+      wall_s: 18.791633738,
+      simulation_per_wall: 1.0643034170869596,
+      p95_transition_s: 0.052528609
+    }
+  },
+  {
+    name: 'braked-10ms-loose',
+    step_s: 0.01,
+    tolerance: 0.0001,
+    completed: true,
+    maximum_matched_body_difference_m: 0.0037165225617449573,
+    maximum_directed_speed_difference_fraction: 0.01013450939163402,
+    maximum_slip_ratio: 0.03748233597698256,
+    passes_physical_approximation: false,
+    passes_slip: true,
+    native: {
+      wall_s: 12.374306968,
+      simulation_per_wall: 1.6162521304603212,
+      p95_transition_s: 0.034391414
+    }
+  },
+  {
+    name: 'braked-fine',
+    step_s: 0.000625,
+    completed: true,
+    maximum_matched_body_difference_m: 0.0006600511071886183,
+    maximum_directed_speed_difference_fraction: 0.0011491780082125292,
+    maximum_slip_ratio: 0.04925160055903872,
+    passes_physical_approximation: true,
+    passes_slip: true,
+    native: {
+      wall_s: 56.983219306,
+      simulation_per_wall: 0.3509805209951365,
+      p95_transition_s: 0.096591588
+    }
+  },
+  {
+    name: 'braked-third-period',
+    step_s: 0.006666666666666667,
+    completed: true,
+    maximum_matched_body_difference_m: 0.003498902880195758,
+    maximum_directed_speed_difference_fraction: 0.0071169114767055735,
+    maximum_slip_ratio: 0.04108806900859836,
+    passes_physical_approximation: false,
+    passes_slip: true,
+    native: {
+      wall_s: 15.671939599,
+      simulation_per_wall: 1.27616622522436,
+      p95_transition_s: 0.048618565
+    }
+  },
+  {
+    name: 'braked-cache3',
+    step_s: 0.005,
+    solver_options: { cached_mechanical_iteration_limit: 3 },
+    completed: true,
+    maximum_matched_body_difference_m: 0.0021491209230024015,
+    maximum_directed_speed_difference_fraction: 0.0033637041344273385,
+    maximum_slip_ratio: 0.04359234209310519,
+    passes_physical_approximation: true,
+    passes_slip: true,
+    native: {
+      wall_s: 32.081380181,
+      simulation_per_wall: 0.6234145752820471,
+      p95_transition_s: 0.058665887
+    }
+  },
+  {
+    name: 'braked-fresh-sample',
+    step_s: 0.005,
+    solver_options: { reuse_controller_sample_jacobian: false },
+    completed: true,
+    maximum_matched_body_difference_m: 0.002149115623036267,
+    maximum_directed_speed_difference_fraction: 0.0033637058515497463,
+    maximum_slip_ratio: 0.043592338177524226,
+    passes_physical_approximation: true,
+    passes_slip: true,
+    native: {
+      wall_s: 19.890633584,
+      simulation_per_wall: 1.0054983877480894,
+      p95_transition_s: 0.055563542
+    }
+  },
+  {
+    name: 'braked-adaptive-10ms',
+    step_s: 0.01,
+    solver_options: { max_iterations: 8, cached_mechanical_iteration_limit: 4 },
+    scope: 'Existing bounded subdivision on difficult Newton solves; preserve tolerance and physical law.',
+    completed: false,
+    maximum_matched_body_difference_m: 0.0007533055988704965,
+    maximum_directed_speed_difference_fraction: null,
+    maximum_slip_ratio: 0.02159833615253266,
+    passes_physical_approximation: false,
+    passes_slip: true,
+    native: {
+      wall_s: 10.280761037,
+      simulation_per_wall: 0.5894505259085715,
+      p95_transition_s: 0.141551998
+    }
+  }
+]

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "first_ppo_run": {
+    "best_distance_m": 30.779300256867227,
+    "best_speed_m_s": 0.5129883376144538,
+    "scope": "Deterministic complete-horizon net speed with no sampled falls. Learned stochastic policy uses PPO-Lagrangian; only fall cost, no gait-quality reward. Detailed timestep/contact validation remains required for improvements."
+  },
+  "trained_actor_ablation": {
+    "original_speed_m_s": 0.5116049776290962,
+    "without_future_predictions_m_s": 0.510373054512469,
+    "scope": "Current dynamics retained; trained actor input ablation, not retraining or sample-efficiency comparison."
+  },
+  "action_proposal": {
+    "version": 1,
+    "matched_physical_prefix_frames": 101,
+    "exact_proposal_targets_verified": 120,
+    "window_s": [
+      2,
+      2.2
+    ],
+    "predicted_baseline_displacement_m": 0.09583816081798653,
+    "predicted_candidate_displacement_m": 0.12568769891074108,
+    "predicted_gain_m": 0.02984953809275455,
+    "measured_baseline_displacement_m": 0.07423061754297385,
+    "measured_candidate_displacement_m": 0.0821533778713125,
+    "measured_gain_m": 0.007922760328338649,
+    "prediction_error_m": {
+      "baseline": 0.021607543275012686,
+      "candidate": 0.043534321039428586
+    },
+    "no_sampled_fall": true,
+    "wall_s": 22.392563364,
+    "scope": "One model-optimized 200ms open-loop sequence replayed from an exactly matching physical prefix. All 120 targets verified. This diagnostic is not a sustained-speed or learning-efficiency result."
+  },
+  "recovery": {
+    "duration_s": 12,
+    "baseline_speed_m_s": 0.37554278343041186,
+    "candidate_speed_m_s": 0.3783879479668586,
+    "net_distance_gain_m": 0.034141974437361,
+    "no_sampled_fall": true
+  },
+  "scope": "Separate learned-controller and model-action-planning results. Sustained speed leader remains 0.5168687755 m/s. Active fresh training comparisons are incomplete; no physical maximum established."
+}

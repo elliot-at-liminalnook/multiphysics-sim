@@ -1,0 +1,81 @@
+{
+  "source_commit": "68ff5f87468170cd1f915870cde22b9b5c255b90",
+  "recorded_at": "2026-09-09T14:01:35.470Z",
+  "session_id": 85485,
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_contact",
+    "bytes": 9137436,
+    "sha256": "4897bb89d52ceeeb81772b6499a3f0b6897948174ebcdf0f5ef1f62c88b231f8"
+  },
+  "unchanged_comparison_optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9049396,
+    "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+  },
+  "shared_source_build_reference": {
+    "path": "examples/full-robot/contact-planning/joint-contact-timing-build.json",
+    "bytes": 11755,
+    "sha256": "721cf0498622bdb1a29632a8ad2211818e1a777cd51a66534e12e43f69a96fcb"
+  },
+  "optimizer_source": {
+    "path": "crates/sim-runtime/examples/optimize_joint_contact.rs",
+    "bytes": 3645,
+    "sha256": "60a0fc2345d8c4faa01e7be6b677bb46a1423f923b465c2108891b1f1af42835"
+  },
+  "cargo_lock": {
+    "path": "Cargo.lock",
+    "bytes": 163503,
+    "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+  },
+  "recorder": {
+    "path": "examples/full-robot/contact-planning/record_joint_timed_search.mjs",
+    "bytes": 3673,
+    "sha256": "1bc299e0b8f42fbd367fc717d73d52e81ed5d16e9bab92316fafa1a3ca8d454c"
+  },
+  "build_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-contact-timing CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --release -p sim-runtime --example optimize_joint_contact",
+  "build_log": {
+    "path": "examples/full-robot/contact-planning/joint-timed-optimizer-build.log",
+    "bytes": 6585,
+    "sha256": "778f6af968b4da68be16e2967b56a6aa754f2c1e3ffe7d40e2f4a5300e3b7aee"
+  },
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "cargo": "cargo 1.97.1 (c980f4866 2026-06-30)\n",
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+      "bytes": 161211,
+      "sha256": "e4c026ee7c0336c90d436e7b7802aeba3549a51e6652ccaaee54d6f0933f282e"
+    }
+  ],
+  "initial": {
+    "path": "examples/full-robot/contact-planning/joint-timed-speed-native-initial.result.json",
+    "bytes": 1462338,
+    "sha256": "738a97f64ea79af615313c4fdbfa7859da4365462e8fd13abe498b384cb6abf1"
+  },
+  "initial_log": {
+    "path": "examples/full-robot/contact-planning/joint-timed-speed-native-initial.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "initial_report_matches_prepared_recipe_after_signed_zero_canonicalization": true,
+  "signed_zero_differences": 18,
+  "arguments": [
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+    "--analytic-forces"
+  ],
+  "stdout": "examples/full-robot/contact-planning/joint-timed-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-timed-speed.log",
+  "scope": "Live 8000-evaluation search of the contact-relative force timing representation, from the same 0.2117102645 m/s motion and broader-height bounds as joint-height-speed. Strict initial contact event ordering is an explicit local domain restriction. No completed result, speed gain, physical ceiling or runtime/browser qualification is claimed."
+}

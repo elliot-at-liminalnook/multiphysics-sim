@@ -1,0 +1,50 @@
+{
+  "prefix": "runs/contact-planning/return-x25-v250",
+  "source": "runs/contact-planning/return-x25-base",
+  "command_speed_m_s": 0.25,
+  "reference_nominal_speed_m_s": 0.211710264528351,
+  "clock_rate": 1.1808591357483351,
+  "physics_step_s": 0.000625,
+  "steady_reference_velocity_scale": 1.1808591357483351,
+  "steady_reference_acceleration_scale": 1.394428298480305,
+  "windows_s": [
+    [
+      0.8,
+      3
+    ],
+    [
+      4.2,
+      6.4
+    ]
+  ],
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "sources": [
+    {
+      "path": "runs/contact-planning/return-x25-base.scene.json",
+      "sha256": "966d07c6ceac88b12e8981f2eb71c7e6b057d1a5eb83651a0367e31e91f16325"
+    },
+    {
+      "path": "runs/contact-planning/return-x25-base.config.json",
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/return-x25-base.actions.json",
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    }
+  ],
+  "files": [
+    {
+      "path": "runs/contact-planning/return-x25-v250.scene.json",
+      "sha256": "0afd5904c9376dc1e2c5c8a6b02c01b78f0569dc9b53b308892a67f78f43d834"
+    },
+    {
+      "path": "runs/contact-planning/return-x25-v250.config.json",
+      "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+    },
+    {
+      "path": "runs/contact-planning/return-x25-v250.actions.json",
+      "sha256": "aec2d05369490b2fcc6c04809160f5323e0a8f34311cb287e4236cedb7228613"
+    }
+  ],
+  "scope": "Direct closed-loop speed experiment. Motion-command bounds and scheduled speed change, with optional explicit timestep refinement; CAD, world, actuator limits, joint bounds, controller code, reference and solver settings are preserved. Existing odd/even feedforward scales with clock rate; off-nominal loads and transitions remain approximate. Inherited failed reference audits remain explicit. No collision/slip or sustained qualification is implied."
+}

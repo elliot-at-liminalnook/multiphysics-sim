@@ -1,0 +1,19 @@
+{
+  "id": "redistribution-dynamic",
+  "cases": [
+    {
+      "source": "runs/speed-ceiling/validation/redistributed-0p5-v175-human-fine",
+      "speed": 0.175,
+      "table_name": "redistributed-0p5-v175-loads",
+      "name_prefix": "redistributed-dynamic-0p5-v175",
+      "scales": [1]
+    },
+    {
+      "source": "runs/speed-ceiling/validation/redistributed-0p8-v175-human-fine",
+      "speed": 0.175,
+      "table_name": "redistributed-0p8-v175-loads",
+      "name_prefix": "redistributed-dynamic-0p8-v175",
+      "scales": [1]
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "scope": "Independent offline dense feasibility audit; not forward simulated tracking.",
+  "frames": 541,
+  "report": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.059272028222898177,
+    "sampled_feasible": true,
+    "maximum_force_error_n": 0.04827753549286906,
+    "maximum_moment_error_nm": 0.015656957926595716,
+    "minimum_torque_margin_nm": 0.7748002376279862,
+    "maximum_penetration_m": 3.989604884235831e-7
+  },
+  "joints": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "range_rad": [
+        -0.058745710918738515,
+        0.06792839950122731
+      ],
+      "peak_speed_rad_s": 1.1680339209928494,
+      "minimum_torque_margin_nm": 2.30223727562432
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "range_rad": [
+        -0.03925098007677086,
+        -0.001182855105626226
+      ],
+      "peak_speed_rad_s": 0.2646466271161755,
+      "minimum_torque_margin_nm": 2.426122438459233
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "range_rad": [
+        -1.126049446187891,
+        -1.0261903027617132
+      ],
+      "peak_speed_rad_s": 1.2989264359979509,
+      "minimum_torque_margin_nm": 1.0317502347716343
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "range_rad": [
+        -0.0141078454956712,
+        0.005684690365997828
+      ],
+      "peak_speed_rad_s": 0.1269627723420355,
+      "minimum_torque_margin_nm": 2.8638261431995224
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "range_rad": [
+        -0.5204838064310658,
+        -0.15478183835247372
+      ],
+      "peak_speed_rad_s": 3.8617140162540884,
+      "minimum_torque_margin_nm": 0.7748002376279862
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "range_rad": [
+        -1.0818208364812822,
+        -0.9482133993492691
+      ],
+      "peak_speed_rad_s": 1.3875310459624453,
+      "minimum_torque_margin_nm": 1.1094131127156945
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "range_rad": [
+        -0.04055471602820984,
+        0.1200332091248065
+      ],
+      "peak_speed_rad_s": 1.3463825787051602,
+      "minimum_torque_margin_nm": 2.245825789661468
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "range_rad": [
+        -0.004105632937708259,
+        0.013357909002490374
+      ],
+      "peak_speed_rad_s": 0.2443878477620935,
+      "minimum_torque_margin_nm": 2.413611024139944
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "range_rad": [
+        -1.1259272905490387,
+        -1.0236558655929822
+      ],
+      "peak_speed_rad_s": 1.3869136874370036,
+      "minimum_torque_margin_nm": 1.0316742103325138
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "range_rad": [
+        -0.03739546678379193,
+        0.009707930707776383
+      ],
+      "peak_speed_rad_s": 0.2441009773032049,
+      "minimum_torque_margin_nm": 2.8058481245268267
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "range_rad": [
+        -0.00886618550846987,
+        0.3586632461325143
+      ],
+      "peak_speed_rad_s": 3.7168628806749724,
+      "minimum_torque_margin_nm": 2.0089495784715705
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "range_rad": [
+        -1.1976871893304726,
+        -1.0470381996173441
+      ],
+      "peak_speed_rad_s": 2.104653456866984,
+      "minimum_torque_margin_nm": 0.9425688749672134
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "global_adaptive": {
+    "result": {
+      "path": "runs/adaptive-planar20-v1/result.json",
+      "sha256": "f8f6190ed1046d656642c90dfc654c3198ddb97b3664ee56b226268bea8cd960"
+    },
+    "new_candidates": 12,
+    "complete": 9,
+    "failed": 3,
+    "best_new_estimate_m_s": 0.08182543234940558
+  },
+  "full_horizon_check": {
+    "result": {
+      "path": "runs/planar-guided300-v1/result.json",
+      "sha256": "e223b8e77480f4c43cbbca14f18ab51c08a32968051e2d9bb45c5176f1cbe1c2"
+    },
+    "distance_m": 0.12093525095629828,
+    "speed_m_s": 0.00040311750318766095,
+    "fallen": false,
+    "estimated_speed_m_s": 0.0016248980575524704,
+    "scope": "Separate20s seed2301 prediction and300s seed1901 physical test. No speed gain; this does not establish calibrated prediction uncertainty."
+  },
+  "local_global": {
+    "first_proposal": {
+      "path": "runs/local-global-planar20-v1/proposal-000/result.json",
+      "sha256": "7312dfe3095c38a4a69ca75aa08ffe2613172b2f7d8af80fcb4305c64ad351d2"
+    },
+    "mode": "local",
+    "all_complete_rows_retained": 20,
+    "failed_rows_preserved": 9,
+    "parameters": [
+      0.3054480775266355,
+      -0.44018487770641324,
+      1.0012110321590506,
+      0.9577978457589887,
+      0.8284413881182543,
+      0.855888384061893,
+      1.1514350928295447,
+      0.8569999590415476
+    ],
+    "region": [
+      [
+        0.641456497532745,
+        0.7414564975327451
+      ],
+      [
+        0.3355628886204062,
+        0.43556288862040615
+      ],
+      [
+        0.45,
+        0.55
+      ],
+      [
+        0.45,
+        0.55
+      ],
+      [
+        0.45,
+        0.55
+      ],
+      [
+        0.45,
+        0.55
+      ],
+      [
+        0.45,
+        0.55
+      ],
+      [
+        0.45,
+        0.55
+      ]
+    ],
+    "batch_specification": "runs/local-global-planar-inputs-v1/experiment.json",
+    "status": "running"
+  },
+  "scope": "Global predicted search completed12new proposals without a predicted improvement; its first proposal completed300s slowly. An adaptive local/global acquisition strategy now uses the same shared Rust predictor, physical recipe and full numerical domain. Region changes affect experiment allocation, not CAD limits or score definition. Numerical convergence and physical maximum remain unresolved."
+}

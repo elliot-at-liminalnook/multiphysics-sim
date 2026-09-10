@@ -1,0 +1,11 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `release` profile [optimized] target(s) in 41.66s
+     Running tests/point_feedback.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/point_feedback-880d60922b10a2da)
+
+running 4 tests
+test distinct_point_objectives_and_inactive_points_are_resolved_together ... ok
+test actual_world_marker_error_drives_bounded_phase_activated_angular_suggestion ... ok
+test loaded_floor_velocity_objective_respects_activation_and_existing_joint_cap ... ok
+test point_feedback_commands_execute_through_the_shared_session_and_replay ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s

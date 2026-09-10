@@ -292,7 +292,7 @@ impl RigidEmbedding<'_> {
         F: Fn(f64, &Generalized) -> Result<Vec<f64>, String>,
     {
         self.step_implicit_coupled_cached_with_guess(seed, &[], time_s, step_s,
-            config, &mut ImplicitSolverWorkspace::default(), Some(velocity_guess), None,
+            config, &mut ImplicitSolverWorkspace::default(), Some(velocity_guess), None, false,
             |t, _, g, _, _| Ok(CoupledForces {
                 generalized_loads: loads(t, g)?, auxiliary_residuals: vec![],
             }))
@@ -355,6 +355,7 @@ impl RigidEmbedding<'_> {
             config,
             &mut ImplicitSolverWorkspace::default(),
             None,
+            false,
             coupling,
         )
     }
@@ -369,13 +370,14 @@ impl RigidEmbedding<'_> {
         config: &ImplicitStepConfig,
         workspace: &mut ImplicitSolverWorkspace,
         auxiliary_coloring: Option<&BlockDiagonalColoring>,
+        scheduled_sensors: bool,
         coupling: F,
     ) -> Result<EmbeddedImplicitStep, String>
     where
         F: Fn(f64, f64, &Generalized, &[f64], &[f64]) -> Result<CoupledForces, String>,
     {
         self.step_implicit_coupled_cached_with_guess(seed, auxiliary_seed, time_s, step_s,
-            config, workspace, None, auxiliary_coloring, coupling)
+            config, workspace, None, auxiliary_coloring, scheduled_sensors, coupling)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -389,6 +391,7 @@ impl RigidEmbedding<'_> {
         workspace: &mut ImplicitSolverWorkspace,
         mechanical_guess: Option<&[f64]>,
         auxiliary_coloring: Option<&BlockDiagonalColoring>,
+        scheduled_sensors: bool,
         coupling: F,
     ) -> Result<EmbeddedImplicitStep, String>
     where
@@ -450,9 +453,9 @@ impl RigidEmbedding<'_> {
         {
             return Err("invalid implicit mechanical step configuration".into());
         }
-        if !self.art.imus.is_empty() {
+        if !scheduled_sensors && !self.art.imus.is_empty() {
             return Err(
-                "embedded implicit stepping does not yet advance authored IMU schedules".into(),
+                "authored IMUs require scheduled motor or mechanical advancement".into(),
             );
         }
         let old_u = self.reduced_velocity(seed);

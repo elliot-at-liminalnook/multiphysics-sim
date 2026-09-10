@@ -1,0 +1,34 @@
+{
+  "base_commit": "e8ae802b",
+  "files": [
+    {
+      "path": "runs/replay_ppo_update-v1",
+      "sha256": "b9611130020a00ef19749d16fbaf8e7979b1f26fb1654f0a2b0db8f05f8e9f7e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/ppo-update-legacy.spec.json",
+      "sha256": "4d4f8264b1166dab6498a17f67b1ed47b2398c29652a1872feed8c5edd68ac9e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/ppo-update-shuffled.spec.json",
+      "sha256": "4f8c87fdd340b58a83aa3dd964f018bf613f3a92274a860b3c97ae051ad62100"
+    },
+    {
+      "path": "crates/sim-domain-control/src/optimization.rs",
+      "sha256": "566cef56eb230eb7a144be65a7ef0596c55748bdf30b488766178bf9d0516633"
+    },
+    {
+      "path": "crates/sim-domain-control/src/ppo.rs",
+      "sha256": "eb40c406582a5986d747c3d2d151760dc984a67aff4ee930db8bfc89300e53d5"
+    },
+    {
+      "path": "crates/sim-runtime/src/ppo_training.rs",
+      "sha256": "fa5e0adfa50cbb20f30847190f6e930f96b353fdffe561cbf0b1a1363398742c"
+    },
+    {
+      "path": "crates/sim-runtime/examples/replay_ppo_update.rs",
+      "sha256": "54abdc7693d4f89216c9a5fc55ebd36717bcf1803f5309f5bc933dcbfe65af23"
+    }
+  ],
+  "scope": "First verify exact legacy optimizer-state reproduction on saved seed74/75 rollouts; then change only minibatch sample ordering and run independent full60 evaluation. Live PPO experiment remains on its pinned binary."
+}

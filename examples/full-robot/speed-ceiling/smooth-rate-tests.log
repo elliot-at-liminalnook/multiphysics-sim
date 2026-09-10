@@ -1,0 +1,17 @@
+   Compiling memchr v2.8.3
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control)
+   Compiling serde_json v1.0.151
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.03s
+     Running tests/trajectory.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/trajectory-0016bfced091143b)
+
+running 7 tests
+test authored_value_bounds_cover_all_reference_segments ... ok
+test linear_interpolation_retains_endpoint_holds_and_channel_order ... ok
+test quintic_has_analytic_midpoint_rest_endpoints_and_checked_derivatives ... ok
+test rejects_nonfinite_unsorted_and_dimension_mismatched_input ... ok
+test periodic_spline_has_analytic_values_and_continuous_cycle_derivatives ... ok
+test rate_bounds_include_interior_spline_extrema ... ok
+test periodic_spline_validates_closure_timing_and_control_hull_bounds ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

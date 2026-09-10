@@ -1,0 +1,31 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {isDeepStrictEqual} from 'node:util';
+import {gunzipSync} from 'node:zlib';
+const d='examples/full-robot/contact-planning/';
+const batch=JSON.parse(fs.readFileSync(d+'joint-start-screen.batch.json'));
+const raw=d+'joint-start-screen.result.jsonl';
+const contents=fs.existsSync(raw)?fs.readFileSync(raw):gunzipSync(fs.readFileSync(raw+'.gz'));
+const rows=contents.toString('utf8').trim().split('\n').map(x=>JSON.parse(x));
+assert.equal(rows.length,batch.starts.length,'Incomplete screen');
+assert.equal(new Set(rows.map(x=>x.id)).size,rows.length,'Duplicate result IDs');
+rows.forEach((r,i)=>assert.equal(r.id,batch.starts[i].id));
+const valid=rows.filter(r=>r.result),failed=rows.filter(r=>r.error);
+for(const r of valid){
+  const source=batch.starts.find(s=>s.id===r.id);
+  assert(isDeepStrictEqual(r.result.candidate.motion,source.candidate.motion),'Force initialization changed motion');
+  assert(Number.isFinite(r.result.maximum_inequality));
+  assert.equal(r.result.maximum_inequality,Math.max(0,...r.result.inequalities));
+}
+const original=JSON.parse(fs.readFileSync(d+'joint-x25-warm-initial.result.json'));
+const reference=rows.find(r=>r.id==='reference').result;
+assert(isDeepStrictEqual(reference.inequalities,original.constraints.inequalities),'Reference constraint regression');
+assert.equal(reference.force_error_n,original.motion_report.maximum_force_error_n);
+assert.equal(reference.moment_error_nm,original.motion_report.maximum_moment_error_nm);
+assert.equal(reference.torque_margin_nm,original.motion_report.minimum_torque_margin_nm);
+const ranked=[...valid].sort((a,b)=>a.result.maximum_inequality-b.result.maximum_inequality||a.id.localeCompare(b.id));
+const brief=r=>{const {candidate,inequalities,...metrics}=r.result;return {id:r.id,...metrics,phases:candidate.motion.feet.map(f=>f.phase_offset),stance_fractions:candidate.motion.feet.map(f=>f.stance_fraction)}};
+const groups=['reference-d0.5','reference-d0.75','constant_mean-d0.5','constant_mean-d0.75'];
+const summary={starts:rows.length,evaluated:valid.length,errors:failed,sampled_feasible:valid.filter(r=>r.result.sampled_feasible).length,reference:brief(rows[0]),best:ranked.slice(0,10).map(brief),group_best:groups.map(group=>({group,best:ranked.find(r=>r.id.startsWith(group))})).map(({group,best})=>({group,best:best?brief(best):null})),checks:{unchanged_motion:true,reference_constraints_identical:true,complete_unique_ordered_results:true},scope:'Initial force-seeded timing/body screen only. Ranking uses maximum normalized physical inequality; no candidate has undergone joint optimization, dense validation or runtime replay in this screen. Failed starts do not exclude their gait family.'};
+fs.writeFileSync(d+'joint-start-screen.summary.json',JSON.stringify(summary,null,2)+'\n');
+console.log(JSON.stringify({...summary,errors:failed.length,best:summary.best.slice(0,3)}));

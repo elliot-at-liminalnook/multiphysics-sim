@@ -1,0 +1,47 @@
+{
+  "source": "runs/speed-ceiling/validation/synchronized-human-0p3125ms.native.json",
+  "checks": [
+    {
+      "name": "valid",
+      "expected_acceptance": true,
+      "exit": 0,
+      "error": "",
+      "maximum_command_error_rad": 0
+    },
+    {
+      "name": "missing-middle",
+      "expected_acceptance": false,
+      "exit": 1,
+      "error": "Error: \"missing/out-of-order policy sample: expected 9.98, got 10\"",
+      "maximum_command_error_rad": null
+    },
+    {
+      "name": "command-mismatch",
+      "expected_acceptance": false,
+      "exit": 1,
+      "error": "Error: \"command mismatch at 3.98: +X | Foot servo output.target error 0.00009999999999998899\"",
+      "maximum_command_error_rad": null
+    },
+    {
+      "name": "wrong-unit",
+      "expected_acceptance": false,
+      "exit": 1,
+      "error": "Error: \"channel unit mismatch\"",
+      "maximum_command_error_rad": null
+    },
+    {
+      "name": "missing-tail-policy",
+      "expected_acceptance": false,
+      "exit": 1,
+      "error": "Error: \"capture ends without a complete sequence of policy samples\"",
+      "maximum_command_error_rad": null
+    },
+    {
+      "name": "conflicting-duplicate",
+      "expected_acceptance": false,
+      "exit": 1,
+      "error": "Error: \"conflicting repeated policy sample\"",
+      "maximum_command_error_rad": null
+    }
+  ]
+}

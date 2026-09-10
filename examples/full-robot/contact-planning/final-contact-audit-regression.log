@@ -1,0 +1,11 @@
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.32s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_runtime-244b255b3d4999ec)
+
+running 5 tests
+test contact_audit::embedded_tests::floor_force_ratio_uses_patch_resultant_and_explicit_load_cutoff ... ok
+test contact_audit::tests::missing_overlapping_and_partial_windows_are_rejected ... ok
+test contact_audit::tests::stage_quadrature_integrates_linear_force_and_tracks_pair_presence ... ok
+test contact_audit::embedded_tests::embedded_trace_aggregates_points_and_requires_all_accepted_time ... ok
+test contact_audit::geometric_tests::recorded_overlap_remains_visible_when_forces_are_omitted ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s

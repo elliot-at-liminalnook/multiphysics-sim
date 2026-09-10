@@ -1,0 +1,483 @@
+{
+  "results": [
+    {
+      "name": "211",
+      "command_speed_m_s": 0.211710264528351,
+      "step_s": 0.000625,
+      "speeds_m_s": [
+        0.2100571743965932,
+        0.20695756584673347
+      ],
+      "maximum_slip_ratio": 0.07732274750321862,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "planned_lifts": 38,
+      "passed_lifts": 38,
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0.000012142527121480721,
+        "penetrating_samples": 190,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "motor_peaks": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.0969084921106993,
+          "maximum_recorded_shaft_torque_nm": 1.20162836348278
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.604303616861134,
+          "maximum_recorded_shaft_torque_nm": 0.7480017331468927
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.3050111804102236,
+          "maximum_recorded_shaft_torque_nm": 2.329160181687886
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 2.940809138538817,
+          "maximum_recorded_shaft_torque_nm": 1.3495833545463694
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.518092517421889,
+          "maximum_recorded_shaft_torque_nm": 0.7499038016725738
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.876973858450751,
+          "maximum_recorded_shaft_torque_nm": 2.2380474059032327
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.134410750128945,
+          "maximum_recorded_shaft_torque_nm": 0.9019040591890917
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.290693277742443,
+          "maximum_recorded_shaft_torque_nm": 0.7233951855096219
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.0436844484202155,
+          "maximum_recorded_shaft_torque_nm": 2.4041151967768517
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.2914215657220254,
+          "maximum_recorded_shaft_torque_nm": 0.9407210442470711
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.348733258717899,
+          "maximum_recorded_shaft_torque_nm": 0.6333331965080081
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 1.9805398471179156,
+          "maximum_recorded_shaft_torque_nm": 2.3557433817788045
+        }
+      ]
+    },
+    {
+      "name": "230",
+      "command_speed_m_s": 0.23,
+      "step_s": 0.000625,
+      "speeds_m_s": [
+        0.22922515912394625,
+        0.22694116746410217
+      ],
+      "maximum_slip_ratio": 0.09040237412676579,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "planned_lifts": 42,
+      "passed_lifts": 41,
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0.000012373646879605991,
+        "penetrating_samples": 250,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "motor_peaks": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.3895360100894765,
+          "maximum_recorded_shaft_torque_nm": 1.3261637140617502
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.408468961309752,
+          "maximum_recorded_shaft_torque_nm": 0.7727271198463372
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.830741458649171,
+          "maximum_recorded_shaft_torque_nm": 2.3388397530551246
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.1710248480727015,
+          "maximum_recorded_shaft_torque_nm": 1.4886585134830423
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.076331216989455,
+          "maximum_recorded_shaft_torque_nm": 0.7546278706442577
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.403453424617865,
+          "maximum_recorded_shaft_torque_nm": 2.311318648234088
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.4019823614292726,
+          "maximum_recorded_shaft_torque_nm": 0.9611885942619214
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.061030589310829,
+          "maximum_recorded_shaft_torque_nm": 0.7359290270840311
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.711902318197999,
+          "maximum_recorded_shaft_torque_nm": 2.4041151967768517
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.603739092776859,
+          "maximum_recorded_shaft_torque_nm": 1.0146082447781595
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.252141441119556,
+          "maximum_recorded_shaft_torque_nm": 0.6412090563186574
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 2.1698578594038387,
+          "maximum_recorded_shaft_torque_nm": 2.192767014492157
+        }
+      ]
+    },
+    {
+      "name": "250",
+      "command_speed_m_s": 0.25,
+      "step_s": 0.000625,
+      "speeds_m_s": [
+        0.2549520702708396,
+        0.25096936749541343
+      ],
+      "maximum_slip_ratio": 0.14514740858308126,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "planned_lifts": 46,
+      "passed_lifts": 40,
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0.000012868510133227923,
+        "penetrating_samples": 191,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "motor_peaks": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.758884631317517,
+          "maximum_recorded_shaft_torque_nm": 1.5475174999534147
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.9842850935533685,
+          "maximum_recorded_shaft_torque_nm": 0.7813356175982025
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.459579364311802,
+          "maximum_recorded_shaft_torque_nm": 2.4028412879266763
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.470142659210837,
+          "maximum_recorded_shaft_torque_nm": 1.5836365701228812
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.756372434676101,
+          "maximum_recorded_shaft_torque_nm": 0.7426695744929829
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.581024440560488,
+          "maximum_recorded_shaft_torque_nm": 2.2613215416945582
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.7559909423999547,
+          "maximum_recorded_shaft_torque_nm": 1.0418046881704484
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.43058439515855,
+          "maximum_recorded_shaft_torque_nm": 0.7597071606208292
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.132563859674873,
+          "maximum_recorded_shaft_torque_nm": 2.4041151967768517
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.9191895557837086,
+          "maximum_recorded_shaft_torque_nm": 1.1277363308494694
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 6.2786684330239355,
+          "maximum_recorded_shaft_torque_nm": 0.6351202065331907
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 2.4164232751653083,
+          "maximum_recorded_shaft_torque_nm": 2.1944902801775013
+        }
+      ]
+    },
+    {
+      "name": "280",
+      "command_speed_m_s": 0.28,
+      "step_s": 0.000625,
+      "speeds_m_s": [
+        0.2935490532275821,
+        0.289339490720392
+      ],
+      "maximum_slip_ratio": 0.2326847712288203,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "planned_lifts": 50,
+      "passed_lifts": 38,
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0.00001388397804922058,
+        "penetrating_samples": 254,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "motor_peaks": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.382240686490975,
+          "maximum_recorded_shaft_torque_nm": 1.818546789950626
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 7.1230319751103375,
+          "maximum_recorded_shaft_torque_nm": 0.7832671077154918
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.05222838475625,
+          "maximum_recorded_shaft_torque_nm": 2.4292758899621445
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.861326441591306,
+          "maximum_recorded_shaft_torque_nm": 1.6233399857536814
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.503716343444802,
+          "maximum_recorded_shaft_torque_nm": 0.7345861286719708
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.816583464564182,
+          "maximum_recorded_shaft_torque_nm": 2.107798188776091
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.233880581397976,
+          "maximum_recorded_shaft_torque_nm": 1.2278798235164636
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 6.400117466371336,
+          "maximum_recorded_shaft_torque_nm": 0.8297726170340032
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.111810842059912,
+          "maximum_recorded_shaft_torque_nm": 2.4041151967768517
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.402417837434988,
+          "maximum_recorded_shaft_torque_nm": 1.2038059700198138
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 6.87040528967648,
+          "maximum_recorded_shaft_torque_nm": 0.6709786249805105
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 2.910636461191344,
+          "maximum_recorded_shaft_torque_nm": 2.1398483085679527
+        }
+      ]
+    },
+    {
+      "name": "230-fine",
+      "command_speed_m_s": 0.23,
+      "step_s": 0.0003125,
+      "speeds_m_s": [
+        0.22898774185909848,
+        0.22646608372073432
+      ],
+      "maximum_slip_ratio": 0.09110689691454911,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "planned_lifts": 42,
+      "passed_lifts": 41,
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0.000012412156840561062,
+        "penetrating_samples": 250,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "motor_peaks": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.404791781185878,
+          "maximum_recorded_shaft_torque_nm": 1.330997960919686
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.389098294167779,
+          "maximum_recorded_shaft_torque_nm": 0.7743417323972429
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.8076887212152437,
+          "maximum_recorded_shaft_torque_nm": 2.331979240866753
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.1799862561395433,
+          "maximum_recorded_shaft_torque_nm": 1.499871037450168
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.051665502798295,
+          "maximum_recorded_shaft_torque_nm": 0.759654166733536
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.3971536507039755,
+          "maximum_recorded_shaft_torque_nm": 2.302513763767728
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.4121976128402345,
+          "maximum_recorded_shaft_torque_nm": 0.9770601333792434
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.043670573900142,
+          "maximum_recorded_shaft_torque_nm": 0.7379292051770767
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 4.705535720169758,
+          "maximum_recorded_shaft_torque_nm": 2.407958444827199
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "maximum_recorded_shaft_speed_rad_s": 3.60958269642438,
+          "maximum_recorded_shaft_torque_nm": 1.0319581249081449
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "maximum_recorded_shaft_speed_rad_s": 5.231119387202588,
+          "maximum_recorded_shaft_torque_nm": 0.6455629195033157
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "maximum_recorded_shaft_speed_rad_s": 2.1475955053114912,
+          "maximum_recorded_shaft_torque_nm": 2.191072811703916
+        }
+      ]
+    }
+  ],
+  "timestep_comparison": {
+    "coarse_s": 0.000625,
+    "fine_s": 0.0003125,
+    "maximum_chassis_position_difference_m": 0.0005345543191228918
+  },
+  "reference_no_load_rate_budget_m_s": 0.2124956807229445,
+  "reference_coordinates": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "peak_reference_rate_rad_s": 3.127351841570195,
+      "time_scaled_rate_budget_speed_m_s": 0.37311283392903355
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "peak_reference_rate_rad_s": 5.490426273549388,
+      "time_scaled_rate_budget_speed_m_s": 0.21252541244800327
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "peak_reference_rate_rad_s": 4.469473186956881,
+      "time_scaled_rate_budget_speed_m_s": 0.26107217998457466
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "peak_reference_rate_rad_s": 2.9416605534920115,
+      "time_scaled_rate_budget_speed_m_s": 0.3966654503750533
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "peak_reference_rate_rad_s": 4.799030765539715,
+      "time_scaled_rate_budget_speed_m_s": 0.2431439107830368
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "peak_reference_rate_rad_s": 4.697878889695953,
+      "time_scaled_rate_budget_speed_m_s": 0.24837913784043
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "peak_reference_rate_rad_s": 3.2435139794786285,
+      "time_scaled_rate_budget_speed_m_s": 0.35975029418217613
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "peak_reference_rate_rad_s": 5.396994014630391,
+      "time_scaled_rate_budget_speed_m_s": 0.21620463264148135
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "peak_reference_rate_rad_s": 4.970216039465722,
+      "time_scaled_rate_budget_speed_m_s": 0.23476949473344613
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "peak_reference_rate_rad_s": 3.5044689336256765,
+      "time_scaled_rate_budget_speed_m_s": 0.33296203516183687
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "peak_reference_rate_rad_s": 5.491194476667048,
+      "time_scaled_rate_budget_speed_m_s": 0.2124956807229445
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "peak_reference_rate_rad_s": 3.0142232405792235,
+      "time_scaled_rate_budget_speed_m_s": 0.38711635309308096
+    }
+  ],
+  "scope": "Matched eight-second runtime speed screens with unchanged physical model and gates. Shaft extrema are recorded sample extrema, not continuous peaks. Reference rate budget is conditional, not a physical speed ceiling. No candidate passes all slip/lift/geometry checks; faster sliding or overlap is not a qualified gait. No sustained, steering, browser or sim-to-real promotion."
+}

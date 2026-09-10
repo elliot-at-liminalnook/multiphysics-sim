@@ -1,0 +1,25 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/motion-forecast-v2.spec.json",
+      "sha256": "c908d68a4659697581fd36dd8a8a132f30b618a4e213626effe58a0899092631"
+    },
+    {
+      "path": "runs/bayesian-speed-only-bounded-expanded/evaluation-013.native.json",
+      "sha256": "db0ffe45259d5ec43ed8ab140a5658ea74d8794cf69ea8453e2f31871a4160ab"
+    },
+    {
+      "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-009.native.json",
+      "sha256": "46dcf06bc9b43498c20ef023f45b74d3e56ec6edd4c2c5bcb43ad00902d1c2ca"
+    },
+    {
+      "path": "runs/speed-only-507-validation/long60.native.json",
+      "sha256": "77f2b59cf0948561d1151faf488540a38753e9cae021357d5430ab5e6ba0b493"
+    },
+    {
+      "path": "runs/speed-only-448-validation/long60.native.json",
+      "sha256": "f653351e0ae0b01a303439181f8eab08485f7137233a952777f010ac1a7f9014"
+    }
+  ],
+  "scope": "Same trajectory data, horizons, network size, seed and optimizer as v1. Use constant velocity as the reference while retaining acceleration estimates as inputs and future acceleration as targets. Test whether avoiding sustained impact-acceleration extrapolation improves physical forecast errors."
+}

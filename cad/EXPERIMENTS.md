@@ -76,6 +76,67 @@ Each new run starts with a fresh state map and fresh plant state. Return updated
 state explicitly. Imported functions and module constants remain available;
 Rhai functions access top-level constants through `global::constant_name`.
 
+`trajectory_sample(config, time_s)` evaluates the shared Rust trajectory schema
+and returns `{values, rates, accelerations}` arrays in the declared channel
+order. For angular controls these are rad, rad/s and rad/s²; coordinates keep
+the units and frame chosen by the caller. The config contains `interpolation`
+and `keyframes: [{time_s, values}]`. `linear` and `quintic_rest_to_rest` retain
+endpoint holds. `periodic_cubic_b_spline` instead wraps time and requires at
+least four distinct-time control points starting at zero, uniform spacing,
+and a final point repeating the first values. Its control points are smoothed,
+not interpolated: values remain in their convex hull while velocity and
+acceleration remain continuous across the cycle. Negative/nonfinite sample
+times and malformed configs fail. The helper retains no controller state;
+changing the curve still requires physical motion validation. When sampling
+at phase φ(t), apply the chain rule: velocity is `q′ φ̇`, acceleration is
+`q″ φ̇² + q′ φ̈`. This does not infer actuator or robot properties.
+
+For offline planning, Rust `Trajectory::rate_traversal_bounds(budgets, subdivisions)`
+brackets the minimum traversal time under explicit positive per-coordinate
+absolute rate budgets. On each reference cell it uses endpoint displacement
+for a lower time bound and analytic polynomial rate extrema for an upper
+bound. The corresponding ideal integral is `∫ max_i(|dq_i/ds|/budget_i) ds`.
+The calculation excludes endpoint holds, acceleration, torque, dwell, contact
+and stability, and uses ordinary floating-point arithmetic. It is a conditional
+reference screen, not a motor capability declaration or an executable gait.
+
+`Trajectory::redistribute_periodic_rates` converts the rate envelope into a
+new periodic B-spline reference. `RateRedistributionConfig` declares the number
+of envelope subdivisions, output controls, blend in `[0,1)`, and increasing
+original control indices whose phase times remain anchored before smoothing.
+Optional `coordinate_intervals` supplies ordered, nonoverlapping pairs of
+anchor indices for each channel. Only those intervals use the redistributed
+phase; an empty interval list retains that channel's original phase everywhere.
+This supports moving selected joints while retaining other reference channels.
+The resulting resampling and smoothing change the path; they require new
+geometry, lift, load and controller validation. The CLI example
+`redistribute_trajectory recipe.json` accepts `trajectory`, `rate_budgets` and
+`redistribution` and returns the new shared trajectory config, source phase
+samples and analytic peak rates. This example supplies no robot defaults and
+does not modify CAD or infer missing actuator properties.
+
+The offline `reference_load_feedforward` example optionally accepts
+`wrench_allocation: {length_scale_m, friction_coefficient, constrained}`.
+With no allocation option it retains the original prescribed net-force shares.
+With the option, shared `weighted_minimum_norm_point_forces` balances scaled
+force/moment demand using explicit relative support weights; zero weight
+disables a point. That unconstrained candidate checks friction and unilateral
+conditions but may fail them.
+
+`constrained` optionally supplies `{regularization, maximum_iterations,
+gradient_tolerance_n}` to shared `constrained_point_forces`. It minimizes
+scaled wrench error plus the declared weighted force penalty under world +Z
+unilateral circular friction cones. The report includes convergence, a
+projected-gradient optimality residual in N, actual wrench residual in N/N·m,
+and force-cone checks. Convergence does not imply the requested wrench is
+balanced, that the assumed supports touch the floor, or that motors can supply
+the torques. No external forces are applied to the simulation. Load reports
+also compare required signed torques/speeds with the exact effective-servo
+torque capacity and report margins in N·m; negative margins reject that
+specific allocation, not every possible motion. All physical coefficients
+must be supplied from the robot/world; numerical force/moment scaling and
+regularization remain explicit experimental choices.
+
 **Link Rhai file**, inside each System or Controller tab, links that editor to an external
 entry file. The editor becomes read-only, reflects external changes, and captures
 all `.rhai` files below its directory at run creation. Imports resolve within that

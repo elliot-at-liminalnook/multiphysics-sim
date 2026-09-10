@@ -1,0 +1,21 @@
+{
+  "sample_period_s": 0.0025,
+  "windows": [
+    [
+      "forward",
+      1.4,
+      20
+    ],
+    [
+      "reverse",
+      25,
+      40
+    ],
+    [
+      "forward-again",
+      45,
+      56
+    ]
+  ],
+  "require_full_coverage": true
+}

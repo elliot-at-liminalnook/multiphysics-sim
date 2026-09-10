@@ -1,0 +1,6 @@
+
+thread 'main' (6701255) panicked at crates/sim-solve/examples/audit_ipopt.rs:100:5:
+assertion `left == right` failed
+  left: -11
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "baselines": [
+    {
+      "sigma": 0.01,
+      "path": "runs/ppo-speed518-resume-sigma01/baseline.json",
+      "sha256": "e92bb308ed00f39cd1cb7e93fc6b0a3c0bf95022bbeac84c3486d2a76f634981",
+      "bytes": 1840,
+      "score_m": 31.062473800777763,
+      "speed_m_s": 0.5177078966796294
+    },
+    {
+      "sigma": 0.03,
+      "path": "runs/ppo-speed518-resume-sigma03/baseline.json",
+      "sha256": "e92bb308ed00f39cd1cb7e93fc6b0a3c0bf95022bbeac84c3486d2a76f634981",
+      "bytes": 1840,
+      "score_m": 31.062473800777763,
+      "speed_m_s": 0.5177078966796294
+    }
+  ],
+  "scope": "Both new-seed continuations reproduce the previously validated full-minute winning score exactly. No update completed yet; these are setup checks, not new speed gains. Inputs and pinned executable are in net-forecast-study-evidence-v1.json."
+}

@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "default_offsets_and_existing_frame_fields_exact": true,
+  "zero_motion_increment_zero": true,
+  "source_table_sha256": "a0a45f87a30b6a2677484010f80102283f6d1b82bb2ff984a40e4acb3f443e03",
+  "results": [
+    {
+      "name": "default-compatibility",
+      "exit": 0,
+      "error": ""
+    },
+    {
+      "name": "weighted-zero-motion",
+      "exit": 0,
+      "error": ""
+    },
+    {
+      "name": "zero-wrench-scale",
+      "exit": 1,
+      "error": "finite points/wrench, positive length scale, nonnegative friction and matched nonnegative weights with at least one active point required"
+    },
+    {
+      "name": "negative-friction",
+      "exit": 1,
+      "error": "finite points/wrench, positive length scale, nonnegative friction and matched nonnegative weights with at least one active point required"
+    },
+    {
+      "name": "no-active-support",
+      "exit": 1,
+      "error": "finite coordinates/translation and nonnegative nonempty support shares required"
+    },
+    {
+      "name": "constrained-zero-motion",
+      "exit": 0,
+      "error": ""
+    },
+    {
+      "name": "constrained-iteration-limit",
+      "exit": 0,
+      "error": ""
+    },
+    {
+      "name": "invalid-regularization",
+      "exit": 1,
+      "error": "positive finite regularization/tolerance and 1..100000 force iterations required"
+    }
+  ],
+  "scope": "Default dynamic table and all existing frame fields remain exact. Weighted zero-motion increments vanish and malformed allocation inputs reject. Analytic point-wrench tests are in the shared robot library; no gait contact or support feasibility claim."
+}

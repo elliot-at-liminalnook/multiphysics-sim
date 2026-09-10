@@ -1,0 +1,10 @@
+{
+  planned: 28,
+  passed: 28,
+  geometry: {
+    frames: 401,
+    maximum_penetration_m: 0.000012142527121480721,
+    penetrating_samples: 190,
+    scope: 'Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage.'
+  }
+}

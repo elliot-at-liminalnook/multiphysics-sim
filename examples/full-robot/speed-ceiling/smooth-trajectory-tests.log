@@ -1,0 +1,21 @@
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-script)
+    Finished `test` profile [optimized + debuginfo] target(s) in 9.80s
+     Running tests/trajectory.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/trajectory-02b4cb938ed99c41)
+
+running 6 tests
+test linear_interpolation_retains_endpoint_holds_and_channel_order ... ok
+test authored_value_bounds_cover_all_reference_segments ... ok
+test rejects_nonfinite_unsorted_and_dimension_mismatched_input ... ok
+test periodic_spline_has_analytic_values_and_continuous_cycle_derivatives ... ok
+test quintic_has_analytic_midpoint_rest_endpoints_and_checked_derivatives ... ok
+test periodic_spline_validates_closure_timing_and_control_hull_bounds ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/trajectory.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/trajectory-5cfd15a563de38f8)
+
+running 1 test
+test trajectory_samples_shared_derivatives_without_state_objects ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

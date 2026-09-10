@@ -1,0 +1,376 @@
+{
+  "batch": {
+    "id": "weighted-load",
+    "cases": [
+      {
+        "source": "runs/speed-ceiling/validation/smooth-front10-v150-human-fine",
+        "speed": 0.15,
+        "table_name": "weighted-front150-loads",
+        "name_prefix": "weighted-front150",
+        "scales": [
+          0.5,
+          1
+        ],
+        "wrench_allocation": {
+          "length_scale_m": 0.35,
+          "friction_coefficient": 0.31724137931034485
+        }
+      },
+      {
+        "source": "runs/speed-ceiling/validation/smooth-front10-v165-human-fine",
+        "speed": 0.165,
+        "table_name": "weighted-front165-loads",
+        "name_prefix": "weighted-front165",
+        "scales": [
+          0.5,
+          1
+        ],
+        "wrench_allocation": {
+          "length_scale_m": 0.35,
+          "friction_coefficient": 0.31724137931034485
+        }
+      },
+      {
+        "source": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-human-fine",
+        "speed": 0.175,
+        "table_name": "weighted-swing175-loads",
+        "name_prefix": "weighted-swing175",
+        "scales": [
+          0.5,
+          1
+        ],
+        "wrench_allocation": {
+          "length_scale_m": 0.35,
+          "friction_coefficient": 0.31724137931034485
+        }
+      }
+    ],
+    "scope": "Weighted wrench residual uses explicit 0.35 m numerical force/moment scaling; friction coefficient inherited from CAD-derived capability recipe. Not an inequality-constrained force optimizer or a physical property change."
+  },
+  "rows": [
+    {
+      "name": "weighted-front150-scale0.5-human-fine",
+      "prefix": "runs/speed-ceiling/validation/weighted-front150-scale0.5-human-fine",
+      "source": "runs/speed-ceiling/validation/smooth-front10-v150-human-fine",
+      "source_scene_sha256": "a699c50bd8764ed6524c5eaf9db7b0ec5a67af214d60546d525bdbf6fed31038",
+      "kind": "human",
+      "family": "weighted-front150-scale0.5-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.15,
+      "scale": 0.5,
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      },
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/weighted-front150-loads.forward.load-recipe.json",
+          "recipe_sha256": "3ce5a087565d1d7e9f5263200138e8982a5c032392803c829699a86f048bf567",
+          "table": "runs/speed-ceiling/validation/weighted-front150-loads.forward.load-table.json",
+          "table_sha256": "a90cf4d32a0021109a812e4129b1be472c74edc9f29a1064cc82c1f007083d53",
+          "maximum_offset_rad": 0.021165169876344533,
+          "maximum_unbalanced_moment_nm": 0.18858870766398028,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.5826642700566771,
+          "friction_feasible_frames": 133,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -1.4731139841643413
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/weighted-front150-loads.reverse.load-recipe.json",
+          "recipe_sha256": "14f055f79f70e27ee3e58d0837cbb1e54017c6b063d90299af7462b5151e654a",
+          "table": "runs/speed-ceiling/validation/weighted-front150-loads.reverse.load-table.json",
+          "table_sha256": "a89de4c5ba3f3d990d1b3b8b46ba19218ebe67806119538b8162cf64f227e519",
+          "maximum_offset_rad": 0.02137420731410498,
+          "maximum_unbalanced_moment_nm": 0.1885887076639805,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.5826642700566778,
+          "friction_feasible_frames": 133,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -1.4731139841643415
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "f86aabdd737ed2eb276d4de2af4b0bc8d90d8f640d67ec97d399f6f21361095e",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "0d1963f8695e729f6ac4885c21bfb6b4b8437f813ffa02961f637e4902de9c50"
+    },
+    {
+      "name": "weighted-front150-scale1-human-fine",
+      "prefix": "runs/speed-ceiling/validation/weighted-front150-scale1-human-fine",
+      "source": "runs/speed-ceiling/validation/smooth-front10-v150-human-fine",
+      "source_scene_sha256": "a699c50bd8764ed6524c5eaf9db7b0ec5a67af214d60546d525bdbf6fed31038",
+      "kind": "human",
+      "family": "weighted-front150-scale1-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.15,
+      "scale": 1,
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      },
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/weighted-front150-loads.forward.load-recipe.json",
+          "recipe_sha256": "3ce5a087565d1d7e9f5263200138e8982a5c032392803c829699a86f048bf567",
+          "table": "runs/speed-ceiling/validation/weighted-front150-loads.forward.load-table.json",
+          "table_sha256": "a90cf4d32a0021109a812e4129b1be472c74edc9f29a1064cc82c1f007083d53",
+          "maximum_offset_rad": 0.021165169876344533,
+          "maximum_unbalanced_moment_nm": 0.18858870766398028,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.5826642700566771,
+          "friction_feasible_frames": 133,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -1.4731139841643413
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/weighted-front150-loads.reverse.load-recipe.json",
+          "recipe_sha256": "14f055f79f70e27ee3e58d0837cbb1e54017c6b063d90299af7462b5151e654a",
+          "table": "runs/speed-ceiling/validation/weighted-front150-loads.reverse.load-table.json",
+          "table_sha256": "a89de4c5ba3f3d990d1b3b8b46ba19218ebe67806119538b8162cf64f227e519",
+          "maximum_offset_rad": 0.02137420731410498,
+          "maximum_unbalanced_moment_nm": 0.1885887076639805,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.5826642700566778,
+          "friction_feasible_frames": 133,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -1.4731139841643415
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "dd1837c529131c496bf4caf5e20e192aa0b8166db413f6dcc548a442d75cf145",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "0d1963f8695e729f6ac4885c21bfb6b4b8437f813ffa02961f637e4902de9c50"
+    },
+    {
+      "name": "weighted-front165-scale0.5-human-fine",
+      "prefix": "runs/speed-ceiling/validation/weighted-front165-scale0.5-human-fine",
+      "source": "runs/speed-ceiling/validation/smooth-front10-v165-human-fine",
+      "source_scene_sha256": "f9813305eb372b1b09b404618764c824769f6a03758c7d963e3fb864d380dc9f",
+      "kind": "human",
+      "family": "weighted-front165-scale0.5-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.165,
+      "scale": 0.5,
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      },
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/weighted-front165-loads.forward.load-recipe.json",
+          "recipe_sha256": "995ef4843dff8be51bf4b46418467e6d680ae7bae5944d7bbc4ef071d0bccda3",
+          "table": "runs/speed-ceiling/validation/weighted-front165-loads.forward.load-table.json",
+          "table_sha256": "e34527229172d1ae47a2567f8c7a5385cc503c10960661de62ef130038337b01",
+          "maximum_offset_rad": 0.024739138606766024,
+          "maximum_unbalanced_moment_nm": 0.23264088425385238,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.7187680147351734,
+          "friction_feasible_frames": 129,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -2.2802634673474502
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/weighted-front165-loads.reverse.load-recipe.json",
+          "recipe_sha256": "ea42d16d094f8155a1750b7f3762dde37c52b8b2020665a61da9ce93cb8950b0",
+          "table": "runs/speed-ceiling/validation/weighted-front165-loads.reverse.load-table.json",
+          "table_sha256": "5ab13a297af1cfd409500603a11c13dac2cc8bf8cfa4e8947ebab780777b3f7c",
+          "maximum_offset_rad": 0.025222908324665262,
+          "maximum_unbalanced_moment_nm": 0.2326408842538526,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.7187680147351742,
+          "friction_feasible_frames": 129,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -2.28026346734745
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "d6f9531dbd11270fb6d9bf923b280839d243dea38f9208b38eb1cf3d259d7d14",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "8de0cc58a1e8bc16cdffa948792d1b88840f41e9de56838862a99706132d12c6"
+    },
+    {
+      "name": "weighted-front165-scale1-human-fine",
+      "prefix": "runs/speed-ceiling/validation/weighted-front165-scale1-human-fine",
+      "source": "runs/speed-ceiling/validation/smooth-front10-v165-human-fine",
+      "source_scene_sha256": "f9813305eb372b1b09b404618764c824769f6a03758c7d963e3fb864d380dc9f",
+      "kind": "human",
+      "family": "weighted-front165-scale1-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.165,
+      "scale": 1,
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      },
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/weighted-front165-loads.forward.load-recipe.json",
+          "recipe_sha256": "995ef4843dff8be51bf4b46418467e6d680ae7bae5944d7bbc4ef071d0bccda3",
+          "table": "runs/speed-ceiling/validation/weighted-front165-loads.forward.load-table.json",
+          "table_sha256": "e34527229172d1ae47a2567f8c7a5385cc503c10960661de62ef130038337b01",
+          "maximum_offset_rad": 0.024739138606766024,
+          "maximum_unbalanced_moment_nm": 0.23264088425385238,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.7187680147351734,
+          "friction_feasible_frames": 129,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -2.2802634673474502
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/weighted-front165-loads.reverse.load-recipe.json",
+          "recipe_sha256": "ea42d16d094f8155a1750b7f3762dde37c52b8b2020665a61da9ce93cb8950b0",
+          "table": "runs/speed-ceiling/validation/weighted-front165-loads.reverse.load-table.json",
+          "table_sha256": "5ab13a297af1cfd409500603a11c13dac2cc8bf8cfa4e8947ebab780777b3f7c",
+          "maximum_offset_rad": 0.025222908324665262,
+          "maximum_unbalanced_moment_nm": 0.2326408842538526,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.7187680147351742,
+          "friction_feasible_frames": 129,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -2.28026346734745
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "baa13553360f2df6c1701b70d892bf359538b06da60b53d2c3fff077970f0431",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "8de0cc58a1e8bc16cdffa948792d1b88840f41e9de56838862a99706132d12c6"
+    },
+    {
+      "name": "weighted-swing175-scale0.5-human-fine",
+      "prefix": "runs/speed-ceiling/validation/weighted-swing175-scale0.5-human-fine",
+      "source": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-human-fine",
+      "source_scene_sha256": "3483c8b4900d5e7763adfb996b646d1fc0b25a50e8006fd15118800053b473e2",
+      "kind": "human",
+      "family": "weighted-swing175-scale0.5-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.175,
+      "scale": 0.5,
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      },
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/weighted-swing175-loads.forward.load-recipe.json",
+          "recipe_sha256": "e01d95908bb0ab1621c37cf36334fa7b8d5feed245693e9f329c8c830b86d031",
+          "table": "runs/speed-ceiling/validation/weighted-swing175-loads.forward.load-table.json",
+          "table_sha256": "b7ee7aeec349a1a2f5c9f5910026afda07a31c3b278e95232598b2b27cf08816",
+          "maximum_offset_rad": 0.050360801332425896,
+          "maximum_unbalanced_moment_nm": 0.17291062562370757,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.533905916820145,
+          "friction_feasible_frames": 125,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -2.7548981835264823
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/weighted-swing175-loads.reverse.load-recipe.json",
+          "recipe_sha256": "1fb601d5ee9650d6810e57960e599b924e9996171b51989f6aef6566a45c6cf7",
+          "table": "runs/speed-ceiling/validation/weighted-swing175-loads.reverse.load-table.json",
+          "table_sha256": "c6304d2784318149ad78aa63713c5ec081ab7b49932c437bc119b5a2fe870358",
+          "maximum_offset_rad": 0.05072423895709485,
+          "maximum_unbalanced_moment_nm": 0.17291062562370757,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.533905916820145,
+          "friction_feasible_frames": 125,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -2.754898183526484
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "a59d7a786090c97f45ecddc46b4e664cb4df4b2617241787c9a8bb87bf2c907b",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "bd100cdadababf0ecf3a1b3fdb951eaa6303f15702bd162ef04987c734ba7763"
+    },
+    {
+      "name": "weighted-swing175-scale1-human-fine",
+      "prefix": "runs/speed-ceiling/validation/weighted-swing175-scale1-human-fine",
+      "source": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-human-fine",
+      "source_scene_sha256": "3483c8b4900d5e7763adfb996b646d1fc0b25a50e8006fd15118800053b473e2",
+      "kind": "human",
+      "family": "weighted-swing175-scale1-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.175,
+      "scale": 1,
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485
+      },
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/weighted-swing175-loads.forward.load-recipe.json",
+          "recipe_sha256": "e01d95908bb0ab1621c37cf36334fa7b8d5feed245693e9f329c8c830b86d031",
+          "table": "runs/speed-ceiling/validation/weighted-swing175-loads.forward.load-table.json",
+          "table_sha256": "b7ee7aeec349a1a2f5c9f5910026afda07a31c3b278e95232598b2b27cf08816",
+          "maximum_offset_rad": 0.050360801332425896,
+          "maximum_unbalanced_moment_nm": 0.17291062562370757,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.533905916820145,
+          "friction_feasible_frames": 125,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -2.7548981835264823
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/weighted-swing175-loads.reverse.load-recipe.json",
+          "recipe_sha256": "1fb601d5ee9650d6810e57960e599b924e9996171b51989f6aef6566a45c6cf7",
+          "table": "runs/speed-ceiling/validation/weighted-swing175-loads.reverse.load-table.json",
+          "table_sha256": "c6304d2784318149ad78aa63713c5ec081ab7b49932c437bc119b5a2fe870358",
+          "maximum_offset_rad": 0.05072423895709485,
+          "maximum_unbalanced_moment_nm": 0.17291062562370757,
+          "wrench_allocation": {
+            "length_scale_m": 0.35,
+            "friction_coefficient": 0.31724137931034485
+          },
+          "maximum_unbalanced_force_n": 0.533905916820145,
+          "friction_feasible_frames": 125,
+          "sampled_frames": 161,
+          "minimum_normal_force_n": -2.754898183526484
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "9a40b4fafd7d7e86e22e944d25341df7b74cf3504035e0051200ad3c225c0b15",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "bd100cdadababf0ecf3a1b3fdb951eaa6303f15702bd162ef04987c734ba7763"
+    }
+  ]
+}

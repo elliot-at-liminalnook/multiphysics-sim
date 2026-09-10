@@ -1,0 +1,38 @@
+{
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/joint-body16-build.json",
+    "bytes": 6833,
+    "sha256": "b1904e6564af474b1e8a204243bc6fa8f7d204376f0d8101d8274467b2274030"
+  },
+  "session_id": 43278,
+  "recorded_at": "2026-09-09T16:01:30.313Z",
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt",
+    "bytes": 9192964,
+    "sha256": "792bc518d5aef6b98c1bd64eee3d38b5543524db4bc2747f5c53202d718d310e"
+  },
+  "recipe": {
+    "path": "examples/full-robot/contact-planning/joint-body16-speed.recipe.json",
+    "bytes": 176501,
+    "sha256": "b389917b1f1ef5f82d854efb8b26db4024f7ba6ad091b6e2a60f18bc8995d2f6"
+  },
+  "search": {
+    "path": "examples/full-robot/contact-planning/joint-body16-speed.search.json",
+    "bytes": 319,
+    "sha256": "5f5d3ec9f1f1f374657a9ba75f3166a83c03e1f427b81bfe3e21f67ba4ba480e"
+  },
+  "environment": {
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "arguments": [
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-body16-speed.recipe.json",
+    "/Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+    "examples/full-robot/contact-planning/joint-body16-speed.search.json"
+  ],
+  "stdout": "examples/full-robot/contact-planning/joint-body16-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-body16-speed.log",
+  "scope": "Live 8000-model-attempt joint speed search with sixteen body controls, 491 total variables, 266 frames and 7192 physical inequalities. Exact initial curve refinement and grouped/ordinary native equivalence verified. Target .30 m/s and physical bounds/thresholds unchanged. Not a feasible runtime gait or physical speed maximum."
+}

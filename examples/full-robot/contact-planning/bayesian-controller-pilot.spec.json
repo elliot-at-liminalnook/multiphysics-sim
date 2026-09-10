@@ -1,0 +1,32 @@
+{
+  "source_prefix": "runs/contact-planning/return-x25-lift-v250",
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "output_directory": "runs/bayesian-controller-pilot-v2",
+  "selector": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+  "runtime_examples": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples",
+  "seed": 42,
+  "initial_design_count": 12,
+  "comparison_evaluations": 8,
+  "baseline_values": [0.25, 0.5, 1.0],
+  "problem": {
+    "context_id": "computed-from-exact-artifacts-by-runner",
+    "parameters": [
+      {"name": "command_speed", "unit": "m/s", "bounds": [0.1, 0.32]},
+      {"name": "tracking_gain", "unit": "1", "bounds": [0.0, 1.0]},
+      {"name": "velocity_lead_factor", "unit": "1", "bounds": [0.5, 1.5]}
+    ],
+    "objective_name": "negative minimum measured forward/reverse speed",
+    "objective_unit": "m/s",
+    "constraints": [
+      {"name": "slip ratio / 0.05 - 1", "unit": "1", "scale": 1.0},
+      {"name": "speed tracking relative error / 0.05 - 1", "unit": "1", "scale": 1.0},
+      {"name": "heading error / 0.1 rad - 1", "unit": "1", "scale": 1.0},
+      {"name": "tilt / 0.1 rad - 1", "unit": "1", "scale": 1.0},
+      {"name": "settling duration / (0.8 s + existing 1e-9 s roundoff guard) - 1; unsettled gate failure = 1", "unit": "1", "scale": 1.0},
+      {"name": "late drift / 0.003 m - 1", "unit": "1", "scale": 1.0},
+      {"name": "failed fraction of all complete planned swing checks", "unit": "1", "scale": 1.0},
+      {"name": "sampled interlink overlap / 0.0001 m; exact zero required", "unit": "1", "scale": 1.0}
+    ]
+  },
+  "scope": "Experimental controller/task search bounds, not physical hardware limits or a theoretical maximum. Source reference and its declared diagnostic load-audit failures are retained. Only requested speed, tracking gain and velocity lead change; fixed motion family. Compare constrained EGO and seeded Latin hypercube after common initial data, with identical detailed runtime and short gates. Timestep, sustained, steering and browser checks remain necessary before promotion. Multiple-seed comparison remains future work."
+}

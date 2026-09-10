@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 
 fn fixture() -> (LiftRequirements, Vec<LiftSample>) {
     let r = LiftRequirements {
+        support_check: Default::default(),
         start_s: 0.0,
         end_s: 0.4,
         maximum_sample_gap_s: 0.1,
@@ -20,6 +21,20 @@ fn fixture() -> (LiftRequirements, Vec<LiftSample>) {
         })
         .collect();
     (r, samples)
+}
+
+#[test]
+fn clearance_only_scope_is_explicit_and_cannot_claim_support() {
+    let (mut r,mut samples)=fixture();
+    r.minimum_support_forces_n.clear();
+    assert!(evaluate_lift(&samples,&r).is_err());
+    r.support_check=SupportCheck::ClearanceOnly;
+    for s in &mut samples {s.floor_forces_n.remove("support");}
+    let result=evaluate_lift(&samples,&r).unwrap();
+    assert!(result.passed);
+    assert!(result.scope.contains("Support and body balance are unassessed"));
+    r.minimum_support_forces_n.insert("support".into(),1.0);
+    assert!(evaluate_lift(&samples,&r).is_err());
 }
 
 #[test]

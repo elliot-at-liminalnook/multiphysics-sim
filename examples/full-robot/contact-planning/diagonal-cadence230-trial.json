@@ -1,0 +1,49 @@
+{
+  "prefix": "runs/contact-planning/diagonal-cadence230",
+  "source": "runs/contact-planning/diagonal21-screen",
+  "command_speed_m_s": 0.23,
+  "reference_nominal_speed_m_s": 0.211710264528351,
+  "clock_rate": 1.0863904048884685,
+  "steady_reference_velocity_scale": 1.0863904048884685,
+  "steady_reference_acceleration_scale": 1.1802441118337306,
+  "windows_s": [
+    [
+      0.8,
+      3
+    ],
+    [
+      4.2,
+      6.4
+    ]
+  ],
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "sources": [
+    {
+      "path": "runs/contact-planning/diagonal21-screen.scene.json",
+      "sha256": "92a709b10cd0dc8950b19828435f2584321f3b1a2368c31aab9a94da25175e89"
+    },
+    {
+      "path": "runs/contact-planning/diagonal21-screen.config.json",
+      "sha256": "a6e8a08ef39008bc86eb53366917e200b3e92c87da9a1a2306807153fd9bc233"
+    },
+    {
+      "path": "runs/contact-planning/diagonal21-screen.actions.json",
+      "sha256": "0a52166a9599618656c15e083bc66ba21c2cc535af604bda44b44d0da8b6912f"
+    }
+  ],
+  "files": [
+    {
+      "path": "runs/contact-planning/diagonal-cadence230.scene.json",
+      "sha256": "e07da5fefaaa235d7f54bbc530f943396724545472cfb3c308c9d41c2a1bd9c0"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-cadence230.config.json",
+      "sha256": "a6e8a08ef39008bc86eb53366917e200b3e92c87da9a1a2306807153fd9bc233"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-cadence230.actions.json",
+      "sha256": "ab70dfcde38fecabf72605cc139f63a5963cdb1656e9d734a0c53a5821e26742"
+    }
+  ],
+  "scope": "Direct closed-loop speed experiment. Only motion-command bounds and scheduled speed change; CAD, world, actuator limits, joint bounds, controller code, reference and solver settings are preserved. Existing odd/even feedforward scales with clock rate; off-nominal loads and transitions remain approximate. Inherited failed reference audits remain explicit. No collision/slip or sustained qualification is implied."
+}

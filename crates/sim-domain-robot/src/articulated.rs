@@ -194,6 +194,17 @@ pub struct ImuC {
     pub stream: u64,
 }
 
+/// Held output of the authored sampled IMU, in its own sensor axes.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ImuReading {
+    pub name: String,
+    pub link: String,
+    pub sample_time_s: Option<f64>,
+    pub next_sample_time_s: f64,
+    pub specific_force_m_s2: [f64; 3],
+    pub angular_velocity_rad_s: [f64; 3],
+}
+
 /// A tree root: the ground link (pinned) or a floating body.
 #[derive(Clone, Debug)]
 pub struct BaseC {
@@ -471,7 +482,10 @@ impl Articulated {
             let mat = model.material_of(l);
             let (lo, hi) = local_bounds(l);
             let contact = contact_vertices(&l.collision, CONTACT_VERTICES);
-            let sdf = l.collision.sdf.clone().filter(|s| s.is_valid());
+            if l.collision.sdf.as_ref().is_some_and(|s| !s.is_valid()) {
+                return Err(format!("invalid CAD distance grid or refinement for {}", l.name));
+            }
+            let sdf = l.collision.sdf.clone();
             links.push(LinkC {
                 name: l.name.clone(),
                 mass: l.mass.max(1e-6),
@@ -879,7 +893,7 @@ impl Articulated {
     }
 
     pub fn floor_height(&self, x: f64, y: f64) -> f64 {
-        self.terrain.as_ref().map(|t| t.height(x, y)).unwrap_or(self.floor_z)
+        crate::model::ground_height(self.floor_z, self.terrain.as_ref(), x, y)
     }
 
     fn base_of(&self, g: &Generalized, b: usize) -> (V, UnitQuaternion<f64>, V, V, V, V) {
@@ -1555,7 +1569,36 @@ impl Articulated {
 
     fn imu_sample(&self, imu: &ImuC, view: &View, states: &mut [f64]) {
         let g = self.read_view(view);
-        let kin = self.evaluate_kinematics_only(&g);
+        self.imu_sample_generalized(imu, &g, states);
+    }
+
+    pub(crate) fn sample_imu_event(&self, index: usize, g: &mut Generalized) -> Result<(), String> {
+        let imu = self.imus.get(index).ok_or("invalid IMU schedule index")?;
+        let mut states = g.states.clone();
+        self.imu_sample_generalized(imu, g, &mut states);
+        states[imu.state + 15] += imu.period;
+        if states[imu.state..imu.state+16].iter().any(|v| !v.is_finite()) {
+            return Err("nonfinite IMU sample".into());
+        }
+        g.states = states;
+        Ok(())
+    }
+
+    pub fn imu_readings(&self, g: &Generalized) -> Vec<ImuReading> {
+        self.imus.iter().map(|imu| {
+            let next = g.states[imu.state + 15];
+            ImuReading {
+                name: imu.name.clone(), link: self.links[imu.link].name.clone(),
+                sample_time_s: (next > imu.latency + 1.5 * imu.period).then_some(next - imu.period),
+                next_sample_time_s: next,
+                specific_force_m_s2: std::array::from_fn(|i| g.states[imu.state + i]),
+                angular_velocity_rad_s: std::array::from_fn(|i| g.states[imu.state + 3 + i]),
+            }
+        }).collect()
+    }
+
+    fn imu_sample_generalized(&self, imu: &ImuC, g: &Generalized, states: &mut [f64]) {
+        let kin = self.evaluate_kinematics_only(g);
         let k = &kin[imu.link];
         let r = k.r * imu.point;
         let vel = k.vel + k.w.cross(&r);

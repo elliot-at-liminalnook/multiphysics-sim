@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+const d='examples/full-robot/contact-planning/';
+const identity=path=>{const bytes=fs.readFileSync(path);return {path,bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')};};
+const sources=['crates/sim-domain-control/src/trajectory.rs','crates/sim-runtime/examples/audit_joint_body_locality.rs','.github/workflows/native-ipopt.yml',d+'check_joint_body_locality.mjs',d+'record_joint_body_locality.mjs'];
+const archive=d+'joint-body-locality-sources.tar.gz';assert(!fs.existsSync(archive));
+execFileSync('tar',['-czf',archive,...sources]);
+const old=identity('/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt'),warm=identity('/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt');
+assert.equal(old.sha256,'64976375fd16c84f5a1d8f8dac0e0e7cd669225ad1da915f85b25f371bfcc439');
+assert.equal(warm.sha256,'1f6b6edc4dd491c30f9d791016f277b83f5484a1d0704fcf93498fe5385dc3fd');
+const result={base_commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),recorded_at:new Date().toISOString(),source_archive:identity(archive),sources:sources.map(identity),binary:identity('/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_body_locality'),unchanged_optimizers:[old,warm],build_command:'CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --release -p sim-runtime --features native-ipopt --example audit_joint_body_locality',cargo_lock:identity('Cargo.lock'),rustc:execFileSync('/Users/elliot/.cargo/bin/rustc',['-Vv']).toString(),inputs:['runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json','examples/full-robot/gait-exploration/workspace-markers.json',d+'joint-timed-speed.recipe.json',d+'joint-ipopt-warm.recipe.json'].map(identity),durable_scene:{index:'examples/full-robot/speed-ceiling/evidence-v8-index.json',entry:'validation/constrained-front165-scale1-human-fine.scene.json'},artifacts:['joint-body-locality-build.log','joint-body-locality-control-tests.log','joint-body-locality-final-control-tests.log','joint-body-locality-trajectory-tests.log','joint-body-locality-fast.result.json','joint-body-locality-fast.log','joint-body-locality-warm.result.json','joint-body-locality-warm.log','joint-body-locality-verification.json'].map(n=>identity(d+n)),scope:'Shared spline-support API and full-CAD validation of grouped body probes at fixed timing. Optimizer executables unchanged; grouped derivatives not yet integrated. No measured optimizer/browser speedup, new runtime gait or physical ceiling.'};
+fs.writeFileSync(d+'joint-body-locality-build.json',JSON.stringify(result,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({binary_sha256:result.binary.sha256,base_commit:result.base_commit,artifacts:result.artifacts.length}));

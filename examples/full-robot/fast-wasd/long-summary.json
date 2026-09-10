@@ -1,0 +1,118 @@
+{
+  "rows": [
+    {
+      "name": "dropout",
+      "completed": true,
+      "error": null,
+      "final_time_s": 12,
+      "windows": [
+        {
+          "start_s": 0.8,
+          "end_s": 3,
+          "directed_speed_mm_s": 62.60447857599877
+        },
+        {
+          "start_s": 6.8,
+          "end_s": 9,
+          "directed_speed_mm_s": 63.60349545370505
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 3,
+          "permanently_below_1mm_s_at": 3.42,
+          "travel_from_request_m": 0.018562169720952905,
+          "late_stop_drift_m": 0.00003778734385753689
+        },
+        {
+          "request_or_packet_loss_s": 9,
+          "permanently_below_1mm_s_at": 9.4,
+          "travel_from_request_m": 0.017281844323985992,
+          "late_stop_drift_m": 0.00016748407956022372
+        }
+      ],
+      "maximum_slip_ratio": 0.03911807497003794,
+      "maximum_tilt_rad": 0.009573705328909419,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.00888224647307543,
+          "motion_to_total_body_path_ratio": 0.023411978788389572
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.014840966095887191,
+          "motion_to_total_body_path_ratio": 0.03911807497003794
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.008611191017973568,
+          "motion_to_total_body_path_ratio": 0.022697526134485134
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.011752274536414756,
+          "motion_to_total_body_path_ratio": 0.03097684836779879
+        }
+      ],
+      "total_horizontal_body_path_m": 0.37938896807305744
+    },
+    {
+      "name": "sustained",
+      "completed": true,
+      "error": null,
+      "final_time_s": 60,
+      "windows": [
+        {
+          "start_s": 1.4,
+          "end_s": 20,
+          "directed_speed_mm_s": 63.130454014982796
+        },
+        {
+          "start_s": 25,
+          "end_s": 40,
+          "directed_speed_mm_s": 62.5367665736617
+        },
+        {
+          "start_s": 45,
+          "end_s": 56,
+          "directed_speed_mm_s": 62.987583876762756
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 56,
+          "permanently_below_1mm_s_at": 56.2,
+          "travel_from_request_m": 0.006726572094954657,
+          "late_stop_drift_m": 0.00018705705516835878
+        }
+      ],
+      "maximum_slip_ratio": 0.03535938440597718,
+      "maximum_tilt_rad": 0.010033621955161269,
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.08345702642285387,
+          "motion_to_total_body_path_ratio": 0.02404404605643944
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.12273263292453042,
+          "motion_to_total_body_path_ratio": 0.03535938440597718
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.07517661408588137,
+          "motion_to_total_body_path_ratio": 0.021658451647794705
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_motion_m": 0.09318184980023234,
+          "motion_to_total_body_path_ratio": 0.02684577661405246
+        }
+      ],
+      "total_horizontal_body_path_m": 3.471005929158189
+    }
+  ],
+  "scope": "Recorded shared-runtime motion. Dropout holds a stale nonzero velocity packet while physics and the Rust lease keep ticking. Hardware transport/sensors remain unbound; no sim-to-real accuracy claim."
+}

@@ -1,0 +1,505 @@
+{
+  "scope": "Finite-horizon planning diagnostics; no periodic gait, detailed runtime tracking or physical maximum claim.",
+  "links": [
+    "-Y | Sliding foot crosshead",
+    "+X | Sliding foot crosshead",
+    "+Y | Sliding foot crosshead",
+    "-X | Sliding foot crosshead"
+  ],
+  "contact_samples": 96,
+  "initial_geometry": {
+    "poses": 1,
+    "maximum_inter_link_penetration_m": 0,
+    "minimum_floor_clearance_m": -0.00010030193266619136
+  },
+  "final_geometry": {
+    "poses": 129,
+    "maximum_inter_link_penetration_m": 0.000016003658523573104,
+    "minimum_floor_clearance_m": -0.00010979044495218471
+  },
+  "stages": [
+    {
+      "periodic_boundary": {
+        "initial_position": [
+          0.035463690760288345,
+          0.041818521444507276,
+          -0.06527039511184062,
+          0.025903991918546143,
+          -0.027741755019005148,
+          -0.019992080053431904,
+          0.0922658404210807,
+          -0.17730559578201097,
+          -1.0997960151804205,
+          -0.15520799663632145,
+          0.07287794681734068,
+          -1.0946350679247734,
+          0.03420398636246047,
+          0.11255346905315029,
+          -1.0195172334795262,
+          0.146224540451686,
+          -0.11519733278942934,
+          -1.138277102218686
+        ],
+        "initial_velocity": [
+          0.11750633148691626,
+          0.10994184956905342,
+          -0.0026073454348138547,
+          -0.15256385409759693,
+          -6.418567974688163e-7,
+          -0.15476193003240352,
+          -0.35082056111361937,
+          -0.6483608804232303,
+          0.6320267951737254,
+          0.3495966162798963,
+          -1.4988631860507977,
+          0.48504493619496697,
+          0.7966690060003094,
+          0.6074005607266062,
+          -0.751147411525413,
+          0.1633894329535002,
+          -1.7778004346159606,
+          0.3106267456700163
+        ],
+        "translation_m": [
+          0.05823167141023195,
+          0.05504923097066915,
+          0
+        ]
+      },
+      "contact": {
+        "dissipation_velocity_m_s": 5,
+        "friction_coefficient": 0.25,
+        "smoothing_m": 0.00001,
+        "stiction_velocity_m_s": 0.001,
+        "stiffness_n_m": 200000
+      },
+      "within_planning_tolerances": false,
+      "maximum_force_error_n": 0.26153132368994964,
+      "maximum_moment_error_nm": 0.0694354026326679,
+      "minimum_torque_margin_nm": -0.00018650528021613155,
+      "maximum_surface_sample_penetration_m": 0.00010972438193018741,
+      "planned_mean_diagonal_body_displacement_rate_m_s": 0.20223232538317779,
+      "planned_terminal_diagonal_body_velocity_m_s": 0.1608301511932218,
+      "dissipated_sliding_work_j": 0.3280913018869322,
+      "maximum_planned_loaded_slip_ratio": 0.9638236987701636,
+      "actuator_work_diagnostics": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "maximum_abs_speed_rad_s": 4.391633837704684,
+          "maximum_motoring_power_w": 2.940838202324359,
+          "maximum_braking_power_w": 3.4788519857920956,
+          "signed_discrete_work_j": 0.021422212520851452,
+          "positive_discrete_work_j": 0.19113971294952734,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "maximum_abs_speed_rad_s": 3.8638239568192185,
+          "maximum_motoring_power_w": 1.283548566927146,
+          "maximum_braking_power_w": 1.1648198264188436,
+          "signed_discrete_work_j": 0.04148390669995983,
+          "positive_discrete_work_j": 0.10547768244402371,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "maximum_abs_speed_rad_s": 2.617967646412176,
+          "maximum_motoring_power_w": 3.6052263576561567,
+          "maximum_braking_power_w": 1.069321639760255,
+          "signed_discrete_work_j": 0.464530484215954,
+          "positive_discrete_work_j": 0.5180914508585887,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "maximum_abs_speed_rad_s": 4.032521548557916,
+          "maximum_motoring_power_w": 3.8951929128131195,
+          "maximum_braking_power_w": 3.473373578740703,
+          "signed_discrete_work_j": 0.012277286595370928,
+          "positive_discrete_work_j": 0.21576569158941603,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "maximum_abs_speed_rad_s": 3.598856363376788,
+          "maximum_motoring_power_w": 1.1232295387668034,
+          "maximum_braking_power_w": 0.08711377823716374,
+          "signed_discrete_work_j": 0.08812796587987491,
+          "positive_discrete_work_j": 0.09416869000039783,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "maximum_abs_speed_rad_s": 3.63994517076813,
+          "maximum_motoring_power_w": 0.10654403166631589,
+          "maximum_braking_power_w": 1.959275983703914,
+          "signed_discrete_work_j": -0.25322978518310774,
+          "positive_discrete_work_j": 0.004389056193100914,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "maximum_abs_speed_rad_s": 3.9220123508510247,
+          "maximum_motoring_power_w": 2.279964229176628,
+          "maximum_braking_power_w": 1.8777438942690319,
+          "signed_discrete_work_j": 0.14345521701937883,
+          "positive_discrete_work_j": 0.1899208828305175,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "maximum_abs_speed_rad_s": 4.142819991128126,
+          "maximum_motoring_power_w": 0.5013021051653173,
+          "maximum_braking_power_w": 0.743822651488299,
+          "signed_discrete_work_j": 0.024580424077600305,
+          "positive_discrete_work_j": 0.05771905983638431,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "maximum_abs_speed_rad_s": 1.769117040842436,
+          "maximum_motoring_power_w": 0.38902713913554254,
+          "maximum_braking_power_w": 1.5405247359429282,
+          "signed_discrete_work_j": -0.17438853042368277,
+          "positive_discrete_work_j": 0.0303835110402827,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "maximum_abs_speed_rad_s": 2.717025510906375,
+          "maximum_motoring_power_w": 1.0083095905148318,
+          "maximum_braking_power_w": 1.0468891592452148,
+          "signed_discrete_work_j": 0.04111826025751181,
+          "positive_discrete_work_j": 0.10175012817822879,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "maximum_abs_speed_rad_s": 6.188935226238016,
+          "maximum_motoring_power_w": 0.1782231450232821,
+          "maximum_braking_power_w": 0.5458791153289319,
+          "signed_discrete_work_j": -0.049036266016755176,
+          "positive_discrete_work_j": 0.007691194029080192,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "maximum_abs_speed_rad_s": 2.515010343779333,
+          "maximum_motoring_power_w": 3.554314459559546,
+          "maximum_braking_power_w": 1.273248692694454,
+          "signed_discrete_work_j": 0.20085025862264458,
+          "positive_discrete_work_j": 0.26317858534026134,
+          "optimistic_peak_motoring_power_w": 4.053749946885045,
+          "power_bound_formula": "stall_torque * no_load_speed / 4; same effective-servo model, no thermal claim"
+        }
+      ],
+      "independent_coordinate_ranges": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "minimum": -0.10842109367183887,
+          "maximum": 0.12444671353751824
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "minimum": -0.1792422441005137,
+          "maximum": 0.15581882628070598
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "minimum": -1.1070399835642541,
+          "maximum": -0.8111604495550462
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "minimum": -0.15520799663632145,
+          "maximum": 0.20330705720733988
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "minimum": -0.1849955336488814,
+          "maximum": 0.07939517933301207
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "minimum": -1.0946350679247734,
+          "maximum": -0.7751129591400422
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "minimum": 0.01985585810395062,
+          "maximum": 0.30160837015758707
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "minimum": -0.17048366110763574,
+          "maximum": 0.12476288584710185
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "minimum": -1.127729119262812,
+          "maximum": -0.9975974268568022
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "minimum": -0.1363366566283108,
+          "maximum": 0.146224540451686
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "minimum": -0.1636816521856252,
+          "maximum": 0.21394319777626145
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "minimum": -1.2860752168830203,
+          "maximum": -1.1059911708764072
+        }
+      ],
+      "per_foot_normal_forces_n": [
+        [
+          22.117463010330635,
+          0.47954339647532684,
+          21.420322296579904,
+          8.109987552767278e-19
+        ],
+        [
+          21.111163987912015,
+          0.0017210739493176005,
+          22.151897618101422,
+          3.920221596426462e-29
+        ],
+        [
+          20.855821882945097,
+          3.098880194369091e-12,
+          20.75102519602289,
+          1.1817833754519927e-28
+        ],
+        [
+          20.70364481804369,
+          1.0103405909682013e-21,
+          19.529889530845406,
+          4.3699563858055264e-18
+        ],
+        [
+          20.27875966998418,
+          3.028729877102047e-26,
+          19.791042133934297,
+          0.0004295271948057591
+        ],
+        [
+          20.18521762000232,
+          1.4944793837306065e-27,
+          19.867885199632536,
+          0.038463601518182775
+        ],
+        [
+          20.215106791199492,
+          1.7153130156704545e-26,
+          18.438242844485153,
+          3.3458651883675795e-17
+        ],
+        [
+          20.349678754911654,
+          2.8415643669002715e-22,
+          17.106388650422872,
+          1.8014591079214537e-29
+        ],
+        [
+          20.73668232474493,
+          2.104172689756251e-15,
+          17.72184319417724,
+          1.5036290660288335e-21
+        ],
+        [
+          20.715145916707094,
+          2.5101253560035962e-8,
+          18.82761483935662,
+          0.000001786541445818072
+        ],
+        [
+          18.065185434387505,
+          0.0016601060784981287,
+          16.94821120078239,
+          4.192400532855433
+        ],
+        [
+          14.814348215396297,
+          0.35175770030017284,
+          14.627665366083985,
+          8.995754275691459
+        ],
+        [
+          12.82411723903802,
+          2.2175937400057495,
+          14.730012011692052,
+          7.980711016109377
+        ],
+        [
+          9.416823572204859,
+          5.154118492475709,
+          14.139324663248132,
+          7.909568554421474
+        ],
+        [
+          5.749445801735766,
+          9.178935462273,
+          7.703579975043577,
+          13.142247786331453
+        ],
+        [
+          1.6102655706492226,
+          13.398979025301587,
+          2.069205694195071,
+          17.670034932104517
+        ],
+        [
+          0.009438369553177305,
+          17.09877795230522,
+          0.00874775383178816,
+          18.095873974460687
+        ],
+        [
+          0.00008626822951540159,
+          19.011432056981782,
+          0.00002609325652436432,
+          16.330128773741
+        ],
+        [
+          0.00024990044002391683,
+          19.957895161431093,
+          0.0004025019284342337,
+          15.034307696527147
+        ],
+        [
+          0.00018041311464187616,
+          20.386643303742698,
+          0.17623232008708334,
+          14.053108204504008
+        ],
+        [
+          0.0000015234636156734703,
+          19.322457073408096,
+          2.9403874097291447,
+          12.525611719573577
+        ],
+        [
+          1.8786251508883531e-7,
+          17.93829437699661,
+          5.172517754758146,
+          11.926769097675573
+        ],
+        [
+          0.000027944149133940784,
+          16.181994667763153,
+          6.869507159367454,
+          11.520899572414573
+        ],
+        [
+          0.06558132730409666,
+          14.5286241727269,
+          8.021481784152357,
+          11.571824191066657
+        ],
+        [
+          3.58900025184677,
+          13.466812253974892,
+          7.406850287126018,
+          12.891511908256655
+        ],
+        [
+          7.3981947001436374,
+          13.064402970890383,
+          6.547836156371553,
+          13.492248842675266
+        ],
+        [
+          9.559959710376173,
+          11.5879923796115,
+          8.604679216880884,
+          11.935981743054638
+        ],
+        [
+          12.86575513614831,
+          8.771651820514967,
+          12.408570338584475,
+          9.176174867856083
+        ],
+        [
+          17.195466336371002,
+          6.5324038804094755,
+          15.920560980618582,
+          4.901082063560717
+        ],
+        [
+          20.36824888491235,
+          5.196014357545776,
+          18.7572404593299,
+          1.6250304729489133
+        ],
+        [
+          21.833016538437626,
+          2.9719391334209906,
+          20.15928479566812,
+          0.34194531802794287
+        ],
+        [
+          22.731404615110897,
+          1.492401436111024,
+          20.293441132422547,
+          0.0000011691555506753727
+        ]
+      ],
+      "thresholded_foot_force_patterns_1n": [
+        "1010",
+        "1010",
+        "1010",
+        "1010",
+        "1010",
+        "1010",
+        "1010",
+        "1010",
+        "1010",
+        "1010",
+        "1011",
+        "1011",
+        "1111",
+        "1111",
+        "1111",
+        "1111",
+        "0101",
+        "0101",
+        "0101",
+        "0101",
+        "0111",
+        "0111",
+        "0111",
+        "0111",
+        "1111",
+        "1111",
+        "1111",
+        "1111",
+        "1111",
+        "1111",
+        "1110",
+        "1110"
+      ],
+      "search": {
+        "initial_cost": 132.18406684789602,
+        "cost": 11.112785122554113,
+        "evaluations": 34638,
+        "termination": "iteration_limit"
+      }
+    }
+  ]
+}

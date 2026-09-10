@@ -1,0 +1,90 @@
+name: Reproducible motion experiments
+on:
+  push:
+    paths: ['crates/**', 'Cargo.*', 'web/**', 'examples/interactive/**', 'examples/wheeled-robot/**', 'examples/full-robot/**', '.github/workflows/experiment.yml']
+  pull_request:
+    paths: ['crates/**', 'Cargo.*', 'web/**', 'examples/interactive/**', 'examples/wheeled-robot/**', 'examples/full-robot/**', '.github/workflows/experiment.yml']
+  workflow_dispatch:
+jobs:
+  search-and-resume:
+    runs-on: macos-15-intel
+    timeout-minutes: 40
+    env:
+      RAYON_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix web
+      - run: cd web && npx playwright install chromium
+      - name: Shared lifecycle and Bayesian proposal tests
+        run: |
+          cargo test --locked --release -p sim-runtime --features bayesian --test experiment --test motion_parameters --test drive_backlash --test robot_input --test robot_contract
+          cargo test --locked --release -p sim-domain-control --test motion_parameters
+          cargo test --locked --release -p sim-script --test trajectory
+      - name: Build native and browser evaluations from matching features
+        run: |
+          cargo build --locked --release -p sim-runtime --features bayesian --example search_motion --example check_motion_experiment --example resolve_identified_experiment --example prepare_robot_input_experiment
+          cargo build --locked --release -p sim-web --target wasm32-unknown-unknown --features sim-runtime/bayesian
+          cargo install wasm-bindgen-cli --version 0.2.127 --locked
+          mkdir -p runs/experiments/viewer
+          wasm-bindgen target/wasm32-unknown-unknown/release/sim_web.wasm --target web --out-dir runs/experiments/viewer
+          cp web/worker.js web/worker-message.mjs runs/experiments/viewer/
+          touch runs/experiments/viewer/OPEN.txt
+      - name: Two robot forms, full searches, cancellation and process restart
+        run: |
+          node examples/interactive/restore_evidence_file.mjs examples/interactive/experiment-evidence-v1.json runs/shared-experiment-v1/settings.json runs/experiments/settings.json
+          for robot in wheeled quadruped; do
+            node examples/interactive/restore_evidence_file.mjs examples/interactive/experiment-evidence-v1.json "runs/shared-experiment-v1/$robot-spec.json" "runs/experiments/$robot-spec.json"
+            target/release/examples/check_motion_experiment "runs/experiments/$robot-spec.json" "runs/experiments/$robot-native.json"
+            target/release/examples/search_motion init "runs/experiments/$robot-spec.json" runs/experiments/settings.json "runs/experiments/$robot-full"
+            target/release/examples/search_motion advance "runs/experiments/$robot-full" 1000 4 > "runs/experiments/$robot-full.log"
+            target/release/examples/search_motion init "runs/experiments/$robot-spec.json" runs/experiments/settings.json "runs/experiments/$robot-resumed"
+            target/release/examples/search_motion advance "runs/experiments/$robot-resumed" 3 4 > "runs/experiments/$robot-partial.log"
+            touch "runs/experiments/$robot-cancel.request"
+            target/release/examples/search_motion advance "runs/experiments/$robot-resumed" 1000 4 "runs/experiments/$robot-cancel.request" > "runs/experiments/$robot-cancel.log"
+            target/release/examples/search_motion advance "runs/experiments/$robot-resumed" 1000 4 > "runs/experiments/$robot-resumed.log"
+            node examples/interactive/check_experiment_resume.mjs "runs/experiments/$robot-full" "runs/experiments/$robot-resumed" "runs/experiments/$robot-partial.log" "runs/experiments/$robot-cancel.log" "runs/experiments/$robot-full.log" "runs/experiments/$robot-resumed.log" "runs/experiments/$robot-search-parity.json"
+            node web/tests/experiment.mjs runs/experiments/viewer "runs/experiments/$robot-native.json" "runs/experiments/$robot-browser.json" "runs/experiments/$robot-browser-capture.json"
+          done
+      - name: Original CAD input and overrides survive both hosts and replay
+        run: |
+          mkdir -p runs/experiments/robot-input
+          for robot in wheeled quadruped; do
+            target/release/examples/prepare_robot_input_experiment "runs/experiments/$robot-spec.json" "runs/experiments/robot-input/$robot-spec.json"
+            target/release/examples/check_motion_experiment "runs/experiments/robot-input/$robot-spec.json" "runs/experiments/robot-input/$robot-native.json"
+            node web/tests/experiment.mjs runs/experiments/viewer "runs/experiments/robot-input/$robot-native.json" "runs/experiments/robot-input/$robot-browser.json" "runs/experiments/robot-input/$robot-browser-capture.json"
+          done
+      - name: Coordinated reference and controller timing on both robot forms
+        run: |
+          node examples/interactive/prepare_coordinated_motion.mjs runs/experiments runs/experiments/timing
+          for robot in wheeled quadruped; do
+            for candidate in original identity changed; do
+              target/release/examples/check_motion_experiment "runs/experiments/timing/$robot-$candidate-spec.json" "runs/experiments/timing/$robot-$candidate-native.json"
+            done
+            for candidate in identity changed; do
+              node web/tests/experiment.mjs runs/experiments/viewer "runs/experiments/timing/$robot-$candidate-native.json" "runs/experiments/timing/$robot-$candidate-browser.json" "runs/experiments/timing/$robot-$candidate-browser-capture.json"
+            done
+          done
+          node examples/interactive/check_coordinated_motion.mjs runs/experiments/timing
+      - name: Identified and explicit actuator definitions on both robot forms
+        run: |
+          mkdir -p runs/experiments/identification
+          for robot in wheeled quadruped; do
+            for candidate in original identified; do
+              node examples/interactive/restore_evidence_file.mjs examples/interactive/resolved-identification-evidence-v1.json "runs/resolved-identification-v1/detailed/$robot-$candidate-spec.json" "runs/experiments/identification/$robot-$candidate-spec.json"
+            done
+            target/release/examples/resolve_identified_experiment "runs/experiments/identification/$robot-identified-spec.json" "runs/experiments/identification/$robot-explicit-spec.json"
+            for candidate in original identified explicit; do
+              target/release/examples/check_motion_experiment "runs/experiments/identification/$robot-$candidate-spec.json" "runs/experiments/identification/$robot-after-$candidate-native.json"
+            done
+            for candidate in identified explicit; do
+              node web/tests/experiment.mjs runs/experiments/viewer "runs/experiments/identification/$robot-after-$candidate-native.json" "runs/experiments/identification/$robot-$candidate-browser.json" "runs/experiments/identification/$robot-$candidate-browser-capture.json"
+            done
+          done
+          node examples/interactive/check_identification_resolution.mjs runs/experiments/identification --after-only

@@ -1,0 +1,15 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2.92s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_runtime-244b255b3d4999ec)
+
+running 5 tests
+test contact_planning::tests::diagonal_distance_preserves_speed_and_rejects_silent_heading_changes ... ok
+test contact_planning::tests::refinement_ranks_physical_failures_and_respects_circular_spacing ... ok
+test contact_planning::tests::operating_cases_keep_one_speed_objective_and_every_physical_gate ... ok
+test contact_planning::joint::tests::forces_follow_changed_stance_duration_and_remain_zero_in_swing ... ok
+contact timing changed with fixed force coefficients: fixed-knot load error 0.14000226449275344, event-bound load error 0.0000000000000009992007221626409
+constant-load force basis: original seven-node linear normalized residual lower bound 0.021271415957864866, event-aligned linear maximum error 0.0000000000000011102230246251565
+test contact_planning::joint::tests::event_aligned_linear_forces_can_partition_a_constant_load_and_refine_exactly ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.01s
+

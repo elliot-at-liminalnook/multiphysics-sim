@@ -1,0 +1,40 @@
+{
+  "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "floor_z_m": -0.4410181228863441,
+  "stiffness_per_sample_n_m": 200000.0,
+  "normal_dissipation_s_m": 0.2,
+  "friction_model": {
+    "kind": "regularized_coulomb",
+    "slip_speed_m_s": 0.001
+  },
+  "links": [
+    {
+      "link": "+X | Sliding foot crosshead",
+      "material": "nylon",
+      "compiled_surface_samples": 24,
+      "static_friction": 0.3,
+      "kinetic_friction": 0.25
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "material": "nylon",
+      "compiled_surface_samples": 24,
+      "static_friction": 0.3,
+      "kinetic_friction": 0.25
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "material": "nylon",
+      "compiled_surface_samples": 24,
+      "static_friction": 0.3,
+      "kinetic_friction": 0.25
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "material": "nylon",
+      "compiled_surface_samples": 24,
+      "static_friction": 0.3,
+      "kinetic_friction": 0.25
+    }
+  ]
+}

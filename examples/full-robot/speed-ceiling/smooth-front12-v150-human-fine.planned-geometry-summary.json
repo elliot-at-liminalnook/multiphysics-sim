@@ -1,0 +1,148 @@
+{
+  "name": "smooth-front12-v150-human-fine",
+  "policy_replay_samples": 1000,
+  "maximum_command_error_rad": 0,
+  "counts": [
+    {
+      "window_s": [
+        1.4,
+        9.8
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 24,
+      "minimum_expected": 23,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        9.8
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 24,
+      "minimum_expected": 23,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        9.8
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 24,
+      "minimum_expected": 23,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        9.8
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 24,
+      "minimum_expected": 23,
+      "passed": true
+    },
+    {
+      "window_s": [
+        11,
+        15.8
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 14,
+      "minimum_expected": 12,
+      "passed": true
+    },
+    {
+      "window_s": [
+        11,
+        15.8
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 13,
+      "minimum_expected": 12,
+      "passed": true
+    },
+    {
+      "window_s": [
+        11,
+        15.8
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 14,
+      "minimum_expected": 12,
+      "passed": true
+    },
+    {
+      "window_s": [
+        11,
+        15.8
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 13,
+      "minimum_expected": 12,
+      "passed": true
+    }
+  ],
+  "planned_lifts": 150,
+  "passed_planned_lifts": 150,
+  "failed_planned_lifts": [],
+  "inter_link_geometry_audit": {
+    "frames": 1001,
+    "maximum_penetration_m": 0,
+    "penetrating_samples": 0,
+    "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+  },
+  "incidental_stance_unloads": [
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 2.12,
+      "end_s": 2.12,
+      "samples": 1,
+      "maximum_clearance_m": -0.000004921848997752054
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 3.16,
+      "end_s": 3.16,
+      "samples": 1,
+      "maximum_clearance_m": -0.00000492178623046069
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 4.2,
+      "end_s": 4.2,
+      "samples": 1,
+      "maximum_clearance_m": -0.000004921786230349667
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 5.24,
+      "end_s": 5.24,
+      "samples": 1,
+      "maximum_clearance_m": -0.000004921786230571712
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 7.32,
+      "end_s": 7.32,
+      "samples": 1,
+      "maximum_clearance_m": -0.000004944188926825355
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 8.36,
+      "end_s": 8.36,
+      "samples": 1,
+      "maximum_clearance_m": -0.000004944150966801342
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 9.4,
+      "end_s": 9.4,
+      "samples": 1,
+      "maximum_clearance_m": -0.00000494415095853018
+    }
+  ],
+  "scope": "All complete planned swing windows from exact Rhai state replay in declared steady-command windows. Stance unloads are reported separately, including boundary delays; no between-sample guarantee."
+}

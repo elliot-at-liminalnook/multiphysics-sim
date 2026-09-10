@@ -439,6 +439,37 @@ fn full_point_placement_matches_rotated_analytic_slider_and_rejects_lateral_targ
 }
 
 #[test]
+fn point_motion_placement_matches_analytic_slider_with_moving_rotated_base() {
+    use nalgebra::{UnitQuaternion,Vector3 as V};
+    use sim_domain_robot::articulated::embedding::{CoordinateInterval,EmbeddedPoint,PlanePlacementConfig,PointMotionTarget};
+    let (art,mut seed)=slider_crank(true);let base=art.bases[0].state;
+    let rotation=UnitQuaternion::from_scaled_axis(V::new(0.4,0.2,-0.3));
+    let quat=rotation.quaternion();seed.states[base+3..base+7].copy_from_slice(&[quat.w,quat.i,quat.j,quat.k]);
+    let origin=V::new(0.2,-0.3,0.4);seed.states[base..base+3].copy_from_slice(origin.as_slice());
+    let map=RigidEmbedding::new(&art,&["joint.motor".into()],Default::default()).unwrap();
+    let seed=map.solve(&seed,&[0.4],&[0.0;7]).unwrap().generalized;
+    let saved=seed.states.clone();
+    let (theta,rate,acc,h)=(0.7,1.2,-0.7,1e-4);
+    let z=expected(theta).1;let dz=(expected(theta+h).1-expected(theta-h).1)/(2.0*h);
+    let ddz=(expected(theta+h).1-2.0*z+expected(theta-h).1)/(h*h);
+    let local=V::new(0.01,0.02,-0.15+z+0.03);let arm=rotation*local;
+    let bv=V::new(0.1,-0.2,0.05);let w=V::new(0.3,0.2,-0.1);
+    let ba=V::new(0.2,0.05,-0.3);let alpha=V::new(-0.2,0.1,0.3);
+    let relative_v=rotation*V::new(0.0,0.0,dz*rate);
+    let target=PointMotionTarget{point:EmbeddedPoint{link:3,local_point_m:[0.01,0.02,0.03]},position_world_m:(origin+arm).into(),
+        velocity_world_m_s:(bv+w.cross(&arm)+relative_v).into(),
+        acceleration_world_m_s2:(ba+alpha.cross(&arm)+w.cross(&w.cross(&arm))+2.0*w.cross(&relative_v)+rotation*V::new(0.0,0.0,ddz*rate*rate+dz*acc)).into()};
+    let bounds=[CoordinateInterval{lower:0.2,upper:1.0,max_step:0.1}];let config=PlanePlacementConfig{tolerance_m:1e-11,..Default::default()};
+    let fit=map.follow_points(&seed,&[target.clone()],&[0.1,-0.2,0.05,0.3,0.2,-0.1],&[0.2,0.05,-0.3,-0.2,0.1,0.3],&bounds,&config,1e-7,1e-6).unwrap();
+    assert!((fit.coordinates[0]-theta).abs()<1e-8);
+    assert!((fit.reduced_velocity[6]-rate).abs()<1e-6);
+    assert!((fit.reduced_acceleration[6]-acc).abs()<1e-5);
+    assert_eq!(seed.states,saved);
+    let mut bad=target;bad.velocity_world_m_s[0]+=1.0;
+    assert!(map.follow_points(&seed,&[bad],&[0.1,-0.2,0.05,0.3,0.2,-0.1],&[0.2,0.05,-0.3,-0.2,0.1,0.3],&bounds,&config,1e-7,1e-6).is_err());
+}
+
+#[test]
 fn placement_preserves_base_pose_and_respects_dependent_joint_limits() {
     use sim_domain_robot::articulated::embedding::{
         CoordinateInterval, EmbeddedPoint, PlanePlacementConfig, PointPlaneTarget,

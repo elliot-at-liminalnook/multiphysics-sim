@@ -1,0 +1,153 @@
+{
+  "completed": true,
+  "preset": "physics-diagonal-seed-5ms",
+  "scenario": "sustained-forward",
+  "measurement_timeout_s": 180,
+  "display_rate_hz": 0,
+  "config_override": null,
+  "runtime_build": {
+    "manifest_sha256": "7a7e66309247b8ab323f550b867a4e0bf139d532ba4c324819062fbe70a7fe6d",
+    "browser_module_sha256": "9a6d3a5b3496b44b08ad158b64b49ef23dc80642a496a85a770e2457ceb066fd",
+    "compiler_profile": "unrecorded compiler settings",
+    "settings": null
+  },
+  "performance": {
+    "simulation_per_wall_second": 1.001778156225808,
+    "transition_p95_s": 0.0088299999833107,
+    "render_interval_p95_s": 0.016670000000000074,
+    "render_frames": 479,
+    "actual_drawn_frames": 381,
+    "command_response": {
+      "drawn_reference_supported": true,
+      "commands": [],
+      "scope": "Keyboard dispatch to the first received/drawn frame carrying the requested latched walking reference. Drawing timestamps follow WebGL submission; controller transfer-boundary waits are included. This does not establish physical stopping time, causal body-motion response or monitor presentation latency."
+    },
+    "transitions": 400,
+    "wall_s": 7.985800000011921,
+    "simulated_s": 8,
+    "breakdown": {
+      "all": {
+        "wall_s": {
+          "samples": 400,
+          "mean": 0.004920299998521805,
+          "p95": 0.0088299999833107,
+          "maximum": 0.08537999999523163
+        },
+        "worker_s": {
+          "samples": 400,
+          "mean": 0.004480162500441067,
+          "p95": 0.008335000038146972,
+          "maximum": 0.08493999999761581
+        },
+        "wasm_call_s": {
+          "samples": 400,
+          "mean": 0.004476099999845018,
+          "p95": 0.008330000042915344,
+          "maximum": 0.08488499999046326
+        },
+        "json_parse_s": {
+          "samples": 400,
+          "mean": 0.0000010249997675418868,
+          "p95": 0.000004999995231628418,
+          "maximum": 0.000030000030994415284
+        },
+        "receive_json_parse_s": {
+          "samples": 400,
+          "mean": 0.00014733750104904133,
+          "p95": 0.0002549999952316284,
+          "maximum": 0.0005949999690055847
+        },
+        "queue_s": {
+          "samples": 400,
+          "mean": 0.000009299999475479097,
+          "p95": 0.000029999971389770506,
+          "maximum": 0.0000350000262260437
+        },
+        "view_update_s": {
+          "samples": 400,
+          "mean": 0.0002758875004947182,
+          "p95": 0.0004599999785423279,
+          "maximum": 0.0009399999976158142
+        },
+        "transport_and_dispatch_s": {
+          "samples": 400,
+          "mean": 0.00043083749860525127,
+          "p95": 0.0006000000238418578,
+          "maximum": 0.011555000007152552
+        }
+      },
+      "by_phase": {
+        "undefined": {
+          "wall_s": {
+            "samples": 400,
+            "mean": 0.004920299998521805,
+            "p95": 0.0088299999833107,
+            "maximum": 0.08537999999523163
+          },
+          "worker_s": {
+            "samples": 400,
+            "mean": 0.004480162500441067,
+            "p95": 0.008335000038146972,
+            "maximum": 0.08493999999761581
+          },
+          "wasm_call_s": {
+            "samples": 400,
+            "mean": 0.004476099999845018,
+            "p95": 0.008330000042915344,
+            "maximum": 0.08488499999046326
+          },
+          "json_parse_s": {
+            "samples": 400,
+            "mean": 0.0000010249997675418868,
+            "p95": 0.000004999995231628418,
+            "maximum": 0.000030000030994415284
+          },
+          "receive_json_parse_s": {
+            "samples": 400,
+            "mean": 0.00014733750104904133,
+            "p95": 0.0002549999952316284,
+            "maximum": 0.0005949999690055847
+          },
+          "queue_s": {
+            "samples": 400,
+            "mean": 0.000009299999475479097,
+            "p95": 0.000029999971389770506,
+            "maximum": 0.0000350000262260437
+          },
+          "view_update_s": {
+            "samples": 400,
+            "mean": 0.0002758875004947182,
+            "p95": 0.0004599999785423279,
+            "maximum": 0.0009399999976158142
+          },
+          "transport_and_dispatch_s": {
+            "samples": 400,
+            "mean": 0.00043083749860525127,
+            "p95": 0.0006000000238418578,
+            "maximum": 0.011555000007152552
+          }
+        }
+      },
+      "scope": "WASM call includes Rust physics, controller, frame construction and JSON serialization. Transport/dispatch is round-trip minus measured worker time and local queue. View update ends at the DOM mutation observer, before display presentation. Component p95 values are not additive."
+    }
+  },
+  "meets_speed_target": true,
+  "meets_transition_target": true,
+  "host": {
+    "cpu": "Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz",
+    "logical_cpus": 16,
+    "platform": "darwin",
+    "architecture": "x64",
+    "browser": "152.0.7977.76",
+    "gpu": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) UHD Graphics 630, Unspecified Version)",
+    "headless": true
+  },
+  "errors": [],
+  "status": "Episode time limit reached",
+  "simulation_error": null,
+  "phase_messages": [],
+  "scope": "One episode through the actual viewer with WebGL drawing enabled. Online-step presets exercise the named keyboard scenario and key release. Active-motion timing excludes hold/idle so standing cannot hide walking latency. rAF intervals measure scheduling, not display presentation. Command-reference delays are measured separately from physical response; no sustained terrain or physical stopping acceptance.",
+  "validation_errors": [],
+  "frame_encoding": "json",
+  "validation_passed": true
+}

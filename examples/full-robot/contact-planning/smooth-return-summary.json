@@ -1,0 +1,229 @@
+{
+  "cases": [
+    {
+      "name": "xhip-contact-damping1",
+      "speed_m_s": [
+        0.23256552326451208,
+        0.22212176193837987
+      ],
+      "slip_ratio": 0.12986298364464816,
+      "control_passed": true,
+      "contact_quality_passed": false,
+      "lifts": [
+        42,
+        42
+      ],
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "inputs": [
+        {
+          "path": "examples/full-robot/contact-planning/xhip-contact-damping1.summary.json",
+          "bytes": 2536,
+          "sha256": "5716cf9c68cfd92853b84d7ad62a78b079cc0c64bdd463face06828e95583060"
+        },
+        {
+          "path": "examples/full-robot/contact-planning/xhip-contact-damping1-clearance.summary.json",
+          "bytes": 3201,
+          "sha256": "afdd345c8f053241da9c44f655b1c0c42791e5d70bc9869aafaebc575517159a"
+        }
+      ]
+    },
+    {
+      "name": "xhip-contact-damping2",
+      "speed_m_s": [
+        0.23841705658028228,
+        0.22233350269815977
+      ],
+      "slip_ratio": 0.15945341429866464,
+      "control_passed": true,
+      "contact_quality_passed": false,
+      "lifts": [
+        39,
+        42
+      ],
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "inputs": [
+        {
+          "path": "examples/full-robot/contact-planning/xhip-contact-damping2.summary.json",
+          "bytes": 2536,
+          "sha256": "cf381459797a8d1e32386458d1ebc709f038d4b18a1fed910148f8f9accb396e"
+        },
+        {
+          "path": "examples/full-robot/contact-planning/xhip-contact-damping2-clearance.summary.json",
+          "bytes": 6173,
+          "sha256": "1a748a087e6f3efc397cc8b72d904768edf2fee22024170bed52a7fb5bec34ab"
+        }
+      ]
+    },
+    {
+      "name": "return-x25-v230",
+      "speed_m_s": [
+        0.23394383948606604,
+        0.225110370126226
+      ],
+      "slip_ratio": 0.1058425867371089,
+      "control_passed": true,
+      "contact_quality_passed": false,
+      "lifts": [
+        42,
+        42
+      ],
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "inputs": [
+        {
+          "path": "examples/full-robot/contact-planning/return-x25-v230.summary.json",
+          "bytes": 2535,
+          "sha256": "5f742e801ddf6b234b249f7dafbc2433abb12213a3da3587da771e94601dad2a"
+        },
+        {
+          "path": "examples/full-robot/contact-planning/return-x25-v230-clearance.summary.json",
+          "bytes": 3165,
+          "sha256": "dadf7692f3ba8bfe5edd6bebea9376deb536218346b10e5e7b7b14f8439d36dd"
+        }
+      ]
+    },
+    {
+      "name": "return-x25-v250",
+      "speed_m_s": [
+        0.26105193543697547,
+        0.24936407713149025
+      ],
+      "slip_ratio": 0.16401937237984843,
+      "control_passed": true,
+      "contact_quality_passed": false,
+      "lifts": [
+        44,
+        46
+      ],
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "inputs": [
+        {
+          "path": "examples/full-robot/contact-planning/return-x25-v250.summary.json",
+          "bytes": 2534,
+          "sha256": "c35e8889e1e2dadb991fcbf8e9783b799fd21eb0e450b4bc2e4f081f652c68a7"
+        },
+        {
+          "path": "examples/full-robot/contact-planning/return-x25-v250-clearance.summary.json",
+          "bytes": 5164,
+          "sha256": "6a01ea88ece1a4308f01e9ea2a9476310d607a005c4aa98e8c02ef4dd6543b0b"
+        }
+      ]
+    },
+    {
+      "name": "return-all25-v230",
+      "speed_m_s": [
+        0.24028887174511912,
+        0.2303168421515736
+      ],
+      "slip_ratio": 0.12673321907035245,
+      "control_passed": true,
+      "contact_quality_passed": false,
+      "lifts": [
+        42,
+        42
+      ],
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "inputs": [
+        {
+          "path": "examples/full-robot/contact-planning/return-all25-v230.summary.json",
+          "bytes": 2533,
+          "sha256": "1bad08c7dbaf5673e6390d0e08aff27933c532db33de5572fc54425ad1675592"
+        },
+        {
+          "path": "examples/full-robot/contact-planning/return-all25-v230-clearance.summary.json",
+          "bytes": 3177,
+          "sha256": "6d445b4860ba502581a9512f5f7635fef57b274732f1844924a0fa00711845bf"
+        }
+      ]
+    },
+    {
+      "name": "return-x15-tight-v230",
+      "speed_m_s": [
+        0.23449214902493,
+        0.22432815791006774
+      ],
+      "slip_ratio": 0.12848877835741485,
+      "control_passed": true,
+      "contact_quality_passed": false,
+      "lifts": [
+        42,
+        42
+      ],
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "inputs": [
+        {
+          "path": "examples/full-robot/contact-planning/return-x15-tight-v230.summary.json",
+          "bytes": 2535,
+          "sha256": "4e92fec2be0e97e9c682942346d7cbbe8928044efc52144eebe8cacfca7c6f4c"
+        },
+        {
+          "path": "examples/full-robot/contact-planning/return-x15-tight-v230-clearance.summary.json",
+          "bytes": 3201,
+          "sha256": "ba11668c3d7285ce3df622e9df9e449c9ca10c80ae81eee13fa70d47d058e868"
+        }
+      ]
+    },
+    {
+      "name": "return-x25-lift-v250",
+      "speed_m_s": [
+        0.2609470706762984,
+        0.24922912777101194
+      ],
+      "slip_ratio": 0.16379093012109425,
+      "control_passed": true,
+      "contact_quality_passed": false,
+      "lifts": [
+        46,
+        46
+      ],
+      "geometry": {
+        "frames": 401,
+        "maximum_penetration_m": 0,
+        "penetrating_samples": 0,
+        "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+      },
+      "inputs": [
+        {
+          "path": "examples/full-robot/contact-planning/return-x25-lift-v250.summary.json",
+          "bytes": 2535,
+          "sha256": "ce2aaf3d9fb1e570600c026ba4af9c115d34e297d24fbe90ed1a712b5b451206"
+        },
+        {
+          "path": "examples/full-robot/contact-planning/return-x25-lift-v250-clearance.summary.json",
+          "bytes": 3195,
+          "sha256": "0e1267a14c043f8a4a663b1da0b9054b13cd6ee9a6ba19f64b4d380cb4cedcbf"
+        }
+      ]
+    }
+  ],
+  "scope": "Completed manually selected diagnostics, retained as evidence and warm starts. No fully qualified fast gait. Superseded by joint force/motion/timing optimization; no physical speed maximum or browser promotion."
+}

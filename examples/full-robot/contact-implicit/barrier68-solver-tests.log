@@ -1,0 +1,37 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.08s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_solve-7c17982704a5e698)
+
+running 29 tests
+test derivative_audit::tests::discontinuity_is_exposed_and_invalid_probes_are_rejected ... ok
+test derivative_audit::tests::analytic_polynomial_has_second_order_remainder_and_converging_slope ... ok
+test equality_dogleg::tests::infeasible_bounds_and_evaluation_budget_never_report_convergence ... ok
+test equality_dogleg::tests::equality_prevents_trading_feasibility_for_tracking ... ok
+test equality_dogleg::tests::whitened_constraints_recover_a_direction_lost_by_normal_equations ... ok
+test inequality_augmented_lagrangian::tests::rejects_invalid_controls_and_nonfinite_inequalities ... ok
+test equality_dogleg::tests::redundant_consistent_constraints_and_inconsistent_constraints_are_distinct ... ok
+test inequality_augmented_lagrangian::tests::hard_evaluation_budget_counts_every_call ... ok
+test inequality_augmented_lagrangian::tests::stationary_fixed_infeasible_point_is_never_success ... ok
+test inequality_augmented_lagrangian::tests::inactive_constraints_leave_objective_minimum_free ... ok
+test equality_dogleg::tests::refinement_closes_ill_conditioned_original_equations ... ok
+test equality_dogleg::tests::nonlinear_manifold_requires_both_stationarity_and_feasibility ... ok
+test inequality_barrier::tests::exact_residuals_and_strict_domain ... ok
+test inequality_augmented_lagrangian::tests::nonlinear_disk_boundary_is_satisfied ... ok
+test equality_dogleg::tests::exact_penalty_globalization_solves_nonlinear_and_linear_constraints ... ok
+test inequality_augmented_lagrangian::tests::active_inequality_recovers_constrained_minimum_and_multiplier ... ok
+test inequality_augmented_lagrangian::tests::split_outer_solve_reproduces_uninterrupted_values_multipliers_and_steps ... ok
+test least_squares::tests::active_and_fixed_bounds_do_not_imply_residual_feasibility ... ok
+test inequality_barrier::tests::unsafe_trials_are_rejected_and_interior_stationary_point_is_reached ... ok
+test least_squares::tests::coupled_nonlinear_fit_and_unit_scaling ... ok
+test least_squares::tests::derivative_refinement_recovers_from_an_aliased_cost_gradient ... ok
+test least_squares::tests::hessian_scaling_resolves_independent_stiff_and_soft_directions ... ok
+test least_squares::tests::rejects_invalid_trials_and_honors_evaluation_budget ... ok
+test least_squares::tests::unmodified_initial_value_keeps_exact_residual_pair ... ok
+test tests::scaled_secant_is_satisfied_without_mutating_snapshot ... ok
+test tests::solves_nonlinear_system ... ok
+test tests::tracked_matrix_uses_the_factorizations_duplicate_sum_order ... ok
+test tests::direct_csc_matches_triplet_constructor_bits_for_duplicates_zeros_and_empty_columns ... ok
+test tests::unsafe_or_exhausted_secants_request_fresh_derivatives ... ok
+
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

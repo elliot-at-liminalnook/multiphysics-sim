@@ -15,6 +15,20 @@ fn parameters() -> BTreeMap<String, f64> {
 }
 
 #[test]
+fn positive_power_bound_and_backdrive_envelope_match_the_actuator_law() {
+    let servo = EffectiveServo::new(&parameters()).unwrap();
+    assert_eq!(servo.peak_motoring_power_w(), 2.0);
+    for i in -100..=100 {
+        let v = i as f64 / 10.0;
+        let tau = servo.torque(0.0, v, 100.0 * v.signum());
+        assert!(tau * v <= servo.peak_motoring_power_w() + 1e-12);
+    }
+    assert_eq!(servo.torque(0.0, 2.0, 100.0) * 2.0, servo.peak_motoring_power_w());
+    assert_eq!(servo.torque_capacity(8.0, -1.0), 2.0);
+    assert_eq!(servo.torque_capacity(8.0, 1.0), 0.0);
+}
+
+#[test]
 fn bounded_torque_speed_curve_and_braking_do_not_create_an_ideal_motion_source() {
     let servo = EffectiveServo::new(&parameters()).unwrap();
     assert_eq!(servo.torque(0.0, 0.0, 0.1), 1.0);

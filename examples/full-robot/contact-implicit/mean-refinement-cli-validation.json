@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "options": [
+        "--unknown"
+      ],
+      "status": 1,
+      "stderr": "Error: \"usage: audit_contact_implicit scene markers recipe result geometry_subdivisions [--pairs] [--inequalities]\"\n"
+    },
+    {
+      "options": [
+        "--pairs",
+        "--pairs"
+      ],
+      "status": 1,
+      "stderr": "Error: \"usage: audit_contact_implicit scene markers recipe result geometry_subdivisions [--pairs] [--inequalities]\"\n"
+    },
+    {
+      "options": [
+        "--inequalities",
+        "--inequalities"
+      ],
+      "status": 1,
+      "stderr": "Error: \"usage: audit_contact_implicit scene markers recipe result geometry_subdivisions [--pairs] [--inequalities]\"\n"
+    },
+    {
+      "options": [],
+      "status": 1,
+      "stderr": "Error: \"usage: audit_contact_implicit scene markers recipe result geometry_subdivisions [--pairs] [--inequalities]\"\n"
+    }
+  ],
+  "scope": "Invalid and duplicate options fail before reading model paths; no physics or file mutation occurs."
+}

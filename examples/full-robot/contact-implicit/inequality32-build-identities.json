@@ -1,0 +1,48 @@
+{
+  "base_commit": "876737e",
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/inequality_augmented_lagrangian.rs",
+      "bytes": 12616,
+      "sha256": "841fcaf1528b05b570c64e2d1c493bb8e5e5d24198fc16d2d1507cbbd37cfb08"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47209,
+      "sha256": "b76f94907853c67cb0290cb7a6227d94bfe7ff9702f74a63839087229c099144"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 55232,
+      "sha256": "973d0a81c4a119391a5daeedebda0b18cd7bd7e4cbbfe0d6b2e977fe963902d4"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 44877,
+      "sha256": "525a751560cd885973ba278ecbb4beaefb0f102d860703f360f57c615fbb3f1f"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_inequalities.rs",
+      "bytes": 2580,
+      "sha256": "133af7d2c6a2cc920875e1b4a3d85d9d57d0058dd9a4c36215aa26df39d44e57"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 2721,
+      "sha256": "44a0f8ec49db9f4e57d047202b64b0a66cff76eb63757c8bb8c8ed437c63112e"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_inequalities",
+      "bytes": 8736572,
+      "sha256": "fe0bc1942bd56de6b2956cb8babd39ba5aadd3c30d98b7b5fe739e618056d481"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8669316,
+      "sha256": "82968de64fe2926d15fdc7a515e6e40e38d73bdfcfa871822c99cf06ac2f8ac7"
+    }
+  ],
+  "scope": "New shared inequality AL solver and physical inequality adapter; unchanged physical contact law and legacy weighted optimizer."
+}

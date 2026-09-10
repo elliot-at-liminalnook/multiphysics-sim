@@ -1,0 +1,32 @@
+{
+  "base_commit": "afba4878ee99eda2e6d32374eaf4200e46c36bad",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 37770,
+      "sha256": "639795fe315898a85169bfba6f5311fd1d31bdb7a2fbabc28343c3ce466f947b"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 29804,
+      "sha256": "148434e217a8fc47899a29b2eb4059aa96885105db27211c30fbfb5621ef0ea7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_targeted_collocation.mjs",
+      "bytes": 3332,
+      "sha256": "95554b3a6a20576dd38fd001fd6acb5cb848b034cbfa36f12bc42395c768a6fc"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8670316,
+      "sha256": "f3740256df080531597245009a5fae19617cebee60173f905e0f615f11a07387"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8604972,
+      "sha256": "1ea2b728e133861114530116466532e81d0fa639d060d1354574bf226768b102"
+    }
+  ]
+}

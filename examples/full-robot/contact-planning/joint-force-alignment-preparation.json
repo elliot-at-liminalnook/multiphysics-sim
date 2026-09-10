@@ -1,0 +1,77 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed.recipe.json",
+      "bytes": 70676,
+      "sha256": "a9309ce23eef4a8e0a255a310b252fb4a2f98001da115048e5ee14e8237cabec"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-checked.result.json",
+      "bytes": 3986560,
+      "sha256": "d36d32615300a60f34418cf94262a2ab017c95adafeab14e40f055c17529b2fe"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-aligned-speed.recipe.json",
+      "bytes": 146687,
+      "sha256": "9fad3e976ba34a0de902cba47e51231fe91613c2b6ceee15703f455d5877890f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-aligned-speed-initial.result.json",
+      "bytes": 1450701,
+      "sha256": "4f2598ef06791a1e850e0882c3e12b3f610a689b89c97835d9feef1009b51d70"
+    }
+  ],
+  "original": {
+    "speed_m_s": 0.211710264528351,
+    "frames": 168,
+    "force_error_n": 13.090908667273979,
+    "moment_error_nm": 3.1866952242751165,
+    "torque_margin_nm": -0.2695338587272766,
+    "cone_violation_n": 8.881784197001252e-16,
+    "maximum_inequality": 260.8181733454796,
+    "sampled_feasible": false
+  },
+  "refined_curves": {
+    "speed_m_s": 0.211710264528351,
+    "frames": 250,
+    "force_error_n": 13.090908667273983,
+    "moment_error_nm": 3.1866952242751165,
+    "torque_margin_nm": -0.2695338587272766,
+    "cone_violation_n": 8.881784197001252e-16,
+    "maximum_inequality": 260.81817334547964,
+    "sampled_feasible": false
+  },
+  "cad_initialized": {
+    "speed_m_s": 0.211710264528351,
+    "frames": 250,
+    "force_error_n": 12.524523848379182,
+    "moment_error_nm": 3.0667182082513644,
+    "torque_margin_nm": -0.2695338587272766,
+    "cone_violation_n": 8.881784197001252e-16,
+    "maximum_inequality": 249.49047696758365,
+    "sampled_feasible": false
+  },
+  "original_variables": 197,
+  "aligned_variables": 443,
+  "force_variables": 366,
+  "nodes_per_clock": [
+    [
+      19,
+      17,
+      17,
+      16
+    ],
+    [
+      19,
+      17,
+      17,
+      16
+    ]
+  ],
+  "maximum_linear_force_curve_change_n": 7.105427357601002e-15,
+  "curve_samples_per_template": 4097,
+  "non_force_recipe_identical": true,
+  "scope": "Exact refinement of the actual linear force curves, followed by explicit CAD load initialization. Added force freedom and audit phases; same body/foot motion, bounds, speed objective, 8000-evaluation budget and physical model. Initial report extraction canonicalizes signed zeros through JavaScript."
+}

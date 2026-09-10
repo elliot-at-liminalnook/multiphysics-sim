@@ -1,0 +1,20 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('#overlay') to be hidden[22m
+[2m    2 × locator resolved to visible <div id="overlay" role="status" aria-live="polite">…</div>[22m
+[2m    61 × locator resolved to visible <div id="overlay" role="status" class="error" aria-live="polite">…</div>[22m
+
+    at /Users/elliot/physics-simulator-gait-exploration/web/tests/gait_live_review.mjs:17:97 {
+  log: [
+    "  - waiting for locator('#overlay') to be hidden",
+    '    2 × locator resolved to visible <div id="overlay" role="status" aria-live="polite">…</div>',
+    '    61 × locator resolved to visible <div id="overlay" role="status" class="error" aria-live="polite">…</div>'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.19.0

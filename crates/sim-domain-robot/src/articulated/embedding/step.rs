@@ -12,7 +12,9 @@ pub struct EmbeddedStep {
 }
 
 impl RigidEmbedding<'_> {
-    pub(super) fn reduced_velocity(&self, g: &Generalized) -> Vec<f64> {
+    /// Read velocity in this chart's order: floating-base world twist, then
+    /// selected independent joint rates. Does not assume joints are actuated.
+    pub fn reduced_velocity(&self, g: &Generalized) -> Vec<f64> {
         self.art
             .bases
             .iter()

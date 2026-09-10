@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "base_commit": "e80f828ae176bcfc3ee1c361a596f7b82b2bc549",
+  "code_files": [
+    {
+      "path": "crates/sim-domain-control/src/contact_phase.rs",
+      "bytes": 22115,
+      "sha256": "1f85cd7768161a1dcb5587d4ae1d9609fbc54dd27f231284118a01fa28554d08"
+    },
+    {
+      "path": "crates/sim-domain-control/src/contact_phase/sequence.rs",
+      "bytes": 5750,
+      "sha256": "d871853a1e010125cbff72972655abfd5946254befabd159fc4677dae1df8ed1"
+    },
+    {
+      "path": "crates/sim-domain-control/src/contact_phase/sequence_tests.rs",
+      "bytes": 8160,
+      "sha256": "56949f19958fefbe50af48b46a5b73e466a8daf406f03b1e7186033177321506"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 49904,
+      "sha256": "9b098579a16a3717a5f05c7ecaa574a8f5839628dab8f25b759be67ed7a4ce23"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 61402,
+      "sha256": "af6c66e973c951390890fa0600eb4d6c12adc5ef8dc45aea1f0f5e84e78070ce"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint_timing.rs",
+      "bytes": 11233,
+      "sha256": "ba095ccebeea294282629e27200241bafb097d8786ddc8cb2b1ca7ca394269d3"
+    },
+    {
+      "path": "crates/sim-runtime/examples/evaluate_contact_sequence.rs",
+      "bytes": 1657,
+      "sha256": "77fce7639d307c45f00a2a22710b2b3cd9a9dbcfdd2637400533bbed9ffd9976"
+    },
+    {
+      "path": "crates/sim-script/tests/contact_phase.rs",
+      "bytes": 4112,
+      "sha256": "1a7a69323765cab8a1d2ae49cda150bb070fc73d0641527a744aee0fa477ec47"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_contact_sequences.mjs",
+      "bytes": 3783,
+      "sha256": "f806b00c958b50ddb666ff94c1822190b49f26673fdd6b96fc6c4a5e19012966"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/record_contact_sequences.mjs",
+      "bytes": 3222,
+      "sha256": "067c752c0beecfdf9dbd54d53e9fb79bebdcefc3b4da2f67577107d50faff742"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-single.recipe.json",
+      "bytes": 11924,
+      "sha256": "cb6f20a0d140ec28b74adf7590413c8452005f675478cebbaa41c7075ffc5d6a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-double.raw.json",
+      "bytes": 10167,
+      "sha256": "da69adba490853dfd6e5402e7925c61ac4f5198118efa371d784ea765470db71"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-double.recipe.json",
+      "bytes": 16403,
+      "sha256": "2fe7af03ab78a0314b53aea8d5bf0afd8f53b66ad5b67cc77b4f9c9afc4a03c3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-single.result.json",
+      "bytes": 800436,
+      "sha256": "56c8023c34ff9dac9981cc89c9a27d86ad1bc2356e262ac58017243720ae0103"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-double.result.json",
+      "bytes": 1600846,
+      "sha256": "6566f7dfe8e880512e3acc5225e5e211cf907f5d2243534ad9872285bddf80c3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-equivalence.json",
+      "bytes": 2599,
+      "sha256": "5a0a55ea1f83500b62a45e1a48f33f612f6af1fd265eaf1ea5497eb3232f5f55"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-replay.json",
+      "bytes": 381,
+      "sha256": "0fc1e24599b3b9e5335179342d0e1221a5de219c9be56e938035133353780c98"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-tests.log",
+      "bytes": 13452,
+      "sha256": "04f92c95edaf96f65d4026db383c4da138d9c2c19b80f20df9af384b208f957f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-planner-tests.log",
+      "bytes": 1484,
+      "sha256": "0db10b346ce4c554114727f2051479ec17f3a3fba241021b2b84c78c666d7758"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-build.log",
+      "bytes": 165,
+      "sha256": "ab7688815bdda55c313ecfdbe302ba69248f7b6919cfe992188ee6519a43bbd6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-single.error.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-double.error.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_contact_sequence",
+    "bytes": 8822372,
+    "sha256": "3109a7bc2716cfeaee12e7b91a8fc26abc49bac0810fa38c9274f70786148f3f"
+  },
+  "inputs": [
+    {
+      "path": "examples/full-robot/baseline/robot.rcad",
+      "bytes": 83806475,
+      "sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+    },
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-best.recipe.json",
+      "bytes": 82313,
+      "sha256": "79e5e0bf27421c262b893c254fd3abbcc91a24bd24d98d0c40bf20a13a07c817"
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 183127,
+      "sha256": "a38a0fb773d040af5c4edcfa973b183c48e877d0e56e2150969d02e7aff562b4"
+    }
+  ],
+  "scene_archive_index": "examples/full-robot/speed-ceiling/evidence-v8-index.json",
+  "completed_commands": [
+    {
+      "command": "cargo test -p sim-domain-control -p sim-script",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo test -p sim-runtime --lib contact_planning --features native-ipopt,conic",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo build -p sim-runtime --release --example evaluate_contact_sequence",
+      "exit_code": 0
+    },
+    {
+      "command": "evaluate_contact_sequence --repeat contact-sequence-single.recipe.json 2",
+      "exit_code": 0
+    },
+    {
+      "command": "evaluate_contact_sequence scene markers contact-sequence-single.recipe.json",
+      "exit_code": 0
+    },
+    {
+      "command": "evaluate_contact_sequence scene markers contact-sequence-double.recipe.json",
+      "exit_code": 0
+    },
+    {
+      "command": "node examples/full-robot/contact-planning/check_contact_sequences.mjs",
+      "exit_code": 0
+    }
+  ],
+  "scope": "Code and compact CAD inputs/results are versioned with this manifest. The scene is durably archived by the index. Binary is rebuilt from the recorded code overlay and lockfile. Successful sampled planning equivalence does not establish faster runtime walking, multi-step joint-force optimization, or a physical speed ceiling."
+}

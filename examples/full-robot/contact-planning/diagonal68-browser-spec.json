@@ -1,0 +1,16 @@
+{
+  "id": "diagonal68",
+  "output": "runs/speed-ceiling/viewer-diagonal68",
+  "wasm": "/Users/elliot/physics-simulator/target/gait-exploration/wasm32-unknown-unknown/release/sim_web.wasm",
+  "profiles": [
+    {
+      "id": "physics-diagonal68-5ms",
+      "label": "Experimental · 45° travel · 68 mm/s",
+      "scene": "runs/contact-planning/diagonal68-preview.scene.json",
+      "config": "runs/contact-planning/diagonal68-preview.config.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "W travels 45° relative to the chassis. Detailed 20 s control/contact checks pass; short forward tracking narrowly misses its gate. Speed search continues.",
+      "evidence": "20 s detailed run: 66.6/67.6 mm/s forward/reverse, 4.51% slip, 78/78 planned clearances; no overlap in 1001 recorded poses. Timestep agreement 2.19 mm. Sustained, between-step geometry, browser fidelity/realtime and hardware calibration are separate."
+    }
+  ]
+}

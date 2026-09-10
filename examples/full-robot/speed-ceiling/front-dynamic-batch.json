@@ -1,0 +1,32 @@
+{
+  "id": "front-dynamic",
+  "cases": [
+    {
+      "source": "runs/speed-ceiling/validation/smooth-front10-v150-human-fine",
+      "speed": 0.15,
+      "table_name": "dynamic-front10-v150",
+      "name_prefix": "smooth-dynamic-front10-v150",
+      "scales": [
+        1
+      ]
+    },
+    {
+      "source": "runs/speed-ceiling/validation/smooth-front12-v150-human-fine",
+      "speed": 0.15,
+      "table_name": "dynamic-front12-v150",
+      "name_prefix": "smooth-dynamic-front12-v150",
+      "scales": [
+        1
+      ]
+    },
+    {
+      "source": "runs/speed-ceiling/validation/smooth-front10-v165-human-fine",
+      "speed": 0.165,
+      "table_name": "dynamic-front10-v165",
+      "name_prefix": "smooth-dynamic-front10-v165",
+      "scales": [
+        1
+      ]
+    }
+  ]
+}

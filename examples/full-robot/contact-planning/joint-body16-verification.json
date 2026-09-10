@@ -1,0 +1,54 @@
+{
+  "controls": 16,
+  "variables": 491,
+  "frames": 266,
+  "constraints": 7192,
+  "old_preparer_recipe_and_initial_byte_identical": true,
+  "initial_full_report_matches_refinement": true,
+  "grouped_native_search_and_full_cad_identical_to_ordinary": true,
+  "grouped_model_evaluations": 220,
+  "ordinary_model_evaluations": 508,
+  "grouped_body_probes": 96,
+  "body_group_fallbacks": 0,
+  "jacobian_nonzeros": 2033504,
+  "dense_jacobian_entries": 3531272,
+  "initial": {
+    "speed_m_s": 0.024999999999999998,
+    "force_error_n": 0.2124734093493339,
+    "moment_error_nm": 0.03011423193947904,
+    "torque_margin_nm": 0.685215966339052,
+    "maximum_inequality": 3.249468186986678,
+    "sampled_feasible": false
+  },
+  "final": {
+    "speed_m_s": 0.026038025902193673,
+    "force_error_n": 0.2105886058790159,
+    "moment_error_nm": 0.029949227184667304,
+    "torque_margin_nm": 0.6820493931789837,
+    "maximum_inequality": 3.2117721175803178,
+    "sampled_feasible": false
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-refinement.result.json",
+      "bytes": 3129492,
+      "sha256": "c1ce562c16305ffb28adb8d1d22e10840729930b01bbac8fbe09f734538adf37"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-grouped-one-step.result.json",
+      "bytes": 3304276,
+      "sha256": "f5ab2744601764da460333d693c8c23beb9e03f1bba3b9f544f74a89c96782d7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-ordinary-one-step.result.json",
+      "bytes": 3304275,
+      "sha256": "cea12179e296fa1ff193f7833dda591dec8082cd95031e9f49f5b5720da833ab"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_body16.mjs",
+      "bytes": 3371,
+      "sha256": "72900cb467eb21f3b186d26e0173d86acd141a3171127365ec4afb9ddf876c74"
+    }
+  ],
+  "scope": "Exact eight-to-sixteen body refinement, extra collocation frames retained and grouped/ordinary native pilot agreement. Same physical model and target; neither initial nor pilot is a qualified runtime gait or physical speed maximum."
+}

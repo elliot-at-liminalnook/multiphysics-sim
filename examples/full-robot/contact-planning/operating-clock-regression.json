@@ -1,0 +1,20 @@
+{
+  "rows": [
+    {
+      "rate": 1,
+      "frames": 162,
+      "exact": true,
+      "feasible": true,
+      "margin_nm": -0.008375917074811737
+    },
+    {
+      "rate": -1,
+      "frames": 162,
+      "exact": true,
+      "feasible": false,
+      "margin_nm": -0.07359710283269835
+    }
+  ],
+  "passed": true,
+  "scope": "Each forward/reverse frame of the combined multi-clock CAD audit exactly equals its independent single-clock evaluation, including velocities, inverse loads, motor margins and geometry."
+}

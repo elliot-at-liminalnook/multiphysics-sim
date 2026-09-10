@@ -1,0 +1,17 @@
+{
+  "id": "physics-flat125",
+  "label": "Experimental · Fast WASD gait · 125 mm/s command",
+  "mode": "embedded",
+  "path": "data/physics-flat125.json",
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "motion_commands": [
+    "command.forward_speed",
+    "command.lateral_speed",
+    "command.yaw_rate"
+  ],
+  "motion_heartbeat": "command.packet_sequence",
+  "asset_sha256": "4361df6292afc39469c67c9e3bce218c051c6b71c56a388e9399cbcac436aab3",
+  "description": "Hold W/S for forward/reverse and combine with A/D to steer. Release to finish the foot transfer and brake. Walking turns; no pivot turn.",
+  "readiness": "Experimental faster gait. Sustained motion checked; slipping remains. Browser performance is under evaluation.",
+  "evidence": "60 s at 0.625 ms: 126.7–128.8 mm/s, 8.5% loaded-foot slip. Release stopped within 0.26 s / 7 mm. Frozen commands stopped within 0.48 s / 37 mm. This 5 ms preview differs from the 1.25 ms path by up to 10 mm. Provisional actuator model and ideal observations."
+}

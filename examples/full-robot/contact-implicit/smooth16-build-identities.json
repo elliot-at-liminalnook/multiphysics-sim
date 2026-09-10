@@ -1,0 +1,42 @@
+{
+  "base_commit": "ea0c87c029a23402ee663f99b9a16a6d3c17c076",
+  "sources": [
+    {
+      "path": "crates/sim-domain-control/src/trajectory.rs",
+      "bytes": 23624,
+      "sha256": "e63f71f67145682719dbf289497dcd3ec15ad7d0eb6e823eb9a5998a3d1767a1"
+    },
+    {
+      "path": "crates/sim-domain-control/src/periodic_drift.rs",
+      "bytes": 5648,
+      "sha256": "941071f790ab5819a2bad963036ea87df6e893f00e3f948a03dab377ae8f9ffe"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 35716,
+      "sha256": "1726ad39c6ee70fc424403177a17057579d0ed41adc06a5f9d2d99fb19ea2fc6"
+    },
+    {
+      "path": "crates/sim-runtime/examples/refine_contact_periodic.rs",
+      "bytes": 1646,
+      "sha256": "7723dbdc34c8319a80787937580dc60cd00f30afec94a450692c6979df1e8b92"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8656460,
+      "sha256": "f8f8bf69bbfe7a95678996011a4fad7f7ccc8e14fec56e8c379fbc3dff06125c"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8595020,
+      "sha256": "a44b2bf15419c1478b5c1cc174df43a2baee0c7619d60ba0b9b224317ec50a22"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/refine_contact_periodic",
+      "bytes": 8283340,
+      "sha256": "4a609ed4852604542c3d6af955bc50078e0b9d175a246074779094b79bca991c"
+    }
+  ]
+}

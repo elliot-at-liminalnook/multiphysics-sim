@@ -1,0 +1,33 @@
+{
+  "files": [
+    {
+      "path": "examples/full-robot/contact-planning/motion-forecast-v4-h1.spec.json",
+      "sha256": "81dc17293f11ee870f53a0b46924fe49747dec10188c92cc80914495208efea7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/motion-forecast-v4-h5.spec.json",
+      "sha256": "59f890e8802b583476927be8cff5bb03ae40595ac4074effceb7a5d3d6a01e56"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/motion-forecast-v4-h10.spec.json",
+      "sha256": "aac8efc650b2871afc266db9cf176c9da1a2dac3afadf8b218bc22c3f690b38a"
+    },
+    {
+      "path": "runs/speed-ppo-predictive-v2/iteration-000-episode-000.json",
+      "sha256": "fc1f7d316dbdc1f9b6f7fa94a31ea41d8ffab9edb314b0a6ae539dad9ab0af8f"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/train_motion_forecast",
+      "sha256": "cb69a1272f0bc852d1fe4b77f90f5a75d78fb09e22e1eb8f017e1bfa3de4ac76"
+    },
+    {
+      "path": "crates/sim-runtime/src/motion_forecast.rs",
+      "sha256": "9a1a4ead8e8f81dc826cbb308788cceb4e3bbe95f63a1852e8bf703b052364b4"
+    },
+    {
+      "path": "crates/sim-runtime/examples/train_motion_forecast.rs",
+      "sha256": "1a5c90aa304e0738ed48da64f0333fd3aefb7f9e7090a04d14e13e6c0e4b3a1c"
+    }
+  ],
+  "scope": "Same causal per-horizon models and fit settings as v3, adding first 40s of learner seed74 actual motion/commands to training and last20s to validation. No rollout predictions are used as labels. Predictor remains frozen in the live PPO experiment."
+}

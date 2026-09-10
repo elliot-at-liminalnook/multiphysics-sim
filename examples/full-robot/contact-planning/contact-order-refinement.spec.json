@@ -1,0 +1,8 @@
+{
+  "queue": "runs/contact-order-neighbors/queue.json",
+  "binary": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_steps",
+  "binary_sha256": "1056b56c0cf5978d7a1828b1f188680de3f8f0211965d4e81e869c7929a5d4bc",
+  "library": "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+  "search": "examples/full-robot/contact-planning/contact-order-refinement.search.json",
+  "output_root": "runs/contact-order-refinements"
+}

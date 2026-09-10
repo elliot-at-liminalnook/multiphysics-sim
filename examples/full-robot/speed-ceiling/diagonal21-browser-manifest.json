@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "id": "diagonal21",
+  "wasm": {
+    "artifact_sha256": "dfc8f4a46f97487727f52c8cfa20f78cc74064258fae05674aeb39f915a151ab",
+    "browser_module_sha256": "9a6d3a5b3496b44b08ad158b64b49ef23dc80642a496a85a770e2457ceb066fd"
+  },
+  "inputs": {
+    "examples/full-robot/contact-planning/diagonal21-browser-spec.json": "40e62beb519e6a146cd9273c0f89c22a682ceb4a49a352562624d7f9d77587cd",
+    "Cargo.lock": "2aece6b0637c79b737cca98a08377b4253d67478280b17162c772ebca02f38f1",
+    "crates/sim-domain-control/src/trajectory.rs": "ced82fa77df4f6c89d5d435bb07ca6c36f6bb24e6c4d5ddec5539b642e5fbf5a",
+    "crates/sim-script/src/lib.rs": "a15719dd0c98f6e518976514de6ac52b2cda096e69419f6a394ac20caa7bf31b",
+    "web/viewer/viewer.js": "69b3ba8559f6e9541cfd499c99d98233eb79aba8102b36ef4fbd45032893d0cb",
+    "web/viewer/motion-commands.mjs": "f3854b84dc9ffb58c04d0656e4287ccd96c0b74076f33b6e39cce0a939f025c7",
+    "web/worker.js": "56fcf9a7de4feddd05f24b6f13186376a6c332e0952acb4c4073e7a9ba5efdb9",
+    "web/worker-message.mjs": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f",
+    "examples/full-robot/speed-ceiling/package_browser_profiles.mjs": "3c6b384f2664fdb06436f29b2e44c1fd398411fcd2bd951522a6abf3e21b3562",
+    "runs/contact-planning/diagonal21-preview.scene.json": "92a709b10cd0dc8950b19828435f2584321f3b1a2368c31aab9a94da25175e89",
+    "runs/contact-planning/diagonal21-preview.config.json": "0280c89ba06a2a126ce2c0ad7a88c70be3838ab0d92ad1e370a3d13f2cac554d",
+    "examples/full-robot/fast-wasd/task.json": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026"
+  },
+  "presets": [
+    {
+      "id": "physics-diagonal21-5ms",
+      "label": "Experimental · 45° travel · 212 mm/s target",
+      "mode": "embedded",
+      "path": "data/physics-diagonal21-5ms.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "5f05fa7f1b33aff76f31c80ce255f2c964244207a0abb2439eceae7d236d35df",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "Requested faster diagonal candidate. Hold W/S to drive; A/D steer. W is 45° relative to chassis.",
+      "evidence": "Planned target 0.211710 m/s. Dense reference audit still fails the torque tolerance; this is a diagnostic controller, not a qualified gait. Actual runtime contact, stopping and browser performance checks are separate."
+    }
+  ],
+  "scope": "Shared Rust/WASM runtime and explicit numerical profiles. Native physical qualification, cross-host parity and rendered browser performance are separate requirements. Building this bundle does not establish their acceptance."
+}

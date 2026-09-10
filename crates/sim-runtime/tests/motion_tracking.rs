@@ -63,6 +63,7 @@ fn incomplete_mismatched_or_invented_phase_cannot_pass() {
         |x: &mut Value| x["frames"].as_array_mut().unwrap().truncate(3),
         |x: &mut Value| x["source"]["cad_sha256"] = json!("different"),
         |x: &mut Value| x["initial_base_translation_m"] = json!([1, 0, 0]),
+        |x: &mut Value| x["initial_base_rotation_vector_rad"] = json!([0, 0, 0.1]),
         |x: &mut Value| x["completed"] = json!(false),
         |x: &mut Value| x["simulated_s"] = json!(0.5),
     ] {

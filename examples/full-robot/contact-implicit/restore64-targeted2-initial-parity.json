@@ -1,0 +1,20 @@
+{
+  "scope": "512 identical sample times; exact shared Rust knot insertion preserves the initial physical curve within stated numerical checks. Fixed cycle displacement encoding changes by 6.94e-18 m per horizontal axis.",
+  "maximum_absolute_differences": {
+    "position": 4.440892098500626e-16,
+    "velocity": 2.708944180085382e-14,
+    "acceleration": 1.0870415678709833e-11,
+    "unactuated_wrench": 5.032275290917099e-11,
+    "motor_torques_nm": 4.001243780749064e-12,
+    "gaps_m": 1.1102230246251565e-16,
+    "contact_forces_world_n": 2.2218671347218333e-11,
+    "contact_velocities_world_m_s": 3.247402347028583e-15
+  },
+  "expectations": {
+    "position": 1e-12,
+    "velocity": 1e-10,
+    "acceleration": 1e-7,
+    "unactuated_wrench": 1e-7,
+    "contact_forces_world_n": 1e-7
+  }
+}

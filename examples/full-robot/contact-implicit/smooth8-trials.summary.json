@@ -1,0 +1,259 @@
+{
+  "scope": "Analytic C2 periodic candidates: independent audit equality and exact physics agreement at shared sample times. Additional samples expose missed force/torque peaks. No runtime gait, stable orbit or physical speed ceiling is established.",
+  "controls": 8,
+  "period_s": 0.39608749046768144,
+  "coarse_samples": 32,
+  "dense_samples": 128,
+  "geometry_poses": 129,
+  "rows": [
+    {
+      "mode": "uniform",
+      "planned_displacement_rate_m_s": 0.09984483462332962,
+      "loaded_slip_ratio": 2.279306115271265,
+      "coarse": {
+        "force_error_n": 1.4296001965183107,
+        "moment_error_nm": 0.5376146592689046,
+        "minimum_torque_margin_nm": -0.0010952683640437222,
+        "within_planning_tolerances": false
+      },
+      "dense": {
+        "force_error_n": 5.820890148518783,
+        "moment_error_nm": 1.930316201066687,
+        "minimum_torque_margin_nm": -0.026585069708779052,
+        "within_planning_tolerances": false
+      },
+      "maximum_interlink_overlap_m": 0.000031476396504348094,
+      "maximum_floor_penetration_m": 0.00011069585919964986,
+      "joints": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "sampled_span_rad": 0.2947300395790292,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "sampled_span_rad": 0.25538716076966117,
+          "sampled_velocity_sign_changes": 6
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "sampled_span_rad": 0.07376720437187956,
+          "sampled_velocity_sign_changes": 6
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "sampled_span_rad": 0.36807208044399775,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "sampled_span_rad": 0.34742221827640796,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "sampled_span_rad": 0.18521810110671988,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "sampled_span_rad": 0.32340662001681497,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "sampled_span_rad": 0.47243967508269064,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "sampled_span_rad": 0.11825440528371067,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "sampled_span_rad": 0.2778200776898682,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "sampled_span_rad": 0.37419138760663906,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "sampled_span_rad": 0.1302367662336288,
+          "sampled_velocity_sign_changes": 4
+        }
+      ],
+      "termination": "iteration_limit",
+      "cost": 132.03384077987738
+    },
+    {
+      "mode": "perturbed",
+      "planned_displacement_rate_m_s": 0.12075756676871446,
+      "loaded_slip_ratio": 1.8550793932389373,
+      "coarse": {
+        "force_error_n": 11.687858569878673,
+        "moment_error_nm": 3.2365604435102195,
+        "minimum_torque_margin_nm": -0.26212241705012895,
+        "within_planning_tolerances": false
+      },
+      "dense": {
+        "force_error_n": 11.687858569878673,
+        "moment_error_nm": 3.2649925274419394,
+        "minimum_torque_margin_nm": -0.2748227353103341,
+        "within_planning_tolerances": false
+      },
+      "maximum_interlink_overlap_m": 0.000024334938693365077,
+      "maximum_floor_penetration_m": 0.00012097473752337162,
+      "joints": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "sampled_span_rad": 0.28926101964520257,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "sampled_span_rad": 0.3953407054033985,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "sampled_span_rad": 0.12289033453516907,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "sampled_span_rad": 0.28600695848747054,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "sampled_span_rad": 0.3158327089583413,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "sampled_span_rad": 0.10609882108112989,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "sampled_span_rad": 0.2636967017164803,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "sampled_span_rad": 0.4014991497692738,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "sampled_span_rad": 0.07259361998376002,
+          "sampled_velocity_sign_changes": 8
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "sampled_span_rad": 0.27389245449688715,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "sampled_span_rad": 0.5045686706226504,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "sampled_span_rad": 0.18491790420353915,
+          "sampled_velocity_sign_changes": 4
+        }
+      ],
+      "termination": "iteration_limit",
+      "cost": 4475.9193552530105
+    },
+    {
+      "mode": "recorded",
+      "planned_displacement_rate_m_s": 0.2019077740233257,
+      "loaded_slip_ratio": 1.1085418444911803,
+      "coarse": {
+        "force_error_n": 2.7712389480794677,
+        "moment_error_nm": 0.8521629644092781,
+        "minimum_torque_margin_nm": -0.002682015078927291,
+        "within_planning_tolerances": false
+      },
+      "dense": {
+        "force_error_n": 5.142015990388774,
+        "moment_error_nm": 1.8266157719813536,
+        "minimum_torque_margin_nm": -0.04133518026324112,
+        "within_planning_tolerances": false
+      },
+      "maximum_interlink_overlap_m": 0.000014017497669235681,
+      "maximum_floor_penetration_m": 0.00011228829335252488,
+      "joints": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "sampled_span_rad": 0.23520843059790214,
+          "sampled_velocity_sign_changes": 6
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "sampled_span_rad": 0.329693173074882,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "sampled_span_rad": 0.2948674978686304,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "sampled_span_rad": 0.36747802010827196,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "sampled_span_rad": 0.27557909676576503,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "sampled_span_rad": 0.3222461067765252,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "sampled_span_rad": 0.2767963232843868,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "sampled_span_rad": 0.2945829095001209,
+          "sampled_velocity_sign_changes": 4
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "sampled_span_rad": 0.13108235075064367,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "sampled_span_rad": 0.27599071976475487,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "sampled_span_rad": 0.4004344537306145,
+          "sampled_velocity_sign_changes": 2
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "sampled_span_rad": 0.18246820521310547,
+          "sampled_velocity_sign_changes": 4
+        }
+      ],
+      "termination": "iteration_limit",
+      "cost": 132.1840668480351
+    }
+  ]
+}

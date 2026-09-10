@@ -1,0 +1,48 @@
+{
+  "source": "runs/speed-ceiling/validation/flat-return-hip0-v125-human-fine",
+  "source_scene_sha256": "a32616bc974438121dd5ebc94fabe4608992f9296860295bce2c798ee98186a3",
+  "rows": [
+    {
+      "name": "smooth-hip0-v125-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-hip0-v125-human-fine",
+      "source": "runs/speed-ceiling/validation/flat-return-hip0-v125-human-fine",
+      "kind": "human",
+      "family": "smooth125",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.125,
+      "scope": "Uniform periodic cubic B-spline control points from the existing 52 mm flat-return joint table. Shared Rust positions/derivatives; original physical model, initialization, phase/braking/lease and steering retained. Control-point hull bounds reference values, not CAD clearance. No load feedforward yet.",
+      "scene_sha256": "a4b9b9583538b66cbf5818f4ce7453238345ca7f757cec6b20ac1049dd516c78",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "782ed8e571965e18d7b08c70e08df064b0ac916a9861ff586e236881e11c7fa4"
+    },
+    {
+      "name": "smooth-hip0-v150-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-hip0-v150-human-fine",
+      "source": "runs/speed-ceiling/validation/flat-return-hip0-v125-human-fine",
+      "kind": "human",
+      "family": "smooth150",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.15,
+      "scope": "Uniform periodic cubic B-spline control points from the existing 52 mm flat-return joint table. Shared Rust positions/derivatives; original physical model, initialization, phase/braking/lease and steering retained. Control-point hull bounds reference values, not CAD clearance. No load feedforward yet.",
+      "scene_sha256": "6a870a97531adb6dfa9a49963bc85b9941c5d9c98c2d5ceecec980a81f822022",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "0d1963f8695e729f6ac4885c21bfb6b4b8437f813ffa02961f637e4902de9c50"
+    },
+    {
+      "name": "smooth-hip0-v175-human-fine",
+      "prefix": "runs/speed-ceiling/validation/smooth-hip0-v175-human-fine",
+      "source": "runs/speed-ceiling/validation/flat-return-hip0-v125-human-fine",
+      "kind": "human",
+      "family": "smooth175",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.175,
+      "scope": "Uniform periodic cubic B-spline control points from the existing 52 mm flat-return joint table. Shared Rust positions/derivatives; original physical model, initialization, phase/braking/lease and steering retained. Control-point hull bounds reference values, not CAD clearance. No load feedforward yet.",
+      "scene_sha256": "041ffa63ebee4d898b68fba35ea842da3030ccb36776ddd3f1c2561c04b5db77",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "bd100cdadababf0ecf3a1b3fdb951eaa6303f15702bd162ef04987c734ba7763"
+    }
+  ]
+}

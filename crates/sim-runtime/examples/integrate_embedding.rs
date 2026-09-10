@@ -1,6 +1,6 @@
 //! Headless host for the shared incremental CAD-derived motor session.
 use sim_runtime::{
-    embedded::{CaptureMode, Config, EmbeddedSession},
+    embedded::{CaptureMode, Config, EmbeddedSession, MAX_ADVANCE_STEPS},
     session::Scene,
 };
 fn run() -> Result<bool, String> {
@@ -13,9 +13,14 @@ fn run() -> Result<bool, String> {
     let config: Config =
         serde_json::from_slice(&std::fs::read(&args[1]).map_err(|e| e.to_string())?)
             .map_err(|e| e.to_string())?;
-    let steps = config.steps;
     let mut session = EmbeddedSession::new(scene, config, 0, CaptureMode::Full)?;
-    let completed = session.advance(steps).is_ok();
+    let completed = (|| -> Result<(), String> {
+        while session.remaining_steps() > 0 {
+            session.advance(session.remaining_steps().min(MAX_ADVANCE_STEPS))?;
+        }
+        Ok(())
+    })()
+    .is_ok();
     println!(
         "{}",
         serde_json::to_string_pretty(&session.report()?).map_err(|e| e.to_string())?

@@ -1,0 +1,25 @@
+{
+  "original_mesh_native_pilot": {
+    "speed_m_s": 0.02518825560741796,
+    "model_evaluations": 244,
+    "sampled_feasible": true,
+    "native_full_constraints_match": true
+  },
+  "dense_audit": {
+    "frames": 2250,
+    "old_physical_frames_preserved": 250,
+    "force_error_n": 0.08056795967287575,
+    "moment_error_nm": 0.03590912533653379,
+    "sampled_feasible": false
+  },
+  "dense_refit": {
+    "status": "AlmostSolved",
+    "numerical_minimax_balance": 1.0668871903222514,
+    "primal_dual_gap": 0.0000032038891537577996,
+    "force_error_n": 0.053344359331866875,
+    "moment_error_nm": 0.021337743803389264,
+    "friction_cone_violation_n": 0,
+    "sampled_feasible": false
+  },
+  "scope": "A usable sampled initializer and feasible one-step joint speed increase, rejected by dense validation. No measured runtime speed gain or physical speed maximum."
+}

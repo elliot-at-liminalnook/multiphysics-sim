@@ -1,0 +1,25 @@
+{
+  "id": "compiled184",
+  "output": "runs/speed-ceiling/viewer-compiled184",
+  "wasm": "/Users/elliot/physics-simulator/target/gait-exploration/wasm32-unknown-unknown/release/sim_web.wasm",
+  "profiles": [
+    {
+      "id": "physics-compiled184-5ms",
+      "label": "Experimental · Planned 184 mm/s · 5 ms preview",
+      "config": "runs/contact-planning/compiled184-preview.config.json",
+      "scene": "runs/contact-planning/compiled184-screen.scene.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "New automatically optimized gait. Short forward/reverse/stop test completed; longer-run, collision and steering checks pending.",
+      "evidence": "Detailed 8 s simulation at 0.625 ms: 183.8 mm/s forward and 182.7 mm/s reverse displacement speed. Loaded-foot slip peaked at 11.6%. Browser speed and approximation error are not yet qualified. Provisional actuator model."
+    },
+    {
+      "id": "physics-compiled184-reference",
+      "label": "Experimental · Planned 184 mm/s · Detailed physics (slow)",
+      "config": "runs/contact-planning/compiled184-screen.config.json",
+      "scene": "runs/contact-planning/compiled184-screen.scene.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "New automatically optimized gait. Short forward/reverse/stop test completed; longer-run, collision and steering checks pending.",
+      "evidence": "Detailed 8 s simulation at 0.625 ms: 183.8 mm/s forward and 182.7 mm/s reverse displacement speed. Loaded-foot slip peaked at 11.6%. Browser speed and approximation error are not yet qualified. Provisional actuator model."
+    }
+  ]
+}

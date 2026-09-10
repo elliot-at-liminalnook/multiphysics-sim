@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "diagonal-seed-human-1p25ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal-seed-human-1p25ms",
+      "duration_s": 20,
+      "step_s": 0.00125,
+      "command_speed_m_s": 0.041098926819874794,
+      "family": "diagonal-seed",
+      "source": "runs/contact-planning/diagonal-seed-cached-screen",
+      "travel_heading_offset_rad": 0.7853981633974483,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "scene_sha256": "adc1da332f25cd24e245e9a322609e71b0a45ee901e43dd8a8f14fe0632df387",
+      "config_sha256": "45b1a27a5efe416cb842190a0bf96e2984d0edb1138133c9fc3ee36169ece6bd",
+      "actions_sha256": "430d19c66a00785f911aad6fab436ed2207c70ee8730513cb754f394d1ab138f"
+    },
+    {
+      "name": "diagonal-seed-human-0p625ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal-seed-human-0p625ms",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.041098926819874794,
+      "family": "diagonal-seed",
+      "source": "runs/contact-planning/diagonal-seed-cached-screen",
+      "travel_heading_offset_rad": 0.7853981633974483,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "scene_sha256": "adc1da332f25cd24e245e9a322609e71b0a45ee901e43dd8a8f14fe0632df387",
+      "config_sha256": "8cac9d6081831151a15ad771e325db4c55db622ef2b92c286649b738bc2cbd5d",
+      "actions_sha256": "430d19c66a00785f911aad6fab436ed2207c70ee8730513cb754f394d1ab138f"
+    },
+    {
+      "name": "diagonal-seed-dropout-0p625ms",
+      "kind": "dropout",
+      "prefix": "runs/contact-planning/diagonal-seed-dropout-0p625ms",
+      "duration_s": 12,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.041098926819874794,
+      "family": "diagonal-seed",
+      "source": "runs/contact-planning/diagonal-seed-cached-screen",
+      "travel_heading_offset_rad": 0.7853981633974483,
+      "actions_source": "examples/full-robot/fast-wasd/dropout.actions.json",
+      "actions_source_sha256": "59ec22dc77e0e2c04fc6c212f2c1bc981d95ffaa047ca89cda05efe7943229a5",
+      "scene_sha256": "cd67b95fba67d604883b895219058dbf1f3438e28e1ab48aabcac439641400a6",
+      "config_sha256": "be899262a01c6ef5bfe8d8b56e94b2597dfd8b8e106ede866743da211f9fa8a0",
+      "actions_sha256": "5d555bd917d4025afd04c87e67729cfd007e7e07e3991b432d2c765c224efda9"
+    }
+  ]
+}

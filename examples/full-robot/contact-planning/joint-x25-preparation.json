@@ -1,0 +1,25 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/return-x25-reference.result.json",
+      "sha256": "f3f6d9146414658e0e183a9925be0cfd023c48b10f99af34d0ec8ebd2d87bdca"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/heading-plus45-restoration.recipe.json",
+      "sha256": "9a3aea121113c83f1570a4184e88a0abce59b16e517cd532f8a01e0cb5679a8f"
+    },
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    }
+  ],
+  "output": {
+    "path": "examples/full-robot/contact-planning/joint-x25.recipe.json",
+    "sha256": "5a7e7038dd40427066cc9b07bb61b994bf55d05131419dff6cb48e6bfe8b7306"
+  },
+  "weight_n": 39.00690539993103,
+  "variables": 173,
+  "motion_variables": 53,
+  "force_variables": 120,
+  "scope": "First joint-force search from measured .234 m/s runtime candidate; nominal reference .211710 m/s. All prior motion variable groups plus independent forward/reverse force nodes are free. Target .30 m/s and search intervals are experimental, not theoretical physical bounds. Original actuator, contact and geometry model and physical tolerances retained; overlap explicitly must be zero. Coarse search requires independent dense validation; no gait promotion."
+}

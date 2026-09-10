@@ -1,0 +1,158 @@
+{
+  "results": [
+    {
+      "name": "belt-three15-v230",
+      "command_speed_m_s": 0.23,
+      "physics_step_s": 0.000625,
+      "speeds_m_s": [
+        0.22733060250964504,
+        0.2154501281342647
+      ],
+      "slip": 0.11396419058690946,
+      "control_passed": false,
+      "passed_lifts": 41,
+      "planned_lifts": 42,
+      "maximum_overlap_m": 0.000012324728928954156,
+      "overlapping_poses": 246,
+      "failed_lift_links": [
+        "+X | Sliding foot crosshead"
+      ]
+    },
+    {
+      "name": "belt-three15-xreach45-v230",
+      "command_speed_m_s": 0.23,
+      "physics_step_s": 0.000625,
+      "speeds_m_s": [
+        0.22733060446613929,
+        0.21545009810449217
+      ],
+      "slip": 0.11396440106495906,
+      "control_passed": false,
+      "passed_lifts": 41,
+      "planned_lifts": 42,
+      "maximum_overlap_m": 0.000012324653488115047,
+      "overlapping_poses": 246,
+      "failed_lift_links": [
+        "+X | Sliding foot crosshead"
+      ]
+    },
+    {
+      "name": "diagonal-hold230",
+      "command_speed_m_s": 0.23,
+      "physics_step_s": 0.000625,
+      "speeds_m_s": [
+        0.23200812444356492,
+        0.230390699572899
+      ],
+      "slip": 0.14216462829832063,
+      "control_passed": true,
+      "passed_lifts": 40,
+      "planned_lifts": 42,
+      "maximum_overlap_m": 0.000017332512297017297,
+      "overlapping_poses": 254,
+      "failed_lift_links": [
+        "+X | Sliding foot crosshead"
+      ]
+    },
+    {
+      "name": "diagonal-hold250",
+      "command_speed_m_s": 0.25,
+      "physics_step_s": 0.000625,
+      "speeds_m_s": [
+        0.2624884039341405,
+        0.2603050023587432
+      ],
+      "slip": 0.1922273788495676,
+      "control_passed": true,
+      "passed_lifts": 38,
+      "planned_lifts": 46,
+      "maximum_overlap_m": 0.000018973970070639264,
+      "overlapping_poses": 194,
+      "failed_lift_links": [
+        "+X | Sliding foot crosshead",
+        "-X | Sliding foot crosshead"
+      ]
+    },
+    {
+      "name": "diagonal-hold280",
+      "command_speed_m_s": 0.28,
+      "physics_step_s": 0.000625,
+      "speeds_m_s": [
+        0.3095277405588052,
+        0.3018439494346504
+      ],
+      "slip": 0.30883729644865554,
+      "control_passed": false,
+      "passed_lifts": 38,
+      "planned_lifts": 50,
+      "maximum_overlap_m": 0.000020396681345776564,
+      "overlapping_poses": 257,
+      "failed_lift_links": [
+        "+X | Sliding foot crosshead",
+        "-X | Sliding foot crosshead"
+      ]
+    },
+    {
+      "name": "xhip-clearance10-v230",
+      "command_speed_m_s": 0.23,
+      "physics_step_s": 0.000625,
+      "speeds_m_s": [
+        0.23303497795512917,
+        0.22401185914906188
+      ],
+      "slip": 0.12621810266295289,
+      "control_passed": true,
+      "passed_lifts": 37,
+      "planned_lifts": 42,
+      "maximum_overlap_m": 0,
+      "overlapping_poses": 0,
+      "failed_lift_links": [
+        "+X | Sliding foot crosshead"
+      ]
+    },
+    {
+      "name": "xhip-lift-v230",
+      "command_speed_m_s": 0.23,
+      "physics_step_s": 0.000625,
+      "speeds_m_s": [
+        0.23374049672799097,
+        0.22376682438509576
+      ],
+      "slip": 0.1345739747550366,
+      "control_passed": true,
+      "passed_lifts": 42,
+      "planned_lifts": 42,
+      "maximum_overlap_m": 0,
+      "overlapping_poses": 0,
+      "failed_lift_links": []
+    },
+    {
+      "name": "xhip-lift-v230-fine",
+      "command_speed_m_s": 0.23,
+      "physics_step_s": 0.0003125,
+      "speeds_m_s": [
+        0.23353053511844893,
+        0.22335506976221706
+      ],
+      "slip": 0.13517782315941987,
+      "control_passed": true,
+      "passed_lifts": 42,
+      "planned_lifts": 42,
+      "maximum_overlap_m": 0,
+      "overlapping_poses": 0,
+      "failed_lift_links": []
+    }
+  ],
+  "parent_overlap_pairs": {
+    "-X | Hip motor pulley and shaft 3090 / Robot | Chassis and hip mounts": {
+      "samples": 250,
+      "maximum_overlap_m": 0.000012373646879605991
+    }
+  },
+  "timestep_comparison": {
+    "maximum_chassis_position_difference_m": 0.0006779842575808197,
+    "coarse_s": 0.000625,
+    "fine_s": 0.0003125
+  },
+  "scope": "Matched detailed eight-second runtime measurements, exact controller replay and sampled CAD geometry, plus one timestep refinement of the final candidate. Path and hold changes preserve physical definitions and gates. No sustained, continuous-time, steering, browser, sim-to-real or physical maximum-speed certificate."
+}

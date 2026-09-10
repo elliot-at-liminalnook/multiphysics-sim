@@ -1,7 +1,8 @@
 """Reproduce an explicit CAD-derived distance-grid correction off the UI thread.
 
 Only named grids and derivation provenance change. Existing dynamics parameters,
-mesh samples, grid cell sizes and collision exclusions are preserved.
+mesh samples and authored collision exclusions are preserved. Grid cell sizes
+remain unchanged unless the recipe explicitly declares cell_m and a node budget.
 """
 import argparse
 import hashlib
@@ -60,16 +61,27 @@ def main():
                 if solid_meshes is not None:
                     solid_meshes.extend(solid_collision_meshes(kernel, body, np.asarray(link['com'])))
             old = link["collision"]["sdf"]
-            new = signed_distance_grid(meshes, old["cell"], solid_meshes=solid_meshes)
-            if old["dims"] != new["dims"] or not np.allclose(old["origin"], new["origin"], atol=1e-10, rtol=0):
+            cell = recipe.get("cell_m", old["cell"])
+            if not np.isfinite(cell) or cell <= 0:
+                raise ValueError("positive finite grid cell_m required")
+            if "cell_m" in recipe:
+                budget = recipe.get("maximum_grid_nodes_per_link")
+                if not isinstance(budget, int) or not 1 <= budget <= 10_000_000:
+                    raise ValueError("explicit grid node budget in [1, 10000000] required")
+                vertices = np.vstack([v for v, _ in meshes])
+                dims = np.maximum(np.ceil((vertices.max(axis=0)-vertices.min(axis=0)+4*cell)/cell).astype(int)+1,2)
+                if int(np.prod(dims)) > budget:
+                    raise ValueError(f"grid node budget exceeded for {name}: {int(np.prod(dims))}")
+            new = signed_distance_grid(meshes, cell, solid_meshes=solid_meshes)
+            if "cell_m" not in recipe and (old["dims"] != new["dims"] or not np.allclose(old["origin"], new["origin"], atol=1e-10, rtol=0)):
                 raise ValueError(f"grid domain changed for {name}; investigate tessellation identity")
             link["collision"]["sdf"] = new
             if solid_meshes is not None:
                 link['collision']['sign_derivation'] = {'algorithm': 'solid_union_ray_v1',
                     'solid_count': len(solid_meshes), 'non_solid_surfaces': 'unsigned_distance_only'}
             report = {"link": name, "wall_s": time.monotonic() - started,
-                      "maximum_node_change_m": float(np.max(np.abs(np.asarray(new["values"]) - old["values"]))),
-                      "cell_m": old["cell"], "dims": old["dims"]}
+                      "maximum_node_change_m": float(np.max(np.abs(np.asarray(new["values"]) - old["values"]))) if "cell_m" not in recipe else None,
+                      "previous_cell_m": old["cell"], "cell_m": new["cell"], "dims": new["dims"]}
             reports.append(report)
             print(json.dumps(report), flush=True)
     scene["robot"]["source"]["collision_distance_experiment"] = {

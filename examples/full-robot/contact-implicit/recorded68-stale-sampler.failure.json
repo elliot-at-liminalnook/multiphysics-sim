@@ -1,0 +1,6 @@
+{
+  "stage": "sample_capture_seed",
+  "sampler_identity_reference": "evidence-v16-index.json",
+  "error": "Sampler executable predates periodic_collocation_phases and rejects the current planner config. No seed produced; subsequent audit had no input.",
+  "resolution": "Rebuild the existing shared Rust sampler against current source; preserve all recipe fields."
+}

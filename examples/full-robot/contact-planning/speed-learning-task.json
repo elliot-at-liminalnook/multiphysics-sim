@@ -1,0 +1,514 @@
+{
+  "version": 1,
+  "observation_source": "ideal_runtime_teacher_only",
+  "period_s": 0.02,
+  "observations": [
+    {
+      "name": "motor.0.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.0.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.1.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.1.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.2.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.2.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.3.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.3.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.4.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.4.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.5.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.5.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.6.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.6.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+Y | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.7.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.7.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+Y | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.8.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.+Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.8.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.+Y | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.9.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.9.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-X | Hip servo output"
+      }
+    },
+    {
+      "name": "motor.10.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.10.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-X | Worm servo output"
+      }
+    },
+    {
+      "name": "motor.11.angle",
+      "source": {
+        "kind": "coordinate_position",
+        "coordinate": "joint.-X | Foot servo output"
+      }
+    },
+    {
+      "name": "motor.11.speed",
+      "source": {
+        "kind": "coordinate_velocity",
+        "coordinate": "joint.-X | Foot servo output"
+      }
+    },
+    {
+      "name": "body.position.x",
+      "source": {
+        "kind": "body_position",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "body.velocity.x",
+      "source": {
+        "kind": "body_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "body.position.y",
+      "source": {
+        "kind": "body_position",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "body.velocity.y",
+      "source": {
+        "kind": "body_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "body.position.z",
+      "source": {
+        "kind": "body_position",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "body.velocity.z",
+      "source": {
+        "kind": "body_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "motor.0.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "-Y · Hip swing (belt) · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.1.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "-Y · Worm drive · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.2.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "-Y · Foot slide · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.3.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "+X · Hip swing (belt) · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.4.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "+X · Worm drive · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.5.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "+X · Foot slide · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.6.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "+Y · Hip swing (belt) · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.7.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "+Y · Worm drive · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.8.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "+Y · Foot slide · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.9.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "-X · Hip swing (belt) · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.10.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "-X · Worm drive · HX-30HM"
+      }
+    },
+    {
+      "name": "motor.11.torque",
+      "source": {
+        "kind": "motor_torque",
+        "motor": "-X · Foot slide · HX-30HM"
+      }
+    },
+    {
+      "name": "foot.0.force.x",
+      "source": {
+        "kind": "floor_force",
+        "link": "-Y | Sliding foot crosshead",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "foot.0.force.y",
+      "source": {
+        "kind": "floor_force",
+        "link": "-Y | Sliding foot crosshead",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "foot.0.force.z",
+      "source": {
+        "kind": "floor_force",
+        "link": "-Y | Sliding foot crosshead",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "foot.1.force.x",
+      "source": {
+        "kind": "floor_force",
+        "link": "+X | Sliding foot crosshead",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "foot.1.force.y",
+      "source": {
+        "kind": "floor_force",
+        "link": "+X | Sliding foot crosshead",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "foot.1.force.z",
+      "source": {
+        "kind": "floor_force",
+        "link": "+X | Sliding foot crosshead",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "foot.2.force.x",
+      "source": {
+        "kind": "floor_force",
+        "link": "+Y | Sliding foot crosshead",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "foot.2.force.y",
+      "source": {
+        "kind": "floor_force",
+        "link": "+Y | Sliding foot crosshead",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "foot.2.force.z",
+      "source": {
+        "kind": "floor_force",
+        "link": "+Y | Sliding foot crosshead",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "foot.3.force.x",
+      "source": {
+        "kind": "floor_force",
+        "link": "-X | Sliding foot crosshead",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "foot.3.force.y",
+      "source": {
+        "kind": "floor_force",
+        "link": "-X | Sliding foot crosshead",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "foot.3.force.z",
+      "source": {
+        "kind": "floor_force",
+        "link": "-X | Sliding foot crosshead",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "body.local_velocity.x",
+      "source": {
+        "kind": "body_local_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "body.angular_velocity.x",
+      "source": {
+        "kind": "body_angular_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "x"
+      }
+    },
+    {
+      "name": "body.up.x",
+      "source": {
+        "kind": "body_axis",
+        "link": "Robot | Chassis and hip mounts",
+        "body_axis": "x",
+        "world_axis": "z"
+      }
+    },
+    {
+      "name": "body.local_velocity.y",
+      "source": {
+        "kind": "body_local_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "body.angular_velocity.y",
+      "source": {
+        "kind": "body_angular_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "y"
+      }
+    },
+    {
+      "name": "body.up.y",
+      "source": {
+        "kind": "body_axis",
+        "link": "Robot | Chassis and hip mounts",
+        "body_axis": "y",
+        "world_axis": "z"
+      }
+    },
+    {
+      "name": "body.local_velocity.z",
+      "source": {
+        "kind": "body_local_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "body.angular_velocity.z",
+      "source": {
+        "kind": "body_angular_velocity",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "z"
+      }
+    },
+    {
+      "name": "body.up.z",
+      "source": {
+        "kind": "body_axis",
+        "link": "Robot | Chassis and hip mounts",
+        "body_axis": "z",
+        "world_axis": "z"
+      }
+    },
+    {
+      "name": "command.forward_speed",
+      "source": {
+        "kind": "controller_input",
+        "name": "command.forward_speed"
+      }
+    },
+    {
+      "name": "command.lateral_speed",
+      "source": {
+        "kind": "controller_input",
+        "name": "command.lateral_speed"
+      }
+    },
+    {
+      "name": "command.yaw_rate",
+      "source": {
+        "kind": "controller_input",
+        "name": "command.yaw_rate"
+      }
+    },
+    {
+      "name": "body.floor_force.z",
+      "source": {
+        "kind": "floor_force",
+        "link": "Robot | Chassis and hip mounts",
+        "axis": "z"
+      }
+    }
+  ],
+  "rewards": [],
+  "termination_bounds": [],
+  "survival_reward_per_s": 0,
+  "termination_penalty": 0,
+  "speed": {
+    "body_link": "Robot | Chassis and hip mounts"
+  }
+}

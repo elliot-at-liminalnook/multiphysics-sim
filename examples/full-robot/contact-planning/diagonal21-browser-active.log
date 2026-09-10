@@ -1,0 +1,20 @@
+{
+  version: 1,
+  completed: true,
+  error: null,
+  page_errors: [],
+  rendered_frames: 332,
+  commands: [
+    { requested_time_s: 0.6, applied_after_time_s: 0.6, keys: [Array] },
+    { requested_time_s: 3, applied_after_time_s: 3, keys: [] },
+    { requested_time_s: 4, applied_after_time_s: 4, keys: [Array] },
+    { requested_time_s: 6.4, applied_after_time_s: 6.4, keys: [] }
+  ],
+  active_window_s: [ 1.4000000000000001, 3 ],
+  simulation_per_wall: 0.36127901804051704,
+  p95_transition_s: 0.10039999997615814,
+  scope: 'Rendered live Rust/Rhai physics via production worker, controlled by UI keys. No playback. Transition timing includes worker response transport and decode; active wall pace includes rendering/scheduling. Independent physical acceptance and replay/native parity remain separate.',
+  active_body_displacement_m: 0.3394963491806963,
+  minimum_active_displacement_m: 0.04,
+  body_motion_verified: true
+}

@@ -1,0 +1,53 @@
+{
+  "base_commit": "ee87873",
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-solve/Cargo.toml",
+      "bytes": 477,
+      "sha256": "205e625b8521d6c766fad99ba80e7856b679ef766addc9002a19b076f1fd080f"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_augmented_lagrangian.rs",
+      "bytes": 18097,
+      "sha256": "899eb7acf8a5ecff813ed67392472a9b240c971d3a3e49d4f042e3d839070679"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 57475,
+      "sha256": "6013823fdce1885d83ed15b95b72049dc84281891b2a330ec3a344fea55459cf"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 48306,
+      "sha256": "078449e94e824c0e27353168701b1723d5bba8b37ac02615d92bcd0f92310ecc"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_inequalities.rs",
+      "bytes": 2721,
+      "sha256": "3ff223c0304acecf5175991ee6a163274a6dd6ecbd966bf1d8ea378500683a2c"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 2721,
+      "sha256": "44a0f8ec49db9f4e57d047202b64b0a66cff76eb63757c8bb8c8ed437c63112e"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_inequalities",
+      "bytes": 8755172,
+      "sha256": "7c819f942a140ec082483377dfcd7b1deb21192a10b581968e0ace86bad073f6"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8669884,
+      "sha256": "e26fb384a541555086eaef3b5eb297add61ca30a4f54ec1b337be58aff68b9bf"
+    }
+  ],
+  "scope": "Optional actual loaded-slip constraint rows; unchanged contact, inverse dynamics, actuator law, RMS objective and physical acceptance. Legacy weighted restoration rejects the option explicitly."
+}

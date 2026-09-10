@@ -1,0 +1,33 @@
+{
+  "source_commit": "40fb58c",
+  "session_id": 4727,
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9049396,
+    "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+  },
+  "build": {
+    "path": "examples/full-robot/contact-planning/joint-force-alignment-build.json",
+    "bytes": 9381,
+    "sha256": "e4f7e21219c5c6c7f495aeb00da140c9bf31d3facdaca9b793465616fa615480"
+  },
+  "recipe": {
+    "path": "examples/full-robot/contact-planning/joint-aligned-speed.recipe.json",
+    "bytes": 146687,
+    "sha256": "9fad3e976ba34a0de902cba47e51231fe91613c2b6ceee15703f455d5877890f"
+  },
+  "initial": {
+    "path": "examples/full-robot/contact-planning/joint-aligned-speed-initial.result.json",
+    "bytes": 1450701,
+    "sha256": "4f2598ef06791a1e850e0882c3e12b3f610a689b89c97835d9feef1009b51d70"
+  },
+  "arguments": [
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-aligned-speed.recipe.json",
+    "--analytic-forces"
+  ],
+  "stdout": "examples/full-robot/contact-planning/joint-aligned-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-aligned-speed.log",
+  "scope": "Live 8000-evaluation 443-variable joint speed search with contact-event force knots. No completed optimization result is included."
+}

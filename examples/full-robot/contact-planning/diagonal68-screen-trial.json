@@ -1,0 +1,28 @@
+{
+  "prefix": "runs/contact-planning/diagonal68-screen",
+  "source_scene": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+  "source_scene_sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8",
+  "compiled_reference": "examples/full-robot/contact-planning/diagonal68-reference.result.json",
+  "compiled_reference_sha256": "67c60013720a1ada424dcef3af9e783410880003ffaa2478bc9539bf2de20858",
+  "travel_heading_offset_rad": 0.7853981633974482,
+  "policy": "examples/full-robot/contact-planning/contact-planned.rhai",
+  "policy_sha256": "a9f5483d742861aa7e39110ed14593ec094cde64bd5ae3d9fa37e2475654c4ee",
+  "files": [
+    {
+      "path": "runs/contact-planning/diagonal68-screen.scene.json",
+      "sha256": "59e1d201cbaac23e6e263de81c9120283841d9c19bc1df39e35c7ed273ee31bb"
+    },
+    {
+      "path": "runs/contact-planning/diagonal68-screen.config.json",
+      "sha256": "c4ec8d19814bd3c74bb796e3d016400996c5039d87a2b297e053f033c828186e"
+    },
+    {
+      "path": "runs/contact-planning/diagonal68-screen.actions.json",
+      "sha256": "67db86443c6030bb2653e7608abbc68a0a36c0926ea0ab647caa372348620a84"
+    }
+  ],
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "duration_s": 8,
+  "step_s": 0.000625,
+  "scope": "First closed-loop forward/reverse/stop screen of the automatically planned contact motion. Source CAD, contact physics, effective actuators, software bounds and lease remain unchanged. Initial pose and reference are explicit. Static plus rate-squared dynamic feedforward is an approximation during transitions; inherited local yaw ratios still require separate steering validation. User browser bundles are untouched. No success or hardware-transfer claim before measurement."
+}

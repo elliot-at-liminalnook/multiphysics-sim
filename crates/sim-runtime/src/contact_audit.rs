@@ -4,6 +4,44 @@ use crate::session::Session;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
+#[derive(Clone, Debug, Serialize)]
+pub struct FloorContactLinkProfile {
+    pub link: String,
+    pub material: String,
+    pub compiled_surface_samples: usize,
+    pub static_friction: f64,
+    pub kinetic_friction: f64,
+}
+#[derive(Clone, Debug, Serialize)]
+pub struct FloorContactProfile {
+    pub expected_cad_sha256: String,
+    pub floor_z_m: f64,
+    pub stiffness_per_sample_n_m: f64,
+    pub normal_dissipation_s_m: f64,
+    pub friction_model: sim_domain_robot::articulated::friction::FloorFrictionModel,
+    pub links: Vec<FloorContactLinkProfile>,
+}
+/// Inspect resolved runtime contact properties, including material-pair friction
+/// and any compiled dissipation defaults/overrides. The authored world friction
+/// field alone does not determine the actual link/world coefficient.
+pub fn floor_contact_profile(
+    art: &sim_domain_robot::Articulated,
+    links: &[String],
+    expected_cad_sha256: &str,
+) -> Result<FloorContactProfile, String> {
+    crate::tracking::compiled_surface_markers(art, links, expected_cad_sha256)?;
+    Ok(FloorContactProfile {
+        expected_cad_sha256: expected_cad_sha256.into(), floor_z_m: art.floor_z,
+        stiffness_per_sample_n_m: art.floor_k, normal_dissipation_s_m: art.floor_dissipation_s_m,
+        friction_model: art.floor_friction,
+        links: links.iter().map(|name| {
+            let link=art.links.iter().find(|l| &l.name==name).unwrap();
+            FloorContactLinkProfile {link:name.clone(),material:link.material.clone(),
+                compiled_surface_samples:link.contact.len(),static_friction:link.floor_mu.0,kinetic_friction:link.floor_mu.1}
+        }).collect(),
+    })
+}
+
 /// Full inter-link geometric inspection of a saved frame. Force-profile
 /// reductions cannot turn this into a vacuous no-contact check.
 pub fn sampled_inter_link_penetrations(
@@ -49,6 +87,7 @@ mod geometric_tests {
         art.links[1].sdf = Some(sim_domain_robot::model::Sdf {
             origin:[-0.1;3], cell:0.2, dims:[2;3],
             values:vec![-0.11,0.09,-0.11,0.09,-0.11,0.09,-0.11,0.09],
+            refinements: vec![],
         });
         let pose = |name:&str| crate::session::LinkPose { name:name.into(),
             position_m:[0.;3],rotation:[[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]] };
@@ -63,7 +102,7 @@ mod geometric_tests {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct FloorClearance {
     pub link: String,
     pub surface_samples: usize,

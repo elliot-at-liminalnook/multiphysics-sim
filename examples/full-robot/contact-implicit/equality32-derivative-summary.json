@@ -1,0 +1,89 @@
+{
+  "scope": "Shared parameter mapping now covers all unique periodic controls and XY displacement. Diagnostics evaluate the original complete planning residual vector, not a certificate for the new constrained KKT step.",
+  "audited_parameters": 576,
+  "drift_parameters": [
+    576,
+    577
+  ],
+  "largest_changes": [
+    {
+      "parameter": 293,
+      "kind": "pose",
+      "change_1e8_to_1e9": 0.000015625034630092658
+    },
+    {
+      "parameter": 491,
+      "kind": "pose",
+      "change_1e8_to_1e9": 0.000014361319371368481
+    },
+    {
+      "parameter": 311,
+      "kind": "pose",
+      "change_1e8_to_1e9": 0.000013490062317123415
+    },
+    {
+      "parameter": 275,
+      "kind": "pose",
+      "change_1e8_to_1e9": 0.000011858991310078914
+    },
+    {
+      "parameter": 257,
+      "kind": "pose",
+      "change_1e8_to_1e9": 0.000011575988352466504
+    }
+  ],
+  "descent": [
+    {
+      "probe_index": 3,
+      "predicted_slope": -1477.4993813767264,
+      "small_step_checks": [
+        {
+          "step": 1.0000000000000001e-7,
+          "central": -1475.1932507242764,
+          "forward": 128.9792379033372
+        },
+        {
+          "step": 1e-8,
+          "central": -1477.4827864602862,
+          "forward": -1316.7808685210503
+        },
+        {
+          "step": 1e-9,
+          "central": -1477.4581915980516,
+          "forward": -1461.33329437248
+        },
+        {
+          "step": 1.0000000000000002e-10,
+          "central": -1477.4449646066826,
+          "forward": -1475.3244848009215
+        }
+      ]
+    },
+    {
+      "probe_index": 5,
+      "predicted_slope": -1477.5496761248912,
+      "small_step_checks": [
+        {
+          "step": 1.0000000000000001e-7,
+          "central": -1475.2580853518923,
+          "forward": 129.0161575973059
+        },
+        {
+          "step": 1e-8,
+          "central": -1477.5432935926376,
+          "forward": -1316.828445752094
+        },
+        {
+          "step": 1e-9,
+          "central": -1477.5478358093774,
+          "forward": -1461.4289298719996
+        },
+        {
+          "step": 1.0000000000000002e-10,
+          "central": -1477.6867612491612,
+          "forward": -1475.5439714519978
+        }
+      ]
+    }
+  ]
+}

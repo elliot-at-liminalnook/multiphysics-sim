@@ -1,0 +1,25 @@
+{
+  "name": "posture-hip30-foot-60",
+  "exit_code": 0,
+  "elapsed_s": 89.45190178099999,
+  "last": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.030805595260647647,
+    "sampled_feasible": true,
+    "maximum_force_error_n": 0.0023788718624628835,
+    "maximum_moment_error_nm": 0.0007884618911536689,
+    "minimum_torque_margin_nm": 0.908038889941976,
+    "maximum_penetration_m": 4.262503350282998e-8
+  },
+  "best": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.03945892178713585,
+    "sampled_feasible": true,
+    "maximum_force_error_n": 0.008866764087409162,
+    "maximum_moment_error_nm": 0.002855756243090757,
+    "minimum_torque_margin_nm": 0.9237374473570634,
+    "maximum_penetration_m": 0.000034165787901496714
+  },
+  "evaluations": 1286,
+  "termination": "iteration_limit"
+}

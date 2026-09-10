@@ -1,0 +1,32 @@
+{
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/train_motion_forecast",
+      "sha256": "8419a7a3593cda682e16c0d5e396d7819352e45fb3729ee24888c3f8f1515771"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_motion_forecast",
+      "sha256": "b2ab0d48601fcca5e7d1890458445b3779d5be28fef2a7602a5926b0672fa0ec"
+    }
+  ],
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/motion_forecast.rs",
+      "sha256": "85885b14873d4987392e2e2aed02d4b2132e605c314902c99df4bcfa7e9ce77f"
+    },
+    {
+      "path": "crates/sim-runtime/examples/train_motion_forecast.rs",
+      "sha256": "d65b3f72462d211d8442c75954a2d0ba438d23441f5f876b48bfb50042483386"
+    },
+    {
+      "path": "crates/sim-runtime/examples/evaluate_motion_forecast.rs",
+      "sha256": "ff286b30fbc884c354c56b6792697c44f99e7858e1671e6a5ae91120bb961691"
+    }
+  ],
+  "input_manifest": {
+    "path": "examples/full-robot/contact-planning/motion-forecast-v2.inputs.json",
+    "sha256": "a2901ff01b813edf5603aa65215901de9d6f4103fb3848b4878c6d8ed37b6e1b"
+  },
+  "base_commit": "2e44554c",
+  "scope": "Same-data comparison with a constant-velocity reference; acceleration remains both input and prediction target."
+}

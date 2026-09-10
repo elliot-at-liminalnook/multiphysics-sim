@@ -1,0 +1,121 @@
+{
+  "source": "runs/contact-planning/xhip-lift-v230.native.json",
+  "policy_replay_source": "runs/contact-planning/xhip-lift-v230.policy-state.json",
+  "inputs": [
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.native.json",
+      "sha256": "9b64ab4be11f51c99ec78ac88391568b5518ec9dbc337e4d3bebbfc678452b94"
+    },
+    {
+      "path": "runs/contact-planning/xhip-lift-v230.policy-state.json",
+      "sha256": "b0d85ec198e5e366077b98fb255655caad2d92cdaa88d8c09e08ab43f15d3267"
+    }
+  ],
+  "results": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_path_m": {
+        "steady_forward": 0.027290332806347264,
+        "steady_reverse": 0.03070996899262599,
+        "other": 0.02376296421716671
+      },
+      "command_phase_bins": [
+        0.008488474479415746,
+        0.006907268858639848,
+        0.012201424741313359,
+        0.009850243589884797,
+        0.0020678083907436262,
+        0.003046601017962041,
+        0.00672891937691653,
+        0.01238693455211088,
+        0.012036227689342979,
+        0.002885895652544378,
+        0.00516346766726577,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_path_m": {
+        "steady_forward": 0.028441436922777088,
+        "steady_reverse": 0.010255407116078127,
+        "other": 0.03312329866526687
+      },
+      "command_phase_bins": [
+        0.013083123122471368,
+        0.004792033053416191,
+        0.00919801873541137,
+        0.0030401529561744226,
+        0.0006278721403380386,
+        0.0009223777528112915,
+        0.004919308807147223,
+        0.004310257883436399,
+        0.002782866364383331,
+        0.005893874529561175,
+        0.0010428014737546322,
+        0.012348248106074839,
+        0,
+        0,
+        0,
+        0.008859207779141832
+      ]
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_path_m": {
+        "steady_forward": 0.018588742971675322,
+        "steady_reverse": 0.03250944348837616,
+        "other": 0.03327636836864771
+      },
+      "command_phase_bins": [
+        0.011747555170824507,
+        0.007202933789613902,
+        0.008932830939500862,
+        0.006253872238195702,
+        0.0008246413277287737,
+        0.00063762902729451,
+        0.0014887653186941433,
+        0.001009991200192769,
+        0.006190574890575163,
+        0.003560299956209984,
+        0.013420644965319722,
+        0,
+        0,
+        0,
+        0,
+        0.023104816004549146
+      ]
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_path_m": {
+        "steady_forward": 0.03461597511191126,
+        "steady_reverse": 0.08273881734352058,
+        "other": 0.024542836739411208
+      },
+      "command_phase_bins": [
+        0.010045169973086106,
+        0.006336390441389917,
+        0.01053920368159816,
+        0.0034944406960244136,
+        0.001092020147370332,
+        0.0024385846831374374,
+        0.0085292015953568,
+        0.015009124883215428,
+        0.008807393748051872,
+        0.010212896653090726,
+        0.03761430263045713,
+        0.027778900062064737,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "scope": "Recorded load-weighted material speed integrated exactly as the existing eight-second screen. Phase bins refer to the controller state held for the physics interval, not an independently observed contact mode; other includes acceleration, braking and settling."
+}

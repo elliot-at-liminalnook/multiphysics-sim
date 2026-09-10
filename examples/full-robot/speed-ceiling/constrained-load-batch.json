@@ -1,0 +1,63 @@
+{
+  "id": "constrained-load",
+  "cases": [
+    {
+      "source": "runs/speed-ceiling/validation/smooth-front10-v150-human-fine",
+      "speed": 0.15,
+      "table_name": "constrained-front150-loads",
+      "name_prefix": "constrained-front150",
+      "scales": [
+        0.5,
+        1
+      ],
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485,
+        "constrained": {
+          "regularization": 0.0001,
+          "maximum_iterations": 20000,
+          "gradient_tolerance_n": 0.000001
+        }
+      }
+    },
+    {
+      "source": "runs/speed-ceiling/validation/smooth-front10-v165-human-fine",
+      "speed": 0.165,
+      "table_name": "constrained-front165-loads",
+      "name_prefix": "constrained-front165",
+      "scales": [
+        0.5,
+        1
+      ],
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485,
+        "constrained": {
+          "regularization": 0.0001,
+          "maximum_iterations": 20000,
+          "gradient_tolerance_n": 0.000001
+        }
+      }
+    },
+    {
+      "source": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-human-fine",
+      "speed": 0.175,
+      "table_name": "constrained-swing175-loads",
+      "name_prefix": "constrained-swing175",
+      "scales": [
+        0.5,
+        1
+      ],
+      "wrench_allocation": {
+        "length_scale_m": 0.35,
+        "friction_coefficient": 0.31724137931034485,
+        "constrained": {
+          "regularization": 0.0001,
+          "maximum_iterations": 20000,
+          "gradient_tolerance_n": 0.000001
+        }
+      }
+    }
+  ],
+  "scope": "Constrained circular friction cones with world +Z normals. Explicit force regularization and numerical force/moment scaling; all sampled static/dynamic optimizers must converge before tables enter simulation. Remaining wrench residual and actual contact feasibility remain separate."
+}

@@ -1,0 +1,53 @@
+{
+  "source": "braked-5ms",
+  "dropout": {
+    "duration_s": 12,
+    "stale_nonzero_command_s": [
+      3,
+      6
+    ],
+    "required_stationary_window_s": [
+      3.8,
+      6
+    ],
+    "resume_reverse_s": [
+      6,
+      9
+    ]
+  },
+  "sustained": {
+    "duration_s": 60,
+    "forward_windows_s": [
+      [
+        1.4,
+        20
+      ],
+      [
+        45,
+        56
+      ]
+    ],
+    "reverse_window_s": [
+      25,
+      40
+    ],
+    "turn_windows_s": [
+      [
+        20,
+        24
+      ],
+      [
+        40,
+        44
+      ]
+    ],
+    "stop_s": 56
+  },
+  "acceptance": {
+    "maximum_loaded_material_motion_ratio": 0.05,
+    "maximum_tilt_rad": 0.1,
+    "maximum_late_stop_drift_m": 0.003,
+    "maximum_dropout_stationary_travel_m": 0.001
+  },
+  "scope": "Prospective retained command and duration checks on unchanged 5 ms development profile. No hardware transport is connected."
+}

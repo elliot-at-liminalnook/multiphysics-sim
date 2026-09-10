@@ -1,0 +1,3811 @@
+{
+  "version": 22,
+  "base_commit": "acd7e46",
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "cad/robocad/capture_geometry.py",
+      "bytes": 12135,
+      "sha256": "25eb72f352dd5918415d9e83a3627820f629d679447a9c5361bb9182d4836954"
+    },
+    {
+      "path": "cad/robocad/kernel/occt.py",
+      "bytes": 55625,
+      "sha256": "8927cd5cba186c7f420715b145f8afdb0f384b75666d0a65d1b7ff4658841c1d"
+    },
+    {
+      "path": "cad/tests/test_capture_geometry.py",
+      "bytes": 5399,
+      "sha256": "fa190244801980f0821772b7c686c32ffed91fcec6b634d4ded1a921cdb5867b"
+    },
+    {
+      "path": "crates/sim-domain-control/examples/contact_slip.rs",
+      "bytes": 1534,
+      "sha256": "8876c59982c22c8fd66eaa275b6a8941256230f6e5776eed7259de86dc70b490"
+    },
+    {
+      "path": "crates/sim-domain-control/src/contact_slip.rs",
+      "bytes": 10262,
+      "sha256": "7fd9ddecffe04c081dbeb863c82d7803f124b6e4ab653576fa9fdf7f8705728e"
+    },
+    {
+      "path": "crates/sim-domain-control/src/elements.rs",
+      "bytes": 6532,
+      "sha256": "cb5af59a5522e7b0cae38941c5f322658cba2d85be7bc738ae5a7d4651535ce0"
+    },
+    {
+      "path": "crates/sim-domain-control/src/lib.rs",
+      "bytes": 380,
+      "sha256": "80116313eacb3c45c276cd4ee44d6cc3d275d98077f117861abf309d40fbf702"
+    },
+    {
+      "path": "crates/sim-domain-control/src/periodic_drift.rs",
+      "bytes": 5648,
+      "sha256": "941071f790ab5819a2bad963036ea87df6e893f00e3f948a03dab377ae8f9ffe"
+    },
+    {
+      "path": "crates/sim-domain-control/src/trajectory.rs",
+      "bytes": 23624,
+      "sha256": "e63f71f67145682719dbf289497dcd3ec15ad7d0eb6e823eb9a5998a3d1767a1"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/effective_servo.rs",
+      "bytes": 8382,
+      "sha256": "12042cd60eff567139a9823d07869ec6f91010cbf6c5ec81b32cc0d220ab24eb"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_capture_geometry.rs",
+      "bytes": 2380,
+      "sha256": "4da4378870b1651c609ffadf267828a4921c222ea77ac77257fe2d2f2d71a649"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_derivatives.rs",
+      "bytes": 4182,
+      "sha256": "6491e11bc7728acc8c24aa0670c3615905f433d6ae0a76b20fb9eeff775b1531"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 3957,
+      "sha256": "ba6d708c03545c223e30dbc848fcaf4e6f19979c97e1a95553df5f714cae64f4"
+    },
+    {
+      "path": "crates/sim-runtime/examples/benchmark_contact_implicit.rs",
+      "bytes": 2765,
+      "sha256": "b778f1e69a2af753bb9d9e9c0f765828b036cadac1615d255a6da47819fefcbd"
+    },
+    {
+      "path": "crates/sim-runtime/examples/compile_contact_implicit.rs",
+      "bytes": 4667,
+      "sha256": "1c11e9ab36775eaf65f8b6d52edaee48a71c62e0c846bfaebd9176e8afd69b81"
+    },
+    {
+      "path": "crates/sim-runtime/examples/inspect_floor_contact.rs",
+      "bytes": 1030,
+      "sha256": "c31eb3184424d70823a0f6bd2774ccc3531eae4dffecf4d71a4900338be94f9f"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_equalities.rs",
+      "bytes": 2350,
+      "sha256": "d03edf1c7f80d4e8328a1498fdc702424b60bfd2e497bf7f83c7d3444677bff8"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_implicit.rs",
+      "bytes": 4316,
+      "sha256": "91d965593ae9ec02a33a24219b82f2e8dfa67249b41a4a85990e5f82c526e484"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_inequalities.rs",
+      "bytes": 2721,
+      "sha256": "3ff223c0304acecf5175991ee6a163274a6dd6ecbd966bf1d8ea378500683a2c"
+    },
+    {
+      "path": "crates/sim-runtime/examples/refine_contact_periodic.rs",
+      "bytes": 1646,
+      "sha256": "7723dbdc34c8319a80787937580dc60cd00f30afec94a450692c6979df1e8b92"
+    },
+    {
+      "path": "crates/sim-runtime/examples/restore_contact_feasibility.rs",
+      "bytes": 2922,
+      "sha256": "eadeffb8928bb4a98ccb3c7e24794f38e34b3e2ff11b51e4c70610278731468e"
+    },
+    {
+      "path": "crates/sim-runtime/examples/sample_capture_seed.rs",
+      "bytes": 5442,
+      "sha256": "01c41334ca01c976217988e1342957fa321aadcbfdab19f3105fc811e106af2a"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_audit.rs",
+      "bytes": 25303,
+      "sha256": "0bbfc34b575e3386465ae109cc51607f6c1b232f8f65eae3d5a8435c783b4786"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 60011,
+      "sha256": "6593d8200df55b564d7dbe8808f15796df54da4487fd85bba6e04174d38838ca"
+    },
+    {
+      "path": "crates/sim-runtime/src/tracking.rs",
+      "bytes": 16935,
+      "sha256": "ede436ece6de376b3f721ad4501c4a149188b4157e9241eb2b3426e31b50994a"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 49959,
+      "sha256": "e6310f359c6e8cc173d66718b9a642bf8d3ef396243a090e8181ea7a66b273b6"
+    },
+    {
+      "path": "crates/sim-solve/Cargo.toml",
+      "bytes": 477,
+      "sha256": "205e625b8521d6c766fad99ba80e7856b679ef766addc9002a19b076f1fd080f"
+    },
+    {
+      "path": "crates/sim-solve/src/derivative_audit.rs",
+      "bytes": 5767,
+      "sha256": "d5667f7096d85a4d6b1d2a24ec7a2917f46bffb927012d5517f3de756aa8bafe"
+    },
+    {
+      "path": "crates/sim-solve/src/equality_dogleg.rs",
+      "bytes": 30150,
+      "sha256": "0b29a68ef8401fc3e0ef557a26886ee41e1bde75fb78b865eacfca29a9263988"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_augmented_lagrangian.rs",
+      "bytes": 18097,
+      "sha256": "899eb7acf8a5ecff813ed67392472a9b240c971d3a3e49d4f042e3d839070679"
+    },
+    {
+      "path": "crates/sim-solve/src/inequality_barrier.rs",
+      "bytes": 2779,
+      "sha256": "3a7612ead0a1133aeaccd37f056127cfb0f7612fc6f7bade12b955c47ad5d1db"
+    },
+    {
+      "path": "crates/sim-solve/src/least_squares.rs",
+      "bytes": 20070,
+      "sha256": "bee77d4fcce86e2afbf9c9fed1efeb9a1bae333948076042ade54b8be120db50"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47237,
+      "sha256": "2b9c7009ca093276bc4d8002c887869807e826e14d0262aa79a02fb24765ef44"
+    },
+    {
+      "path": "examples/full-robot/audit_captured_geometry.py",
+      "bytes": 1273,
+      "sha256": "a89bcc91a3e7fd988078a410ed20b4305971049182fc2978c88c8cf79c28a4be"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/BASIS_RESTORATION.md",
+      "bytes": 5512,
+      "sha256": "385172735438f38d8ac714bbd3a45cf0e4977f164fc7ddb91ba120f03aeb14f6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/CONTINUOUS_MEAN_SLIP.md",
+      "bytes": 9063,
+      "sha256": "d61d22372c0c7a2196f906d5bda55ba69a3df0bf0ff2a17ebe4c390334b001e1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/COUPLED_SLIP.md",
+      "bytes": 6408,
+      "sha256": "4a19655a5dc820cfe7693d40299f7db5307456b1f7f7eda45fde21ab365f62fd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/DERIVATIVE_RECOVERY.md",
+      "bytes": 7432,
+      "sha256": "12ea59bdfcc83c5ea0d95dda8fe9f9b05c0f614215588709486477b655937542"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/EQUALITY_CONSTRAINTS.md",
+      "bytes": 6112,
+      "sha256": "6f765251df37e5ea908739fe0052841baa0e45b5e8033efd852e20578f7f2953"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/FEASIBILITY_RESTORATION.md",
+      "bytes": 6964,
+      "sha256": "11baa91fc8490e9e53e71981c8faf452113cdb8ef24ee7a9c5740965db167b5e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/FINE_GRID.md",
+      "bytes": 5554,
+      "sha256": "2e3d5c659d7ede565cee878295396b0610c426f2a4332a335c1abcbb2e646c5f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/INEQUALITY_SLIP.md",
+      "bytes": 7009,
+      "sha256": "26f43acbce4455eee78058fd7e7148557cdc387ffcdfd7351bacbf41dbb2d9fe"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/INNER_BUDGET_AND_RECORDED_SEED.md",
+      "bytes": 7535,
+      "sha256": "1077e28cd4c8ffd7fc28634358cfea172f118c68bcedee69cd34da09b379a2c1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/KKT_REFINEMENT.md",
+      "bytes": 5319,
+      "sha256": "91d955b733229355b23a32991299e4f09d82af01e657c5e69ea3a0caf733663f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/LOADED_SLIP_CONSTRAINT.md",
+      "bytes": 6940,
+      "sha256": "793c34ba7ccac20f6eaad27e443631bfeb1ca47b3cb6db495a8f4def54b9fda8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/MEAN_BOUND_REFINEMENT.md",
+      "bytes": 8110,
+      "sha256": "607da2afa8ac238a0370f14612a278eaacca52129825e078de3d2b2d12f6e177"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/MEAN_GRID_REFINEMENT.md",
+      "bytes": 4725,
+      "sha256": "6c2730ac58f0fc3b061da682ff054e8408a7e57cb8d0caa148e5d174d69b233e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/PERIODIC_CYCLES.md",
+      "bytes": 7533,
+      "sha256": "d99f0368b43a0f97fafb6ccdcdb533eea22708b02bf7dd4bb4010c90522baaf0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/README.md",
+      "bytes": 11256,
+      "sha256": "a8670e1880950bde7953a419262255051044efe3f6deab88f91bc7471b393105"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/REFINED_PERIODIC.md",
+      "bytes": 5968,
+      "sha256": "7d5593724dae640616e7e02f5c02758372c3f14b052c4b9e43533cd2059411bc"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/RUNTIME_TRACKING.md",
+      "bytes": 7905,
+      "sha256": "b696f9a6172c51bac16fae0207f5c2b93f1d5cabec9fcb0bbf46b7671216baed"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/SAMPLED_SLIP_BOUND.md",
+      "bytes": 3201,
+      "sha256": "a6577fc8e66491d6b1a2a71b628a5279341a559c6efa97dccd0254ba8c79b3f6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/SLIP_BARRIER.md",
+      "bytes": 8420,
+      "sha256": "6ac960821cacb31de405054457dadf6fb7d68b9d62867d5919d58bde25b80a79"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/SLIP_OBJECTIVE.md",
+      "bytes": 6704,
+      "sha256": "3a8a5463044161344235b331ed968c32e0bfd07f2def7303a8626104e748be9b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/SMOOTH_PERIODIC.md",
+      "bytes": 5340,
+      "sha256": "d6264bde99f883757c54f29c7ed2656c533a0d7a010a3f0565809a85aea1d7ec"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/SURFACE_RESULTS.md",
+      "bytes": 6969,
+      "sha256": "a80adf7e97288f032b9d152f4d37e9f3bdcf3f609031714b2e3892b80b479e7f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/TARGETED_COLLOCATION.md",
+      "bytes": 5207,
+      "sha256": "0715e0f963e9d443d2f1230131bc482e6d7f133d12cd461514ae8e3d55cbfbd8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/WARM_CONTINUATION.md",
+      "bytes": 7509,
+      "sha256": "4652975fa7280faa7edb525278d2bebb1a7c60e71070f1bf1468c51fb3bc68b9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/adaptive-finegrid-comparison.json",
+      "bytes": 1501,
+      "sha256": "9a829b5b9c9eb3f49a632e9f529e99d2accbd32247a6fc56c0ca3b533a6126b5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/adaptive-finegrid-ff32.trial.json",
+      "bytes": 2223,
+      "sha256": "b26e6c6e3955bf9611dc326f88e511ebe95f7e5557617a4616443faf19d4cffa"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/adaptive-finegrid-ff64.trial.json",
+      "bytes": 2224,
+      "sha256": "68b1fd49bae8e1b57ead4936330c84472e86081f2ec318c7d22e95a1e6273f5f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/adaptive-finegrid-runtime.analysis.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/adaptive-finegrid-runtime.summary.json",
+      "bytes": 3788,
+      "sha256": "c08c8a2e898521ebc7287d6ddb866e6b489f2fa37dabd2a780e3306abb82d4a4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/analyze_runtime_trials.mjs",
+      "bytes": 6696,
+      "sha256": "8cf4889b28622f0901b97829e3f7d30e9d364349bf28363988a9697286d8132c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-build-identities.json",
+      "bytes": 2444,
+      "sha256": "86b2d98e5027bd453f1476fd75ca8f83d7b5aef9710019c4cd8d3dcb053b281d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-build.log",
+      "bytes": 581,
+      "sha256": "70dd38e49f182273657deab8c2141787c6bc9a19857115d06a5d028d81826d28"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-input-failure-jacobi.log",
+      "bytes": 146,
+      "sha256": "e3ecbfb50d02b50a667a020e79350f1e58bcaafa29441d532665105c18934195"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-input-failure-jacobi.result.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-input-failure-parent.audit.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-input-failure.json",
+      "bytes": 327,
+      "sha256": "c2fb17dec3fb7f6a08ea1bb55fb976a78a3cc3422db0b7875ba7fe263ac33369"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-jacobi-dense.audit.json",
+      "bytes": 14082230,
+      "sha256": "1d2630bd552d838b73d9f0c851878b871752fe036492d4ced310103a4f412a9c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-jacobi-dense.recipe.json",
+      "bytes": 694388,
+      "sha256": "ccc5c02202571bfebb9d6324c8da9f10077209276c2ee94e0d5fdba81525b1a7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-jacobi.audit.json",
+      "bytes": 3530574,
+      "sha256": "43324288db07bf688f356264b92e82bd21ef632d971bc040915cc1dae7878551"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-jacobi.log",
+      "bytes": 38037,
+      "sha256": "23c44ac84debca611e6d845aa508a8728779d737728c942c71587d8826b00bba"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-jacobi.recipe.json",
+      "bytes": 694387,
+      "sha256": "0261b66eb527137261b2e2dc9dc5f8b35f9e9322f6ab55654100889ac6c07270"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-jacobi.result.json",
+      "bytes": 2902047,
+      "sha256": "f6e2367664b266e458e21ea01b8dddae31c58d097b1b1e2870b25477ae8e597b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-parent.audit.json",
+      "bytes": 3530303,
+      "sha256": "e7945f8ed14ba5826cdfe2a6643514eec653539d71a685cf74abedaf232ed62f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-planner-tests.log",
+      "bytes": 2178,
+      "sha256": "5c3a243b6051340391179c7f96dd584e36d40572019f58b699500ebfbadabe55"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-solver-tests.log",
+      "bytes": 3110,
+      "sha256": "10dc6e8a925eb86af8cf9b396d16d0c5f294f73ab15042a29115752652e4b57e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-summary.json",
+      "bytes": 12190,
+      "sha256": "334f63a43ad2a283a88bce019bd7cb0ea0eecdef36ef62328fe5b5f71de5f420"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-threshold-down.audit.json",
+      "bytes": 2332416,
+      "sha256": "ec2d91bcda542af97a683f42990d828725c9949c514f16bf79980f4fa4f70d66"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-threshold-down.positions.json",
+      "bytes": 17077,
+      "sha256": "bd1ef414c2981f53fac34024ba49332c193e6162859a05728894f61c4459e6b8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-threshold-up.audit.json",
+      "bytes": 2332692,
+      "sha256": "66b54630522cc376d1b466cd1c4d669f617b871903468514074d7ed5dbd90165"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/barrier68-threshold-up.positions.json",
+      "bytes": 17075,
+      "sha256": "73ddf3b52b97b718141111e5e2efc47cb4d8697de3eb785fc5a3097c4a2eeaad"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/cache-halfgrid.benchmark.json",
+      "bytes": 390,
+      "sha256": "7521ea58e7996d5baf5c0cd49586db601da8f86c78fa19020a356ebf2098c0c2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/cache-halfgrid.benchmark.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/cache-regression.audit.json",
+      "bytes": 368986,
+      "sha256": "f0054409ad95f78942525bf9e07d37602128be972b75896dd36b34d291159d70"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/cache-regression.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/cache-release-build.log",
+      "bytes": 165,
+      "sha256": "bb823ae78213756077107722aaf25e6a30a98b54191f4c3aa0519be317ded1e9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/cache-tests.log",
+      "bytes": 1010,
+      "sha256": "75ff01ed49d48b0ce3c8b7a8721cc0aabef1f2b576000a443b72c278a63edc22"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/component-tests.log",
+      "bytes": 1881,
+      "sha256": "6f0d337b0136afd0091809b6548e72abf772004b5c3ae0112be35978f5c33223"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/controller-runtime-build.log",
+      "bytes": 277,
+      "sha256": "eb51f84bfc80d67bb4d78cfa0d4197f7f34bf38ccd2aee46fd897bcbaffc6e32"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/controller-servo-tests.log",
+      "bytes": 6348,
+      "sha256": "60856056db759630a6d4a65d1e495da769b26ba2ceafe29ae568c419352b0804"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/derivative-recovery-release.log",
+      "bytes": 581,
+      "sha256": "0281fc14d3f7cb8b5b24b3d96c24cf2b440019a148e6023bb1cdf13cf68856b4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/derivative-recovery-runtime-tests.log",
+      "bytes": 1426,
+      "sha256": "bd23683437d1b18f2c5b776e56c2ab9be7529cf0d22d8f740f6256a02b66590c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/derivative-recovery-solve-tests.log",
+      "bytes": 1508,
+      "sha256": "e5dddbcaf64ff9d4fedc32922ae0cb98d7b910f84b10129f6915a8d71f20fc0b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/derivative-recovery.summary.json",
+      "bytes": 1708,
+      "sha256": "799a00cbfd3c679747c49d2c384ed5df9a2479a9d6160a55834d700a125f56af"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/derivative-refinement-build-identities.json",
+      "bytes": 2724,
+      "sha256": "e7099d3dd4831e770ad14976509665ebdf2501cdb1bf09d027f5990e9d3ddfce"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal21-seed.json",
+      "bytes": 5479,
+      "sha256": "439e2845e498f665158ed37d9b0bba00a9cd92220660d91e630c13344234a2ed"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.audit.json",
+      "bytes": 233488,
+      "sha256": "61b0648ab8d13886b648778bc23068d27a72a8bf45a0b79671b0fa4488f2e9ed"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.log",
+      "bytes": 50439,
+      "sha256": "4adeb359e99f7595df05b97ddeebdd0633a9a7edd1476d2a3bb95846fbe71512"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.recipe.json",
+      "bytes": 39973,
+      "sha256": "eb9e38028ad409eb3726fd2143dd011285e116070c8a413ffa873639d20a5cce"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-refinement.result.json",
+      "bytes": 86366,
+      "sha256": "fbad9a4861c8b643bbab7ab8439272097e917b276d7cb98380377f21ac7f27d8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.audit.json",
+      "bytes": 233529,
+      "sha256": "e9ee3acab8ef6aa4b9972e40e5ff8d933d59fafd05dbab2a3f701e822337af62"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.log",
+      "bytes": 50450,
+      "sha256": "64baa5bc3502158e24f9df7ff0cfe8141c788721f10e988b64e8b4c3ccd310ee"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.recipe.json",
+      "bytes": 40308,
+      "sha256": "27a5439e17223976d379b9d51938b8796c1c677495e660495182600d85c01179"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-scaled.result.json",
+      "bytes": 86736,
+      "sha256": "da6f1af70ff1974c2b2a3d0db6094651fcb4a335ca343bac9b840f8ff0766fbf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.log",
+      "bytes": 67137,
+      "sha256": "be4b47fb74b3890a937923197f9433580e8b5acdced3165bd548eaef8b67742c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.recipe.json",
+      "bytes": 39884,
+      "sha256": "59afeeae6a82ca48c43c3ec4f95b499887d159076d99fe859defc7e97c955aec"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.result.json",
+      "bytes": 318318,
+      "sha256": "460bb9917f0bb39a97a89f3370eec5d01eb7f2c946bee3c6098fa503f61ec5e2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-stiffness.timing.json",
+      "bytes": 52,
+      "sha256": "5af96ea2a3e0b0263180c4dae3823226fdb164f519ced60004713e435ae1b5be"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.log",
+      "bytes": 50514,
+      "sha256": "3543549b679607ef57e5e4f8c423b3c9ebf386375fd388b8be2a061c6e5a2640"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.recipe.json",
+      "bytes": 40270,
+      "sha256": "158a9f90f12610ec2936dd75dfc871438786c0708c905141fd876b0a7b3b60da"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25-unscaled-control.result.json",
+      "bytes": 86760,
+      "sha256": "da90c44263f830b10e321c351eccab920d4ef89cebb4cb2f4009bbeb42b60430"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.log",
+      "bytes": 49630,
+      "sha256": "5d752ae8ea07f6e57cfd63ce023e4a2054505bf820e1c6fcf632f652e15386dd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.recipe.json",
+      "bytes": 39405,
+      "sha256": "a5b95d4217485b368d7e4895fdbdbaf136db7414dd8282553115624d5bbc958e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/diagonal25.result.json",
+      "bytes": 240314,
+      "sha256": "f32298919f4db922b5f1d3ebfb09e42e136397e1b5be32588d7c3a88b117d4f2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-build-identities.json",
+      "bytes": 2126,
+      "sha256": "93e5925487b3e61631b9e7ad75eec25da7e05493f970e934f65e205173a876cb"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-build.log",
+      "bytes": 581,
+      "sha256": "6a54f70afc0dd425f2e61f43fb825a388b8d9adcc7e483f4dcbcd5febf10a48f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-contact-tests.log",
+      "bytes": 1918,
+      "sha256": "625160a2bc25d3ac6b5a41a77bc9e7b4fb37808f29fa6d065a1f375dd883c43b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-derivative-summary.json",
+      "bytes": 2220,
+      "sha256": "e635e58d5091e99d31f399973dec531bef8c0c86784a636b1a04da3ef0a8df39"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-dogleg-tests.log",
+      "bytes": 810,
+      "sha256": "bd347ded8ac319550b897f64e301add4770381aa3a7107bd0c48d6bf6c168688"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact-build-identities.json",
+      "bytes": 929,
+      "sha256": "29aa9af53319791b6f1c0e78edf823a5c51d31c9781f39f903a509e91b0649fd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact-build.log",
+      "bytes": 581,
+      "sha256": "37bf1c08a0628b2d0949ecaf71d336a7dffd07ac85746df6e3848241ac92e748"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact-contact-tests.log",
+      "bytes": 1918,
+      "sha256": "7aba3d05348934c5603db5d58421e6a507d413d7344134259107743c8d68ed29"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact-dense.audit.json",
+      "bytes": 9285095,
+      "sha256": "7bf81e354b002abc5ddc2e4338ecbd527360214e9be211bc3686f0c1cfb46ec7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact-dense.recipe.json",
+      "bytes": 91593,
+      "sha256": "e6fd9774169ae64ddf42d6d17138ef89c7e9eedc73b585f44fb62f7b3725434c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact-tests.log",
+      "bytes": 2112,
+      "sha256": "87ffcc63a318e47b4e8e41e14503bf1c2750f692e7f464859e6e81e99a8c087f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact.audit.json",
+      "bytes": 1603940,
+      "sha256": "3976d7128dcdee58e6ed1b1ad7c357dd8a7c311bcbad2d865d6d844315b4eb98"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact.log",
+      "bytes": 15020,
+      "sha256": "1e65459afc9ff0de9c7814e45fe8ac5dd6b31cd5128bf3adc0d0f0f8787c5657"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact.recipe.json",
+      "bytes": 92827,
+      "sha256": "f1360b9d4a8efe77894da9ffbe51682341bc7cae75b494e384a8487a91e66c00"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-exact.result.json",
+      "bytes": 1263856,
+      "sha256": "849c5e8f0a17aeb76a4f9456bdc7e09da3a4e27ddf39730231c4bf7824d4707a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-initial-derivatives.json",
+      "bytes": 1137990,
+      "sha256": "91f52771c44abd1da8839e4d700eeeeee71415d6e1606879bb2887ba8208de7a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-initial-derivatives.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-initial.audit.json",
+      "bytes": 1604085,
+      "sha256": "77c7970c2d50fb1bb8576a02213b5c100c54d946a9e3174d3faa65f9281620b4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-build-identities.json",
+      "bytes": 1350,
+      "sha256": "5f32affba8a8491f725447f6e100a0ac4a4453b6b90ebdb45f3f878e4438eb18"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-build.log",
+      "bytes": 581,
+      "sha256": "5854c5835bf8bd1c335334984ddd3b83f615c059c4f496830a645dc94922bc14"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-contact-tests.log",
+      "bytes": 1918,
+      "sha256": "bcd8e0c1be164e17b0731d66bc5703fb73b2756c1ba54cdb78d179449d99438f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-control.log",
+      "bytes": 4980,
+      "sha256": "224e49eed0a59d073eb6c86d9f2274ff85823f0f9ad3c2597db3abf4dd885e20"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-control.result.json",
+      "bytes": 1258592,
+      "sha256": "f21af6002d40b29dd1d38278619adcf345725f748f1cc0d740c20b1507df2d19"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-dense.audit.json",
+      "bytes": 9284154,
+      "sha256": "5b11389c1f59fbe395a5e82f8d4a7950da06ae821e69182a46a90da40886d965"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-dense.recipe.json",
+      "bytes": 91972,
+      "sha256": "94770f0bccf0f64a514725db837f157156f5a78edf1eab61985186b7b69a7816"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-original-dense.audit.json",
+      "bytes": 9283944,
+      "sha256": "158caa7c2ba4914f9492388d15c38f9d8a4a60550de5e0fc89460e75b5b36fc5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-original-dense.recipe.json",
+      "bytes": 91821,
+      "sha256": "96809cc22a648eb4feb5c6cc3a19b158557032fa6b6b488ff095f8fcda9aaf6e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-original.audit.json",
+      "bytes": 1603644,
+      "sha256": "8fdd9734b03c1ab63db38c07a8a327613740c38eac2110570ab18adc1f8e6b45"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-original.log",
+      "bytes": 18732,
+      "sha256": "e832effd23163e73bfaf4b10a2ec5d1b7d3e246fd5f65857055e804569d609d8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-original.recipe.json",
+      "bytes": 93007,
+      "sha256": "634557465596a79af0a04d221cea06df6a4c68a62b749d7509e2ee15eccb0ba6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-original.result.json",
+      "bytes": 1273179,
+      "sha256": "7ad033234d0c78d517f56a7fe10d4d8bf8c11c6193a6b4abf6b2c0b01b458707"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-summary.json",
+      "bytes": 6937,
+      "sha256": "fa4f00d553b3fb3bd8ee08a7e871239a41d2bdb8051aca82fbb52e1ef251f838"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined-tests.log",
+      "bytes": 2201,
+      "sha256": "b332347072adb3fe9d0a93b68046aea4505c514eeb999484e3686d27b353a821"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined.audit.json",
+      "bytes": 1603825,
+      "sha256": "b753b524bd10fe66b0bf624dc3fd14225e96d45172ac8add68bcf9adb00bf250"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined.log",
+      "bytes": 4980,
+      "sha256": "224e49eed0a59d073eb6c86d9f2274ff85823f0f9ad3c2597db3abf4dd885e20"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined.recipe.json",
+      "bytes": 93158,
+      "sha256": "64ac355da501a8bb36b011282a011dc5dc850ff40f37332528ea681db3a470b1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-refined.result.json",
+      "bytes": 1260462,
+      "sha256": "b74b329a89841ebf7b08364b78ef92e5a38ac147274c6a63491106f1cdb11b48"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-solve-tests.log",
+      "bytes": 1906,
+      "sha256": "c1c9c481cdcac9eb8893112fd9efb25cde2784e8d03f71aa79db92f597f75789"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-summary.json",
+      "bytes": 6204,
+      "sha256": "1138fb79baeb693fc9ab7478dbc08d0412c9a330225cbb14dd69efc2cf8bede4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened-build-identities.json",
+      "bytes": 927,
+      "sha256": "a2d95118b6e986a4f25acccaffeae185206d307920bcce2698ab3536e5df182e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened-build.log",
+      "bytes": 581,
+      "sha256": "dd60a92184670332f2201edd8341d043347e3ea32977a6996cde5f26d1acdc69"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened-dense.audit.json",
+      "bytes": 9282116,
+      "sha256": "48c170dc4c4a4832949cdfbc3f6ad4b2f226870655861df6030785e4e0a5e2da"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened-dense.recipe.json",
+      "bytes": 91258,
+      "sha256": "8782b5bf3a4ff5c9ee1b927de359afb4331ab363c327b8ae0c2c3ca882613497"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened-tests.log",
+      "bytes": 2008,
+      "sha256": "7f4e9dc2c1832f9bc07f07f08a56b9fb433bb3fac166bb1970e3014629921b30"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened.audit.json",
+      "bytes": 1602971,
+      "sha256": "8e3aa5747832e0ea363cbb81d81816251e4c783e39cc09d375b091411590fbe5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened.log",
+      "bytes": 18106,
+      "sha256": "5d8a5898e91f9717e447460e67667ea4fc280245833bd096f58bb251e521ba2f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened.recipe.json",
+      "bytes": 92460,
+      "sha256": "944b5505b9fd2b70a05afbd10e5fd1e7d4ed99de483e3b177502f319a139082c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32-whitened.result.json",
+      "bytes": 1263850,
+      "sha256": "e570e850e37750078bace09267dd5ec28e5fa49e2bea77689a2c23c8aaeec514"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32.audit.json",
+      "bytes": 1604085,
+      "sha256": "77c7970c2d50fb1bb8576a02213b5c100c54d946a9e3174d3faa65f9281620b4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32.initial.json",
+      "bytes": 12223,
+      "sha256": "049aa9154882c31be0778d23d62a83cc315249ba475253e6329ff87b9f1bf040"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32.log",
+      "bytes": 531,
+      "sha256": "61bf917a3fe71302bdbceb40a32489056afe352c1d7996d8c708b142ab7899e7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32.recipe.json",
+      "bytes": 92223,
+      "sha256": "6de986015186fdc14f7e8b48260b46b3f75149b0b258f803ee6d5b28f119ab2f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/equality32.result.json",
+      "bytes": 1255194,
+      "sha256": "3c24ee8a3f8fc3b0d81e022daba40872ff5a9ffad47b34558ea4dd03e4a44e35"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/finegrid-build-identities.json",
+      "bytes": 1957,
+      "sha256": "cfb1ad3bcacc9e20b45aadf416e26b560b35a77a4d35f0e8db5227e63ff9d3e4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/finite-plan.rhai",
+      "bytes": 573,
+      "sha256": "fc5c30e2482b96ef371799a5788a95f9b4ea4475f59cf9a08808c4595635ddb6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-build-identities.json",
+      "bytes": 1779,
+      "sha256": "d8ee708e9de808e7358d3b575eb83c9e525f59f7535d2b1443f66dc9cd21e3a8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-build.log",
+      "bytes": 581,
+      "sha256": "3848f45c0973016e16c1877f4b48617a0a78cb94eedcb71acbba95c1f8e1cf2e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-dense.audit.json",
+      "bytes": 14048777,
+      "sha256": "355de1e12cf48f5f3eb7ba81541cf7870b557992072c07cb32bc76946c920fb2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-dense.recipe.json",
+      "bytes": 94817,
+      "sha256": "ff63496f717194b45d6d075dc53c681329b48c77546d29bb8cb7b01fc332fe29"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-initial.audit.json",
+      "bytes": 3763125,
+      "sha256": "f042ab3951098c4d5ed1409d0cae35cfc1fcc92bab87332b6712595478491e91"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-inner30-dense.audit.json",
+      "bytes": 14047731,
+      "sha256": "d55dbef724de56c37778c1e7c675a0945c1cf503ee770d83bb18b3c6783e170e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-inner30-dense.recipe.json",
+      "bytes": 94689,
+      "sha256": "06b4926765da4bb4eee800be40974d73a366c24ab690046378357f304130ed9d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-inner30.audit.json",
+      "bytes": 3762434,
+      "sha256": "f3c1909e713864eb573ac21a840464479b572f1d04c67ebb9a6beca959146aad"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-inner30.log",
+      "bytes": 56031,
+      "sha256": "280cc51fda8db39f48694e78cf971b62f08378d4ac112ca23cb2b232817ae642"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-inner30.recipe.json",
+      "bytes": 97143,
+      "sha256": "5bd3f2ae23bee06932ab9dba0ec9255b9b87f109bd0181a3d47fcbc106cacb3f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-inner30.result.json",
+      "bytes": 2900587,
+      "sha256": "d70317de2a68ccf11c495e638ffc4b0f05856f026ab5f447d4e7ab20c558d3d1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-runtime-tests.log",
+      "bytes": 2178,
+      "sha256": "7a72e5cc9135467f684a604d6cbdbf58d8f54fd95c310727150c899a3e055e99"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-solver-tests.log",
+      "bytes": 1504,
+      "sha256": "93bb8041ad643eb8df4e06db0cdf0de5af15dbaaa826bc4d483a6c6885a8e738"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32-summary.json",
+      "bytes": 3360,
+      "sha256": "de239c424be09d7d9b87628aa0f742c4d238be7b1cb95d59e72a3f28f602af7e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32.audit.json",
+      "bytes": 3762740,
+      "sha256": "048a7a5b05377f48b3cadcfb44a5554036222a9a1073ad16271800c21e32968c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32.log",
+      "bytes": 18651,
+      "sha256": "25a51ffa3a442d803ad02d8d878a24e46ce1733c666979ac17c02e1c163222a3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32.recipe.json",
+      "bytes": 97271,
+      "sha256": "f6f0067827f35880092cdd0093db0f09a8f8e8dfcfb3732bdb06fb8985a434c8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inequality32.result.json",
+      "bytes": 2887600,
+      "sha256": "b47096d1829fe52052438ef400a804ee7be5b885d203229548483583b3be7f7b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/inner-budget-and-seed-summary.json",
+      "bytes": 8409,
+      "sha256": "9d751ae69102f99c72fa95a92af9b9adb4c2848354faf1a1a508d69a6e63d7b8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-grid-build-identities.json",
+      "bytes": 3829,
+      "sha256": "b4e953c7360bf16e03a8456ee67b0cf353fd7b10580681a6a8caabe8b94dde61"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-grid-initial-dense.audit.json",
+      "bytes": 28153768,
+      "sha256": "4f14999333c920aff548d06e88248144e76cf29f8427e645845abade4bdd2a85"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-grid-parent-inspection.audit.json",
+      "bytes": 3915257,
+      "sha256": "7c3d4558ad2994421206b9a2269d12568100c144ee18bec93ea693e65c00cecf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-grid-summary.json",
+      "bytes": 11970,
+      "sha256": "130b0583c4d77dd177668efc1e7b3a593dce588cfaae842b584b6a04af635124"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-grid256-inspection.audit.json",
+      "bytes": 7732603,
+      "sha256": "1ee6026a34f362ed7386cd1ad4ef080b637ce296d3c0527f59b89348315c02a3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-refinement-audit-build.log",
+      "bytes": 164,
+      "sha256": "6505041a403dfb5dec85389e5074dec512d0ecb8dad3ff05de465b8f20c6b4a2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-refinement-build-identities.json",
+      "bytes": 3864,
+      "sha256": "8ddf0f99076ba91c679c52df8d75f5870dba011e30389bbae8fa360698afdd6d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-refinement-cli-validation.json",
+      "bytes": 1026,
+      "sha256": "0f293f541507b378b3af0620c80d7e5f213c44f7b1d0276f1d20e10bb9c6285f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-refinement-control-identities.json",
+      "bytes": 3062,
+      "sha256": "efeeeca41f23b30e0f470b5fe44bd2be2d693ae4703e6064af2cfd8fa10dc821"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-refinement-parent-inspection.audit.json",
+      "bytes": 3873550,
+      "sha256": "a9f08715c7d8cd1cb59e0a86df6ea031b46fbf9414c147b7444e5d34fe20c123"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-refinement-parent.audit.json",
+      "bytes": 3530483,
+      "sha256": "e87689fb777899c5baedb195161048bac9d9d6c9d5f890e03e4256a55540f0c0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-refinement-refiner-build.log",
+      "bytes": 164,
+      "sha256": "7cb14c0b98ee7d544de454b09d2ba3ab408110d1596de236ea4505bbd605dd0c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean-refinement-summary.json",
+      "bytes": 11083,
+      "sha256": "bd9be6d998a8d74c4a06bd94f36e71973231402a84f61ff4333c09ebcb532d04"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean32-inner60-dense.audit.json",
+      "bytes": 14082497,
+      "sha256": "22171d29ca0b56a9acf6a0297faa01003b1235f9cbde709030946941e4a8dc20"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean32-inner60-dense.recipe.json",
+      "bytes": 694594,
+      "sha256": "d1a89225ebd5ef04611bf8aea4a18e3e6fe8372351f9aabedc2eb2d2e367af2e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean32-inner60.audit.json",
+      "bytes": 3531144,
+      "sha256": "8b56751ff9a0204e36b593923430a89ae3d8602130d9c6b46917f39163ce17ec"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean32-inner60.log",
+      "bytes": 36153,
+      "sha256": "3c6ec06e5f7aa3b5afe884ab28fe3cc2509f154f00b35c4830bf0b3cc59e7033"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean32-inner60.recipe.json",
+      "bytes": 694593,
+      "sha256": "15cb916a15b7218d15554ec65f93d9bb02df363b803b31efca29b23189f8aed4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean32-inner60.result.json",
+      "bytes": 2822368,
+      "sha256": "4793c3eb921e5eede7f059181d6f1e88e799171385dc9c9312fdb0e144cd11bc"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid128-dense.audit.json",
+      "bytes": 28153366,
+      "sha256": "946c653c5e66c5ad7af17fa5958e04c466613a6aac207d66f34417c2c416f661"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid128-dense.recipe.json",
+      "bytes": 792973,
+      "sha256": "4aacb131fe0ed702d5c55ef894d34b8ba5b2854b2b21971b949974b3cc1337c7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid128.audit.json",
+      "bytes": 3530603,
+      "sha256": "5abfa310aa5c11206f3995d5891974e2de54ef36c6f43721046a8f4fbd9cd705"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid128.log",
+      "bytes": 73163,
+      "sha256": "4f83ccd7d4c31e8844c32e8fa333d1c04c91fcd62ef1485bd1b7cab8e8bacb2c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid128.recipe.json",
+      "bytes": 792972,
+      "sha256": "562a5099113d147c9634d050459ad868d4a7174cdf08d16ad39ae8ab4f38d72c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid128.result.json",
+      "bytes": 2983656,
+      "sha256": "970dc44852f2c86059776b6380873e9fdfdd9a02d85777d94b9b255b452edd67"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid256-dense.audit.json",
+      "bytes": 28153392,
+      "sha256": "da3048f58553aa5250ce26c541300c7e3a6eb7556b8080d235585620f2f05966"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid256-dense.recipe.json",
+      "bytes": 1394575,
+      "sha256": "265b3db9f0f585839a4cd472466b495015a61c1d3471135825a155bf23c94c3e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid256-inspection.recipe.json",
+      "bytes": 177179,
+      "sha256": "0851034b0946d2ea2c02eecbee9f614a014fe2ae05f7b59cc7323d1b827c2182"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid256.audit.json",
+      "bytes": 7046795,
+      "sha256": "3ba5bd881356c373d9d3cdeb854aba930e50e4bbf30c6bfae75f9da11d574b45"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid256.log",
+      "bytes": 73226,
+      "sha256": "2e95666e756af03b2f5254eef8649496387573c32aae4983e4e281a0c6084849"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid256.recipe.json",
+      "bytes": 1394574,
+      "sha256": "a687c0c4c4aee19aaf061036b579201d873a8675e8d9e8c7a6ca98b0592c93f5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-grid256.result.json",
+      "bytes": 5784495,
+      "sha256": "e1d2c5a7d1eb795340d47f1cef4014031ea22c79420e43ce3e8c7785600b19eb"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-initial-dense.audit.json",
+      "bytes": 14080535,
+      "sha256": "84480487ef19179d92a6f0a75bca2968f87de2b4af387b674c1e0ba289d7bd54"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inner60-dense.audit.json",
+      "bytes": 14081190,
+      "sha256": "4e70793ad99cecdb61a457f6e08e4c824f30f0a322ce43a73a7cb1d12ba8f3b5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inner60-dense.recipe.json",
+      "bytes": 795171,
+      "sha256": "8fd6cc53cc357f7e1c4a952b750aaae3fe11df2c07de2c481848ec4704dcf994"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inner60.audit.json",
+      "bytes": 3530488,
+      "sha256": "5b057f422c9ea5e08cab2077944ab0c9c86a2fb2bb31159b0ba1fefcc79460c2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inner60.log",
+      "bytes": 73095,
+      "sha256": "4ab2a26ef199f105c472d51f8a7305d7a1fbc747787dc4b4db2f10a4b4890829"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inner60.recipe.json",
+      "bytes": 795171,
+      "sha256": "db0241300aef2a83ee09f77763fdd0d2d07ea680b57f4c53db8c907389131e9a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inner60.result.json",
+      "bytes": 2892261,
+      "sha256": "e34262af9c92cc31cf0f62a44807c017ad15a9d43494f274ecc3ec6dc5a7fa7f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inspection.audit.json",
+      "bytes": 3914894,
+      "sha256": "6112bac8e73f1906ada89f910766b9e7aab3818da832582b2fbe5633452c1c04"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inspection.initial.json",
+      "bytes": 33315,
+      "sha256": "4653f87454ccd866f60965e545c48eb4eed75fb7184e86f4ff6069f1a38f10d5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean64-inspection.recipe.json",
+      "bytes": 178892,
+      "sha256": "6f3b9a272ac1f77e06ce8a6182adbee2fd26aefc7c65d6d9931a17713e2faf89"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-build-identities.json",
+      "bytes": 3066,
+      "sha256": "ffd96d9645b1c6841f1bcba9882fa2e559f6fc87e2ab0ac4286b857e6197cb5e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-build.log",
+      "bytes": 381,
+      "sha256": "e3638231c9ef6cb7f061588e5948e5f469730ffd00cd9d57d6e9f05cf38fbb90"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-component-example-build.log",
+      "bytes": 169,
+      "sha256": "12f18eafee9015b8138edcdb125a86048d563fd9199f6a0167e8b7e95bfe0520"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-component-example.json",
+      "bytes": 534,
+      "sha256": "fd8718832e9e021ec68a902b203d876b3b0d5f41c1203556af214d0426cecbc8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-continuation-summary.json",
+      "bytes": 10954,
+      "sha256": "ab67275354122e7b3ecd8496eee18a1c0a9e6020c7f8f2e111b5a861c5ea9ef4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-control-tests.log",
+      "bytes": 7513,
+      "sha256": "e11b06ce42d4178d1d064020e3e338b184b449bd5d944ede45bfd0b89cd0f26d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-initial.audit.json",
+      "bytes": 3527724,
+      "sha256": "d5447021bdf9d5f1953d63b782f1e2abd229e2d805281ce0a7fecdb58e6fded5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-parent.audit.json",
+      "bytes": 3530303,
+      "sha256": "e7945f8ed14ba5826cdfe2a6643514eec653539d71a685cf74abedaf232ed62f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-planner-tests.log",
+      "bytes": 1862,
+      "sha256": "17fefcf2c6689f224b01247987af11bd95661416963dfd6a0404773666d2f0c3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-restore-dense.audit.json",
+      "bytes": 14081772,
+      "sha256": "5d377e293040f6c62d5eae4e22af2270f0554849063e6f04e6bb0e75d68399c6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-restore-dense.recipe.json",
+      "bytes": 94319,
+      "sha256": "4450de98df25ee69c39e3cb12aedca0ebb3ea3cb62683b91ecfbff54f8749d22"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-restore.audit.json",
+      "bytes": 3529862,
+      "sha256": "2d3a58a9b08082a24db741dbd392716a753235d7af47644ab533d1242a0be698"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-restore.log",
+      "bytes": 17920,
+      "sha256": "26849abb1abe817e159ddbac93ec217ce6f13b846758aa2669462c73bd37f44e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-restore.recipe.json",
+      "bytes": 94318,
+      "sha256": "fcc3c23a1346d6a1f0f74a7bbf97ed8940708391348504dd6c1964a50597bd96"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-restore.result.json",
+      "bytes": 2816674,
+      "sha256": "6f36b9836d8cb8d9e9c78283affa73ee893052ae985ae5b1a595f2cce007adc1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-summary.json",
+      "bytes": 6952,
+      "sha256": "e35f1d612681b44c2ba840e8f43611e19708304641bb7fd25fa1ab7d8e151eaf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-threshold-down.audit.json",
+      "bytes": 2332633,
+      "sha256": "a46b68259fe778c665d4c81ec918f367c5f40c5678de26895565c82ccd17c069"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-threshold-up.audit.json",
+      "bytes": 2332909,
+      "sha256": "42d8b8fc736a865f244aded660170f3efeaf3967d0477bc5cf8f31d77f8c3263"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm-dense.audit.json",
+      "bytes": 14080884,
+      "sha256": "2396062cff170499cb08c9680705bad883cc09413c41537a564df83bde064c53"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm-dense.recipe.json",
+      "bytes": 694394,
+      "sha256": "26ff58070898016f768943736ef6dc4588bd0882a3c4abe66970e24707f0c2aa"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm-jacobi-dense.audit.json",
+      "bytes": 14082670,
+      "sha256": "0deef7b9d8f1cff44514ab252c725baf65b2f907673793bae27606863cd720b2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm-jacobi-dense.recipe.json",
+      "bytes": 693955,
+      "sha256": "61b9e3618fa358c154f2bac5e80b0252eb78d59d23e1bfe32d3a734b603dd7cd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm-jacobi.audit.json",
+      "bytes": 3530707,
+      "sha256": "2336ec1dbb2f3a3a132d2192cb6c78a3b0b8a4a8fe4c5a7a1c8feb7d84171f36"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm-jacobi.log",
+      "bytes": 36118,
+      "sha256": "f152f7b447a270b4456fa86cf79c346e155af3396d19f28f565622185f649c64"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm-jacobi.recipe.json",
+      "bytes": 693954,
+      "sha256": "f7884b1ac9ad49102e0582c0533bc676a76c1f11a59505248f89927bf735c37b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm-jacobi.result.json",
+      "bytes": 2901913,
+      "sha256": "e704914c2376bb0fe2a6683ab7ae82a9043630688fd2c7e2becbae75def6d2ab"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm.audit.json",
+      "bytes": 3530483,
+      "sha256": "e87689fb777899c5baedb195161048bac9d9d6c9d5f890e03e4256a55540f0c0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm.log",
+      "bytes": 36145,
+      "sha256": "f9a42e21ef0b2e2564d62f7c6fa6b4479a97e399e5cde63656803b42d64d9ca6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm.recipe.json",
+      "bytes": 694393,
+      "sha256": "f221ead5a3683b63c7f023427f654a193a49e3adfc8bce177b4a1e31ae3696b4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/mean68-warm.result.json",
+      "bytes": 2901754,
+      "sha256": "542b279d7b6fa862d674a896e711018c39b54d946d479e00f04799a6cb6d502c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/pair-audit-sources/crates__sim-runtime__examples__audit_contact_implicit.rs.txt",
+      "bytes": 2721,
+      "sha256": "44a0f8ec49db9f4e57d047202b64b0a66cff76eb63757c8bb8c8ed437c63112e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/pair-audit-sources/crates__sim-runtime__src__contact_implicit.rs.txt",
+      "bytes": 51304,
+      "sha256": "a16ffcf4c25ba54c48e90759700bde71833975094cd8d55d31f627de4d60ca54"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/pair-audit-sources/crates__sim-runtime__tests__contact_implicit.rs.txt",
+      "bytes": 41129,
+      "sha256": "8710980ec816d6a07bbf24bf57e404732cf6910f20a90bb4eda062c00db2bc61"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-at-rest-rejection.log",
+      "bytes": 134,
+      "sha256": "17659706fc379f9f49be23c43f6b1dfda67689a0b6a3cf0ffea3331f1e24e388"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-build-identities.json",
+      "bytes": 1859,
+      "sha256": "a971393c8a81553a19cda7cc3458bf71dd5046c0f58f2bb1e75fd52daf44dd37"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-motion-variation.json",
+      "bytes": 2853,
+      "sha256": "5e27eb2c606a071047015d4561ab53129f104e0501fac351663c85e0b1a68459"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed-refinement.audit.json",
+      "bytes": 732697,
+      "sha256": "d8bf2386426f766159841d3553f27a5b79f645956e3d1b484b38e9e8edfb98d2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed-refinement.log",
+      "bytes": 432784,
+      "sha256": "a6e8e35084d177d7ff85281c077b2f2806e578cf485bfec2040965ec2d8cb272"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed-refinement.recipe.json",
+      "bytes": 70588,
+      "sha256": "aa332c014f9c97d51bdc4d46eaff7271f3ec4f8198887a23f6fe9b8e9ab945b9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed-refinement.result.json",
+      "bytes": 484831,
+      "sha256": "284e5527a10295689b49925172cb33a465d8adc53e645e192a9298930cc23518"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed-refinement.summary.json",
+      "bytes": 14531,
+      "sha256": "ce75d324eb3280bde6e6b50cf57df3bc57982ad82c162842d119dc991115f6b9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.audit.json",
+      "bytes": 732691,
+      "sha256": "9c4fd8aa99081f0669af2aa5d0ed221618f937e0e759c09960ac842f5079770f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.initial-audit.json",
+      "bytes": 729673,
+      "sha256": "56ee8a52c04b0da042afd1501e9d1f5f034f103c140fea69fccc21f9c2ea1039"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.initial-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.initial.json",
+      "bytes": 9286,
+      "sha256": "03b9d155efe0fdcc34b33b5f3ae85c1d4e6e977a4ee271d148691b87ba06719b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.log",
+      "bytes": 680363,
+      "sha256": "2bfadf74deca1dba69bf7c293f9a74330d456c31bc44966f2d9f9e134772e467"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.recipe.json",
+      "bytes": 70289,
+      "sha256": "62274cd0efb17b29334622ce4cbb784d3deca37728dc59eabc01cc1ba0733a37"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.result.json",
+      "bytes": 2374124,
+      "sha256": "f54103d47e6dd010e427691365314ab2ecda2178a7bb7ba158521fee3c0d2dcf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-perturbed.summary.json",
+      "bytes": 56218,
+      "sha256": "a90b918b57b5926b4e998401fb940ed5482f81ae09487a40e0a85c227b6de126"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-release-build.log",
+      "bytes": 165,
+      "sha256": "2d510df541dccb1724d6bea38261d0f5517cc96654d72b988800e8687778d0c3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-startup-regression.audit.json",
+      "bytes": 733097,
+      "sha256": "fe4a62098d9a186e727572aabf51a3d71a4cad29b82d616616ad989dc8d17299"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-startup-regression.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-tests.log",
+      "bytes": 1170,
+      "sha256": "da9862b679c12dd7a68d023d8133483720d2d0b81faded9bcb712f68e05ce50f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-trials.summary.json",
+      "bytes": 10330,
+      "sha256": "e0c69267cc4a30fea8037b46b249a3e80226716718f4c847f2ad788635163ed3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.audit.json",
+      "bytes": 733647,
+      "sha256": "fe09e7aabb7826d3ea4c1f14cb1945b81771d8669b49855b85689adafd75118a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.initial-audit.json",
+      "bytes": 671390,
+      "sha256": "0b1dc560d7c1bffe24b2bf88da02ec2aadb7879f50e6e73bd97556918eb95990"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.initial-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.initial.json",
+      "bytes": 9237,
+      "sha256": "015c2f5801c9f2dcaf212a684c0b0752772bdc6fd11b1d50c442f8fa171c625a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.log",
+      "bytes": 678918,
+      "sha256": "5ec18d50e9b589a5acd02016e5d251d9548d4055f84e9e10417957dac2a624f1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.recipe.json",
+      "bytes": 70016,
+      "sha256": "5f0ee43d2d67aa7bf96e5e7b59ecd3cfd85938b7cfb6949d3c6c7d5777fc9b3f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.result.json",
+      "bytes": 2378110,
+      "sha256": "c53796c7a4c622080000b2585e05ed10f665204fd380b7917c06e33fe6d21927"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/periodic-uniform.summary.json",
+      "bytes": 56081,
+      "sha256": "fc345f13de02dd82b15cc713fc53a17ee619f6d172259f9d29c2212046e6d438"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_continuous_slip_trial.mjs",
+      "bytes": 1698,
+      "sha256": "c8df2e1d7d8e725c568af4e7a61ee2747ec5fbb4b2f5cfcd6459dfdd6e059904"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_finegrid_trial.mjs",
+      "bytes": 2902,
+      "sha256": "0d863efb8f22035bbfc14ab7caba78d6d79a7f5c6485e22ef7293e7213a13e9d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_inequality_continuation.mjs",
+      "bytes": 4023,
+      "sha256": "e868797912bbc96ce533288225b808af931cf3170e1fd1abe25eeedf77665b91"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_inequality_grid_checkpoint.mjs",
+      "bytes": 5353,
+      "sha256": "23b2cf904f89b92882f8fb8edcb0d77074b55ee51f078b743464fb8f8e474b8b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_loaded_slip_trial.mjs",
+      "bytes": 2542,
+      "sha256": "f2fbed3961bf3360d66f2d8408d8a01c458d860eb0b76f17af730850792ca604"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_periodic_trials.mjs",
+      "bytes": 4325,
+      "sha256": "40fdeb37feef20cf2cda9271efa70e8d78e5ee87cc85ab27f36347b5688731ec"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_planned_cad_probe.mjs",
+      "bytes": 2016,
+      "sha256": "dcc672c0dc62a0188080e87f9d94a1114275111719c8f20971e49a916a41ff2e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_recorded_periodic_trial.mjs",
+      "bytes": 2875,
+      "sha256": "6c228de8e891d04b056b7c35533416f3b8edd7ed6206979925ae94079c027cba"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_refined_inequality_checkpoint.mjs",
+      "bytes": 4909,
+      "sha256": "375b5cabbc00742717e024ee1b87046b0bf15b05caefc504a04cbcc623500d14"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_refined_periodic_trial.mjs",
+      "bytes": 5802,
+      "sha256": "57bc878f8399ed4748da541d037998e1dce498dead8dc985011723e48bad089b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_resolved_contact_trials.mjs",
+      "bytes": 3123,
+      "sha256": "759ccdfb49c65a4bc1d7dd5f5d0c78680566e9117d5670cba2b58f85228977ab"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_robot_trial.mjs",
+      "bytes": 4093,
+      "sha256": "797319e24bbf2ab233fde4d7d40aa7eb8e0e2cd76bf276e6d46ece0298a5e3d7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_runtime_trial.mjs",
+      "bytes": 4335,
+      "sha256": "a3276332d83f565c74de0aa970c59c57dda871df43bea21ab44fe50d1693a8ac"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_slip_barrier_trial.mjs",
+      "bytes": 1972,
+      "sha256": "966ee29eafecc275f57c955459d7bac906715680cf2798e1cad37166bb0b1517"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_smooth_periodic_trials.mjs",
+      "bytes": 1961,
+      "sha256": "c80e2a3e93fe711e08b7f57da912128dd52ec574f411e991c08da69972b42f16"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_surface_trial.mjs",
+      "bytes": 4295,
+      "sha256": "3498434bed10365c3d54d3cdf5c1d9b3dea200eddc7f356cc7168a289347ee77"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/prepare_targeted_collocation.mjs",
+      "bytes": 4316,
+      "sha256": "d2e78cfdc4b81ad49da0e2c593e52c80cf6e5796fd375e9d19a8539301712fc9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-centered-sampling.recipe.json",
+      "bytes": 97193,
+      "sha256": "a380ea6c768d9c8cd26f8dcd159903a4a32ed4553dc8df453f6468f5f46777c2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-dense.audit.json",
+      "bytes": 14069722,
+      "sha256": "67fb3bed33b91400f8400c7ca1fb9bbf22b01a30ee48de5ba62d82fb785fae95"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-dense.recipe.json",
+      "bytes": 108536,
+      "sha256": "9f4b791de40fd27c6dc07bff9be6b4da46e70b5ef89980847c8c76cbbe6e4938"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-restore-dense.audit.json",
+      "bytes": 14081180,
+      "sha256": "33b24d414d8f8d4d27a85cd3885dc8185bdf2226570462a5fd93ee8ee915c4c0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-restore-dense.recipe.json",
+      "bytes": 108661,
+      "sha256": "3a58e34495f764a3689d87dd891d115e9b8a6ab18bf80c3ebe14f5110d841095"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-restore.audit.json",
+      "bytes": 3530303,
+      "sha256": "e7945f8ed14ba5826cdfe2a6643514eec653539d71a685cf74abedaf232ed62f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-restore.log",
+      "bytes": 17974,
+      "sha256": "47c7fd97a68ce92b3afe164f248519b9e005c5ac4918be5cab9a40efd5a7b68d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-restore.recipe.json",
+      "bytes": 108660,
+      "sha256": "e4612dcb12f72d06975a0925aba3f3d6e1c43dae8c44adcc690100e9978dbe7e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-restore.result.json",
+      "bytes": 2445969,
+      "sha256": "167e2056b161a8db0656e1c614a25af02beb802221701933d32a4c9a74d51db8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-sampler-build.log",
+      "bytes": 164,
+      "sha256": "f4c2d8891aba35f4b38522608a06aee71968286788d620f1623f1cd9be9e80be"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-sampler-identities.json",
+      "bytes": 1003,
+      "sha256": "3baa9bff6ec0105c51ff812d8d43e926e41c1a539554b40bac4a1aac5df42af1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-sampling.recipe.json",
+      "bytes": 96689,
+      "sha256": "4f558d5bead5acb5cf925958d062659ac5d4969a7e8263841f8788f3a6bde32f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-stale-sampler.empty-output.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-stale-sampler.failure.json",
+      "bytes": 367,
+      "sha256": "c909bf43c05473bc45eec507d48e4914378a72fd5dd8991bfe40be8dd5e4f3e3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68-unprepared-dense.empty-output.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68.audit.json",
+      "bytes": 3768382,
+      "sha256": "3ddccb9456c735a39db9a3f9fcfdcd57b8ad2d9e9d9ab0d6c2326cfbcc3673e8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68.initial.json",
+      "bytes": 17763,
+      "sha256": "901cca462d465981ed56d467777de1752b79bc3e9d5c875d177f21968ca20a46"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68.raw.initial.json",
+      "bytes": 13140,
+      "sha256": "7c118fac0e0aa6f6852862a1ea8b23c532fa818d463e535c5684a025041677d2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/recorded68.recipe.json",
+      "bytes": 110949,
+      "sha256": "516b1d4951375fa3063734c39ab1d1585bfd29c66f83c758ccb60d5005276909"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/rejected-surface25.compile.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/rejected-surface25.compile.log",
+      "bytes": 94,
+      "sha256": "adff2fe625ed040d82e655efc53ba2065c9db00b2e0bf69c374782f1f8888fbc"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/release-build.log",
+      "bytes": 581,
+      "sha256": "5e9f357a9f3a69ae4e4ee84a56b086595a16708d9543c81baca1776db4064423"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-control.audit.json",
+      "bytes": 353188,
+      "sha256": "9844c7a8982cea6c8faabe895dc5694a9e8b03c8275f83a7813672b5f0a27a44"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-control.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-control.compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-control.compiled.json",
+      "bytes": 364239,
+      "sha256": "e20a10d42d62efed917cd6065ff6dbbe34d90c8c9756b02309b346413433f297"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-control.log",
+      "bytes": 103250,
+      "sha256": "a9284b684fd491efffdb019bfb29e4039bfb0f6c617ff235c9b5a1c0d4713e5d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-control.recipe.json",
+      "bytes": 40597,
+      "sha256": "a6078ebad1518bf4f165c9c1c3f87a131cd12dd36efa00313ba6cf1beeefe3f3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-control.result.json",
+      "bytes": 214990,
+      "sha256": "e163339b466f3ea60e97ad57f45b4e91edee512f9449586e92184f42a71bc2c5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-control.summary.json",
+      "bytes": 5372,
+      "sha256": "b34190b62c1e631082b94e23ee08559b9d5ef4314bda426e268900eb29688d20"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-work.audit.json",
+      "bytes": 368986,
+      "sha256": "f0054409ad95f78942525bf9e07d37602128be972b75896dd36b34d291159d70"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-work.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-work.compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-work.compiled.json",
+      "bytes": 380051,
+      "sha256": "600cd23e68424cfff751e0ab96364dab0397fae483d6dacc48784fdbc31af601"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-work.log",
+      "bytes": 215410,
+      "sha256": "d979b035ab86645c486a901dfa00676b124a0968de20e5929bfc90342d9da88c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-work.recipe.json",
+      "bytes": 41027,
+      "sha256": "b29038a4a9e2e7d700824a6eea85ec89bc6e839fd4d484284152780e8b63a02a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-work.result.json",
+      "bytes": 254308,
+      "sha256": "ae0d223bccc603b4eeca8b7a98a3c1476f6daeb2d6556dee544e8e2e3939dfcd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-contact-work.summary.json",
+      "bytes": 5370,
+      "sha256": "34753b6a24d6dbfa590ed70df9613e06e49a21ab1ae8f9ab29463a20956b34d0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-control-ff128.trial.json",
+      "bytes": 2176,
+      "sha256": "c91eb843a5af48b85f7d53ce76b229956123e7247bcbb50e3786b66b80e418ca"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-control-ff64.trial.json",
+      "bytes": 2170,
+      "sha256": "24e307fb777573f5d0873a5ca5933e6a774724e7c6591408099724f0dce5bcc1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-control-runtime.analysis.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-control-runtime.summary.json",
+      "bytes": 3786,
+      "sha256": "330c1e95ba4e059c1b25a3a182ec58d971d12a996ad1c6b3ebd99f53fac0cdb4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-floor-contact.json",
+      "bytes": 1048,
+      "sha256": "b2ed152a6f41691ad7be446e8fe6277a12f64beed382a4a1a9096c45b8495c0f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-profile-build.log",
+      "bytes": 165,
+      "sha256": "f19f2ab00ac242c8fa00446c943d551b1ebc02d3cd1eaef73177151bab6fa7f0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-ff128.trial.json",
+      "bytes": 2158,
+      "sha256": "4b59f99c4ae9626bd98fdd1d7873205eaea975ddb413d2a6e23c6b92ffd34947"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-ff64.trial.json",
+      "bytes": 2152,
+      "sha256": "91b96feac4e88551e129d9a571edeeb3ee664d2d6453c586b68104888fa15f7d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-adaptive.audit.json",
+      "bytes": 733097,
+      "sha256": "fe4a62098d9a186e727572aabf51a3d71a4cad29b82d616616ad989dc8d17299"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-adaptive.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-adaptive.compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-adaptive.compiled.json",
+      "bytes": 753702,
+      "sha256": "09e86c75aed75bd5244d91087aecd3c146c0670f7b9db2fbb1506224d022b467"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-adaptive.log",
+      "bytes": 436067,
+      "sha256": "994110488219e9fe18e9f59ecbd88017a8f2bb3336956d92357b1d180f58f7a5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-adaptive.recipe.json",
+      "bytes": 69985,
+      "sha256": "dda10783199a22059dd5eaedbc9bd58f67dfa1d09aa248766211577874be125f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-adaptive.result.json",
+      "bytes": 484169,
+      "sha256": "fc900666c628fe761478d802c0de1546a0048d8f3cb71184663c887e9538a11c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-adaptive.summary.json",
+      "bytes": 7166,
+      "sha256": "62ee3895d93c9f2c7c1e698d353878d66336016554a94a9877370e8eeb4c318e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-derivative.audit.json",
+      "bytes": 732851,
+      "sha256": "2546c3ff56297f589c11b88137c7d84a666e51964384fad6e9e25314fa04ca5c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-derivative.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-derivative.log",
+      "bytes": 99909,
+      "sha256": "07d45b4dcb63a219a578e9199b969f334b4a4bf7d0efb346efc2bea634d0217e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-derivative.recipe.json",
+      "bytes": 70601,
+      "sha256": "9c06eacc5289e0aade65bb569b9296defd4bec6639aa71393d4d7561b6a0a565"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-derivative.result.json",
+      "bytes": 470914,
+      "sha256": "564199bcfaa152fa26b626e480792e0a7de80318b406244b2d290e319531cf97"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-derivative.summary.json",
+      "bytes": 7176,
+      "sha256": "ab2bd4f1bdf9c1a8b4f71eb0dd327a3caf6644da9b54d144c46a54bb00dc2837"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-refinement.audit.json",
+      "bytes": 733039,
+      "sha256": "9f4f27c25033c95e87d468870d2293b572e73a518cf73e37092a3a858f8c79f1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-refinement.log",
+      "bytes": 431136,
+      "sha256": "04bc9ef0658834423f6c57500985ed41f85c6fb956d52a8378a41c666d50ac9d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-refinement.recipe.json",
+      "bytes": 70023,
+      "sha256": "129f9029411314e27b97d96d44b868aead7ad367317b9e074efec53ace587805"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-refinement.result.json",
+      "bytes": 481848,
+      "sha256": "d52548865c999f17dc92b6201142d84fb39e8897568b4b0d84d5afd62c76f855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-refinement.summary.json",
+      "bytes": 7166,
+      "sha256": "99ff57cb229935051266b5803f089b8aa980d6eb38a88144a3c56a25174c4e84"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-torque.audit.json",
+      "bytes": 732856,
+      "sha256": "5122b6902d4cf1d147894d6e2e6f6633c466d3b521b9bc5df82d344aa3fc7d51"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-torque.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-torque.log",
+      "bytes": 17173,
+      "sha256": "95281e38054df4640154bfb7f913310202a264eb8eabeb2604927f779ee1a3cc"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-torque.recipe.json",
+      "bytes": 70112,
+      "sha256": "92c486ed3bd3f0d488c0d456d6ab238bbfe4626ec4fec2db033eff24a80c15a5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-torque.result.json",
+      "bytes": 467612,
+      "sha256": "fbd3b7db4f1e6fc3454c3e267bc9d42b0c90121c64b53b5a7dff6d6658c823c8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid-torque.summary.json",
+      "bytes": 7175,
+      "sha256": "1fcc72de3be3e75ce330c9422081deb5a939946382956cc8c9ee598730b7e5a1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid.audit.json",
+      "bytes": 733049,
+      "sha256": "6cd30bee65bef066f96bbdb4bb1f1bebd861eb7da75d75915e87ce41fdb7b08f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid.log",
+      "bytes": 427505,
+      "sha256": "94ee70a4f08842e138a581b7bb97359e3b1697154dbed16c82b8084345f84c2d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid.recipe.json",
+      "bytes": 69643,
+      "sha256": "7619d32992bd3ae98335e65ca105c1e4027a26d8f4c253cc60f51e00aa4e8129"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid.result.json",
+      "bytes": 481604,
+      "sha256": "a4aa456091e201c1d587b2063fe4caee8883a13cb3f65eb193502ef2717f97a1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-finegrid.summary.json",
+      "bytes": 7152,
+      "sha256": "1995e95ff5052ae144feb3a9e0dce0990148fe2cf09a534dfb419670e060c19a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-halfgrid.audit.json",
+      "bytes": 731230,
+      "sha256": "17f6079dbf9509a223e5a4f59c8cc7490148e0530e27fb21deed60ea722761c7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-halfgrid.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-halfgrid.positions.json",
+      "bytes": 9236,
+      "sha256": "efa09fb4ec0bfff97cfbadd31c3f37ee2d758462023990f9fd1189455dfd6858"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-halfgrid.recipe.json",
+      "bytes": 18887,
+      "sha256": "35e54de6b277a3b66a00e30b23601433ba3d248446c130421c2130da40e1ed57"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-runtime.analysis.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/resolved-work-runtime.summary.json",
+      "bytes": 3775,
+      "sha256": "a334e9ac28c84e84d0b621644e8cc8cded446edbd37b291a846f85667dcd9f0c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore-basis-build-identities.json",
+      "bytes": 1869,
+      "sha256": "ecd5c4c2293d63c77d1cac6b8e8413edfb277c4bc68325fc7596ebc8d287b5dc"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore-basis-build.log",
+      "bytes": 164,
+      "sha256": "6505041a403dfb5dec85389e5074dec512d0ecb8dad3ff05de465b8f20c6b4a2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore-basis-summary.json",
+      "bytes": 7948,
+      "sha256": "864daf26baf909b5a60b7cb05cb802dde12b6c4d0b08ac0ee02ba55aae22a658"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-build-identities.json",
+      "bytes": 1298,
+      "sha256": "321b649dc743bfa9703b447691c4eced7bcedb5e365a14d72a535e4b04eb663b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-build.log",
+      "bytes": 165,
+      "sha256": "213f3b7e3859e2bcb7eab3c2f3e6119a60af372cb36b852a4e466ae4f482c686"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-contact-tests.log",
+      "bytes": 1589,
+      "sha256": "1d749165cf7c0354a9ad9e6fe6b39a0187cdf9a192940bfbcf9dda89d68002f3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-continued-dense.audit.json",
+      "bytes": 9281277,
+      "sha256": "e787e4e6fab9534fd206689f7451e34614bdabc114bce9a9acc0b3e7c6caaef9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-continued-dense.recipe.json",
+      "bytes": 89722,
+      "sha256": "8c9d142c3b92a88ccd7a3f4926fb06ceb00986ac03ab4876a173ef0a5e014148"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-continued.audit.json",
+      "bytes": 1603578,
+      "sha256": "4cba932d360778cccfa71ee9d2cea57b664bae07fde8ceae3d9f8fe3aa05c528"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-continued.log",
+      "bytes": 18722,
+      "sha256": "66cd98a2b434acf4e3620750d90548d7afb0b446e55b9d5bf94f8cd1dfb6d307"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-continued.recipe.json",
+      "bytes": 91012,
+      "sha256": "d617117645baa86cd9ac439b2b80b76c31546f2ec2f2e00f172704f81860fa5e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-continued.result.json",
+      "bytes": 1302036,
+      "sha256": "a58bfc7a7bc7b100be91502a3de7dbbd152975ed3efaab6ccc06c0551d297755"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-control-build-identity.json",
+      "bytes": 493,
+      "sha256": "f9b403f132663611f3469e289ba9f5d1237b7e5100c4aebf0e258a6907a1a825"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-fixed-dense.audit.json",
+      "bytes": 9283102,
+      "sha256": "082e94a51c5c26cc26da1749d803a0b1ab2ccc7547fe72bf9a8fc82a92761456"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-fixed-dense.recipe.json",
+      "bytes": 91818,
+      "sha256": "e82ea0dc7daf18c37d75e2ddab5b66df07a2c17b4a2d29711d7ad8aa35ac9b21"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-fixed.audit.json",
+      "bytes": 1603910,
+      "sha256": "a70fa25454dabf320174dc2b3da17a4f5d2e97cbd1287124364cb1dd7a6425fd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-fixed.log",
+      "bytes": 18660,
+      "sha256": "9d2d0203a98962a7e396fcaff11f482c0c7cafc82d4583aa6d2b32300f53a90f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-fixed.recipe.json",
+      "bytes": 93032,
+      "sha256": "d97368b1f36d167426faab16c274c7faadbce5661f34c811b6427d6bf40680d7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-fixed.result.json",
+      "bytes": 1304168,
+      "sha256": "1724c715a79207175e6f070ce66b4047eee4408723973f2ba35de55e6f92446a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-full-control-dense.audit.json",
+      "bytes": 9283607,
+      "sha256": "e2eefbc97caf4dcb9a65ae48b3c5e228c607478c6e73ab0dd8a180425ee448d3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-full-control-dense.recipe.json",
+      "bytes": 91788,
+      "sha256": "0b13a8b72ff61c38784c5695a5321d0517238b702013982c54ae33a46f562c54"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-full-control.audit.json",
+      "bytes": 1603704,
+      "sha256": "20e35bd11e9ce37957421bac0f7d7b1fb7e5450ef9b47a9352df167eb02c3e3e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-full-control.log",
+      "bytes": 172986,
+      "sha256": "872fd927ffde4feb8f52bdfd7c7ad786b61381c1b8ba3ac503d07d4b742243c7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-full-control.recipe.json",
+      "bytes": 93078,
+      "sha256": "f305175ade5cc68ae5be297fbbb9c88e0c6e268b584fe50efcfcf1a0f096a5d1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-full-control.result.json",
+      "bytes": 1497294,
+      "sha256": "93a226c18f1f8de1a977cba3ab1bb4f04d977d96781b7b4949acb88c326d5f98"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-remaining-peaks.json",
+      "bytes": 3332,
+      "sha256": "694c5ba617c7310eb72da057eb484fea9819abb5d289b237c97f2e18ad4d5309"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-selector-regression.json",
+      "bytes": 378,
+      "sha256": "efe359c554f6a9ed6d3da01400df23562649f0004c4966cae6233fa3a5b6e49b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-summary.json",
+      "bytes": 7055,
+      "sha256": "c308b6297124bdb05c8776a4c7808d423c7892f7d1e74da75781d5c818a3f41c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted-dense.audit.json",
+      "bytes": 9284415,
+      "sha256": "2b9f89bbb6bf16220017d4d741304f9955bbfe0c1ce62b50484b60fea7c8b152"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted-dense.recipe.json",
+      "bytes": 95372,
+      "sha256": "54c921c56b3684bf1ce45b394f3f10d192fe721cf23f99471edb815ac50b95c6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted-selection.log",
+      "bytes": 421,
+      "sha256": "304a9c2a896e7586f1e67cd21002ee50234158981091971a79af137f442d7a62"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted.audit.json",
+      "bytes": 2083559,
+      "sha256": "c5d9c1c921817ea372c882f524f6c2e5a055b6e49070499ac05ad0cf3ee1cfb4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted.initial.json",
+      "bytes": 16693,
+      "sha256": "51662de1933ce000102ff7a701d410034bd11b3b6aeb3ef4b2857558be267a5e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted.log",
+      "bytes": 18534,
+      "sha256": "a847abedeb0f4e66ecae0ec21598f48c205843ff18b15be3b5917b617aaa7f57"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted.recipe.json",
+      "bytes": 97236,
+      "sha256": "d747becc381a42f091f8364ce4044c9948e1ae11f61c4c4a0b7daa6c67565e86"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted.result.json",
+      "bytes": 1803708,
+      "sha256": "88b4b8d0cf3bffd97cbfb40e6aa15ff8135c653fcd536ab37052ae83ddc3ae23"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted2-dense.audit.json",
+      "bytes": 9284507,
+      "sha256": "069f18e95578b1e1f4602ec933870bbe895fe7d429bf7272f357260fecda89e6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted2-dense.recipe.json",
+      "bytes": 95430,
+      "sha256": "4a4ba88db08e4ae46a93898425144ef0841ee94a765ab7cbb2fc5478658fa60b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted2-selection.log",
+      "bytes": 425,
+      "sha256": "86bd8b9a0bfdb9966695556a95b7d31b2fe057ef5d7ff2d09052164397673206"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted2.audit.json",
+      "bytes": 2563415,
+      "sha256": "129b42614633de98a19f31ee9d23a414c28e5a91a1dd4ffee63bd95e777428a8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted2.initial.json",
+      "bytes": 16699,
+      "sha256": "a71bbc3b4bbabbb1170cb4d42bd5efc82b809a0e1952a80f2b719cc9ff6402de"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted2.log",
+      "bytes": 18587,
+      "sha256": "79bd2aac55de3029690acb590d4995332e8ea2bd3419e52bcf350bf375fe3832"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted2.recipe.json",
+      "bytes": 97884,
+      "sha256": "bf6c899c7905234f4a24c163ffbf2aa4312a4e8250cd86852a5b8619c688bd60"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore32-targeted2.result.json",
+      "bytes": 2301697,
+      "sha256": "d1b74a94cdeaf34c927556187cffda467e8bb086b4d6652c68f2cca3789900a0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-adapter-regression.json",
+      "bytes": 258,
+      "sha256": "bf42af6f610e2bb61f113fd37f11a1bb51132dd5476ae9615850570abf2e0bb5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2-dense.audit.json",
+      "bytes": 9287302,
+      "sha256": "848ca643117649cc73177fdaee19fe5733975e95a440736f5ab22a74727082bc"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2-dense.recipe.json",
+      "bytes": 174751,
+      "sha256": "ca112726e54abeabac01c380136b5ad0f66271e2d74acc80f5307d40e83af609"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2-initial-dense.audit.json",
+      "bytes": 9284900,
+      "sha256": "e8e4f9d8b33b8dc7392a88d56aaf5910d610c9d790c4ebec3457f4355684e825"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2-initial-parity.json",
+      "bytes": 795,
+      "sha256": "067739442e5e1459c9e483e817e8f21c248fd98e98449a255920336a51962396"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2.audit.json",
+      "bytes": 2564959,
+      "sha256": "f4e1c2061c187e662573341a19e27ef96c4dcee5473320ebcedc15c30132d7a0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2.initial.json",
+      "bytes": 33147,
+      "sha256": "676d424b363dda5d74b8fb2599e3108f1b2ceabb187be85f2d50e4b648c1083b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2.log",
+      "bytes": 37482,
+      "sha256": "f8f511d1afdb4834c41646a6f1ebc84d45d8334460eff27de0689ef32c2e9fd6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2.recipe.json",
+      "bytes": 177206,
+      "sha256": "be8c9ad9d55586a6cc96d4df12ccd2b0b8605797b1c3bb49933935b7ac80f235"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/restore64-targeted2.result.json",
+      "bytes": 2348495,
+      "sha256": "584339678476e1baf0142c28345abb4fe962c65405fb33920015d3f9d7c55f66"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-archive-v2.log",
+      "bytes": 204,
+      "sha256": "2fb5ff1d5c8bfd444bf786c7509b56a376d7396f3a409871f32969b05f83c20b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-archive.log",
+      "bytes": 204,
+      "sha256": "248211f607524d85caf60b141b971d40900cd26358b2a65a5343c0bb02f21dd3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-evidence/evidence-v1-index.json",
+      "bytes": 13379,
+      "sha256": "01f584e7958fa96704ab622dc313ebb91130e07a2a0b2dfb2bd72d521cfb6012"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-evidence/evidence-v1.part-00",
+      "bytes": 16760641,
+      "sha256": "a1bea8d0c9fcf4e86f614b86472bf50c419419a8be2ba970261f737c4ac8775f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-evidence/evidence-v2-index.json",
+      "bytes": 18635,
+      "sha256": "4f7a71759b8d642f32cc03234d2c9d3b284efaaf5f8698e0835cce88dcc83f31"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-evidence/evidence-v2.part-00",
+      "bytes": 17524618,
+      "sha256": "383974a0d1f5b818dd5d0d06342d70ca8c63cf8965583247e08bfa103cef8cf6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-evidence/evidence-v3-index.json",
+      "bytes": 19087,
+      "sha256": "f4b52d3153cc89eeda0993ac7452fd9b5fe6155806579ac76fe9b31e4d2ee2c8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-evidence/evidence-v3.part-00",
+      "bytes": 8775665,
+      "sha256": "1bc893d6bcc8342b968943b452fc650dd56b1ef9259844ff625dedcfddc40a30"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-tests.log",
+      "bytes": 1213,
+      "sha256": "3896820f522176c2fa901a39c4dd482dd32a50462765163f692ef17fe1157ec5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-tracking-binaries.json",
+      "bytes": 902,
+      "sha256": "a8910106853c26699dcc2026130a21a52838671396317e6b311298cf0d2c1a26"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-tracking.analysis.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/runtime-tracking.summary.json",
+      "bytes": 5470,
+      "sha256": "4902ead15d3866f5c3105a8f5778c180265c6b9d8e375a6987d36d146a5064aa"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliding-work-tests.log",
+      "bytes": 930,
+      "sha256": "f8d383ba2cc0515a1c290ddb5cc22308db2426d7344bc86fc7f7627d77eab02c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-audit-build-identities.json",
+      "bytes": 945,
+      "sha256": "de8cc25a60cd6eaeeaa73fe9c9a6b67aaf52e07178d7ad3cbea73d6296e0e1e2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-audit-build.log",
+      "bytes": 165,
+      "sha256": "3bfc2e52c040185b8d6aeedab0cfb01259325619684be433c4bcb4fd1f516113"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-both-tests.log",
+      "bytes": 98,
+      "sha256": "fe9d5eb780cafdd057dda319f927868e99d8e8fec909e96a25e7fef214d70167"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-both.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-both.result.json",
+      "bytes": 91225,
+      "sha256": "8a5388b434c2e59e037ec4ee69426bf2c4564afab4fa0dad26eb3f5234cbea3b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-identities.json",
+      "bytes": 1155,
+      "sha256": "d9e0514c89d5c18d6a0c93e5690fd55d79adee5255099effb64cf4baf1e22093"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-probe.input.json",
+      "bytes": 30529,
+      "sha256": "ec492b60145ffbd9d57ceb1d8d3669be1b21d7e4f55c5975aba86c3da9c8479a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-probe.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-probe.result.json",
+      "bytes": 81547,
+      "sha256": "91b71bbce75cc519fbcf158ccd8811ddc208583a275bd00cd952ea5e3689416e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-summary.json",
+      "bytes": 11025,
+      "sha256": "bb6f26b24fe77c0e9cace398d6e10adece1df94c51459ab08e2037fe15e80b2c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-cad-tests.log",
+      "bytes": 98,
+      "sha256": "077cc5aac71a0325a524e17e626c6d00b959a0c9dc16d98cbad9a41cd8be6d88"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-collision-provenance.json",
+      "bytes": 3454,
+      "sha256": "557e7caed663c5f50dbdfae80c522053b8a3638cc1b0535c343d06c5c10eb4eb"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-contact-tests.log",
+      "bytes": 1762,
+      "sha256": "ea6f3e3659423cad1316683919a938a8057a47813d84b9683f5ce10e3db7ff12"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-optimizer-identity.json",
+      "bytes": 500,
+      "sha256": "1c66c341f8aaa3711b8918d695bdad9faef81007fa6657707a60028dff4e3998"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-pair-source-snapshots.json",
+      "bytes": 1111,
+      "sha256": "cc6bf863d27c9902acbcffd78922b1e95afabf1709dec5d3197a840dae4e67e4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-parent-pairs.audit.json",
+      "bytes": 9323013,
+      "sha256": "2274d2f684be6021340022826ba4a4befb15d545ce2c5370041b280ff918e664"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-parent-pairs.summary.json",
+      "bytes": 595,
+      "sha256": "a17422b9213a62f40502fd9530b80af737988f16be9d631705a4dcd06820ab35"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-parent-poses.audit.json",
+      "bytes": 14049849,
+      "sha256": "e0ba515cafc8528770357b2fb25911d45130f74fb16300809ef50eab65cc70e1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-pose-build-identities.json",
+      "bytes": 1026,
+      "sha256": "6f3d4166c4a3662c16fbf7aabf5addf4a74e918ab5540d740d703d301554a715"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-pose-build.log",
+      "bytes": 165,
+      "sha256": "c62f2582f8311154201bea1083633e50aaa9afc4958a4fc3ada5f589478d768b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-pose-parity.json",
+      "bytes": 238,
+      "sha256": "c0a57e7ee6ac8a4329a2267f3edce128658ac3e3457419ea409fb82e36223c76"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-pose-tests.log",
+      "bytes": 1762,
+      "sha256": "77558a315e894d73f1214d086c0b58f15a0b1ed80185f08a62082f0654691d42"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip-coupled-summary.json",
+      "bytes": 10558,
+      "sha256": "27051a8aa933afa716ca094b3732f82de981dd2685dbab5830f7baf915ed6c0d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-build-identities.json",
+      "bytes": 1806,
+      "sha256": "c97342cb351d146656b8c2720f3bd133050b70e74fb2c7a2643cd1f8132710e3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-build.log",
+      "bytes": 381,
+      "sha256": "9984d2947c21011dbe4418bb3c70f20241c2b9ebbc1da2690788576e8c3c5a6a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-component-example-identity.json",
+      "bytes": 526,
+      "sha256": "0d60ae217e7481c5531929978a61e8b2ddf0ee103e387358b647c19b5f86fa41"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-component-example.json",
+      "bytes": 440,
+      "sha256": "7a227f7c27691a0da8192c981a2e5ec065e957fb2cc4a8723e2edd7779afdf7c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-component-example.log",
+      "bytes": 285,
+      "sha256": "b860db9a21588de1e86b029b783db0e1d3cf00f0a6806dd1ad33de22a19136da"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-component-tests.log",
+      "bytes": 720,
+      "sha256": "9879f35e90a1514e196899a9d68ace69ad35fbfa570b725a846af155726681b2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-control-dense.audit.json",
+      "bytes": 9285520,
+      "sha256": "4a9c90f0398fd7d379eb554c06d29b609141d1abaadab6d1faeb255525770b35"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-control-dense.recipe.json",
+      "bytes": 93750,
+      "sha256": "5ee4bbc47a3b8a7ee6b374feafa1413929d0b09952bcc54237004dfb0294fe1e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-control-tests.log",
+      "bytes": 7411,
+      "sha256": "2efc790308f7625065e97c1be18ae8cc3b92027b4cdaf800960d994c8318fa19"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-control.audit.json",
+      "bytes": 2563714,
+      "sha256": "4eb4fe158d2962f80d9b20ec39e4fd1e7e56836fc58274359be7bdb5912eeb4e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-control.log",
+      "bytes": 18521,
+      "sha256": "12df73b6a343cd9685060b1888b8d0463e6c6fe322c42edea92c9e6f50b1d83c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-control.recipe.json",
+      "bytes": 92375,
+      "sha256": "4218aee2246e238077d762d309a83faffabfca990aa5f78be794ea3bd90642f2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-control.result.json",
+      "bytes": 2298363,
+      "sha256": "80d622bf787fb057be109a74c51017ca312fdea6f994884c379544e32ff73d7e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-control-dense.audit.json",
+      "bytes": 9322025,
+      "sha256": "65226aea2d7328f426d92835d00509652906914aa3b4e5f880abaf302925ed58"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-control-dense.recipe.json",
+      "bytes": 93433,
+      "sha256": "9e7b0bb637d585eb382088ac5bf07e0bccc8de6ec49600afc06ee35dd0805d08"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-control.audit.json",
+      "bytes": 2563699,
+      "sha256": "3ff55f83dcc58aa559f34e3d31f93cca786ed68dc32f39c98684db2cb342e93d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-control.log",
+      "bytes": 18575,
+      "sha256": "5762c19f38bbabaf4e1fec4aeb785cab6ec97b658c54fe852eb82a4da487e9d7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-control.recipe.json",
+      "bytes": 95887,
+      "sha256": "72f0cf273c0262e0b8f5e528b1b32b7db88ad7021e6b4544eb8e7aa5dcc68640"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-control.result.json",
+      "bytes": 2301164,
+      "sha256": "f6283671b40140d0fb1d7de9103774ddfa4a723f99737f07bf549ab3636aef7e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-selection.log",
+      "bytes": 425,
+      "sha256": "d3dab167bcde0b181c217dd86c86b14cd56cd0941cd73a7161f323af71608041"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-targeted-dense.audit.json",
+      "bytes": 9321516,
+      "sha256": "de51677ee1e7c252a6e5ceef5df54f2612a5cbc352d7f2efec8425690959b97f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-targeted-dense.recipe.json",
+      "bytes": 99100,
+      "sha256": "5ed9126602203e36190bc330d650bc09d9e385f9b384b509b2c81d0fd9dcea8b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-targeted.audit.json",
+      "bytes": 3043409,
+      "sha256": "3721b84614f1d7625ee8790571b6333bf4b109fe0b2f1a8d5ce244cb75c62888"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-targeted.initial.json",
+      "bytes": 16695,
+      "sha256": "b6c49274cfd5d42f63388f6e1a7b560a5d1ffa0149a80f2e5d287d1014f20a67"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-targeted.log",
+      "bytes": 18650,
+      "sha256": "1a743d05989e735bc80105c2ab369208b0276910724cf88a305a6b893ecd9851"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-targeted.recipe.json",
+      "bytes": 102143,
+      "sha256": "9252579e5e68c1ba52f3349d2383d84508add7e0f38a8a1a909c9ffd1a36d44f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-coupled-targeted.result.json",
+      "bytes": 2802760,
+      "sha256": "8f6aef2d7c4ca9730fc5db0f83c4b42e24a420682b6aec80b8f4969459cc2b4f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-initial-dense.audit.json",
+      "bytes": 9285507,
+      "sha256": "7d2367f1935ccdf267c45c4a531e66692189fb294b90beb3e1f85ee2b6a8340b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-initial-parity.json",
+      "bytes": 307,
+      "sha256": "d3c675925fb841bdce11f2aab9900f4f1ea04761ff6424de973b44ec180342d7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-runtime-tests.log",
+      "bytes": 1978,
+      "sha256": "6bbc62f046605649e657b8935f21261b9511b7ccb3749160164468cd0d2d785a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped-dense.audit.json",
+      "bytes": 9284527,
+      "sha256": "3cbdf71ef7c9dc2ee0114c6955ebaf4a724d069b0d0ba701412a853d13a8cdce"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped-dense.recipe.json",
+      "bytes": 93750,
+      "sha256": "5ee4bbc47a3b8a7ee6b374feafa1413929d0b09952bcc54237004dfb0294fe1e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped.audit.json",
+      "bytes": 2564293,
+      "sha256": "42d62c5e0488e4e49a96432a228160b706b86c4b2b8f203f31e4f73e0964fbd8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped.log",
+      "bytes": 18596,
+      "sha256": "f76356372431dcd53843fe3acbf841b65baa6890de093ed189c449ff1fa27b22"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped.recipe.json",
+      "bytes": 96032,
+      "sha256": "fb531bb0ec721677b5816db4771c52491e0da8dc3dbaa2e3253f807b453367d2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped.result.json",
+      "bytes": 2301937,
+      "sha256": "1b762af9864a408f9ce7426fa60e6ed617cc911eb5167c9072d1d04639a7dbfe"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped02-dense.audit.json",
+      "bytes": 9283431,
+      "sha256": "3f7d796a6a15ec6a33e6c5f5ea53c72e0f4ad8a469829277d8c3d57e2e7e55e2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped02-dense.recipe.json",
+      "bytes": 93567,
+      "sha256": "79acaa36e3578ddf8d148eeaf0f58fee398746f4bc0254844eddc1a985b51312"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped02.audit.json",
+      "bytes": 2564261,
+      "sha256": "5f3dbf81e24efccba7807d3e18ad6b37695db10bba5df43f59a8e8c8fd6ee03e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped02.log",
+      "bytes": 18507,
+      "sha256": "ddd514ade53f5dc69d7b33961b03b1c50d08d91b6dbcac212125e8e596798438"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped02.recipe.json",
+      "bytes": 96021,
+      "sha256": "406319b8411036fb520fc4063ca873a788176e5976f9803406ad8ecbd1c89860"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped02.result.json",
+      "bytes": 2301813,
+      "sha256": "acb32779cadda013deeb79461243679d5fcf8090766c2f2621c5c801ef0594b7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped05-dense.audit.json",
+      "bytes": 9282832,
+      "sha256": "b3f6a3b2415615de259d994dafdf7e8b02c83d36959d0813ae8204cd8e16b4dc"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped05-dense.recipe.json",
+      "bytes": 93567,
+      "sha256": "01536e07bd75e742c8b21bf57582996abfc6ff0f79f704dd06a67a039569709c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped05.audit.json",
+      "bytes": 2563905,
+      "sha256": "e31708db2cd1bd981066034474b86ee88e23af5ed2bf43480e29c341fb895db7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped05.log",
+      "bytes": 18529,
+      "sha256": "c17a52d4e666636e4a989e66c81955aafb23531d7f76f52cbafea30bbedd9258"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped05.recipe.json",
+      "bytes": 96021,
+      "sha256": "bbd7aab0ee26372644cae6d605ab79e62332802a646185d9fc7a5f803366b714"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-shaped05.result.json",
+      "bytes": 2301494,
+      "sha256": "1623ddcf7469d1e56006f7d37645fe055221691fea30a9f9958a31cdb9c269bf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/slip32-summary.json",
+      "bytes": 18018,
+      "sha256": "97b705267a807dd081495669a373aaed3947fc71a3a862df168de76a500df36f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-build-identities.json",
+      "bytes": 1991,
+      "sha256": "d705e8963bdcc720aae9e82f8a5ffe9d6faf62e13301ab99de5525071d45793d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-build.log",
+      "bytes": 165,
+      "sha256": "2c092a8739dbab6c5e64a11e9491cb05eec80152407ebecb78483a2503c9f73b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-jacobi-dense.audit.json",
+      "bytes": 14084912,
+      "sha256": "cf0dab79f4391c5ddb057d299b705865775b19f99ac0ce5e6b6bcf4582b2a7ce"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-jacobi-dense.recipe.json",
+      "bytes": 694415,
+      "sha256": "b7ada364c4618f7ac97733c6b9ac96ba78a447807be94f96e609e45401b9c2b2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-jacobi.audit.json",
+      "bytes": 3531227,
+      "sha256": "9b227e268c74f5a55bb782e40afa871eab3416af91b52e393fca5a5ce6278b2f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-jacobi.log",
+      "bytes": 36107,
+      "sha256": "52f354256e689fb8331a45f97ca78a5ab8f1d43055915b0ae6e6b9266c3b09d8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-jacobi.recipe.json",
+      "bytes": 694414,
+      "sha256": "856b597aac14471d476c130c5da6b103dfcdf197b9363bc6682c90ac587c0b44"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-jacobi.result.json",
+      "bytes": 2901042,
+      "sha256": "fd6f48f948446335018ff683243654a19230134cab2acc7f2223121d7e85b8df"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-parent.audit.json",
+      "bytes": 3530303,
+      "sha256": "e7945f8ed14ba5826cdfe2a6643514eec653539d71a685cf74abedaf232ed62f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-summary.json",
+      "bytes": 4646,
+      "sha256": "dd4bf12d5d4bd0835c35ef3f5c77fb0822016e80935223f8ed28beb091e58bad"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/sliplimit68-tests.log",
+      "bytes": 1762,
+      "sha256": "e33f8c4241b4fe9f6e9d613cc1537c8c1da8e6ba5f49468a3263977c0afa816d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-build-identities.json",
+      "bytes": 1534,
+      "sha256": "74abb7caaeeb5ed24e4d91db385a2120805a7d84470d5076383c449490afc919"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-build.log",
+      "bytes": 381,
+      "sha256": "5c0b788ae457d0f2e877bc7aaac6270b830e015e9676526d4826894d29617dd6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-contact-tests.log",
+      "bytes": 1564,
+      "sha256": "0555600fffb0b6f6dc4ee772d13c8050f84539728b5ea1755d89e6c9b3fd08ea"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-drift-tests.log",
+      "bytes": 650,
+      "sha256": "d85c14ad99ea831a0dc9ebd289fc4cbc813e33c1d05f3b0006ca2598edcb1163"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-insertion-audit.json",
+      "bytes": 1661,
+      "sha256": "f2a561dfe6c5434a8f88ed0d8cab604c41f946d4c0842cc63b885e52381fe894"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded-dense.audit.json",
+      "bytes": 2322198,
+      "sha256": "365f44e76f29781f0f3d1bd8f807614604dd0b79b80588f7674453c291c04c3b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded-dense.recipe.json",
+      "bytes": 49835,
+      "sha256": "3b848e15594caf0ae8c2f4dbc3151cae840d0a903965e477d0fa9469bad9f086"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded-initial.audit.json",
+      "bytes": 883611,
+      "sha256": "f7efc267cd2957e904793adfae3dd51781d79c41a3b8bd74b258e9e496b945e1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded.audit.json",
+      "bytes": 883901,
+      "sha256": "3b647263e4ad35fb0114a922d0e160968cecb354b07122ec02dc4dd3228462b4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded.initial.json",
+      "bytes": 8882,
+      "sha256": "6db12012fa99a0b4b5787a6130017326b14e71222c31518c3274a0b11d41c099"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded.log",
+      "bytes": 174203,
+      "sha256": "8e7578ea1452df72e914f3b82beda45248687251ea6fa916d442adb2b43d48fa"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded.recipe.json",
+      "bytes": 49729,
+      "sha256": "c0d5329dac711964b434b0db06b0360da9d455be50969cfb265b67315a360940"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded.result.json",
+      "bytes": 615417,
+      "sha256": "bb15530c6a2f94b46bd3847ffb65e240bd230d4b3b6b4664820332ef5df69930"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-recorded.summary.json",
+      "bytes": 16470,
+      "sha256": "628c265d8443e8ff4155b00100a579db714edb604e7ee141cd3e3d9b19b96777"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-trials.summary.json",
+      "bytes": 457417,
+      "sha256": "9cc36b797b341e608b4e6bbf2712642cd6216f78bfbbf4535d4d687493e3314e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform-dense.audit.json",
+      "bytes": 2324168,
+      "sha256": "e5d5aaf800bac202b63663d41e72d12d250a29c1560ad013b2a2dc6a60287e9d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform-dense.recipe.json",
+      "bytes": 49839,
+      "sha256": "2b92e0ffb4ea1b13786d882dc8decaa493e9faac2c1e68fe447ed7aa9789675c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform-initial.audit.json",
+      "bytes": 884833,
+      "sha256": "7a248d6b3b989716a9b329a4e5cd800cb7e5bd8f6e8e41fb963f0de615e06739"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform.audit.json",
+      "bytes": 885208,
+      "sha256": "a8750a16fcbe5cf76f399300ced34533ce93eefd47a0a4cd9b1e5ccfdc773746"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform.initial.json",
+      "bytes": 8888,
+      "sha256": "98c91bcd5feb735a2229138203360cf75842f213ad447b3dc5cd2767b59af1ed"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform.log",
+      "bytes": 173751,
+      "sha256": "cfc03ca21a26f99702180c655bff01babe7e4236bc1216d0adaccc532e9cd0e7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform.recipe.json",
+      "bytes": 49733,
+      "sha256": "419170d90977fda3340679e2d1a40af1cfc52d327412d77a3838fbe67e2467b5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform.result.json",
+      "bytes": 616382,
+      "sha256": "b2ef197b9bd5b9093691733d2b4735af43435c1b499c9e6b1666f2a583a88ff6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth16-uniform.summary.json",
+      "bytes": 16350,
+      "sha256": "1526aa244773dec1213efa506f6c8ca7ef8ae26fcadb8c8e2ef1a04ec62a3fd3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-force-peaks.json",
+      "bytes": 10851,
+      "sha256": "e5a37de237ac9b6e4bd8dcc50de8e1a6b4e4231f9e375ae7418c0176d7181921"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-insertion-audit.json",
+      "bytes": 752,
+      "sha256": "704e3f613793e0262e015a8651dc3f1f0ccce0b219a67747498c4f29886266ce"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded-512.audit.json",
+      "bytes": 9284055,
+      "sha256": "629b2d15defe2062030d65d141e3522b312c8edeb7866c7dcbe0cafdff814bc0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded-512.recipe.json",
+      "bytes": 91373,
+      "sha256": "73a6ef931b2433976e8b71c203fedfca0c26d2129a6f23e6059074deaebb98f9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded-dense.audit.json",
+      "bytes": 2322864,
+      "sha256": "6b09c9daeb9e0427cf20bb563fa6baaaa36a3de64b67b2bf8ba05f8ff03b1479"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded-dense.recipe.json",
+      "bytes": 91312,
+      "sha256": "d2ecf842b109142b4cae409b88a33fb7e9f0471e64a1b1f49f468f513ae6c13d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded-initial.audit.json",
+      "bytes": 1363134,
+      "sha256": "d280bff11afdb0aa466de3d84feb196c9e36eff08ac53c157c933c04b6cd4dc6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded.audit.json",
+      "bytes": 1363508,
+      "sha256": "f47ce1be54a2a82f73b99de37ee2d9dde524ad43d01374a43f3829f16c0f5c19"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded.initial.json",
+      "bytes": 16944,
+      "sha256": "c927020df901070b56de3bf0845da2981dea3829e8571eeedb85c78cab2218ad"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded.log",
+      "bytes": 348207,
+      "sha256": "5fbc1f3139ff254edf038b066708577844347f06971254355eb747dec9e08030"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded.recipe.json",
+      "bytes": 91252,
+      "sha256": "5d830aeb0a3e694687da12ce1b0f915eec26469d71db967d14075fb48174946f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded.result.json",
+      "bytes": 1214170,
+      "sha256": "d2e802fa47d97a25dd54a28d0ae167985f2f049fedb534f50278eff1e66800b3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-recorded.summary.json",
+      "bytes": 21532,
+      "sha256": "09cd9d6dd59681f78dcf0f9a65ad270abaa20825c8199f8c203dc07ff3164abf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth32-stiction-transition.json",
+      "bytes": 10712,
+      "sha256": "0445d5c2d99aad3dcc4930b0104d11c542c5dafafd28baf646c719ece09b2f50"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-build-identities.json",
+      "bytes": 2006,
+      "sha256": "19ad7a73071727e2823621464f581698b8dce3e39f7cf7acb62b46eebb0734bf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-contact-tests.log",
+      "bytes": 1347,
+      "sha256": "ef41960db595600a9f89148231a45473e00695ed70c0f07b60a501e0e5543312"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-drift-tests.log",
+      "bytes": 545,
+      "sha256": "9fa28a1c1757df15cb2aa0387d8b811624ca0f931f1039d6011596595b5db77a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-periodic-regression.audit.json",
+      "bytes": 732697,
+      "sha256": "d8bf2386426f766159841d3553f27a5b79f645956e3d1b484b38e9e8edfb98d2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-perturbed-dense.audit.json",
+      "bytes": 2317793,
+      "sha256": "f213d4a473abfc3b437bba5816f7024a4a5f1dbb8852c802e84ebcacc8dde550"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-perturbed-dense.recipe.json",
+      "bytes": 29225,
+      "sha256": "ddd89110d2195fc42da6492521ddd05280776bcea864e447c7b71275414b78f4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-perturbed.audit.json",
+      "bytes": 883216,
+      "sha256": "dc10f13291f9b1abcca5f7110d6c6fead432a1cae88e903e7280c93ef826ef6e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-perturbed.initial.json",
+      "bytes": 4591,
+      "sha256": "621b402a771d2cfda1c391b98b8330d7737141a3e430bc9362022d6c632940e2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-perturbed.log",
+      "bytes": 226221,
+      "sha256": "4a8569826404d8457e70616f367f8c34f143125fed6fa0736e8a9270d965e6c5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-perturbed.recipe.json",
+      "bytes": 29119,
+      "sha256": "9ad2ca53eb30174f11d1cfcde990023612ab390d74bc86d5e1439c5632b481e0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-perturbed.result.json",
+      "bytes": 3040976,
+      "sha256": "65018e9f3c9dc6f7c1c9bb130f6c6d5190bd386861f91fe52ad901f46274a305"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-perturbed.summary.json",
+      "bytes": 63463,
+      "sha256": "c9e68b90ba15ef785838cf230c2590293e43824d6754d4f74267ba0e5aefe78e"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded-dense.audit.json",
+      "bytes": 2321413,
+      "sha256": "8b5948c47183004f4fd16c7c39b70d3e4976ddb80150ff00a8ff7ff65606d339"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded-dense.recipe.json",
+      "bytes": 38983,
+      "sha256": "1e86235e9eec61447b40e2b328aceacfea895b8012e40acff81b439e4fa37f45"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded-gauge-rejection.log",
+      "bytes": 92,
+      "sha256": "9280340dcdacef44c93710458c87bcc88450ca62b1a5696f9f175954fe1ad284"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded-gauge-rejection.recipe.json",
+      "bytes": 38717,
+      "sha256": "e9d2270d2d270734890adbaabdcb49e2054b26f9ad5f0964fb08775c297ab40c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded.audit.json",
+      "bytes": 883686,
+      "sha256": "e51cdd6c37e88cfc8efb63689f18bd931ebe07692877f81541fcc7f46470e022"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded.initial.json",
+      "bytes": 4159,
+      "sha256": "a0a33d0c54d0bd67c65db14d041b24ad894e2db205981d0690bed480dd5b15d9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded.log",
+      "bytes": 226785,
+      "sha256": "5480d6711254b0c6182f57498f5809276f46919808e64fdd5f9428338a4ccb0d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded.recipe.json",
+      "bytes": 38877,
+      "sha256": "d8655c4f6b44f92754fdf2c3106668f634155ce25eef6f6db4a387538e7f2bd3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded.result.json",
+      "bytes": 3055246,
+      "sha256": "82e15aca74730e50e20b8ad2763c17890825317c6fbcd35e5073c0cdf75e85e3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-recorded.summary.json",
+      "bytes": 63644,
+      "sha256": "4599102ecf42f7d2cb3551958f820e0c4a19a73632c7b3094a895070708d183d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-release.log",
+      "bytes": 381,
+      "sha256": "b60952719df141f3dd7008b10f271abad24d2dbcd9b7e3580b2bfd70d601ed0a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-sampler-build.log",
+      "bytes": 164,
+      "sha256": "38be988ff8dcda1589968b4d7e1c78e49bf64ff951693ca146bb634925c416ca"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-startup-regression.audit.json",
+      "bytes": 733097,
+      "sha256": "fe4a62098d9a186e727572aabf51a3d71a4cad29b82d616616ad989dc8d17299"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-trials.summary.json",
+      "bytes": 8804,
+      "sha256": "59d8fb3a1a044996b573c9db5a478513a6ccd5631a259f4a03192156d1ace82a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-uniform-dense.audit.json",
+      "bytes": 2322824,
+      "sha256": "3ba50f06018841c7442ffa1861deb682a8b8d4e294ee825018a361218136d4a6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-uniform-dense.recipe.json",
+      "bytes": 28975,
+      "sha256": "c3d3e37de0b00f01978da4d0d03abc9248b00c6cb0b97a63f704dbd62fb29d05"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-uniform.audit.json",
+      "bytes": 884861,
+      "sha256": "40428f8037d75ebdad18ae5eae9a6e743425463e474cc345a2c9ec3c5fa97017"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-uniform.initial.json",
+      "bytes": 4567,
+      "sha256": "39a20cf2445c94c0418f17f419e4a680a81bb792684140581240e6fc7de450b3"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-uniform.log",
+      "bytes": 226274,
+      "sha256": "490d98777df555a4b6487f57667360521554a779fbf9d3b4acf451666cef0f10"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-uniform.recipe.json",
+      "bytes": 28869,
+      "sha256": "1a5ce5efd97dfefb1bdbdbf0b1b0a3b4c9350652d5a133cb61bf83e9b3cf5ae9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-uniform.result.json",
+      "bytes": 3045842,
+      "sha256": "a2f5d3ea2936fbc559c35223a8f1b61e117a520b587adf5971c5d969799f3b90"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/smooth8-uniform.summary.json",
+      "bytes": 63336,
+      "sha256": "67230c2659bf9f1ca443c8e9b2111608410c2ab3dc970cd4cd6e684da99c0cd2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/solver-tests.log",
+      "bytes": 1391,
+      "sha256": "43af0a688c15cf7db2b07d989ed4f68b3a32e3792de1a16a5c56668cc3e3c886"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/stalled-derivatives.audit.json",
+      "bytes": 831013,
+      "sha256": "15debaa0f58016b426260562be60580c20bc94b2a2b1a82fd91536a34e5807ab"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/stalled-derivatives.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/stalled-descent.audit.json",
+      "bytes": 836237,
+      "sha256": "2cee97b7ec23c5c5fd0db5041559bcfef1ff930c59569e67aff31283bb0b7f44"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/stalled-descent.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/stalled-descent.replay.json",
+      "bytes": 836237,
+      "sha256": "2cee97b7ec23c5c5fd0db5041559bcfef1ff930c59569e67aff31283bb0b7f44"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/stalled-descent.replay.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_basis_restoration.mjs",
+      "bytes": 4606,
+      "sha256": "ebc939a0db5e97011b0620475f745d1ce00597e5412f5958b10c9bae8a871dd4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_cad_witness.mjs",
+      "bytes": 2516,
+      "sha256": "018fb2f22ae4bd83360fb900ffdd37aded9992ab98332e4185aa2b5354009164"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_continuous_slip_continuation.mjs",
+      "bytes": 4082,
+      "sha256": "920f117e8a19d5061af5a706e92099e322c0896919381d5ea81b3113068cf02b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_continuous_slip_trial.mjs",
+      "bytes": 4117,
+      "sha256": "803d30a7b21ead31bcfa62a3cb83eddef930e1576b8ce6c9f7571e70fb151066"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_coupled_slip.mjs",
+      "bytes": 6030,
+      "sha256": "38f88a1706c00b9f90a7e625b670ed66c3719af47b3faf5c9d2e3782e2a6ba12"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_derivative_recovery.mjs",
+      "bytes": 2961,
+      "sha256": "798b879319432394139bf271c9648b95258dddf70226fdb656f5c31848e90207"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_equality_trials.mjs",
+      "bytes": 3456,
+      "sha256": "a1418c1e331cc3ce43507d550a3332074ac50badc4249c0d5b6a6b969a973a9c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_inequality_trial.mjs",
+      "bytes": 2502,
+      "sha256": "9dbd83c3e0df289962a9b7e6b007eec9663044232f9abd5aea9dd75bf891a9f7"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_inner_budget_and_seed.mjs",
+      "bytes": 3481,
+      "sha256": "aa829da79c51b87a4aa4f0ac27f3dd2f20de1f52c51727cf646535c026f7e126"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_kkt_refinement.mjs",
+      "bytes": 3751,
+      "sha256": "7ac505b0b3df86911ee9474fed789f3f06de34a947ca80f776ef770b00f4c4e1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_loaded_slip_trial.mjs",
+      "bytes": 3240,
+      "sha256": "43ed079aaf984092b0c28afa2207966408dc50557c62e826600234447105cc15"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_mean_grid_refinement.mjs",
+      "bytes": 5694,
+      "sha256": "12fc0a691a3aeb2daeeb213bfc5869789dcf0a4806133d1c97487531d1b71144"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_mean_refinement.mjs",
+      "bytes": 6714,
+      "sha256": "92a9307d8226c2de0ebde23199962c2cf255fb8264a7b082e30ab144c9f0d503"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_periodic_trials.mjs",
+      "bytes": 2711,
+      "sha256": "6f178fca4d047f2145ecaca2fcf7ce5dcc7b9fee35e3b1244f66fe6a5118aa01"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_refined_periodic_trials.mjs",
+      "bytes": 2520,
+      "sha256": "a5ca7cf5bf2c1c8cd5f913c03d4653059df5f305e8d8707c452aba104bd5519d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_restoration.mjs",
+      "bytes": 5161,
+      "sha256": "b4f48bb608a67faa38626c29326d800b0a78ae9ea99469617e31783dbd0daf55"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_slip_barrier_trial.mjs",
+      "bytes": 7615,
+      "sha256": "6773f5cb418a372d7d0e315cdbcc2bc139bf2471f93ec7080bb6f899ad17f021"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_slip_objective.mjs",
+      "bytes": 5597,
+      "sha256": "7fc182fce9c2e57a599fbdaff6195b1307867bf9c61a6431c071f057e33f9f7f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_smooth_trials.mjs",
+      "bytes": 2796,
+      "sha256": "560b92e491febe4fda6e71484a756ed4e409e22df0dd2c5c2afe8cedcb607505"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_surface_trial.mjs",
+      "bytes": 5853,
+      "sha256": "057dddf072baae30218a00ffa51692caba69951c3100b7c3f02b298d384f81b2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_targeted_collocation.mjs",
+      "bytes": 3299,
+      "sha256": "1b260437b527ead9b4e9c6e5ec4184a866a497217aadbaa403ace69f88c78d3f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_trials.mjs",
+      "bytes": 2555,
+      "sha256": "ccce0fb1b2b46e0566b176adff2cf9c92d2cdb81da5ab17ae6ad943b37c6cb4f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summarize_warm_continuation.mjs",
+      "bytes": 3295,
+      "sha256": "4551b44a010f92a7d74a9a7e3b58c8614a740f282aafdedcfbd580bf26129644"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/summary.json",
+      "bytes": 4313,
+      "sha256": "d03614be991283261125feaa8ad3aee3c2550f65333e37246b98b121627fdddf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-build.log",
+      "bytes": 165,
+      "sha256": "245ed20d01eb575c8615810d3eacd23cb8b94ed8a938c0e877f65868882fa211"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-markers.json",
+      "bytes": 12596,
+      "sha256": "87852fc9203e680b77b144cdfe5778e62790ff4fa121652611b9ae33fc6b2aac"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-selection.json",
+      "bytes": 356,
+      "sha256": "43710137cf799378d709fba259da669ad84c394d7f51e2ce31ff2c9d8ed42cff"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-tests.log",
+      "bytes": 761,
+      "sha256": "dbedb583872781a9f4dfb0816b57cf8f8ee072d943bd2a81b919500e05aa9343"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-tracking-ff128-v3.trial.json",
+      "bytes": 2188,
+      "sha256": "be19aeb6c556f775af569c86e891b6f2e7b2f107e2f6523b3916260e6a64819a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-tracking-ff64-aligned.trial.json",
+      "bytes": 2207,
+      "sha256": "3b6eae547802718f43b0732eb23b19d4eedf3a76a7a77c8971517766001f3b41"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-tracking-ff64-v3.trial.json",
+      "bytes": 2182,
+      "sha256": "b01e4f71408d83309224df11f01ec566508fd9b6e7f6ee0d62e0185612160327"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-tracking-ff64.trial.json",
+      "bytes": 1962,
+      "sha256": "26523a95758756c2f564661effa138efeda40083ab661ae65bc2d1e785840d48"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface-tracking-pd64-v3.trial.json",
+      "bytes": 2182,
+      "sha256": "42db93bd478a3e6d35dd69296a1b65694543f278b623bfb1191f1f04031c567b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-initial.audit.json",
+      "bytes": 127249,
+      "sha256": "cac43f15658aac009e26b263f5866244dcaa7ea4b8c0245c2852882e644b7d22"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-initial.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-initial.positions.json",
+      "bytes": 6576,
+      "sha256": "597bee0fcfa3d0d925bba8adc32307b6b72047312241fbcb002a84ff95df75d9"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.audit.json",
+      "bytes": 355608,
+      "sha256": "cc6dbeaff8b51650d6ce7fdb5fd4f36524e43b2f419cb7523a8fd5bf07c3d199"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.log",
+      "bytes": 211621,
+      "sha256": "702a450ea6117b2ab26f087fcf9faa78ff947ec2f5cd3bf7cbd71aebc5719dd5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.recipe.json",
+      "bytes": 39477,
+      "sha256": "e7a9807c7d4101fe7e6b700a6bf26b0e20ea8beeadbf612a90a2e3881e5d0563"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.result.json",
+      "bytes": 224191,
+      "sha256": "b487b86a630003fbd557f2b48d17397b3de79f7d20694cff6acc2fa1f0d4bf11"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-refinement.summary.json",
+      "bytes": 5321,
+      "sha256": "0acba438e6c2063d0b2bfa5ed0ce1ce0f304a7113d8e2986a6e445719eae9157"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.audit.json",
+      "bytes": 352761,
+      "sha256": "eb5e422cad7b6457108f6608d3dab4ab1bfa1cda7ff1e01aacb2a457f4cdf1f0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.log",
+      "bytes": 214948,
+      "sha256": "eddf4ed0965921e8cb65a65c9fe2f519dbbc4d3e93de33fd4a55ee64d0158ae6"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.recipe.json",
+      "bytes": 39717,
+      "sha256": "394bc5df21e114178613929157f62b6016d41c655cc02b97064461524416b11c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.result.json",
+      "bytes": 221454,
+      "sha256": "0b0ed3c20cde7369d7cc15429fd8dd82ee684ecba65b1eeb5ca4506879107b09"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-refinement.summary.json",
+      "bytes": 5232,
+      "sha256": "86cd739396f43c70a36503dc870c619f5243d25a105e446ea093fe75ff096590"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.audit.json",
+      "bytes": 352279,
+      "sha256": "ee1f6644382b0152035b27a192764c4c5948c6733c36340c818bf8fa99ca9301"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.log",
+      "bytes": 200485,
+      "sha256": "5fea09aba65045c4d0fefbd8bc19238f3ce338596da066cfd1ebef8b14e71d87"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.recipe.json",
+      "bytes": 39465,
+      "sha256": "d310e4139d4dae217ff59e921c42fa815b71d09012764a9b7bb68362cfcf8489"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.result.json",
+      "bytes": 928838,
+      "sha256": "b8ec6c450bd812961aec064a55a6e4e6329b5a0c4b35c30dde934bec4b2f871a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating-seed.summary.json",
+      "bytes": 19310,
+      "sha256": "f8ee361b2d10bfdd9b83d63475db994363157c549e0760705d3b48caa068633d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating.compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25-translating.compiled.json",
+      "bytes": 363831,
+      "sha256": "886d1a273b9734b86e001a29c8de9c48b9b3d0ae33e9e3a76a3933a667689930"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.audit.json",
+      "bytes": 356729,
+      "sha256": "b8ee67ce44a8be313a0526605fe1b092c3bf281d54742594db429304158f9eb4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.log",
+      "bytes": 198049,
+      "sha256": "fc0f01a99cc86677023a745b14c40b1e0a55b20f86b409532ffd1aa31f40af38"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.recipe.json",
+      "bytes": 39262,
+      "sha256": "888e0b1d1db32685fb70e540c21da9594d8b2bb5258eda6b508902c1f86e1527"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.result.json",
+      "bytes": 947375,
+      "sha256": "c08376de05639e58ecac8d4602367fd20bf28a9d75481d9be8abbb20e2ca1c05"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/surface25.summary.json",
+      "bytes": 19468,
+      "sha256": "12175ef6e8f054503935c252a5f00e3ae7f626541276e0e8040406ad58aa15bd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-build-identities.json",
+      "bytes": 1134,
+      "sha256": "04347660c4a8765847ad234c9b1d5f3159ff39e8026f2e534c3f7385e1b1a918"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-build.log",
+      "bytes": 165,
+      "sha256": "882652162ded44e1d3bb799406b51f14dd58c766484a26a385a30c78663ba429"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-comparison.json",
+      "bytes": 5593,
+      "sha256": "8e21534e020ac1e00a56e32c14c97f00287870553a701ea4c07ac1f80ccbb45c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-control-dense.audit.json",
+      "bytes": 9284066,
+      "sha256": "af0c93494a55c96e063912d0f1a3f34fd9003cdbdeefdb19abe0952a9324e433"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-control-dense.recipe.json",
+      "bytes": 90958,
+      "sha256": "ebd5968e138e677e9e8b97246d5a827e85c7f38eb91d4dc37ce5e2869885b6d8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-control.audit.json",
+      "bytes": 1363547,
+      "sha256": "c6fd5945e7019017d12a22bcfe09991f4a5e2c4c86781086becf955d15cf48bf"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-control.initial.json",
+      "bytes": 12211,
+      "sha256": "cfe2ca6788f0eada562048a2bfc40946647c90f7200dcb9d1493c3597ce855eb"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-control.log",
+      "bytes": 347041,
+      "sha256": "4473508267a8a16bfaeb539e670dec507813a6bdd82214e6e575a71cb242c9b1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-control.recipe.json",
+      "bytes": 90901,
+      "sha256": "a465711e4e947c1b956082a087d34ba94912ac4274bccb01375609f6f81cc18c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-control.result.json",
+      "bytes": 1213860,
+      "sha256": "ec49c3c00973cca5a83bcce2752fce776407cede742070148e05c73fc1a5cf3b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-control.summary.json",
+      "bytes": 21522,
+      "sha256": "96410d22cb3369f3c5105a97a8565eb89e0fcca0472c03d1d41799770ed9a68b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-peak-movement.json",
+      "bytes": 1800,
+      "sha256": "46e342e45dc5699b591a2ab94eaec1204a0702d58f496b0475c5e2cb2516987d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded-dense.audit.json",
+      "bytes": 9285910,
+      "sha256": "bb78dce7d0f105c80bd1aa63cb63f53981c10ed0f705b9b56185ff5626f43e60"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded-dense.recipe.json",
+      "bytes": 93346,
+      "sha256": "b70c8761e100ff51c7554da7669e536d30bb1becbba0506fcc5eae59257d388b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded-initial.audit.json",
+      "bytes": 1603564,
+      "sha256": "d0ca39bc78f552e1b143c68d16bf6ebf40cad0fcb40669365edc5bd1b56400f0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded.audit.json",
+      "bytes": 1604085,
+      "sha256": "77c7970c2d50fb1bb8576a02213b5c100c54d946a9e3174d3faa65f9281620b4"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded.initial.json",
+      "bytes": 16707,
+      "sha256": "4e0d1b83491a00d4de32fb76777ca7385e8a346a167cfd3354f87f5f63e54c7d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded.log",
+      "bytes": 347648,
+      "sha256": "160cee72cfc5a39bbac24760a10a775294cfa8b258e943b9c6b2c20438cd0e35"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded.recipe.json",
+      "bytes": 94501,
+      "sha256": "cf3b075c597e00b0f343042ce7077325a98fbb8e4f3241c2333f26e962050aca"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded.result.json",
+      "bytes": 1504265,
+      "sha256": "66e3c27ee468edcef8b1565983e37a6dcb39e2d50a6d168c1cfc981fc66347f5"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-recorded.summary.json",
+      "bytes": 24021,
+      "sha256": "b76dd38964535f7e04ac89c919968d0797e3dbf02dab24deb979a48f881cfdef"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-tests.log",
+      "bytes": 1424,
+      "sha256": "baa438baff971bdc7524ea26e357e1da50448f998ccb75cb9ab3baf8b9ac194b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/targeted32-uniform-regression.audit.json",
+      "bytes": 1363508,
+      "sha256": "f47ce1be54a2a82f73b99de37ee2d9dde524ad43d01374a43f3829f16c0f5c19"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/verify_inequality_evidence.mjs",
+      "bytes": 7754,
+      "sha256": "1d8c42b487279f07de5fe14d421e75b2d9eca920f394178aff4bd9866095c9f1"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-build-identities.json",
+      "bytes": 1930,
+      "sha256": "fa70f4a5e55c68561e8c588ca5e91267dec7dfd50c01abc934832a58079fba91"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-build.log",
+      "bytes": 581,
+      "sha256": "a313dd6da09a703f29ed3c8aba3bcced77de13dd466a9ccb3b7894b04d769e0c"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-dense.audit.json",
+      "bytes": 14080022,
+      "sha256": "7a39f32501bf1f336160a21e669c88e1227ac742c0032ab02ebc3cb745a8e63f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-dense.recipe.json",
+      "bytes": 694138,
+      "sha256": "85c313af1f49556fba13fa7aad52037c45e82e229a2eb8a03dbf194124e49164"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-jacobi-dense.audit.json",
+      "bytes": 14085982,
+      "sha256": "95ddc1323d5fba94a86c72df07d02a28b8764c57c0c4e8a6c68e1c734d474f53"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-jacobi-dense.recipe.json",
+      "bytes": 694353,
+      "sha256": "78221f5f5d73311b013ad421460a197a2578cc937464d0cd42329740d54c5b00"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-jacobi.audit.json",
+      "bytes": 3531410,
+      "sha256": "71de6ff6413e6e0452a6f25975e138e0a3135a2b1234bc97d1f7c4bd78c4a110"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-jacobi.log",
+      "bytes": 36197,
+      "sha256": "fac40dd68e01eefbfd8b0dc495b2783276a6c1da5ee7a89af56067aae56af82d"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-jacobi.recipe.json",
+      "bytes": 694352,
+      "sha256": "6bc8fdd7e86e3e5c41dabb58206773a569c6a7e462489be9685b26055a129278"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-jacobi.result.json",
+      "bytes": 2900851,
+      "sha256": "08db143d3668d6768532863797391b3154f7174402181defcad20f869bda3808"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-original-initial.audit.json",
+      "bytes": 3527521,
+      "sha256": "6a157aa3e861e8a3873385b5b8817ed72c2eb2ea04dceb4fe0d2ca0d151afc6b"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-parent-parity.json",
+      "bytes": 250,
+      "sha256": "4b1194a40f4a9d0ef2b52de46fb54ccbeca5c9502e912fd492ece6217eb674d8"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-parent.audit.json",
+      "bytes": 3530303,
+      "sha256": "e7945f8ed14ba5826cdfe2a6643514eec653539d71a685cf74abedaf232ed62f"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-runtime-tests.log",
+      "bytes": 2178,
+      "sha256": "d98f082411c86e794e1d2dfd29ad06ef0363311cdcb7c7dcda2b7b9ebee9adc0"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-solver-tests.log",
+      "bytes": 1661,
+      "sha256": "169e986f1c3fdac674cfb3f4292358fa3d98811d6ffd1e11235d78adf91005cd"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68-summary.json",
+      "bytes": 8453,
+      "sha256": "13a91bbb1754d9e82a80d073795218f1474aef8f3ce9b90ed7f4aba119662b08"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68.audit.json",
+      "bytes": 3530009,
+      "sha256": "6099a8244d5e6630fe076aa554f496908c3b6ef160cc9dcabcb931630abf183a"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68.log",
+      "bytes": 36126,
+      "sha256": "ddd98d8f9161fe59276064432dd7ea24afae22354f43553093068b0001858fd2"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68.recipe.json",
+      "bytes": 694137,
+      "sha256": "71ee06d1ab61cfeed4a031374522c569b6af5ca141a3bc15514aba9ca71f4181"
+    },
+    {
+      "path": "examples/full-robot/contact-implicit/warm68.result.json",
+      "bytes": 2900975,
+      "sha256": "7f1ca1cf5fd83406d82d39492b9fa65cb7592b9d36f1fd6245856650d2d2405b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/runtime-evidence/evidence-v4-index.json",
+      "bytes": 38699,
+      "sha256": "2709711c4d56936a1ee7dd8c61698fb4ce0ba01b1c4218a3fbcb38f0737b6308"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/CHECKPOINT.md",
+      "bytes": 62314,
+      "sha256": "55f076542b82c9c1e68f1dc459fa9a1bb850afef86c9977c2386c190de3d8dad"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/README.md",
+      "bytes": 40660,
+      "sha256": "79ab65acd6c918806d84a909c2f5cea2fed8192d83acadca5108fc2761287bc5"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/planner-literature.md",
+      "bytes": 10800,
+      "sha256": "cbebd136b3c95b2046dbd142312d1e9fa67788f86e13a29bb4e29b9a72bde706"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "examples/full-robot/baseline/robot.rcad",
+      "bytes": 83806475,
+      "sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589"
+    },
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.config.json",
+      "bytes": 130013,
+      "sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697"
+    },
+    {
+      "path": "runs/contact-planning/diagonal21-screen.native.json",
+      "bytes": 26708456,
+      "sha256": "ecb04750126aaf4fea18cde58358f9af435e0bc14d8523e41812e9ff05c19774"
+    },
+    {
+      "path": "runs/contact-planning/diagonal68-minimal-observations.native.json",
+      "bytes": 26684938,
+      "sha256": "b7741bd17102a3381e81e5b35a79258150bc3adc11c0159f65106c7550775285"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/debug/examples/contact_slip",
+      "bytes": 579368,
+      "sha256": "8e70367c246f1f7599d2610b3a2280b8a23a60a54723b23c31b320d010acf33a"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_capture_geometry",
+      "bytes": 8284236,
+      "sha256": "3255bfd934cb69dc9f655567a916692c5282229a525f8a0956720978c4d9a5f7"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_derivatives",
+      "bytes": 8595176,
+      "sha256": "7a9160298a40774ebe73f5d5d1e6bc0b9f46fc3a7661b3aa88e64d7c1ba32e2f"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8716884,
+      "sha256": "1d0aadffa82d5489441e8191f10410fa1733c15502b4d8a5df8802f272c3e8f4"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/benchmark_contact_implicit",
+      "bytes": 8520356,
+      "sha256": "d6ad484936d2c1da7344bffff143e1466525f6b820481b01d85d95df4b7c93e4"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_implicit",
+      "bytes": 8631252,
+      "sha256": "fabd0cf913b0658d47892335b3751d459ce7b802cf4baae9287c0ee010ec2cbf"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/inspect_floor_contact",
+      "bytes": 8134628,
+      "sha256": "f99629f85fd2e4df324f913b571c40622450d80c9d6796d16bd21f0f46810ac9"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_equalities",
+      "bytes": 8763396,
+      "sha256": "c96089b26394748b704ef0fd5bb19996264232e49f53af6352af798804a887fe"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8667828,
+      "sha256": "b0139de3cadf6c271c4866a8b5833ade509ae6e5b551e77944887447759c1e78"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_inequalities",
+      "bytes": 8755772,
+      "sha256": "20b941ca9034b3084c7951c8b001709bce31d74e61657d17799fde9aaba0a10a"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/refine_contact_periodic",
+      "bytes": 8307724,
+      "sha256": "54d8091d947f5b63a9bfe5fb913ddeed5e9ba0bb299340faa22dea0d08e1e2b1"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/restore_contact_feasibility",
+      "bytes": 8708044,
+      "sha256": "92489741ee35625ca48aadda2b872b441ad30a5f88e427aef4b595bf98ad5c19"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+      "bytes": 15473156,
+      "sha256": "883861839a19fda8be8d0b353c2088373bce364ef3c3d63d2ea92e241a798c14"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/sample_capture_seed",
+      "bytes": 8270436,
+      "sha256": "4a0ee5c6d08e1dc40d767a6a32aa74decb33c72ad5d7c8422347774bfb5c8c3c"
+    }
+  ],
+  "scope": "Completed dense-grid comparison; offline planned speed remains .067063 m/s and balance fails. User redirected priority to measured runtime speed; fixed-speed continuation is paused. No qualified contact-implicit controller or maximum-speed certificate."
+}

@@ -1,0 +1,78 @@
+{
+  "base_commit": "9999b0c9e7d4045c24fcd4c8e35e6967368d3157",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-force-v1-build-sources.tar.gz",
+    "bytes": 69924,
+    "sha256": "b5efae88f8a384704d4973917a5ad3250742fb2280624e6e919be7fc4773f0f3"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-domain-control/src/contact_phase.rs",
+      "bytes": 18290,
+      "sha256": "1816a4271da669785424e15034bfa783ca6d57591d4ca1d9700486cfca870ad3"
+    },
+    {
+      "path": "crates/sim-domain-control/src/elements.rs",
+      "bytes": 6579,
+      "sha256": "1bf6aa64340109044ee48a604d83a7203123b177739c9ba4d8ce28caa6da6409"
+    },
+    {
+      "path": "crates/sim-domain-control/src/lib.rs",
+      "bytes": 403,
+      "sha256": "bc33e35bc97d82c9099752405a52bdcc4722a6624b3c736a4ed48c44d91e2cb4"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/motion_capability.rs",
+      "bytes": 28807,
+      "sha256": "03f014e332a59b00fd81220c433ab8568ac4aa21c72d0014856cb6464341e3ca"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 43381,
+      "sha256": "6d3eaf479b4eeed06a7c36856ef84df32c5f2db6361b433045ed40152321509f"
+    },
+    {
+      "path": "crates/sim-script/tests/contact_phase.rs",
+      "bytes": 3440,
+      "sha256": "c17482f4ceeb11265dd8b96dea61601590493886ff2d55f1ecad398ed8d9042a"
+    },
+    {
+      "path": "crates/sim-domain-control/src/smooth_return.rs",
+      "bytes": 5853,
+      "sha256": "fe125467873c398af75f22a2f72bda4456e98ddeb3ce0d2e00bb82822c0f0e26"
+    },
+    {
+      "path": "crates/sim-domain-control/examples/smooth_return.rs",
+      "bytes": 649,
+      "sha256": "fa08e8e828da244c32385bcb30c7c448de5edbe52540dcf73459616410c1bdc6"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 15437,
+      "sha256": "077c562d0a2c81f6574560a8247db7af059f5f2a24d9b268e393801466d39799"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_joint_contact.rs",
+      "bytes": 2582,
+      "sha256": "8a72bb111fc3c90389b0aec18e42a897486d359e16b7f5ea67cd1021a79c9b95"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+      "bytes": 8960076,
+      "sha256": "4e2a861e049a8bb4bf6a739494cbeb6da517e1d37dd3d257ebeac526159c99b0"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_reference",
+      "bytes": 8792300,
+      "sha256": "8a371446a418c4ec3ff7f4e9802ad172d08ebc6957609b290f8bb53c46f10854"
+    }
+  ],
+  "scope": "Build identity for joint-x25 initial evaluation and first optimization; source overlays archived before automatic force initialization is added."
+}

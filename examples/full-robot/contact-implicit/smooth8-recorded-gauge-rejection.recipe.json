@@ -1,0 +1,1502 @@
+{
+  "config": {
+    "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "independent_coordinates": [
+      "joint.-Y | Hip servo output",
+      "joint.-Y | Worm servo output",
+      "joint.-Y | Foot servo output",
+      "joint.+X | Hip servo output",
+      "joint.+X | Worm servo output",
+      "joint.+X | Foot servo output",
+      "joint.+Y | Hip servo output",
+      "joint.+Y | Worm servo output",
+      "joint.+Y | Foot servo output",
+      "joint.-X | Hip servo output",
+      "joint.-X | Worm servo output",
+      "joint.-X | Foot servo output"
+    ],
+    "embedding": {
+      "absolute_rank_tolerance": 1e-12,
+      "analytic_mechanism_positions": true,
+      "angle_scale_rad": 1,
+      "block_dependent_factorization": true,
+      "dependent_solve": "pivoted_qr",
+      "direct_closure_jacobian": true,
+      "length_scale_m": 0.1,
+      "max_iterations": 30,
+      "max_scaled_correction": 0.25,
+      "relative_rank_tolerance": 1e-10,
+      "scaled_closure_tolerance": 1e-8,
+      "scaled_position_tolerance": 1e-11
+    },
+    "actuators": {
+      "joint.+X | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+X | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+X | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      }
+    },
+    "contact": {
+      "stiffness_n_m": 200000,
+      "smoothing_m": 0.00001,
+      "dissipation_velocity_m_s": 5,
+      "friction_coefficient": 0.25,
+      "stiction_velocity_m_s": 0.001
+    },
+    "step_s": 0.04951093630846018,
+    "initial_velocity": [],
+    "position_reference": [
+      [
+        0.03521468780747009,
+        0.0425150724174891,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ],
+      [
+        0.04396706750912195,
+        0.05126745211914096,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ],
+      [
+        0.05271944721077381,
+        0.06001983182079282,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ],
+      [
+        0.06147182691242567,
+        0.06877221152244467,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ],
+      [
+        0.07022420661407752,
+        0.07752459122409654,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ],
+      [
+        0.07897658631572937,
+        0.0862769709257484,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ],
+      [
+        0.08772896601738125,
+        0.09502935062740026,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ],
+      [
+        0.09648134571903311,
+        0.10378173032905211,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ],
+      [
+        0.10523372542068496,
+        0.11253411003070397,
+        -0.07524555092928434,
+        -0.030101991906411885,
+        -0.06329641122773966,
+        -0.029302208346959846,
+        0.03976389036521888,
+        0.0435233742430472,
+        -1.0819048436830343,
+        0.059362725314430875,
+        -0.0168486077260952,
+        -1.0417084092380189,
+        0.13313691271499395,
+        0.11748465400869934,
+        -1.3153347937738769,
+        0.023581363779684672,
+        -0.04603781355241665,
+        -1.424862871561063
+      ]
+    ],
+    "position_scales": [
+      0.3,
+      0.3,
+      0.03,
+      0.15,
+      0.15,
+      0.2,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+    ],
+    "velocity_reference": [
+      0.17677669529663687,
+      0.17677669529663687,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "velocity_scales": [
+      0.05,
+      0.05,
+      0.2,
+      0.3,
+      0.3,
+      0.3,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30,
+      30
+    ],
+    "force_tolerance_n": 0.05,
+    "moment_tolerance_nm": 0.02,
+    "torque_tolerance_nm": 0.001,
+    "torque_effort_scale_nm": 30,
+    "maximum_point_penetration_m": 0.001,
+    "penetration_scale_m": 0.001,
+    "contact_sliding_work_scale_j": 0.04828171022115292,
+    "periodic_horizontal_translation": true,
+    "periodic_cubic_subdivisions": 4
+  },
+  "bounds": [
+    [
+      {
+        "lower": 0.03521468780747009,
+        "upper": 0.03521468780747009
+      },
+      {
+        "lower": 0.0425150724174891,
+        "upper": 0.0425150724174891
+      },
+      {
+        "lower": -0.13524555092928434,
+        "upper": -0.01524555092928434
+      },
+      {
+        "lower": -0.3301019919064119,
+        "upper": 0.2698980080935881
+      },
+      {
+        "lower": -0.36329641122773965,
+        "upper": 0.23670358877226033
+      },
+      {
+        "lower": -0.32930220834695983,
+        "upper": 0.27069779165304014
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      }
+    ],
+    [
+      {
+        "lower": -0.07603293249087804,
+        "upper": 0.16396706750912196
+      },
+      {
+        "lower": -0.06873254788085903,
+        "upper": 0.17126745211914096
+      },
+      {
+        "lower": -0.13524555092928434,
+        "upper": -0.01524555092928434
+      },
+      {
+        "lower": -0.3301019919064119,
+        "upper": 0.2698980080935881
+      },
+      {
+        "lower": -0.36329641122773965,
+        "upper": 0.23670358877226033
+      },
+      {
+        "lower": -0.32930220834695983,
+        "upper": 0.27069779165304014
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      }
+    ],
+    [
+      {
+        "lower": -0.06728055278922618,
+        "upper": 0.1727194472107738
+      },
+      {
+        "lower": -0.05998016817920718,
+        "upper": 0.1800198318207928
+      },
+      {
+        "lower": -0.13524555092928434,
+        "upper": -0.01524555092928434
+      },
+      {
+        "lower": -0.3301019919064119,
+        "upper": 0.2698980080935881
+      },
+      {
+        "lower": -0.36329641122773965,
+        "upper": 0.23670358877226033
+      },
+      {
+        "lower": -0.32930220834695983,
+        "upper": 0.27069779165304014
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      }
+    ],
+    [
+      {
+        "lower": -0.058528173087574326,
+        "upper": 0.18147182691242567
+      },
+      {
+        "lower": -0.051227788477555325,
+        "upper": 0.18877221152244467
+      },
+      {
+        "lower": -0.13524555092928434,
+        "upper": -0.01524555092928434
+      },
+      {
+        "lower": -0.3301019919064119,
+        "upper": 0.2698980080935881
+      },
+      {
+        "lower": -0.36329641122773965,
+        "upper": 0.23670358877226033
+      },
+      {
+        "lower": -0.32930220834695983,
+        "upper": 0.27069779165304014
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      }
+    ],
+    [
+      {
+        "lower": -0.04977579338592247,
+        "upper": 0.19022420661407752
+      },
+      {
+        "lower": -0.04247540877590346,
+        "upper": 0.19752459122409655
+      },
+      {
+        "lower": -0.13524555092928434,
+        "upper": -0.01524555092928434
+      },
+      {
+        "lower": -0.3301019919064119,
+        "upper": 0.2698980080935881
+      },
+      {
+        "lower": -0.36329641122773965,
+        "upper": 0.23670358877226033
+      },
+      {
+        "lower": -0.32930220834695983,
+        "upper": 0.27069779165304014
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      }
+    ],
+    [
+      {
+        "lower": -0.04102341368427062,
+        "upper": 0.19897658631572934
+      },
+      {
+        "lower": -0.03372302907425159,
+        "upper": 0.2062769709257484
+      },
+      {
+        "lower": -0.13524555092928434,
+        "upper": -0.01524555092928434
+      },
+      {
+        "lower": -0.3301019919064119,
+        "upper": 0.2698980080935881
+      },
+      {
+        "lower": -0.36329641122773965,
+        "upper": 0.23670358877226033
+      },
+      {
+        "lower": -0.32930220834695983,
+        "upper": 0.27069779165304014
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      }
+    ],
+    [
+      {
+        "lower": -0.03227103398261874,
+        "upper": 0.20772896601738125
+      },
+      {
+        "lower": -0.02497064937259974,
+        "upper": 0.21502935062740025
+      },
+      {
+        "lower": -0.13524555092928434,
+        "upper": -0.01524555092928434
+      },
+      {
+        "lower": -0.3301019919064119,
+        "upper": 0.2698980080935881
+      },
+      {
+        "lower": -0.36329641122773965,
+        "upper": 0.23670358877226033
+      },
+      {
+        "lower": -0.32930220834695983,
+        "upper": 0.27069779165304014
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      }
+    ],
+    [
+      {
+        "lower": -0.02351865428096689,
+        "upper": 0.2164813457190331
+      },
+      {
+        "lower": -0.016218269670947888,
+        "upper": 0.2237817303290521
+      },
+      {
+        "lower": -0.13524555092928434,
+        "upper": -0.01524555092928434
+      },
+      {
+        "lower": -0.3301019919064119,
+        "upper": 0.2698980080935881
+      },
+      {
+        "lower": -0.36329641122773965,
+        "upper": 0.23670358877226033
+      },
+      {
+        "lower": -0.32930220834695983,
+        "upper": 0.27069779165304014
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "upper": -0.02
+      }
+    ],
+    [
+      {
+        "lower": 0,
+        "upper": 0.19001903761321487
+      },
+      {
+        "lower": 0,
+        "upper": 0.19001903761321487
+      }
+    ]
+  ],
+  "search": {
+    "maximum_iterations": 40,
+    "maximum_evaluations": 100000,
+    "difference_step": 1e-7,
+    "initial_damping": 0.1,
+    "gradient_tolerance": 0.00001
+  },
+  "smoothing_schedule_m": [
+    0.003,
+    0.001,
+    0.0001,
+    0.00001
+  ],
+  "stiffness_schedule_n_m": [
+    2000,
+    10000,
+    50000,
+    200000
+  ],
+  "hessian_scaling_exponent": 0.25,
+  "derivative_refinement": {
+    "minimum_step": 1e-9,
+    "reduction_factor": 0.1
+  },
+  "initial_positions": [
+    [
+      0.035214687807470085,
+      0.0425150724174891,
+      -0.06430413374120071,
+      0.02174402955336408,
+      -0.01900963110343087,
+      -0.020815499624116142,
+      0.10349881665540267,
+      -0.11214962809087417,
+      -1.0965619121117232,
+      -0.11953228614755754,
+      -0.0024336593187651192,
+      -1.0936853236827904,
+      0.02924688706864358,
+      0.076337814869398,
+      -1.012845643747474,
+      0.11564741302722217,
+      -0.05139661708974573,
+      -1.1302903427852027
+    ],
+    [
+      0.04218720418607638,
+      0.04844065183486136,
+      -0.0643023135727882,
+      0.011298412380133833,
+      -0.02958636211223064,
+      -0.016571510212076535,
+      0.044803490801409974,
+      -0.1451866455724411,
+      -1.0541990641169035,
+      -0.0053435604998859874,
+      -0.10158394085005827,
+      -1.0511024803540898,
+      0.07659638598504495,
+      0.10406473643601263,
+      -1.057767872558185,
+      -0.04218000499819444,
+      0.17561155823298,
+      -1.2678085527252152
+    ],
+    [
+      0.050953003339722885,
+      0.055863119250322876,
+      -0.06227799314084649,
+      -0.0027669005147989067,
+      -0.05618377819012427,
+      -0.01436742216183845,
+      -0.04058335463970747,
+      -0.17143776386710832,
+      -0.9831749508236467,
+      0.09701953365596214,
+      -0.28995318643290635,
+      -0.841435485401987,
+      0.16362991765087867,
+      0.09792817375135122,
+      -1.0907175441227936,
+      -0.12341081410337645,
+      0.3143291584064117,
+      -1.3019182105314184
+    ],
+    [
+      0.06011352799179018,
+      0.06267651847290422,
+      -0.05962164143301833,
+      -0.028426931065932068,
+      -0.06496378592917501,
+      -0.024959261552795608,
+      -0.08000080089878414,
+      -0.13378965043072463,
+      -0.8828947345590368,
+      0.14410514934222804,
+      -0.1906613766051145,
+      -0.814050303391202,
+      0.2331118335611582,
+      0.016112013276425696,
+      -1.132050283515981,
+      -0.11253486783053734,
+      0.14802734178668264,
+      -1.2624425186440384
+    ],
+    [
+      0.06877557081784669,
+      0.06824102209985687,
+      -0.05788762524343149,
+      -0.04730057277117622,
+      -0.053344621964753584,
+      -0.04325531050338551,
+      -0.06748199696131738,
+      -0.10444085429076674,
+      -0.8032437593346534,
+      0.18141299735520108,
+      -0.1487858772086965,
+      -0.8593255235177256,
+      0.2696747199660927,
+      -0.04215970185385073,
+      -1.1645959397258117,
+      -0.09043803475054184,
+      0.08402739004833093,
+      -1.194249145180101
+    ],
+    [
+      0.07579494273373466,
+      0.07575830814539826,
+      -0.05791984100006448,
+      -0.03197437935707666,
+      -0.04610138214344906,
+      -0.04646678576302982,
+      0.051700729627988794,
+      -0.031156855265219337,
+      -0.9597631649514301,
+      0.12401646975982991,
+      -0.06613373730577884,
+      -0.9068240811857486,
+      0.16943931684761693,
+      -0.2555630698474614,
+      -1.1527447470105199,
+      -0.02093425368204239,
+      0.03084631439957241,
+      -1.1531077764312925
+    ],
+    [
+      0.08270329368083565,
+      0.08512247904813432,
+      -0.059643156557379465,
+      0.00826439715338188,
+      -0.04444362321029184,
+      -0.03402230754562666,
+      0.1377309373861768,
+      0.15856866140486922,
+      -1.0770844652153817,
+      -0.01115993386427959,
+      0.017498702350558067,
+      -0.952999111812932,
+      0.0454387285742637,
+      -0.22021688573699183,
+      -0.9419881662798644,
+      0.07244938918525146,
+      -0.049721404030047614,
+      -1.1429383480624713
+    ],
+    [
+      0.08924262021072235,
+      0.0938212262430601,
+      -0.06218956787063589,
+      0.02730788293017497,
+      -0.03095746991340532,
+      -0.024405685104284695,
+      0.11471431025382361,
+      -0.03474831660253844,
+      -1.1108369586946547,
+      -0.10149166828766487,
+      0.012051607705669307,
+      -1.0298730987159248,
+      0.030857424686429366,
+      0.002065592965026026,
+      -0.9494886606892975,
+      0.1291975694609911,
+      -0.08175903084099369,
+      -1.122021323544544
+    ],
+    [
+      0.09451832569095978,
+      0.10116707610161475,
+      -0.06430413374120071,
+      0.02174402955336408,
+      -0.01900963110343087,
+      -0.020815499624116142,
+      0.10349881665540267,
+      -0.11214962809087417,
+      -1.0965619121117232,
+      -0.11953228614755754,
+      -0.0024336593187651192,
+      -1.0936853236827904,
+      0.02924688706864358,
+      0.076337814869398,
+      -1.012845643747474,
+      0.11564741302722217,
+      -0.05139661708974573,
+      -1.1302903427852027
+    ]
+  ],
+  "provenance": {
+    "source_recipe": "examples/full-robot/contact-implicit/periodic-perturbed.recipe.json",
+    "source_recipe_sha256": "62274cd0efb17b29334622ce4cbb784d3deca37728dc59eabc01cc1ba0733a37",
+    "operation": "Eight unique periodic cubic B-spline controls plus XY drift, with analytic position, velocity and acceleration evaluated at four collocation samples per control interval by shared Rust. No contact schedule. Controls are not interpolated poses.",
+    "target_speed_m_s": 0.25,
+    "period_s": 0.39608749046768144,
+    "initial_guess": "Recorded .21 runtime motion; numerical seed only",
+    "seed": null,
+    "perturbation": "Three zero-mean Fourier harmonics with seeded independent coefficients for every actuator coordinate, at at most 1% of its software bound width. Numerical symmetry breaking only; all poses remain optimization variables.",
+    "continuation": "Same stiffness/smoothing continuation for both seeds, finishing at the resolved detailed-planning parameters. Other physical properties, objectives and physical acceptance tolerances retained.",
+    "limitations": "Local finite-period search, not a global speed bound. Geometric collision checks, detailed runtime orbit entry/tracking, stable repetition and WASD qualification remain separate. The existing at-rest compiler rejects periodic orbits.",
+    "numerical_basis": "Downsample the existing constant or deterministic three-harmonic seed every third control. This changes the numerical motion basis, not CAD properties or hardware limits. Finer collocation and basis refinement remain necessary.",
+    "physical_parameters": "Same resolved friction, stiffness, actuator envelopes, period, target, objective scales and acceptance gates as source.",
+    "capture": {
+      "path": "runs/contact-planning/diagonal21-screen.native.json",
+      "sha256": "ecb04750126aaf4fea18cde58358f9af435e0bc14d8523e41812e9ff05c19774"
+    },
+    "sampler": {
+      "path": "crates/sim-runtime/examples/sample_capture_seed.rs",
+      "sha256": "3a5177a4bbdc113abe826a4b9ce3c7eed8854ca5d8dcd6f9c8339633e2f7459d"
+    },
+    "sampler_binary": {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/sample_capture_seed",
+      "sha256": "db98d20c637c8e95bbc4c4408ba5bce258b9ee0aec96801511706d7113c72904"
+    },
+    "transformation": "Recorded poses converted with shared CAD base rotation and independent-coordinate mapping; linear interpolation and non-XY endpoint detrending form a numerical seed only. Samples used as cubic controls are smoothed, not exact replay. No captured contact schedule is imposed; no feasibility claim.",
+    "removed_endpoint_drift": [
+      0,
+      0,
+      0.00001240362695005548,
+      -0.00028083324452983505,
+      -0.00023700299782864961,
+      -0.0011650956143740947,
+      0.0006159065548683312,
+      -0.00017845268687800842,
+      0.0011166380928775421,
+      0.001774518179310236,
+      -0.0004804187344857238,
+      0.00041154011308042193,
+      0.001183604585484492,
+      -0.0011134482656998262,
+      -0.00043485118518371557,
+      -0.003383811357120098,
+      0.004305684274184249,
+      -0.003159883286421694
+    ],
+    "source_commands": [
+      {
+        "time_s": 1.48,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 74,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.5,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 75,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.52,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 76,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.54,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 77,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.56,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 78,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.58,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 79,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.6,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 80,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.62,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 81,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.6400000000000001,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 82,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.6600000000000001,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 83,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.68,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 84,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.7,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 85,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.72,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 86,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.74,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 87,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.76,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 88,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.78,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 89,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.8,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 90,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.82,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 91,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.84,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 92,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.86,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 93,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.8800000000000001,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 94,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.9000000000000001,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 95,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      },
+      {
+        "time_s": 1.92,
+        "values": {
+          "command.body_gain": 0.25,
+          "command.forward_speed": 0.211710264528351,
+          "command.lateral_speed": 0,
+          "command.packet_sequence": 96,
+          "command.point_gain": 0.25,
+          "command.tracking_gain": 0.5,
+          "command.yaw_rate": 0
+        }
+      }
+    ]
+  }
+}

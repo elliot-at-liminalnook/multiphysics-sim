@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "passed": true,
+  "speed_m_s": 0.025795773709373453,
+  "frames": [
+    128,
+    256
+  ],
+  "original_phase_visits": 2,
+  "absolute_equivalence_tolerance": 1e-8,
+  "maximum_differences": {
+    "frame.clock.phase_rate": 0,
+    "frame.clock.phase_acceleration_per_s": 0,
+    "frame.coordinates[]": 1.2760625889285393e-14,
+    "frame.reduced_velocity[]": 9.015010959956271e-14,
+    "frame.reduced_acceleration[]": 2.675193400136777e-12,
+    "frame.support_forces_world_n[][]": 1.0941247907680918e-13,
+    "frame.wrench_residual[]": 2.353672812205332e-14,
+    "frame.motor_torques_nm[]": 1.9734214262712158e-14,
+    "frame.torque_capacity_margin_nm[]": 4.529709940470639e-14,
+    "frame.servo_command.targets_rad[]": 1.2496947920936918e-14,
+    "frame.servo_command.inequalities[]": 1.2789769243681803e-12,
+    "frame.servo_command.maximum_violation_rad": 0,
+    "frame.maximum_inter_link_penetration_m": 0,
+    "frame.maximum_floor_penetration_m": 1.1102230246251565e-16,
+    "frame.floor_clearances[].surface_samples": 0,
+    "frame.floor_clearances[].minimum_clearance_m": 1.6653345369377348e-16,
+    "normalized_interval_weight": 1.9081958235744878e-17,
+    "maximum_force_error_n": 2.3314683517128287e-15,
+    "maximum_moment_error_nm": 7.771561172376096e-16,
+    "minimum_torque_margin_nm": 1.5543122344752192e-15,
+    "maximum_penetration_m": 0
+  },
+  "evidence": [
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-single.recipe.json",
+      "sha256": "cb6f20a0d140ec28b74adf7590413c8452005f675478cebbaa41c7075ffc5d6a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-double.raw.json",
+      "sha256": "da69adba490853dfd6e5402e7925c61ac4f5198118efa371d784ea765470db71"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-double.recipe.json",
+      "sha256": "2fe7af03ab78a0314b53aea8d5bf0afd8f53b66ad5b67cc77b4f9c9afc4a03c3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-single.result.json",
+      "sha256": "56c8023c34ff9dac9981cc89c9a27d86ad1bc2356e262ac58017243720ae0103"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/contact-sequence-double.result.json",
+      "sha256": "6566f7dfe8e880512e3acc5225e5e211cf907f5d2243534ad9872285bddf80c3"
+    }
+  ],
+  "scope": "Repeated-cycle CAD planning equivalence using the same physical parameters and unchanged feasibility gates. Multi-step point-load allocation passes the sampled planner; this is neither joint per-stance force optimization nor runtime walking or a speed improvement."
+}

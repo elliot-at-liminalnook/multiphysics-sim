@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "output": "runs/speed-neural-imitation-v1/input",
+  "seed": 42,
+  "hidden_widths": [
+    32,
+    32
+  ],
+  "features": [
+    "-Y | Hip servo output.angle",
+    "-Y | Hip servo output.angular_velocity",
+    "-Y | Worm servo output.angle",
+    "-Y | Worm servo output.angular_velocity",
+    "-Y | Foot servo output.angle",
+    "-Y | Foot servo output.angular_velocity",
+    "+X | Hip servo output.angle",
+    "+X | Hip servo output.angular_velocity",
+    "+X | Worm servo output.angle",
+    "+X | Worm servo output.angular_velocity",
+    "+X | Foot servo output.angle",
+    "+X | Foot servo output.angular_velocity",
+    "+Y | Hip servo output.angle",
+    "+Y | Hip servo output.angular_velocity",
+    "+Y | Worm servo output.angle",
+    "+Y | Worm servo output.angular_velocity",
+    "+Y | Foot servo output.angle",
+    "+Y | Foot servo output.angular_velocity",
+    "-X | Hip servo output.angle",
+    "-X | Hip servo output.angular_velocity",
+    "-X | Worm servo output.angle",
+    "-X | Worm servo output.angular_velocity",
+    "-X | Foot servo output.angle",
+    "-X | Foot servo output.angular_velocity",
+    "body.gravity_direction.x",
+    "body.gravity_direction.y",
+    "body.gravity_direction.z",
+    "body.angular_velocity.x",
+    "body.angular_velocity.y",
+    "body.angular_velocity.z",
+    "command.forward_speed",
+    "command.lateral_speed",
+    "command.yaw_rate"
+  ],
+  "training": [
+    {
+      "capture": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-004.native.json",
+        "sha256": "94406e76eb3d8564bddf3192a085c1e95df2eb1a93f282fbbed94785eb103daa"
+      }
+    },
+    {
+      "capture": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.native.json",
+        "sha256": "fad20e60614f8cc43030bf424ed5868aa652b23e908661398295d69c08c06515"
+      }
+    }
+  ],
+  "validation": [
+    {
+      "capture": {
+        "path": "runs/speed-only-424-validation/long60.native.json",
+        "sha256": "021ac2b994f2c5c2574f1b111aa6f47127bbc914829ad4a4394c9bf416fb1d03"
+      },
+      "start_s": 20,
+      "end_s": 60
+    },
+    {
+      "capture": {
+        "path": "runs/speed-only-337-validation/long60.native.json",
+        "sha256": "ebea971e16956010ebf0e01ce8bd4fe969e0e3223bfc88f8791514c33e2daa55"
+      },
+      "start_s": 20,
+      "end_s": 60
+    }
+  ],
+  "optimizer": {
+    "epochs": 300,
+    "learning_rate": 0.001,
+    "batch_size": 64
+  },
+  "objective": "Warm-start a direct actuator policy from measured fast walking; subsequent reinforcement learning and candidate ranking maximize net displacement/time without falling.",
+  "limitations": [
+    "Forward walking demonstrations only; no WASD generalization claim.",
+    "Validation uses later parts of the same deterministic teacher trajectories, excluding the exact repeated first 20 seconds.",
+    "Ideal encoder and IMU-like signals, without measured sensor noise or latency.",
+    "No phase, reference, body/foot position, contact forces or feedback suggestions enter the network.",
+    "This is imitation initialization, not the PLANC planner/CLF/PPO algorithm."
+  ]
+}

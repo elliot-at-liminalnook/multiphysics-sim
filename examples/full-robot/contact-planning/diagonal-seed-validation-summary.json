@@ -1,0 +1,232 @@
+{
+  "rows": [
+    {
+      "name": "diagonal-seed-human-1p25ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal-seed-human-1p25ms",
+      "duration_s": 20,
+      "step_s": 0.00125,
+      "command_speed_m_s": 0.041098926819874794,
+      "family": "diagonal-seed",
+      "source": "runs/contact-planning/diagonal-seed-cached-screen",
+      "travel_heading_offset_rad": 0.7853981633974483,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "scene_sha256": "adc1da332f25cd24e245e9a322609e71b0a45ee901e43dd8a8f14fe0632df387",
+      "config_sha256": "45b1a27a5efe416cb842190a0bf96e2984d0edb1138133c9fc3ee36169ece6bd",
+      "actions_sha256": "430d19c66a00785f911aad6fab436ed2207c70ee8730513cb754f394d1ab138f",
+      "completed": true,
+      "error": null,
+      "simulated_s": 20,
+      "windows": [
+        {
+          "start_s": 1.4,
+          "end_s": 6,
+          "speed_m_s": 0.03953188810458564
+        },
+        {
+          "start_s": 11,
+          "end_s": 16,
+          "speed_m_s": 0.04100221111921548
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.240000000000002,
+          "release_travel_m": 0.004144437230141524,
+          "late_drift_m": 0.00006386001545420043
+        }
+      ],
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.01762240464733644,
+          "ratio_to_total_body_path": 0.022482891425965813
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.004313572533791006,
+          "ratio_to_total_body_path": 0.005503311544370299
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.014410578923622795,
+          "ratio_to_total_body_path": 0.018385202689923063
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.04174230181571921,
+          "ratio_to_total_body_path": 0.05325536771932879
+        }
+      ],
+      "total_body_path_m": 0.7838139816386815,
+      "maximum_slip_ratio": 0.05325536771932879,
+      "maximum_tilt_rad": 0.05795442812299808,
+      "turn_rad": 0.1870256374264155,
+      "passed_turn_response": true,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_motion_checks": false,
+      "capture_sha256": "89316bb5ca6810cecc741f533beb6c24bae809402c034d930bfc54ea18778351"
+    },
+    {
+      "name": "diagonal-seed-human-0p625ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/diagonal-seed-human-0p625ms",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.041098926819874794,
+      "family": "diagonal-seed",
+      "source": "runs/contact-planning/diagonal-seed-cached-screen",
+      "travel_heading_offset_rad": 0.7853981633974483,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "scene_sha256": "adc1da332f25cd24e245e9a322609e71b0a45ee901e43dd8a8f14fe0632df387",
+      "config_sha256": "8cac9d6081831151a15ad771e325db4c55db622ef2b92c286649b738bc2cbd5d",
+      "actions_sha256": "430d19c66a00785f911aad6fab436ed2207c70ee8730513cb754f394d1ab138f",
+      "completed": true,
+      "error": null,
+      "simulated_s": 20,
+      "windows": [
+        {
+          "start_s": 1.4,
+          "end_s": 6,
+          "speed_m_s": 0.03949081932496337
+        },
+        {
+          "start_s": 11,
+          "end_s": 16,
+          "speed_m_s": 0.0410281955856835
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.240000000000002,
+          "release_travel_m": 0.00412548138289524,
+          "late_drift_m": 0.00006694292181945437
+        }
+      ],
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.017169028271326933,
+          "ratio_to_total_body_path": 0.021932634013596925
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.004504303420972141,
+          "ratio_to_total_body_path": 0.005754037844026414
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.0141690320252005,
+          "ratio_to_total_body_path": 0.018100278526225453
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.0424641723219547,
+          "ratio_to_total_body_path": 0.05424600248245523
+        }
+      ],
+      "total_body_path_m": 0.7828074029176413,
+      "maximum_slip_ratio": 0.05424600248245523,
+      "maximum_tilt_rad": 0.0580534047316893,
+      "turn_rad": 0.18637011665888273,
+      "passed_turn_response": true,
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_motion_checks": false,
+      "capture_sha256": "5ebf3e3b45b4a49ecc029442b6efe85167f3f5800794914d7ba458fe2a780e53"
+    },
+    {
+      "name": "diagonal-seed-dropout-0p625ms",
+      "kind": "dropout",
+      "prefix": "runs/contact-planning/diagonal-seed-dropout-0p625ms",
+      "duration_s": 12,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.041098926819874794,
+      "family": "diagonal-seed",
+      "source": "runs/contact-planning/diagonal-seed-cached-screen",
+      "travel_heading_offset_rad": 0.7853981633974483,
+      "actions_source": "examples/full-robot/fast-wasd/dropout.actions.json",
+      "actions_source_sha256": "59ec22dc77e0e2c04fc6c212f2c1bc981d95ffaa047ca89cda05efe7943229a5",
+      "scene_sha256": "cd67b95fba67d604883b895219058dbf1f3438e28e1ab48aabcac439641400a6",
+      "config_sha256": "be899262a01c6ef5bfe8d8b56e94b2597dfd8b8e106ede866743da211f9fa8a0",
+      "actions_sha256": "5d555bd917d4025afd04c87e67729cfd007e7e07e3991b432d2c765c224efda9",
+      "completed": true,
+      "error": null,
+      "simulated_s": 12,
+      "windows": [
+        {
+          "start_s": 0.8,
+          "end_s": 3,
+          "speed_m_s": 0.040246920657794304
+        },
+        {
+          "start_s": 6.8,
+          "end_s": 9,
+          "speed_m_s": 0.041011097232479095
+        }
+      ],
+      "stops": [
+        {
+          "request_or_packet_loss_s": 3,
+          "permanently_below_1mm_s_at": 3.48,
+          "release_travel_m": 0.01360487441541593,
+          "late_drift_m": 0.000012632340063061746
+        },
+        {
+          "request_or_packet_loss_s": 9,
+          "permanently_below_1mm_s_at": 9.42,
+          "release_travel_m": 0.011274421152165771,
+          "late_drift_m": 0.000059178121780288905
+        }
+      ],
+      "feet": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.006461306141888804,
+          "ratio_to_total_body_path": 0.02128550282857154
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.01270025026160138,
+          "ratio_to_total_body_path": 0.04183847769018694
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "loaded_material_path_m": 0.003930421782128579,
+          "ratio_to_total_body_path": 0.012948001862750434
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "loaded_material_path_m": 0.003511211178260816,
+          "ratio_to_total_body_path": 0.011566994942718319
+        }
+      ],
+      "total_body_path_m": 0.30355431083431067,
+      "maximum_slip_ratio": 0.04183847769018694,
+      "maximum_tilt_rad": 0.057614350034323164,
+      "turn_rad": null,
+      "passed_turn_response": true,
+      "passed_control_checks": true,
+      "passed_contact_quality": true,
+      "passed_motion_checks": true,
+      "capture_sha256": "a1a4120068b30a969395738da3eab88065ab103b58ec7ecb70986aa45a8d536c"
+    }
+  ],
+  "comparisons": [
+    {
+      "reference": "diagonal-seed-human-1p25ms",
+      "candidate": "diagonal-seed-human-0p625ms",
+      "maximum_body_difference_m": 0.0005972117573194371,
+      "maximum_speed_fraction": 0.0010388772606462952,
+      "absolute_slip_ratio_difference": 0.0009906347631264412,
+      "both_motion_checks_passed": false,
+      "passed": true
+    }
+  ],
+  "scope": "Command-driven native recordings. Control gates require ±5% speed tracking, <=0.1 rad tilt, human-schedule yaw change 0.24±0.06 rad, settling below 1 mm/s within 0.8 s and <=3 mm late drift. Contact quality separately requires <=5% loaded material slip; combined motion checks require both. These development thresholds are not physical speed limits. Collision, periodic lift and browser checks remain separate."
+}

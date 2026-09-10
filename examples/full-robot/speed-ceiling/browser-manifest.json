@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "profile": "synchronized-human-5ms",
+  "wasm": {
+    "artifact_sha256": "3d9682cb16c3be0d59238a25d6e4dc751e2ac9dcc97be3631b6f7ea472cb43dd",
+    "browser_module_sha256": "ee5743f1867471dd0f3cbb6728e86b3280fdbb10aed67bbb3f654cd74a408149"
+  },
+  "inputs": {
+    "runs/speed-ceiling/validation/synchronized-human-5ms.scene.json": "f6a5ab62cfb1269c2edd9915f5f60f68c9830f49d705eef99b2fefdcb405259f",
+    "runs/speed-ceiling/validation/synchronized-human-5ms.config.json": "ef3d4ce9b50a5050ea7cde9c0290a56f2621defaf2b62bdeae941c49d16ec222",
+    "examples/full-robot/fast-wasd/task.json": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026",
+    "Cargo.lock": "2aece6b0637c79b737cca98a08377b4253d67478280b17162c772ebca02f38f1",
+    "crates/sim-domain-robot/src/sdf.rs": "89e53c33217a5d71fc10b2cada0beb49f0d5bc3ac6a2b43e2928fcb8a98b769a",
+    "crates/sim-domain-robot/src/model.rs": "e0d2828130f23c107a14f3f74a249537c433396f5b19e0e3a443c6a9f1b1da6d",
+    "crates/sim-domain-control/src/command_lease.rs": "e8f71c8bf9d554876be3c97cabac7b0306743ad02356c7cd1a87fa887a86747d",
+    "crates/sim-script/src/lib.rs": "c73d225f58b688610df569945b79b0bbbbe55e2ce4a1da39287cb869181f9e87",
+    "web/viewer/viewer.js": "a9970cd7ec7312e8ef9bd377bed5aca801e80f1446627ddb7701e99efc7b158f",
+    "web/viewer/motion-commands.mjs": "160237d406526efcbe4605111dc3bcbdfc4f7dfe3800646aecca57eed32b05f6",
+    "examples/full-robot/speed-ceiling/package_browser.mjs": "3cd092341aa7ca304cfdb021a1046693229d15a7b10bc80ef7632f8fc3e245c7"
+  },
+  "scope": "Fresh shared Rust/WASM runtime with CAD grid refinements and command lease. Simulation time and commands recorded for replay. Browser measurements are separate from native physical acceptance."
+}

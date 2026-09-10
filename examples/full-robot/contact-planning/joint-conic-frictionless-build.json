@@ -1,0 +1,76 @@
+{
+  "base_commit": "5296e0cc3247e4465de225a4d4819ec98bbb3a30",
+  "recorded_at": "2026-09-09T17:33:07.794Z",
+  "prior_source_build": {
+    "path": "examples/full-robot/contact-planning/joint-conic-pattern-build.json",
+    "bytes": 15111,
+    "sha256": "d162b46ac6a3e6a441296d44efc8842a8db778420099994b7962c851a42ce771"
+  },
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-conic-frictionless-sources.tar.gz",
+    "bytes": 3979,
+    "sha256": "820209cd995eab14f52bc755f862d6e128aa2f6fdf200e20d7b5b09ff2fecaf2"
+  },
+  "source": {
+    "path": "crates/sim-runtime/src/contact_planning/joint_conic.rs",
+    "bytes": 11765,
+    "sha256": "f9165508e986b2ed0e3b4177b234cd2e5bdcc9c0a3b8df402aa7b10562d8b3d1"
+  },
+  "cargo_lock": {
+    "path": "Cargo.lock",
+    "bytes": 167132,
+    "sha256": "895a49c1003c13918aeb05316d9b413dde3f5fb25960907456db6ee58e6e9583"
+  },
+  "conic_cli": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/solve_joint_force_cones",
+    "bytes": 9399364,
+    "sha256": "33cc7f1564437d814dd02dee20d24e57aeadbde5d179233dd35d3d140e0d14a1"
+  },
+  "screen": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/screen_joint_contact_starts",
+    "bytes": 9365908,
+    "sha256": "416b45831f5bf8eb67a2f60f3bdda52fc5637efa4e540cfc312bec4d2bd80945"
+  },
+  "prior_cli": {
+    "path": "runs/joint-conic-patterns/solve_joint_force_cones-before-frictionless",
+    "bytes": 9395372,
+    "sha256": "2d4491a40a1b56641af4b6df8d60457fdf2a67fb741724aab8a36eff4029d84f"
+  },
+  "prior_screen": {
+    "path": "runs/joint-conic-patterns/screen_joint_contact_starts-before-frictionless",
+    "bytes": 9361924,
+    "sha256": "01c0c7ed8f5cd2f741e5c240c582a799298e72adc4c1396dda224fb1092fceb0"
+  },
+  "build_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --locked --release -p sim-runtime --features conic --example solve_joint_force_cones --example screen_joint_contact_starts",
+  "test_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo test --locked --release -p sim-runtime --features conic --lib contact_planning",
+  "tests": 6,
+  "terminal_exit_codes": {
+    "tests": 0,
+    "build": 0,
+    "robot_replay": 0
+  },
+  "positive_friction_robot_replay_byte_identical": true,
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-frictionless-tests.log",
+      "bytes": 1084,
+      "sha256": "b8b19a35333281dde85640df7239aa70c90f1adcdbde2dd3fd7356848b1167d4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-frictionless-build.log",
+      "bytes": 165,
+      "sha256": "2b7f8174192d9900e51ec94a8dd49eacab3d77d9d40ab043011955e46a3cce44"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-frictionless-replay.result.json",
+      "bytes": 1593705,
+      "sha256": "c529f4251baf86833cea10cd3529beab54abb91c6e72a18a84c5f33421015120"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-frictionless-replay.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "scope": "Retain unilateral support at exactly zero friction, with analytic negative-load test. Existing positive-friction robot conic result is byte-identical. No physical model/tolerance changes or runtime gain."
+}

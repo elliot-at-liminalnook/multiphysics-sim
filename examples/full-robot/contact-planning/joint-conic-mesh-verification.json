@@ -1,0 +1,48 @@
+{
+  "added_phases": [
+    0.18849999999999997,
+    0.1895,
+    0.1875,
+    0.1905,
+    0.1865,
+    0.19149999999999998,
+    0.18549999999999997,
+    0.1925
+  ],
+  "old_physical_frames_retained": 250,
+  "dense_frames": 2250,
+  "refined_frames": 266,
+  "only_collocation_phases_changed": true,
+  "worst_dense_failure_now_in_optimization_mesh": true,
+  "refined_initial": {
+    "speed_m_s": 0.02518825560741796,
+    "force_error_n": 0.08063757652113737,
+    "moment_error_nm": 0.035947929314287475,
+    "torque_margin_nm": 1.0912037741701959,
+    "cone_violation_n": 0,
+    "maximum_inequality": 0.7973964657143737,
+    "sampled_feasible": false
+  },
+  "force_refit": {
+    "native_status": "AlmostSolved",
+    "speed_m_s": 0.02518825560741796,
+    "force_error_n": 0.053400682864380225,
+    "moment_error_nm": 0.02136027315035305,
+    "torque_margin_nm": 1.0917911393665394,
+    "cone_violation_n": 0,
+    "maximum_inequality": 0.06801365751765243,
+    "sampled_feasible": false
+  },
+  "native_pilot": {
+    "native_status": -1,
+    "model_evaluations": 219,
+    "speed_m_s": 0.02515947236284378,
+    "force_error_n": 0.05312671803529356,
+    "moment_error_nm": 0.02124981288955774,
+    "torque_margin_nm": 1.0919528712689108,
+    "cone_violation_n": 0,
+    "maximum_inequality": 0.06253436070587126,
+    "sampled_feasible": false
+  },
+  "scope": "Adaptive collocation incorporates observed dense failures without changing physical limits or motion. No global speed optimum or measured runtime gain."
+}

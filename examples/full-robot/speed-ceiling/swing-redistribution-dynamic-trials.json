@@ -1,0 +1,95 @@
+{
+  "batch": {
+    "id": "swing-redistribution-dynamic",
+    "cases": [
+      {
+        "source": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-human-fine",
+        "speed": 0.175,
+        "table_name": "swing-redistributed-0p5-v175-loads",
+        "name_prefix": "swing-redistributed-dynamic-0p5-v175",
+        "scales": [
+          1
+        ]
+      },
+      {
+        "source": "runs/speed-ceiling/validation/swing-redistributed-0p8-v175-human-fine",
+        "speed": 0.175,
+        "table_name": "swing-redistributed-0p8-v175-loads",
+        "name_prefix": "swing-redistributed-dynamic-0p8-v175",
+        "scales": [
+          1
+        ]
+      }
+    ]
+  },
+  "rows": [
+    {
+      "name": "swing-redistributed-dynamic-0p5-v175-scale1-human-fine",
+      "prefix": "runs/speed-ceiling/validation/swing-redistributed-dynamic-0p5-v175-scale1-human-fine",
+      "source": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-human-fine",
+      "source_scene_sha256": "3483c8b4900d5e7763adfb996b646d1fc0b25a50e8006fd15118800053b473e2",
+      "kind": "human",
+      "family": "swing-redistributed-dynamic-0p5-v175-scale1-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.175,
+      "scale": 1,
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-loads.forward.load-recipe.json",
+          "recipe_sha256": "5bf510615eabaa0ebd70fc6bf4645c68870477746af41095fb0b2e27a02b9723",
+          "table": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-loads.forward.load-table.json",
+          "table_sha256": "c07529f68b9c04c18a74f17aff8df14a9203c20f6cbaa021c158ce2d03300c8a",
+          "maximum_offset_rad": 0.0503903650727458,
+          "maximum_unbalanced_moment_nm": 6.588985715214581
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-loads.reverse.load-recipe.json",
+          "recipe_sha256": "9716d72d4c8bac00f64144c564e7096e7e569d8906345f2ce5b6ab8235df7e06",
+          "table": "runs/speed-ceiling/validation/swing-redistributed-0p5-v175-loads.reverse.load-table.json",
+          "table_sha256": "d81ea6d483aa1e083ef8788323b6f517007774629e1c5b8cde39f9cc062ef40e",
+          "maximum_offset_rad": 0.05075380269741476,
+          "maximum_unbalanced_moment_nm": 6.588985715214581
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "2cd9ebff408d37d6d7b52db57a1e9c176f2ec6e36ada5cb219ff7c1a48c9d183",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "bd100cdadababf0ecf3a1b3fdb951eaa6303f15702bd162ef04987c734ba7763"
+    },
+    {
+      "name": "swing-redistributed-dynamic-0p8-v175-scale1-human-fine",
+      "prefix": "runs/speed-ceiling/validation/swing-redistributed-dynamic-0p8-v175-scale1-human-fine",
+      "source": "runs/speed-ceiling/validation/swing-redistributed-0p8-v175-human-fine",
+      "source_scene_sha256": "add1c885a7b92dba46ae166e6bb21807ab082f50b639419689d96af26269b8bf",
+      "kind": "human",
+      "family": "swing-redistributed-dynamic-0p8-v175-scale1-human-fine",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.175,
+      "scale": 1,
+      "tables": {
+        "forward": {
+          "recipe": "runs/speed-ceiling/validation/swing-redistributed-0p8-v175-loads.forward.load-recipe.json",
+          "recipe_sha256": "d94c417b2e67d49446a7b8b7eceeefb79297f9926a2a7d531f2cb22d21c15548",
+          "table": "runs/speed-ceiling/validation/swing-redistributed-0p8-v175-loads.forward.load-table.json",
+          "table_sha256": "0e31e5377f3d305648889c6124222716ba589b0abf56232ea7e6d48ea9d9d2f3",
+          "maximum_offset_rad": 0.06776887803273157,
+          "maximum_unbalanced_moment_nm": 7.856160378228823
+        },
+        "reverse": {
+          "recipe": "runs/speed-ceiling/validation/swing-redistributed-0p8-v175-loads.reverse.load-recipe.json",
+          "recipe_sha256": "b7042d39aef7ac6a75bb0ab7844fb480006169c6d9271a01164d84cf0f52b44b",
+          "table": "runs/speed-ceiling/validation/swing-redistributed-0p8-v175-loads.reverse.load-table.json",
+          "table_sha256": "800cb1a937946c875d47eedaa753e78091dca9b3a9642e53d021d76826352085",
+          "maximum_offset_rad": 0.06741546823891262,
+          "maximum_unbalanced_moment_nm": 7.856160378228824
+        }
+      },
+      "scope": "Signed steady-cadence dynamic torque increment over static allocation at the same reference pose. Shared inverse dynamics, prescribed point-support shares, unbalanced body moment reported. Linear interpolation of 5 ms phase table; gain .5/1, offset capped at .06 rad. Enabled only at the exact nominal cadence with zero commanded yaw and no braking; does not model acceleration/reversal transients. Original physical model and phase/lease/braking policy retained.",
+      "scene_sha256": "56068d259066533e2b459bd4c42a491cc4bcf935342d7bb53d077182843a1d26",
+      "config_sha256": "d40f80c1693a0ad99f50b504ebbcad1cc9ad81341bca9bbe7eaee0ce49bcc697",
+      "actions_sha256": "bd100cdadababf0ecf3a1b3fdb951eaa6303f15702bd162ef04987c734ba7763"
+    }
+  ]
+}

@@ -1,0 +1,1235 @@
+{
+  "version": 1,
+  "archives": [
+    {
+      "original": {
+        "path": ".github/workflows/browser.yml",
+        "bytes": 61073,
+        "sha256": "e511c68f4b7e05b4a14edc1d2578dd4ecada53e47bf8c90cd6004ab5da4d76c7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e511c68f4b7e05b4a14edc1d2578dd4ecada53e47bf8c90cd6004ab5da4d76c7.gz",
+        "bytes": 7885,
+        "sha256": "bb67883c89a7e6e39ade186bf404fe0d7d7cab6869928d2b2bb69962ce44d27d"
+      }
+    },
+    {
+      "original": {
+        "path": "Cargo.lock",
+        "bytes": 183185,
+        "sha256": "85e0126f6aa99514b1cff07f836356ba44d7300b75e60be078fe762d355647e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/85e0126f6aa99514b1cff07f836356ba44d7300b75e60be078fe762d355647e0.gz",
+        "bytes": 41949,
+        "sha256": "c843fc24a39198867820ecf18e42952b2f27823c569e57ca3c7b3fd0ed0f7a60"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/Cargo.toml",
+        "bytes": 1913,
+        "sha256": "f8e3f636d6059873fb76cd8b953ed0f249e188024b5098a919635b95311dcbdc"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f8e3f636d6059873fb76cd8b953ed0f249e188024b5098a919635b95311dcbdc.gz",
+        "bytes": 493,
+        "sha256": "3c036a5bf70f6721a11c314c8a7e94521ac71c8fccc5f1f6b50c4ffa0fe22ee6"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/build.rs",
+        "bytes": 2985,
+        "sha256": "7f306085f6c80b6ece89ae1426638482f2d0d24c1ba714a28e963247e04fde79"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7f306085f6c80b6ece89ae1426638482f2d0d24c1ba714a28e963247e04fde79.gz",
+        "bytes": 1123,
+        "sha256": "e60a123c3f66899fb185b61db2e0312b013b3614575dc6c02c81e4242b630f27"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/examples/check_controller_forecast.rs",
+        "bytes": 3796,
+        "sha256": "2ecb845e8b0ca547c952cd0e02109c0da8084fe35c4c94ef56623260ca7f6323"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2ecb845e8b0ca547c952cd0e02109c0da8084fe35c4c94ef56623260ca7f6323.gz",
+        "bytes": 1499,
+        "sha256": "130f960f2f89b1f1c7cec69a2f4d63163d38e872aa38bf36cc7d83805f06abda"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/examples/compare_environment_fidelity.rs",
+        "bytes": 1480,
+        "sha256": "d23ea3bc60dd2ea29db0b99bff678764fe3aeede28953d85aae7118f5e336b84"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d23ea3bc60dd2ea29db0b99bff678764fe3aeede28953d85aae7118f5e336b84.gz",
+        "bytes": 703,
+        "sha256": "973d4ec96938e294fa6a6fa27af67150451f5cc6061313ef15f83885fc0a2117"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/examples/prepare_controller_forecast.rs",
+        "bytes": 3830,
+        "sha256": "9bec3baf99be610e81d8fc798fd0bc1fd471dd05100a65dee916d20bf3e53cce"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9bec3baf99be610e81d8fc798fd0bc1fd471dd05100a65dee916d20bf3e53cce.gz",
+        "bytes": 1423,
+        "sha256": "6e657e6f185e5f6ac6eddda0bd12cebcdfe0b73fccd13c21d917976fbf3df2fd"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/examples/run_environment.rs",
+        "bytes": 5266,
+        "sha256": "ed35f5617619720f099157dfb9a4062b3863aa2f004b90ac72ecbc5c8bb352da"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ed35f5617619720f099157dfb9a4062b3863aa2f004b90ac72ecbc5c8bb352da.gz",
+        "bytes": 1859,
+        "sha256": "2cc1d5d9749863b23ef8b5672605fbd43e5557015e4913c88acaa6092ef00bcf"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/embedded.rs",
+        "bytes": 67508,
+        "sha256": "8fa46ac9df33af45321eda0912ad14b88f556ae684860502e0ec55cb9cf26cd4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8fa46ac9df33af45321eda0912ad14b88f556ae684860502e0ec55cb9cf26cd4.gz",
+        "bytes": 15264,
+        "sha256": "fb54dd4975c169c3df7443e5e4f5a2715178e2461fa443d41c970019ba45ae75"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/environment.rs",
+        "bytes": 38921,
+        "sha256": "3fd9adb3d2ac6f9525c8285f58122858dc47efa39ac928d2195e4deb5a238ca1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3fd9adb3d2ac6f9525c8285f58122858dc47efa39ac928d2195e4deb5a238ca1.gz",
+        "bytes": 10001,
+        "sha256": "d51521bc934b2fb67a998e848874f2c12fc0a659e2b5e556e6d0ca6d76f7f1d0"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/fidelity.rs",
+        "bytes": 22871,
+        "sha256": "dfe74703b3bad053ae86c2a154702f7cb348812d9a3ab2ff4d93d22c9ac39fc9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/dfe74703b3bad053ae86c2a154702f7cb348812d9a3ab2ff4d93d22c9ac39fc9.gz",
+        "bytes": 6265,
+        "sha256": "2ba057270e89cbfcbf7bc62b4e8a977c3bce98af8fc6a08f1770e34569861222"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/lib.rs",
+        "bytes": 2719,
+        "sha256": "92a283c75c75d50af76cc1cb8f25204b2f45dd90ef11230f087cde9c5f8467e0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/92a283c75c75d50af76cc1cb8f25204b2f45dd90ef11230f087cde9c5f8467e0.gz",
+        "bytes": 753,
+        "sha256": "514f99aeb4fdb7770608af8787a728d3313b8f592625b6b5181e664ef4e93749"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/motion_forecast.rs",
+        "bytes": 26920,
+        "sha256": "6afaff0c1c812a3ae8400058a38e61ad30a7182387186bd11bca9cb9988f3895"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6afaff0c1c812a3ae8400058a38e61ad30a7182387186bd11bca9cb9988f3895.gz",
+        "bytes": 7552,
+        "sha256": "1bba5f81c0822f26707b6f203ad06c20b6ee1770db12b721c115a9003a42ed65"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/src/physics_context.rs",
+        "bytes": 9662,
+        "sha256": "12fe528d85fa675461102ad638d7ffa69695538eba88937e44101f5cd963a647"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/12fe528d85fa675461102ad638d7ffa69695538eba88937e44101f5cd963a647.gz",
+        "bytes": 2954,
+        "sha256": "4642570f0660de3a254605a9ea13fb1df40cdf79ce838e2b11fc3d3d254e6994"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/controller_forecast.rs",
+        "bytes": 16598,
+        "sha256": "ff8350a3b8f9371c678edaf900daad1abc6b175c62035befcb06af83916f2f32"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ff8350a3b8f9371c678edaf900daad1abc6b175c62035befcb06af83916f2f32.gz",
+        "bytes": 3812,
+        "sha256": "74f3ed292f4946bd393f3d366c8818eeffec6a7cb68d1e5722c0f11222044f43"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/forecast_observability.rs",
+        "bytes": 4177,
+        "sha256": "bd6b0121ce39d9f5d3c71900990d5ce8c9ab648190b60375f34c0ad2595a50d0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bd6b0121ce39d9f5d3c71900990d5ce8c9ab648190b60375f34c0ad2595a50d0.gz",
+        "bytes": 1410,
+        "sha256": "362b7598d6a2e7a9745167a6613c4d1beed6ec5300ef3634f1a1b7a3ea9a751c"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/imu_policy.rs",
+        "bytes": 15287,
+        "sha256": "49f908cc3c51e4b6a64c63d824d5b593ee6066a20e5bb1ad51b37ed802bd51ef"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/49f908cc3c51e4b6a64c63d824d5b593ee6066a20e5bb1ad51b37ed802bd51ef.gz",
+        "bytes": 4153,
+        "sha256": "9af225ea9682ffc9b4c8b8086980d023c27de056d3dc197b1c9a4e9549132431"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/motion_forecast.rs",
+        "bytes": 5862,
+        "sha256": "ae4c4ae825d0a4a97c90c59dc0c8354ee156fae641a4d010d5e8a71c893f6247"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ae4c4ae825d0a4a97c90c59dc0c8354ee156fae641a4d010d5e8a71c893f6247.gz",
+        "bytes": 2117,
+        "sha256": "43e0400b84076fcdc30471e4e93a46dee3f9f0e59aa5f05b8aca672c0a272187"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/ppo_training.rs",
+        "bytes": 9026,
+        "sha256": "9cdb9e81c978ad166ae0d93a501f0b0c9d9af7fc5f069387d75fc7460a53e267"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9cdb9e81c978ad166ae0d93a501f0b0c9d9af7fc5f069387d75fc7460a53e267.gz",
+        "bytes": 2710,
+        "sha256": "aedc6ce2cb199ccbf3b3861f10d82ccf3d5d6b2b959ce6bbf420bda856c0450a"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-runtime/tests/predictive_policy.rs",
+        "bytes": 29477,
+        "sha256": "f859c6277537499c9751ba3db2f255810f57b080bb7092aab3da85ed4e8482b5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f859c6277537499c9751ba3db2f255810f57b080bb7092aab3da85ed4e8482b5.gz",
+        "bytes": 6231,
+        "sha256": "e7eac746e32ac3d338f7f89270ed98211f698056643f3c5a58371fb04ea3c0de"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-web/Cargo.toml",
+        "bytes": 253,
+        "sha256": "867202739fccd54f8d3d6270417fed4392155ae96236be6ea584d7e2ed54c959"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/867202739fccd54f8d3d6270417fed4392155ae96236be6ea584d7e2ed54c959.gz",
+        "bytes": 174,
+        "sha256": "bcb639a575bf520e46c859ba0b6e39f2732ca0b68ade5cad8f0c2f4fc2eba8bf"
+      }
+    },
+    {
+      "original": {
+        "path": "crates/sim-web/src/lib.rs",
+        "bytes": 10595,
+        "sha256": "6a5271b09aa2f9292873732b4ec39a8e576910fe465f68767e146170adfda6e4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6a5271b09aa2f9292873732b4ec39a8e576910fe465f68767e146170adfda6e4.gz",
+        "bytes": 2505,
+        "sha256": "5d9a8ae0d273003cd607c4168fc97e1ef0d60a325efadc124ee03e49ce9abde2"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/archive_evidence_files.mjs",
+        "bytes": 2319,
+        "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480.gz",
+        "bytes": 1005,
+        "sha256": "9871ebfdb39045f0f290b38bbfe0d0ce6759382c8107b89abc5d0072c5857481"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/check_fidelity_report_parity.mjs",
+        "bytes": 1405,
+        "sha256": "194c3b26bba432d23e44c7aa65d05542d5e862b8d4f4a778ca23d56bb02ba578"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/194c3b26bba432d23e44c7aa65d05542d5e862b8d4f4a778ca23d56bb02ba578.gz",
+        "bytes": 722,
+        "sha256": "eb6ba602006eb47bd8fb809300de47d3a91cc50169b1eb3d24661dcebab8c7ab"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/controller-action-forecasts.md",
+        "bytes": 5147,
+        "sha256": "e567372f6b74b08d8583a578468c86338349d8de8ae974de37627dfce04e8775"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e567372f6b74b08d8583a578468c86338349d8de8ae974de37627dfce04e8775.gz",
+        "bytes": 2313,
+        "sha256": "0378af526d6fac62693c2b11e68908dcebc0f7047ffe9ca329e7a62414e1a9b1"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/fidelity-comparison.md",
+        "bytes": 7735,
+        "sha256": "26b145a08555c2cdf56684f854f332d8137f6e4edc381a77ea72dbcbcacaaf12"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/26b145a08555c2cdf56684f854f332d8137f6e4edc381a77ea72dbcbcacaaf12.gz",
+        "bytes": 3496,
+        "sha256": "c0a77a9c474db1220076638cf2107cf2f04aeaf6317e72932bcd0e3e6a4ed6a7"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/physics-bound-forecasts.md",
+        "bytes": 5914,
+        "sha256": "8c057dce5128d2efde468312ce9583a8894b0aee75f62d83b01d1333a11fa043"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8c057dce5128d2efde468312ce9583a8894b0aee75f62d83b01d1333a11fa043.gz",
+        "bytes": 2615,
+        "sha256": "ca8253ed95a8d64d1ad5bd3a60648290ce56c8bb332103cde137ac45ca021937"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/prepare_fidelity_parity_plan.mjs",
+        "bytes": 1626,
+        "sha256": "8f474a89f4842f254a135c062acb71da3bfacd91b0d270a26ab383595867b530"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8f474a89f4842f254a135c062acb71da3bfacd91b0d270a26ab383595867b530.gz",
+        "bytes": 830,
+        "sha256": "58ecf13991de155a800321ca46228f87196343ce596f46f5a7b51643f58d4221"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/restore_evidence_file.mjs",
+        "bytes": 1151,
+        "sha256": "257f467dec08b7ef4dba0ee600f486e10d060a5a44758f8c097bf756f0023319"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/257f467dec08b7ef4dba0ee600f486e10d060a5a44758f8c097bf756f0023319.gz",
+        "bytes": 547,
+        "sha256": "dc76e37881cf3e521ba084990f6f44b8248028393e6be01b9974124175182029"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/interactive/shared-robot-learning-plan.md",
+        "bytes": 7810,
+        "sha256": "229247d2e55fce542a820f632699abb4e46b73490864e1640cf8181c4226c77e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/229247d2e55fce542a820f632699abb4e46b73490864e1640cf8181c4226c77e.gz",
+        "bytes": 3215,
+        "sha256": "4d9300d1bc39b37bda3dbf821c6ec2052b9eed7b0f1a5825efd321846abfecb6"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/baseline/robot.rcad",
+        "bytes": 7178,
+        "sha256": "9cd32aa97d620cf7e342fe994eccd5904cd0a2b235e60092e877d516d8a17a7a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9cd32aa97d620cf7e342fe994eccd5904cd0a2b235e60092e877d516d8a17a7a.gz",
+        "bytes": 6720,
+        "sha256": "a9dc01562345e325441c407e26c793193d290d03d5659f344aa5a74c3ec7e5ac"
+      }
+    },
+    {
+      "original": {
+        "path": "examples/wheeled-robot/baseline/robot.simrobot.json",
+        "bytes": 1265289,
+        "sha256": "2acaaae1980b533665be97ddaa19400cb7a9900b673642f4bdba06a35deb8ea9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2acaaae1980b533665be97ddaa19400cb7a9900b673642f4bdba06a35deb8ea9.gz",
+        "bytes": 84023,
+        "sha256": "a89714b25dc72f85c9fe3e4cd3d6b311200274ac16af536e9eea2a9be885e36e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-fidelity-v1/quadruped-final-native.json",
+        "bytes": 13119659,
+        "sha256": "c3e9c634a92bd3c41758081dd07009e6f39860e7f96f92908042c2578828b922"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c3e9c634a92bd3c41758081dd07009e6f39860e7f96f92908042c2578828b922.gz",
+        "bytes": 3698815,
+        "sha256": "a0fe5ecc4914362cc92b435674dffa6991cc135b46386b269c099ec1bcad1d42"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-fidelity-v1/wheeled-final-native.json",
+        "bytes": 1197989,
+        "sha256": "ccccc80d7192b691589c631ae658fb9a01232a67844c0309aab063d470d2aba3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ccccc80d7192b691589c631ae658fb9a01232a67844c0309aab063d470d2aba3.gz",
+        "bytes": 97922,
+        "sha256": "32b53d8e13398d8745b6ccb062a29218a8401b9c6a26e8541942939cb9b164ef"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/acceptance.json",
+        "bytes": 2253,
+        "sha256": "ada94929b0764a02768c2dd6ae006c6b0ef11db2053437ac95bd43ffe102ed59"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ada94929b0764a02768c2dd6ae006c6b0ef11db2053437ac95bd43ffe102ed59.gz",
+        "bytes": 840,
+        "sha256": "86bcc790198916800078effacf694f83ec9adb5b2b18387d0320e4b6bccb0ade"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/build-inputs.json",
+        "bytes": 47540,
+        "sha256": "31fb5c09e7a8b96e5b923de1751178e701e164fb26780602ee3f996c3c3198df"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/31fb5c09e7a8b96e5b923de1751178e701e164fb26780602ee3f996c3c3198df.gz",
+        "bytes": 14259,
+        "sha256": "807e87ce7e70c7e7631e78bad84092395227433eb8e6dbc4292278a0458a2778"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/check_controller_forecast",
+        "bytes": 18109528,
+        "sha256": "321de8cbcbf20fe860b0ce9477c87bc8283b28ac907e4409667ec4ab3bbc1662"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/321de8cbcbf20fe860b0ce9477c87bc8283b28ac907e4409667ec4ab3bbc1662.gz",
+        "bytes": 5399014,
+        "sha256": "0f19520641fa9c8ef1cfdedc4c81605ac1da261d053545ed75bf9714450f288c"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/compare_environment_fidelity",
+        "bytes": 3327432,
+        "sha256": "177892165324577148830412e8d66b9bd9e5c8bcb8f64d3295eb2848a359c595"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/177892165324577148830412e8d66b9bd9e5c8bcb8f64d3295eb2848a359c595.gz",
+        "bytes": 1005632,
+        "sha256": "40c24bdb6c8bac0b025fe5b5844737da21da41138c89905c7ac26f179f155329"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/final-tests.log",
+        "bytes": 9485,
+        "sha256": "8edb43d3e7a6c8942d76d4031192fabf22f740c506766fcb272c42d58a1d078d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8edb43d3e7a6c8942d76d4031192fabf22f740c506766fcb272c42d58a1d078d.gz",
+        "bytes": 3226,
+        "sha256": "dddd807064e88621e65693aa62748d8c266292f163fe2d440cf2bc868cc82b0d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/native-build.log",
+        "bytes": 817,
+        "sha256": "be1ee80fcbb719049c5d9379c49ddf1029ad0c510f1b2e48ab314d246bfb80c5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/be1ee80fcbb719049c5d9379c49ddf1029ad0c510f1b2e48ab314d246bfb80c5.gz",
+        "bytes": 469,
+        "sha256": "6725be8e06973af823b4bf580b627cc8866b237c83bf716f2f554009456aa3b4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/physics-parity.json",
+        "bytes": 690,
+        "sha256": "04b3f1990260e13ccc948cbefa8978226280be6af20fa44181633c7049914d3b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/04b3f1990260e13ccc948cbefa8978226280be6af20fa44181633c7049914d3b.gz",
+        "bytes": 320,
+        "sha256": "32de5c3ba5305567e65f643086e029078e89d2a16480228d624c48ed05fd190a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/prepare_controller_forecast",
+        "bytes": 3116048,
+        "sha256": "3f57f3322423f27d9a5edb4fcfc388419e2fbf2c8faad1f8baf58fd9454e18bb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3f57f3322423f27d9a5edb4fcfc388419e2fbf2c8faad1f8baf58fd9454e18bb.gz",
+        "bytes": 919063,
+        "sha256": "1cf0e1acd151e5e837b1f3ea4e2315754a9d614624d473d3e1549bd709a00f56"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-browser-frames.json",
+        "bytes": 13101655,
+        "sha256": "fed918261ebebc92f1083c74e6b162d3d8f7b15ec573abbfc4479501605f3856"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fed918261ebebc92f1083c74e6b162d3d8f7b15ec573abbfc4479501605f3856.gz",
+        "bytes": 3698703,
+        "sha256": "55ea8b17960a08004d967a69f3918b989c38ba1480b654990b023a0d241a948a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-case/data.json",
+        "bytes": 12888714,
+        "sha256": "f5bcb66285e5e60a081f4a79d0b126477cc1044a488c05c1783abec7099cd8a1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f5bcb66285e5e60a081f4a79d0b126477cc1044a488c05c1783abec7099cd8a1.gz",
+        "bytes": 3652737,
+        "sha256": "b6dc338a6050aeb6df3e055a1dd5dfa657b06220cd46fc910105c3a3ddef0842"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-case/recipe.json",
+        "bytes": 4975167,
+        "sha256": "bb1a9d2009f699a2ecb1c85dd11688820998d651d773e4752b5736085b320b7f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bb1a9d2009f699a2ecb1c85dd11688820998d651d773e4752b5736085b320b7f.gz",
+        "bytes": 1884026,
+        "sha256": "e7a9569d9d873c0af94d3576c4397df1cda47df419b5ec6316dcc13fc98dbf2e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-case/recording.json",
+        "bytes": 12889642,
+        "sha256": "a4bfac12ac39c477b59ea25bfaab536269ffd450b6789ee20eb46a61a15771eb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a4bfac12ac39c477b59ea25bfaab536269ffd450b6789ee20eb46a61a15771eb.gz",
+        "bytes": 3648846,
+        "sha256": "8eaee0f269169723f46d14a67baf023ee13c5c36e4c0360559c75971c1f6be6a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-case/scope.json",
+        "bytes": 501,
+        "sha256": "e5cb981fd574393b1a00e8cf0cf6e72e30c80fc78c124c1ce5f22c9850f7bb2d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e5cb981fd574393b1a00e8cf0cf6e72e30c80fc78c124c1ce5f22c9850f7bb2d.gz",
+        "bytes": 350,
+        "sha256": "908a88219ce510d075f70a7b47f98dffeead34987a851d83d4d3eac9368acfa3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-final-browser-capture.json",
+        "bytes": 13110867,
+        "sha256": "d8313140d8497078a99276147881bcc71b38ddb5ae34b5d2d501cf2f9dae5543"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d8313140d8497078a99276147881bcc71b38ddb5ae34b5d2d501cf2f9dae5543.gz",
+        "bytes": 3700579,
+        "sha256": "b08de06d0c1688c451ca671ef7bb56e6fb0c87c610e3e602479ae7621acbe3b2"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-final-browser-fidelity.json",
+        "bytes": 25910674,
+        "sha256": "1be23cbf4cb31f9c515fda4f932b97388433e82788e83a61bf673bb86c6e282d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1be23cbf4cb31f9c515fda4f932b97388433e82788e83a61bf673bb86c6e282d.gz",
+        "bytes": 7313401,
+        "sha256": "2e3996c392e93040c9f72ed195377186328fe6c66fd74784ff2647c27ff5d724"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-final-browser.json",
+        "bytes": 124244,
+        "sha256": "7ce833060fc7f635f615c1421b185836cbbca6a9bb7431675ea5a1a62498df30"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7ce833060fc7f635f615c1421b185836cbbca6a9bb7431675ea5a1a62498df30.gz",
+        "bytes": 9770,
+        "sha256": "92c8510c28bcea613ec39ba4a46f133d047e4386722fd36bf07f34c34a9d6b05"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-final-browser.log",
+        "bytes": 124245,
+        "sha256": "8aaf2090b124384d310dcd1dda6fac2c839c767823f75c023792e528eeecdeff"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8aaf2090b124384d310dcd1dda6fac2c839c767823f75c023792e528eeecdeff.gz",
+        "bytes": 9771,
+        "sha256": "ed21620b7fa0d1cf9c2a0df2a949792f89ceeca31bef8394b8d7d6997b59b067"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-final-fidelity-parity.json",
+        "bytes": 479,
+        "sha256": "7a8b977e19cb69df434b6331b34783fd3f357f58f1a474ccf66c466b53b75d1c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/7a8b977e19cb69df434b6331b34783fd3f357f58f1a474ccf66c466b53b75d1c.gz",
+        "bytes": 306,
+        "sha256": "d5470a1eac35720540a08dfc97b53e622e17e2cd04ef91177c49fb82d011f3d4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-final-fidelity-plan.json",
+        "bytes": 1463,
+        "sha256": "237fd325904b123089cac5b963f291beb68bc2a4358d21230b15a75ca37890b6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/237fd325904b123089cac5b963f291beb68bc2a4358d21230b15a75ca37890b6.gz",
+        "bytes": 653,
+        "sha256": "e90131313490a8ec3cf7a7a69c276af8863cd1fb4ffd4369e99c4feff42d8d72"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-final-native-fidelity.json",
+        "bytes": 25924414,
+        "sha256": "16b11f0d9d3323fea3bcfbd6ca1926601b71f5240ac85e82e753252355e27d3e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/16b11f0d9d3323fea3bcfbd6ca1926601b71f5240ac85e82e753252355e27d3e.gz",
+        "bytes": 7314214,
+        "sha256": "7b1f85d321bf5be94c2139187a3f03c55824c4f72eb0900c5e144b7d9f6678a7"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-forecast-case.json",
+        "bytes": 5058540,
+        "sha256": "1220c2f0a0166bc686eb1d683014fc8d90b3e54fc10d409245011edcc5aae0ea"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1220c2f0a0166bc686eb1d683014fc8d90b3e54fc10d409245011edcc5aae0ea.gz",
+        "bytes": 1903528,
+        "sha256": "f18227d1eddccc175ea2b79431ae2ecee7987739ccc32051d8877c8e8ee8d171"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-forecast.log",
+        "bytes": 37,
+        "sha256": "b5e0edd7478afd2a84cc7392bd1a164bb1bf8a2629c7f9885af38b60f70e6748"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b5e0edd7478afd2a84cc7392bd1a164bb1bf8a2629c7f9885af38b60f70e6748.gz",
+        "bytes": 57,
+        "sha256": "bb7d40d02191112a7489716de58e41ece08e74b0fd125b17cf868d5cc9d17442"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-native.json",
+        "bytes": 13122218,
+        "sha256": "8bdce58c92708b425f502f610ffdee78ebcee4019d07fcb7ec988d171b36c744"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8bdce58c92708b425f502f610ffdee78ebcee4019d07fcb7ec988d171b36c744.gz",
+        "bytes": 3700243,
+        "sha256": "c60d794c71700a31f11d06aa135a3c0a901125c361fbbf3eac0c3c780e479844"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-native.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/quadruped-source-recording.json",
+        "bytes": 12889642,
+        "sha256": "a4bfac12ac39c477b59ea25bfaab536269ffd450b6789ee20eb46a61a15771eb"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a4bfac12ac39c477b59ea25bfaab536269ffd450b6789ee20eb46a61a15771eb.gz",
+        "bytes": 3648846,
+        "sha256": "8eaee0f269169723f46d14a67baf023ee13c5c36e4c0360559c75971c1f6be6a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/run_environment",
+        "bytes": 16296396,
+        "sha256": "6049970d8c9f92dc736abb7f5c37e4f0cc173f7bce3c458588d23f03209b9971"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6049970d8c9f92dc736abb7f5c37e4f0cc173f7bce3c458588d23f03209b9971.gz",
+        "bytes": 4842831,
+        "sha256": "7eb1a77fb3c437110c7c6a0cb11d30962fa8dedae53b6cfb3f94cc65d8848646"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/sim_web.wasm",
+        "bytes": 11879486,
+        "sha256": "243a1e108f28f2f78eea48b6f0c37bec162d7fd2b1db44e38b37fdcecf877833"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/243a1e108f28f2f78eea48b6f0c37bec162d7fd2b1db44e38b37fdcecf877833.gz",
+        "bytes": 2510411,
+        "sha256": "b54fc22f5aff27b08417d34fe2f05b3e9b842e2eddedff5760e242946c094f46"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/OPEN.txt",
+        "bytes": 45,
+        "sha256": "2f367822d31c8b18511913fa7c2d83f18f2834ed63cd74c400c1fa9ca6963fe3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2f367822d31c8b18511913fa7c2d83f18f2834ed63cd74c400c1fa9ca6963fe3.gz",
+        "bytes": 65,
+        "sha256": "c246d67c46f88b748a0e6d8d4182ba85acbf3639eeeb6621aa5cec1779f94b11"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/catalog.json",
+        "bytes": 276,
+        "sha256": "c3a18419c3193190de528192de8702e60bd7166a11d3081234c07823fec37f8e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c3a18419c3193190de528192de8702e60bd7166a11d3081234c07823fec37f8e.gz",
+        "bytes": 164,
+        "sha256": "2154647bf09ebad0e092e31c45f86112c356d656faeb451267994cce80ccc027"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/data/quadruped-controller-forecast.json",
+        "bytes": 12882073,
+        "sha256": "2bfa2cc84563fab28a5eb29f9e0eb9fabe4b771dd63dfbc3c78464b1ba9a44c2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2bfa2cc84563fab28a5eb29f9e0eb9fabe4b771dd63dfbc3c78464b1ba9a44c2.gz",
+        "bytes": 3648956,
+        "sha256": "f9ad26aaa2e08c910b325fe90659894da00a8279cad3e018cfa69eb64fb5689e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/data/wheeled-velocity-policy.json",
+        "bytes": 1123238,
+        "sha256": "28e9dd7a3328154b49b55c624aa4adf5a2b6a6370c41a3eb4a7c64b366952d55"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/28e9dd7a3328154b49b55c624aa4adf5a2b6a6370c41a3eb4a7c64b366952d55.gz",
+        "bytes": 82748,
+        "sha256": "c55cbfbc37112aa99ff74adbbcdf90c7d8227a04c2bd2fd5fe2b609790d0d92a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/sim_web.d.ts",
+        "bytes": 7590,
+        "sha256": "130a12daa5d1e885842d4258b08a6c382aece71d3ed4a19e20d9b7f944b22d4b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/130a12daa5d1e885842d4258b08a6c382aece71d3ed4a19e20d9b7f944b22d4b.gz",
+        "bytes": 1689,
+        "sha256": "f5a32e587e83ef0c3af14449da8b9104a3b1469aa395f923675f00d68bb6b271"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/sim_web.js",
+        "bytes": 32349,
+        "sha256": "b98605ef51d0bfd56a9ea29df431dcf19883a390a2a86a821a899979ff016998"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b98605ef51d0bfd56a9ea29df431dcf19883a390a2a86a821a899979ff016998.gz",
+        "bytes": 4652,
+        "sha256": "4f778a8cdfd460f7855e9f705414181f74a01c6787c86c399445e19b69a090eb"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/sim_web_bg.wasm",
+        "bytes": 11487118,
+        "sha256": "66bf7176e748303760489c560192d54ae597f1fc71716e690d709f8c1092b25b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/66bf7176e748303760489c560192d54ae597f1fc71716e690d709f8c1092b25b.gz",
+        "bytes": 2419875,
+        "sha256": "3ff9f5bec59f2ea112ec65cda0bf1b6d9938a15a32103abff1c08cfb278b284b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/sim_web_bg.wasm.d.ts",
+        "bytes": 4002,
+        "sha256": "e77f55132a1aad4a1fbe62e4929fd9a852c3a7ed8f80d255e0b19abba98be05c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e77f55132a1aad4a1fbe62e4929fd9a852c3a7ed8f80d255e0b19abba98be05c.gz",
+        "bytes": 532,
+        "sha256": "6d18749ae61554be5cc928f64e0762a1308a91c5cca13de7e91cc51bac94959e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/worker-message.mjs",
+        "bytes": 761,
+        "sha256": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f.gz",
+        "bytes": 385,
+        "sha256": "45c03b136b87c5aa8e1b34ebbb6358ddac6e965d93ae445b22d1a3fe5863fbe8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/viewer/worker.js",
+        "bytes": 6557,
+        "sha256": "28c91a205d5a73a7862fda48315faaf5b5d6666e47134812436f63684577df33"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/28c91a205d5a73a7862fda48315faaf5b5d6666e47134812436f63684577df33.gz",
+        "bytes": 1846,
+        "sha256": "cc8453c0281da602a8dd267b6f163f25d2b24c87a27e8accb318463fb19d3506"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wasm-build.log",
+        "bytes": 1017,
+        "sha256": "33888c373dbe632eb07f60ea2eff4ae500c3145a5b4f9820a13a21f9e1a1530f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33888c373dbe632eb07f60ea2eff4ae500c3145a5b4f9820a13a21f9e1a1530f.gz",
+        "bytes": 524,
+        "sha256": "d3686281d68ab2940e04f0fc83e1ff3d1cde8b1cfe253a6b475fa40602704f14"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-browser-frames.json",
+        "bytes": 1212098,
+        "sha256": "70da5178068463e0033fbea0e3e5f99eac23e9fbbf79262b2ba7b7d26bf26146"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/70da5178068463e0033fbea0e3e5f99eac23e9fbbf79262b2ba7b7d26bf26146.gz",
+        "bytes": 99176,
+        "sha256": "7985051306b2ab3ce831dd0d3823bef03c1281584cf3c0a0c1f56a2bc16994a4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-case/data.json",
+        "bytes": 1135085,
+        "sha256": "f15d5dde720ff470b69ff98edbaa8bd50518e43941c439185ec62ec6e8b6df78"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f15d5dde720ff470b69ff98edbaa8bd50518e43941c439185ec62ec6e8b6df78.gz",
+        "bytes": 83075,
+        "sha256": "3138a862c19d5d4e5ebf209b4f4750381bc0d2b3126fcf7ade61ad9740fc784a"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-case/recipe.json",
+        "bytes": 4495,
+        "sha256": "d165af88b64ebd28624052e2cd1b01c966831639777a92d7c59afb7e18cb2195"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d165af88b64ebd28624052e2cd1b01c966831639777a92d7c59afb7e18cb2195.gz",
+        "bytes": 2046,
+        "sha256": "9d20e2b93c9562f89867b7d9d4ea8e8d89b9a90460559aba887f213c1a77ab78"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-case/recording.json",
+        "bytes": 1135735,
+        "sha256": "bf8a3df0436f439dbbd6eb9246e40d6b791c4c5b58a0fe9b86234a660353b574"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/bf8a3df0436f439dbbd6eb9246e40d6b791c4c5b58a0fe9b86234a660353b574.gz",
+        "bytes": 81833,
+        "sha256": "ef16300a0e4b4851476ce906700d0f5b3da867fa605fa98ffce148e1470d5eb5"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-case/scope.json",
+        "bytes": 604,
+        "sha256": "4688787d4ebc4080d11c72ae31150942556f9df888e2676a06f6e6aa7079f809"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4688787d4ebc4080d11c72ae31150942556f9df888e2676a06f6e6aa7079f809.gz",
+        "bytes": 345,
+        "sha256": "a17541501fd033de87143ea68c698b9973a21749d77b30fd604162f312263dd3"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-final-browser-capture.json",
+        "bytes": 1192535,
+        "sha256": "ac34300a85c61012a446d80ded7c1eee9ee177229d303aac00e5efd5808c56dd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ac34300a85c61012a446d80ded7c1eee9ee177229d303aac00e5efd5808c56dd.gz",
+        "bytes": 95906,
+        "sha256": "cd22ca74484dc88a089e3af53fb0291c88b999fdee5becdeae8a01f3a6b28921"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-final-browser-fidelity.json",
+        "bytes": 2268444,
+        "sha256": "0e8a77a759cf9a9e2233d09261e976dffff4525ec85d5d3d80424487fc87a3ca"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0e8a77a759cf9a9e2233d09261e976dffff4525ec85d5d3d80424487fc87a3ca.gz",
+        "bytes": 165780,
+        "sha256": "55d9e7c312e4e677955b81c83e4bc99efac2fc4d3bc89156428ee8a1961639fe"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-final-browser.json",
+        "bytes": 60526,
+        "sha256": "796185766bdbed955a898d24e001f2cdb8c18c3298fe24ba040b4f7d0bc22611"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/796185766bdbed955a898d24e001f2cdb8c18c3298fe24ba040b4f7d0bc22611.gz",
+        "bytes": 5514,
+        "sha256": "b30d37148c281a8bb1eb0b3fcf6940b5dd45658a5d840fbc16ea4bd2f17a6af4"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-final-browser.log",
+        "bytes": 60527,
+        "sha256": "1b55665d18e4d7c558c6218f78c58a13a0107eb2e18dba5eee11e9a705e5ad0d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1b55665d18e4d7c558c6218f78c58a13a0107eb2e18dba5eee11e9a705e5ad0d.gz",
+        "bytes": 5515,
+        "sha256": "8e8187eeef11439d665a1eb3048555940bb93ee5eceaa57ad3793c31c3025db8"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-final-fidelity-parity.json",
+        "bytes": 460,
+        "sha256": "3bdc183096d0e93d688e5ee74bc8ac93808d7b311d9b2151ec9356413b5d7935"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/3bdc183096d0e93d688e5ee74bc8ac93808d7b311d9b2151ec9356413b5d7935.gz",
+        "bytes": 292,
+        "sha256": "4c64caee915dab9971c9042e692a450deacfdf091b142ae68f9236c0791c7874"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-final-fidelity-plan.json",
+        "bytes": 1459,
+        "sha256": "4ecbf65e7163c04a6f03470140bd09a23cb31fb731db49a94ccd29700c861d05"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4ecbf65e7163c04a6f03470140bd09a23cb31fb731db49a94ccd29700c861d05.gz",
+        "bytes": 648,
+        "sha256": "0f0421092064c00ddc45e948ffe4b4492b8d905b5d91d843d9c183eb059f5618"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-final-native-fidelity.json",
+        "bytes": 2292386,
+        "sha256": "1bfad4490623b050ffe7f62be29ed8fa3e711079c3a1a23ab96535d134cc0275"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1bfad4490623b050ffe7f62be29ed8fa3e711079c3a1a23ab96535d134cc0275.gz",
+        "bytes": 166244,
+        "sha256": "6a5f71b6353d767e3651c4f0f01541478a49adcaae1a41b503baba8b8cde26ef"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-forecast-case.json",
+        "bytes": 66258,
+        "sha256": "71b458cadca8fca1a580868a178704feaca0bf0e2e0a5bb3dbc3fdbad08a3bd5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/71b458cadca8fca1a580868a178704feaca0bf0e2e0a5bb3dbc3fdbad08a3bd5.gz",
+        "bytes": 14531,
+        "sha256": "fea0c664000f4c79d45f104c3d47955ba8ce2cefd5fb5dc3d756e3d4a6fad6c6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-forecast.log",
+        "bytes": 37,
+        "sha256": "36d72c7ba98bf22342c40aa41a4ddc937cd22bb0b9bff51aa553d991702ad679"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/36d72c7ba98bf22342c40aa41a4ddc937cd22bb0b9bff51aa553d991702ad679.gz",
+        "bytes": 57,
+        "sha256": "c9ab85ed1103e17b8424e149fc81d6edf86e741d42711099cf11a194fa2fbc6d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-native.json",
+        "bytes": 1200544,
+        "sha256": "766404348374fb5c48158d70fcac90f79b48aac5a7790e9abc52eb316d347a3e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/766404348374fb5c48158d70fcac90f79b48aac5a7790e9abc52eb316d347a3e.gz",
+        "bytes": 99136,
+        "sha256": "b6e23342233943b5a87de2a8acb30886c6f7e4832a6fcb319d021335d5530bfd"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-native.stderr",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-recording.json",
+        "bytes": 1123884,
+        "sha256": "f21d4e0d058501b836e6bc800748f63a4b39fb73c60a00a9703e2e6bff385b62"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f21d4e0d058501b836e6bc800748f63a4b39fb73c60a00a9703e2e6bff385b62.gz",
+        "bytes": 83131,
+        "sha256": "58ee518ad7ca64fbc4bf4429d4b60b83b0c71d399c4b290e51ebb7ce22baf824"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-source/config.json",
+        "bytes": 825,
+        "sha256": "0e26740b69e905f81eac20c6dc0dc95a4d2571e8ed9fe71196e675b88752911a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0e26740b69e905f81eac20c6dc0dc95a4d2571e8ed9fe71196e675b88752911a.gz",
+        "bytes": 441,
+        "sha256": "a5cda459e5ec58cd5a8ffaf224393dc13ce44f03045bb66a77dcedaec63472be"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-source/data.json",
+        "bytes": 1124055,
+        "sha256": "b20a179fa8e3af4226418772a2a0fd3b59ead03a0d706e64a7ac671e8baf478a"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b20a179fa8e3af4226418772a2a0fd3b59ead03a0d706e64a7ac671e8baf478a.gz",
+        "bytes": 81717,
+        "sha256": "3438550652fbfc213b4462b4776830a07433045889d2e4e9e3931279489e2746"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-source/scene.json",
+        "bytes": 1122499,
+        "sha256": "c55aec85bc54031f8ffcf6fe080cb4aadbeef2f2a271870904bbd9072cd416b7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c55aec85bc54031f8ffcf6fe080cb4aadbeef2f2a271870904bbd9072cd416b7.gz",
+        "bytes": 81216,
+        "sha256": "2ebbb0a6cbdd95d602b2f1921e67bdaee36539c7ed8d0318d2242bab3657ed99"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-source/scope.json",
+        "bytes": 210,
+        "sha256": "e9fd91ffca81dd645e12ba9428c232f07d78bba050ee8b22442e90dea7ae2518"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e9fd91ffca81dd645e12ba9428c232f07d78bba050ee8b22442e90dea7ae2518.gz",
+        "bytes": 183,
+        "sha256": "29e058de3907c967828e7877cefcbd460b8888c34090f1502c9730372a89dfbc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled-source/task.json",
+        "bytes": 705,
+        "sha256": "a01d25c146bff1a236633f15d8f8f70883a711cdbe007f140639e234ff710481"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a01d25c146bff1a236633f15d8f8f70883a711cdbe007f140639e234ff710481.gz",
+        "bytes": 260,
+        "sha256": "acd2aa1bd2116ba6e809d90247bb871e76cd67e220fb1c3aaf0b8993f04134b1"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/shared-physics-binding-v1/wheeled.actions.json",
+        "bytes": 119,
+        "sha256": "6a754a2f50a31e13d800432405b970d37bdf418fabc907fd57a1cb2c8dc8dac2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6a754a2f50a31e13d800432405b970d37bdf418fabc907fd57a1cb2c8dc8dac2.gz",
+        "bytes": 82,
+        "sha256": "1a3823b571d678e0db603c03c21f5d6c592472156a6cd3d254c309653c844f5d"
+      }
+    },
+    {
+      "original": {
+        "path": "web/package-lock.json",
+        "bytes": 2059,
+        "sha256": "ef2213ccff1ae7ae056f819e43e7757ae643d5d78a0c9fb2d65ee3f27bff9a05"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ef2213ccff1ae7ae056f819e43e7757ae643d5d78a0c9fb2d65ee3f27bff9a05.gz",
+        "bytes": 787,
+        "sha256": "99beee53a37eac1f97df0af827fc0d8cfef6f2bb100f3f9e6a7487df669d5693"
+      }
+    },
+    {
+      "original": {
+        "path": "web/package.json",
+        "bytes": 189,
+        "sha256": "d0e10b6f6316721a8069080bc4c0861240088be91d55fdd1fc6f268091ff5a76"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d0e10b6f6316721a8069080bc4c0861240088be91d55fdd1fc6f268091ff5a76.gz",
+        "bytes": 148,
+        "sha256": "2a7ce07b5f3eb769bd720f5479c2999d489de766abeacfe4ccdd9fe272e7b4f0"
+      }
+    },
+    {
+      "original": {
+        "path": "web/serve-viewer.mjs",
+        "bytes": 1068,
+        "sha256": "f4df0ed6bb95ecb6d26c4d0aaa934f30e66f18cc02d67e98c8006b70f8195cb5"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f4df0ed6bb95ecb6d26c4d0aaa934f30e66f18cc02d67e98c8006b70f8195cb5.gz",
+        "bytes": 589,
+        "sha256": "de38ec7c081065183af215dbc1792c20226596855b3c83b982a50387e5060373"
+      }
+    },
+    {
+      "original": {
+        "path": "web/tests/environment.mjs",
+        "bytes": 14799,
+        "sha256": "9a93a82dd61c2d433182eafe5ffba557727d337fce3107bb993389955a3e38cd"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/9a93a82dd61c2d433182eafe5ffba557727d337fce3107bb993389955a3e38cd.gz",
+        "bytes": 5003,
+        "sha256": "00f69997c07d9180286a3f9d34b05ee4ff95ce268ffba79e423630cc5f6bb365"
+      }
+    },
+    {
+      "original": {
+        "path": "web/worker-message.mjs",
+        "bytes": 761,
+        "sha256": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f.gz",
+        "bytes": 385,
+        "sha256": "45c03b136b87c5aa8e1b34ebbb6358ddac6e965d93ae445b22d1a3fe5863fbe8"
+      }
+    },
+    {
+      "original": {
+        "path": "web/worker.js",
+        "bytes": 6557,
+        "sha256": "28c91a205d5a73a7862fda48315faaf5b5d6666e47134812436f63684577df33"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/28c91a205d5a73a7862fda48315faaf5b5d6666e47134812436f63684577df33.gz",
+        "bytes": 1846,
+        "sha256": "cc8453c0281da602a8dd267b6f163f25d2b24c87a27e8accb318463fb19d3506"
+      }
+    }
+  ],
+  "scope": "Version 2 fixed-physics/source forecast binding across native and WASM on both CAD robot forms. 76 tests; raw browser queries and native labels/results; unchanged parsed physical trajectories versus prior committed captures. Legacy source recording retained explicitly unknown; actual replay supplies identified training data. Code inputs fully enumerated in build-inputs.json and baseline commit plus changed sources preserved. No prediction-accuracy, contact-convergence, realtime or morphology-transfer qualification.",
+  "terminal_evidence": {
+    "acceptance": "runs/shared-physics-binding-v1/acceptance.json",
+    "tests": "runs/shared-physics-binding-v1/final-tests.log",
+    "builds": [
+      "runs/shared-physics-binding-v1/native-build.log",
+      "runs/shared-physics-binding-v1/wasm-build.log"
+    ],
+    "status": "Final tests/builds, native preparation/captures/fits, final browser checks, and native fidelity/report parity commands observed terminal exit 0 before archival. No process is writing these artifacts."
+  },
+  "specification": {
+    "path": "runs/shared-physics-binding-v1/archive-spec.json",
+    "sha256": "691e69f4cf0edd66269b40f0fd9235b5fa0105d2cef4a5c6591dbe0db7d9a489"
+  },
+  "code": {
+    "path": "/Users/elliot/physics-simulator-gait-exploration/examples/interactive/archive_evidence_files.mjs",
+    "sha256": "d4aed9951c6ded6c2ff31679e97e0165252acddb243d316ae899351200400480"
+  }
+}

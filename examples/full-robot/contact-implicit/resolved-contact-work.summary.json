@@ -1,0 +1,196 @@
+{
+  "scope": "Finite-horizon planning diagnostics; no periodic gait, detailed runtime tracking or physical maximum claim.",
+  "links": [
+    "-Y | Sliding foot crosshead",
+    "+X | Sliding foot crosshead",
+    "+Y | Sliding foot crosshead",
+    "-X | Sliding foot crosshead"
+  ],
+  "contact_samples": 96,
+  "initial_geometry": {
+    "poses": 13,
+    "maximum_inter_link_penetration_m": 0,
+    "minimum_floor_clearance_m": 0.000020000000000020002
+  },
+  "final_geometry": {
+    "poses": 61,
+    "maximum_inter_link_penetration_m": 0,
+    "minimum_floor_clearance_m": -0.000132366105064452
+  },
+  "stages": [
+    {
+      "contact": {
+        "dissipation_velocity_m_s": 5,
+        "friction_coefficient": 0.25,
+        "smoothing_m": 0.00001,
+        "stiction_velocity_m_s": 0.001,
+        "stiffness_n_m": 200000
+      },
+      "within_planning_tolerances": true,
+      "maximum_force_error_n": 0.03321675306086688,
+      "maximum_moment_error_nm": 0.00685077166061374,
+      "minimum_torque_margin_nm": -0.006585172732062716,
+      "maximum_surface_sample_penetration_m": 0.00011909873169169138,
+      "planned_mean_diagonal_body_displacement_rate_m_s": 0.18496699770350564,
+      "planned_terminal_diagonal_body_velocity_m_s": 0.08662720462401079,
+      "dissipated_sliding_work_j": 0.6606388490129204,
+      "maximum_planned_loaded_slip_ratio": 0.9534843603299236,
+      "independent_coordinate_ranges": [
+        {
+          "name": "joint.-Y | Hip servo output",
+          "minimum": -0.020350677824164443,
+          "maximum": 0.05262821039270427
+        },
+        {
+          "name": "joint.-Y | Worm servo output",
+          "minimum": -0.04273883453217575,
+          "maximum": 0.08880067235692923
+        },
+        {
+          "name": "joint.-Y | Foot servo output",
+          "minimum": -1.1862727583421886,
+          "maximum": -1.032986719467407
+        },
+        {
+          "name": "joint.+X | Hip servo output",
+          "minimum": -0.0474494419367496,
+          "maximum": 0.08607224496910959
+        },
+        {
+          "name": "joint.+X | Worm servo output",
+          "minimum": -0.11203869847817272,
+          "maximum": 0.13831158906354935
+        },
+        {
+          "name": "joint.+X | Foot servo output",
+          "minimum": -1.0705972479788075,
+          "maximum": -1.0011539694323173
+        },
+        {
+          "name": "joint.+Y | Hip servo output",
+          "minimum": 0.09093011954398666,
+          "maximum": 0.21301598097884522
+        },
+        {
+          "name": "joint.+Y | Worm servo output",
+          "minimum": 0.007442701069071855,
+          "maximum": 0.22262397042261872
+        },
+        {
+          "name": "joint.+Y | Foot servo output",
+          "minimum": -1.466881589363162,
+          "maximum": -1.310834816064668
+        },
+        {
+          "name": "joint.-X | Hip servo output",
+          "minimum": 0.023581363779684672,
+          "maximum": 0.14432401546133589
+        },
+        {
+          "name": "joint.-X | Worm servo output",
+          "minimum": -0.20005845262221378,
+          "maximum": 0.08305503211903398
+        },
+        {
+          "name": "joint.-X | Foot servo output",
+          "minimum": -1.548120783020479,
+          "maximum": -1.3146432953665534
+        }
+      ],
+      "per_foot_normal_forces_n": [
+        [
+          20.759313117511702,
+          0.0012793507550758324,
+          15.125494106131883,
+          9.749145067744447
+        ],
+        [
+          5.855364743202799e-209,
+          16.92326284443305,
+          0,
+          13.289655044018295
+        ],
+        [
+          10.415776478473324,
+          6.910542194391305,
+          5.50998973711898e-151,
+          23.033523417356218
+        ],
+        [
+          14.44611811160222,
+          2.997280520358293,
+          18.340144669472803,
+          0
+        ],
+        [
+          24.8435630315495,
+          2.2696292732071195e-164,
+          20.723561381332242,
+          0
+        ],
+        [
+          7.100094280158382,
+          10.104733476940782,
+          10.432746568286197,
+          3.8674021291442853
+        ],
+        [
+          4.7701081124163105,
+          11.53426887046207,
+          8.397206507868223,
+          19.38107909234606
+        ],
+        [
+          12.887907485513345,
+          4.276604431486389,
+          19.695323267083975,
+          6.898190724025588e-31
+        ],
+        [
+          0,
+          19.76330839633166,
+          0.0015460844625925572,
+          23.107981045080354
+        ],
+        [
+          7.518128429329947,
+          9.65561696659157,
+          19.01646395083876,
+          3.743158164989598e-133
+        ],
+        [
+          5.485005666170995e-73,
+          22.65617214098656,
+          2.329839683633892,
+          13.881181689763292
+        ],
+        [
+          15.784209519967133,
+          8.360418471046523e-182,
+          24.83976072460494,
+          8.087654967008591e-12
+        ]
+      ],
+      "thresholded_foot_force_patterns_1n": [
+        "1011",
+        "0101",
+        "1101",
+        "1110",
+        "1010",
+        "1111",
+        "1111",
+        "1110",
+        "0101",
+        "1110",
+        "0111",
+        "1010"
+      ],
+      "search": {
+        "initial_cost": 4576.537104177254,
+        "cost": 14.696772416096248,
+        "evaluations": 43327,
+        "termination": "iteration_limit"
+      }
+    }
+  ]
+}

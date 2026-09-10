@@ -1,0 +1,3159 @@
+{
+  "robot": {
+    "acceleration_tolerance_m_s2": 0.000001,
+    "actuators": {
+      "joint.+X | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+X | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+X | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      }
+    },
+    "additional_clocks": [
+      {
+        "phase_rate": -1,
+        "phase_acceleration_per_s": 0
+      }
+    ],
+    "additional_phases": [],
+    "direction_world": [
+      0.7071067811865476,
+      0.7071067811865475,
+      0
+    ],
+    "embedding": {
+      "absolute_rank_tolerance": 1e-12,
+      "analytic_mechanism_positions": true,
+      "angle_scale_rad": 1,
+      "block_dependent_factorization": true,
+      "dependent_solve": "pivoted_qr",
+      "direct_closure_jacobian": true,
+      "length_scale_m": 0.1,
+      "max_iterations": 30,
+      "max_scaled_correction": 0.25,
+      "relative_rank_tolerance": 1e-10,
+      "scaled_closure_tolerance": 1e-8,
+      "scaled_position_tolerance": 1e-11
+    },
+    "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "extend_motoring_penalty_past_no_load": true,
+    "force_allocation": {
+      "gradient_tolerance_n": 0.000001,
+      "maximum_iterations": 20000,
+      "regularization": 0.0001
+    },
+    "force_tolerance_n": 0.05,
+    "include_body_knots": true,
+    "independent_coordinates": [
+      "joint.-Y | Hip servo output",
+      "joint.-Y | Worm servo output",
+      "joint.-Y | Foot servo output",
+      "joint.+X | Hip servo output",
+      "joint.+X | Worm servo output",
+      "joint.+X | Foot servo output",
+      "joint.+Y | Hip servo output",
+      "joint.+Y | Worm servo output",
+      "joint.+Y | Foot servo output",
+      "joint.-X | Hip servo output",
+      "joint.-X | Worm servo output",
+      "joint.-X | Foot servo output"
+    ],
+    "initial_base_translation_m": [
+      0,
+      0,
+      -0.06906212053309974
+    ],
+    "initial_coordinates": [
+      0,
+      -0.00008346418847292681,
+      -1.0471975511965976,
+      0,
+      -0.27612813350949833,
+      -1.0471975511965976,
+      0,
+      -0.00008346425388696227,
+      -1.0471975511965976,
+      0.17453292519943295,
+      -0.00007650604473797781,
+      -1.0471975511965976
+    ],
+    "joint_search_bounds": [
+      {
+        "lower": -1.0471975511965976,
+        "max_step": 0.05,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "max_step": 0.1,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "max_step": 0.1,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "max_step": 0.05,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "max_step": 0.1,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "max_step": 0.1,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "max_step": 0.05,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "max_step": 0.1,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "max_step": 0.1,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "max_step": 0.05,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "max_step": 0.1,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "max_step": 0.1,
+        "upper": -0.02
+      }
+    ],
+    "moment_length_scale_m": 0.35,
+    "moment_tolerance_nm": 0.02,
+    "penetration_tolerance_m": 0.0001,
+    "phase_acceleration_per_s": 0,
+    "phase_rate": 1,
+    "placement": {
+      "damping_m": 0.000001,
+      "max_iterations": 40,
+      "tolerance_m": 1e-9
+    },
+    "sampling": "contact_intervals",
+    "speed_residual_scale_m_s": 0.05,
+    "target_speed_m_s": 0.3,
+    "torque_tolerance_nm": 0.01,
+    "uniform_samples": 16,
+    "velocity_tolerance_m_s": 1e-7
+  },
+  "candidate": {
+    "force_templates": [
+      [
+        {
+          "interpolation": "linear",
+          "keyframes": [
+            {
+              "time_s": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "time_s": 0.05,
+              "values": [
+                3.9667746138302893,
+                4.608782207714466,
+                19.16775095861898
+              ]
+            },
+            {
+              "time_s": 0.25,
+              "values": [
+                3.9883766154766866,
+                5.237257576850941,
+                20.75079102496464
+              ]
+            },
+            {
+              "time_s": 0.5,
+              "values": [
+                0.06434099902835592,
+                0.10443610234801105,
+                21.713201000375054
+              ]
+            },
+            {
+              "time_s": 0.75,
+              "values": [
+                -1.674608270007169,
+                -1.5732680533505905,
+                19.0539731774589
+              ]
+            },
+            {
+              "time_s": 0.95,
+              "values": [
+                0.17322057782043485,
+                -1.8399661264160936,
+                17.50036179997483
+              ]
+            },
+            {
+              "time_s": 1,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "interpolation": "linear",
+          "keyframes": [
+            {
+              "time_s": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "time_s": 0.05,
+              "values": [
+                -0.6317635562101848,
+                -3.8835472872993595,
+                12.402538496615984
+              ]
+            },
+            {
+              "time_s": 0.25,
+              "values": [
+                -0.35589195780689303,
+                -2.6257098596877437,
+                12.961617952567643
+              ]
+            },
+            {
+              "time_s": 0.5,
+              "values": [
+                -1.2776472567120554,
+                1.157296870257577,
+                18.57955716218086
+              ]
+            },
+            {
+              "time_s": 0.75,
+              "values": [
+                -0.6646907690739385,
+                -1.8737071262331937,
+                19.316279768777175
+              ]
+            },
+            {
+              "time_s": 0.95,
+              "values": [
+                -0.33953560144469846,
+                -0.8631072627277515,
+                19.19324275989339
+              ]
+            },
+            {
+              "time_s": 1,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "interpolation": "linear",
+          "keyframes": [
+            {
+              "time_s": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "time_s": 0.05,
+              "values": [
+                2.4739516801328816,
+                0.7652208592597982,
+                19.664988104339628
+              ]
+            },
+            {
+              "time_s": 0.25,
+              "values": [
+                1.6599609680627139,
+                -1.5571521315805197,
+                21.685147384462283
+              ]
+            },
+            {
+              "time_s": 0.5,
+              "values": [
+                -3.0365425493612306,
+                -5.379236042102723,
+                19.4713462025702
+              ]
+            },
+            {
+              "time_s": 0.75,
+              "values": [
+                -3.7431952145892504,
+                -4.474842115092694,
+                18.389827554278018
+              ]
+            },
+            {
+              "time_s": 0.95,
+              "values": [
+                -3.4177800475328954,
+                -4.083100666168378,
+                16.78452885020355
+              ]
+            },
+            {
+              "time_s": 1,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "interpolation": "linear",
+          "keyframes": [
+            {
+              "time_s": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "time_s": 0.05,
+              "values": [
+                -1.0819145112327677,
+                1.9597427244401906,
+                17.168856743354354
+              ]
+            },
+            {
+              "time_s": 0.25,
+              "values": [
+                -0.7893444538917423,
+                2.955779715617513,
+                18.34027129752334
+              ]
+            },
+            {
+              "time_s": 0.5,
+              "values": [
+                3.102828796249386,
+                3.5125896238499,
+                14.794205904600927
+              ]
+            },
+            {
+              "time_s": 0.75,
+              "values": [
+                2.1512656530086374,
+                3.8229013304569737,
+                13.827419119904269
+              ]
+            },
+            {
+              "time_s": 0.95,
+              "values": [
+                3.1821380751436594,
+                3.978009710910796,
+                16.05770854519569
+              ]
+            },
+            {
+              "time_s": 1,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "interpolation": "linear",
+          "keyframes": [
+            {
+              "time_s": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "time_s": 0.05,
+              "values": [
+                3.9667746138302897,
+                4.608782207714466,
+                19.16775095861898
+              ]
+            },
+            {
+              "time_s": 0.25,
+              "values": [
+                3.988376615476686,
+                5.2372575768509435,
+                20.750791024964652
+              ]
+            },
+            {
+              "time_s": 0.5,
+              "values": [
+                0.0643409990283558,
+                0.10443610234801055,
+                21.713201000375054
+              ]
+            },
+            {
+              "time_s": 0.75,
+              "values": [
+                -1.6746082700071692,
+                -1.573268053350591,
+                19.053973177458904
+              ]
+            },
+            {
+              "time_s": 0.95,
+              "values": [
+                0.17322057782043473,
+                -1.8399661264160918,
+                17.500361799974833
+              ]
+            },
+            {
+              "time_s": 1,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "interpolation": "linear",
+          "keyframes": [
+            {
+              "time_s": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "time_s": 0.05,
+              "values": [
+                -0.631763556210182,
+                -3.8835472872993586,
+                12.40253849661598
+              ]
+            },
+            {
+              "time_s": 0.25,
+              "values": [
+                -0.3558919578068909,
+                -2.6257098596877437,
+                12.961617952567643
+              ]
+            },
+            {
+              "time_s": 0.5,
+              "values": [
+                -1.2776472567120551,
+                1.157296870257577,
+                18.57955716218086
+              ]
+            },
+            {
+              "time_s": 0.75,
+              "values": [
+                -0.664690769073936,
+                -1.8737071262331935,
+                19.31627976877717
+              ]
+            },
+            {
+              "time_s": 0.95,
+              "values": [
+                -0.33953560144469774,
+                -0.8631072627277517,
+                19.19324275989339
+              ]
+            },
+            {
+              "time_s": 1,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "interpolation": "linear",
+          "keyframes": [
+            {
+              "time_s": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "time_s": 0.05,
+              "values": [
+                2.4739516801328816,
+                0.7652208592597981,
+                19.66498810433963
+              ]
+            },
+            {
+              "time_s": 0.25,
+              "values": [
+                1.6599609680627136,
+                -1.5571521315805215,
+                21.685147384462283
+              ]
+            },
+            {
+              "time_s": 0.5,
+              "values": [
+                -3.03654254936123,
+                -5.379236042102723,
+                19.4713462025702
+              ]
+            },
+            {
+              "time_s": 0.75,
+              "values": [
+                -3.7431952145892518,
+                -4.474842115092691,
+                18.389827554278014
+              ]
+            },
+            {
+              "time_s": 0.95,
+              "values": [
+                -3.4177800475328914,
+                -4.083100666168389,
+                16.784528850203568
+              ]
+            },
+            {
+              "time_s": 1,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "interpolation": "linear",
+          "keyframes": [
+            {
+              "time_s": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "time_s": 0.05,
+              "values": [
+                -1.081914511232768,
+                1.9597427244401902,
+                17.168856743354354
+              ]
+            },
+            {
+              "time_s": 0.25,
+              "values": [
+                -0.7893444538917392,
+                2.955779715617513,
+                18.340271297523348
+              ]
+            },
+            {
+              "time_s": 0.5,
+              "values": [
+                3.1028287962493923,
+                3.5125896238498977,
+                14.794205904600929
+              ]
+            },
+            {
+              "time_s": 0.75,
+              "values": [
+                2.151265653008632,
+                3.822901330456972,
+                13.827419119904256
+              ]
+            },
+            {
+              "time_s": 0.95,
+              "values": [
+                3.1821380751436568,
+                3.978009710910797,
+                16.05770854519569
+              ]
+            },
+            {
+              "time_s": 1,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    ],
+    "motion": {
+      "body": {
+        "interpolation": "periodic_cubic_b_spline",
+        "keyframes": [
+          {
+            "time_s": 0,
+            "values": [
+              -0.0012322478449068985,
+              0.0030887869317366527,
+              0.0021146749559448307,
+              0.042838588475292594,
+              -0.05202076291756877,
+              -0.019671600017164004
+            ]
+          },
+          {
+            "time_s": 0.09902187261692036,
+            "values": [
+              -0.007828026398087965,
+              0.000858624201325018,
+              -0.003953689636276965,
+              0.016901878677798465,
+              0.00431930624818129,
+              -0.019974899519623557
+            ]
+          },
+          {
+            "time_s": 0.19804374523384072,
+            "values": [
+              -0.0034882882583439183,
+              0.002173035376390544,
+              0.001044894435662802,
+              -0.0018101467115357872,
+              -0.08633377395531938,
+              0.0010504311018145335
+            ]
+          },
+          {
+            "time_s": 0.2970656178507611,
+            "values": [
+              -0.001057230390194397,
+              -0.004564966523954196,
+              0.006397920341355046,
+              -0.07934953974426567,
+              -0.040172616688395106,
+              -0.062296735359805344
+            ]
+          },
+          {
+            "time_s": 0.39608749046768144,
+            "values": [
+              -0.0012322478449068985,
+              0.0030887869317366527,
+              0.0021146749559448307,
+              0.042838588475292594,
+              -0.05202076291756877,
+              -0.019671600017164004
+            ]
+          }
+        ]
+      },
+      "displacement_world_m": [
+        0.059294995900457136,
+        0.05929499590045712,
+        0
+      ],
+      "feet": [
+        {
+          "center_world_m": [
+            0.006867059714388571,
+            -0.3220619630438515,
+            -0.4410181228863441
+          ],
+          "phase_offset": 0,
+          "stance_fraction": 0.5,
+          "swing_offset_world_m": [
+            0.0036352663602615166,
+            -0.008475348049323726,
+            0.008604443870237429
+          ]
+        },
+        {
+          "center_world_m": [
+            0.3325862718064657,
+            -0.001379932656932252,
+            -0.4410181228863441
+          ],
+          "phase_offset": 0.5,
+          "stance_fraction": 0.5,
+          "swing_offset_world_m": [
+            -0.005398552662848886,
+            0.0031305144441884578,
+            0.006451886202428511
+          ]
+        },
+        {
+          "center_world_m": [
+            -0.011099694046041851,
+            0.3134380550083265,
+            -0.4410181228863441
+          ],
+          "phase_offset": 0.25,
+          "stance_fraction": 0.5,
+          "swing_offset_world_m": [
+            -0.0027255098044493588,
+            0.007191469897327173,
+            0.011295993727846152
+          ]
+        },
+        {
+          "center_world_m": [
+            -0.29795599691543134,
+            -0.03209596683963781,
+            -0.4410181228863441
+          ],
+          "phase_offset": 0.75,
+          "return_ramp_fraction": 0.25,
+          "stance_fraction": 0.5,
+          "swing_offset_world_m": [
+            -0.005082504029640307,
+            0.007874774531011645,
+            0.005858668511462838
+          ]
+        }
+      ],
+      "period_s": 0.39608749046768144
+    }
+  },
+  "variables": [
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "period"
+        }
+      },
+      "bound": {
+        "lower": 0.25,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "displacement_along_direction"
+        }
+      },
+      "bound": {
+        "lower": 0.02,
+        "upper": 0.14
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_stance",
+          "foot": 0
+        }
+      },
+      "bound": {
+        "lower": 0.3,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_center",
+          "foot": 0,
+          "axis": 0
+        }
+      },
+      "bound": {
+        "lower": -0.28115601622728903,
+        "upper": 0.27639301627276086
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_center",
+          "foot": 0,
+          "axis": 1
+        }
+      },
+      "bound": {
+        "lower": -0.4219010840003192,
+        "upper": -0.20415234330944187
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 0,
+          "axis": 0
+        }
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 0,
+          "axis": 1
+        }
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 0,
+          "axis": 2
+        }
+      },
+      "bound": {
+        "lower": 0.003,
+        "upper": 0.025
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_phase",
+          "foot": 1
+        }
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 0.999
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_stance",
+          "foot": 1
+        }
+      },
+      "bound": {
+        "lower": 0.3,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_center",
+          "foot": 1,
+          "axis": 0
+        }
+      },
+      "bound": {
+        "lower": 0.21396620843033204,
+        "upper": 0.44019518621497344
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_center",
+          "foot": 1,
+          "axis": 1
+        }
+      },
+      "bound": {
+        "lower": -0.29461767350234164,
+        "upper": 0.29461767351234763
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 1,
+          "axis": 0
+        }
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 1,
+          "axis": 1
+        }
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 1,
+          "axis": 2
+        }
+      },
+      "bound": {
+        "lower": 0.003,
+        "upper": 0.025
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_phase",
+          "foot": 2
+        }
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 0.999
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_stance",
+          "foot": 2
+        }
+      },
+      "bound": {
+        "lower": 0.3,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_center",
+          "foot": 2,
+          "axis": 0
+        }
+      },
+      "bound": {
+        "lower": -0.2811555162772109,
+        "upper": 0.2763935162321115
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_center",
+          "foot": 2,
+          "axis": 1
+        }
+      },
+      "bound": {
+        "lower": 0.146795044034559,
+        "upper": 0.4219010840056727
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 2,
+          "axis": 0
+        }
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 2,
+          "axis": 1
+        }
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 2,
+          "axis": 2
+        }
+      },
+      "bound": {
+        "lower": 0.003,
+        "upper": 0.025
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_phase",
+          "foot": 3
+        }
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 0.999
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_stance",
+          "foot": 3
+        }
+      },
+      "bound": {
+        "lower": 0.3,
+        "upper": 0.8
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_center",
+          "foot": 3,
+          "axis": 0
+        }
+      },
+      "bound": {
+        "lower": -0.42650120030766503,
+        "upper": -0.17526321871981426
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_center",
+          "foot": 3,
+          "axis": 1
+        }
+      },
+      "bound": {
+        "lower": -0.23087121282321135,
+        "upper": -2.8445740907276872e-11
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 3,
+          "axis": 0
+        }
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 3,
+          "axis": 1
+        }
+      },
+      "bound": {
+        "lower": -0.02,
+        "upper": 0.02
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "foot_swing",
+          "foot": 3,
+          "axis": 2
+        }
+      },
+      "bound": {
+        "lower": 0.003,
+        "upper": 0.025
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 0,
+          "channel": 0
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 0,
+          "channel": 1
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 0,
+          "channel": 2
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 0,
+          "channel": 3
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 0,
+          "channel": 4
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 0,
+          "channel": 5
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 1,
+          "channel": 0
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 1,
+          "channel": 1
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 1,
+          "channel": 2
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 1,
+          "channel": 3
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 1,
+          "channel": 4
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 1,
+          "channel": 5
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 2,
+          "channel": 0
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 2,
+          "channel": 1
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 2,
+          "channel": 2
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 2,
+          "channel": 3
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 2,
+          "channel": 4
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 2,
+          "channel": 5
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 3,
+          "channel": 0
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 3,
+          "channel": 1
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 3,
+          "channel": 2
+        }
+      },
+      "bound": {
+        "lower": -0.015,
+        "upper": 0.015
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 3,
+          "channel": 3
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 3,
+          "channel": 4
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "motion",
+        "decision": {
+          "kind": "body_control",
+          "control": 3,
+          "channel": 5
+        }
+      },
+      "bound": {
+        "lower": -0.1,
+        "upper": 0.1
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 4,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 4,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 4,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 5,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 5,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 0,
+        "node": 5,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 4,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 4,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 4,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 5,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 5,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 1,
+        "node": 5,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 4,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 4,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 4,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 5,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 5,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 2,
+        "node": 5,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 4,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 4,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 4,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 5,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 5,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 0,
+        "foot": 3,
+        "node": 5,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 4,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 4,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 4,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 5,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 5,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 0,
+        "node": 5,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 4,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 4,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 4,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 5,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 5,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 1,
+        "node": 5,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 4,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 4,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 4,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 5,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 5,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 2,
+        "node": 5,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 1,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 1,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 1,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 2,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 2,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 2,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 3,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 3,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 3,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 4,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 4,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 4,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 5,
+        "axis": 0
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 5,
+        "axis": 1
+      },
+      "bound": {
+        "lower": -39.00690539993103,
+        "upper": 39.00690539993103
+      }
+    },
+    {
+      "decision": {
+        "kind": "force",
+        "clock": 1,
+        "foot": 3,
+        "node": 5,
+        "axis": 2
+      },
+      "bound": {
+        "lower": 0,
+        "upper": 39.00690539993103
+      }
+    }
+  ],
+  "search": {
+    "maximum_outer_iterations": 4,
+    "maximum_evaluations": 3500,
+    "initial_penalty": 1,
+    "maximum_penalty": 10000,
+    "penalty_growth": 10,
+    "required_reduction": 0.25,
+    "constraint_tolerance": 1e-7,
+    "complementarity_tolerance": 0.000001,
+    "scaling_exponent": 0,
+    "inner": {
+      "maximum_iterations": 6,
+      "maximum_evaluations": 2200,
+      "difference_step": 0.0001,
+      "initial_damping": 0.1,
+      "gradient_tolerance": 0.00001
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "human20-lhs70-human-1p25ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/human20-lhs70-human-1p25ms",
+      "duration_s": 20,
+      "step_s": 0.00125,
+      "command_speed_m_s": 0.07031284890781607,
+      "family": "human20-lhs70",
+      "source": "runs/bayesian-human20-pilot-v2/evaluation-009",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/human20-lhs70-validation-settings.json",
+        "sha256": "bb3366a407b08bd0d450b959d8615fb4867d18be001c2a557f41e167d5ccb9c7"
+      },
+      "scene_sha256": "d92eb1b3a202e4f8c4a0c7c7936ae02a538a78194b6e0673c89bb2793774143b",
+      "config_sha256": "a1ae9c40198cb16f6e18b39d276731cdf9ed19323406a62e0896ceee31f0a3bd",
+      "actions_sha256": "49d99889a38e54b67f994c2ca078a9fe60d9a810d25d31309a9d5be94272f109"
+    },
+    {
+      "name": "human20-lhs70-human-0p625ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/human20-lhs70-human-0p625ms",
+      "duration_s": 20,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.07031284890781607,
+      "family": "human20-lhs70",
+      "source": "runs/bayesian-human20-pilot-v2/evaluation-009",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/human20-lhs70-validation-settings.json",
+        "sha256": "bb3366a407b08bd0d450b959d8615fb4867d18be001c2a557f41e167d5ccb9c7"
+      },
+      "scene_sha256": "d92eb1b3a202e4f8c4a0c7c7936ae02a538a78194b6e0673c89bb2793774143b",
+      "config_sha256": "66692b358e377502202d6153d8cedc70914993c5d63313eca9349ca0afb0950d",
+      "actions_sha256": "49d99889a38e54b67f994c2ca078a9fe60d9a810d25d31309a9d5be94272f109"
+    },
+    {
+      "name": "human20-lhs70-dropout-0p625ms",
+      "kind": "dropout",
+      "prefix": "runs/contact-planning/human20-lhs70-dropout-0p625ms",
+      "duration_s": 12,
+      "step_s": 0.000625,
+      "command_speed_m_s": 0.07031284890781607,
+      "family": "human20-lhs70",
+      "source": "runs/bayesian-human20-pilot-v2/evaluation-009",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/dropout.actions.json",
+      "actions_source_sha256": "59ec22dc77e0e2c04fc6c212f2c1bc981d95ffaa047ca89cda05efe7943229a5",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/human20-lhs70-validation-settings.json",
+        "sha256": "bb3366a407b08bd0d450b959d8615fb4867d18be001c2a557f41e167d5ccb9c7"
+      },
+      "scene_sha256": "0094d30f004487565f4300d38831b9258f8457215cbceba24134a217d581c3d5",
+      "config_sha256": "df17c840edb9c9d368098f0abc2a3e5285d3c632918bc6d58638637cfc8d1c2a",
+      "actions_sha256": "985733483bd3aac3097d8fae628165e78a908d694950f04bbc93f2292455eee6"
+    },
+    {
+      "name": "human20-lhs70-human-0p3125ms",
+      "kind": "human",
+      "prefix": "runs/contact-planning/human20-lhs70-human-0p3125ms",
+      "duration_s": 20,
+      "step_s": 0.0003125,
+      "command_speed_m_s": 0.07031284890781607,
+      "family": "human20-lhs70",
+      "source": "runs/bayesian-human20-pilot-v2/evaluation-009",
+      "travel_heading_offset_rad": 0.7853981633974482,
+      "actions_source": "examples/full-robot/fast-wasd/braked-5ms.actions.json",
+      "actions_source_sha256": "b859cf5bfbc849a8c4979ee60e3ae5ff20f590117b3f4712553429b50a403553",
+      "validation_settings": {
+        "path": "examples/full-robot/contact-planning/human20-lhs70-validation-settings.json",
+        "sha256": "bb3366a407b08bd0d450b959d8615fb4867d18be001c2a557f41e167d5ccb9c7"
+      },
+      "scene_sha256": "d92eb1b3a202e4f8c4a0c7c7936ae02a538a78194b6e0673c89bb2793774143b",
+      "config_sha256": "2dab395966ac830f938df860a3bf9fa865affddc4a86661126f4cd389024447b",
+      "actions_sha256": "49d99889a38e54b67f994c2ca078a9fe60d9a810d25d31309a9d5be94272f109"
+    }
+  ]
+}

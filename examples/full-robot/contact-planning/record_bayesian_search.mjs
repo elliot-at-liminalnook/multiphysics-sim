@@ -1,0 +1,26 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {isDeepStrictEqual} from 'node:util';
+const d='examples/full-robot/contact-planning/',root='runs/bayesian-controller-pilot-v2';
+const read=p=>JSON.parse(fs.readFileSync(p));
+const id=path=>{const b=fs.readFileSync(path);return{path,bytes:b.length,sha256:crypto.createHash('sha256').update(b).digest('hex')};};
+function archive(name,files){const path=d+name;assert(!fs.existsSync(path));execFileSync('tar',['-czf',path,...files]);return{...id(path),entries:files.map(id)};}
+const context=read(root+'/context.json');
+for(const f of [...context.inputs,...context.code,...context.binaries])assert.equal(id(f.path).sha256,f.sha256,f.path);
+const baseline=read(root+'/evaluation-000.native.json'),source=read('runs/contact-planning/return-x25-lift-v250.native.json');
+const physical=frames=>frames.map(f=>{const c={...f};delete c.stepping_wall_s;return c;});
+assert(isDeepStrictEqual(physical(baseline.frames),physical(source.frames)),'baseline non-timing fields differ');
+const paths=fs.readdirSync(root);
+const completedNames=paths.filter(n=>/^evaluation-\d+\.evaluation\.json$/.test(n)).sort().map(n=>n.split('.')[0]);
+const completed=completedNames.map(n=>read(root+'/'+n+'.evaluation.json'));
+const observed=paths.filter(n=>completedNames.some(prefix=>n.startsWith(prefix+'.')||n.startsWith(prefix+'-'))||['context.json','spec.json','initial.design-request.json','initial.design.json','initial-design.execution.json','initial-design.stdout.log','initial-design.stderr.log'].includes(n)).sort().map(n=>root+'/'+n);
+const failedRoot='runs/bayesian-controller-pilot';
+const failed=fs.readdirSync(failedRoot).sort().map(n=>failedRoot+'/'+n);
+const sources=['Cargo.lock','crates/sim-solve/Cargo.toml','crates/sim-solve/src/lib.rs','crates/sim-solve/src/bayesian.rs','crates/sim-solve/examples/suggest_black_box.rs','.github/workflows/bayesian.yml',d+'run_bayesian_controller_screen.mjs',d+'bayesian-controller-pilot.spec.json',d+'record_bayesian_search.mjs'];
+const logs=['bayesian-tests.log','bayesian-tests-default.log','bayesian-repeat-diagnosis.log','bayesian-logei-tests.log','bayesian-all-tests.log','bayesian-build.log','bayesian-controller-pilot.log','bayesian-controller-pilot.error.log'].map(n=>d+n);
+const manifest={base_commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),recorded_at:new Date().toISOString(),sources:archive('bayesian-search-sources.tar.gz',sources),completed_snapshot:archive('bayesian-search-completed-snapshot.tar.gz',observed),telemetry_comparison_failure:archive('bayesian-search-telemetry-failure.tar.gz',failed),ei_diagnostic_sources:id(d+'bayesian-ei-diagnostic-sources.tar.gz'),logs:logs.map(id),context:id(root+'/context.json'),binaries:context.binaries,rustc:execFileSync('/Users/elliot/.cargo/bin/rustc',['-Vv']).toString(),runtime_source_provenance:id(d+'smooth-return-evidence-index.json'),completed_trials:completed.map(r=>({observation:r.observation,metrics:r.metrics,wall_s:r.wall_s,capture_sha256:r.capture_sha256})),verification:{shared_tests_passed:39,bayesian_tests_passed:4,baseline_non_timing_frame_equality:true,excluded_telemetry_field:'stepping_wall_s',failed_feature_build_exit_code:101,ei_repeat_test_exit_code:101,logei_tests_exit_code:0,build_exit_code:0,initial_telemetry_sensitive_driver_exit_code:1},scope:'Optional native constrained LogEI selection and deterministic initial designs are implemented and tested. Completed trial prefix is archived; the remaining one-seed robot comparison is live and its final results are unknown. No passing speed improvement, broad contact-family exhaustion, timestep/sustained/browser qualification or physical maximum follows.'};
+fs.writeFileSync(d+'bayesian-search-build.json',JSON.stringify(manifest,null,2)+'\n',{flag:'wx'});
+fs.writeFileSync(d+'bayesian-controller-pilot-launch.json',JSON.stringify({session_id:58089,pid:55604,command:['node',d+'run_bayesian_controller_screen.mjs',d+'bayesian-controller-pilot.spec.json'],workdir:process.cwd(),source_build:id(d+'bayesian-search-build.json'),stdout:d+'bayesian-controller-pilot-v2.log',stderr:d+'bayesian-controller-pilot-v2.error.log',output_directory:root,status:'Observed live; complete parsed trial records identify finished per-trial evaluations for archive selection, final comparison not yet available.',scope:'Existing eight-control and sixteen-control Ipopt searches continue separately. No restarted physics process due to observation timeout; v2 fixes the baseline telemetry-only comparison.'},null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({completed_trials:completed.length,source_archive:manifest.sources.bytes,completed_archive:manifest.completed_snapshot.bytes,failed_comparison_archive:manifest.telemetry_comparison_failure.bytes}));

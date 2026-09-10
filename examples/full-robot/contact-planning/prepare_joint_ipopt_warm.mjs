@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+const d='examples/full-robot/contact-planning/';
+const read=name=>JSON.parse(fs.readFileSync(d+name));
+const recipe=read('joint-timed-speed.recipe.json'), completed=read('joint-timed-speed.result.json');
+assert(completed.candidate?.force_timing,'Completed timing-aware candidate required');
+assert.equal(completed.search.evaluations,8000);
+recipe.candidate=completed.candidate;
+assert.equal(recipe.robot.target_speed_m_s,.3);
+const output=d+'joint-ipopt-warm.recipe.json';
+fs.writeFileSync(output,JSON.stringify(recipe,null,2)+'\n',{flag:'wx'});
+const identity=path=>{const bytes=fs.readFileSync(path);return {path,bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')};};
+fs.writeFileSync(d+'joint-ipopt-warm-preparation.json',JSON.stringify({inputs:['joint-timed-speed.recipe.json','joint-timed-speed.result.json'].map(name=>identity(d+name)),output:identity(output),recorder:identity(d+'prepare_joint_ipopt_warm.mjs'),scope:'Use the completed timing-aware AL candidate as the initial point for native joint speed optimization. Target .30 m/s, all variables, bounds, physical definitions and acceptance gates remain unchanged. This is solver warm initialization from an infeasible near-balanced motion, not a slow-gait success criterion or hardware speed claim.'},null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({output,variables:recipe.variables.length,speed_m_s:Math.hypot(...recipe.candidate.motion.displacement_world_m)/recipe.candidate.motion.period_s}));

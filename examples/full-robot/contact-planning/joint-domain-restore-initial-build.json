@@ -1,0 +1,58 @@
+{
+  "base_commit": "ef0463965bedd4ca4cd00f93017cb03d2fdc9ff2",
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/domain_restore.rs",
+      "bytes": 5426,
+      "sha256": "81f2ba42e467117d5d4a52d5780230a5d28d9acdd9a251bd4ee12c0e293bfbfc"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47436,
+      "sha256": "0f0a0d81ae2ba12c6bfdb40bca37a4dfca66b00ed34a9c29f50111147ab770bb"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 47878,
+      "sha256": "049aa14b8a34fff36085dc24abdec0279a2090cf9bf195a43972c026566f8823"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 56924,
+      "sha256": "6593593bbe2c83378f68b9aab6eefc6d9518d78055026de0261512c600f3d5f2"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint_restore.rs",
+      "bytes": 4072,
+      "sha256": "3f7ee5c99a80e1391988304ddc9573c442e3debf83f4cef530836c6d88966736"
+    },
+    {
+      "path": "crates/sim-runtime/examples/restore_joint_domain.rs",
+      "bytes": 4101,
+      "sha256": "7fd275d03829d92757b5667dd8879fa432fc6fc09e4bbbd18fde7ad1098664da"
+    },
+    {
+      "path": "crates/sim-runtime/examples/refine_joint_contact_mesh.rs",
+      "bytes": 4267,
+      "sha256": "4869a736d0af4722ac1ddda3284d5eb7264ca7a1fadafaec1a01dcfa6f4e7a3d"
+    }
+  ],
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-domain-restore-initial-sources.tar.gz",
+    "bytes": 41228,
+    "sha256": "7fc20824f36f18da164d708992fc4aa1a383e33730503d5ca65f54157f103a50"
+  },
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/restore_joint_domain",
+      "bytes": 9128820,
+      "sha256": "2ba5530bd463d9b731d018e15a1353cc07fd60f94ce00a9257957b1f28a950df"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/refine_joint_contact_mesh",
+      "bytes": 9106908,
+      "sha256": "f6d349fd59e553dbfb05a71f9ee116df0e3fd00277b51e1973c73881b8fd72c8"
+    }
+  ],
+  "scope": "Initial tested build used by the 24-step restoration and finer audit; subsequent input validation does not alter these archived sources."
+}

@@ -1,0 +1,278 @@
+{
+  "scope": "Fixed-displacement continuation with identical initial motion, model, bounds and slip objective. Adding collocation nodes also increases the number of unweighted physical residuals relative to four aggregate slip residuals; this is not pure grid-only causal isolation. All trials fail qualification; projected planned rate is not measured walking speed or a physical bound.",
+  "rows": [
+    {
+      "name": "slip32-shaped05",
+      "optimized": {
+        "samples": 144,
+        "force_error_n": 0.21538993266463513,
+        "moment_error_nm": 0.05897711273991879,
+        "minimum_torque_margin_nm": -0.000004446426384363544,
+        "maximum_point_penetration_m": 0.00011299861263092126,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.7519447059346688,
+        "within_sampled_slip_limit": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000016649625151071923
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.21538993266463513,
+        "moment_error_nm": 0.06980984129218662,
+        "minimum_torque_margin_nm": -0.002321785861467668,
+        "maximum_point_penetration_m": 0.00011299861263092126,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.7287270577392722,
+        "within_sampled_slip_limit": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000016649625151071923
+      },
+      "dense_slip": {
+        "body_path_m": 0.08348245987609627,
+        "displacement_m": 0.07960923285285043,
+        "duration_s": 0.39608749046768144,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.32876267708804996,
+            "sampled_loaded_slip_ratio": 0.19245233867749525
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 1.3911250708967489,
+            "sampled_loaded_slip_ratio": 0.7287270577392722
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.6059198888320002,
+            "sampled_loaded_slip_ratio": 0.30602922106545233
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.4519478944776367,
+            "sampled_loaded_slip_ratio": 0.13055927862844371
+          }
+        ],
+        "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+        "shaping_residuals": [
+          5.575253541760999,
+          26.822501417934976,
+          11.118397776640002,
+          8.038957889552734
+        ],
+        "within_sampled_slip_limit": false
+      },
+      "planned_projected_45deg_rate_m_s": 0.20092650990916813,
+      "collision": {
+        "overlapping_frames": 115,
+        "pairs": [
+          {
+            "from": "-X | Hip motor pulley and shaft 3090",
+            "to": "Robot | Chassis and hip mounts",
+            "samples": 115,
+            "maximum_penetration_m": 0.000016649625151071923,
+            "time_s": 0.1516272424446593,
+            "point_world_m": [
+              -0.006128746569432547,
+              0.05920535260996415,
+              -0.046430040964249644
+            ],
+            "normal_world": [
+              -0.8603582449930827,
+              0.23889121587765694,
+              0.4502384670915155
+            ]
+          }
+        ]
+      },
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34482,
+        "initial_cost": 1127.0320427032882,
+        "cost": 631.1546779361682
+      }
+    },
+    {
+      "name": "slip32-coupled-control",
+      "optimized": {
+        "samples": 144,
+        "force_error_n": 0.22352300941563602,
+        "moment_error_nm": 0.05315223796799584,
+        "minimum_torque_margin_nm": -0.000008648761441132358,
+        "maximum_point_penetration_m": 0.00011373090356403548,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.6963899835970744,
+        "within_sampled_slip_limit": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000016317058030451958
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.22352300941563602,
+        "moment_error_nm": 0.05370994126575408,
+        "minimum_torque_margin_nm": -0.0012913922745218798,
+        "maximum_point_penetration_m": 0.00011373090356403548,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.6659106082499472,
+        "within_sampled_slip_limit": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000016327625443482576
+      },
+      "dense_slip": {
+        "body_path_m": 0.08342404403614768,
+        "displacement_m": 0.07960923285285043,
+        "duration_s": 0.39608749046768144,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.3144876481277322,
+            "sampled_loaded_slip_ratio": 0.18193580498728237
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 1.2392568894934515,
+            "sampled_loaded_slip_ratio": 0.6659106082499472
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.5522245293762841,
+            "sampled_loaded_slip_ratio": 0.2855891619884712
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.42177378237423074,
+            "sampled_loaded_slip_ratio": 0.11836382078673614
+          }
+        ],
+        "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+        "shaping_residuals": [
+          5.289752962554644,
+          23.785137789869026,
+          10.04449058752568,
+          7.435475647484615
+        ],
+        "within_sampled_slip_limit": false
+      },
+      "planned_projected_45deg_rate_m_s": 0.20092650990916813,
+      "collision": {
+        "overlapping_frames": 115,
+        "pairs": [
+          {
+            "from": "-X | Hip motor pulley and shaft 3090",
+            "to": "Robot | Chassis and hip mounts",
+            "samples": 115,
+            "maximum_penetration_m": 0.000016327625443482576,
+            "time_s": 0.15085363406483962,
+            "point_world_m": [
+              -0.006252839601805609,
+              0.059096718142978275,
+              -0.04648906225640298
+            ],
+            "normal_world": [
+              -0.8607801990006041,
+              0.23695144813927435,
+              0.4504569460372223
+            ]
+          }
+        ]
+      },
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34486,
+        "initial_cost": 631.1546779361682,
+        "cost": 534.74293168697
+      }
+    },
+    {
+      "name": "slip32-coupled-targeted",
+      "optimized": {
+        "samples": 176,
+        "force_error_n": 0.2017519070413485,
+        "moment_error_nm": 0.05911554673700592,
+        "minimum_torque_margin_nm": -0.000044320086133198267,
+        "maximum_point_penetration_m": 0.00011337845733561114,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.6240940059181062,
+        "within_sampled_slip_limit": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.00001664074787926606
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.39464491709429916,
+        "moment_error_nm": 0.13003140410046185,
+        "minimum_torque_margin_nm": -0.000044320086133198267,
+        "maximum_point_penetration_m": 0.00011337845733561114,
+        "within_planning_tolerances": false,
+        "maximum_loaded_slip_ratio": 0.6099398742797412,
+        "within_sampled_slip_limit": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.00001664490321671545
+      },
+      "dense_slip": {
+        "body_path_m": 0.08346115253435055,
+        "displacement_m": 0.07960923285285043,
+        "duration_s": 0.39608749046768144,
+        "groups": [
+          {
+            "group": "+X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.3338934437611578,
+            "sampled_loaded_slip_ratio": 0.19624535788468317
+          },
+          {
+            "group": "+Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 1.164959282747655,
+            "sampled_loaded_slip_ratio": 0.6099398742797412
+          },
+          {
+            "group": "-X | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.5798998636168059,
+            "sampled_loaded_slip_ratio": 0.295578350445533
+          },
+          {
+            "group": "-Y | Sliding foot crosshead",
+            "rms_slip_upper_bound": 0.4329127771264998,
+            "sampled_loaded_slip_ratio": 0.12462403513783413
+          }
+        ],
+        "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+        "shaping_residuals": [
+          5.677868875223156,
+          22.299185654953096,
+          10.597997272336116,
+          7.658255542529996
+        ],
+        "within_sampled_slip_limit": false
+      },
+      "planned_projected_45deg_rate_m_s": 0.20092650990916813,
+      "collision": {
+        "overlapping_frames": 116,
+        "pairs": [
+          {
+            "from": "-X | Hip motor pulley and shaft 3090",
+            "to": "Robot | Chassis and hip mounts",
+            "samples": 116,
+            "maximum_penetration_m": 0.00001664490321671545,
+            "time_s": 0.15085363406483962,
+            "point_world_m": [
+              -0.006260000177617718,
+              0.0590891138587275,
+              -0.046488061680851914
+            ],
+            "normal_world": [
+              -0.8605328078185724,
+              0.23829130026590367,
+              0.4502227702876305
+            ]
+          }
+        ]
+      },
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34483,
+        "initial_cost": 722.9699969847229,
+        "cost": 552.288347955038
+      }
+    }
+  ]
+}

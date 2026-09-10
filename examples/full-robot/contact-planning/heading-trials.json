@@ -1,0 +1,48 @@
+{
+  "rows": [
+    {
+      "name": "heading0",
+      "degrees": 0,
+      "recipe": "examples/full-robot/contact-planning/heading0-audit.recipe.json",
+      "direction_world": [
+        1,
+        0,
+        0
+      ],
+      "initial_speed_m_s": 0.184176818657572
+    },
+    {
+      "name": "heading-plus45",
+      "degrees": 45,
+      "recipe": "examples/full-robot/contact-planning/heading-plus45-audit.recipe.json",
+      "direction_world": [
+        0.7071067811865476,
+        0.7071067811865475,
+        0
+      ],
+      "initial_speed_m_s": 0.184176818657572
+    },
+    {
+      "name": "heading-minus45",
+      "degrees": -45,
+      "recipe": "examples/full-robot/contact-planning/heading-minus45-audit.recipe.json",
+      "direction_world": [
+        0.7071067811865476,
+        -0.7071067811865475,
+        0
+      ],
+      "initial_speed_m_s": 0.184176818657572
+    }
+  ],
+  "sources": [
+    {
+      "path": "examples/full-robot/contact-planning/bidirectional-restoration.recipe.json",
+      "sha256": "4023108e4c6a8a324eec404d4299022570a0bf56ccc22474ebf45219a8680531"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/controller-reference.recipe.json",
+      "sha256": "2b308f51693b1633e397f0deae58c7779fb904b9e0e1b7cd5648bdd6f8cdfd6d"
+    }
+  ],
+  "scope": "Matched initial speed, physical CAD pose, foot centers, world, actuators and tolerances. Only the travel vector changes relative to the chassis. Scalar travel distance preserves the requested heading during optimization. Initial body oscillations and contact timings are warm starts, not optimized independently for these headings. Both forward and reverse clocks are checked. This first audit is not a maximum-speed comparison."
+}

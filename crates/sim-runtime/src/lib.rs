@@ -3,11 +3,17 @@
 use sim_core::BehaviorRegistry;
 
 pub mod contact_audit;
+pub mod contact_planning;
+pub mod contact_implicit;
+pub mod configuration_inspection;
+pub mod robot_contract;
+pub mod robot_input;
 pub mod body_feedback;
 pub mod embedded;
 pub mod embedded_policy;
 pub mod environment;
 pub mod policy_evaluation;
+pub mod predictive_control;
 pub mod lift;
 pub mod physical;
 pub mod planning;
@@ -35,6 +41,7 @@ pub fn registry() -> BehaviorRegistry {
     sim_domain_multibody::elements::register(&mut registry).unwrap();
     sim_domain_multibody::planar::register(&mut registry).unwrap();
     sim_domain_multibody::contact::register(&mut registry).unwrap();
+    sim_domain_multibody::smooth_contact::register(&mut registry).unwrap();
     sim_domain_multibody::chain::register(&mut registry).unwrap();
     sim_domain_magnetic::register(&mut registry).unwrap();
     sim_domain_chemical::register(&mut registry).unwrap();
@@ -53,7 +60,21 @@ pub fn newton() -> sim_solve::NewtonConfig {
 }
 
 pub mod task_observation;
+pub mod imu_observation;
 
 pub mod point_feedback;
 pub mod step_reference;
 pub mod walking_task;
+pub mod speed_task;
+pub mod progress_task;
+pub mod ppo_training;
+pub mod motion_data;
+pub mod motion_forecast;
+pub mod motion_parameters;
+pub mod experiment;
+#[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
+pub mod experiment_search;
+pub mod forecast_actions;
+pub mod fidelity;
+pub mod physics_context;
+pub mod predictive_policy;

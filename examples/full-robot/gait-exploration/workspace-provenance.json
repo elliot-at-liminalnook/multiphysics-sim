@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "source": "examples/full-robot/whole-swing/settled-integral-minute.config.json",
+  "scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+  "sha256": {
+    "examples/full-robot/whole-swing/settled-integral-minute.config.json": "74ef81885d887392b60fca4fb2b4630b87b4e3a0a42dcd87c02fe1bfac41e66b",
+    "examples/full-robot/whole-swing/settled-integral-candidate.scene.json": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01"
+  },
+  "samples": 829,
+  "scope": "Fixed-base sampled kinematics and CAD-authored exclusions; no positive separation margin, continuous clearance, hardware range certification, or loaded stability claim. Every row solves independently from scene seed; initial base vertical offset omitted because relative reach and inter-link overlap are translation invariant."
+}

@@ -1,0 +1,137 @@
+{
+  "training_samples": 1980,
+  "validation_samples": 3980,
+  "training_normalized_mse": 0.07726201448569514,
+  "validation_normalized_mse": 0.07328334683594268,
+  "prior_validation_normalized_mse": 1.0325260467493127,
+  "normalized_mse_reduction_fraction": 0.9290251833678582,
+  "groups": [
+    {
+      "horizon_s": 0.02,
+      "unit": "rad",
+      "components": 12,
+      "prior_component_rmse": 0.06628603645645766,
+      "prediction_component_rmse": 0.018919081397622585
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "rad/s",
+      "components": 12,
+      "prior_component_rmse": 4.60066338963449,
+      "prediction_component_rmse": 1.1906978596759252
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "rad/s²",
+      "components": 12,
+      "prior_component_rmse": 230.0331694817245,
+      "prediction_component_rmse": 59.53489298379626
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "m",
+      "components": 15,
+      "prior_component_rmse": 0.003674883916257475,
+      "prediction_component_rmse": 0.0011179379187708216
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "m/s",
+      "components": 15,
+      "prior_component_rmse": 0.30572143335744495,
+      "prediction_component_rmse": 0.08024022325373728
+    },
+    {
+      "horizon_s": 0.02,
+      "unit": "m/s²",
+      "components": 15,
+      "prior_component_rmse": 15.286071667872246,
+      "prediction_component_rmse": 4.0120111626868615
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "rad",
+      "components": 12,
+      "prior_component_rmse": 0.9920353554503959,
+      "prediction_component_rmse": 0.21173521401089856
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "rad/s",
+      "components": 12,
+      "prior_component_rmse": 19.071336433723474,
+      "prediction_component_rmse": 4.0477610496262155
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "rad/s²",
+      "components": 12,
+      "prior_component_rmse": 249.09132904952003,
+      "prediction_component_rmse": 76.60684268198588
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "m",
+      "components": 15,
+      "prior_component_rmse": 0.07470074548092405,
+      "prediction_component_rmse": 0.014184021754866194
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "m/s",
+      "components": 15,
+      "prior_component_rmse": 1.5456323174611992,
+      "prediction_component_rmse": 0.26927420968735755
+    },
+    {
+      "horizon_s": 0.1,
+      "unit": "m/s²",
+      "components": 15,
+      "prior_component_rmse": 21.02558033195393,
+      "prediction_component_rmse": 5.335400357994415
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "rad",
+      "components": 12,
+      "prior_component_rmse": 3.7434643777038796,
+      "prediction_component_rmse": 0.8032544555570976
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "rad/s",
+      "components": 12,
+      "prior_component_rmse": 36.52929448698938,
+      "prediction_component_rmse": 7.912438982699007
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "rad/s²",
+      "components": 12,
+      "prior_component_rmse": 235.39896292674325,
+      "prediction_component_rmse": 92.2804035726394
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "m",
+      "components": 15,
+      "prior_component_rmse": 0.294940136903498,
+      "prediction_component_rmse": 0.05331053999752357
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "m/s",
+      "components": 15,
+      "prior_component_rmse": 2.9286390060028555,
+      "prediction_component_rmse": 0.5334762694752918
+    },
+    {
+      "horizon_s": 0.2,
+      "unit": "m/s²",
+      "components": 15,
+      "prior_component_rmse": 17.303040881616425,
+      "prediction_component_rmse": 5.730873708775727
+    }
+  ],
+  "scope": "Action-conditioned position, velocity and finite-interval acceleration prediction. Constant-acceleration kinematic reference plus learned residual; not a reduced-order force/contact planner or PLANC reproduction. Normalization uses training data only. Future actions are known supervision, not privileged future state inputs. This result alone does not establish improved control or transfer."
+}

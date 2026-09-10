@@ -1,0 +1,48 @@
+{
+  "base_commit": "01073c42f2e7a730a1d26ec4418cdb45e7bd7767",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 28360,
+      "sha256": "3c474e55c422234ec37f840f48dd0d6b8b30c0defea207f5805c6000e1e82edd"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 21793,
+      "sha256": "10347beb986b3efd274c0916e31527770fd1fbc288b072452aca47463580d99f"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_implicit.rs",
+      "bytes": 4316,
+      "sha256": "91d965593ae9ec02a33a24219b82f2e8dfa67249b41a4a85990e5f82c526e484"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 1654,
+      "sha256": "f051f7350d56cd829e42624ad677ad5a8d9f25c6fadea5741a7cef690d394883"
+    },
+    {
+      "path": "crates/sim-runtime/examples/compile_contact_implicit.rs",
+      "bytes": 4667,
+      "sha256": "1c11e9ab36775eaf65f8b6d52edaee48a71c62e0c846bfaebd9176e8afd69b81"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8637868,
+      "sha256": "23dd16120759f9cafdc829efcd777d4124576d91a3689fe4188745f041e815e1"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8577500,
+      "sha256": "f224284269639a7e4173fe933b299e8ec7fd9415b90da46d23f10bf061cefba3"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_implicit",
+      "bytes": 8613356,
+      "sha256": "94d6aabee43f40475e9cd3be3cb38b21de214528e4b9af659b3cca8e4d921fbd"
+    }
+  ],
+  "scope": "Periodic-boundary implementation and paired periodic searches; exact legacy startup audit regression verified."
+}

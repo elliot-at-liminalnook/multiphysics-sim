@@ -67,12 +67,21 @@ def test_brep_pair_and_transported_contact_probe_preserve_source(tmp_path):
     assert all(p["brep_members"][0]["solid_states"] == ["inside"] for p in end["contact_point_probes"])
     assert all(p["brep_members"][0]["surface_distance_mm"] == pytest.approx(5) for p in end["contact_point_probes"])
     assert (scene, capture) == before and cad.read_bytes() == raw
+    both = audit_captured_pair(cad, scene, capture, "a", "b", [0, 1], 1,
+                              measure_pair_distances=False, probe_both_sides=True)
+    for frame in both["frames"]:
+        for probe in frame["contact_point_probes"]:
+            assert probe["source_link"] == "a"
+            assert probe["source_brep_members"][0]["solid_states"] == ["inside"]
+            assert probe["source_brep_members"][0]["surface_distance_mm"] == pytest.approx(5)
+            del probe["source_link"], probe["source_brep_members"]
     focused = audit_captured_pair(cad, scene, capture, "a", "b", [0, 1], 1,
                                  measure_pair_distances=False)
     assert focused["pair_distances_measured"] is False
     for full, points in zip(result["frames"], focused["frames"]):
         assert points["member_distances"] == []
         assert points["contact_point_probes"] == full["contact_point_probes"]
+    assert both == focused
     geometric = copy.deepcopy(capture)
     for frame in geometric["frames"]:
         frame["internal_contacts"] = frame.pop("contacts")

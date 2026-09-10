@@ -1,0 +1,24 @@
+{
+  "original_linear_templates": 8,
+  "maximum_preserved_force_curve_error_n": 7.105427357601002e-15,
+  "matched_original_frames": 168,
+  "maximum_normalized_common_frame_difference": 1.4210854715202004e-13,
+  "helper_reports_reproduced": true,
+  "independent_initial_report_equal_after_signed_zero_canonicalization": true,
+  "distinct_derivative_configurations": 3,
+  "checked_force_columns": 1098,
+  "independent_uncached_probe_matches": 6,
+  "maximum_derivative_scaled_error": 8.759446934856145e-9,
+  "isolated_two_support_fixture": {
+    "original_seven_node_linear_residual_lower_bound": 0.021271415957864866,
+    "aligned_linear_maximum_error": 1.1102230246251565e-15,
+    "duty_fraction": 0.65,
+    "phase_offsets": [
+      0,
+      0.5
+    ],
+    "required_total_force": 1,
+    "scope": "Total vertical load only, with no geometry, actuator or robot-speed certificate. Floating-point affine lower bound on original node values in [-2,2]."
+  },
+  "scope": "Representation and derivative fidelity. The prepared CAD candidate remains infeasible; no new measured speed or global physical limit is established."
+}

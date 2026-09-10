@@ -1,0 +1,57 @@
+[
+  {
+    name: 'diagonal81-human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.09091180964098405,
+    turn_rad: 0.1939550116912656,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'diagonal81-human-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.07959323104625454,
+    turn_rad: 0.1922671317656483,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'diagonal81-dropout-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.04107830213079434,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'diagonal81-human-0p3125ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.07786594996904131,
+    turn_rad: 0.19146357056758068,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  }
+] [
+  {
+    reference: 'diagonal81-human-0p625ms',
+    candidate: 'diagonal81-human-1p25ms',
+    maximum_body_difference_m: 0.0034700979425772794,
+    maximum_speed_fraction: 0.0026805214996484237,
+    absolute_slip_ratio_difference: 0.011318578594729511,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'diagonal81-human-0p625ms',
+    candidate: 'diagonal81-human-0p3125ms',
+    maximum_body_difference_m: 0.0018384476290115854,
+    maximum_speed_fraction: 0.0014190590603326621,
+    absolute_slip_ratio_difference: 0.001727281077213233,
+    both_motion_checks_passed: false,
+    passed: true
+  }
+]

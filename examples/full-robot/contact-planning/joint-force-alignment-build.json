@@ -1,0 +1,227 @@
+{
+  "base_commit": "85b7db093411bd45a93ff2d99fd7a9ffad14a6c9",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-force-alignment-sources.tar.gz",
+    "bytes": 54244,
+    "sha256": "717f6120e6c0b926c78aef7b85b0319e143df1bd1efdd95ff533a7bfc637f2fc"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 47620,
+      "sha256": "7fe580a95ad0a40f7cc631964ac7d829183c2cfb886f3bdc4bd165d898226a19"
+    },
+    {
+      "path": "crates/sim-runtime/examples/align_joint_contact_forces.rs",
+      "bytes": 8491,
+      "sha256": "8547560a0cb81bd12b8fb131de34352d25149c872276cc5a5ebbc140e4bfa6ad"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_force_jacobian.rs",
+      "bytes": 7100,
+      "sha256": "316c950fed966989b601f03a8596b8a0ae7bc8a1b982d240b9f01a337effc0fb"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/align_joint_contact_forces",
+      "bytes": 9051876,
+      "sha256": "479eb0f42570dca32d51291542312147058837fe45dc0e5bdbde2e3664d41f5d"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_force_jacobian",
+      "bytes": 8987844,
+      "sha256": "a267c9259c9274dfa8a201b3f7b6d7575d377dbbc75a17b8b445937a0167b718"
+    }
+  ],
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9049396,
+    "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+  },
+  "optimizer_build_reference": {
+    "path": "examples/full-robot/contact-planning/joint-derivative-build.json",
+    "bytes": 9942,
+    "sha256": "cb114b9de8a65e4275015d9f7bf6a58ace26d32b5f17a71b55ec35af4c7e2032"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed.recipe.json",
+      "bytes": 70676,
+      "sha256": "a9309ce23eef4a8e0a255a310b252fb4a2f98001da115048e5ee14e8237cabec"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-analytic-launch.json",
+      "bytes": 3399,
+      "sha256": "7126b55e1072b0de49c795643af7cc4c5c715f7358c2a568a61fb94b018d7ae6"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/BODY_REFINEMENT.md",
+      "bytes": 3864,
+      "sha256": "28f7a60f687b0db98ebb47b26cae562677a98a076fd42734c5b0aa1597b9d005"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/FORCE_ALIGNMENT.md",
+      "bytes": 5716,
+      "sha256": "305d675a4f59cbd569052a67fa0848cc108f5f4287f7b8627d2844a03b3b1a28"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/JOINT_DERIVATIVES.md",
+      "bytes": 4877,
+      "sha256": "1f5ee357bb564a6247d67c5db1618af2b124bcf361c1925cc1b3ca151f791a9d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/README.md",
+      "bytes": 24277,
+      "sha256": "1dccc6a6d74318bc2a2a7e2adc4076c4027081397b86d9419e687392be92e4ca"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_force_alignment.mjs",
+      "bytes": 3610,
+      "sha256": "d6cf82b26c157409f786ffa1d79fc874249dd06aa883f0b127e0608532b53929"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-aligned-force-jacobian.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-aligned-force-jacobian.result.json",
+      "bytes": 1463534,
+      "sha256": "17ab440e6a955623f0d1cb3ad8458a9b58c2d95a0b73d4486876af2ae069dc19"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-aligned-speed-initial.result.json",
+      "bytes": 1450701,
+      "sha256": "4f2598ef06791a1e850e0882c3e12b3f610a689b89c97835d9feef1009b51d70"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-aligned-speed.recipe.json",
+      "bytes": 146687,
+      "sha256": "9fad3e976ba34a0de902cba47e51231fe91613c2b6ceee15703f455d5877890f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-actual-linear-tests.log",
+      "bytes": 1473,
+      "sha256": "469b71eebc8a153350843e37d45701f4130ce92497cecdb5eab11008214d7e3f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-build.log",
+      "bytes": 165,
+      "sha256": "ff60d0aeb9f8c123e8c246303c3c7e30d72cee788429de1b78f98aaa2a5c4cbb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-checked-build.log",
+      "bytes": 165,
+      "sha256": "41a05f63ae16ce429fc52ffc5dae4b0af4e6e14f27392f94c201a6e07bf32432"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-checked-tests.log",
+      "bytes": 1104,
+      "sha256": "591f34733e6d5a68ea8178204a1b5ad10e127e0f6384f734ce5bcff00c934fe6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-checked.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-checked.result.json",
+      "bytes": 3986560,
+      "sha256": "d36d32615300a60f34418cf94262a2ab017c95adafeab14e40f055c17529b2fe"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-final-tests.log",
+      "bytes": 1134,
+      "sha256": "34ec7734ab657311dbff25b9987775098ba62070338b261af80f5dd388f4c89c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-preparation.json",
+      "bytes": 2541,
+      "sha256": "8c9d698f28cdfd7f35fc2e8ae8c2f8b621fcc3122d796c399770809e3ed6be8f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-tests.log",
+      "bytes": 1076,
+      "sha256": "98bd35d688a648bfd2f4001d5b4f736badea62ca962a00138c735b0136a7b6b6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment-verification.json",
+      "bytes": 1117,
+      "sha256": "476b227fd7adbbc3cfccc8f4f57262ecb57fc49c4a7e8a4807c3ddee895d5bcf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-alignment.result.json",
+      "bytes": 3986374,
+      "sha256": "b5206a3f5811ad2f7b2626cea7fb9584a40d0259401635f184e3c0acc684d95a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.log",
+      "bytes": 36944,
+      "sha256": "e481c93859d83c8331f80f2b99f09899c0004abe30dcc19cd4747062969f2bed"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.result.json",
+      "bytes": 1347894,
+      "sha256": "b70d668a2fb7a448f6356cc280b72d8b0f8331cec13bb3147d2f69fb2ee0f02d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.summary.json",
+      "bytes": 3434,
+      "sha256": "40ac5f8b33d50941e52e73694cbe3b91b359f246494f1ab5bcf217b490bf517c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.log",
+      "bytes": 33898,
+      "sha256": "ec29e963a7060cda0b3b7cba2c7fafab4bf50202949ada81924228f2fddc9905"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.result.json",
+      "bytes": 1351966,
+      "sha256": "c63b0d93744669d5d458ab41e1aad113813a2c88ef64aab5d74e23e4decea236"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.75.summary.json",
+      "bytes": 3440,
+      "sha256": "5d959c0ece6e4c8652f54705fb94955039dae3054d29bfb0a94d3a886d66ee6c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_joint_force_alignment.mjs",
+      "bytes": 2958,
+      "sha256": "b8900fe5971126e7a2ec50a796a3a0010076206fc8d3af866e8d8b93c8d9550b"
+    }
+  ],
+  "verification": {
+    "path": "examples/full-robot/contact-planning/joint-force-alignment-verification.json",
+    "bytes": 1117,
+    "sha256": "476b227fd7adbbc3cfccc8f4f57262ecb57fc49c4a7e8a4807c3ddee895d5bcf"
+  },
+  "checks": {
+    "source_archive_extraction_verified": true,
+    "optimizer_unchanged": true,
+    "final_planner_tests_passed": 5
+  },
+  "scope": "Completed event-aligned force refinement, corrected actual-linear load-partition fixture, three-distinct-configuration derivative audit and both completed original-body multistart solves. First helper report reproduced by final verified helper. Historical mistaken quintic/duplicate-interpolation interpretations are corrected in FORCE_ALIGNMENT.md; failed/intermediate logs retained. Live body8 outputs excluded."
+}

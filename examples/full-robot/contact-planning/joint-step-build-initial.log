@@ -1,0 +1,23 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-script)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-dynamics)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-compile)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+error[E0753]: expected outer doc comment
+ --> crates/sim-runtime/examples/optimize_joint_ipopt.rs:1:1
+  |
+1 | //! Present the shared CAD joint problem to the verified native NLP interface.
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 | use serde::{Deserialize, Serialize};
+  | ------------------------------------ the inner doc comment doesn't annotate this `use` import
+  |
+help: to annotate the `use` import, change the doc comment from inner to outer style
+  |
+1 - //! Present the shared CAD joint problem to the verified native NLP interface.
+1 + /// Present the shared CAD joint problem to the verified native NLP interface.
+  |
+
+For more information about this error, try `rustc --explain E0753`.
+error: could not compile `sim-runtime` (example "optimize_joint_ipopt_steps") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

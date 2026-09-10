@@ -1,0 +1,57 @@
+{
+  "base_commit": "233402f374bac9d88a3fa835f44ffa00129fc515",
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/equality_dogleg.rs",
+      "bytes": 21290,
+      "sha256": "041d0bdda2f804c4e54be36911bbbde92667dea4d0fc41b0809565fff4eeb0cc"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47168,
+      "sha256": "c496c8fab8513ebfb17dcf804b80d5af89f47c49bf1ddb72bd645a9650485a81"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 41215,
+      "sha256": "97191d84ade48596b705d0dc6dbc887e4915ad5a699e2b70f6bfee95fa75ca17"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 32553,
+      "sha256": "a343ed5f557d71086ded60fcb5ee1b685fe5f291ab2c03ede268d65d98c30625"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_equalities.rs",
+      "bytes": 2344,
+      "sha256": "a4f540aa91fd25f6fa8a0a6a2710818aaec530762832c1a9dac4c3eab6226b17"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_derivatives.rs",
+      "bytes": 4182,
+      "sha256": "6491e11bc7728acc8c24aa0670c3615905f433d6ae0a76b20fb9eeff775b1531"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_equalities",
+      "bytes": 8739004,
+      "sha256": "bb3f57aa784eb180f3adac1ead7ceb80dedeaaff5c45749f5cf2a6bf45ec39ee"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8667828,
+      "sha256": "b0139de3cadf6c271c4866a8b5833ade509ae6e5b551e77944887447759c1e78"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8607756,
+      "sha256": "dbdad5a891e98fec7bd7f1641d4161fca4731d2566331ec62d34a2d40fb62c6d"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_derivatives",
+      "bytes": 8595176,
+      "sha256": "7a9160298a40774ebe73f5d5d1e6bc0b9f46fc3a7661b3aa88e64d7c1ba32e2f"
+    }
+  ]
+}

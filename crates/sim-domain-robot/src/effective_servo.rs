@@ -9,6 +9,10 @@ use sim_core::{
 };
 use std::collections::BTreeMap;
 
+#[path = "servo_command.rs"]
+mod command;
+pub use command::{ServoCommandCheck, ServoCommandLimits};
+
 pub const EFFECTIVE_SERVO: &str = "robot.effective_servo";
 
 #[derive(Clone, Debug)]
@@ -59,9 +63,106 @@ impl EffectiveServo {
     /// This is an effective response law, not a winding or heat prediction.
     pub fn torque(&self, angle: f64, speed: f64, target: f64) -> f64 {
         let request = self.stiffness * (target - angle) - self.damping * speed;
-        let available =
-            self.stall * (1.0 - (request.signum() * speed / self.speed).max(0.0)).max(0.0);
+        let available = self.torque_capacity(speed, request);
         request.clamp(-available, available)
+    }
+
+    /// Unclamped position command realizing torque feedforward plus the existing
+    /// position/velocity feedback gains about a moving reference. The normal
+    /// torque-speed envelope and external command bounds still apply.
+    pub fn reference_target(&self, angle: f64, speed: f64, torque_nm: f64) -> Result<f64, String> {
+        let target = angle + (self.damping * speed + torque_nm) / self.stiffness;
+        if [angle, speed, torque_nm, target]
+            .iter()
+            .any(|v| !v.is_finite())
+        {
+            return Err("finite moving reference and feedforward torque required".into());
+        }
+        Ok(target)
+    }
+
+    /// Torque magnitude available at a finite signed speed, in the direction
+    /// of a requested torque. Braking retains stall torque even above no-load
+    /// speed. This is the same envelope used by the running servo model.
+    pub fn torque_capacity(&self, speed: f64, requested_torque: f64) -> f64 {
+        self.stall * (1.0 - (requested_torque.signum() * speed / self.speed).max(0.0)).max(0.0)
+    }
+
+    /// Nonnegative optimization residual in Nm with the same zero-violation
+    /// set as the exact torque envelope. For nonzero motoring torque, extend
+    /// the sloping boundary beyond no-load speed instead of clipping its
+    /// gradient. This is not negative physical capacity or a backdrive limit:
+    /// braking retains stall torque, and zero-torque coasting has no penalty.
+    /// The runtime torque law remains `torque_capacity` above.
+    pub fn optimization_torque_violation(&self, speed: f64, requested_torque: f64) -> f64 {
+        if requested_torque == 0.0 {
+            return 0.0;
+        }
+        let along = (requested_torque.signum() * speed / self.speed).max(0.0);
+        (requested_torque.abs() - self.stall * (1.0 - along)).max(0.0)
+    }
+
+    /// Optimistic positive mechanical power, achieved at half no-load speed
+    /// and half stall torque. Does not establish sustained thermal capacity.
+    pub fn peak_motoring_power_w(&self) -> f64 {
+        self.stall * self.speed / 4.0
+    }
+}
+
+#[cfg(test)]
+mod optimization_tests {
+    use super::*;
+
+    #[test]
+    fn moving_reference_realizes_feedforward_and_feedback_without_bypassing_limits() {
+        let motor = EffectiveServo {
+            stiffness: 10.,
+            damping: 0.1,
+            stall: 3.,
+            speed: 2.,
+        };
+        let target = motor.reference_target(0.2, 0.5, 0.4).unwrap();
+        assert!((motor.torque(0.2, 0.5, target) - 0.4).abs() < 1e-12);
+        assert!((motor.torque(0.19, 0.4, target) - (0.4 + 0.1 + 0.01)).abs() < 1e-12);
+        let saturated = motor.reference_target(0.2, 0.5, 10.).unwrap();
+        assert_eq!(
+            motor.torque(0.2, 0.5, saturated),
+            motor.torque_capacity(0.5, 10.)
+        );
+        assert!(motor.reference_target(f64::NAN, 0., 0.).is_err());
+        assert!(motor.reference_target(0., f64::INFINITY, 0.).is_err());
+    }
+
+    #[test]
+    fn extended_penalty_keeps_physical_feasibility_and_free_backdrive() {
+        let motor = EffectiveServo {
+            stiffness: 10.0,
+            damping: 0.1,
+            stall: 3.0,
+            speed: 2.0,
+        };
+        for speed in [-20.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 20.0] {
+            for torque in [-4.0, -3.0, -1.0, -0.01, 0.0, 0.01, 1.0, 3.0, 4.0] {
+                assert_eq!(
+                    motor.optimization_torque_violation(speed, torque) == 0.0,
+                    torque.abs() <= motor.torque_capacity(speed, torque)
+                );
+            }
+        }
+        assert_eq!(motor.optimization_torque_violation(100.0, 0.0), 0.0);
+        assert_eq!(motor.optimization_torque_violation(100.0, -1.0), 0.0);
+        assert_eq!(motor.optimization_torque_violation(-100.0, 1.0), 0.0);
+        // The physical capacity is flat at zero; the search still receives
+        // the exact linear envelope slope and a useful direction of repair.
+        assert_eq!(motor.torque_capacity(3.0, 0.2), 0.0);
+        assert_eq!(motor.torque_capacity(4.0, 0.2), 0.0);
+        assert!(
+            (motor.optimization_torque_violation(4.0, 0.2)
+                - motor.optimization_torque_violation(3.0, 0.2)
+                - 1.5)
+                .abs()
+                < 1e-12
+        );
     }
 }
 

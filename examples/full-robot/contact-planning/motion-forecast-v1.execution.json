@@ -1,0 +1,41 @@
+{
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/train_motion_forecast",
+    "sha256": "41e24a566503b87637e484aef4e3ba03b56773977ed1a3850b1880451f2ea7b3"
+  },
+  "sources": [
+    {
+      "path": "crates/sim-core/src/lib.rs",
+      "sha256": "85502d7e63d89364282d9feadf739b106b2abd7e6d357cdb606c0976686862bc"
+    },
+    {
+      "path": "crates/sim-runtime/src/motion_forecast.rs",
+      "sha256": "230ed018ce5888596adb4bde41f579224e525e2c985bb5905049f4c4e22a526b"
+    },
+    {
+      "path": "crates/sim-runtime/src/motion_data.rs",
+      "sha256": "82424db02df56de5f34fb815790ebbc63ba9eda1ac53eaf13164e489e23c069a"
+    },
+    {
+      "path": "crates/sim-runtime/examples/train_motion_forecast.rs",
+      "sha256": "9c5eb8e5c03cf0e8a4ea0416fa47f5fc4f0e114a50bb03b94f7a86e43cb27baa"
+    },
+    {
+      "path": "crates/sim-domain-control/src/neural.rs",
+      "sha256": "9366f11b93930c2021344e2d299ce2843deb64908c493cc6817302d2d1c6ea06"
+    },
+    {
+      "path": "crates/sim-domain-control/src/optimization.rs",
+      "sha256": "128a63326ae3a76a807c8b8160b4a752f3719b667edfd9a447c8973283f4a2b6"
+    },
+    {
+      "path": "crates/sim-domain-control/src/ppo.rs",
+      "sha256": "83aaa778e878116ec5294e56e14bbf899658923f07c90e4865cf3988f3e10a23"
+    }
+  ],
+  "input_manifest": {
+    "path": "examples/full-robot/contact-planning/motion-forecast-v1.inputs.json",
+    "sha256": "41c29b24282db7bc0e6c00c08f051f3f945a1a7651cca8a74a2f94dae9660960"
+  },
+  "scope": "Native Rust labeling, fitting and validation; frozen spec and input hashes. Existing search runtime binary verified unchanged."
+}

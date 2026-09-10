@@ -31,6 +31,8 @@ const duration=data.config.step_s*data.config.steps;
 // This execution timeout does not relax the realtime or transition gates.
 const measurementTimeoutMs=Math.max(180000,duration*10000);
 const steering=Boolean(data.config.policy?.step_reference);
+assert(steering||!entry.motion_commands?.length,
+ 'Declared motion-command presets without step_reference require gait_live_review.mjs; an idle episode is not a walking performance test.');
 const schedules={
  'turn-reverse':[[0,'w'],[8.4,'a'],[16.8,'s'],[20,null]],
  'forward-reverse':[[0,'w'],[8.4,'s'],[16.8,null]],

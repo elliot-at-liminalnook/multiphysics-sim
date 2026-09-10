@@ -1,0 +1,46 @@
+{
+  "recorded_at": "2026-09-09T17:57:02.955Z",
+  "session_id": 19725,
+  "command": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/restore_joint_domain runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json examples/full-robot/contact-planning/joint-body16-domain-audit.recipe.json examples/full-robot/contact-planning/joint-body16-domain4000.config.json",
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/joint-domain-restore-build.json",
+    "bytes": 8343,
+    "sha256": "ba039d73e252d6efffffc8d61a34a4750a621dd5edc628dd16cdccfb2a2914c1"
+  },
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/restore_joint_domain",
+    "bytes": 9129188,
+    "sha256": "e5bdfa329784807edaa5cda5c421300156037e1d261cd73e59156943a6faf8fa"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json",
+      "bytes": 161842,
+      "sha256": "dceb6f328f7ca58f60ff5400ad941e340f5d43f93c6573498c63697739612137"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain-audit.recipe.json",
+      "bytes": 177010,
+      "sha256": "545edf98fc1a8e48aeb654b9692bfcd68634cddb7313a9e414cd594b5bb717e4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain4000.config.json",
+      "bytes": 66,
+      "sha256": "c2805d302b07cee5639c5cd9666b9932d8eb29f43c48a9ab73d187992c2a8417"
+    }
+  ],
+  "output": "examples/full-robot/contact-planning/joint-body16-domain4000.result.json",
+  "log": "examples/full-robot/contact-planning/joint-body16-domain4000.log",
+  "status": "Launched and observed running; no terminal result yet.",
+  "scope": "Preserves all earlier 1000 uniform audit phases while adding 4000 uniform phases. Same original limits and explicit target fixed fields."
+}

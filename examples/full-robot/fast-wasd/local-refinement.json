@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "source_scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+  "source_scene_sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01",
+  "link": "-X | Hip output shaft and pulley",
+  "bounds_local_m": [
+    [
+      -0.011919821594288992,
+      -0.004417072199587119,
+      -0.06253576593754442
+    ],
+    [
+      8.017840571100839e-05,
+      0.0035829278004128814,
+      -0.05053576593754443
+    ]
+  ],
+  "cell_m": 0.0005,
+  "blend_width_m": 0.001,
+  "maximum_nodes": 20000,
+  "actual_nodes": 10625,
+  "tessellation_tolerance_mm": 0.15,
+  "wall_s": 5.1052385319999996,
+  "provenance": "Derived from versioned CAD B-rep, triangle distance and individual-solid union ray sign. Quintic blend to retained parent; approximate field, not exact CAD clearance. No source geometry or exclusion changes.",
+  "cad_probe_local_m": [
+    [
+      -0.005899066749526893,
+      -0.0004170721995871195,
+      -0.05651095850337852
+    ],
+    [
+      -0.005983064821113854,
+      -0.0004170721995871195,
+      -0.05661136896695431
+    ],
+    [
+      -0.005908583066900119,
+      -0.0004170721995871192,
+      -0.05652236122023591
+    ],
+    [
+      -0.0058885717396151005,
+      -0.0004170721995871168,
+      -0.05649837505960898
+    ]
+  ]
+}

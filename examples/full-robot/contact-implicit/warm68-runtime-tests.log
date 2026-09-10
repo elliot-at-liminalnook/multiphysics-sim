@@ -1,0 +1,28 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-dynamics)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-compile)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `test` profile [optimized + debuginfo] target(s) in 32.53s
+     Running tests/contact_implicit.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/contact_implicit-ea9c03ef0423684e)
+
+running 16 tests
+test slip_component_is_shared_with_typed_ports_and_required_units ... ok
+test planning_contact_is_discoverable_with_explicit_units_and_required_parameters ... ok
+test optional_sliding_cost_equals_analytic_friction_work_without_changing_forces ... ok
+test resolved_contact_profile_uses_material_pair_and_compiled_dissipation ... ok
+test gravity_and_state_contact_balance_without_actuation_or_contact_schedule ... ok
+test tilted_surface_contacts_match_runtime_samples_and_generate_edge_moments ... ok
+test periodic_boundary_closes_velocity_and_repeats_the_same_physics ... ok
+test cubic_collocation_uses_analytic_acceleration_and_is_grid_independent ... ok
+test periodic_slip_report_and_optional_objective_do_not_confuse_stationarity_with_acceptance ... ok
+test feasibility_restoration_ignores_task_cost_and_recovers_unactuated_dynamics ... ok
+test equality_partition_and_solver_enforce_unactuated_startup_dynamics ... ok
+test periodic_optimizer_can_change_its_first_pose_and_preserves_exact_closure ... ok
+test irregular_cubic_collocation_preserves_physics_weights_and_cache ... ok
+test cubic_cache_matches_every_control_probe_and_constant_translation_balances_gravity ... ok
+test cached_three_knot_evaluation_is_exact_for_probes_and_invalid_inputs ... ok
+test optimizer_discovers_touchdown_from_a_separated_stationary_guess ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+

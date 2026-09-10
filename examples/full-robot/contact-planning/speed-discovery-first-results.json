@@ -1,0 +1,685 @@
+{
+  "records": [
+    {
+      "observation": {
+        "context_id": "4b644b65a0ea929de221ee8f56f9ebc30ea75f9c665e2e3ecf8b43512bcd6d2d",
+        "values": [
+          0.211710264528351,
+          0.5,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.20702016981487031,
+          "residuals": [
+            -1
+          ]
+        },
+        "evidence": "runs/bayesian-speed-only-diagonal21/evaluation-000.evaluation.json"
+      },
+      "method": "source-parameters-new-task",
+      "metrics": {
+        "net_distance_m": 4.1404033962974065,
+        "displacement_xy_m": [
+          2.9814067646981166,
+          2.873004348671161
+        ],
+        "elapsed_s": 20,
+        "requested_duration_s": 20,
+        "speed_m_s": 0.20702016981487031,
+        "minimum_chassis_up_z": 0.9973284224229584,
+        "minimum_chassis_ground_clearance_m": 0.2920416894974851,
+        "chassis_floor_contact": false,
+        "fallen": false,
+        "completed": true,
+        "scope": "Net horizontal chassis displacement divided by the full trial duration. Falling means chassis ground contact or overturning. CAD hull clearance and orientation are sampled at recorded frames; no slip, tracking, lift, steering or stop threshold."
+      },
+      "wall_s": 159.368006947,
+      "native_exit_code": 0,
+      "capture_sha256": "c45b482bb947f13c054845422e16b6eaa756f59e901f1b4357c21ea11236fa94"
+    },
+    {
+      "observation": {
+        "context_id": "4b644b65a0ea929de221ee8f56f9ebc30ea75f9c665e2e3ecf8b43512bcd6d2d",
+        "values": [
+          0.27731921593244,
+          2.197073823396008,
+          0.9690620571170736
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.2720497603352899,
+          "residuals": [
+            -1
+          ]
+        },
+        "evidence": "runs/bayesian-speed-only-diagonal21/evaluation-001.evaluation.json"
+      },
+      "method": "initial-latin-hypercube",
+      "metrics": {
+        "net_distance_m": 5.440995206705797,
+        "displacement_xy_m": [
+          4.003974642114942,
+          3.684103134372867
+        ],
+        "elapsed_s": 20,
+        "requested_duration_s": 20,
+        "speed_m_s": 0.2720497603352899,
+        "minimum_chassis_up_z": 0.9971396258525511,
+        "minimum_chassis_ground_clearance_m": 0.291583348926019,
+        "chassis_floor_contact": false,
+        "fallen": false,
+        "completed": true,
+        "scope": "Net horizontal chassis displacement divided by the full trial duration. Falling means chassis ground contact or overturning. CAD hull clearance and orientation are sampled at recorded frames; no slip, tracking, lift, steering or stop threshold."
+      },
+      "wall_s": 136.04620274700002,
+      "native_exit_code": 0,
+      "capture_sha256": "4cf469a6ea788cd33a85434737776c541866012bddf018d84c7af99a6d82917b"
+    },
+    {
+      "observation": {
+        "context_id": "57d9da5cfbe0a48c86ce11c6c8c6187b1fc71a4d3c117035e0aff6c664712853",
+        "values": [
+          0.3166963504694018,
+          0.6902410253030458,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.33671570359070535,
+          "residuals": [
+            -1
+          ]
+        },
+        "evidence": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.evaluation.json"
+      },
+      "method": "source-parameters-new-task",
+      "metrics": {
+        "net_distance_m": 6.734314071814107,
+        "displacement_xy_m": [
+          3.713355860115895,
+          5.618004474364224
+        ],
+        "elapsed_s": 20,
+        "requested_duration_s": 20,
+        "speed_m_s": 0.33671570359070535,
+        "minimum_chassis_up_z": 0.9972797468835514,
+        "minimum_chassis_ground_clearance_m": 0.2913592801632045,
+        "chassis_floor_contact": false,
+        "fallen": false,
+        "completed": true,
+        "scope": "Net horizontal chassis displacement divided by the full trial duration. Falling means chassis ground contact or overturning. CAD hull clearance and orientation are sampled at recorded frames; no slip, tracking, lift, steering or stop threshold."
+      },
+      "wall_s": 112.315295744,
+      "native_exit_code": 0,
+      "capture_sha256": "fad20e60614f8cc43030bf424ed5868aa652b23e908661398295d69c08c06515"
+    }
+  ],
+  "archives": [
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/context.json",
+        "bytes": 3123,
+        "sha256": "54551f5789110ed785a730dde1913267daf753f34a6f92500a05ce51f1e45e2e"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/54551f5789110ed785a730dde1913267daf753f34a6f92500a05ce51f1e45e2e.gz",
+        "bytes": 1426,
+        "sha256": "6ef653e21424f66e11559cf5130a3e91a08e269c3b9506a2749891ec87389823"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/context.json",
+        "bytes": 3141,
+        "sha256": "f4777ddc581f187358f50ce195c6b22d67809f44186bea03ce303228b57fccd2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f4777ddc581f187358f50ce195c6b22d67809f44186bea03ce303228b57fccd2.gz",
+        "bytes": 1429,
+        "sha256": "ee8da4627ccfaad5cf9dba2071c7250241eed49ceca2cc107aa9e4b7bcb37d2e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/context.json",
+        "bytes": 3301,
+        "sha256": "960e8df764304fa853bae029b5a3097368a8b4b943806f1f63842f590129fa46"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/960e8df764304fa853bae029b5a3097368a8b4b943806f1f63842f590129fa46.gz",
+        "bytes": 1456,
+        "sha256": "1ae5b24538e5ba7a0630949e2d40091cc277abcf04959dcede0a5ccb04d7b32d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/speed-only-337-validation/launch.json",
+        "bytes": 2271,
+        "sha256": "47901c75f7b53ff1c15a8e1f27df17e9672306ef344ef592bed9832bd6c90e8c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/47901c75f7b53ff1c15a8e1f27df17e9672306ef344ef592bed9832bd6c90e8c.gz",
+        "bytes": 1037,
+        "sha256": "bc1266cee1ed23bb18178c51e258e70108aea85f9ecd393d09f9fa02bfa3926f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-000.actions.json",
+        "bytes": 65895,
+        "sha256": "060e691d60017f4ecaec67e689d77fe7c6fb02827b018166c4773106d296c89d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/060e691d60017f4ecaec67e689d77fe7c6fb02827b018166c4773106d296c89d.gz",
+        "bytes": 2600,
+        "sha256": "252372ce5e72351e2eb2c30bcdf8d58ec1ee35f4272f9bd53e63c69a8dede780"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-000.config.json",
+        "bytes": 277576,
+        "sha256": "48c7e36e73bc6d5606612757fb6b8d859b32c02304a65ca2b425d5e594818479"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/48c7e36e73bc6d5606612757fb6b8d859b32c02304a65ca2b425d5e594818479.gz",
+        "bytes": 9399,
+        "sha256": "9ccbb0afe2f907ecb99d196d7a6b573497bb423a65115cc4e2daff7964de6d72"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-000.evaluation.json",
+        "bytes": 1056,
+        "sha256": "c6447864c957a949c9d0cfaf982bd7d94c751d081818a083dbe0ceb2a6b0a728"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c6447864c957a949c9d0cfaf982bd7d94c751d081818a083dbe0ceb2a6b0a728.gz",
+        "bytes": 679,
+        "sha256": "74b288d1b841fa598fc9c4052f10d64f9847c59f8fe1fddb97443bdad7ac1dde"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-000.native.json",
+        "bytes": 45963581,
+        "sha256": "c45b482bb947f13c054845422e16b6eaa756f59e901f1b4357c21ea11236fa94"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c45b482bb947f13c054845422e16b6eaa756f59e901f1b4357c21ea11236fa94.gz",
+        "bytes": 10704536,
+        "sha256": "18831048dc726ecc3671b9835059527a6643c22a620691ebc947ae0da1a0a85f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-000.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-000.scene.json",
+        "bytes": 12777675,
+        "sha256": "de308613e0d85c3a189449391c212ab2d9bb7e89b745f3c0546e20b1d902b3ff"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/de308613e0d85c3a189449391c212ab2d9bb7e89b745f3c0546e20b1d902b3ff.gz",
+        "bytes": 3614015,
+        "sha256": "19d504422cffc73fe647545a27e2107ecccda4146bf5b93dfb3363d9e20ef74b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-000.summary.json",
+        "bytes": 585,
+        "sha256": "c58a7e96b897b958d431d25fb5c4079530c2c8d37dac81c08d672a32d2df798f"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/c58a7e96b897b958d431d25fb5c4079530c2c8d37dac81c08d672a32d2df798f.gz",
+        "bytes": 393,
+        "sha256": "26c4be10d2e6443c407b1a14862c76056fb0d41af04659e1fc112daeda67d65b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-001.actions.json",
+        "bytes": 78895,
+        "sha256": "8084af08165e33752380488b6b1ea5b34fb72325ff80319f54cfe43af700c8ac"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8084af08165e33752380488b6b1ea5b34fb72325ff80319f54cfe43af700c8ac.gz",
+        "bytes": 2721,
+        "sha256": "b918ca7c2501d3d61db7409df5cde936dfb09abb5ddf46bfef918b9aa0cecc08"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-001.config.json",
+        "bytes": 277576,
+        "sha256": "48c7e36e73bc6d5606612757fb6b8d859b32c02304a65ca2b425d5e594818479"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/48c7e36e73bc6d5606612757fb6b8d859b32c02304a65ca2b425d5e594818479.gz",
+        "bytes": 9399,
+        "sha256": "9ccbb0afe2f907ecb99d196d7a6b573497bb423a65115cc4e2daff7964de6d72"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-001.evaluation.json",
+        "bytes": 1083,
+        "sha256": "a8d7e073ef37569c265e1bb553b7dd1b44f14e1b38c4efaa33372240441db0a3"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a8d7e073ef37569c265e1bb553b7dd1b44f14e1b38c4efaa33372240441db0a3.gz",
+        "bytes": 699,
+        "sha256": "09cad04942fa390f22b16c93bd5429044756d0d59a5ce2f6cc683ea09bd6fb8f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-001.native.json",
+        "bytes": 46022601,
+        "sha256": "4cf469a6ea788cd33a85434737776c541866012bddf018d84c7af99a6d82917b"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/4cf469a6ea788cd33a85434737776c541866012bddf018d84c7af99a6d82917b.gz",
+        "bytes": 10788714,
+        "sha256": "409a8f006a426483c22cbadcf45b6ab84631b3f9113290a5bfc41e7cadce904e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-001.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-001.scene.json",
+        "bytes": 12777881,
+        "sha256": "ac20483e27541d3106276a2c18ad93ed33219a2f41a962bf52d04ffecc901365"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ac20483e27541d3106276a2c18ad93ed33219a2f41a962bf52d04ffecc901365.gz",
+        "bytes": 3614035,
+        "sha256": "2e1ea9ffe42999a6a7b68019b1811ee40f28e9089accf322d4a6935dca25891e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-diagonal21/evaluation-001.summary.json",
+        "bytes": 581,
+        "sha256": "aea4de15b2e51ecd6cd6010aa8335111b762ecc2520627549b3cc87c44e0e1a0"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/aea4de15b2e51ecd6cd6010aa8335111b762ecc2520627549b3cc87c44e0e1a0.gz",
+        "bytes": 392,
+        "sha256": "e447ecbebcff9522c2ddd337eced788a56b691bbab01668d0bb258cb7d5c4c0f"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.actions.json",
+        "bytes": 81895,
+        "sha256": "d8cd7927ebf26db87d0ea16b4f3b237db9ae3df420651be94941632abacf02e6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/d8cd7927ebf26db87d0ea16b4f3b237db9ae3df420651be94941632abacf02e6.gz",
+        "bytes": 2844,
+        "sha256": "59ce2f43bf3e890af2375b726f049bc6612f315a3f101ead3bf06614dcf9fdd6"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.config.json",
+        "bytes": 277578,
+        "sha256": "fee99311db76dbac7c4af73e4de2c2dcb953628fab597b04c51e5c2bd56e02e7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fee99311db76dbac7c4af73e4de2c2dcb953628fab597b04c51e5c2bd56e02e7.gz",
+        "bytes": 9398,
+        "sha256": "a75b52a43a83a0c8b3ede4f049578422005a4c5a9a589e45fb39f19642d0bb94"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.evaluation.json",
+        "bytes": 1076,
+        "sha256": "8d825ac1163b03383005a35856c10bb7538e48797617d6008b38d1bc4fa2c4d4"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/8d825ac1163b03383005a35856c10bb7538e48797617d6008b38d1bc4fa2c4d4.gz",
+        "bytes": 694,
+        "sha256": "f40a385e2a5d74cc30c4d1f0390adbb7a667559c48bf1389d979e522314b7c4d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.native.json",
+        "bytes": 46022632,
+        "sha256": "fad20e60614f8cc43030bf424ed5868aa652b23e908661398295d69c08c06515"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fad20e60614f8cc43030bf424ed5868aa652b23e908661398295d69c08c06515.gz",
+        "bytes": 10798527,
+        "sha256": "05d46b91331d92f43f43552e667d1178e9adf4a993ec360ff156e141f1b3027b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.scene.json",
+        "bytes": 12774245,
+        "sha256": "f7fb8daaedf1b5887cb2d32024dd61c96342614ca1db7ea1ac8a2dcb47baebf1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/f7fb8daaedf1b5887cb2d32024dd61c96342614ca1db7ea1ac8a2dcb47baebf1.gz",
+        "bytes": 3613291,
+        "sha256": "b145ddd3d231362cb4533884ccb480381a686052291c1d53723bfc6c6915df4e"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-000.summary.json",
+        "bytes": 583,
+        "sha256": "22748fa9481b8747eaafc5e8356999076865376c0b96bf75101301f4d80d1a48"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/22748fa9481b8747eaafc5e8356999076865376c0b96bf75101301f4d80d1a48.gz",
+        "bytes": 393,
+        "sha256": "c1d6aa16b3ed20583fc25fe7c7bd328875b5de10bb3f0933dfc0de05b9912285"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-audit.execution.json",
+        "bytes": 268,
+        "sha256": "a33df2e1e7ec2a8b3132ef7b9748e8f774b98496bf12477b1efba85e72d308f1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/a33df2e1e7ec2a8b3132ef7b9748e8f774b98496bf12477b1efba85e72d308f1.gz",
+        "bytes": 173,
+        "sha256": "efac8e0485acabd47c07360ef6df8bb9ad75f6463d00915f0fc2081bc6c5ce8b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-audit.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-audit.stdout.log",
+        "bytes": 316,
+        "sha256": "547b57798729258d73936f47d77add42a1426a41d289883dd3a50dfc75bb1a29"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/547b57798729258d73936f47d77add42a1426a41d289883dd3a50dfc75bb1a29.gz",
+        "bytes": 236,
+        "sha256": "4bae53d51e4d13e18d527a472a58dca509ad1db177e596a0bfa7be98b126bdee"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-measure.execution.json",
+        "bytes": 260,
+        "sha256": "fe1b2854a3c47ffe3d18667d001d1ee64ca53e219693d0f6e5bbde4dc6a86eb6"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fe1b2854a3c47ffe3d18667d001d1ee64ca53e219693d0f6e5bbde4dc6a86eb6.gz",
+        "bytes": 185,
+        "sha256": "4151ff2160c3c9978393248bc1503d54dc37111e01fe241547fe094b9727d5db"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-measure.stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003-measure.stdout.log",
+        "bytes": 850,
+        "sha256": "ac14c2a7cc8024295d3aa2bac9ede0c78b631cbd3f55c6d3b0aae66f204b108d"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ac14c2a7cc8024295d3aa2bac9ede0c78b631cbd3f55c6d3b0aae66f204b108d.gz",
+        "bytes": 367,
+        "sha256": "ff365d7a21a597c135c9ed7f6300fc5a84e32e342785d223677f55ac7ff9ec96"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.actions.json",
+        "bytes": 30094,
+        "sha256": "925cc74fa85a934e070ecd1edf409d08868608834e04bb690dfc4f649f837da9"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/925cc74fa85a934e070ecd1edf409d08868608834e04bb690dfc4f649f837da9.gz",
+        "bytes": 1158,
+        "sha256": "e714a7e7d9d625ca1bd48b73c7d6c76f242cd8eb3393309640d2ee4f74d741fc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.clearance.spec.json",
+        "bytes": 94,
+        "sha256": "2b9dd3970baf98d026d89d396efcb3570f83e332813d7609033ff07764529cd2"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/2b9dd3970baf98d026d89d396efcb3570f83e332813d7609033ff07764529cd2.gz",
+        "bytes": 109,
+        "sha256": "ee6271096565dcb92e47d9dfb01a578a4609f643c75a1bb053f2a134f45b9eca"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.clearance.summary.json",
+        "bytes": 18170,
+        "sha256": "0449b9c852bbc0658da18aa7812dbebcfd984068107c231c49b951c3c13d8c60"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/0449b9c852bbc0658da18aa7812dbebcfd984068107c231c49b951c3c13d8c60.gz",
+        "bytes": 1871,
+        "sha256": "b5b75ef897d34bedfb522ef913ad3f0e78651cc9f2c7a47a2b7f99c61ca50042"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.config.json",
+        "bytes": 130276,
+        "sha256": "33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/33f63255e05cd94fb0a19b7177c284c0ac2b5b624015f177d9d2bf97069b01c7.gz",
+        "bytes": 8138,
+        "sha256": "03dd20b29079262aa7b0ecf477fc436347a5cda539d71ae3d0c10f8bc8bc4b81"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.contact-clearance-requirements.json",
+        "bytes": 18097,
+        "sha256": "e98c8fc86779bb3d701643f231f3367995d68e0713211a7205e84a81dad42577"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e98c8fc86779bb3d701643f231f3367995d68e0713211a7205e84a81dad42577.gz",
+        "bytes": 636,
+        "sha256": "4a4a77a4348fa242c24c6a725e78ba5034f0881e13b6d2c6829e364966cc660d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.contact-geometry.json",
+        "bytes": 652939,
+        "sha256": "ff7cd890d965039ba844e484b868607652b5647cf47b2397e162d8aef44efb73"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/ff7cd890d965039ba844e484b868607652b5647cf47b2397e162d8aef44efb73.gz",
+        "bytes": 82416,
+        "sha256": "d80cf3c3a62d1235c5e7b62b12ef7cddfeae3814b7f8bb8e23cb63ba3e5b3e84"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.evaluation.json",
+        "bytes": 792,
+        "sha256": "88dc0c0f52777983642986ed4d7f3cfb2ac59ac4599cf923ae20c2bafc10c0c1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/88dc0c0f52777983642986ed4d7f3cfb2ac59ac4599cf923ae20c2bafc10c0c1.gz",
+        "bytes": 524,
+        "sha256": "f06050c12f128837fe80197f35ba68cfb191f47f212b6f862ca95c2f2ee8a55d"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.native.json",
+        "bytes": 26709590,
+        "sha256": "6a9aaaeedf2c42e71266008a1f6f845a1b7e4ce73f7e1d11c0f23c11b71a8bf1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/6a9aaaeedf2c42e71266008a1f6f845a1b7e4ce73f7e1d11c0f23c11b71a8bf1.gz",
+        "bytes": 6691361,
+        "sha256": "79b9dc6b68a3e86cb9fbdfe8ab6c4e8e01624ad48093300edf0df1a6d695bf17"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.native.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.gz",
+        "bytes": 20,
+        "sha256": "f1b651238a58fe290baec6c5e32f3bdb1943dd2bd582f02569231f7a757c7837"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.policy-state.json",
+        "bytes": 95416,
+        "sha256": "fa39eb7e42211177755e087e4e7bce972189312d83734853058a0285de83a398"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fa39eb7e42211177755e087e4e7bce972189312d83734853058a0285de83a398.gz",
+        "bytes": 8711,
+        "sha256": "b115ee71cdd347e0b38cf5f87bf275668a4888de5d055bafe6eab6d3dbd14a22"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.scene.json",
+        "bytes": 12774246,
+        "sha256": "b9de5eff1e0b2c34a3346166e58cf99d884be7cff4e97730a018326de325b07c"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/b9de5eff1e0b2c34a3346166e58cf99d884be7cff4e97730a018326de325b07c.gz",
+        "bytes": 3613288,
+        "sha256": "8633d8b8e4074dccbc031395704bdce8bea4b719149233909466f9971e23729b"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/bayesian-controller-pilot-v2/evaluation-003.summary.json",
+        "bytes": 2532,
+        "sha256": "edab2239065becc2af28ac5d57aa9bc95a2dcfd93539493b37dffb3eede6d3d8"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/edab2239065becc2af28ac5d57aa9bc95a2dcfd93539493b37dffb3eede6d3d8.gz",
+        "bytes": 1050,
+        "sha256": "e95ef11e8a3463567007a5aad0a185ad150106fac44ec21701ab12e9f2da99dc"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/speed-discovery-fast-short-trial.actions.json",
+        "bytes": 182896,
+        "sha256": "1f31802ba54b8fdcc29d14ca1b6380e8ea3370630fd2016abd97ae98f39aaf37"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/1f31802ba54b8fdcc29d14ca1b6380e8ea3370630fd2016abd97ae98f39aaf37.gz",
+        "bytes": 3107,
+        "sha256": "9b5abc1e382f2beabd0e3c02183f93e553116731e814a0d3f95a514b00c89911"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/speed-discovery-fast-short-trial.config.json",
+        "bytes": 277578,
+        "sha256": "fee99311db76dbac7c4af73e4de2c2dcb953628fab597b04c51e5c2bd56e02e7"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/fee99311db76dbac7c4af73e4de2c2dcb953628fab597b04c51e5c2bd56e02e7.gz",
+        "bytes": 9398,
+        "sha256": "a75b52a43a83a0c8b3ede4f049578422005a4c5a9a589e45fb39f19642d0bb94"
+      }
+    },
+    {
+      "original": {
+        "path": "runs/contact-planning/speed-discovery-fast-short-trial.scene.json",
+        "bytes": 34695417,
+        "sha256": "19b3993083f28b0696da73fbc803bd1be66d6ec3bf38934a07ff423f32f827f1"
+      },
+      "archive": {
+        "path": "examples/full-robot/contact-planning/speed-objective-evidence-files/19b3993083f28b0696da73fbc803bd1be66d6ec3bf38934a07ff423f32f827f1.gz",
+        "bytes": 4016243,
+        "sha256": "732a193ced0a4656ace6b08d43ad847ef4df8ff9b516cf210ad38ce0c515709e"
+      }
+    }
+  ],
+  "scope": "Complete first 0.207 and 0.272 m/s diagonal21 trials and 0.337 m/s recovered fast-seed trial. Measured for twenty seconds with no sampled chassis contact or overturning. Full raw captures, initial conditions and code/binary/model contexts retained. Finer timestep and 60-second validation is running; no physical maximum claimed."
+}

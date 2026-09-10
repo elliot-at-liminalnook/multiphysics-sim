@@ -1,0 +1,34 @@
+name: Bayesian experiment selection
+on:
+  push:
+    paths: ['crates/sim-solve/**', 'crates/sim-domain-control/src/planar_prediction.rs', 'crates/sim-domain-control/tests/planar_prediction.rs', 'Cargo.*', '.github/workflows/bayesian.yml', 'examples/full-robot/contact-planning/measure_speed_run*.mjs', 'examples/interactive/run_affine_speed_search.mjs', 'examples/interactive/run_local_global_planar_speed.mjs', 'examples/interactive/test_command_parameter_bindings.mjs']
+  pull_request:
+    paths: ['crates/sim-solve/**', 'crates/sim-domain-control/src/planar_prediction.rs', 'crates/sim-domain-control/tests/planar_prediction.rs', 'Cargo.*', '.github/workflows/bayesian.yml', 'examples/full-robot/contact-planning/measure_speed_run*.mjs', 'examples/interactive/run_affine_speed_search.mjs', 'examples/interactive/run_local_global_planar_speed.mjs', 'examples/interactive/test_command_parameter_bindings.mjs']
+jobs:
+  speed-measurement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test measured distance, allowed lean and fall classification
+        run: node --test examples/full-robot/contact-planning/measure_speed_run.test.mjs
+      - name: Test typed command bindings for trajectory search
+        run: node --test examples/interactive/test_command_parameter_bindings.mjs
+  constrained-selector:
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    env:
+      RAYON_NUM_THREADS: '2'
+      EGOBOX_LOG: 'off'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test observed feasibility, seeded search and stratified designs
+        run: cargo test --locked --release -p sim-solve --features bayesian --lib
+      - name: Test planar forecasts and shared response bindings
+        run: cargo test --locked --release -p sim-domain-control --test planar_prediction
+      - name: Build experiment selection CLI
+        run: cargo build --locked --release -p sim-solve --features bayesian --example suggest_black_box --example suggest_composite_planar --example calibrate_response_uncertainty

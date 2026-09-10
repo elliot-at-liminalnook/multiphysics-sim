@@ -169,6 +169,40 @@ pub(crate) fn validate_markers(markers: &[Marker]) -> Result<(), String> {
     Ok(())
 }
 
+/// Select every compiled runtime contact vertex on explicitly named CAD links.
+/// These are sampled surfaces, not exact CAD geometry. Locations are relative
+/// to each rigid link COM, matching runtime poses and EmbeddedPoint conventions.
+/// Stiffness/force weighting is not changed or inferred by this selection.
+pub fn compiled_surface_markers(
+    art: &sim_domain_robot::Articulated,
+    links: &[String],
+    expected_cad_sha256: &str,
+) -> Result<Vec<Marker>, String> {
+    if expected_cad_sha256.is_empty()
+        || art.model.source["cad_sha256"].as_str() != Some(expected_cad_sha256)
+        || links.is_empty()
+        || links.iter().collect::<BTreeSet<_>>().len() != links.len()
+    {
+        return Err("matching explicit CAD identity and unique nonempty surface links required".into());
+    }
+    let mut markers = vec![];
+    for name in links {
+        let matches = art.links.iter().filter(|l| &l.name == name).collect::<Vec<_>>();
+        if matches.len() != 1 || matches[0].contact.is_empty() {
+            return Err(format!("unique link with compiled contact samples required: {name}"));
+        }
+        for (index, point) in matches[0].contact.iter().enumerate() {
+            markers.push(Marker {
+                id: format!("{name}/surface/{index}"),
+                link: name.clone(),
+                local_point_m: (*point).into(),
+            });
+        }
+    }
+    validate_markers(&markers)?;
+    Ok(markers)
+}
+
 /// Transform physical marker locations, rather than comparing link origins.
 pub fn sample_markers(frame: &EpisodeFrame, markers: &[Marker]) -> Result<TrackingSample, String> {
     validate_markers(markers)?;

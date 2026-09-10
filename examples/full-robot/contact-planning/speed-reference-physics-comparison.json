@@ -1,0 +1,23 @@
+{
+  "source": "runs/bayesian-controller-pilot-v2/evaluation-003",
+  "base": "runs/contact-planning/diagonal21-screen",
+  "robot_and_world_identical": true,
+  "actuator_configuration_identical_except_initial_targets": true,
+  "initial_target_differences": [
+    {
+      "index": 9,
+      "source": 0.06996992497582386,
+      "baseline": -0.1131458490048312
+    },
+    {
+      "index": 10,
+      "source": 0.21059821392967157,
+      "baseline": 0.1384210840406683
+    },
+    {
+      "index": 11,
+      "source": -1.2599375051364714,
+      "baseline": -1.2553759883105409
+    }
+  ]
+}

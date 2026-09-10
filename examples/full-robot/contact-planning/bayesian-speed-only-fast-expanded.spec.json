@@ -1,0 +1,68 @@
+{
+  "source_prefix": "runs/contact-planning/speed-discovery-fast-short-trial",
+  "task": "examples/full-robot/contact-planning/speed-discovery-task.json",
+  "output_directory": "runs/bayesian-speed-only-fast-expanded",
+  "selector": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+  "runtime_examples": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples",
+  "seed": 42,
+  "initial_design_count": 8,
+  "comparison_evaluations": 16,
+  "baseline_values": [
+    0.3838915467847494,
+    0.6325537857821286,
+    3
+  ],
+  "problem": {
+    "context_id": "computed-from-exact-artifacts-by-runner",
+    "parameters": [
+      {
+        "name": "command_speed",
+        "unit": "m/s",
+        "bounds": [
+          0.05,
+          1.2
+        ]
+      },
+      {
+        "name": "tracking_gain",
+        "unit": "1",
+        "bounds": [
+          0,
+          3
+        ]
+      },
+      {
+        "name": "velocity_lead_factor",
+        "unit": "1",
+        "bounds": [
+          0,
+          6
+        ]
+      }
+    ],
+    "objective_name": "negative net horizontal chassis displacement divided by full trial duration",
+    "objective_unit": "m/s",
+    "constraints": [
+      {
+        "name": "fall observed (chassis ground contact or overturning)",
+        "unit": "1",
+        "scale": 1
+      }
+    ]
+  },
+  "scope": "Continuous 20-second travel. Optimize net distance/time without falling. No slip, lift, requested-speed tracking, heading, steering or stopping rejection. Physical CAD, actuator and runtime model preserved. Parameter ranges are initial search windows to expand, not physical ceilings. Fall geometry is sampled; timestep and longer-distance confirmation follow promising results. Expanded the lead-factor window from 3 to 6 because the 0.448 m/s candidate was on that boundary. Requested-speed exploration also expands from 0.6 to 1.2 m/s. Two declared seeds isolate increased lead at the measured best speed/gain. These remain exploration windows, not physical limits. No observation from another context is imported as a score.",
+  "evaluation_profile": "speed20",
+  "baseline_replay": false,
+  "seed_values": [
+    [
+      0.3838915467847494,
+      0.6325537857821286,
+      4.5
+    ],
+    [
+      0.3838915467847494,
+      0.6325537857821286,
+      6
+    ]
+  ]
+}

@@ -1,0 +1,365 @@
+{
+  "rows": [
+    {
+      "name": "smooth-dynamic-v150-scale1-human-fine",
+      "source_capture_sha256": "199082f726fbba0b33e0820d36c7be451eb2e0653e29cafffa726abb7fc6002d",
+      "window_s": [
+        1.4000000000000001,
+        6
+      ],
+      "samples": 231,
+      "maximum_sampled_total_positive_power_w": 7.308670812789163,
+      "motors": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "maximum_absolute_speed_rad_s": 2.3328308573225356,
+          "maximum_absolute_torque_nm": 0.5912768828113945,
+          "speed_fraction_of_declared_no_load": 0.42326098106781157,
+          "torque_fraction_of_declared_stall": 0.2009782079206098,
+          "approximate_positive_work_j": 0.08150757335668234,
+          "approximate_mean_positive_power_w": 0.01771903768623529
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "maximum_absolute_speed_rad_s": 0.52032538325583,
+          "maximum_absolute_torque_nm": 0.257275857376281,
+          "speed_fraction_of_declared_no_load": 0.09440608670793929,
+          "torque_fraction_of_declared_stall": 0.08744945432479695,
+          "approximate_positive_work_j": 0.034199185319971216,
+          "approximate_mean_positive_power_w": 0.007434605504341569
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "maximum_absolute_speed_rad_s": 3.5154564428217885,
+          "maximum_absolute_torque_nm": 2.3264378119172116,
+          "speed_fraction_of_declared_no_load": 0.637832587913246,
+          "torque_fraction_of_declared_stall": 0.7907687850989589,
+          "approximate_positive_work_j": 1.2860132581324448,
+          "approximate_mean_positive_power_w": 0.27956809959400974
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "maximum_absolute_speed_rad_s": 0.08939670781135545,
+          "maximum_absolute_torque_nm": 0.04809123985353323,
+          "speed_fraction_of_declared_no_load": 0.01621983785652374,
+          "torque_fraction_of_declared_stall": 0.01634647232695271,
+          "approximate_positive_work_j": 0.00007989865209960093,
+          "approximate_mean_positive_power_w": 0.000017369272195565423
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "maximum_absolute_speed_rad_s": 5.118231376605838,
+          "maximum_absolute_torque_nm": 0.390080076197713,
+          "speed_fraction_of_declared_no_load": 0.928634678761335,
+          "torque_fraction_of_declared_stall": 0.1325903260194912,
+          "approximate_positive_work_j": 0.8709944148586505,
+          "approximate_mean_positive_power_w": 0.1893466119257936
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "maximum_absolute_speed_rad_s": 2.7758005442747735,
+          "maximum_absolute_torque_nm": 2.5558586849804183,
+          "speed_fraction_of_declared_no_load": 0.5036319105306942,
+          "torque_fraction_of_declared_stall": 0.8687501797183267,
+          "approximate_positive_work_j": 0.8510957150938439,
+          "approximate_mean_positive_power_w": 0.1850208076290965
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "maximum_absolute_speed_rad_s": 2.3243268058865656,
+          "maximum_absolute_torque_nm": 0.5921693512061903,
+          "speed_fraction_of_declared_no_load": 0.4217180345903413,
+          "torque_fraction_of_declared_stall": 0.20128156275119105,
+          "approximate_positive_work_j": 0.08458298688827953,
+          "approximate_mean_positive_power_w": 0.01838760584527816
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "maximum_absolute_speed_rad_s": 0.5336403984615954,
+          "maximum_absolute_torque_nm": 0.2621339387165366,
+          "speed_fraction_of_declared_no_load": 0.09682191826350839,
+          "torque_fraction_of_declared_stall": 0.08910074242700501,
+          "approximate_positive_work_j": 0.0347743020020109,
+          "approximate_mean_positive_power_w": 0.00755963087000237
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "maximum_absolute_speed_rad_s": 3.5112923571910635,
+          "maximum_absolute_torque_nm": 2.3122533693307066,
+          "speed_fraction_of_declared_no_load": 0.6370770702280358,
+          "torque_fraction_of_declared_stall": 0.7859474164064544,
+          "approximate_positive_work_j": 1.3467522465666972,
+          "approximate_mean_positive_power_w": 0.29277222751449944
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "maximum_absolute_speed_rad_s": 0.04703478051168836,
+          "maximum_absolute_torque_nm": 0.014510170407622102,
+          "speed_fraction_of_declared_no_load": 0.008533832309872405,
+          "torque_fraction_of_declared_stall": 0.004932085339241604,
+          "approximate_positive_work_j": 0.00007083151341720496,
+          "approximate_mean_positive_power_w": 0.000015398155090696732
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "maximum_absolute_speed_rad_s": 4.958526546908207,
+          "maximum_absolute_torque_nm": 0.6856238692256202,
+          "speed_fraction_of_declared_no_load": 0.8996583718478239,
+          "torque_fraction_of_declared_stall": 0.2330472584846746,
+          "approximate_positive_work_j": 0.08689836298577835,
+          "approximate_mean_positive_power_w": 0.01889094847516921
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "maximum_absolute_speed_rad_s": 4.656781410941025,
+          "maximum_absolute_torque_nm": 2.2228392224252542,
+          "speed_fraction_of_declared_no_load": 0.844910749712675,
+          "torque_fraction_of_declared_stall": 0.7555550646500944,
+          "approximate_positive_work_j": 3.2430311569563686,
+          "approximate_mean_positive_power_w": 0.7050067732513845
+        }
+      ]
+    },
+    {
+      "name": "smooth-dynamic-front10-v150-scale1-human-fine",
+      "source_capture_sha256": "0420e822d7a111022314ed9a3cb7e4d6060969477d46db85e9e71e3de84b9293",
+      "window_s": [
+        1.4000000000000001,
+        6
+      ],
+      "samples": 231,
+      "maximum_sampled_total_positive_power_w": 7.289879566543827,
+      "motors": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "maximum_absolute_speed_rad_s": 2.3599454607865993,
+          "maximum_absolute_torque_nm": 0.5916196657435858,
+          "speed_fraction_of_declared_no_load": 0.4281805634830735,
+          "torque_fraction_of_declared_stall": 0.20109472169177237,
+          "approximate_positive_work_j": 0.0894253245798489,
+          "approximate_mean_positive_power_w": 0.019440287952141068
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "maximum_absolute_speed_rad_s": 0.524759412100868,
+          "maximum_absolute_torque_nm": 0.26326089610166226,
+          "speed_fraction_of_declared_no_load": 0.09521058198162911,
+          "torque_fraction_of_declared_stall": 0.0894838013326543,
+          "approximate_positive_work_j": 0.03443842842679402,
+          "approximate_mean_positive_power_w": 0.007486614875390004
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "maximum_absolute_speed_rad_s": 3.534276342221455,
+          "maximum_absolute_torque_nm": 2.3266911821555527,
+          "speed_fraction_of_declared_no_load": 0.641247207133708,
+          "torque_fraction_of_declared_stall": 0.7908549070122665,
+          "approximate_positive_work_j": 1.309840686177714,
+          "approximate_mean_positive_power_w": 0.2847479752560248
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "maximum_absolute_speed_rad_s": 0.08840583623170203,
+          "maximum_absolute_torque_nm": 0.04760878900480084,
+          "speed_fraction_of_declared_no_load": 0.01604005745127067,
+          "torque_fraction_of_declared_stall": 0.016182484676146913,
+          "approximate_positive_work_j": 0.00007957111394141171,
+          "approximate_mean_positive_power_w": 0.00001729806824813298
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "maximum_absolute_speed_rad_s": 5.134402025611637,
+          "maximum_absolute_torque_nm": 0.43672702374618066,
+          "speed_fraction_of_declared_no_load": 0.9315686269047307,
+          "torque_fraction_of_declared_stall": 0.1484458755865257,
+          "approximate_positive_work_j": 0.8807994560615036,
+          "approximate_mean_positive_power_w": 0.191478142622066
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "maximum_absolute_speed_rad_s": 4.331936621220734,
+          "maximum_absolute_torque_nm": 2.747542159433263,
+          "speed_fraction_of_declared_no_load": 0.785972004128015,
+          "torque_fraction_of_declared_stall": 0.9339044286048288,
+          "approximate_positive_work_j": 0.875746250577803,
+          "approximate_mean_positive_power_w": 0.19037961969082676
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "maximum_absolute_speed_rad_s": 2.351910279933528,
+          "maximum_absolute_torque_nm": 0.589872354390385,
+          "speed_fraction_of_declared_no_load": 0.42672268730647334,
+          "torque_fraction_of_declared_stall": 0.20050080111977928,
+          "approximate_positive_work_j": 0.09247016643530287,
+          "approximate_mean_positive_power_w": 0.02010221009463106
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "maximum_absolute_speed_rad_s": 0.5343259984419675,
+          "maximum_absolute_torque_nm": 0.26922866436431075,
+          "speed_fraction_of_declared_no_load": 0.09694631121698871,
+          "torque_fraction_of_declared_stall": 0.09151227801689356,
+          "approximate_positive_work_j": 0.03499948344927463,
+          "approximate_mean_positive_power_w": 0.007608583358537964
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "maximum_absolute_speed_rad_s": 3.529787952228354,
+          "maximum_absolute_torque_nm": 2.3120807228771874,
+          "speed_fraction_of_declared_no_load": 0.6404328487562321,
+          "torque_fraction_of_declared_stall": 0.7858887329438654,
+          "approximate_positive_work_j": 1.3712735431437264,
+          "approximate_mean_positive_power_w": 0.29810294416167965
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "maximum_absolute_speed_rad_s": 0.046734377572450254,
+          "maximum_absolute_torque_nm": 0.01434146301413092,
+          "speed_fraction_of_declared_no_load": 0.008479328211395456,
+          "torque_fraction_of_declared_stall": 0.004874740784444202,
+          "approximate_positive_work_j": 0.00006997413724294743,
+          "approximate_mean_positive_power_w": 0.000015211768965858137
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "maximum_absolute_speed_rad_s": 4.997235118613392,
+          "maximum_absolute_torque_nm": 0.6597887083056668,
+          "speed_fraction_of_declared_no_load": 0.9066815248484982,
+          "torque_fraction_of_declared_stall": 0.22426574766635118,
+          "approximate_positive_work_j": 0.0765538796547734,
+          "approximate_mean_positive_power_w": 0.016642147751037697
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "maximum_absolute_speed_rad_s": 4.678353072743657,
+          "maximum_absolute_torque_nm": 2.265222201636052,
+          "speed_fraction_of_declared_no_load": 0.8488246394441938,
+          "torque_fraction_of_declared_stall": 0.76996126833528,
+          "approximate_positive_work_j": 3.2362348691562244,
+          "approximate_mean_positive_power_w": 0.703529319381788
+        }
+      ]
+    },
+    {
+      "name": "front150-human-0p3125ms",
+      "source_capture_sha256": "819d1466d8c2dc93730e02e23f56e97c649d9515c816f5c116a1718d9fcfd544",
+      "window_s": [
+        1.4000000000000001,
+        6
+      ],
+      "samples": 231,
+      "maximum_sampled_total_positive_power_w": 7.3093496373974265,
+      "motors": [
+        {
+          "coordinate": "joint.-Y | Hip servo output",
+          "maximum_absolute_speed_rad_s": 2.3829671116562583,
+          "maximum_absolute_torque_nm": 0.6071784468214257,
+          "speed_fraction_of_declared_no_load": 0.4323575343518814,
+          "torque_fraction_of_declared_stall": 0.2063832354648549,
+          "approximate_positive_work_j": 0.08194133458114845,
+          "approximate_mean_positive_power_w": 0.01781333360459749
+        },
+        {
+          "coordinate": "joint.-Y | Worm servo output",
+          "maximum_absolute_speed_rad_s": 0.5750120123806157,
+          "maximum_absolute_torque_nm": 0.26366804801980137,
+          "speed_fraction_of_declared_no_load": 0.10432824468265615,
+          "torque_fraction_of_declared_stall": 0.08962219447001146,
+          "approximate_positive_work_j": 0.0344282340949947,
+          "approximate_mean_positive_power_w": 0.007484398716303196
+        },
+        {
+          "coordinate": "joint.-Y | Foot servo output",
+          "maximum_absolute_speed_rad_s": 3.5201080215508087,
+          "maximum_absolute_torque_nm": 2.3311521709194403,
+          "speed_fraction_of_declared_no_load": 0.6386765547058574,
+          "torque_fraction_of_declared_stall": 0.7923712212017493,
+          "approximate_positive_work_j": 1.3163515413294062,
+          "approximate_mean_positive_power_w": 0.28616337854987095
+        },
+        {
+          "coordinate": "joint.+X | Hip servo output",
+          "maximum_absolute_speed_rad_s": 0.09093332207465438,
+          "maximum_absolute_torque_nm": 0.04919454549924558,
+          "speed_fraction_of_declared_no_load": 0.016498635977941413,
+          "torque_fraction_of_declared_stall": 0.016721491878553697,
+          "approximate_positive_work_j": 0.00008021272792488858,
+          "approximate_mean_positive_power_w": 0.000017437549548888823
+        },
+        {
+          "coordinate": "joint.+X | Worm servo output",
+          "maximum_absolute_speed_rad_s": 5.109020815157448,
+          "maximum_absolute_torque_nm": 0.548818490101171,
+          "speed_fraction_of_declared_no_load": 0.9269635454845294,
+          "torque_fraction_of_declared_stall": 0.18654637077941025,
+          "approximate_positive_work_j": 0.8535413034049171,
+          "approximate_mean_positive_power_w": 0.1855524572619385
+        },
+        {
+          "coordinate": "joint.+X | Foot servo output",
+          "maximum_absolute_speed_rad_s": 4.3232791791696785,
+          "maximum_absolute_torque_nm": 2.7023585790502733,
+          "speed_fraction_of_declared_no_load": 0.7844012269734839,
+          "torque_fraction_of_declared_stall": 0.9185462854458534,
+          "approximate_positive_work_j": 0.9224071490922265,
+          "approximate_mean_positive_power_w": 0.20052329328091884
+        },
+        {
+          "coordinate": "joint.+Y | Hip servo output",
+          "maximum_absolute_speed_rad_s": 2.3748983543844657,
+          "maximum_absolute_torque_nm": 0.6056049778194774,
+          "speed_fraction_of_declared_no_load": 0.4308935661828489,
+          "torque_fraction_of_declared_stall": 0.20584840484755326,
+          "approximate_positive_work_j": 0.08509171917838329,
+          "approximate_mean_positive_power_w": 0.018498199821387673
+        },
+        {
+          "coordinate": "joint.+Y | Worm servo output",
+          "maximum_absolute_speed_rad_s": 0.5461131146670133,
+          "maximum_absolute_torque_nm": 0.26947355714474475,
+          "speed_fraction_of_declared_no_load": 0.09908492592268549,
+          "torque_fraction_of_declared_stall": 0.09159551839644349,
+          "approximate_positive_work_j": 0.03501960700494569,
+          "approximate_mean_positive_power_w": 0.007612958044553412
+        },
+        {
+          "coordinate": "joint.+Y | Foot servo output",
+          "maximum_absolute_speed_rad_s": 3.5156772738675195,
+          "maximum_absolute_torque_nm": 2.317671971302055,
+          "speed_fraction_of_declared_no_load": 0.6378726547551145,
+          "torque_fraction_of_declared_stall": 0.7877892285004071,
+          "approximate_positive_work_j": 1.3834407951763878,
+          "approximate_mean_positive_power_w": 0.3007479989513887
+        },
+        {
+          "coordinate": "joint.-X | Hip servo output",
+          "maximum_absolute_speed_rad_s": 0.04733947966622229,
+          "maximum_absolute_torque_nm": 0.014543249389915185,
+          "speed_fraction_of_declared_no_load": 0.008589115899196401,
+          "torque_fraction_of_declared_stall": 0.004943329064092626,
+          "approximate_positive_work_j": 0.00007056917074358943,
+          "approximate_mean_positive_power_w": 0.000015341124074693354
+        },
+        {
+          "coordinate": "joint.-X | Worm servo output",
+          "maximum_absolute_speed_rad_s": 4.980521984787291,
+          "maximum_absolute_torque_nm": 0.6667114931624625,
+          "speed_fraction_of_declared_no_load": 0.9036491500847007,
+          "torque_fraction_of_declared_stall": 0.22661883965216206,
+          "approximate_positive_work_j": 0.07746914510157994,
+          "approximate_mean_positive_power_w": 0.016841118500343467
+        },
+        {
+          "coordinate": "joint.-X | Foot servo output",
+          "maximum_absolute_speed_rad_s": 4.685541221315474,
+          "maximum_absolute_torque_nm": 2.274688680396949,
+          "speed_fraction_of_declared_no_load": 0.8501288329338412,
+          "torque_fraction_of_declared_stall": 0.7731789756260459,
+          "approximate_positive_work_j": 3.2351737912573357,
+          "approximate_mean_positive_power_w": 0.7032986502733339
+        }
+      ]
+    }
+  ],
+  "scope": "Recorded effective-servo torque and speed at 20 ms reporting points, forward window only. Positive work uses trapezoidal integration of those samples, not solver-stage energy. Individual peaks need not coincide; unobserved peaks are not bounded. No-load speed is not a hard backdrive limit, and stall torque is not simultaneously available at no-load speed. Ratios do not establish torque-speed feasibility, thermal limits or a global physical speed ceiling."
+}

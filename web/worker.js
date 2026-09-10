@@ -1,7 +1,8 @@
 // Transport only. Physics, controllers, recording and validation execute in Rust.
-import init, { Simulation, EmbeddedSimulation, EnvironmentSimulation } from './sim_web.js';
+import init, { Simulation, EmbeddedSimulation, EnvironmentSimulation, MotionEvaluation, bind_motion_experiment, inspect_robot_contract, compare_environment_fidelity, materialize_motion } from './sim_web.js';
 const ready = init();
 let simulation;
+let evaluation;
 let embedded = false, environment = false, chunk = 8, loaded;
 let queue = Promise.resolve();
 self.onmessage = ({ data }) => {
@@ -24,6 +25,44 @@ self.onmessage = ({ data }) => {
       };
       let result;
       switch (data.type) {
+        case 'experiment_bind': {
+          result = JSON.parse(bind_motion_experiment(JSON.stringify(data.spec)));
+          break;
+        }
+        case 'experiment_start':
+        case 'experiment_resume': {
+          const next = data.type === 'experiment_start'
+            ? new MotionEvaluation(JSON.stringify(data.experiment), JSON.stringify(data.proposal))
+            : MotionEvaluation.resume(JSON.stringify(data.experiment), JSON.stringify(data.checkpoint));
+          evaluation?.free(); evaluation = next;
+          result = JSON.parse(evaluation.frame());
+          break;
+        }
+        case 'experiment_advance': {
+          if (!evaluation) throw new Error('no active motion evaluation');
+          result = JSON.parse(evaluation.advance(data.maximum_actions ?? 1));
+          break;
+        }
+        case 'experiment_checkpoint':
+        case 'experiment_frame':
+        case 'experiment_metadata': {
+          if (!evaluation) throw new Error('no active motion evaluation');
+          const method = data.type.slice('experiment_'.length);
+          result = JSON.parse(evaluation[method]());
+          break;
+        }
+        case 'inspect_robot': {
+          result = JSON.parse(inspect_robot_contract(JSON.stringify(data.document)));
+          break;
+        }
+        case 'materialize_motion': {
+          result = JSON.parse(materialize_motion(JSON.stringify(data.scene), JSON.stringify(data.actions), JSON.stringify(data.recipe), JSON.stringify(data.values)));
+          break;
+        }
+        case 'compare_environment_fidelity': {
+          result = JSON.parse(compare_environment_fidelity(JSON.stringify(data.reference), JSON.stringify(data.candidate), JSON.stringify(data.plan)));
+          break;
+        }
         case 'load': {
           const next = data.task ? new EnvironmentSimulation(JSON.stringify(data.scene), JSON.stringify(data.config), JSON.stringify(data.task), data.seed ?? 0) : data.config ? new EmbeddedSimulation(JSON.stringify(data.scene), JSON.stringify(data.config), data.seed ?? 0) : new Simulation(JSON.stringify(data.scene), data.seed ?? 0);
           simulation?.free();
@@ -46,6 +85,11 @@ self.onmessage = ({ data }) => {
           result = stepResult(() => embedded ? simulation.advance(count) : simulation.step(new Float64Array(data.action))); break;
         }
         case 'frame': result = JSON.parse(simulation.frame()); break;
+        case 'predict_controller_trajectory': {
+          if (!environment) throw new Error('controller trajectory prediction requires a loaded environment');
+          result = JSON.parse(simulation.predict_controller_trajectory(JSON.stringify(data.model), JSON.stringify(data.previous), JSON.stringify(data.actions)));
+          break;
+        }
         case 'set_attempt_audit_limit': {
           if (!Number.isInteger(data.limit) || data.limit < 0 || data.limit > 10000) throw new Error('attempt limit must be 0..10000');
           simulation.set_attempt_audit_limit(data.limit); result = null; break;

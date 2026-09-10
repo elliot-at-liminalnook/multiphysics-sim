@@ -1,0 +1,38 @@
+{
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-planner-build.json",
+    "bytes": 11151,
+    "sha256": "75bc66d4731e5b494059fd10f9c3061e9f6f7de2dcd14630e41c4bf3789abd6b"
+  },
+  "session_id": 49822,
+  "recorded_at": "2026-09-09T14:49:30.786Z",
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt",
+    "bytes": 9137996,
+    "sha256": "64976375fd16c84f5a1d8f8dac0e0e7cd669225ad1da915f85b25f371bfcc439"
+  },
+  "recipe": {
+    "path": "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+    "bytes": 161211,
+    "sha256": "e4c026ee7c0336c90d436e7b7802aeba3549a51e6652ccaaee54d6f0933f282e"
+  },
+  "search": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-speed.search.json",
+    "bytes": 217,
+    "sha256": "c29ee1fd0000b83f5b1ebd706cc7fbec7499393d443ef37912ccea8bf179ff90"
+  },
+  "environment": {
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "arguments": [
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+    "/Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+    "examples/full-robot/contact-planning/joint-ipopt-speed.search.json"
+  ],
+  "stdout": "examples/full-robot/contact-planning/joint-ipopt-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-ipopt-speed.log",
+  "scope": "Live 8000-model-attempt joint speed search; source is identified by base commit plus the build index source overlay. No completed optimization result yet."
+}

@@ -1,0 +1,50 @@
+{
+  "coordinate_count": 432,
+  "final_build_replay_exact": true,
+  "gradient_cosine_1e7_1e9": -0.1779122788329087,
+  "directions": [
+    {
+      "gradient_probe_index": 3,
+      "predicted_cost_slope": -22176.78916866152,
+      "actual_small_step_slope": 6175.340754021221,
+      "actual_forward_cost_slope": 6424.213518485544,
+      "verification_step": 1e-9
+    },
+    {
+      "gradient_probe_index": 5,
+      "predicted_cost_slope": -40577.319878138245,
+      "actual_small_step_slope": -40577.323381727765,
+      "actual_forward_cost_slope": -35220.118798307,
+      "verification_step": 1e-9
+    }
+  ],
+  "adaptive_search": {
+    "refinements": 1,
+    "termination": "iteration_limit",
+    "initial_cost": 11.955850165850302,
+    "final_cost": 11.609834458084784,
+    "derivative_transitions": [
+      {
+        "iteration": 0,
+        "difference_step": 1e-7
+      },
+      {
+        "iteration": 18,
+        "difference_step": 1e-8
+      }
+    ],
+    "within_planning_tolerances": true
+  },
+  "matched_clock_runtime_comparison": {
+    "earlier": "resolved-work-ff128",
+    "current": "adaptive-finegrid-ff64",
+    "relative_mean_speed_increase": 0.0653990853385058,
+    "previous_speed_m_s": 0.15803759880444293,
+    "current_speed_m_s": 0.16837311321534723,
+    "previous_slip_ratio": 0.9987955882119061,
+    "current_slip_ratio": 0.7508369555897597,
+    "previous_joint_error_rad": 0.04326922491812647,
+    "current_joint_error_rad": 0.016818725591435157
+  },
+  "scope": "Derivative failure and recovery, then short startup runtime measurement. Multiple planner changes contribute to the before/after comparison. No derivative certificate, sustained gait, realtime/WASD or physical maximum claim."
+}

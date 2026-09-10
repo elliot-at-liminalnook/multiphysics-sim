@@ -1,0 +1,22 @@
+name: Conic force optimization
+on:
+  push:
+    paths: ['crates/sim-solve/**', 'crates/sim-domain-robot/src/effective_servo.rs', 'crates/sim-domain-robot/src/servo_command.rs', 'crates/sim-runtime/src/contact_planning*', 'crates/sim-runtime/src/contact_planning/**', 'crates/sim-runtime/examples/solve_joint_force_cones.rs', 'crates/sim-runtime/examples/audit_joint_servo_command_map.rs', 'crates/sim-runtime/examples/refine_joint_contact_mesh.rs', 'crates/sim-runtime/examples/restore_joint_domain.rs', 'crates/sim-runtime/examples/screen_joint_contact_starts.rs', 'crates/sim-runtime/Cargo.toml', 'Cargo.*', '.github/workflows/conic.yml']
+  pull_request:
+    paths: ['crates/sim-solve/**', 'crates/sim-runtime/src/contact_planning*', 'crates/sim-runtime/src/contact_planning/**', 'crates/sim-runtime/examples/solve_joint_force_cones.rs', 'crates/sim-runtime/examples/audit_joint_servo_command_map.rs', 'crates/sim-runtime/examples/refine_joint_contact_mesh.rs', 'crates/sim-runtime/examples/restore_joint_domain.rs', 'crates/sim-runtime/examples/screen_joint_contact_starts.rs', 'crates/sim-runtime/Cargo.toml', 'Cargo.*', '.github/workflows/conic.yml']
+jobs:
+  conic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Analytic optimum, independent dual checks and failure statuses
+        run: cargo test --locked --release -p sim-solve --features conic --lib
+      - name: Effective servo command bounds
+        run: cargo test --locked --release -p sim-domain-robot --lib effective_servo
+      - name: Shared planner and conic integration build
+        run: |
+          cargo test --locked --release -p sim-runtime --features conic --lib contact_planning
+          cargo build --locked --release -p sim-runtime --features conic --example solve_joint_force_cones --example audit_joint_servo_command_map --example refine_joint_contact_mesh --example screen_joint_contact_starts --example restore_joint_domain

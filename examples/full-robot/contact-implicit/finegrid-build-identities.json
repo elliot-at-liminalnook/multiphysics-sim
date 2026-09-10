@@ -1,0 +1,48 @@
+{
+  "base_commit": "0d2cd75fef99f1abb494216a044c493112896ded",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 23994,
+      "sha256": "5ad120095bb59ff86a88c688dd3d31fa384edf37d63205f902feb50b757645bc"
+    },
+    {
+      "path": "crates/sim-runtime/examples/benchmark_contact_implicit.rs",
+      "bytes": 2765,
+      "sha256": "b778f1e69a2af753bb9d9e9c0f765828b036cadac1615d255a6da47819fefcbd"
+    },
+    {
+      "path": "crates/sim-runtime/examples/optimize_contact_implicit.rs",
+      "bytes": 4115,
+      "sha256": "54f183942549c774c49873d060c0233c3ad2074c290ab2bc8df8a1dc23e94b18"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 1654,
+      "sha256": "f051f7350d56cd829e42624ad677ad5a8d9f25c6fadea5741a7cef690d394883"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/benchmark_contact_implicit",
+      "bytes": 8520356,
+      "sha256": "d6ad484936d2c1da7344bffff143e1466525f6b820481b01d85d95df4b7c93e4"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_contact_implicit",
+      "bytes": 8618748,
+      "sha256": "f85ff990e62ff191b41a04f60ef806a072ebbcbe443f8562d43c87071fd89b8f"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+      "bytes": 8571564,
+      "sha256": "7f5d6ae56c6bbaf95a3932a1385fb4ab67021e412a239859004d0010f572dce5"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/compile_contact_implicit",
+      "bytes": 8607420,
+      "sha256": "941cfc5988df863d1c09825e714789a09dde6a8dc0289c8a432b5f688afc1337"
+    }
+  ],
+  "scope": "Built after cache changes; sources identified by content before commit. Exact cached/uncached comparison plus unchanged retained pre-cache CAD audit."
+}

@@ -1,0 +1,26 @@
+{
+  "samples": 1000,
+  "maximum_forward_offset_change_rad": 8.673617379884035e-18,
+  "maximum_reverse_load_reconstruction_error_nm": 4.440892098500626e-16,
+  "unchanged_joint_reference": true,
+  "passed": true,
+  "sources": [
+    {
+      "path": "examples/full-robot/contact-planning/directional-feedforward-reference.result.json",
+      "sha256": "6d30be870df2d7b6b607ec858c036343ecdfe99f435a46a25ca084b6657a15b5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/controller-reference.result.json",
+      "sha256": "4069ad16662c9f37d109162ecd8c945590199de6685a2275a1a6e3072abf73f9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/reverse-load-audit.result.json",
+      "sha256": "2472c1b8d2986d439be2c503ecd5bcbca2c3492775adf46c829f4f2d7b456146"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/check_directional_feedforward.mjs",
+      "sha256": "9f1616c705953c108f14ff61f5fb1eea84eca8dc912bf0f968ff2fd21d1dc512"
+    }
+  ],
+  "scope": "At every original uniform inverse-load sample, new odd/even offsets preserve the forward feedforward and reconstruct the separately evaluated reverse load. Periodic interpolation is linear in these coefficients; finite sampling, intermediate clock rates, acceleration and steering remain approximations."
+}

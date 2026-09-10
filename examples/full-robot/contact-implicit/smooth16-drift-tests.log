@@ -1,0 +1,10 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.12s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_domain_control-a95756fb84132527)
+
+running 2 tests
+test periodic_drift::tests::translating_reference_closes_derivatives_and_matches_finite_differences ... ok
+test periodic_drift::tests::periodic_knot_insertion_preserves_position_velocity_and_acceleration ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+

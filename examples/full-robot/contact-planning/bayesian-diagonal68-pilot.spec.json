@@ -1,0 +1,89 @@
+{
+  "source_prefix": "runs/contact-planning/diagonal68-screen",
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "output_directory": "runs/bayesian-diagonal68-pilot",
+  "selector": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+  "runtime_examples": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples",
+  "seed": 42,
+  "initial_design_count": 12,
+  "comparison_evaluations": 8,
+  "baseline_values": [
+    0.06780678488063342,
+    0.5,
+    1
+  ],
+  "problem": {
+    "context_id": "computed-from-exact-artifacts-by-runner",
+    "parameters": [
+      {
+        "name": "command_speed",
+        "unit": "m/s",
+        "bounds": [
+          0.06,
+          0.16
+        ]
+      },
+      {
+        "name": "tracking_gain",
+        "unit": "1",
+        "bounds": [
+          0,
+          1
+        ]
+      },
+      {
+        "name": "velocity_lead_factor",
+        "unit": "1",
+        "bounds": [
+          0.5,
+          1.5
+        ]
+      }
+    ],
+    "objective_name": "negative minimum measured forward/reverse speed",
+    "objective_unit": "m/s",
+    "constraints": [
+      {
+        "name": "slip ratio / 0.05 - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "speed tracking relative error / 0.05 - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "heading error / 0.1 rad - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "tilt / 0.1 rad - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "settling duration / (0.8 s + existing 1e-9 s roundoff guard) - 1; unsettled gate failure = 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "late drift / 0.003 m - 1",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "failed fraction of all complete planned swing checks",
+        "unit": "1",
+        "scale": 1
+      },
+      {
+        "name": "sampled interlink overlap / 0.0001 m; exact zero required",
+        "unit": "1",
+        "scale": 1
+      }
+    ]
+  },
+  "scope": "Existing constrained LogEI versus seeded sampling on the near-feasible diagonal68 family. Requested-speed bounds are experimental, not physical limits. Physical properties and screen gates unchanged. Complements the ongoing coupled multi-step/contact-order searches; does not exhaust contact families or certify maximum speed."
+}

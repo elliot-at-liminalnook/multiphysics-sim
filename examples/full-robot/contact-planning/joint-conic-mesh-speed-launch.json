@@ -1,0 +1,41 @@
+{
+  "recorded_at": "2026-09-09T17:00:52.631Z",
+  "session_id": 48627,
+  "command": "VECLIB_MAXIMUM_THREADS=1 OMP_NUM_THREADS=1 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-conic-mesh-speed.recipe.json /Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/joint-conic-mesh-speed.search.json",
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/joint-conic-mesh-build.json",
+    "bytes": 9294,
+    "sha256": "fc2fe5dffb20a625651ab433c3e554ea2023ccf5a7da0281a07929a2b91033a6"
+  },
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt",
+    "bytes": 9192964,
+    "sha256": "792bc518d5aef6b98c1bd64eee3d38b5543524db4bc2747f5c53202d718d310e"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-mesh-speed.recipe.json",
+      "bytes": 161936,
+      "sha256": "508bdb24e211dc103fa5d3301f61391ded3edb31f9fa6f459faaff8c1c217723"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-mesh-speed.search.json",
+      "bytes": 319,
+      "sha256": "5f5d3ec9f1f1f374657a9ba75f3166a83c03e1f427b81bfe3e21f67ba4ba480e"
+    }
+  ],
+  "output": "examples/full-robot/contact-planning/joint-conic-mesh-speed.result.json",
+  "log": "examples/full-robot/contact-planning/joint-conic-mesh-speed.log",
+  "status": "Launched and observed running; no terminal result yet.",
+  "scope": "Full joint speed optimization on the adaptively refined mesh; all original decision bounds, physical gates and .30 m/s experimental target retained."
+}

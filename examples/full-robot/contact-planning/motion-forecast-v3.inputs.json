@@ -1,0 +1,25 @@
+{
+  "heads": [
+    {
+      "path": "examples/full-robot/contact-planning/motion-forecast-v3-h1.spec.json",
+      "sha256": "8935a46bf9e0dc64923d57370e242edb3747fa6811a87b6fb6419760d7d895ee"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/motion-forecast-v3-h5.spec.json",
+      "sha256": "0630e31891c247767c5d4e1626053c3a52963ef2f94374abc2b562491c474d0b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/motion-forecast-v3-h10.spec.json",
+      "sha256": "072eab128ec4d21032a754b9f18b9226792f8a1b81ff8e2824edec8ee9d1c58c"
+    }
+  ],
+  "input_manifest": {
+    "path": "examples/full-robot/contact-planning/motion-forecast-v2.inputs.json",
+    "sha256": "a2901ff01b813edf5603aa65215901de9d6f4103fb3848b4878c6d8ed37b6e1b"
+  },
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/train_motion_forecast",
+    "sha256": "8419a7a3593cda682e16c0d5e396d7819352e45fb3729ee24888c3f8f1515771"
+  },
+  "scope": "Separate horizon networks exclude all commands scheduled after their predicted endpoints. Same anchor windows as v2; end times shortened to preserve common anchors. Physics labels, current dynamics, seed, width and fit settings unchanged."
+}

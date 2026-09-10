@@ -1,0 +1,125 @@
+{
+  "accepted_fraction": 0.9999974966049194,
+  "rejected_upper_fraction": 0.9999975562095642,
+  "attempts": [
+    {
+      "fraction": 0,
+      "rejection": null
+    },
+    {
+      "fraction": 1,
+      "rejection": "contact phase 0.75112500000000004, time 0.59902320426171529 s, clock rate 1 acceleration 0: no improving bounded point-plane step; maximum error 0.0000000007489180386954786 m; independent coordinates [0.224198618772216, 0.007986020907242519, -0.21680840862768547, 0.5558569359788946, -0.18081028998013104, -0.02, 0.25557115427162963, -0.31013775393861454, -0.4774717087880859, 0.42987873807601584, 0.11689436910637228, -0.658981244691268]; active bounds [5]"
+    },
+    {
+      "fraction": 0.5,
+      "rejection": null
+    },
+    {
+      "fraction": 0.75,
+      "rejection": null
+    },
+    {
+      "fraction": 0.875,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9375,
+      "rejection": null
+    },
+    {
+      "fraction": 0.96875,
+      "rejection": null
+    },
+    {
+      "fraction": 0.984375,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9921875,
+      "rejection": null
+    },
+    {
+      "fraction": 0.99609375,
+      "rejection": null
+    },
+    {
+      "fraction": 0.998046875,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9990234375,
+      "rejection": null
+    },
+    {
+      "fraction": 0.99951171875,
+      "rejection": null
+    },
+    {
+      "fraction": 0.999755859375,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9998779296875,
+      "rejection": null
+    },
+    {
+      "fraction": 0.99993896484375,
+      "rejection": null
+    },
+    {
+      "fraction": 0.999969482421875,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9999847412109375,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9999923706054688,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9999961853027344,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9999980926513672,
+      "rejection": "contact phase 0.75137500000000002, time 0.59922258041827237 s, clock rate 1 acceleration 0: no improving bounded point-plane step; maximum error 0.0000000009538749790038992 m; independent coordinates [0.22418804671770345, 0.008193053694003753, -0.21725400184513308, 0.5558261596972425, -0.18076128972447975, -0.02, 0.25548287040350437, -0.3101761211660184, -0.4776653609341315, 0.42982356492712603, 0.11687278336893421, -0.658942758468114]; active bounds [5]"
+    },
+    {
+      "fraction": 0.9999971389770508,
+      "rejection": null
+    },
+    {
+      "fraction": 0.999997615814209,
+      "rejection": "contact phase 0.75137500000000002, time 0.59922258062280842 s, clock rate 1 acceleration 0: no improving bounded point-plane step; maximum error 0.0000000006405747043913834 m; independent coordinates [0.2241876912907938, 0.008193195562346201, -0.21725447593022432, 0.5558262107107638, -0.180761246636706, -0.02, 0.2554826299717894, -0.31017565583936113, -0.47766553200626766, 0.42982363440135235, 0.1168727087438741, -0.6589428007549047]; active bounds [5]"
+    },
+    {
+      "fraction": 0.9999973773956299,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9999974966049194,
+      "rejection": null
+    },
+    {
+      "fraction": 0.9999975562095642,
+      "rejection": "contact phase 0.75137500000000002, time 0.59922258064837541 s, clock rate 1 acceleration 0: no improving bounded point-plane step; maximum error 0.0000000006014120312869409 m; independent coordinates [0.22418764686242662, 0.008193213295864657, -0.21725453519076862, 0.5558262170874537, -0.1807612412507335, -0.02, 0.25548259991781935, -0.31017559767353936, -0.47766555339027245, 0.42982364308563015, 0.11687269941574098, -0.6589428060407531]; active bounds [5]"
+    }
+  ],
+  "frames": 10266,
+  "failed_phases_added_to_optimization": [
+    0.7505,
+    0.751125,
+    0.751375,
+    0.7515
+  ],
+  "speed_m_s": 0.02522439329306118,
+  "force_error_n": 0.04420538468386892,
+  "moment_error_nm": 0.013717458636751594,
+  "torque_margin_nm": 1.2601432373190502,
+  "maximum_cone_violation_n": 0,
+  "maximum_inequality": 0,
+  "sampled_feasible": true,
+  "scope": "Passes the combined 1000+4000 uniform audit and event mesh under the original planner gates. Subsequent runtime rejection identifies missing servo-command constraints; this is not an executable gait or speed gain."
+}

@@ -1,0 +1,65 @@
+{
+  "id": "constrained165",
+  "speed": 0.165,
+  "source": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine",
+  "profiles": [
+    [
+      "preview-5ms",
+      "human",
+      20,
+      0.005,
+      "braked-5ms",
+      {
+        "newton": {
+          "broyden_updates": true
+        },
+        "linearized_jacobian_probes": true,
+        "linearized_probe_relative_step": 0.00001,
+        "reuse_exact_probe_base": true
+      }
+    ],
+    [
+      "preview-10ms",
+      "human",
+      20,
+      0.01,
+      "braked-5ms",
+      {
+        "newton": {
+          "broyden_updates": true
+        },
+        "linearized_jacobian_probes": true,
+        "linearized_probe_relative_step": 0.00001,
+        "reuse_exact_probe_base": true
+      }
+    ],
+    [
+      "human-1p25ms",
+      "human",
+      20,
+      0.00125,
+      "braked-5ms"
+    ],
+    [
+      "human-0p3125ms",
+      "human",
+      20,
+      0.0003125,
+      "braked-5ms"
+    ],
+    [
+      "sustained-0p625ms",
+      "sustained",
+      60,
+      0.000625,
+      "sustained"
+    ],
+    [
+      "dropout-0p625ms",
+      "dropout",
+      12,
+      0.000625,
+      "dropout"
+    ]
+  ]
+}

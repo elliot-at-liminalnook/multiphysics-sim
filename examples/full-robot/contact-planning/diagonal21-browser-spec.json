@@ -1,0 +1,16 @@
+{
+  "id": "diagonal21",
+  "output": "runs/speed-ceiling/viewer-diagonal21",
+  "wasm": "/Users/elliot/physics-simulator/target/gait-exploration/wasm32-unknown-unknown/release/sim_web.wasm",
+  "profiles": [
+    {
+      "id": "physics-diagonal21-5ms",
+      "label": "Experimental · 45° travel · 212 mm/s target",
+      "scene": "runs/contact-planning/diagonal21-preview.scene.json",
+      "config": "runs/contact-planning/diagonal21-preview.config.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "readiness": "Requested faster diagonal candidate. Hold W/S to drive; A/D steer. W is 45° relative to chassis.",
+      "evidence": "Planned target 0.211710 m/s. Dense reference audit still fails the torque tolerance; this is a diagnostic controller, not a qualified gait. Actual runtime contact, stopping and browser performance checks are separate."
+    }
+  ]
+}

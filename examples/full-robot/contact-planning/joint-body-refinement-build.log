@@ -1,0 +1,17 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+error[E0369]: binary operation `==` cannot be applied to type `ContactClock`
+   --> crates/sim-runtime/examples/refine_joint_contact_body.rs:128:35
+    |
+128 |             .all(|(a, b)| a.clock == b.clock && (a.time_s - b.time_s).abs() < 1e-12);
+    |                           ------- ^^ ------- ContactClock
+    |                           |
+    |                           ContactClock
+    |
+note: `ContactClock` does not implement `PartialEq`
+   --> crates/sim-runtime/src/contact_planning.rs:52:1
+    |
+ 52 | pub struct ContactClock {
+    | ^^^^^^^^^^^^^^^^^^^^^^^ `ContactClock` is defined in another crate
+
+For more information about this error, try `rustc --explain E0369`.
+error: could not compile `sim-runtime` (example "refine_joint_contact_body") due to 1 previous error

@@ -1,0 +1,33 @@
+{
+  "reason": "User clarified slip is diagnostic; terminate obsolete slip-constrained selection and preserve completed trials for a new explicitly transformed context.",
+  "parent": "60455 78522 node examples/full-robot/contact-planning/run_bayesian_controller_screen.mjs examples/full-robot/contact-planning/bayesian-human20-pilot-v2.spec.json",
+  "child": "61400 60455 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment runs/bayesian-human20-pilot-v2/evaluation-014.scene.json runs/bayesian-human20-pilot-v2/evaluation-014.config.json examples/full-robot/fast-wasd/task.json runs/bayesian-human20-pilot-v2/evaluation-014.actions.json",
+  "frozen_driver": "examples/full-robot/contact-planning/run_bayesian_controller_screen-slip5-v2.mjs",
+  "driver_sha256": "550ca2244ca6f95b537b25ab6ab63b9967ed736b2684cdadade66ca197c227c9",
+  "completed_evaluations": [
+    "evaluation-000.evaluation.json",
+    "evaluation-001.evaluation.json",
+    "evaluation-002.evaluation.json",
+    "evaluation-003.evaluation.json",
+    "evaluation-004.evaluation.json",
+    "evaluation-005.evaluation.json",
+    "evaluation-006.evaluation.json",
+    "evaluation-007.evaluation.json",
+    "evaluation-008.evaluation.json",
+    "evaluation-009.evaluation.json",
+    "evaluation-010.evaluation.json",
+    "evaluation-011.evaluation.json",
+    "evaluation-012.evaluation.json",
+    "evaluation-013.evaluation.json"
+  ],
+  "signals": [
+    {
+      "pid": 60455,
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 61400,
+      "signal": "SIGTERM"
+    }
+  ]
+}

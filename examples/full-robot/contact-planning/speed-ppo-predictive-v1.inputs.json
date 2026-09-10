@@ -1,0 +1,23 @@
+{
+  "commit": "a842ac34",
+  "files": [
+    {
+      "path": "runs/speed-neural-predictive-507/ppo-experiment.json",
+      "sha256": "38276a01fa5e642f247ee2eb6ef9d8e5dfde8bdf29fe504443b017f034b07eec"
+    },
+    {
+      "path": "runs/train_ppo_policy-predictive-v1",
+      "sha256": "c054a00c1acc2b8a56e10cc92b25fcf504435dc5ba09f8a64fc822bb62826fed"
+    }
+  ],
+  "source_binary": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/train_ppo_policy",
+  "command": [
+    "runs/train_ppo_policy-predictive-v1",
+    "runs/speed-neural-predictive-507/ppo-experiment.json",
+    "runs/speed-ppo-predictive-v1"
+  ],
+  "objective": "Full60 net displacement per second, no sampled falls; no slip/tracking/effort reward.",
+  "initialization": "Archived zero-output .507 teacher with causal separate-horizon trajectory inputs. Forecast heads frozen for the first PPO experiment.",
+  "input_archive_manifest": "examples/full-robot/contact-planning/predictive-controller-evidence-v1.json",
+  "scope": "Four PPO updates with two full60 stochastic rollouts each, seeded Gaussian sigma .01 normalized output units; independent complete60 deterministic evaluation. The optimizer batch is finite, not a physical speed-limit claim or goal deadline."
+}

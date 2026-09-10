@@ -1,0 +1,12 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4.17s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_solve-9f4d6be44a7b8ce6)
+
+running 4 tests
+test equality_dogleg::tests::infeasible_bounds_and_evaluation_budget_never_report_convergence ... ok
+test equality_dogleg::tests::equality_prevents_trading_feasibility_for_tracking ... ok
+test equality_dogleg::tests::redundant_consistent_constraints_and_inconsistent_constraints_are_distinct ... ok
+test equality_dogleg::tests::nonlinear_manifold_requires_both_stationarity_and_feasibility ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+

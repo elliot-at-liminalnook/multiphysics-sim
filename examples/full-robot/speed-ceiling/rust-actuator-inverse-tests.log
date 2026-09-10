@@ -1,0 +1,18 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 9.67s
+     Running tests/effective_servo.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/effective_servo-c2fb80da7996653a)
+
+running 4 tests
+test positive_power_bound_and_backdrive_envelope_match_the_actuator_law ... ok
+test registered_component_applies_equal_opposite_shaft_and_housing_torques ... ok
+test bounded_torque_speed_curve_and_braking_do_not_create_an_ideal_motion_source ... ok
+test registry_and_runtime_share_parameters_and_reject_missing_or_unsupported_physics ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/inverse_loads.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/inverse_loads-98da2a7f6a6eb356)
+
+running 1 test
+test inverse_load_matches_analytic_pendulum_gravity_and_parallel_axis_inertia ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

@@ -1,0 +1,76 @@
+{
+  "source": "examples/full-robot/speed-ceiling/capability.json",
+  "source_sha256": "f3365811b197010816d02b67cb214ae5b5e5bbaaddd82a9547cedc09ed12c246",
+  "rows": [
+    {
+      "posture": "hip0-foot-60",
+      "directions": [
+        {
+          "direction_world": [
+            1,
+            0,
+            0
+          ],
+          "stance_budget_m_s": 0.409547593478176,
+          "quintic_return_budget_m_s": 0.11106375416357316
+        },
+        {
+          "direction_world": [
+            0.7071067811865476,
+            0.7071067811865475,
+            0
+          ],
+          "stance_budget_m_s": 0.5667233503467651,
+          "quintic_return_budget_m_s": 0.15368768822963122
+        }
+      ]
+    },
+    {
+      "posture": "hip30-foot-60",
+      "directions": [
+        {
+          "direction_world": [
+            1,
+            0,
+            0
+          ],
+          "stance_budget_m_s": 0.47290482671626954,
+          "quintic_return_budget_m_s": 0.12824537673661546
+        },
+        {
+          "direction_world": [
+            0.7071067811865476,
+            0.7071067811865475,
+            0
+          ],
+          "stance_budget_m_s": 0.423994868257626,
+          "quintic_return_budget_m_s": 0.11498165918850875
+        }
+      ]
+    },
+    {
+      "posture": "hip45-foot-60",
+      "directions": [
+        {
+          "direction_world": [
+            1,
+            0,
+            0
+          ],
+          "stance_budget_m_s": 0.5667259107941199,
+          "quintic_return_budget_m_s": 0.15368838258823592
+        },
+        {
+          "direction_world": [
+            0.7071067811865476,
+            0.7071067811865475,
+            0
+          ],
+          "stance_budget_m_s": 0.40954759347817626,
+          "quintic_return_budget_m_s": 0.11106375416357323
+        }
+      ]
+    }
+  ],
+  "scope": "Conditional shaft-rate budgets from the shared CAD closure Jacobian and effective actuator model. No-load speed is a design budget, not a hard backdrive limit. Frozen-pose return bounds omit varying geometry, lifting, acceleration, torque, friction and stability. Static support uses explicit point forces with contact disabled only for the audit: minimum-norm allocation is a candidate, not an optimized feasibility proof; contact height differences are reported, not resolved. Constant-static-torque rate screens omit velocity and acceleration loads. The sampled linear joint reference bound applies only to uniform time scaling of that reference. None is a global attainable speed proof."
+}

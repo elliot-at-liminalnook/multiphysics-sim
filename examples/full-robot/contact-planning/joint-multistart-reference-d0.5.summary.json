@@ -1,0 +1,109 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.recipe.json",
+      "sha256": "6d3e971d7bcef5d9d6c6d741fa82c6b361e386aa67f297b80c03bf7325ce47ad"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5-initial.result.json",
+      "sha256": "df6f47ee59b367ae177eb51656ea972f9c522d839d1d605478e5e76e953af27f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-multistart-reference-d0.5.result.json",
+      "sha256": "b70d668a2fb7a448f6356cc280b72d8b0f8331cec13bb3147d2f69fb2ee0f02d"
+    }
+  ],
+  "initial": {
+    "speed_m_s": 0.211710264528351,
+    "force_error_n": 22.864446930148027,
+    "moment_error_nm": 6.7390689458171,
+    "torque_margin_nm": -0.04518797226592351,
+    "cone_violation_n": 1.7763568394002505e-15,
+    "maximum_inequality": 456.2889386029605,
+    "sampled_feasible": false
+  },
+  "final": {
+    "speed_m_s": 0.05331697743687844,
+    "force_error_n": 1.0583610602088491,
+    "moment_error_nm": 0.5195512392508589,
+    "torque_margin_nm": -0.17747353123865706,
+    "cone_violation_n": 4.735199134736787,
+    "maximum_inequality": 94.70398269473573,
+    "sampled_feasible": false
+  },
+  "variable_groups": {
+    "period": {
+      "variables": 1,
+      "changed_over_1e_9": 1,
+      "maximum_normalized_change": 0.011055901093269916
+    },
+    "displacement_along_direction": {
+      "variables": 1,
+      "changed_over_1e_9": 1,
+      "maximum_normalized_change": 0.5255150547251016
+    },
+    "foot_stance": {
+      "variables": 4,
+      "changed_over_1e_9": 4,
+      "maximum_normalized_change": 0.06062037639570095
+    },
+    "foot_center": {
+      "variables": 8,
+      "changed_over_1e_9": 8,
+      "maximum_normalized_change": 0.5122604369729702
+    },
+    "foot_swing": {
+      "variables": 12,
+      "changed_over_1e_9": 12,
+      "maximum_normalized_change": 0.2717654050254865
+    },
+    "foot_phase": {
+      "variables": 3,
+      "changed_over_1e_9": 3,
+      "maximum_normalized_change": 0.017160007554472168
+    },
+    "body_control": {
+      "variables": 24,
+      "changed_over_1e_9": 24,
+      "maximum_normalized_change": 0.5286208067108339
+    },
+    "force": {
+      "variables": 120,
+      "changed_over_1e_9": 120,
+      "maximum_normalized_change": 0.513359838821551
+    }
+  },
+  "solver": {
+    "evaluations": 2927,
+    "termination": "outer_iteration_limit",
+    "outer_iterations": 4,
+    "history": [
+      {
+        "iteration": 0,
+        "objective_cost": 11.45437722834477,
+        "maximum_violation": 101.56785252556428,
+        "accepted_inner_steps": 6
+      },
+      {
+        "iteration": 1,
+        "objective_cost": 12.071806620733424,
+        "maximum_violation": 94.2697965807967,
+        "accepted_inner_steps": 6
+      },
+      {
+        "iteration": 2,
+        "objective_cost": 12.143335225508865,
+        "maximum_violation": 94.86288886125688,
+        "accepted_inner_steps": 6
+      },
+      {
+        "iteration": 3,
+        "objective_cost": 12.170502724175506,
+        "maximum_violation": 94.70398269473573,
+        "accepted_inner_steps": 6
+      }
+    ]
+  },
+  "retained_sampled_feasible": false,
+  "scope": "Offline joint optimization evidence only. Every physical inequality must pass independent validation before runtime qualification. A lower violation or changed variables does not constitute a faster gait or a physical speed ceiling."
+}

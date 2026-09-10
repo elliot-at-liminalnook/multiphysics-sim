@@ -1,0 +1,40 @@
+name: Native constrained solver
+on:
+  push:
+    paths: ['crates/sim-domain-control/**', 'crates/sim-domain-robot/src/effective_servo.rs', 'crates/sim-domain-robot/src/servo_command.rs', 'crates/sim-runtime/examples/audit_joint_body_locality.rs', 'crates/sim-solve/**', 'crates/sim-runtime/src/contact_planning*', 'crates/sim-runtime/src/contact_planning/**', 'crates/sim-runtime/examples/optimize_joint_ipopt*.rs', 'crates/sim-runtime/examples/support/joint_checkpoint.rs', 'crates/sim-runtime/Cargo.toml', 'Cargo.*', 'examples/full-robot/contact-planning/prepare_native_ipopt.mjs', '.github/workflows/native-ipopt.yml']
+  pull_request:
+    paths: ['crates/sim-domain-control/**', 'crates/sim-domain-robot/src/effective_servo.rs', 'crates/sim-domain-robot/src/servo_command.rs', 'crates/sim-runtime/examples/audit_joint_body_locality.rs', 'crates/sim-solve/**', 'crates/sim-runtime/src/contact_planning*', 'crates/sim-runtime/src/contact_planning/**', 'crates/sim-runtime/examples/optimize_joint_ipopt*.rs', 'crates/sim-runtime/examples/support/joint_checkpoint.rs', 'crates/sim-runtime/Cargo.toml', 'Cargo.*', 'examples/full-robot/contact-planning/prepare_native_ipopt.mjs', '.github/workflows/native-ipopt.yml']
+jobs:
+  sparse-nlp:
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch and verify the pinned native ABI and dependencies
+        run: |
+          mkdir -p runs/ipopt-audit
+          node examples/full-robot/contact-planning/prepare_native_ipopt.mjs runs/ipopt-audit/native-libraries.json
+      - name: Test shared solvers and build the native interface audit
+        run: |
+          cargo test --locked --release -p sim-domain-control --lib --test trajectory > runs/ipopt-audit/trajectory-tests.log 2>&1
+          cargo test --locked --release -p sim-solve --features native-ipopt --lib > runs/ipopt-audit/shared-tests.log 2>&1
+          cargo build --locked --release -p sim-solve --features native-ipopt --example audit_ipopt > runs/ipopt-audit/build.log 2>&1
+          cargo test --locked --release -p sim-runtime --features native-ipopt --lib contact_planning > runs/ipopt-audit/planner-tests.log 2>&1
+          cargo build --locked --release -p sim-runtime --features native-ipopt --example optimize_joint_ipopt > runs/ipopt-audit/planner-build.log 2>&1
+          cargo test --locked --release -p sim-runtime --features native-ipopt --example optimize_joint_ipopt_checkpoint > runs/ipopt-audit/checkpoint-tests.log 2>&1
+          cargo build --locked --release -p sim-runtime --features native-ipopt --example optimize_joint_ipopt_checkpoint > runs/ipopt-audit/checkpoint-build.log 2>&1
+          cargo build --locked --release -p sim-runtime --features native-ipopt --example audit_joint_body_locality > runs/ipopt-audit/locality-build.log 2>&1
+      - name: Enforce reference optimum, load-sharing ceiling and failure handling
+        run: |
+          target/release/examples/audit_ipopt "$PWD/runs/native-ipopt-casadi-3.8.0/extracted/casadi/libipopt.dylib" > runs/ipopt-audit/result.json 2> runs/ipopt-audit/native.log
+          node -e 'JSON.parse(require("node:fs").readFileSync("runs/ipopt-audit/result.json", "utf8"))'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-ipopt-audit
+          path: runs/ipopt-audit/

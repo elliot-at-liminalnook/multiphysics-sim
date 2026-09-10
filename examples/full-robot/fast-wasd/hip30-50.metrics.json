@@ -1,0 +1,122 @@
+{
+  "name": "hip30-50",
+  "method": "CAD hip rotation shares forward stroke between belt and worm",
+  "hip_initial_deg": 30,
+  "command_speed_m_s": 0.05,
+  "period_s": 0.8,
+  "stride_m": 0.04000000000000001,
+  "lift_m": 0.008,
+  "swing_s": 0.32,
+  "source_plan": "examples/full-robot/fast-wasd/hip30-50.plan.json",
+  "completed": true,
+  "error": null,
+  "capture_sha256": "b01c4e45d6ee47751915929ca2d6f1a734c2de58ad0f0db8f30fd5d65b7e4181",
+  "simulated_s": 6,
+  "measured_forward_speed_mm_s": 50.35189319141064,
+  "stop_drift_m": 0.0011867012345878846,
+  "maximum_tilt_rad": 0.011827024619631551,
+  "maximum_heading_rad": 0.033959054668802974,
+  "maximum_slip_ratio": 0.0910660374403113,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.022015029777887163,
+      "motion_to_net_body_advance_ratio": 0.0910660374403113
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.007936711880796869,
+      "motion_to_net_body_advance_ratio": 0.03283052117492873
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.01053153858853385,
+      "motion_to_net_body_advance_ratio": 0.043564124013624236
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.0032850650358283513,
+      "motion_to_net_body_advance_ratio": 0.013588800858542974
+    }
+  ],
+  "motor": [
+    {
+      "name": "joint.-Y | Hip servo output",
+      "maximum_speed_rad_s": 0.6946424789475731,
+      "maximum_torque_nm": 0.2089915090616769,
+      "angle_span_rad": 0.1020870235536171
+    },
+    {
+      "name": "joint.-Y | Worm servo output",
+      "maximum_speed_rad_s": 0.7992653424026777,
+      "maximum_torque_nm": 0.31702295109170653,
+      "angle_span_rad": 0.18690460856233418
+    },
+    {
+      "name": "joint.-Y | Foot servo output",
+      "maximum_speed_rad_s": 1.2494986962674268,
+      "maximum_torque_nm": 2.137524676945683,
+      "angle_span_rad": 0.11344219318746918
+    },
+    {
+      "name": "joint.+X | Hip servo output",
+      "maximum_speed_rad_s": 0.4353904691086482,
+      "maximum_torque_nm": 0.6722295150388979,
+      "angle_span_rad": 0.06730857631501785
+    },
+    {
+      "name": "joint.+X | Worm servo output",
+      "maximum_speed_rad_s": 1.3303021305800748,
+      "maximum_torque_nm": 0.41747914470906317,
+      "angle_span_rad": 0.30539046463654623
+    },
+    {
+      "name": "joint.+X | Foot servo output",
+      "maximum_speed_rad_s": 1.0543347117619728,
+      "maximum_torque_nm": 1.9978464627899046,
+      "angle_span_rad": 0.14968061881043715
+    },
+    {
+      "name": "joint.+Y | Hip servo output",
+      "maximum_speed_rad_s": 0.7338639016846497,
+      "maximum_torque_nm": 0.20629611001944542,
+      "angle_span_rad": 0.11506339585756975
+    },
+    {
+      "name": "joint.+Y | Worm servo output",
+      "maximum_speed_rad_s": 0.7609463623064391,
+      "maximum_torque_nm": 0.3195652982602897,
+      "angle_span_rad": 0.17649479663163883
+    },
+    {
+      "name": "joint.+Y | Foot servo output",
+      "maximum_speed_rad_s": 1.0277094961103084,
+      "maximum_torque_nm": 1.991484356277868,
+      "angle_span_rad": 0.1192756224766145
+    },
+    {
+      "name": "joint.-X | Hip servo output",
+      "maximum_speed_rad_s": 0.410391969403294,
+      "maximum_torque_nm": 0.5807188560210111,
+      "angle_span_rad": 0.05722300117876655
+    },
+    {
+      "name": "joint.-X | Worm servo output",
+      "maximum_speed_rad_s": 1.3498947246327428,
+      "maximum_torque_nm": 0.44565138359605333,
+      "angle_span_rad": 0.31510258961219834
+    },
+    {
+      "name": "joint.-X | Foot servo output",
+      "maximum_speed_rad_s": 1.024117887473802,
+      "maximum_torque_nm": 1.9421338523169327,
+      "angle_span_rad": 0.14924299855115508
+    }
+  ],
+  "positive_mechanical_work_j": 2.8036382608830634,
+  "native": {
+    "wall_s": 11.751036469,
+    "simulation_per_wall": 0.5105932583758369,
+    "p95_transition_s": 0.07257683
+  }
+}

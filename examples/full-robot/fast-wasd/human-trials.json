@@ -1,0 +1,118 @@
+{
+  "cases": [
+    {
+      "name": "human-hip0-60",
+      "source": "hip0-60",
+      "speed_m_s": 0.06,
+      "step_s": 0.00125
+    },
+    {
+      "name": "human-hip0-65",
+      "source": "hip0-65",
+      "speed_m_s": 0.065,
+      "step_s": 0.00125
+    },
+    {
+      "name": "human-feedforward-65",
+      "source": "feedforward-65",
+      "speed_m_s": 0.065,
+      "step_s": 0.00125
+    },
+    {
+      "name": "human-braked-65",
+      "source": "human-feedforward-65",
+      "speed_m_s": 0.065,
+      "step_s": 0.00125,
+      "scope": "Brake within the all-stance interval, then settle 80 ms before reversal. Cap phase advance at the next lift boundary during braking."
+    },
+    {
+      "name": "braked-5ms",
+      "step_s": 0.005,
+      "source": "human-braked-65",
+      "speed_m_s": 0.065
+    },
+    {
+      "name": "braked-5ms-loose",
+      "step_s": 0.005,
+      "tolerance": 0.0001,
+      "source": "human-braked-65",
+      "speed_m_s": 0.065
+    },
+    {
+      "name": "braked-10ms-loose",
+      "step_s": 0.01,
+      "tolerance": 0.0001,
+      "source": "human-braked-65",
+      "speed_m_s": 0.065
+    },
+    {
+      "name": "braked-fine",
+      "step_s": 0.000625,
+      "source": "human-braked-65",
+      "speed_m_s": 0.065
+    },
+    {
+      "name": "braked-third-period",
+      "step_s": 0.006666666666666667,
+      "source": "human-braked-65",
+      "speed_m_s": 0.065
+    },
+    {
+      "name": "braked-cache3",
+      "step_s": 0.005,
+      "solver_options": {
+        "cached_mechanical_iteration_limit": 3
+      },
+      "source": "braked-5ms",
+      "speed_m_s": 0.065
+    },
+    {
+      "name": "braked-fresh-sample",
+      "step_s": 0.005,
+      "solver_options": {
+        "reuse_controller_sample_jacobian": false
+      },
+      "source": "braked-5ms",
+      "speed_m_s": 0.065
+    },
+    {
+      "name": "braked-adaptive-10ms",
+      "step_s": 0.01,
+      "solver_options": {
+        "max_iterations": 8,
+        "cached_mechanical_iteration_limit": 4
+      },
+      "scope": "Existing bounded subdivision on difficult Newton solves; preserve tolerance and physical law.",
+      "source": "human-braked-65",
+      "speed_m_s": 0.065
+    }
+  ],
+  "commands": [
+    {
+      "start_s": 0,
+      "forward_m_s": 0,
+      "yaw_rad_s": 0
+    },
+    {
+      "start_s": 0.4,
+      "forward": "full",
+      "yaw_rad_s": 0
+    },
+    {
+      "start_s": 6,
+      "forward": "full",
+      "yaw_rad_s": 0.06
+    },
+    {
+      "start_s": 10,
+      "forward": "reverse",
+      "yaw_rad_s": 0
+    },
+    {
+      "start_s": 16,
+      "forward_m_s": 0,
+      "yaw_rad_s": 0
+    }
+  ],
+  "scope": "20 s WASD sequence. Rust packet lease, phase-gated stop/reverse, bounded acceleration. Simulated command freshness uses controller time; hardware requires independent deadlines and real packet arrival sequence. Walking turns only."
+}

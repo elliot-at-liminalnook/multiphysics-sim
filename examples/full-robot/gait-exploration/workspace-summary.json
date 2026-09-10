@@ -1,0 +1,667 @@
+{
+  "version": 1,
+  "scope": "Sampled fixed-base assembly screen only; no trajectory clearance or loaded gait qualification.",
+  "inspection_wall_s": 0.184263684,
+  "poses_per_s": 4498.987440194672,
+  "counts": {
+    "samples": 829,
+    "solver_errors": 0,
+    "authored_limit_violations": 0,
+    "sampled_overlap": 480,
+    "passes_sampled_pose_screen": 349
+  },
+  "initial": {
+    "samples": 1,
+    "solver_errors": 0,
+    "authored_limit_violations": 0,
+    "sampled_overlap": 0,
+    "passes_sampled_pose_screen": 1
+  },
+  "legs": [
+    {
+      "id": "-Y-foot-surface",
+      "initial_position_world_m": [
+        -0.004762999954528164,
+        -0.31655673029826215,
+        -0.425087525417713
+      ],
+      "initial_jacobian_m_per_rad": [
+        [
+          0.2165567302982622,
+          1.754291444728255e-33,
+          -1.449578347211499e-17
+        ],
+        [
+          -0.004762999954528165,
+          0.0850175050835426,
+          -7.422734630967423e-7
+        ],
+        [
+          -1.138228722207934e-17,
+          -0.02751134605965243,
+          -0.0444665836105331
+        ]
+      ],
+      "sampled_valid_foot_bounds_world_m": [
+        [
+          -0.28115601622728903,
+          0.27639301627276086
+        ],
+        [
+          -0.4219010840003192,
+          -0.20415234330944187
+        ],
+        [
+          -0.42512901209735254,
+          -0.2427364249416779
+        ]
+      ],
+      "by_hip_deg": {
+        "0": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "15": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "30": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "45": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "60": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "-60": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "-45": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "-30": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "-15": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        }
+      }
+    },
+    {
+      "id": "+X-foot-surface",
+      "initial_position_world_m": [
+        0.33549065642168835,
+        1.0005976919286023e-11,
+        -0.4250996539029621
+      ],
+      "initial_jacobian_m_per_rad": [
+        [
+          -1.0005976920427773e-11,
+          -0.08501993078059245,
+          0.0024544468795357137
+        ],
+        [
+          0.23549065642168837,
+          -2.165417945062082e-35,
+          -1.077153953711598e-34
+        ],
+        [
+          2.0653228407606433e-20,
+          -0.031298131284337664,
+          -0.044398792202705636
+        ]
+      ],
+      "sampled_valid_foot_bounds_world_m": [
+        [
+          0.21396620843033204,
+          0.44019518621497344
+        ],
+        [
+          -0.29461767350234164,
+          0.29461767351234763
+        ],
+        [
+          -0.42514107733419837,
+          -0.24000494828804755
+        ]
+      ],
+      "by_hip_deg": {
+        "0": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "15": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "30": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "45": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "60": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "-60": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "-45": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "-30": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        },
+        "-15": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 12,
+          "passes_sampled_pose_screen": 8
+        }
+      }
+    },
+    {
+      "id": "+Y-foot-surface",
+      "initial_position_world_m": [
+        -0.004762000045099383,
+        0.31655673030382075,
+        -0.4250875254176506
+      ],
+      "initial_jacobian_m_per_rad": [
+        [
+          -0.21655673030382072,
+          -1.9973031437172266e-32,
+          3.8774800601882854e-17
+        ],
+        [
+          -0.004762000045099384,
+          -0.08501750508353013,
+          7.422740448608727e-7
+        ],
+        [
+          5.909148122737102e-18,
+          -0.027511346060764157,
+          -0.04446658361053315
+        ]
+      ],
+      "sampled_valid_foot_bounds_world_m": [
+        [
+          -0.2811555162772109,
+          0.2763935162321115
+        ],
+        [
+          0.146795044034559,
+          0.4219010840056727
+        ],
+        [
+          -0.4462453940534304,
+          -0.24273642494064268
+        ]
+      ],
+      "by_hip_deg": {
+        "0": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "15": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "30": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "45": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "60": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "-60": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "-45": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "-30": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "-15": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        }
+      }
+    },
+    {
+      "id": "-X-foot-surface",
+      "initial_position_world_m": [
+        -0.3213191389485182,
+        -2.8445740907276872e-11,
+        -0.4250874591648128
+      ],
+      "initial_jacobian_m_per_rad": [
+        [
+          2.8445740907273014e-11,
+          0.08501749183296256,
+          -6.80392487081938e-7
+        ],
+        [
+          -0.22131913894851826,
+          1.2530329020683627e-34,
+          -5.322158843762206e-34
+        ],
+        [
+          -2.5250327481467885e-19,
+          -0.028463827789703633,
+          -0.04446658361152304
+        ]
+      ],
+      "sampled_valid_foot_bounds_world_m": [
+        [
+          -0.42650120030766503,
+          -0.17526321871981426
+        ],
+        [
+          -0.23087121282321135,
+          -2.8445740907276872e-11
+        ],
+        [
+          -0.44747793210097,
+          -0.24150370956440181
+        ]
+      ],
+      "by_hip_deg": {
+        "0": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "15": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "30": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "45": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 8,
+          "passes_sampled_pose_screen": 12
+        },
+        "60": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 20,
+          "passes_sampled_pose_screen": 0
+        },
+        "-60": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 20,
+          "passes_sampled_pose_screen": 0
+        },
+        "-45": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 20,
+          "passes_sampled_pose_screen": 0
+        },
+        "-30": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 20,
+          "passes_sampled_pose_screen": 0
+        },
+        "-15": {
+          "samples": 20,
+          "solver_errors": 0,
+          "authored_limit_violations": 0,
+          "sampled_overlap": 20,
+          "passes_sampled_pose_screen": 0
+        }
+      }
+    }
+  ],
+  "coupled": {
+    "same": {
+      "samples": 36,
+      "solver_errors": 0,
+      "authored_limit_violations": 0,
+      "sampled_overlap": 20,
+      "passes_sampled_pose_screen": 16
+    },
+    "alternating": {
+      "samples": 36,
+      "solver_errors": 0,
+      "authored_limit_violations": 0,
+      "sampled_overlap": 20,
+      "passes_sampled_pose_screen": 16
+    },
+    "opposing": {
+      "samples": 36,
+      "solver_errors": 0,
+      "authored_limit_violations": 0,
+      "sampled_overlap": 20,
+      "passes_sampled_pose_screen": 16
+    }
+  },
+  "errors": {},
+  "collision_pairs": [
+    [
+      "-X | Hip motor pulley and shaft 3090 / Robot | Chassis and hip mounts",
+      {
+        "samples": 160,
+        "maximum_penetration_m": 0.00016067307769880695
+      }
+    ],
+    [
+      "-Y | Thigh sector gear / -Y | Worm and input spindle b4c1",
+      {
+        "samples": 72,
+        "maximum_penetration_m": 0.0016952827072444579
+      }
+    ],
+    [
+      "+X | Hip output shaft and pulley b6c0 / +X | Worm and input spindle 3a48",
+      {
+        "samples": 72,
+        "maximum_penetration_m": 0.00005198315845781026
+      }
+    ],
+    [
+      "+X | Thigh sector gear / +X | Worm and input spindle 3a48",
+      {
+        "samples": 72,
+        "maximum_penetration_m": 0.00026422064757425183
+      }
+    ],
+    [
+      "+Y | Hip output shaft and pulley / +Y | Thigh sector gear",
+      {
+        "samples": 72,
+        "maximum_penetration_m": 0.0002160796645749722
+      }
+    ],
+    [
+      "-Y | Hip output shaft and pulley / -Y | Thigh sector gear",
+      {
+        "samples": 36,
+        "maximum_penetration_m": 0.00007026259351133619
+      }
+    ],
+    [
+      "-X | Hip output shaft and pulley / -X | Thigh sector gear",
+      {
+        "samples": 36,
+        "maximum_penetration_m": 0.00019470970455152622
+      }
+    ],
+    [
+      "-X | Thigh sector gear / -X | Worm and input spindle 5276",
+      {
+        "samples": 36,
+        "maximum_penetration_m": 0.00001701159068038941
+      }
+    ],
+    [
+      "-X | Foot servo crank 9a9b / -Y | Foot servo crank",
+      {
+        "samples": 18,
+        "maximum_penetration_m": 0.000980632933918386
+      }
+    ],
+    [
+      "+Y | Foot servo crank 3689 / -X | Foot servo crank 9a9b",
+      {
+        "samples": 15,
+        "maximum_penetration_m": 0.0010711761479459026
+      }
+    ],
+    [
+      "-X | Foot servo crank 9a9b / -Y | Thigh sector gear",
+      {
+        "samples": 12,
+        "maximum_penetration_m": 0.00045129770816594084
+      }
+    ],
+    [
+      "+X | Foot servo crank 7900 / +Y | Thigh sector gear",
+      {
+        "samples": 12,
+        "maximum_penetration_m": 0.0008645509530160213
+      }
+    ],
+    [
+      "+Y | Foot servo crank 3689 / -X | Thigh sector gear",
+      {
+        "samples": 10,
+        "maximum_penetration_m": 0.0010901010446440899
+      }
+    ],
+    [
+      "+X | Thigh sector gear / +Y | Thigh sector gear",
+      {
+        "samples": 8,
+        "maximum_penetration_m": 0.0028956914132742106
+      }
+    ],
+    [
+      "+X | Rigid curved connecting link / +Y | Rigid curved connecting link",
+      {
+        "samples": 8,
+        "maximum_penetration_m": 0.0022326966399630658
+      }
+    ],
+    [
+      "-X | Rigid curved connecting link / -Y | Rigid curved connecting link",
+      {
+        "samples": 8,
+        "maximum_penetration_m": 0.0006472213563082475
+      }
+    ],
+    [
+      "-X | Rigid curved connecting link / -Y | Foot servo crank",
+      {
+        "samples": 6,
+        "maximum_penetration_m": 0.002093924850682977
+      }
+    ],
+    [
+      "+X | Rigid curved connecting link / +Y | Foot servo crank 3689",
+      {
+        "samples": 6,
+        "maximum_penetration_m": 0.0006475855912505761
+      }
+    ],
+    [
+      "+X | Rigid curved connecting link / -Y | Rigid curved connecting link",
+      {
+        "samples": 5,
+        "maximum_penetration_m": 0.0012649211525977235
+      }
+    ],
+    [
+      "-X | Foot servo crank 9a9b / -Y | Rigid curved connecting link",
+      {
+        "samples": 4,
+        "maximum_penetration_m": 0.0020719300647813427
+      }
+    ],
+    [
+      "+X | Foot servo crank 7900 / -Y | Thigh sector gear",
+      {
+        "samples": 4,
+        "maximum_penetration_m": 0.00035519618570127066
+      }
+    ],
+    [
+      "+X | Thigh sector gear / -Y | Thigh sector gear",
+      {
+        "samples": 4,
+        "maximum_penetration_m": 0.00019449347742850147
+      }
+    ],
+    [
+      "+Y | Thigh sector gear / -X | Thigh sector gear",
+      {
+        "samples": 4,
+        "maximum_penetration_m": 0.0006749472031757069
+      }
+    ],
+    [
+      "+Y | Rigid curved connecting link / -X | Rigid curved connecting link",
+      {
+        "samples": 4,
+        "maximum_penetration_m": 0.0008417072849399833
+      }
+    ],
+    [
+      "+X | Thigh sector gear / -Y | Foot servo crank",
+      {
+        "samples": 3,
+        "maximum_penetration_m": 0.0006008987280434482
+      }
+    ],
+    [
+      "+Y | Foot servo crank 3689 / -X | Rigid curved connecting link",
+      {
+        "samples": 3,
+        "maximum_penetration_m": 0.0020337783626275833
+      }
+    ],
+    [
+      "+X | Foot servo crank 7900 / -Y | Foot servo crank",
+      {
+        "samples": 2,
+        "maximum_penetration_m": 0.0013060031660361766
+      }
+    ],
+    [
+      "+X | Rigid curved connecting link / -Y | Foot servo crank",
+      {
+        "samples": 2,
+        "maximum_penetration_m": 0.0011971812123434424
+      }
+    ],
+    [
+      "+Y | Rigid curved connecting link / -X | Foot servo crank 9a9b",
+      {
+        "samples": 1,
+        "maximum_penetration_m": 0.0021070131799858323
+      }
+    ]
+  ]
+}

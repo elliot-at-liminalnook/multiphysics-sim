@@ -1,0 +1,13 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control)
+error: float literals must have an integer part
+   --> crates/sim-domain-control/tests/trajectory.rs:152:61
+    |
+152 |     assert!(fine.duration_upper_s - fine.duration_lower_s < .04);
+    |                                                             ^^^
+    |
+help: must have an integer part
+    |
+152 |     assert!(fine.duration_upper_s - fine.duration_lower_s < 0.04);
+    |                                                             +
+
+error: could not compile `sim-domain-control` (test "trajectory") due to 1 previous error

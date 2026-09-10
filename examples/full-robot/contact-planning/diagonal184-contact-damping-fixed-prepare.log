@@ -1,0 +1,27 @@
+{
+  source: 'runs/contact-planning/diagonal184-diagnostic-screen',
+  prefix: 'runs/contact-planning/diagonal184-contact-damping-fixed',
+  inputs: [
+    {
+      path: 'runs/contact-planning/diagonal184-diagnostic-screen.scene.json',
+      sha256: '0c42757879c5df247d651973821c94f1905aaf929eb7fbac611e8fe03840bfee'
+    },
+    {
+      path: 'runs/contact-planning/diagonal184-diagnostic-screen.config.json',
+      sha256: 'c304d874014f222f4cdbc120dfc7f2a771004563d489eb1d562220678fda7726'
+    },
+    {
+      path: 'runs/contact-planning/diagonal184-diagnostic-screen.actions.json',
+      sha256: '4a05d253e15b4b9af53b0612b948570f6259a620ace7ad3b60db389d433e78c7'
+    }
+  ],
+  source_policy_sha256: 'e9308842cd6f243ed6e77afd74951b3b726c57f8341a1053f1ba6f6cf1708247',
+  mass_kg: 3.976239082561776,
+  weight_n: 39.00690539993103,
+  velocity_damping_s: 0.02,
+  full_support_force_n: 9.751726349982757,
+  position_gain: 0,
+  maximum_correction_rad: 0.05,
+  damping_m_per_rad: 0.001,
+  scope: 'Replaces the inherited unused point-feedback observation recipe, which the source policy did not consume. Diagnostic teacher feedback from privileged actual loaded contact material velocity. Time constant is effective servo damping/stiffness; full-support load is CAD model weight/foot count. 0.001 m/rad inverse-Jacobian damping and 0.05 rad command cap are explicit numerical/controller choices, not robot properties. No position-path attraction, pose mutation or additional physical damping; policy changes ordinary servo targets. Contact model, actuators, geometry, actions and timestep are unchanged. Hardware sensing and transfer remain uncalibrated.'
+}

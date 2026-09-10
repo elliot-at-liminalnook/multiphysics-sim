@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "teacher",
+      "duration_s": 300,
+      "net_distance_m": 154.30126902731595,
+      "net_speed_m_s": 0.5143375634243865,
+      "displacement_xy_m": [
+        76.7038959260299,
+        133.88574970178456
+      ],
+      "fallen": false,
+      "error": null,
+      "report": {
+        "path": "runs/sustained300-speed518/teacher.json",
+        "sha256": "5e44a04427c2e149de175dadd729397b16ac5f44a41c0f4c082c16c6108cb91c"
+      }
+    },
+    {
+      "name": "learned",
+      "duration_s": 300,
+      "net_distance_m": 149.19686537378453,
+      "net_speed_m_s": 0.49732288457928175,
+      "displacement_xy_m": [
+        142.9389797311936,
+        42.75690249268081
+      ],
+      "fallen": false,
+      "error": null,
+      "report": {
+        "path": "runs/sustained300-speed518/learned.json",
+        "sha256": "d27c9716006ce11e2d83fa3c41dcc24df0f562e7482b69e87ba22143828b17d4"
+      }
+    }
+  ],
+  "comparison_60s": [
+    {
+      "name": "teacher",
+      "duration_s": 60,
+      "net_distance_m": 31.01212653174123,
+      "net_speed_m_s": 0.5168687755290206,
+      "report": {
+        "path": "runs/ppo-speed517-current-dynamics/baseline.json",
+        "sha256": "aae333af7525356ff181be1919a73ef9c452db75220ce2c9d7b91e8f1d8b478e"
+      }
+    },
+    {
+      "name": "learned",
+      "duration_s": 60,
+      "net_distance_m": 31.062473800777763,
+      "net_speed_m_s": 0.5177078966796294,
+      "report": {
+        "path": "runs/ppo-speed517-current-dynamics/iteration-001-validation.json",
+        "sha256": "e92bb308ed00f39cd1cb7e93fc6b0a3c0bf95022bbeac84c3486d2a76f634981"
+      }
+    }
+  ],
+  "teacher_advantage_300s_m_s": 0.01701467884510477,
+  "files": [
+    {
+      "path": "runs/sustained300-speed518/reduce.cjs",
+      "sha256": "e0a7bde773d4ba8ffbfaf2c767ff35626d66a4de5f0dc14acb64df17e1629797"
+    },
+    {
+      "path": "runs/sustained300-speed518/inputs.json",
+      "sha256": "9e6ce16b78f2b465fe04c7f09dd52d46b713990cb3f3358e64ac12d111924846"
+    },
+    {
+      "path": "runs/ppo-speed517-current-dynamics.spec.json",
+      "sha256": "170088f8fd4d338d263ca6ee5e28959558a3d342b12bb9e44af1faddc9d52450"
+    },
+    {
+      "path": "runs/ppo-speed517-current-dynamics/iteration-001-state.json",
+      "sha256": "de80051ffa27b1a1b3887a2f978badcf34238aefe560fa7a2ef3db4e4684d58a"
+    },
+    {
+      "path": "runs/evaluate_policy-reference-v1",
+      "sha256": "fee26f0ba05def1b0b317f273b562d61123fefe080cd2cede11dec33fe085630"
+    },
+    {
+      "path": "runs/sustained300-speed518/scene.json",
+      "sha256": "1609fd1edd63cc12eebe9c9ce42774877e868b5bd55c36b1da9bb2148d099dae"
+    },
+    {
+      "path": "runs/sustained300-speed518/task.json",
+      "sha256": "fca343a1981bd8492fd4e7c656394f0f35e62f1cbc4aee846312f2c738dc862f"
+    },
+    {
+      "path": "runs/sustained300-speed518/actions.json",
+      "sha256": "24a49e544cfc9400cd1bf266ea4ecc6be23b89add2346683ecc305ab3a913cf0"
+    },
+    {
+      "path": "runs/sustained300-speed518/teacher.config.json",
+      "sha256": "2ea91a57afa7d097d120c53e09942dbfc67e227e4308958bc2b5dd86a76d9a21"
+    },
+    {
+      "path": "runs/sustained300-speed518/learned.config.json",
+      "sha256": "47f59357a2299c797ece02ab4da155cad0949f5bcb84d300ec93b2aa2b19cd51"
+    },
+    {
+      "path": "runs/sustained300-speed518/teacher.json",
+      "sha256": "5e44a04427c2e149de175dadd729397b16ac5f44a41c0f4c082c16c6108cb91c"
+    },
+    {
+      "path": "runs/sustained300-speed518/learned.json",
+      "sha256": "d27c9716006ce11e2d83fa3c41dcc24df0f562e7482b69e87ba22143828b17d4"
+    },
+    {
+      "path": "runs/ppo-speed517-current-dynamics/baseline.json",
+      "sha256": "aae333af7525356ff181be1919a73ef9c452db75220ce2c9d7b91e8f1d8b478e"
+    },
+    {
+      "path": "runs/ppo-speed517-current-dynamics/iteration-001-validation.json",
+      "sha256": "e92bb308ed00f39cd1cb7e93fc6b0a3c0bf95022bbeac84c3486d2a76f634981"
+    }
+  ],
+  "scope": "Matched nominal300s evaluations finish without sampled falls or numerical errors. Original startup and net endpoint distance include all300s. The0.5177078967m/s actor remains the faster60s candidate, but the zero-correction teacher is faster at300s. The minute-long neural advantage does not establish improved sustained speed over this longer horizon. No path-length, heading, slip or tracking penalty was added; no physical maximum or sim-to-real claim is established."
+}

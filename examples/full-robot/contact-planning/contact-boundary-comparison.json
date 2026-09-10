@@ -1,0 +1,41 @@
+{
+  "before_samples": 4482,
+  "before_failures": [
+    {
+      "error": "return phase must be finite and in [0, 1]",
+      "time_s": -0.9704105475725036
+    },
+    {
+      "error": "return phase must be finite and in [0, 1]",
+      "time_s": -0.9704105475725034
+    },
+    {
+      "error": "return phase must be finite and in [0, 1]",
+      "time_s": 0.29655284396536696
+    },
+    {
+      "error": "return phase must be finite and in [0, 1]",
+      "time_s": 0.296552843965367
+    },
+    {
+      "error": "return phase must be finite and in [0, 1]",
+      "time_s": 2.8304796270411074
+    },
+    {
+      "error": "return phase must be finite and in [0, 1]",
+      "time_s": 2.830479627041108
+    }
+  ],
+  "after_samples": 4488,
+  "after_failures": [],
+  "unchanged_previous_samples": 4482,
+  "before_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_boundaries",
+    "sha256": "8acf890b35e39ac81da3034a8768bd8068a1a62dd7d679dd554c30e9b8397b0e"
+  },
+  "after_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_boundaries",
+    "sha256": "21fc11892a682821d195b6a0c8a34fd43a12c5b224bbe786075c158aa68b03d0"
+  },
+  "scope": "All previous successful samples deeply identical; endpoint roundoff corrected for six valid times. No dynamics or physical speed qualification."
+}

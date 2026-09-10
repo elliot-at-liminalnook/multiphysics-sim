@@ -1,0 +1,33 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {isDeepStrictEqual} from 'node:util';
+import crypto from 'node:crypto';
+const d = 'examples/full-robot/contact-planning/';
+const read = name => JSON.parse(fs.readFileSync(d + name));
+const canonical = value => JSON.parse(JSON.stringify(value));
+const same = (a, b, message) => assert(isDeepStrictEqual(canonical(a), canonical(b)), message);
+const projected = read('joint-ipopt-projected-one-step.result.json');
+const previous = read('joint-ipopt-one-step.result.json');
+const replay = read('joint-ipopt-projection-legacy.result.json');
+for (const key of Object.keys(previous)) {
+  if (key !== 'scope') same(previous[key], replay[key], `Legacy replay changed ${key}`);
+}
+same(projected.initial_report, previous.initial_report, 'Projected initial physical report changed');
+assert.equal(projected.constraint_projection.full_count, 6776);
+assert.equal(projected.constraint_projection.fixed_zero_rows.length, 32);
+assert.equal(projected.constraint_projection.collision_domain_rows.length, 250);
+const removed = new Set([...projected.constraint_projection.fixed_zero_rows, ...projected.constraint_projection.collision_domain_rows]);
+assert.equal(removed.size, 282);
+const full = projected.report.constraints.inequalities;
+for (const row of removed) assert(full[row] === 0, 'Omitted full-audit row nonzero (either signed zero is valid)');
+const selected = full.filter((_, row) => !removed.has(row));
+same(projected.search.final_evaluation.constraints, selected, 'Projected native constraints differ from independent full audit');
+assert.equal(projected.search.final_evaluation.objective, .5 * projected.report.constraints.objective[0] ** 2);
+assert.equal(selected.length, 6494);
+assert.equal(projected.report.sampled_feasible, full.every(x => x <= 0));
+assert.equal(projected.returned_candidate_error, null);
+const summarize = result => ({native_status: result.search.native_status, model_evaluations: result.model_evaluations, jacobian_nonzeros: result.jacobian_nonzeros, speed_m_s: result.report.motion_report.speed_m_s, force_error_n: result.report.motion_report.maximum_force_error_n, moment_error_nm: result.report.motion_report.maximum_moment_error_nm, torque_margin_nm: result.report.motion_report.minimum_torque_margin_nm, maximum_inequality: Math.max(...result.report.constraints.inequalities), feasible: result.report.sampled_feasible});
+const identity = name => {const path=d+name, bytes=fs.readFileSync(path); return {path,bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')};};
+const result = {legacy_all_previous_fields_except_scope_identical:true,initial_full_report_identical:true,projected_native_rows_equal_independent_uncached_audit:true,full_constraints:6776,native_constraints:6494,fixed_endpoint_rows:32,collision_domain_rows:250,old_one_step:summarize(previous),projected_one_step:summarize(projected),artifacts:['joint-ipopt-projected-one-step.result.json','joint-ipopt-projection-legacy.result.json','joint-ipopt-projection-tests.log','check_joint_ipopt_projection.mjs'].map(identity),scope:'One-iteration formulation comparison, with unchanged physical acceptance and independently audited original rows. Collision domain is sampled and local, with no repair from colliding initial guesses. No convergence, runtime speed gain or global speed bound established.'};
+fs.writeFileSync(d+'joint-ipopt-projection-verification.json',JSON.stringify(result,null,2)+'\n',{flag:'wx'});
+console.log(JSON.stringify({...result,artifacts:undefined}));

@@ -1,0 +1,54 @@
+{
+  "name": "human-hip0-60",
+  "source": "hip0-60",
+  "speed_m_s": 0.06,
+  "step_s": 0.00125,
+  "completed": true,
+  "error": null,
+  "final_time_s": 20,
+  "windows": [
+    {
+      "start_s": 1.4,
+      "end_s": 6,
+      "directed_speed_mm_s": 57.76771548160779
+    },
+    {
+      "start_s": 11,
+      "end_s": 16,
+      "directed_speed_mm_s": 56.73547621236723
+    }
+  ],
+  "turn_rad": 0.22586868510340277,
+  "stop_drift_after_transfer_m": 0.0000017922026753233504,
+  "stop_travel_from_release_m": 0.008967531168868278,
+  "maximum_tilt_rad": 0.013142141824872897,
+  "total_horizontal_body_path_m": 0.902750098039463,
+  "maximum_slip_ratio": 0.06456910680478194,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.020513202562871046,
+      "motion_to_total_body_path_ratio": 0.02272301338700528
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.058289767498337454,
+      "motion_to_total_body_path_ratio": 0.06456910680478194
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.020514242841548513,
+      "motion_to_total_body_path_ratio": 0.022724165731025762
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.054296660528396344,
+      "motion_to_total_body_path_ratio": 0.060145837310142065
+    }
+  ],
+  "native": {
+    "wall_s": 37.73922977,
+    "simulation_per_wall": 0.52995252213384,
+    "p95_transition_s": 0.077734651
+  }
+}

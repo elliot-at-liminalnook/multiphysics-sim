@@ -1,0 +1,85 @@
+{
+  "pairs": [
+    {
+      "times_s": [
+        3.7800000000000002,
+        11.5
+      ],
+      "normalized_input_rms_difference": 0.08375781472349972,
+      "teacher_action_rms_difference_rad": 0.4170896250790386
+    },
+    {
+      "times_s": [
+        3.74,
+        11.46
+      ],
+      "normalized_input_rms_difference": 0.08875952769234374,
+      "teacher_action_rms_difference_rad": 0.14612017193001536
+    },
+    {
+      "times_s": [
+        3.7600000000000002,
+        11.48
+      ],
+      "normalized_input_rms_difference": 0.09120323301054079,
+      "teacher_action_rms_difference_rad": 0.22357195761606535
+    },
+    {
+      "times_s": [
+        3.72,
+        11.44
+      ],
+      "normalized_input_rms_difference": 0.10908991575852327,
+      "teacher_action_rms_difference_rad": 0.2985720669986286
+    },
+    {
+      "times_s": [
+        3.8000000000000003,
+        11.52
+      ],
+      "normalized_input_rms_difference": 0.1197263399871286,
+      "teacher_action_rms_difference_rad": 0.3079793108225063
+    },
+    {
+      "times_s": [
+        16.94,
+        18.06
+      ],
+      "normalized_input_rms_difference": 0.12234309441729047,
+      "teacher_action_rms_difference_rad": 0.34244734157814044
+    },
+    {
+      "times_s": [
+        16.92,
+        18.04
+      ],
+      "normalized_input_rms_difference": 0.13309584579741757,
+      "teacher_action_rms_difference_rad": 0.2856036597130485
+    },
+    {
+      "times_s": [
+        3.7,
+        11.42
+      ],
+      "normalized_input_rms_difference": 0.1370932937072953,
+      "teacher_action_rms_difference_rad": 0.2168812161464659
+    },
+    {
+      "times_s": [
+        10.38,
+        11.74
+      ],
+      "normalized_input_rms_difference": 0.13716863339914645,
+      "teacher_action_rms_difference_rad": 0.3898633537560193
+    },
+    {
+      "times_s": [
+        3.12,
+        11.28
+      ],
+      "normalized_input_rms_difference": 0.13766844076957022,
+      "teacher_action_rms_difference_rad": 0.4033828574807882
+    }
+  ],
+  "scope": "Ten closest distinct observed student input vectors under frozen training normalization, compared with stateful teacher advice. Similar inputs with different teacher commands suggest a missing controller-history/phase variable; this is a diagnostic, not proof that a feedforward policy cannot walk."
+}

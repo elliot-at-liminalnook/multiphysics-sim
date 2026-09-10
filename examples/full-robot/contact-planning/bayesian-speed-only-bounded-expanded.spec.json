@@ -1,0 +1,68 @@
+{
+  "source_prefix": "runs/contact-planning/speed-discovery-bounded-diagonal21",
+  "task": "examples/full-robot/contact-planning/speed-discovery-task.json",
+  "output_directory": "runs/bayesian-speed-only-bounded-expanded",
+  "selector": "/Users/elliot/physics-simulator/target/gait-bayesian/release/examples/suggest_black_box",
+  "runtime_examples": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples",
+  "seed": 42,
+  "initial_design_count": 8,
+  "comparison_evaluations": 16,
+  "baseline_values": [
+    0.37482567647449444,
+    1.517585715267573e-17,
+    2.1479788974477305
+  ],
+  "problem": {
+    "context_id": "computed-from-exact-artifacts-by-runner",
+    "parameters": [
+      {
+        "name": "command_speed",
+        "unit": "m/s",
+        "bounds": [
+          0.05,
+          1.2
+        ]
+      },
+      {
+        "name": "tracking_gain",
+        "unit": "1",
+        "bounds": [
+          -1,
+          3
+        ]
+      },
+      {
+        "name": "velocity_lead_factor",
+        "unit": "1",
+        "bounds": [
+          0,
+          6
+        ]
+      }
+    ],
+    "objective_name": "negative net horizontal chassis displacement divided by full trial duration",
+    "objective_unit": "m/s",
+    "constraints": [
+      {
+        "name": "fall observed (chassis ground contact or overturning)",
+        "unit": "1",
+        "scale": 1
+      }
+    ]
+  },
+  "scope": "Continuous 20-second travel. Optimize net distance/time without falling. No slip, lift, requested-speed tracking, heading, steering or stopping rejection. Physical CAD, actuator and runtime model preserved. Parameter ranges are initial search windows to expand, not physical ceilings. Fall geometry is sampled; timestep and longer-distance confirmation follow promising results. The 0.462 m/s candidate lies at the initial tracking-gain lower boundary. This experiment expands gain below zero and doubles the lead and requested-speed windows, preserving saturation and CAD physics. Negative gains and larger leads are experimental controller policies, not physical-property overrides or speed ceilings.",
+  "evaluation_profile": "speed20",
+  "baseline_replay": false,
+  "seed_values": [
+    [
+      0.37482567647449444,
+      -0.5,
+      2.1479788974477305
+    ],
+    [
+      0.37482567647449444,
+      -1,
+      2.1479788974477305
+    ]
+  ]
+}

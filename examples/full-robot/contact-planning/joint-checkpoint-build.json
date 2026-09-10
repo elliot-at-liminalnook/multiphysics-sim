@@ -1,0 +1,412 @@
+{
+  "base_commit": "016399e068ac4a1d903b6649a26ef7e64635735a",
+  "recorded_at": "2026-09-09T19:17:31.209Z",
+  "sources": {
+    "path": "examples/full-robot/contact-planning/joint-checkpoint-sources.tar.gz",
+    "bytes": 27638,
+    "sha256": "a8bdaa94cbd1adbb6848cf658ec55e792c9e15cc0d8e46539b8ed8f07a42ebe8",
+    "entries": [
+      {
+        "path": "crates/sim-runtime/Cargo.toml",
+        "bytes": 1768,
+        "sha256": "d4b89bc2203fddc594979ca8160ee8026e622979eb69a69c0e7aa758e23c2139"
+      },
+      {
+        "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+        "bytes": 60584,
+        "sha256": "fba188208c7d210e25c7fd0554e6a37495207a9faf51d7d2cd0a1f2ac15439b0"
+      },
+      {
+        "path": "crates/sim-runtime/src/contact_planning/joint_ipopt.rs",
+        "bytes": 28715,
+        "sha256": "794cb5160976ef120e213e9e7eb46b06ae568d036cf7a8e7b1f2b7a925189cc5"
+      },
+      {
+        "path": "crates/sim-runtime/examples/optimize_joint_ipopt.rs",
+        "bytes": 3574,
+        "sha256": "c73401a7dc45e28bbeec6e53b890086101641fff865df85d61c852a5c4c807c2"
+      },
+      {
+        "path": "crates/sim-runtime/examples/optimize_joint_ipopt_checkpoint.rs",
+        "bytes": 162,
+        "sha256": "1341bc7585898a1966edf2dd711d3b4c2576943f8d4c9c897b7e939370d76aef"
+      },
+      {
+        "path": "crates/sim-runtime/examples/support/joint_checkpoint.rs",
+        "bytes": 6659,
+        "sha256": "2dd7ddcf7b98f898eeb93e40c5de559fd931f33cefca4101dcac2c4ea1c46d79"
+      },
+      {
+        "path": ".github/workflows/native-ipopt.yml",
+        "bytes": 3517,
+        "sha256": "d606c98c5f74940b69a8f512dcdab52033847895efd7fa36d974207dafe0bb76"
+      },
+      {
+        "path": "examples/full-robot/contact-planning/check_joint_checkpoints.mjs",
+        "bytes": 4785,
+        "sha256": "5cd992ebc3c1f4c655f25fe0f15180f0a411876ac4d15091bcfe6d2e6c19d293"
+      },
+      {
+        "path": "examples/full-robot/contact-planning/record_joint_checkpoints.mjs",
+        "bytes": 5774,
+        "sha256": "de5adbb677294408da80d500082ceda76eaa6472dd2d5608349f8c490937d342"
+      }
+    ]
+  },
+  "verification": {
+    "path": "examples/full-robot/contact-planning/joint-checkpoint-verification.tar.gz",
+    "bytes": 4262299,
+    "sha256": "3b2e8243c0cc2ff749d3bed20a36c16c0b1b5ad1e9c01c9c62d1dd97e2b60a19",
+    "entries": [
+      {
+        "path": "runs/joint-checkpoints/verification/control.log",
+        "bytes": 134,
+        "sha256": "33547fa576883b116ecc57fcf1c9747684b18a6f7f5022409f54f494c1f3103d"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/control.result.json",
+        "bytes": 2997838,
+        "sha256": "2f628eade45fdf775a2cc104ddfe02acbfef367ca2256fa81c8b6da0ff112ed2"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/disabled.log",
+        "bytes": 134,
+        "sha256": "33547fa576883b116ecc57fcf1c9747684b18a6f7f5022409f54f494c1f3103d"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/disabled.result.json",
+        "bytes": 2997838,
+        "sha256": "2f628eade45fdf775a2cc104ddfe02acbfef367ca2256fa81c8b6da0ff112ed2"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/enabled.log",
+        "bytes": 134,
+        "sha256": "33547fa576883b116ecc57fcf1c9747684b18a6f7f5022409f54f494c1f3103d"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/enabled.result.json",
+        "bytes": 2997838,
+        "sha256": "2f628eade45fdf775a2cc104ddfe02acbfef367ca2256fa81c8b6da0ff112ed2"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/existing_directory.log",
+        "bytes": 61,
+        "sha256": "bdfbe5e37daeee2cd9d0b68e584fb92ea07a6e913134f4c7307aa52b1315bb17"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/existing_directory.result.json",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/feasible/best_sampled_feasible.json",
+        "bytes": 1555414,
+        "sha256": "8ca02e21b3d07142d2c825a20574b6861e1af9aa643631ec4b88cab6c02da909"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/feasible/least_violation.json",
+        "bytes": 1555424,
+        "sha256": "e74379eb073cf333137cb965b8c49a4eda1ef3790894c42978b412a0b1074597"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/feasible/run.json",
+        "bytes": 83188,
+        "sha256": "c5b5535b22f75aa16ea6e7619888b3a85f19ce61d2cac4155f67ea056ac2e7c7"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/infeasible/least_violation.json",
+        "bytes": 2066209,
+        "sha256": "0c06b5532e37c02e2176d6b7878c38c8dce8ce27f0af183da507d944d0cfef4c"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/infeasible/run.json",
+        "bytes": 91357,
+        "sha256": "e54a67c8a5c2bd076536c9cba8a8bd9b95333141ad3963881572e05ca32f6f1f"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/infeasible.log",
+        "bytes": 134,
+        "sha256": "8a09044cbf75a1c270ea3e313d1888722aa0dfe1c7c6bdcf3b7d1e2738f2a8ae"
+      },
+      {
+        "path": "runs/joint-checkpoints/verification/infeasible.result.json",
+        "bytes": 3985280,
+        "sha256": "1e3fc3cddf6e16bfcaf987574169a654fdf214b382e01f1271667f0b8f432de9"
+      }
+    ]
+  },
+  "runtime": {
+    "path": "examples/full-robot/contact-planning/joint-checkpoint-runtime.tar.gz",
+    "bytes": 7925778,
+    "sha256": "f5c2bf8f5b62c40e6b0f8e6b3b414248438c094980330fa973c1ac2a1dfff8a6",
+    "entries": [
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.actions.json",
+        "bytes": 24574,
+        "sha256": "237a652d738f7c6ee78bfcfa7c7e441b88cfb7c71abc0d6c2f72e8ea58d64109"
+      },
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.config.json",
+        "bytes": 130278,
+        "sha256": "f91dd6246b674f49cc5556a9073a4a322481df40143a4fc2fd302905365b85a5"
+      },
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.contact-clearance-requirements.json",
+        "bytes": 6409,
+        "sha256": "026fd3632ec0899bec34aa1519cc9b0edf670201ca60477a4170ac9a55109dad"
+      },
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.contact-geometry.json",
+        "bytes": 613042,
+        "sha256": "3aa812038d3c444dc38b8267fc2d64d98b054a1448d30577ef32574ae9dc9b99"
+      },
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.contact-geometry.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.error.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.native.json",
+        "bytes": 23192794,
+        "sha256": "f156f259ea215160dbb570d54a9f29e411daf033d43cbea6ad83c8c47162ed79"
+      },
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.policy-state.json",
+        "bytes": 91458,
+        "sha256": "a901a3125eeffc0b421d7f424db82d000051b97c67647f7cdb303a13d607a4fa"
+      },
+      {
+        "path": "runs/contact-planning/joint-mesh-command-screen.scene.json",
+        "bytes": 9167891,
+        "sha256": "ae7a25ee5119dff79e10e42956a7b5a1e4d1937dac575dcde0971dd2d3da566b"
+      }
+    ]
+  },
+  "cargo_lock": {
+    "path": "Cargo.lock",
+    "bytes": 167132,
+    "sha256": "895a49c1003c13918aeb05316d9b413dde3f5fb25960907456db6ee58e6e9583"
+  },
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt_checkpoint",
+    "bytes": 9386268,
+    "sha256": "64ff92a73eacb4467eadc57b9abcf16684f022a495a729be01fc05853a0eaab9"
+  },
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/solve_joint_force_cones",
+      "bytes": 9437244,
+      "sha256": "7e122ebeea61be51ac664b1aa1d90866627880f3c4ac92387bfac337d1a6e5a7"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+      "bytes": 15497924,
+      "sha256": "f364502f7563b6221c2736ec4b990c66e6c4194d59c8bd6b36aedcf7762c97ce"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/replay_policy_state",
+      "bytes": 5310860,
+      "sha256": "706554e0900a2a552e967d485be88049347a573b98a7d2841257da8cf31600b9"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_lift",
+      "bytes": 8557852,
+      "sha256": "241130984bd5f2bc987c7c0d9d413e360f7bb387a3b9fb832d7e4480809eecf5"
+    }
+  ],
+  "compiler": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/compile_contact_reference",
+    "bytes": 8950916,
+    "sha256": "c48c96b8e0a6f1c12278ae6098baafde23cb8c185b80ef54f105d4e0352145c9"
+  },
+  "previous_binary_provenance": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-servo-conic-build.json",
+      "bytes": 8944,
+      "sha256": "0a26e8122ccf8c8f873e710b9c981c15a9784ecd2c5c7c0deab6e213e645a952"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-servo-command-build.json",
+      "bytes": 16783,
+      "sha256": "b10c750cd4fb90b5dc110ef8cf86b8035152860d6e8e3b43cd7c9ad8c7632c50"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/smooth-return-evidence-index.json",
+      "bytes": 18831,
+      "sha256": "0842201cb3e3abc0bb0058dab114b9a139f51dbb5244a437e60fbf2b57da76fb"
+    }
+  ],
+  "native_library_manifest": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-native-library.json",
+    "bytes": 5450,
+    "sha256": "1d5bb98f34fdceb3384f730f61a41ef15be68ec9896837471403bc941a6583a4"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-speed.recipe.json",
+      "bytes": 82320,
+      "sha256": "473a6458a55088140e71bc407cde28343cf408e2d61a4c076ae0eca21c7e7f11"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-speed.search.json",
+      "bytes": 320,
+      "sha256": "77c941ec853d4214409cd614c0e6bde692b1d4f71a136d0475371c2f9c3466a8"
+    }
+  ],
+  "durable_scene": {
+    "index": "examples/full-robot/speed-ceiling/evidence-v8-index.json",
+    "entry": "validation/constrained-front165-scale1-human-fine.scene.json"
+  },
+  "completed_artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-checkpoint-old.log",
+      "bytes": 134,
+      "sha256": "33547fa576883b116ecc57fcf1c9747684b18a6f7f5022409f54f494c1f3103d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-checkpoint-old.result.json",
+      "bytes": 2997838,
+      "sha256": "2f628eade45fdf775a2cc104ddfe02acbfef367ca2256fa81c8b6da0ff112ed2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-checkpoint-smoke.search.json",
+      "bytes": 314,
+      "sha256": "c274c20a4d484413ab5c92cec8fb666e759189164006f81c7da68931de3a522c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-checkpoint-verification.json",
+      "bytes": 6673,
+      "sha256": "8a92325585dd2a5df2f1983083029ffecd4f8a5a3cecd9305e9f55104f89079d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-mesh-speed.log",
+      "bytes": 88768,
+      "sha256": "b8e2e6aa2212e0083c99ca78732368f0d8275d8dc8daf9a1d8c6984e7155012f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-mesh-speed.recipe.json",
+      "bytes": 161936,
+      "sha256": "508bdb24e211dc103fa5d3301f61391ded3edb31f9fa6f459faaff8c1c217723"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-mesh-speed.result.json",
+      "bytes": 3190059,
+      "sha256": "5d0a8f15eef950f5efa87801f049afdef7ab2dfb1707a4d5ba911132b5aac996"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-mesh-speed.search.json",
+      "bytes": 319,
+      "sha256": "5f5d3ec9f1f1f374657a9ba75f3166a83c03e1f427b81bfe3e21f67ba4ba480e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-mesh-speed.summary.json",
+      "bytes": 18663,
+      "sha256": "e51d64d826f52e445b777ef281f2e138115f6fca5182ecaeae2b83cf437da135"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-best.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-best.recipe.json",
+      "bytes": 82313,
+      "sha256": "79e5e0bf27421c262b893c254fd3abbcc91a24bd24d98d0c40bf20a13a07c817"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-best.result.json",
+      "bytes": 2194549,
+      "sha256": "804ee470c6d4720a9854d375a873f04423418b541d2253e6ba67df452eceaec8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-clearance.spec.json",
+      "bytes": 153,
+      "sha256": "eb16dec18fa0a936112f6fc4bad0f6c7d40b90c9cd905cede43859548ca723cd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-clearance.summary.json",
+      "bytes": 3227,
+      "sha256": "7ef93f490c79631603c93bc91c8b8992a18cb1dc1306335de9bb4b6222ae2827"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-final.recipe.json",
+      "bytes": 82228,
+      "sha256": "2355ebaa50ef6ec3746bcd427daff63581e41bdca4ff607fde8d667d99bda554"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-final.result.json",
+      "bytes": 239869,
+      "sha256": "3f127efe7dc68d5bc2b66a4f75b9bc30fc6c7d8259b5f5a8d7c3ea4656ebb942"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-reference.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-reference.recipe.json",
+      "bytes": 21019,
+      "sha256": "b0ded7699a1797a7a8c9dac8ecb1d4cc45fe310a57ee090fc53d2c4540476250"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-reference.result.json",
+      "bytes": 1244568,
+      "sha256": "f51015f83b28e53bc4e6f2f0ee288080e1a257bf3cb5caec9affa765810e38da"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-screen-trial.json",
+      "bytes": 2450,
+      "sha256": "5c5b6b76feb998c6d3a365a3993f8cfd2c29b4da47c04944b55ad4ae81a3786e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-screen.summary.json",
+      "bytes": 2581,
+      "sha256": "043cafe6eae542be2b989d2f59ac884c5a19db0dd7e2bd72d2805ac90084ffce"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-speed.recipe.json",
+      "bytes": 82320,
+      "sha256": "473a6458a55088140e71bc407cde28343cf408e2d61a4c076ae0eca21c7e7f11"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-mesh-command-speed.search.json",
+      "bytes": 320,
+      "sha256": "77c941ec853d4214409cd614c0e6bde692b1d4f71a136d0475371c2f9c3466a8"
+    }
+  ],
+  "terminal_exit_codes": {
+    "old_mesh_search": 0,
+    "conic_final": 0,
+    "conic_best": 0,
+    "reference": 0,
+    "runtime": 0,
+    "runtime_analysis": 0,
+    "clearance": 0,
+    "checkpoint_verification": 0,
+    "planner_tests": 0,
+    "checkpoint_test": 0,
+    "build": 0
+  },
+  "scope": "Passive snapshot smoke/replay verified; completed older local search and conic repair, dense compilation and short runtime screen retained. Current searches remain live. No faster gait, timestep/sustained/browser qualification or global maximum established."
+}

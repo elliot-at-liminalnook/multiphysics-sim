@@ -1,0 +1,209 @@
+{
+  "id": "fast-paired-gait",
+  "name": "Physics-derived opposite-pair gait",
+  "description": "20 s forward, walking-turn, reverse and stop trial. Short forward speed 27.1 mm/s; reverse 24.9 mm/s. Slip and rendered realtime latency remain failures.",
+  "benchmark_version": "paired-steering-development-20s-v1",
+  "controller_sha256": "5c98a9efdfc14898b7de8ccdbf550392bf83372d2ee6f071763615f34206b5d3",
+  "model_sha256": "57fb6c3823da1703ae7e2118f1387ccca49f83a3f397f3ccad73d2cb72b87018",
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "environment_sha256": "90d8e51e66d8b9eebcc489bf90a7543d977a164a48acb50fec546b44f7174a6f",
+  "fidelity_sha256": "39aafded5a12e05c878bf98d1549e27cd7df766e2bc49d8d2a32e09aeffdfced",
+  "fidelity_label": "Effective servo · 5 ms compared with 1.25 ms",
+  "environment_label": "Flat floor · no push",
+  "comparison_group": "paired-steering-development-20s-v1",
+  "load": {
+    "scene": {
+      "path": "examples/full-robot/gait-exploration/steering-5ms.scene.json",
+      "sha256": "9c4ce6dabb03b06262cdb3e4c4e86f228edfb9992054112b9a47521998c6b4d8"
+    },
+    "config": {
+      "path": "examples/full-robot/gait-exploration/steering-5ms.config.json",
+      "sha256": "ef3d4ce9b50a5050ea7cde9c0290a56f2621defaf2b62bdeae941c49d16ec222"
+    },
+    "task": {
+      "path": "examples/full-robot/gait-exploration/live-pair.task.json",
+      "sha256": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026"
+    },
+    "seed": 0,
+    "asset_sha256": "3b359609d6ee7e38641c0b3c73430f30bb803ea3253f4b600f95c1934042edef"
+  },
+  "replay": {
+    "completed_steps": 4000,
+    "input_events": [
+      {
+        "at_step": 80,
+        "values": [
+          0.5,
+          0.25,
+          0.25,
+          0.025,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "at_step": 1200,
+        "values": [
+          0.5,
+          0.25,
+          0.25,
+          0.025,
+          0,
+          0.03,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "at_step": 2000,
+        "values": [
+          0.5,
+          0.25,
+          0.25,
+          -0.025,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "at_step": 3200,
+        "values": [
+          0.5,
+          0.25,
+          0.25,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "simulated_s": 20,
+    "sustained_speed_m_s": null,
+    "speed_window_s": 4.6,
+    "short_speed_m_s": 0.02706560876699728,
+    "task_passed": false,
+    "qualified_swings": null,
+    "swings": null,
+    "final_heading_error_rad": null,
+    "final_position_error_m": null,
+    "positive_mechanical_work_j": null,
+    "native_throughput": 1.2298507247400279,
+    "native_hardware": "Native development measurement; browser host in parity report.",
+    "browser_active_throughput": 0.7780055875399613,
+    "browser_active_p95_s": 0.07331499999761582
+  },
+  "gates": {
+    "sustained_walk": {
+      "status": "missing",
+      "detail": "No minute-long qualified run."
+    },
+    "turn_reverse_stop": {
+      "status": "pass",
+      "detail": "Completed 20 s requested forward/walking-turn/reverse/stop; 0.104 rad turn and 0.236 mm late stop drift."
+    },
+    "disturbances": {
+      "status": "missing",
+      "detail": "No qualified robust controller; full-authority distilled student failed tilt at 3.28 s."
+    },
+    "terrain": {
+      "status": "missing",
+      "detail": "Flat floor only."
+    },
+    "contact_motion": {
+      "status": "fail",
+      "detail": "Worst loaded foot material motion / total body path is 10.9% during steering, above 5%. All 1001 recorded poses had no sampled inter-link overlap."
+    },
+    "numerical_accuracy": {
+      "status": "missing",
+      "detail": "5 ms differs from 1.25 ms by at most 1.46 mm over 20 s; longer/finer validation remains open."
+    },
+    "browser_realtime": {
+      "status": "fail",
+      "detail": "Rendered active pace 0.778x; p95 73.3 ms."
+    },
+    "replay_parity": {
+      "status": "pass",
+      "detail": "20 s browser/native comparison and exact replay/reset passed."
+    }
+  },
+  "evidence": [
+    {
+      "path": "examples/full-robot/gait-exploration/steering-summary.json",
+      "sha256": "d0b81106ba00aab86e668ee190364829bc2110e975b1652dc25a65d9195b1ca9"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/steering-5ms.geometry.json",
+      "sha256": "5f1b5ca17b95bf900eeb6465c4ab58ed2c0f4384de3c91a9727a37da1bc3b310"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/browser-parity.json",
+      "sha256": "1285b9244a58f4d5fdbbfaa303624291ceeade738502ea9296e52cf7df6aac99"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/browser-live.json",
+      "sha256": "98defeb89639f0988548bb262cc4ecaa6331d3b68625e5d5a42164e09e028288"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/student-observation-boundary.json",
+      "sha256": "015b9c1c1485c9c14b55bfdd1743e9170985b5a864d128ac16cc91e51e597e94"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/cad-point-check.json",
+      "sha256": "2429533ac581dec1cae8fe970c14040127ce39675b28943e10d9f2a1f6843747"
+    }
+  ],
+  "capture": {
+    "path": "examples/full-robot/gait-exploration/steering-5ms.native.json",
+    "sha256": "d1c53a47593272932b66557a3024cb250630f9d197021967ad4ae94dc13c54de"
+  },
+  "limitations": "Uncalibrated CAD physics and ideal joint sensing; no sim-to-real or stability guarantee. Walking turns, no turn-in-place or lateral motion.",
+  "preset_id": "experimental-fast-paired-gait"
+}

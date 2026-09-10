@@ -1,7 +1,7 @@
 //! Bounded, read-only reporting through the production incremental runtime.
 use serde_json::json;
 use sim_runtime::{
-    embedded::{CaptureMode, Config, EmbeddedSession},
+    embedded::{CaptureMode, Config, EmbeddedRecording, EmbeddedSession},
     session::Scene,
 };
 
@@ -20,15 +20,32 @@ fn run() -> Result<bool, String> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     if args.len() != 5 {
         return Err(
-            "usage: capture_embedded_window scene.json config.json start-s end-s sample-period-s"
+            "usage: capture_embedded_window scene.json config.json start-s end-s sample-period-s, or capture_embedded_window --replay recording.json start-s end-s sample-period-s"
                 .into(),
         );
     }
-    let scene: Scene = serde_json::from_slice(&std::fs::read(&args[0]).map_err(|e| e.to_string())?)
-        .map_err(|e| e.to_string())?;
-    let config: Config =
-        serde_json::from_slice(&std::fs::read(&args[1]).map_err(|e| e.to_string())?)
-            .map_err(|e| e.to_string())?;
+    let replay = args[0] == "--replay";
+    let (scene, config, recording) = if replay {
+        let recording: EmbeddedRecording =
+            serde_json::from_slice(&std::fs::read(&args[1]).map_err(|e| e.to_string())?)
+                .map_err(|e| e.to_string())?;
+        if recording.failure.is_some() {
+            return Err("dense replay requires a recording without a failed attempt".into());
+        }
+        (
+            recording.scene.clone(),
+            recording.config.clone(),
+            Some(recording),
+        )
+    } else {
+        let scene: Scene =
+            serde_json::from_slice(&std::fs::read(&args[0]).map_err(|e| e.to_string())?)
+                .map_err(|e| e.to_string())?;
+        let config: Config =
+            serde_json::from_slice(&std::fs::read(&args[1]).map_err(|e| e.to_string())?)
+                .map_err(|e| e.to_string())?;
+        (scene, config, None)
+    };
     let number = |i: usize| args[i].parse::<f64>().map_err(|e| e.to_string());
     let (start, end, period) = (number(2)?, number(3)?, number(4)?);
     let (first, last, stride) = (
@@ -39,21 +56,34 @@ fn run() -> Result<bool, String> {
     if stride == 0
         || last < first
         || last > config.steps
+        || recording.as_ref().is_some_and(|r| last > r.completed_steps)
         || (last - first) % stride != 0
         || (last - first) / stride > 10_000
     {
         return Err("window requires ordered in-horizon endpoints, positive dividing period and at most 10001 frames".into());
     }
-    let mut session = EmbeddedSession::new(scene, config.clone(), 0, CaptureMode::Latest)?;
+    let seed = recording.as_ref().map_or(0, |r| r.seed);
+    let mut session = if let Some(recording) = recording {
+        EmbeddedSession::prepare_replay(recording, CaptureMode::Latest)?.0
+    } else {
+        EmbeddedSession::new(scene, config.clone(), seed, CaptureMode::Latest)?
+    };
+    let snapshot = |session: &EmbeddedSession| {
+        if replay {
+            session.interactive_frame()
+        } else {
+            session.frame()
+        }
+    };
     let metadata = session.diagnostic_metadata();
-    let initial_frame = session.frame()?;
+    let initial_frame = snapshot(&session)?;
     if first > 0 {
         let _ = session.advance(first); // Latched failure is recorded below.
     }
-    let mut frames = vec![session.frame()?];
+    let mut frames = vec![snapshot(&session)?];
     while session.completed_steps() < last && session.error().is_none() {
         let _ = session.advance(stride);
-        frames.push(session.frame()?);
+        frames.push(snapshot(&session)?);
         if frames.len() % 100 == 0 {
             eprintln!(
                 "captured {} s",
@@ -62,11 +92,12 @@ fn run() -> Result<bool, String> {
         }
     }
     let complete = session.completed_steps() == last && session.error().is_none();
-    let report = json!({"kind":"embedded_window_v1","scene_path":args[0],"config_path":args[1],"config":config,
-        "window_s":[start,end],"sample_period_s":period,"metadata":metadata,"seed":0,"initial_frame":initial_frame,
+    let report = json!({"kind":"embedded_window_v1","scene_path":if replay {None}else{Some(&args[0])},"config_path":if replay {None}else{Some(&args[1])},"recording_path":if replay {Some(&args[1])}else{None},"config":config,
+        "recording":if replay {Some(session.recording())}else{None},
+        "window_s":[start,end],"sample_period_s":period,"metadata":metadata,"seed":seed,"initial_frame":initial_frame,
         "frames":frames,"completed_steps":session.completed_steps(),"window_complete":complete,
         "full_motion_complete":session.remaining_steps()==0&&session.error().is_none(),"error":session.error(),
-        "scope":"Deliberate observation window in the unchanged incremental runtime. A successful window need not complete the full motion. Samples are endpoint snapshots; policy observations retain their own timestamp. No events or states are skipped in advancing to or through the window."});
+        "scope":"Deliberate observation window in the unchanged incremental runtime. Replay preserves the recorded recipe/seed/input event schedule; host sample spacing changes observation only. At a command boundary replay exposes the newly scheduled held inputs, while an environment endpoint precedes the next host input submission; completed physics/policy samples must still agree. A successful window need not complete the full motion. Samples are endpoint snapshots; policy observations retain their own timestamp. No events or states are skipped in advancing to or through the window."});
     println!(
         "{}",
         serde_json::to_string(&report).map_err(|e| e.to_string())?

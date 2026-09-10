@@ -1,0 +1,139 @@
+{
+  "url": "https://files.pythonhosted.org/packages/2b/f6/fa7d705761915e0e7f243a407b0c44772e15d32aa7d75b82f2411b32684e/casadi-3.8.0-cp311-abi3-macosx_11_0_x86_64.macosx_11_0_intel.whl",
+  "archive": {
+    "path": "runs/native-ipopt-casadi-3.8.0/casadi.whl",
+    "bytes": 53391344,
+    "sha256": "456eb3b43ca868ac0b46f38526ba4f09201943dc7553e23c212945fce79aa909"
+  },
+  "ipopt_version": [
+    3,
+    14,
+    19
+  ],
+  "abi": {
+    "ipnumber_bits": 64,
+    "ipindex_bits": 32,
+    "boolean": "C bool"
+  },
+  "libraries": [
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/libipopt.dylib",
+      "bytes": 2013744,
+      "sha256": "78bad0de2784d8e3f8fd2465d04f61779b7d7435579aba53c911d0db70d28b7c",
+      "install_name": "@rpath/libipopt.3.dylib",
+      "dependencies": [
+        "@rpath/libcoinmumps.3.dylib",
+        "@rpath/libcoinmetis.2.dylib",
+        "@rpath/libgfortran.5.dylib",
+        "@rpath/libquadmath.0.dylib",
+        "/usr/lib/libSystem.B.dylib",
+        "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+        "@rpath/libc++.1.0.dylib"
+      ]
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/libcoinmumps.3.dylib",
+      "bytes": 2921936,
+      "sha256": "7482c75a5c636cfe9ff3d81251f56e1dad9b7b395dc2774dca584fd74488170c",
+      "install_name": "@rpath/libcoinmumps.3.dylib",
+      "dependencies": [
+        "@rpath/libcoinmetis.2.dylib",
+        "@rpath/libgfortran.5.dylib",
+        "@rpath/libquadmath.0.dylib",
+        "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+        "/usr/lib/libSystem.B.dylib"
+      ]
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/libcoinmetis.2.dylib",
+      "bytes": 299920,
+      "sha256": "520232208c38a44ca7160779803c7088700f28ce15a641cbab5e43cb0dbb0cac",
+      "install_name": "@rpath/libcoinmetis.2.dylib",
+      "dependencies": [
+        "/usr/lib/libSystem.B.dylib"
+      ]
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/libgfortran.5.dylib",
+      "bytes": 3132240,
+      "sha256": "58a27a34deaa1d6793c1e63551005d0e62242a3d9867761b57d9d1ef64cdb4b0",
+      "install_name": "/DLC/dummy/libgfortran.5.dylib",
+      "dependencies": [
+        "@rpath/libquadmath.0.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ]
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/libquadmath.0.dylib",
+      "bytes": 313952,
+      "sha256": "a1411af550aa098ea2abd5903dd7c9d0eb4e86d9614d9b35a4f9ad2abe4f7492",
+      "install_name": "/DLC/dummy/libquadmath.0.dylib",
+      "dependencies": [
+        "/usr/lib/libSystem.B.dylib"
+      ]
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/libc++.1.0.dylib",
+      "bytes": 1069744,
+      "sha256": "1da46c41fc4945c03989908cb4f770a3c658341d3f905bb09edc187acafe61cc",
+      "install_name": "/DLC/dummy/libc++.1.0.dylib",
+      "dependencies": [
+        "/usr/lib/libSystem.B.dylib",
+        "/usr/lib/libc++abi.dylib"
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/coin-or/IpStdCInterface.h",
+      "bytes": 19605,
+      "sha256": "9e8660f32f825b2132539d4404b1835002b263265d9feff57926801c777b4744"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/coin-or/IpTypes.h",
+      "bytes": 1653,
+      "sha256": "814eca1603edd056fef2f0c92ceb7eb4aeae331815b1b19160213b7e6bd8e204"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/coin-or/IpoptConfig.h",
+      "bytes": 1121,
+      "sha256": "3f4533c2e842a26c5c0a94fe98a56a290c3f67bc237e1360f4347b66d602a6bd"
+    }
+  ],
+  "licenses": [
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/licenses/metis-external/LICENSE",
+      "bytes": 11249,
+      "sha256": "29e7b414f74c59a451641f757d830da1d0a4ab62a6f968e6ce9eb68933aa6429"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/licenses/metis-external/metis-4.0/LICENSE",
+      "bytes": 889,
+      "sha256": "2ecd4c415834a03b26950118da215aded2698b10836ea0e8235ed557a380dc1e"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/licenses/mumps-external/LICENSE",
+      "bytes": 14198,
+      "sha256": "0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/licenses/mumps-external/MUMPS/LICENSE",
+      "bytes": 2579,
+      "sha256": "5813fefd30a36fd7550cd2b62274be6586a0db51c11c3f2d4b852283e22ccc42"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/licenses/ipopt-external/LICENSE",
+      "bytes": 14198,
+      "sha256": "0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/extracted/casadi/include/licenses/highs-external/extern/metis/LICENSE.txt",
+      "bytes": 641,
+      "sha256": "64ab947d7b289ad76e935adff51b31e4ac160df7dfad24480dbaa452e39bbe79"
+    }
+  ],
+  "platform": "darwin",
+  "architecture": "x64",
+  "system": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6\nBuildVersion:\t\t25G72\n",
+  "scope": "Pinned native C library and transitive bundled dependencies from the official CasADi distribution. No Python interpreter, CasADi modeling API or alternative robot runtime is used. Other architectures/build ABIs are not verified."
+}

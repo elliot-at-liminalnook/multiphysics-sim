@@ -1,0 +1,338 @@
+{
+  "base_commit": "8a2ccd6c7db377658b6514a9448d1f1159a398b5",
+  "recorded_at": "2026-09-09T16:47:04.669Z",
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 167132,
+      "sha256": "895a49c1003c13918aeb05316d9b413dde3f5fb25960907456db6ee58e6e9583"
+    },
+    {
+      "path": "crates/sim-solve/Cargo.toml",
+      "bytes": 723,
+      "sha256": "fa63b191dd1a1ed4ac1958b30321d13772b69df81601796b6316ddf3b68e21c0"
+    },
+    {
+      "path": "crates/sim-runtime/Cargo.toml",
+      "bytes": 1677,
+      "sha256": "2e9e66a5ac4b56194f4defab000ce7bc3385d4fb24e9dac229f5fe255c1b72f9"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47412,
+      "sha256": "9de80bd1a443026529a0d00df94b82ae324b7654135571b1e7b33170ff18b4e7"
+    },
+    {
+      "path": "crates/sim-solve/src/conic.rs",
+      "bytes": 10203,
+      "sha256": "0ec52349e104efba607c68e641cf1d8e5f506a7f6ae9c362f05b62cad891e662"
+    },
+    {
+      "path": "crates/sim-runtime/examples/solve_joint_force_cones.rs",
+      "bytes": 7552,
+      "sha256": "7a708c82eb92790f89f001fc5d75a233571449c1333c2f5adff479a4ba27b18d"
+    },
+    {
+      "path": ".github/workflows/conic.yml",
+      "bytes": 1197,
+      "sha256": "0ca4ac89506c3e05a4e1232bd7e81136dda5534d8630b28657d8132c337c0495"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_force_conic.mjs",
+      "bytes": 3003,
+      "sha256": "2eaf5fc0882a7f3d7b22f6d1077f40510ac1871dc62ae4c8dbda37fabe625d53"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_conic_followup.mjs",
+      "bytes": 3441,
+      "sha256": "a64d23958667f496b73d4994afab3820bfdab199bb8858be7267639f9b62f5c5"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/record_joint_force_conic.mjs",
+      "bytes": 4928,
+      "sha256": "786708bef2a96ad8546a25409cbba78959f3c7909635b93c5ecdf9273bfa42c5"
+    }
+  ],
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-force-conic-sources.tar.gz",
+    "bytes": 62859,
+    "sha256": "09782adbdb07b801d713f11c216325970f68ddb615c789ec67185dc3631277f6"
+  },
+  "initial_source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-force-conic-initial-sources.tar.gz",
+    "bytes": 59136,
+    "sha256": "c447a88cc49414e85ce27c43e6cbe1b94b47cf87d016a77383fe3d29cce0e29d"
+  },
+  "initial_binary": {
+    "path": "runs/joint-force-conic/solve_joint_force_cones-initial",
+    "bytes": 9399140,
+    "sha256": "ad46de3ba21ec006a421750acda7459b31f46fa8f37005163938dc663f97f74e"
+  },
+  "final_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/solve_joint_force_cones",
+    "bytes": 9404788,
+    "sha256": "cf9b9ceb74c309d851c646f899efe4d50e6031a24b3c5e93b11a96dc115668b3"
+  },
+  "native_pilot_binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt",
+    "bytes": 9192964,
+    "sha256": "792bc518d5aef6b98c1bd64eee3d38b5543524db4bc2747f5c53202d718d310e"
+  },
+  "native_source_build": {
+    "path": "examples/full-robot/contact-planning/joint-body-grouping-build.json",
+    "bytes": 7955,
+    "sha256": "66e614277bad587aba981877966d005b1ddea87b8f98bd7b3f4ce680ad46ba4d"
+  },
+  "dense_evaluator": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_contact",
+    "bytes": 9137436,
+    "sha256": "4897bb89d52ceeeb81772b6499a3f0b6897948174ebcdf0f5ef1f62c88b231f8"
+  },
+  "evaluator_source_build": {
+    "path": "examples/full-robot/contact-planning/joint-contact-timing-build.json",
+    "bytes": 11755,
+    "sha256": "721cf0498622bdb1a29632a8ad2211818e1a777cd51a66534e12e43f69a96fcb"
+  },
+  "completed_warm_search_launch": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-warm-speed-launch.json",
+    "bytes": 1966,
+    "sha256": "0f80ab3c677a7bcdc1902e332e0781482f5522275473ab755f7432c4a38b971f"
+  },
+  "native_library_manifest": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-native-library.json",
+    "bytes": 5450,
+    "sha256": "1d5bb98f34fdceb3384f730f61a41ef15be68ec9896837471403bc941a6583a4"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+      "bytes": 161647,
+      "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+      "bytes": 161211,
+      "sha256": "e4c026ee7c0336c90d436e7b7802aeba3549a51e6652ccaaee54d6f0933f282e"
+    }
+  ],
+  "durable_scene": {
+    "index": "examples/full-robot/speed-ceiling/evidence-v8-index.json",
+    "entry": "validation/constrained-front165-scale1-human-fine.scene.json"
+  },
+  "clarabel": {
+    "version": "0.11.1",
+    "source": "https://crates.io/crates/clarabel/0.11.1",
+    "checksum": "d950c870fad4feed732bc3f7da489d223ba3911eac0522e6512eed7e659cfafe"
+  },
+  "build_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --locked --release -p sim-runtime --features conic --example solve_joint_force_cones",
+  "test_commands": [
+    "cargo test --locked --release -p sim-solve --features conic --lib",
+    "cargo test --locked --release -p sim-runtime --features conic --lib contact_planning"
+  ],
+  "run_commands": [
+    "solve_joint_force_cones runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+    "solve_joint_force_cones runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-conic-warm-final.recipe.json",
+    "solve_joint_force_cones runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+    "solve_joint_force_cones runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-conic-feasible-dense.recipe.json"
+  ],
+  "native_pilot_command": "VECLIB_MAXIMUM_THREADS=1 OMP_NUM_THREADS=1 /Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_ipopt runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json /Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/joint-conic-feasible-pilot.search.json",
+  "dense_audit_command": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_contact runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-conic-feasible-dense.recipe.json --evaluate",
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "terminal_exit_codes": {
+    "initial_tests": 0,
+    "all_shared_tests": 0,
+    "planner_tests": 0,
+    "final_shared_tests": 0,
+    "initial_build": 0,
+    "final_build": 0,
+    "warm_conic": 0,
+    "warm_final_conic": 0,
+    "fast_conic": 0,
+    "native_pilot": 0,
+    "dense_initial_audit": 0,
+    "dense_refit": 0,
+    "dense_final_audit": 0,
+    "warm_final_recheck": 0,
+    "completed_eight_control_native": 0
+  },
+  "full_speed_configuration_status": "Prepared only, not launched: dense failure must be incorporated in mesh refinement first.",
+  "remote_ci": "Added, not executed in this session.",
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-dense-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-dense-audit.result.json",
+      "bytes": 13829485,
+      "sha256": "cab63d25b35e7311e73f5c52668459ce19896586fda2fb6e0c77e9310a5b2c94"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-dense-refit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-dense-refit.result.json",
+      "bytes": 641779,
+      "sha256": "597c4d34623d73141c6449553e48837993a4ba500d1eb121bfcdcd7567c7af24"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-fast.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-fast.result.json",
+      "bytes": 1581769,
+      "sha256": "08ef768b950a900ed9fab51e62b93125b8e1b822e233b0bbb6f2a3e509f23454"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-dense.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-dense.recipe.json",
+      "bytes": 162088,
+      "sha256": "9c2b83d560c524684e69443ec743923f61451cdfe907d6bfebe62bf199c8240a"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-dense.result.json",
+      "bytes": 13167690,
+      "sha256": "403630103f89cc7a161f770779af63df527a7908141a249ae728930a8cd66c91"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-pilot.log",
+      "bytes": 3389,
+      "sha256": "de67d28fc8e4078d462295ef923f6d0dcd0626762c3c974baa73dc0fd5aa1dfd"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-pilot.result.json",
+      "bytes": 3121192,
+      "sha256": "7616231c57c6f87c3176f4b0f3113f3befbb30daac9d7c62245c2ebd901d365d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-pilot.search.json",
+      "bytes": 316,
+      "sha256": "db6bb52982d0cdfac03f75cbe161e138045349ddfb33c84caf7b370535f459d2"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-pilot.summary.json",
+      "bytes": 2241,
+      "sha256": "6334d892fcab7c3da49799cbbdfeb8b6e61b22cef4b6a27375947341eeda660f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json",
+      "bytes": 161842,
+      "sha256": "dceb6f328f7ca58f60ff5400ad941e340f5d43f93c6573498c63697739612137"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-speed.search.json",
+      "bytes": 319,
+      "sha256": "5f5d3ec9f1f1f374657a9ba75f3166a83c03e1f427b81bfe3e21f67ba4ba480e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-warm-final-rechecked.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-warm-final-rechecked.result.json",
+      "bytes": 1593705,
+      "sha256": "c529f4251baf86833cea10cd3529beab54abb91c6e72a18a84c5f33421015120"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-warm-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-warm-final.recipe.json",
+      "bytes": 161731,
+      "sha256": "fcd8b1e3ac70ba65a64b53be8f450ea18ee50688f777ee8c9bc0b166391c0d8d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-warm-final.result.json",
+      "bytes": 1593668,
+      "sha256": "d4509825ceaea58078e1ba74ca59557f3f45b146bd4d5e8501b5bbde6c39c991"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-warm.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-warm.result.json",
+      "bytes": 1596266,
+      "sha256": "91c71caac535c986e9f461cf59ad1b4c5d5cd26f42620a3f412f03cbdfafcccf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-conic-all-tests.log",
+      "bytes": 3706,
+      "sha256": "97641570ff98e8390a23a635fe451c81e36a42a568883e238a55414c1b9ffc0b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-conic-build.log",
+      "bytes": 1317,
+      "sha256": "dc9e14e5b67934a8d8ecc99b7ef6d3c2c8cc97b49719d1b4b9a73f8828e40ac4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-conic-final-build.log",
+      "bytes": 581,
+      "sha256": "056189a38e4a04a4ba8acace096f8618b0f2e30a8286e90ba418e16cd57ce607"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-conic-final-tests.log",
+      "bytes": 3805,
+      "sha256": "4ecc0e8b1adfbcc2578403f2f43339cfe0933cc509605af090f5c25f1f189513"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-conic-followup-verification.json",
+      "bytes": 869,
+      "sha256": "4ff499d47f4f17ec4cb869649b4864c1d3098bba428f9ffae2bd63f028c54f18"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-conic-planner-tests.log",
+      "bytes": 951,
+      "sha256": "d99505086e66b9fa2292abc009c01f3814de5c8e0f8d6c084d2d41944c913638"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-conic-tests.log",
+      "bytes": 2087,
+      "sha256": "c8c3ae45adb12cb03ac6b58bd1cca39c1caaa2b7d16257b753e4e045c865bd6f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-conic-verification.json",
+      "bytes": 3821,
+      "sha256": "8f9067289017495f35673398842beb684110d6dce5ebeeb1d29fe89e0cb03de7"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-speed.log",
+      "bytes": 109453,
+      "sha256": "76e4088384993f29dff6b28e073db9e469082b2a2ea57006e332d698e9e8263f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-speed.result.json",
+      "bytes": 2986979,
+      "sha256": "ed06f750b53e057fd0e18003fbed93637e6241bee54d9c32d2ef046f3f0915ab"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm-speed.summary.json",
+      "bytes": 17420,
+      "sha256": "722e735546e62748621d666eaaceb60c578df23ce0304c976c81c22326b512c9"
+    }
+  ],
+  "scope": "Shared convex force solve recovers a sampled feasible initializer and native one-step speed increase, but dense checks remain infeasible. No new measured runtime speed or physical maximum."
+}

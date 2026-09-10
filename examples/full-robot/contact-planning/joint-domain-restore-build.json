@@ -1,0 +1,184 @@
+{
+  "base_commit": "ef0463965bedd4ca4cd00f93017cb03d2fdc9ff2",
+  "recorded_at": "2026-09-09T17:57:02.846Z",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-domain-restore-sources.tar.gz",
+    "bytes": 44027,
+    "sha256": "507ec2ceb5f74d1408fd33a86498bdf933461e92a5c8be32fa9d50652fccaac3"
+  },
+  "initial_measurement_build": {
+    "path": "examples/full-robot/contact-planning/joint-domain-restore-initial-build.json",
+    "bytes": 2211,
+    "sha256": "2cd3040e8fba8c1a045a09a53098917bd854e4ae1634b5c12f2d3e602c935726"
+  },
+  "sources": [
+    {
+      "path": "crates/sim-solve/src/domain_restore.rs",
+      "bytes": 5426,
+      "sha256": "81f2ba42e467117d5d4a52d5780230a5d28d9acdd9a251bd4ee12c0e293bfbfc"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47436,
+      "sha256": "0f0a0d81ae2ba12c6bfdb40bca37a4dfca66b00ed34a9c29f50111147ab770bb"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 47878,
+      "sha256": "049aa14b8a34fff36085dc24abdec0279a2090cf9bf195a43972c026566f8823"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 56924,
+      "sha256": "6593593bbe2c83378f68b9aab6eefc6d9518d78055026de0261512c600f3d5f2"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint_restore.rs",
+      "bytes": 4468,
+      "sha256": "751b005f9132fe9eaf3c128acef3dfbc10ba9c7b415abc8b19a50e7fa883f8e0"
+    },
+    {
+      "path": "crates/sim-runtime/examples/restore_joint_domain.rs",
+      "bytes": 4101,
+      "sha256": "7fd275d03829d92757b5667dd8879fa432fc6fc09e4bbbd18fde7ad1098664da"
+    },
+    {
+      "path": "crates/sim-runtime/examples/refine_joint_contact_mesh.rs",
+      "bytes": 4267,
+      "sha256": "4869a736d0af4722ac1ddda3284d5eb7264ca7a1fadafaec1a01dcfa6f4e7a3d"
+    },
+    {
+      "path": ".github/workflows/conic.yml",
+      "bytes": 1656,
+      "sha256": "7a1d60607a2ff652283c9f6fc2327a521ed3c47a48e1044ae528b9d6ebd63567"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_domain_restore.mjs",
+      "bytes": 3515,
+      "sha256": "b0204a269d226cd12e56b7f274a3ebd4d725da79375ae8d358b4dd2332947f90"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/record_joint_domain_restore.mjs",
+      "bytes": 4710,
+      "sha256": "672fc2f9952abe03435db4a875e8c0d146b584f5f9e1a4b6e26e35dc228f8ce7"
+    }
+  ],
+  "cargo_lock": {
+    "path": "Cargo.lock",
+    "bytes": 167132,
+    "sha256": "895a49c1003c13918aeb05316d9b413dde3f5fb25960907456db6ee58e6e9583"
+  },
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/restore_joint_domain",
+      "bytes": 9129188,
+      "sha256": "e5bdfa329784807edaa5cda5c421300156037e1d261cd73e59156943a6faf8fa"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/refine_joint_contact_mesh",
+      "bytes": 9106908,
+      "sha256": "f6d349fd59e553dbfb05a71f9ee116df0e3fd00277b51e1973c73881b8fd72c8"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json",
+      "bytes": 161842,
+      "sha256": "dceb6f328f7ca58f60ff5400ad941e340f5d43f93c6573498c63697739612137"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-conic-audit.recipe.json",
+      "bytes": 176806,
+      "sha256": "dc8a92a4bff5cd82e94c917c713a33fbe14cec00f06f9b6d2c52166376db8624"
+    }
+  ],
+  "durable_scene": {
+    "index": "examples/full-robot/speed-ceiling/evidence-v8-index.json",
+    "entry": "validation/constrained-front165-scale1-human-fine.scene.json"
+  },
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "initial_build_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --locked --release -p sim-runtime --features conic --example restore_joint_domain --example refine_joint_contact_mesh",
+  "final_build_command": "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo build --locked --release -p sim-runtime --features conic --example restore_joint_domain",
+  "test_commands": [
+    "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo test --locked --release -p sim-solve --features conic --lib",
+    "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration CARGO_BUILD_JOBS=2 /Users/elliot/.cargo/bin/cargo test --locked --release -p sim-runtime --features conic --lib contact_planning"
+  ],
+  "restoration_command": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/restore_joint_domain runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-conic-feasible-speed.recipe.json examples/full-robot/contact-planning/joint-body16-conic-audit.recipe.json examples/full-robot/contact-planning/joint-body16-domain.config.json",
+  "terminal_exit_codes": {
+    "solve_tests": 0,
+    "planner_tests": 0,
+    "build": 0,
+    "restoration": 0,
+    "verification": 0,
+    "finer_audit": 1,
+    "invalid_body_rejection": 1
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain-audit.recipe.json",
+      "bytes": 177010,
+      "sha256": "545edf98fc1a8e48aeb654b9692bfcd68634cddb7313a9e414cd594b5bb717e4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain-fine.config.json",
+      "bytes": 104,
+      "sha256": "757f06e5dec69b92b61f35169a16277140866c74ea1fbd7dab158faa7c11e856"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain-fine.log",
+      "bytes": 458,
+      "sha256": "dffd27c28afc6566ce6c55b775808e2dddb44ebfb21c6f9cf677a46a49cd65d6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain-fine.result.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain-invalid-body.log",
+      "bytes": 131,
+      "sha256": "ec21123594b986996f6fbc04d1fec4a1ee3891c2dfcea940c860c55d3f360b54"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain.config.json",
+      "bytes": 66,
+      "sha256": "a66e8c0895ffcba49372eea888634f7e65d5624f3315642b3b2ce2ae301d6872"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain.log",
+      "bytes": 149,
+      "sha256": "6f4122441af1f5cbda32dddaac0f0d1072c4eee3bbfba42f44c6add1fa7e2c98"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain.recipe.json",
+      "bytes": 176764,
+      "sha256": "bc55423ec44a925241d16a9a5848a889299d6ae76227bb31a57fc0541c5f4521"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain.result.json",
+      "bytes": 13463964,
+      "sha256": "be0e9fba7d7f2dd1ca8a9981b8d767ac97f1207f39030faea59a18b867fae074"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain.summary.json",
+      "bytes": 5555,
+      "sha256": "069946ff5d7165d61ec9eae5ba9e9bdafdd43a9c935ef4057c520b6a3ba7de6b"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-domain4000.config.json",
+      "bytes": 66,
+      "sha256": "c2805d302b07cee5639c5cd9666b9932d8eb29f43c48a9ab73d187992c2a8417"
+    }
+  ],
+  "scope": "Local evaluation-domain restoration with physical constraints unchanged. Does not establish a physical speed ceiling, a continuously valid motion, or a runtime gait."
+}

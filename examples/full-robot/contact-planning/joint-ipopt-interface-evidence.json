@@ -1,0 +1,418 @@
+{
+  "base_commit": "ecff40ce4fae26a0a843741ee5456351bb90fa4f",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-interface-sources.tar.gz",
+    "bytes": 62171,
+    "sha256": "fb9da737b1a623cc35dce2b108291c18bb6d293cb73d597334ede43dae39df60"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163518,
+      "sha256": "2315b7fe8ba43e235355ffdcf823e018a6f17a0b828f83d8d0954a50216e47bf"
+    },
+    {
+      "path": "crates/sim-solve/Cargo.toml",
+      "bytes": 646,
+      "sha256": "3e645080a36805e05f612d96d61b1d3176105f3a9ec9d33e0ddc1d0bd028f980"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47347,
+      "sha256": "5ff5d5d37e89b665e02fe1244eeb3bd7927a03da5624959591f48140e33866fd"
+    },
+    {
+      "path": "crates/sim-solve/src/ipopt.rs",
+      "bytes": 21527,
+      "sha256": "816d98a06760454a78d15c96693d73305563362add3827bfd70d7b61db7a76e5"
+    },
+    {
+      "path": "crates/sim-solve/examples/audit_ipopt.rs",
+      "bytes": 7902,
+      "sha256": "07cf9473e33ccfd4a448ce293d838888ba4b64711f4170086f021e7e75a4cd79"
+    },
+    {
+      "path": ".github/workflows/native-ipopt.yml",
+      "bytes": 1741,
+      "sha256": "ad318dafc227ffa555c34dfbaddbfb6aac0e3269e2804b544504e60b15f30906"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_native_ipopt.mjs",
+      "bytes": 4052,
+      "sha256": "c2fead8c63f2291fe5cc1d3a1f0e0c3d9290fbf978cb67cbc7c4c748ad8835a8"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-build.log",
+      "bytes": 292,
+      "sha256": "181764908b6acb772193bbd00a4db411bd0b77dfb3aff70664625a1686f260ae"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-checked-build.log",
+      "bytes": 193,
+      "sha256": "82f36b8ced85bdfc008a59d50cb2b7d93df8dd0ce9d4cfcc95bf8c4761e94911"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-checked.log",
+      "bytes": 200,
+      "sha256": "d1770a8ef37b58160b9448a489c87c6f5ea7aeefd17cc040effad87035fef1ac"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-checked.result.json",
+      "bytes": 7508,
+      "sha256": "389ad739fbb378777e6e9b76d50cabe0d5c0f318d4318162d723380726282941"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-final-build.log",
+      "bytes": 160,
+      "sha256": "a67a3e03996ecc390e1fad41c05a872ad03541b99fa22ef8e13a0462dd107f2d"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-final.log",
+      "bytes": 200,
+      "sha256": "cf9362abee0b1efb011d3185e85dbf1816e836c872e99963b8efd5b95e917270"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-final.result.json",
+      "bytes": 9870,
+      "sha256": "696db76375cdb033b970f87e2ea5f87dcd11e81a445260e1f5874243e3ac3f00"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-hessian-build.log",
+      "bytes": 160,
+      "sha256": "cd62ffd8bded26e8a32bf057d9e0210744ea6810d53b1629aa997a8ac86b94c9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface-support-build.log",
+      "bytes": 160,
+      "sha256": "1affcb38669c10fc2ffa10a7d4a7d42ed37607c1da1a37881f50c1faec13cbb8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface.log",
+      "bytes": 218,
+      "sha256": "6c1930c4d8a451dd24085a8954b4262c2470f1028a7b5fe44d654c1671b798c9"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-interface.result.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-native-library.json",
+      "bytes": 5450,
+      "sha256": "1d5bb98f34fdceb3384f730f61a41ef15be68ec9896837471403bc941a6583a4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-solve-release-tests.log",
+      "bytes": 3448,
+      "sha256": "d8486addac930d8b0ebc9cd1f837f89e6e87c658f8a6877d5e98dcdcf1f71f36"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-solve-tests.log",
+      "bytes": 3455,
+      "sha256": "aae9ace6746a6224dd48d86b3968434b16e642dab6031cf57ca166254f68c8eb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/NATIVE_IPOPT.md",
+      "bytes": 6034,
+      "sha256": "6dbead40385159f0b05e4b8229b90d3ceb9789f9b087effb392e16611f9fc769"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/README.md",
+      "bytes": 25029,
+      "sha256": "81c36ac44c9de7abca052ede7536581ea31a49f8816033f0f8ceb7c700685547"
+    }
+  ],
+  "audit_executable": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_ipopt",
+    "bytes": 583672,
+    "sha256": "b1f01a28101378bd75bcbb7c0b16bbef992c010501c8a1f472b0197ce1ad7ae4"
+  },
+  "native_distribution_manifest": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-native-library.json",
+    "bytes": 5450,
+    "sha256": "1d5bb98f34fdceb3384f730f61a41ef15be68ec9896837471403bc941a6583a4"
+  },
+  "tested_minimal_native_libraries": [
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib",
+      "bytes": 2013744,
+      "sha256": "78bad0de2784d8e3f8fd2465d04f61779b7d7435579aba53c911d0db70d28b7c"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/minimal/libcoinmumps.3.dylib",
+      "bytes": 2921936,
+      "sha256": "7482c75a5c636cfe9ff3d81251f56e1dad9b7b395dc2774dca584fd74488170c"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/minimal/libcoinmetis.2.dylib",
+      "bytes": 299920,
+      "sha256": "520232208c38a44ca7160779803c7088700f28ce15a641cbab5e43cb0dbb0cac"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/minimal/libgfortran.5.dylib",
+      "bytes": 3132240,
+      "sha256": "58a27a34deaa1d6793c1e63551005d0e62242a3d9867761b57d9d1ef64cdb4b0"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/minimal/libquadmath.0.dylib",
+      "bytes": 313952,
+      "sha256": "a1411af550aa098ea2abd5903dd7c9d0eb4e86d9614d9b35a4f9ad2abe4f7492"
+    },
+    {
+      "path": "runs/native-ipopt-casadi-3.8.0/minimal/libc++.1.0.dylib",
+      "bytes": 1069744,
+      "sha256": "1da46c41fc4945c03989908cb4f770a3c658341d3f905bb09edc187acafe61cc"
+    }
+  ],
+  "unchanged_running_optimizers": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+      "bytes": 9049396,
+      "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_contact",
+      "bytes": 9137436,
+      "sha256": "4897bb89d52ceeeb81772b6499a3f0b6897948174ebcdf0f5ef1f62c88b231f8"
+    }
+  ],
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)\nbinary: rustc\ncommit-hash: 8bab26f4f68e0e26f0bb7960be334d5b520ea452\ncommit-date: 2026-07-14\nhost: x86_64-apple-darwin\nrelease: 1.97.1\nLLVM version: 22.1.6\n",
+  "commands": [
+    "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration cargo test --locked --release -p sim-solve --features native-ipopt --lib",
+    "CARGO_TARGET_DIR=/Users/elliot/physics-simulator/target/gait-exploration cargo build --release -p sim-solve --features native-ipopt --example audit_ipopt",
+    "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_ipopt /Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib"
+  ],
+  "verification": {
+    "native_audit_exit_code": 0,
+    "reference_cases": 7,
+    "shared_solver_tests_passed": 32,
+    "ci_configured": true,
+    "remote_ci_run": false,
+    "hs071": {
+      "budget_exhausted": false,
+      "callback_panicked": false,
+      "cancelled": false,
+      "derivative_evaluations": 10,
+      "final_evaluation": {
+        "constraints": [
+          25.00000000001811,
+          40.00000000000001
+        ],
+        "objective": 17.0140172891763
+      },
+      "iterations": [
+        {
+          "barrier_parameter": 1,
+          "dual_infeasibility": 0.5275979386623803,
+          "iteration": 0,
+          "objective": 16.109693,
+          "primal_infeasibility": 11.243400000000001,
+          "restoration": false,
+          "step_norm": 0
+        },
+        {
+          "barrier_parameter": 0.5305689255349046,
+          "dual_infeasibility": 23.9595738256986,
+          "iteration": 1,
+          "objective": 17.42070896057694,
+          "primal_infeasibility": 0.8400266517475572,
+          "restoration": false,
+          "step_norm": 0.8132396619293295
+        },
+        {
+          "barrier_parameter": 0.23247265374007875,
+          "dual_infeasibility": 0.2003383606210256,
+          "iteration": 2,
+          "objective": 17.120452603949012,
+          "primal_infeasibility": 0.2141047549481243,
+          "restoration": false,
+          "step_norm": 1.0219820458957207
+        },
+        {
+          "barrier_parameter": 0.024627712166236437,
+          "dual_infeasibility": 0.08494849611784286,
+          "iteration": 3,
+          "objective": 16.97903287018917,
+          "primal_infeasibility": 0.21450833613291564,
+          "restoration": false,
+          "step_norm": 0.11781912425710603
+        },
+        {
+          "barrier_parameter": 0.0006392793769751,
+          "dual_infeasibility": 0.012024813217142022,
+          "iteration": 4,
+          "objective": 16.97255390419626,
+          "primal_infeasibility": 0.07810431119064276,
+          "restoration": false,
+          "step_norm": 0.08008431342247285
+        },
+        {
+          "barrier_parameter": 0.000012020041721267729,
+          "dual_infeasibility": 0.009499776838679565,
+          "iteration": 5,
+          "objective": 17.013661582482676,
+          "primal_infeasibility": 0.0006942704353747331,
+          "restoration": false,
+          "step_norm": 0.010035752083103778
+        },
+        {
+          "barrier_parameter": 8.294401320918818e-7,
+          "dual_infeasibility": 0.0003493745702954818,
+          "iteration": 6,
+          "objective": 17.01401773354008,
+          "primal_infeasibility": 0.000001958671930424316,
+          "restoration": false,
+          "step_norm": 0.0010915008707673651
+        },
+        {
+          "barrier_parameter": 6.450634687014522e-9,
+          "dual_infeasibility": 2.1482062689703948e-7,
+          "iteration": 7,
+          "objective": 17.014017301055485,
+          "primal_infeasibility": 1.4725429764439468e-9,
+          "restoration": false,
+          "step_norm": 0.00003018805269062423
+        },
+        {
+          "barrier_parameter": 1e-11,
+          "dual_infeasibility": 1.6853087537963248e-9,
+          "iteration": 8,
+          "objective": 17.0140172891763,
+          "primal_infeasibility": 7.105427357601002e-15,
+          "restoration": false,
+          "step_norm": 1.1675363138173754e-8
+        },
+        {
+          "barrier_parameter": 1e-11,
+          "dual_infeasibility": 1.2082842660807908e-12,
+          "iteration": 9,
+          "objective": 17.0140172891763,
+          "primal_infeasibility": 7.105427357601002e-15,
+          "restoration": false,
+          "step_norm": 3.153889633881562e-11
+        }
+      ],
+      "last_callback_error": null,
+      "maximum_constraint_or_bound_violation": 7.105427357601002e-15,
+      "native_status": 0,
+      "rejected_callbacks": 0,
+      "value_evaluations": 12,
+      "values": [
+        1.0000000000091922,
+        4.74299963725657,
+        3.8211499841972096,
+        1.3794082931588207
+      ]
+    },
+    "synthetic_support_speed": {
+      "budget_exhausted": false,
+      "callback_panicked": false,
+      "cancelled": false,
+      "derivative_evaluations": 9,
+      "final_evaluation": {
+        "constraints": [
+          1,
+          0.9999999999924999,
+          0.9999999999925
+        ],
+        "objective": -1.333333333313333
+      },
+      "iterations": [
+        {
+          "barrier_parameter": 1,
+          "dual_infeasibility": 0.19277108433734935,
+          "iteration": 0,
+          "objective": -0.2,
+          "primal_infeasibility": 0,
+          "restoration": false,
+          "step_norm": 0
+        },
+        {
+          "barrier_parameter": 0.2516121096863606,
+          "dual_infeasibility": 0.1935069905922696,
+          "iteration": 1,
+          "objective": -0.44889529769928904,
+          "primal_infeasibility": 1.1102230246251565e-16,
+          "restoration": false,
+          "step_norm": 0.24889529769928906
+        },
+        {
+          "barrier_parameter": 0.008580713986443245,
+          "dual_infeasibility": 0.4022123040242557,
+          "iteration": 2,
+          "objective": -0.9841162704622987,
+          "primal_infeasibility": 0,
+          "restoration": false,
+          "step_norm": 0.5352209727630096
+        },
+        {
+          "barrier_parameter": 0.0016891184800538431,
+          "dual_infeasibility": 0.3470178946548606,
+          "iteration": 3,
+          "objective": -1.322271598873235,
+          "primal_infeasibility": 0,
+          "restoration": false,
+          "step_norm": 0.43394793316966124
+        },
+        {
+          "barrier_parameter": 0.0008247393429116906,
+          "dual_infeasibility": 0.012190170834707463,
+          "iteration": 4,
+          "objective": -1.3319100684241763,
+          "primal_infeasibility": 1.1102230246251565e-16,
+          "restoration": false,
+          "step_norm": 0.01592502126182469
+        },
+        {
+          "barrier_parameter": 0.000010366400524596215,
+          "dual_infeasibility": 0.0010635686944056285,
+          "iteration": 5,
+          "objective": -1.3333089463102819,
+          "primal_infeasibility": 1.1102230246251565e-16,
+          "restoration": false,
+          "step_norm": 0.0014223837378582952
+        },
+        {
+          "barrier_parameter": 8.590677081322917e-8,
+          "dual_infeasibility": 0.000018859526164021353,
+          "iteration": 6,
+          "objective": -1.3333331942202606,
+          "primal_infeasibility": 0,
+          "restoration": false,
+          "step_norm": 0.00002424790997881369
+        },
+        {
+          "barrier_parameter": 1e-11,
+          "dual_infeasibility": 1.0932073984193075e-7,
+          "iteration": 7,
+          "objective": -1.333333333316759,
+          "primal_infeasibility": 0,
+          "restoration": false,
+          "step_norm": 1.3909649826407004e-7
+        },
+        {
+          "barrier_parameter": 1e-11,
+          "dual_infeasibility": 2.6992855499069225e-12,
+          "iteration": 8,
+          "objective": -1.333333333313333,
+          "primal_infeasibility": 1.1102230246251565e-16,
+          "restoration": false,
+          "step_norm": 3.425851041786489e-12
+        }
+      ],
+      "last_callback_error": null,
+      "maximum_constraint_or_bound_violation": 0,
+      "native_status": 0,
+      "rejected_callbacks": 0,
+      "value_evaluations": 10,
+      "values": [
+        1.333333333313333,
+        0.6666666666641666,
+        0.3333333333358334
+      ]
+    }
+  },
+  "scope": "Shared native constrained NLP interface only. Not yet integrated into the robot planner. Earlier missing-example build and missing-Hessian-callback failures are retained. Three existing robot optimizations continue independently; their live output/logs are excluded. No new robot speed or physical maximum is established."
+}

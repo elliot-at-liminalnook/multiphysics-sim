@@ -1,0 +1,26 @@
+{
+  "source_commit": "d0b1743",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/examples/sample_capture_seed.rs",
+      "bytes": 5442,
+      "sha256": "01c41334ca01c976217988e1342957fa321aadcbfdab19f3105fc811e106af2a"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 55232,
+      "sha256": "973d0a81c4a119391a5daeedebda0b18cd7bd7e4cbbfe0d6b2e977fe963902d4"
+    }
+  ],
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/sample_capture_seed",
+    "bytes": 8270436,
+    "sha256": "4a0ee5c6d08e1dc40d767a6a32aa74decb33c72ad5d7c8422347774bfb5c8c3c"
+  },
+  "capture": {
+    "path": "runs/contact-planning/diagonal68-minimal-observations.native.json",
+    "bytes": 26684938,
+    "sha256": "b7741bd17102a3381e81e5b35a79258150bc3adc11c0159f65106c7550775285"
+  },
+  "scope": "Sampler rebuilt against the current config schema. Scene and CAD unchanged; runtime capture SHA verified against existing durable archive."
+}

@@ -1,0 +1,20 @@
+{
+  "session_id": 58089,
+  "pid": 55604,
+  "command": [
+    "node",
+    "examples/full-robot/contact-planning/run_bayesian_controller_screen.mjs",
+    "examples/full-robot/contact-planning/bayesian-controller-pilot.spec.json"
+  ],
+  "workdir": "/Users/elliot/physics-simulator-gait-exploration",
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/bayesian-search-build.json",
+    "bytes": 40187,
+    "sha256": "e625da443bbc4e17de45c1e71823cd77c3470e8f750d1bf5a1b414c423b54c22"
+  },
+  "stdout": "examples/full-robot/contact-planning/bayesian-controller-pilot-v2.log",
+  "stderr": "examples/full-robot/contact-planning/bayesian-controller-pilot-v2.error.log",
+  "output_directory": "runs/bayesian-controller-pilot-v2",
+  "status": "Observed live; complete parsed trial records identify finished per-trial evaluations for archive selection, final comparison not yet available.",
+  "scope": "Existing eight-control and sixteen-control Ipopt searches continue separately. No restarted physics process due to observation timeout; v2 fixes the baseline telemetry-only comparison."
+}

@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "unchanged": [
+    "motion",
+    "trajectory",
+    "static_feedforward",
+    "pause_windows_s",
+    "initial_coordinates"
+  ],
+  "force_templates_preserved": true,
+  "dynamic_and_odd_feedforward_changed": true,
+  "failed_physical_audits_preserved": true,
+  "default_compiler_byte_identical": true,
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/return-x25-reference.result.json",
+      "sha256": "f3f6d9146414658e0e183a9925be0cfd023c48b10f99af34d0ec8ebd2d87bdca"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm-reference.result.json",
+      "sha256": "1e91c3d6f41bfc69e177cc2498cfde4a50dfb04b2f0f1eb6a1a38100c2469625"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm-reference.recipe.json",
+      "sha256": "8a672208fa1db006e9a45188d3043000e4df4a07099644d2dd98ad018e18054f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-seed-parent-recompiled.result.json",
+      "sha256": "d064d6818ab218db2fd3624b00a32058556a12484e2c3d3e63a5784d478f536c"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/xhip-lift-reference.result.json",
+      "sha256": "d064d6818ab218db2fd3624b00a32058556a12484e2c3d3e63a5784d478f536c"
+    }
+  ],
+  "scope": "Reference compilation behavior checks only; no detailed runtime force tracking or gait qualification."
+}

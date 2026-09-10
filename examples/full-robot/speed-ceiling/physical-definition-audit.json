@@ -1,0 +1,358 @@
+{
+  "passed": true,
+  "scope": "Controller changes and explicit CAD-derived collision refinement only. No actuator authority, gravity, friction or injected physical load increase.",
+  "rows": [
+    {
+      "name": "hip0-v100-lift12-gain0.5",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip0-v100-lift12-gain1",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip0-v100-lift16-gain0.5",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip0-v100-lift16-gain1",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip0-v100-lift20-gain0.5",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip0-v100-lift20-gain1",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip0-v100-lift8-gain1",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "return24-lift12-v100",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "return28-lift12-v100",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "return28-lift12-v125",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "foot40-lift8-v100",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "foot40-lift12-v100",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "foot40-return28-lift12-v125",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip30-refined-v125-lift16",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip45-refined-v100-lift12",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip45-refined-v125-lift16",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip0-v100-lift12-gain0.5-load0.5",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "hip0-v100-lift12-gain0.5-load1",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "return28-lift12-v125-load0.5",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "return28-lift12-v125-load1",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "foot40-lift12-v100-load0.5",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "foot40-lift12-v100-load1",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-stroke-cadence-80",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-stroke-cadence-90",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-stroke-cadence-100",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-stroke-cadence-110",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-stroke-cadence-125",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-stroke-cadence-150",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-stroke-cadence-95",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-rear10-v100",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-rear12-v100",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-frontrear10-v100",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "human-5ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "human-1p25ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "human-0p625ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "sustained-5ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "dropout-5ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "v95-human-0p625ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-rear10-v100-human-fine",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-rear12-v100-human-fine",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "short-frontrear10-v100-human-fine",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "sampled-gain0-lookahead0ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "sampled-gain0.5-lookahead10ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    },
+    {
+      "name": "sampled-gain0-lookahead10ms",
+      "recognized_cad_model": true,
+      "unchanged_effective_actuators": true,
+      "unchanged_world_loads": true,
+      "unchanged_generalized_loads": true,
+      "reference_feedback_disabled": true
+    }
+  ]
+}

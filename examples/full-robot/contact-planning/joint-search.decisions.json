@@ -1,0 +1,628 @@
+[
+  {
+    "decision": {
+      "kind": "period"
+    },
+    "value": 0.35795746887689117,
+    "bound": {
+      "lower": 0.25,
+      "upper": 0.8
+    }
+  },
+  {
+    "decision": {
+      "kind": "displacement",
+      "axis": 0
+    },
+    "value": 0.07027274784602547,
+    "bound": {
+      "lower": 0.02,
+      "upper": 0.09
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_stance",
+      "foot": 0
+    },
+    "value": 0.4859214626798313,
+    "bound": {
+      "lower": 0.3,
+      "upper": 0.8
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_center",
+      "foot": 0,
+      "axis": 0
+    },
+    "value": -0.001924776129122046,
+    "bound": {
+      "lower": -0.024762999954528166,
+      "upper": 0.015237000045471835
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_center",
+      "foot": 0,
+      "axis": 1
+    },
+    "value": -0.317160439955405,
+    "bound": {
+      "lower": -0.3365558363141676,
+      "upper": -0.29655583631416754
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 0,
+      "axis": 0
+    },
+    "value": 0.0008267585235800685,
+    "bound": {
+      "lower": -0.02,
+      "upper": 0.02
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 0,
+      "axis": 1
+    },
+    "value": -0.000018198785823028696,
+    "bound": {
+      "lower": -0.02,
+      "upper": 0.02
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 0,
+      "axis": 2
+    },
+    "value": 0.008043673006203927,
+    "bound": {
+      "lower": 0.003,
+      "upper": 0.025
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_phase",
+      "foot": 1
+    },
+    "value": 0.46728129285382153,
+    "bound": {
+      "lower": 0,
+      "upper": 0.999
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_stance",
+      "foot": 1
+    },
+    "value": 0.47335580495148255,
+    "bound": {
+      "lower": 0.3,
+      "upper": 0.8
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_center",
+      "foot": 1,
+      "axis": 0
+    },
+    "value": 0.3317482214841511,
+    "bound": {
+      "lower": 0.31253455387942186,
+      "upper": 0.3525345538794219
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_center",
+      "foot": 1,
+      "axis": 1
+    },
+    "value": -0.00006203616183282634,
+    "bound": {
+      "lower": -0.019999999989994025,
+      "upper": 0.020000000010005976
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 1,
+      "axis": 0
+    },
+    "value": 0.008821031048215733,
+    "bound": {
+      "lower": -0.02,
+      "upper": 0.02
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 1,
+      "axis": 1
+    },
+    "value": 0.00031946784765296207,
+    "bound": {
+      "lower": -0.02,
+      "upper": 0.02
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 1,
+      "axis": 2
+    },
+    "value": 0.007085975396992376,
+    "bound": {
+      "lower": 0.003,
+      "upper": 0.025
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_phase",
+      "foot": 2
+    },
+    "value": 0,
+    "bound": {
+      "lower": 0,
+      "upper": 0.999
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_stance",
+      "foot": 2
+    },
+    "value": 0.49422518020482764,
+    "bound": {
+      "lower": 0.3,
+      "upper": 0.8
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_center",
+      "foot": 2,
+      "axis": 0
+    },
+    "value": -0.002136355710510237,
+    "bound": {
+      "lower": -0.024762000045099382,
+      "upper": 0.015237999954900617
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_center",
+      "foot": 2,
+      "axis": 1
+    },
+    "value": 0.31714027335364425,
+    "bound": {
+      "lower": 0.29655583631902543,
+      "upper": 0.33655583631902547
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 2,
+      "axis": 0
+    },
+    "value": -0.0008873522038995163,
+    "bound": {
+      "lower": -0.02,
+      "upper": 0.02
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 2,
+      "axis": 1
+    },
+    "value": 0.00003341085192019172,
+    "bound": {
+      "lower": -0.02,
+      "upper": 0.02
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 2,
+      "axis": 2
+    },
+    "value": 0.007955447714929358,
+    "bound": {
+      "lower": 0.003,
+      "upper": 0.025
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_phase",
+      "foot": 3
+    },
+    "value": 0.45946281196917177,
+    "bound": {
+      "lower": 0,
+      "upper": 0.999
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_stance",
+      "foot": 3
+    },
+    "value": 0.5062371323569114,
+    "bound": {
+      "lower": 0.3,
+      "upper": 0.8
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_center",
+      "foot": 3,
+      "axis": 0
+    },
+    "value": -0.31561445986402803,
+    "bound": {
+      "lower": -0.3413183194930321,
+      "upper": -0.30131831949303206
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_center",
+      "foot": 3,
+      "axis": 1
+    },
+    "value": 0.00008701320545311669,
+    "bound": {
+      "lower": -0.020000000028445743,
+      "upper": 0.019999999971554258
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 3,
+      "axis": 0
+    },
+    "value": -0.0005446887489855522,
+    "bound": {
+      "lower": -0.02,
+      "upper": 0.02
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 3,
+      "axis": 1
+    },
+    "value": 0.00027650478598786193,
+    "bound": {
+      "lower": -0.02,
+      "upper": 0.02
+    }
+  },
+  {
+    "decision": {
+      "kind": "foot_swing",
+      "foot": 3,
+      "axis": 2
+    },
+    "value": 0.008938418377451313,
+    "bound": {
+      "lower": 0.003,
+      "upper": 0.025
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 0,
+      "channel": 0
+    },
+    "value": -0.0014180455336084748,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 0,
+      "channel": 1
+    },
+    "value": 0.0002688048318829697,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 0,
+      "channel": 2
+    },
+    "value": -0.0004537676887327313,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 0,
+      "channel": 3
+    },
+    "value": -0.000021024415280485043,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 0,
+      "channel": 4
+    },
+    "value": 0.013877001420379134,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 0,
+      "channel": 5
+    },
+    "value": 0.0007416547161874371,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 1,
+      "channel": 0
+    },
+    "value": -0.0031170019899098185,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 1,
+      "channel": 1
+    },
+    "value": 0.000013608076712044725,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 1,
+      "channel": 2
+    },
+    "value": 0.0007541407342958363,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 1,
+      "channel": 3
+    },
+    "value": 0.00016052501346466852,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 1,
+      "channel": 4
+    },
+    "value": -0.008511006204658167,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 1,
+      "channel": 5
+    },
+    "value": -0.000038012549734206535,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 2,
+      "channel": 0
+    },
+    "value": -0.0038117379322253273,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 2,
+      "channel": 1
+    },
+    "value": -0.00023868363349910382,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 2,
+      "channel": 2
+    },
+    "value": 0.00005692241191129592,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 2,
+      "channel": 3
+    },
+    "value": 0.0008798452427208198,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 2,
+      "channel": 4
+    },
+    "value": -0.013365768131834224,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 2,
+      "channel": 5
+    },
+    "value": 0.0003614194717589808,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 3,
+      "channel": 0
+    },
+    "value": 0.002507238586963497,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 3,
+      "channel": 1
+    },
+    "value": -0.00004503235545557337,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 3,
+      "channel": 2
+    },
+    "value": -0.00008209805367629525,
+    "bound": {
+      "lower": -0.015,
+      "upper": 0.015
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 3,
+      "channel": 3
+    },
+    "value": -0.0001864593948287252,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 3,
+      "channel": 4
+    },
+    "value": 0.01121808674064187,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  },
+  {
+    "decision": {
+      "kind": "body_control",
+      "control": 3,
+      "channel": 5
+    },
+    "value": -0.0017244769159382167,
+    "bound": {
+      "lower": -0.1,
+      "upper": 0.1
+    }
+  }
+]

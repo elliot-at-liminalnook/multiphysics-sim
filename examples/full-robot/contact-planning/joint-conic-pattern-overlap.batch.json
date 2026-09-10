@@ -1,0 +1,767 @@
+{
+  "robot": {
+    "acceleration_tolerance_m_s2": 0.000001,
+    "actuators": {
+      "joint.+X | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+X | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+X | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.+Y | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-X | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Foot servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Hip servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      },
+      "joint.-Y | Worm servo output": {
+        "damping": 0.6742555873943625,
+        "no_load_speed": 5.5115660589294615,
+        "stall_torque": 2.941995,
+        "stiffness": 33.71277936971813
+      }
+    },
+    "additional_clocks": [
+      {
+        "phase_acceleration_per_s": 0,
+        "phase_rate": -1
+      }
+    ],
+    "additional_phases": [],
+    "direction_world": [
+      0.7071067811865476,
+      0.7071067811865475,
+      0
+    ],
+    "embedding": {
+      "absolute_rank_tolerance": 1e-12,
+      "analytic_mechanism_positions": true,
+      "angle_scale_rad": 1,
+      "block_dependent_factorization": true,
+      "dependent_solve": "pivoted_qr",
+      "direct_closure_jacobian": true,
+      "length_scale_m": 0.1,
+      "max_iterations": 30,
+      "max_scaled_correction": 0.25,
+      "relative_rank_tolerance": 1e-10,
+      "scaled_closure_tolerance": 1e-8,
+      "scaled_position_tolerance": 1e-11
+    },
+    "expected_cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "extend_motoring_penalty_past_no_load": true,
+    "force_allocation": {
+      "gradient_tolerance_n": 0.000001,
+      "maximum_iterations": 20000,
+      "regularization": 0.0001
+    },
+    "force_tolerance_n": 0.05,
+    "include_body_knots": true,
+    "independent_coordinates": [
+      "joint.-Y | Hip servo output",
+      "joint.-Y | Worm servo output",
+      "joint.-Y | Foot servo output",
+      "joint.+X | Hip servo output",
+      "joint.+X | Worm servo output",
+      "joint.+X | Foot servo output",
+      "joint.+Y | Hip servo output",
+      "joint.+Y | Worm servo output",
+      "joint.+Y | Foot servo output",
+      "joint.-X | Hip servo output",
+      "joint.-X | Worm servo output",
+      "joint.-X | Foot servo output"
+    ],
+    "initial_base_translation_m": [
+      0,
+      0,
+      -0.06906212053309974
+    ],
+    "initial_coordinates": [
+      0,
+      -0.00008346418847292681,
+      -1.0471975511965976,
+      0,
+      -0.27612813350949833,
+      -1.0471975511965976,
+      0,
+      -0.00008346425388696227,
+      -1.0471975511965976,
+      0.17453292519943295,
+      -0.00007650604473797781,
+      -1.0471975511965976
+    ],
+    "joint_search_bounds": [
+      {
+        "lower": -1.0471975511965976,
+        "max_step": 0.05,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773421799675,
+        "max_step": 0.1,
+        "upper": 2.6179104138030214
+      },
+      {
+        "lower": -2.5,
+        "max_step": 0.1,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "max_step": 0.05,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.894122011500993,
+        "max_step": 0.1,
+        "upper": 2.341865744481996
+      },
+      {
+        "lower": -2.5,
+        "max_step": 0.1,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "max_step": 0.05,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180773422453814,
+        "max_step": 0.1,
+        "upper": 2.6179104137376075
+      },
+      {
+        "lower": -2.5,
+        "max_step": 0.1,
+        "upper": -0.02
+      },
+      {
+        "lower": -1.0471975511965976,
+        "max_step": 0.05,
+        "upper": 1.0471975511965976
+      },
+      {
+        "lower": -2.6180703840362325,
+        "max_step": 0.1,
+        "upper": 2.6179173719467563
+      },
+      {
+        "lower": -2.5,
+        "max_step": 0.1,
+        "upper": -0.02
+      }
+    ],
+    "moment_length_scale_m": 0.35,
+    "moment_tolerance_nm": 0.02,
+    "penetration_tolerance_m": 0.0001,
+    "phase_acceleration_per_s": 0,
+    "phase_rate": 1,
+    "placement": {
+      "damping_m": 0.000001,
+      "max_iterations": 40,
+      "tolerance_m": 1e-9
+    },
+    "sampling": "contact_intervals",
+    "speed_residual_scale_m_s": 0.05,
+    "target_speed_m_s": 0.3,
+    "torque_tolerance_nm": 0.01,
+    "uniform_samples": 16,
+    "velocity_tolerance_m_s": 1e-7
+  },
+  "starts": [
+    {
+      "id": "mean-d0.8-p0123",
+      "candidate": {
+        "force_templates": [
+          [
+            {
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "time_s": 0,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 0.5,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 1,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            },
+            {
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "time_s": 0,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 0.5,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 1,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            },
+            {
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "time_s": 0,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 0.5,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 1,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            },
+            {
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "time_s": 0,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 0.5,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 1,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "time_s": 0,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 0.5,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 1,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            },
+            {
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "time_s": 0,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 0.5,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 1,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            },
+            {
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "time_s": 0,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 0.5,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 1,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            },
+            {
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "time_s": 0,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 0.5,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "time_s": 1,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ]
+                }
+              ]
+            }
+          ]
+        ],
+        "force_timing": null,
+        "motion": {
+          "body": {
+            "interpolation": "periodic_cubic_b_spline",
+            "keyframes": [
+              {
+                "time_s": 0,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              },
+              {
+                "time_s": 0.04951093630846018,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              },
+              {
+                "time_s": 0.09902187261692036,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              },
+              {
+                "time_s": 0.14853280892538054,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              },
+              {
+                "time_s": 0.19804374523384072,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              },
+              {
+                "time_s": 0.2475546815423009,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              },
+              {
+                "time_s": 0.2970656178507611,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              },
+              {
+                "time_s": 0.3465765541592213,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              },
+              {
+                "time_s": 0.39608749046768144,
+                "values": [
+                  -0.003401448222883295,
+                  0.0003888699963745045,
+                  0.0014009500241714285,
+                  -0.005354804825677601,
+                  -0.04355196182827549,
+                  -0.02522320094869459
+                ]
+              }
+            ]
+          },
+          "displacement_world_m": [
+            0.059294995900457136,
+            0.05929499590045712,
+            0
+          ],
+          "feet": [
+            {
+              "center_world_m": [
+                0.006867059714388571,
+                -0.3220619630438515,
+                -0.4410181228863441
+              ],
+              "phase_offset": 0,
+              "stance_fraction": 0.8,
+              "swing_offset_world_m": [
+                0.0036352663602615166,
+                -0.008475348049323726,
+                0.008604443870237429
+              ]
+            },
+            {
+              "center_world_m": [
+                0.3325862718064657,
+                -0.001379932656932252,
+                -0.4410181228863441
+              ],
+              "phase_offset": 0.2505,
+              "stance_fraction": 0.8,
+              "swing_offset_world_m": [
+                -0.005398552662848886,
+                0.0031305144441884578,
+                0.006451886202428511
+              ]
+            },
+            {
+              "center_world_m": [
+                -0.011099694046041851,
+                0.3134380550083265,
+                -0.4410181228863441
+              ],
+              "phase_offset": 0.501,
+              "stance_fraction": 0.8,
+              "swing_offset_world_m": [
+                -0.0027255098044493588,
+                0.007191469897327173,
+                0.011295993727846152
+              ]
+            },
+            {
+              "center_world_m": [
+                -0.29795599691543134,
+                -0.03209596683963781,
+                -0.4410181228863441
+              ],
+              "phase_offset": 0.7515,
+              "return_ramp_fraction": 0.25,
+              "stance_fraction": 0.8,
+              "swing_offset_world_m": [
+                -0.005082504029640307,
+                0.007874774531011645,
+                0.005858668511462838
+              ]
+            }
+          ],
+          "period_s": 0.39608749046768144
+        }
+      },
+      "align_and_bind_forces": true
+    }
+  ],
+  "conic": {
+    "solver": {
+      "maximum_iterations": 200,
+      "tolerance": 1e-9
+    },
+    "force_bounds": [
+      [
+        [
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": 0,
+            "upper": 39.00690539993103
+          }
+        ],
+        [
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": 0,
+            "upper": 39.00690539993103
+          }
+        ],
+        [
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": 0,
+            "upper": 39.00690539993103
+          }
+        ],
+        [
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": 0,
+            "upper": 39.00690539993103
+          }
+        ]
+      ],
+      [
+        [
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": 0,
+            "upper": 39.00690539993103
+          }
+        ],
+        [
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": 0,
+            "upper": 39.00690539993103
+          }
+        ],
+        [
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": 0,
+            "upper": 39.00690539993103
+          }
+        ],
+        [
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": -39.00690539993103,
+            "upper": 39.00690539993103
+          },
+          {
+            "lower": 0,
+            "upper": 39.00690539993103
+          }
+        ]
+      ]
+    ]
+  }
+}

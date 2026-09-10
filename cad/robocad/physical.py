@@ -237,7 +237,7 @@ def solid_collision_meshes(kernel, body, com_m):
 
 
 def signed_distance_grid(meshes: list[tuple[np.ndarray, np.ndarray]], cell: float, pad: float = 2.0,
-                         *, solid_meshes=None) -> dict:
+                         *, solid_meshes=None, bounds_m=None, maximum_nodes=None) -> dict:
     """Distance to member surfaces, signed by membership in their solid union.
 
     Triangle AABB queries retain every possible nearest face. Triangle centroids
@@ -245,13 +245,31 @@ def signed_distance_grid(meshes: list[tuple[np.ndarray, np.ndarray]], cell: floa
     Interior magnitudes in overlapping members are not exact union distances.
     CAD callers supply separate solid_meshes for sign classification. With None,
     the caller's member meshes define interiors (legacy mesh-only derivation).
+    Explicit bounds_m supplies a local query box in the mesh frame, without
+    automatic padding. It requires a node budget checked before allocation.
     """
     import trimesh
 
+    if not np.isfinite(cell) or cell <= 0:
+        raise ValueError('distance grid requires positive finite cell size')
     allv = np.vstack([v for v, _ in meshes])
-    lo = allv.min(axis=0) - pad * cell
-    hi = allv.max(axis=0) + pad * cell
-    dims = np.maximum(np.ceil((hi - lo) / cell).astype(int) + 1, 2)
+    if bounds_m is None:
+        lo = allv.min(axis=0) - pad * cell
+        hi = allv.max(axis=0) + pad * cell
+    else:
+        bounds = np.asarray(bounds_m, dtype=float)
+        if bounds.shape != (2, 3) or not np.all(np.isfinite(bounds)) or np.any(bounds[1] <= bounds[0]):
+            raise ValueError('local distance grid requires ordered finite 3D bounds')
+        if not isinstance(maximum_nodes, int) or maximum_nodes <= 0:
+            raise ValueError('local distance grid requires a positive integer node budget')
+        lo, hi = bounds
+    intervals = np.ceil((hi - lo) / cell)
+    if not np.all(np.isfinite(intervals)) or np.any(intervals >= np.iinfo(np.intp).max):
+        raise ValueError('distance grid dimensions overflow')
+    dims = np.maximum(intervals.astype(int) + 1, 2)
+    node_count = math.prod(int(d) for d in dims)
+    if maximum_nodes is not None and node_count > maximum_nodes:
+        raise ValueError(f'distance grid node budget exceeded: {node_count} > {maximum_nodes}')
     xs, ys, zs = (lo[i] + cell * np.arange(dims[i]) for i in range(3))
     gx, gy, gz = np.meshgrid(xs, ys, zs, indexing="ij")
     pts = np.stack([gx.ravel(), gy.ravel(), gz.ravel()], axis=1)

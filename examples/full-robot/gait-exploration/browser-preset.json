@@ -1,0 +1,16 @@
+{
+  "id": "experimental-fast-paired-gait",
+  "label": "Experimental · Fast paired gait · 25 mm/s",
+  "mode": "embedded",
+  "path": "data/experimental-fast-paired-gait.json",
+  "task": "examples/full-robot/gait-exploration/live-pair.task.json",
+  "motion_commands": [
+    "command.forward_speed",
+    "command.lateral_speed",
+    "command.yaw_rate"
+  ],
+  "asset_sha256": "3b359609d6ee7e38641c0b3c73430f30bb803ea3253f4b600f95c1934042edef",
+  "description": "Command-driven opposite-leg pairs. Hold W/S for forward/reverse; combine W or S with A/D for walking turns. Stop finishes an airborne transfer. No turn-in-place or lateral motion.",
+  "readiness": "Experimental: slip and realtime latency gates remain unmet.",
+  "evidence": "20 s native steering trial: 27.1 mm/s forward, 24.9 mm/s reverse. Explicit 5 ms approximation differs by at most 1.46 mm body position from the 1.25 ms reference. Ideal joint observations; uncalibrated CAD physics. Browser measurements pending."
+}

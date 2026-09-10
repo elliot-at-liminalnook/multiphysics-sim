@@ -58,6 +58,7 @@ where
                 config,
                 workspace,
                 None,
+                true,
                 |t, _, g, _, _| {
                     Ok(CoupledForces {
                         generalized_loads: (self.loads)(t, g)?,
@@ -99,11 +100,14 @@ where
             segments,
         })
     }
-    fn guards(&self, _: f64, _: &State) -> Result<Vec<f64>, String> {
-        Ok(vec![])
+    fn guards(&self, t: f64, state: &State) -> Result<Vec<f64>, String> {
+        Ok(self.map.art.imus.iter().map(|imu| state.mechanics.states[imu.state + 15] - t).collect())
     }
-    fn jump(&mut self, _: usize, _: f64, _: &mut State) -> Result<(), String> {
-        Err("pure mechanical advancement has no scheduled jumps".into())
+    fn scheduled(&self, _: f64, state: &State) -> Result<Vec<(usize, f64)>, String> {
+        Ok(self.map.art.imus.iter().enumerate().map(|(i, imu)| (i, state.mechanics.states[imu.state + 15])).collect())
+    }
+    fn jump(&mut self, index: usize, _: f64, state: &mut State) -> Result<(), String> {
+        self.map.art.sample_imu_event(index, &mut state.mechanics)
     }
 }
 impl RigidEmbedding<'_> {
@@ -205,13 +209,14 @@ impl RigidEmbedding<'_> {
             segments: vec![],
         };
         let result = advance_interval(&mut stepper, &initial, time_s, step_s, refinement)?;
-        let endpoint = Rc::try_unwrap(
+        let mut endpoint = Rc::try_unwrap(
             result
                 .state
                 .endpoint
                 .ok_or("mechanical interval produced no endpoint")?,
         )
         .map_err(|_| "mechanical interval retained a temporary endpoint")?;
+        endpoint.generalized = result.state.mechanics;
         *workspace = result.state.workspace;
         Ok(EmbeddedMechanicalAdvance {
             endpoint,

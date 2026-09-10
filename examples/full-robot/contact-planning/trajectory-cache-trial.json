@@ -1,0 +1,7 @@
+{
+  "source": "runs/contact-planning/diagonal-seed-screen",
+  "prefix": "runs/contact-planning/diagonal-seed-cached-screen",
+  "policy": "examples/full-robot/contact-planning/contact-planned.rhai",
+  "policy_sha256": "a9f5483d742861aa7e39110ed14593ec094cde64bd5ae3d9fa37e2475654c4ee",
+  "scope": "Only policy trajectory access changes to immutable cached shared Rust objects. All source CAD, compiled motor curves, feedforward coefficients, initial state, actions, physics and numerical settings remain identical. Exact capture comparison is required."
+}

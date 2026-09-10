@@ -1,0 +1,170 @@
+[
+  {
+    name: 'human-hip0-60',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.22586868510340277,
+    stop_drift_after_transfer_m: 0.0000017922026753233504,
+    stop_travel_from_release_m: 0.008967531168868278,
+    maximum_slip_ratio: 0.06456910680478194,
+    native: {
+      wall_s: 37.73922977,
+      simulation_per_wall: 0.52995252213384,
+      p95_transition_s: 0.077734651
+    }
+  },
+  {
+    name: 'human-hip0-65',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.22912529248642272,
+    stop_drift_after_transfer_m: 0.00003183280736468355,
+    stop_travel_from_release_m: 0.009128942784454915,
+    maximum_slip_ratio: 0.07006626091227144,
+    native: {
+      wall_s: 40.232550073,
+      simulation_per_wall: 0.4971099262589862,
+      p95_transition_s: 0.086586001
+    }
+  },
+  {
+    name: 'human-feedforward-65',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.2227498032107158,
+    stop_drift_after_transfer_m: 0.00011925710562132123,
+    stop_travel_from_release_m: 0.008769254914061787,
+    maximum_slip_ratio: 0.05981618669405992,
+    native: {
+      wall_s: 40.452059666,
+      simulation_per_wall: 0.49441240236303774,
+      p95_transition_s: 0.083171125
+    }
+  },
+  {
+    name: 'human-braked-65',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.2227498032107158,
+    stop_drift_after_transfer_m: 0.0002676240019263996,
+    stop_travel_from_release_m: 0.017363939294398598,
+    maximum_slip_ratio: 0.04773953964729642,
+    native: {
+      wall_s: 39.968557772,
+      simulation_per_wall: 0.5003933370348183,
+      p95_transition_s: 0.079829796
+    }
+  },
+  {
+    name: 'braked-5ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.2191356927536444,
+    stop_drift_after_transfer_m: 0.00028926713267810375,
+    stop_travel_from_release_m: 0.017303535727883717,
+    maximum_slip_ratio: 0.043592338177524226,
+    native: {
+      wall_s: 19.300990247,
+      simulation_per_wall: 1.0362162637281602,
+      p95_transition_s: 0.052859039
+    }
+  },
+  {
+    name: 'braked-5ms-loose',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.21916068163665195,
+    stop_drift_after_transfer_m: 0.00028926727485886235,
+    stop_travel_from_release_m: 0.017303535548289926,
+    maximum_slip_ratio: 0.04359224295696308,
+    native: {
+      wall_s: 18.791633738,
+      simulation_per_wall: 1.0643034170869596,
+      p95_transition_s: 0.052528609
+    }
+  },
+  {
+    name: 'braked-10ms-loose',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.21693835571839695,
+    stop_drift_after_transfer_m: 0.0003161347135489932,
+    stop_travel_from_release_m: 0.017190791731942972,
+    maximum_slip_ratio: 0.03748233597698256,
+    native: {
+      wall_s: 12.374306968,
+      simulation_per_wall: 1.6162521304603212,
+      p95_transition_s: 0.034391414
+    }
+  },
+  {
+    name: 'braked-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.22336039129194243,
+    stop_drift_after_transfer_m: 0.0002674191553680792,
+    stop_travel_from_release_m: 0.017316368697543046,
+    maximum_slip_ratio: 0.04925160055903872,
+    native: {
+      wall_s: 56.983219306,
+      simulation_per_wall: 0.3509805209951365,
+      p95_transition_s: 0.096591588
+    }
+  },
+  {
+    name: 'braked-third-period',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.21806842710292104,
+    stop_drift_after_transfer_m: 0.00030374000358331674,
+    stop_travel_from_release_m: 0.01720536312075535,
+    maximum_slip_ratio: 0.04108806900859836,
+    native: {
+      wall_s: 15.671939599,
+      simulation_per_wall: 1.27616622522436,
+      p95_transition_s: 0.048618565
+    }
+  },
+  {
+    name: 'braked-cache3',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.21913569295164978,
+    stop_drift_after_transfer_m: 0.000289267120791529,
+    stop_travel_from_release_m: 0.01730353567224464,
+    maximum_slip_ratio: 0.04359234209310519,
+    native: {
+      wall_s: 32.081380181,
+      simulation_per_wall: 0.6234145752820471,
+      p95_transition_s: 0.058665887
+    }
+  },
+  {
+    name: 'braked-fresh-sample',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    turn_rad: 0.2191356927536444,
+    stop_drift_after_transfer_m: 0.00028926713267810375,
+    stop_travel_from_release_m: 0.017303535727883717,
+    maximum_slip_ratio: 0.043592338177524226,
+    native: {
+      wall_s: 19.890633584,
+      simulation_per_wall: 1.0054983877480894,
+      p95_transition_s: 0.055563542
+    }
+  },
+  {
+    name: 'braked-adaptive-10ms',
+    completed: false,
+    windows: [ [Object], [Object] ],
+    turn_rad: null,
+    stop_drift_after_transfer_m: null,
+    stop_travel_from_release_m: null,
+    maximum_slip_ratio: 0.02159833615253266,
+    native: {
+      wall_s: 10.280761037,
+      simulation_per_wall: 0.5894505259085715,
+      p95_transition_s: 0.141551998
+    }
+  }
+]

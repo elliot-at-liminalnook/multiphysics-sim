@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "frames": 401,
+  "compared_fields": [
+    "poses",
+    "joint_positions",
+    "joint_velocities",
+    "contacts",
+    "contact_history",
+    "motor_states",
+    "motor_readings",
+    "servo_targets_rad",
+    "policy",
+    "policy_inputs",
+    "completed_steps",
+    "done",
+    "error",
+    "time_s"
+  ],
+  "uncached_wall_s": 39.316401352,
+  "cached_wall_s": 18.373212146,
+  "observed_ratio": 2.1398763068525013,
+  "sources": [
+    {
+      "path": "runs/contact-planning/diagonal-seed-screen.native.json",
+      "sha256": "08ee071abc65f17c352e69f92f818aed06194117fe82f72f29a9faf1013bcfd6"
+    },
+    {
+      "path": "runs/contact-planning/diagonal-seed-cached-screen.native.json",
+      "sha256": "9cb58e86b863bc95d3334ca41846aaa088770f681b193047007a7dd4d5d59636"
+    }
+  ],
+  "scope": "Exact complete eight-second native physical and policy frame equality after caching immutable reference trajectories. Timings are single runs with concurrent optimization and some build activity, not isolated realtime acceptance."
+}

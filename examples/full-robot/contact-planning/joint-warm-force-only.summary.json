@@ -1,0 +1,956 @@
+{
+  "source": {
+    "path": "examples/full-robot/contact-planning/joint-warm-force-only.result.json",
+    "bytes": 3126602,
+    "sha256": "cb97c03f317943b99d9899dba33803912c50bed9ac4c2a7c5b747e14630cd095"
+  },
+  "initial": {
+    "speed_m_s": 0.024999999999999998,
+    "force_error_n": 0.07916036393500692,
+    "moment_error_nm": 0.02406937384081742,
+    "torque_margin_nm": 0.685215966339052,
+    "cone_violation_n": 0.00010787329235384391,
+    "maximum_inequality": 0.5832072787001383,
+    "maximum_interlink_penetration_m": 0,
+    "maximum_floor_penetration_m": 0.00010107442218271201,
+    "sampled_feasible": false
+  },
+  "final": {
+    "speed_m_s": 0.024999999999999998,
+    "force_error_n": 0.11583907778064817,
+    "moment_error_nm": 0.028427791957161025,
+    "torque_margin_nm": 0.6904730738503626,
+    "cone_violation_n": 0.2968644129111295,
+    "maximum_inequality": 5.9372882582225905,
+    "maximum_interlink_penetration_m": 0,
+    "maximum_floor_penetration_m": 0.00010107442218271201,
+    "sampled_feasible": false
+  },
+  "returned_candidate_error": null,
+  "best_sampled_feasible_found": false,
+  "model_evaluations": 276,
+  "model_budget_exhausted": false,
+  "native": {
+    "status": -1,
+    "maximum_constraint_or_bound_violation": 5.9372882582225905,
+    "value_evaluations": 172,
+    "derivative_evaluations": 102,
+    "rejected_callbacks": 0,
+    "budget_exhausted": false,
+    "callback_panicked": false,
+    "cancelled": false,
+    "last_callback_error": null,
+    "iterations": [
+      {
+        "restoration": false,
+        "iteration": 0,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 0.5832072887001384,
+        "dual_infeasibility": 2.6681648071834867,
+        "barrier_parameter": 1,
+        "step_norm": 0
+      },
+      {
+        "restoration": true,
+        "iteration": 1,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 0.5832072887001384,
+        "dual_infeasibility": 999.000499999875,
+        "barrier_parameter": 0.5832072887001384,
+        "step_norm": 0
+      },
+      {
+        "restoration": true,
+        "iteration": 2,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 0.7570134118996438,
+        "dual_infeasibility": 994.4689728075746,
+        "barrier_parameter": 0.000038512267488658834,
+        "step_norm": 45.51186508483459
+      },
+      {
+        "restoration": true,
+        "iteration": 3,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 0.7741199998199615,
+        "dual_infeasibility": 993.9762163466613,
+        "barrier_parameter": 0.00003850098742108445,
+        "step_norm": 39.387246957050834
+      },
+      {
+        "restoration": true,
+        "iteration": 4,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 0.7774021474181918,
+        "dual_infeasibility": 514869.90358496865,
+        "barrier_parameter": 8.18655249688338,
+        "step_norm": 438.4139876960633
+      },
+      {
+        "restoration": true,
+        "iteration": 5,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 0.7777783353201354,
+        "dual_infeasibility": 514822.191819485,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 12992.240745526178
+      },
+      {
+        "restoration": true,
+        "iteration": 6,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 0.7901428187882656,
+        "dual_infeasibility": 513761.8412096038,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 443.77856606982147
+      },
+      {
+        "restoration": true,
+        "iteration": 7,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 44.47643095624912,
+        "dual_infeasibility": 525810.757819796,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 128.27000406736033
+      },
+      {
+        "restoration": true,
+        "iteration": 8,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 44.37622564525802,
+        "dual_infeasibility": 507219.11967354186,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 99.931417887696
+      },
+      {
+        "restoration": true,
+        "iteration": 9,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 60.6964697752839,
+        "dual_infeasibility": 514315.9490414948,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 93.05819367529281
+      },
+      {
+        "restoration": true,
+        "iteration": 10,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 62.89054933557142,
+        "dual_infeasibility": 200238.81046830537,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 75.50933590275234
+      },
+      {
+        "restoration": true,
+        "iteration": 11,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 57.151510720580916,
+        "dual_infeasibility": 378668.00361264,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.08541423674613
+      },
+      {
+        "restoration": true,
+        "iteration": 12,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 61.33210160975693,
+        "dual_infeasibility": 27118.36543505536,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.6342639401899
+      },
+      {
+        "restoration": true,
+        "iteration": 13,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 121.69045258115163,
+        "dual_infeasibility": 35492.74895290607,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 66.04022485123467
+      },
+      {
+        "restoration": true,
+        "iteration": 14,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 98.41755252281564,
+        "dual_infeasibility": 22280.607271655797,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 132.35053131605997
+      },
+      {
+        "restoration": true,
+        "iteration": 15,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 72.41557724131502,
+        "dual_infeasibility": 17127.056139271153,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 78.87032829424132
+      },
+      {
+        "restoration": true,
+        "iteration": 16,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 69.03628834850883,
+        "dual_infeasibility": 15197.445704887845,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 66.88236462560631
+      },
+      {
+        "restoration": true,
+        "iteration": 17,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 56.142442475667906,
+        "dual_infeasibility": 30237.895162739278,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 61.442942915700264
+      },
+      {
+        "restoration": true,
+        "iteration": 18,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 59.5168268171052,
+        "dual_infeasibility": 24119.873368709937,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 49.559909151388744
+      },
+      {
+        "restoration": true,
+        "iteration": 19,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 22.329024912311752,
+        "dual_infeasibility": 36694.39436162807,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 62.80941776253573
+      },
+      {
+        "restoration": true,
+        "iteration": 20,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 56.159752199974605,
+        "dual_infeasibility": 39778.44105927171,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 26.786761657104766
+      },
+      {
+        "restoration": true,
+        "iteration": 21,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 62.08900441179145,
+        "dual_infeasibility": 56141.3153872593,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.017016414822876
+      },
+      {
+        "restoration": true,
+        "iteration": 22,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 58.079087038066746,
+        "dual_infeasibility": 54114.255695162006,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.97668401799109
+      },
+      {
+        "restoration": true,
+        "iteration": 23,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 60.631344847665076,
+        "dual_infeasibility": 88496.49139102055,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.35521518796072
+      },
+      {
+        "restoration": true,
+        "iteration": 24,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 58.87604618059004,
+        "dual_infeasibility": 82596.51262032131,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.7536947427687
+      },
+      {
+        "restoration": true,
+        "iteration": 25,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 32.64089530998223,
+        "dual_infeasibility": 113726.10693245025,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.301699148900596
+      },
+      {
+        "restoration": true,
+        "iteration": 26,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 27.80647491130611,
+        "dual_infeasibility": 154704.65811215952,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 32.632141053438424
+      },
+      {
+        "restoration": true,
+        "iteration": 27,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 10.927546470961488,
+        "dual_infeasibility": 176200.63023063532,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 27.916465049053176
+      },
+      {
+        "restoration": true,
+        "iteration": 28,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 1.3963874145434685,
+        "dual_infeasibility": 374279.61358196783,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 11.650092001317299
+      },
+      {
+        "restoration": true,
+        "iteration": 29,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 1.3482942747021749,
+        "dual_infeasibility": 318578.97547901276,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 1.140574180301262
+      },
+      {
+        "restoration": true,
+        "iteration": 30,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 32.09688203417028,
+        "dual_infeasibility": 279601.6601719498,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 0.7399264093653442
+      },
+      {
+        "restoration": true,
+        "iteration": 31,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 27.872004331377525,
+        "dual_infeasibility": 242570.02850771532,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 32.074158257950195
+      },
+      {
+        "restoration": true,
+        "iteration": 32,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 27.8352305757482,
+        "dual_infeasibility": 260920.10251230805,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 27.8536171503431
+      },
+      {
+        "restoration": true,
+        "iteration": 33,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 1.3483007197014685,
+        "dual_infeasibility": 505310.2389551271,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 27.856373222925097
+      },
+      {
+        "restoration": true,
+        "iteration": 34,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 1.348290219204506,
+        "dual_infeasibility": 416263.1818371139,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 1.0730341734778106
+      },
+      {
+        "restoration": true,
+        "iteration": 35,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 1.3482923383813203,
+        "dual_infeasibility": 374700.23517743475,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 0.5990439098256762
+      },
+      {
+        "restoration": true,
+        "iteration": 36,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 1.3482924181560905,
+        "dual_infeasibility": 369224.1726905719,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 0.7972149440980414
+      },
+      {
+        "restoration": true,
+        "iteration": 37,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 31.565472777935895,
+        "dual_infeasibility": 83880.72580173775,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 1.2313810666472982
+      },
+      {
+        "restoration": true,
+        "iteration": 38,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 32.810898107302876,
+        "dual_infeasibility": 80675.1788199075,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 32.188185001908415
+      },
+      {
+        "restoration": true,
+        "iteration": 39,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 16.40545260260518,
+        "dual_infeasibility": 100390.75485857824,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 32.41473358523256
+      },
+      {
+        "restoration": true,
+        "iteration": 40,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 31.348504843521937,
+        "dual_infeasibility": 67700.74445849941,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 15.87233424607401
+      },
+      {
+        "restoration": true,
+        "iteration": 41,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 54.186387550934086,
+        "dual_infeasibility": 91683.6926677989,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 33.38370084008068
+      },
+      {
+        "restoration": true,
+        "iteration": 42,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 22.47885879241028,
+        "dual_infeasibility": 68553.16940460986,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 53.956414807173616
+      },
+      {
+        "restoration": true,
+        "iteration": 43,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 61.62553830609744,
+        "dual_infeasibility": 100616.90982002966,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 22.196364318783917
+      },
+      {
+        "restoration": true,
+        "iteration": 44,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 31.4840052919688,
+        "dual_infeasibility": 113795.81757223177,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.74899972445849
+      },
+      {
+        "restoration": true,
+        "iteration": 45,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 54.37029948395781,
+        "dual_infeasibility": 16669.054138578103,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 31.1880101817698
+      },
+      {
+        "restoration": true,
+        "iteration": 46,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 69.89958907341818,
+        "dual_infeasibility": 55442.99909771959,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 53.4680029325124
+      },
+      {
+        "restoration": true,
+        "iteration": 47,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 34.949798369718536,
+        "dual_infeasibility": 58242.00742388551,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 64.57553804204545
+      },
+      {
+        "restoration": true,
+        "iteration": 48,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 54.64187151991595,
+        "dual_infeasibility": 60995.86748313502,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 39.99578949941449
+      },
+      {
+        "restoration": true,
+        "iteration": 49,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 54.81455730916872,
+        "dual_infeasibility": 92446.5648352509,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 57.85781093738142
+      },
+      {
+        "restoration": true,
+        "iteration": 50,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 65.94926253097299,
+        "dual_infeasibility": 94171.26494503769,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 58.809032535251745
+      },
+      {
+        "restoration": true,
+        "iteration": 51,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 57.37371049545567,
+        "dual_infeasibility": 80318.8272495539,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 60.829504397755215
+      },
+      {
+        "restoration": true,
+        "iteration": 52,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 62.400034342468416,
+        "dual_infeasibility": 75495.85246065515,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.589111196714306
+      },
+      {
+        "restoration": true,
+        "iteration": 53,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 57.69273394455959,
+        "dual_infeasibility": 66216.00077809815,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.96016935741906
+      },
+      {
+        "restoration": true,
+        "iteration": 54,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 60.584260651578205,
+        "dual_infeasibility": 72094.1133460456,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.13849653574199
+      },
+      {
+        "restoration": true,
+        "iteration": 55,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 58.113111879726176,
+        "dual_infeasibility": 81148.2772736756,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.348685497637554
+      },
+      {
+        "restoration": true,
+        "iteration": 56,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 29.056552888844863,
+        "dual_infeasibility": 60589.908731557975,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.23321858065534
+      },
+      {
+        "restoration": true,
+        "iteration": 57,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 61.74163933375576,
+        "dual_infeasibility": 30468.1737825192,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 30.24055174891226
+      },
+      {
+        "restoration": true,
+        "iteration": 58,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 57.08983917853013,
+        "dual_infeasibility": 62273.477605294895,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 59.34552466260206
+      },
+      {
+        "restoration": true,
+        "iteration": 59,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 43.09686642578714,
+        "dual_infeasibility": 57858.317350995174,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 58.69894031486572
+      },
+      {
+        "restoration": true,
+        "iteration": 60,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 63.503361214434534,
+        "dual_infeasibility": 22244.403148547946,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 45.822099530255976
+      },
+      {
+        "restoration": true,
+        "iteration": 61,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 55.55515151476001,
+        "dual_infeasibility": 80592.18322842574,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 54.1003866331204
+      },
+      {
+        "restoration": true,
+        "iteration": 62,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 47.35173217830413,
+        "dual_infeasibility": 62771.08460049024,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 54.53978960287732
+      },
+      {
+        "restoration": true,
+        "iteration": 63,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 65.67061646823865,
+        "dual_infeasibility": 50996.421002473304,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 46.56755074515747
+      },
+      {
+        "restoration": true,
+        "iteration": 64,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 32.89473249592183,
+        "dual_infeasibility": 43686.18215986287,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 62.48229822461808
+      },
+      {
+        "restoration": true,
+        "iteration": 65,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 54.50963638863155,
+        "dual_infeasibility": 16744.073612632546,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 37.3734679439811
+      },
+      {
+        "restoration": true,
+        "iteration": 66,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 80.21713499189636,
+        "dual_infeasibility": 33711.398153360555,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 66.2656689608745
+      },
+      {
+        "restoration": true,
+        "iteration": 67,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 37.93779736753169,
+        "dual_infeasibility": 26122.157890920615,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 68.38888476595037
+      },
+      {
+        "restoration": true,
+        "iteration": 68,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 78.31349614484486,
+        "dual_infeasibility": 21152.59755859219,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 30.607005160238288
+      },
+      {
+        "restoration": true,
+        "iteration": 69,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 79.51921710499627,
+        "dual_infeasibility": 14261.206666270708,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 71.53718311425897
+      },
+      {
+        "restoration": true,
+        "iteration": 70,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 112.1268485556783,
+        "dual_infeasibility": 23264.66500381414,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 78.00541700944791
+      },
+      {
+        "restoration": true,
+        "iteration": 71,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 56.06342847992846,
+        "dual_infeasibility": 20680.912582366436,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 101.88395895950768
+      },
+      {
+        "restoration": true,
+        "iteration": 72,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 92.02898926942865,
+        "dual_infeasibility": 19535.7475169577,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 62.97554651743893
+      },
+      {
+        "restoration": true,
+        "iteration": 73,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 46.01449836436487,
+        "dual_infeasibility": 23108.212919278758,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 86.90963250431223
+      },
+      {
+        "restoration": true,
+        "iteration": 74,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 113.04187983214908,
+        "dual_infeasibility": 8948.494802502324,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 57.231475447041404
+      },
+      {
+        "restoration": true,
+        "iteration": 75,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 117.09171498439963,
+        "dual_infeasibility": 19511.91707866223,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 94.93651534619718
+      },
+      {
+        "restoration": true,
+        "iteration": 76,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 119.46429609604814,
+        "dual_infeasibility": 11749.69797214698,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 105.9460104524867
+      },
+      {
+        "restoration": true,
+        "iteration": 77,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 82.26537981501946,
+        "dual_infeasibility": 8873.088435088092,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 121.14455806838194
+      },
+      {
+        "restoration": true,
+        "iteration": 78,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 41.13268706993895,
+        "dual_infeasibility": 8362.216498529388,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 89.46783732284662
+      },
+      {
+        "restoration": true,
+        "iteration": 79,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 104.8935008539263,
+        "dual_infeasibility": 7433.262032260884,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 48.8455208195963
+      },
+      {
+        "restoration": true,
+        "iteration": 80,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 141.41363184174176,
+        "dual_infeasibility": 10588.737138798117,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 91.93160410173428
+      },
+      {
+        "restoration": true,
+        "iteration": 81,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 99.14061486418382,
+        "dual_infeasibility": 14195.218734349839,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 104.40266266016654
+      },
+      {
+        "restoration": true,
+        "iteration": 82,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 109.77460149955769,
+        "dual_infeasibility": 5464.820758409988,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 83.39236350995388
+      },
+      {
+        "restoration": true,
+        "iteration": 83,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 100.85697088537358,
+        "dual_infeasibility": 15149.850595548156,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 104.81999944678164
+      },
+      {
+        "restoration": true,
+        "iteration": 84,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 59.660976403579184,
+        "dual_infeasibility": 53071.91517553446,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 93.96717978307748
+      },
+      {
+        "restoration": true,
+        "iteration": 85,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 60.332948790786844,
+        "dual_infeasibility": 40032.21917558845,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 64.78480583585461
+      },
+      {
+        "restoration": true,
+        "iteration": 86,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 72.81657325574935,
+        "dual_infeasibility": 9894.903056674782,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 64.30382173297377
+      },
+      {
+        "restoration": true,
+        "iteration": 87,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 104.1818572625219,
+        "dual_infeasibility": 8518.76429874146,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 77.09840410797773
+      },
+      {
+        "restoration": true,
+        "iteration": 88,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 107.34808946139333,
+        "dual_infeasibility": 9545.95340863128,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 69.50416273139177
+      },
+      {
+        "restoration": true,
+        "iteration": 89,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 29.924574564843226,
+        "dual_infeasibility": 15457.175581681406,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 109.9525267131683
+      },
+      {
+        "restoration": true,
+        "iteration": 90,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 67.48195875833665,
+        "dual_infeasibility": 12815.065520839365,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 30.18676435023684
+      },
+      {
+        "restoration": true,
+        "iteration": 91,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 101.0451880889828,
+        "dual_infeasibility": 15073.140308813901,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 71.68048971265281
+      },
+      {
+        "restoration": true,
+        "iteration": 92,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 45.3256299216209,
+        "dual_infeasibility": 15875.527609473596,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 95.84822612355079
+      },
+      {
+        "restoration": true,
+        "iteration": 93,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 62.426581287658394,
+        "dual_infeasibility": 10095.253595092678,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 40.593470531245245
+      },
+      {
+        "restoration": true,
+        "iteration": 94,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 40.13994059430266,
+        "dual_infeasibility": 14861.388179289554,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 58.56434569417275
+      },
+      {
+        "restoration": true,
+        "iteration": 95,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 32.074790369192044,
+        "dual_infeasibility": 27668.937784736296,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 42.48131726385173
+      },
+      {
+        "restoration": true,
+        "iteration": 96,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 62.78273722605965,
+        "dual_infeasibility": 40518.748310645984,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 33.52455625734298
+      },
+      {
+        "restoration": true,
+        "iteration": 97,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 29.12401141766344,
+        "dual_infeasibility": 34488.00646133486,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 60.44605780165397
+      },
+      {
+        "restoration": true,
+        "iteration": 98,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 32.382446908404916,
+        "dual_infeasibility": 24860.636933939604,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 26.54215845916361
+      },
+      {
+        "restoration": true,
+        "iteration": 99,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 14.248373288116795,
+        "dual_infeasibility": 27986.335771230562,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 30.439599614876155
+      },
+      {
+        "restoration": true,
+        "iteration": 100,
+        "objective": 15.124999999999995,
+        "primal_infeasibility": 66.30947686529726,
+        "dual_infeasibility": 30172.29566313033,
+        "barrier_parameter": 30.80061082031464,
+        "step_norm": 13.711263558567927
+      }
+    ]
+  },
+  "scope": "Completed local joint NLP result; native termination is not a physical infeasibility or optimality certificate. Physical summary comes from the independently audited returned candidate. No runtime/browser gait or global maximum established."
+}

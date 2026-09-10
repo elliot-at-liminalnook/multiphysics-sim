@@ -1,0 +1,282 @@
+[
+  {
+    name: 'human-5ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.039833370810635454,
+    turn_rad: 0.21108607112889438,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.05470159325938183,
+    turn_rad: 0.20846546143930417,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'human-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.05947908990919937,
+    turn_rad: 0.20822456893799612,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'sustained-5ms',
+    completed: true,
+    windows: [ [Object], [Object], [Object] ],
+    maximum_slip_ratio: 0.04001684597384026,
+    turn_rad: null,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'dropout-5ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.04058363947849411,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'v95-human-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.049301328990821756,
+    turn_rad: 0.2018241273310492,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'short-rear10-v100-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0587319588210285,
+    turn_rad: 0.20893779012689756,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'short-rear12-v100-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.059305818481840175,
+    turn_rad: 0.20959398880270394,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'short-frontrear10-v100-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.05904402002605809,
+    turn_rad: 0.2088283885980719,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'sampled-gain0-lookahead0ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.23114777314507104,
+    turn_rad: 0.21394854299126173,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'sampled-gain0.5-lookahead10ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.04808919593670118,
+    turn_rad: 0.20884573593113862,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'sampled-gain0-lookahead10ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.12324901327001624,
+    turn_rad: 0.2132842571529849,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-human-5ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.03887226458270804,
+    turn_rad: 0.2121370898263635,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.046806929755284436,
+    turn_rad: 0.20936104347172765,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-human-0p3125ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0489143991960424,
+    turn_rad: 0.2083929475476721,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-sustained-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object], [Object] ],
+    maximum_slip_ratio: 0.04304585576052135,
+    turn_rad: null,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-dropout-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.046098943263177476,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'synchronized-cadence-105-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.07376283739556883,
+    turn_rad: 0.2024941972511427,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-110-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.0869387762305974,
+    turn_rad: 0.20993620723974277,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-125-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.1193613740402244,
+    turn_rad: 0.22393360429504278,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-150-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.17304857655585465,
+    turn_rad: 0.23890423228488708,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-200-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.5791937155461869,
+    turn_rad: 0.2617743746393551,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-cadence-300-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.4187691261672197,
+    turn_rad: 0.266425320254109,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'synchronized-human-10ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.03317298042618648,
+    turn_rad: 0.21263035289218474,
+    stops: [ [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'belt-short-hip30-v125-cad-yaw-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.10628302522512369,
+    turn_rad: 0.1312423645104533,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'belt-short-hip45-v150-centered-cad-yaw-human-fine',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.1815483241257124,
+    turn_rad: 0.05608164094647153,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  }
+] [
+  {
+    reference: 'human-1p25ms',
+    candidate: 'human-5ms',
+    maximum_body_difference_m: 0.00261108078354073,
+    maximum_speed_fraction: 0.0025724228775982337,
+    absolute_slip_ratio_difference: 0.014868222448746374,
+    both_motion_checks_passed: false,
+    passed: true
+  },
+  {
+    reference: 'human-1p25ms',
+    candidate: 'human-0p625ms',
+    maximum_body_difference_m: 0.0008602179835290355,
+    maximum_speed_fraction: 0.0010920309264257578,
+    absolute_slip_ratio_difference: 0.004777496649817539,
+    both_motion_checks_passed: false,
+    passed: true
+  },
+  {
+    reference: 'synchronized-human-1p25ms',
+    candidate: 'synchronized-human-5ms',
+    maximum_body_difference_m: 0.0027727213628227707,
+    maximum_speed_fraction: 0.004513464456957579,
+    absolute_slip_ratio_difference: 0.007934665172576398,
+    both_motion_checks_passed: true,
+    passed: true
+  },
+  {
+    reference: 'synchronized-human-1p25ms',
+    candidate: 'synchronized-human-0p3125ms',
+    maximum_body_difference_m: 0.0018615682207596392,
+    maximum_speed_fraction: 0.0053722374833341194,
+    absolute_slip_ratio_difference: 0.0021074694407579656,
+    both_motion_checks_passed: true,
+    passed: true
+  },
+  {
+    reference: 'synchronized-human-1p25ms',
+    candidate: 'synchronized-human-10ms',
+    maximum_body_difference_m: 0.007221415624421441,
+    maximum_speed_fraction: 0.006981754439339276,
+    absolute_slip_ratio_difference: 0.013633949329097957,
+    both_motion_checks_passed: true,
+    passed: false
+  }
+]

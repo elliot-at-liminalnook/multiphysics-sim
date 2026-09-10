@@ -13,7 +13,7 @@ const wasmArtifact = process.env.WASM_ARTIFACT || 'target/wasm32-unknown-unknown
 const read = async p => JSON.parse(await readFile(resolve(root,p)));
 const hash = async p => createHash('sha256').update(await readFile(resolve(root,p))).digest('hex');
 await mkdir(output, { recursive:true }); await mkdir(join(output,'data'), { recursive:true });
-for (const file of ['index.html','viewer.css','viewer.js','leaderboard.js','leaderboard-model.mjs','leaderboard.css','video-export.js']) await cp(join(root,'web/viewer',file),join(output,file));
+for (const file of ['index.html','viewer.css','viewer.js','leaderboard.js','leaderboard-model.mjs','leaderboard.css','video-export.js','motion-commands.mjs']) await cp(join(root,'web/viewer',file),join(output,file));
 await cp(join(root,'web/worker.js'),join(output,'worker.js'));
 await cp(join(root,'web/worker-message.mjs'),join(output,'worker-message.mjs'));
 await cp(join(root,'web/serve-viewer.mjs'),join(output,'serve-viewer.mjs'));
@@ -67,6 +67,6 @@ for (const preset of configured.presets) {
 await packageLeaderboard(root, output, catalog, manifest, fixtureOnly);
 await writeFile(join(output,'catalog.json'),JSON.stringify(catalog,null,2));
 for (const path of ['web/leaderboard/package.mjs','web/viewer/leaderboard.js','web/viewer/leaderboard-model.mjs','web/viewer/leaderboard.css','web/viewer/video-export.js']) manifest.inputs[path]=await hash(path);
-for (const path of ['web/build-viewer.mjs','web/serve-viewer.mjs','web/viewer/presets.json','web/viewer/viewer.js','web/viewer/viewer.css','web/viewer/index.html','web/worker.js','web/worker-message.mjs','web/package-lock.json',wasmArtifact]) manifest.inputs[path]=await hash(path);
+for (const path of ['web/build-viewer.mjs','web/serve-viewer.mjs','web/viewer/presets.json','web/viewer/viewer.js','web/viewer/motion-commands.mjs','web/viewer/viewer.css','web/viewer/index.html','web/worker.js','web/worker-message.mjs','web/package-lock.json',wasmArtifact]) manifest.inputs[path]=await hash(path);
 await writeFile(join(output,'build-manifest.json'),JSON.stringify(manifest,null,2));
 console.log(`Packaged ${catalog.presets.length} presets in ${output}`);

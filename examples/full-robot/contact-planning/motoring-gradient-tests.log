@@ -1,0 +1,11 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-dynamics)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-compile)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 13.67s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_domain_robot-aab60f3d48bdb8e0)
+
+running 1 test
+test effective_servo::optimization_tests::extended_penalty_keeps_physical_feasibility_and_free_backdrive ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.00s

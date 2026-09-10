@@ -1,0 +1,12 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+    Finished `release` profile [optimized] target(s) in 9.46s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/sim_runtime-74c4eacf9d97a563)
+
+running 5 tests
+test contact_audit::tests::missing_overlapping_and_partial_windows_are_rejected ... ok
+test contact_audit::tests::stage_quadrature_integrates_linear_force_and_tracks_pair_presence ... ok
+test contact_audit::embedded_tests::embedded_trace_aggregates_points_and_requires_all_accepted_time ... ok
+test contact_audit::embedded_tests::floor_force_ratio_uses_patch_resultant_and_explicit_load_cutoff ... ok
+test contact_audit::geometric_tests::recorded_overlap_remains_visible_when_forces_are_omitted ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s

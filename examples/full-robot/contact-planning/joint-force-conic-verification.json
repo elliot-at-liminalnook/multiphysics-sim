@@ -1,0 +1,95 @@
+{
+  "summaries": [
+    {
+      "name": "warm",
+      "recipe": {
+        "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+        "bytes": 161647,
+        "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+      },
+      "result": {
+        "path": "examples/full-robot/contact-planning/joint-conic-warm.result.json",
+        "bytes": 1596266,
+        "sha256": "91c71caac535c986e9f461cf59ad1b4c5d5cd26f42620a3f412f03cbdfafcccf"
+      },
+      "status": "Solved",
+      "iterations": 14,
+      "speed_m_s": 0.024999999999999998,
+      "minimax_balance": 1.4451431900158684,
+      "measured_maximum_normalized_balance": 1.4451431899937006,
+      "reported_dual_objective": 1.445143189817706,
+      "primal_dual_gap": 1.9820123320357652e-10,
+      "primal_cone_violation": 0,
+      "dual_cone_violation": 0,
+      "stationarity_residual": 1.4441781104324036e-12,
+      "independent_affine_error": 2.2737367544323206e-13,
+      "force_box_violation_n": 0,
+      "force_error_n": 0.07225715949968503,
+      "moment_error_nm": 0.026191579749431593,
+      "torque_margin_nm": 0.6795200412383895,
+      "friction_cone_violation_n": 0,
+      "sampled_feasible": false
+    },
+    {
+      "name": "warm-final",
+      "recipe": {
+        "path": "examples/full-robot/contact-planning/joint-conic-warm-final.recipe.json",
+        "bytes": 161731,
+        "sha256": "fcd8b1e3ac70ba65a64b53be8f450ea18ee50688f777ee8c9bc0b166391c0d8d"
+      },
+      "result": {
+        "path": "examples/full-robot/contact-planning/joint-conic-warm-final.result.json",
+        "bytes": 1593668,
+        "sha256": "d4509825ceaea58078e1ba74ca59557f3f45b146bd4d5e8501b5bbde6c39c991"
+      },
+      "status": "Solved",
+      "iterations": 15,
+      "speed_m_s": 0.02515190739040914,
+      "minimax_balance": 0.7161083223158552,
+      "measured_maximum_normalized_balance": 0.7161083223007836,
+      "reported_dual_objective": 0.7161083221139684,
+      "primal_dual_gap": 2.014308719822111e-10,
+      "primal_cone_violation": 0,
+      "dual_cone_violation": 0,
+      "stationarity_residual": 1.4561685190983553e-12,
+      "independent_affine_error": 2.8421709430404007e-13,
+      "force_box_violation_n": 0,
+      "force_error_n": 0.03580541611503918,
+      "moment_error_nm": 0.013715419551961316,
+      "torque_margin_nm": 1.0912870043136882,
+      "friction_cone_violation_n": 0,
+      "sampled_feasible": true
+    },
+    {
+      "name": "fast",
+      "recipe": {
+        "path": "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+        "bytes": 161211,
+        "sha256": "e4c026ee7c0336c90d436e7b7802aeba3549a51e6652ccaaee54d6f0933f282e"
+      },
+      "result": {
+        "path": "examples/full-robot/contact-planning/joint-conic-fast.result.json",
+        "bytes": 1581769,
+        "sha256": "08ef768b950a900ed9fab51e62b93125b8e1b822e233b0bbb6f2a3e509f23454"
+      },
+      "status": "Solved",
+      "iterations": 12,
+      "speed_m_s": 0.211710264528351,
+      "minimax_balance": 34.3110547299451,
+      "measured_maximum_normalized_balance": 34.311054728539716,
+      "reported_dual_objective": 34.31105471570305,
+      "primal_dual_gap": 1.4242175438994309e-8,
+      "primal_cone_violation": 0,
+      "dual_cone_violation": 0,
+      "stationarity_residual": 1.0324430199659673e-10,
+      "independent_affine_error": 1.9895196601282805e-13,
+      "force_box_violation_n": 0,
+      "force_error_n": 1.7155527364269858,
+      "moment_error_nm": 0.5319207725157925,
+      "torque_margin_nm": -0.2695338587272766,
+      "friction_cone_violation_n": 0,
+      "sampled_feasible": false
+    }
+  ],
+  "scope": "Independent scalar checks of completed convex fixed-motion force solves. Native numerical optimum is not an interval proof, global speed maximum or runtime validation."
+}

@@ -4,7 +4,33 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+native-ipopt = ["sim-solve/native-ipopt"]
+conic = ["sim-solve/conic"]
+bayesian = ["sim-solve/bayesian"]
+
+[[example]]
+name = "search_motion"
+required-features = ["bayesian"]
+
+[[example]]
+name = "solve_joint_force_cones"
+required-features = ["conic"]
+
+[[example]]
+name = "optimize_joint_ipopt"
+required-features = ["native-ipopt"]
+
+[[example]]
+name = "optimize_joint_ipopt_checkpoint"
+required-features = ["native-ipopt"]
+
+[[example]]
+name = "optimize_joint_ipopt_events"
+required-features = ["native-ipopt"]
+
 [dependencies]
+blake3 = "=1.8.7"
 nalgebra.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -33,3 +59,6 @@ sim-solve = { path = "../sim-solve" }
 sim-script = { path = "../sim-script" }
 
 web-time = "1.1"
+
+[build-dependencies]
+blake3 = "=1.8.7"

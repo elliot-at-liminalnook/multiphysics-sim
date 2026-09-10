@@ -1,0 +1,44 @@
+[
+  {
+    "hip": 0,
+    "reference_speed": 0.065,
+    "lift": 6,
+    "gain": 0.5,
+    "hold_lookahead_s": 0.01,
+    "source_scene": "runs/speed-ceiling/hip-refinement/refined.scene.json",
+    "name": "flat-lift6-hip0-v125",
+    "speed": 0.125,
+    "return_start_s": 0.04,
+    "return_end_s": 0.36,
+    "return_ramp_fraction": 0.25,
+    "return_source": "belt-short-hip0-v100"
+  },
+  {
+    "hip": 0,
+    "reference_speed": 0.065,
+    "lift": 10,
+    "gain": 0.5,
+    "hold_lookahead_s": 0.01,
+    "source_scene": "runs/speed-ceiling/hip-refinement/refined.scene.json",
+    "name": "flat-lift10-hip0-v125",
+    "speed": 0.125,
+    "return_start_s": 0.04,
+    "return_end_s": 0.36,
+    "return_ramp_fraction": 0.25,
+    "return_source": "belt-short-hip0-v100"
+  },
+  {
+    "hip": 0,
+    "reference_speed": 0.065,
+    "lift": 6,
+    "gain": 0.5,
+    "hold_lookahead_s": 0.01,
+    "source_scene": "runs/speed-ceiling/hip-refinement/refined.scene.json",
+    "name": "flat-lift6-hip0-v115",
+    "speed": 0.115,
+    "return_start_s": 0.04,
+    "return_end_s": 0.36,
+    "return_ramp_fraction": 0.25,
+    "return_source": "belt-short-hip0-v100"
+  }
+]

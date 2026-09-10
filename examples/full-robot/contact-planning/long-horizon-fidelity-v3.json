@@ -1,0 +1,102 @@
+{
+  "version": 3,
+  "teacher": [
+    {
+      "name": "nominal",
+      "step_s": 0.000625,
+      "inter_link_contact": false,
+      "duration_s": 300,
+      "distance_m": 154.30126902731595,
+      "speed_m_s": 0.5143375634243865,
+      "displacement_xy_m": [
+        76.7038959260299,
+        133.88574970178456
+      ],
+      "fallen": false,
+      "error": null,
+      "result": {
+        "path": "runs/affine-speed300-v1/evaluation-000/result.json",
+        "sha256": "5e44a04427c2e149de175dadd729397b16ac5f44a41c0f4c082c16c6108cb91c"
+      }
+    },
+    {
+      "name": "fine",
+      "step_s": 0.0003125,
+      "inter_link_contact": false,
+      "duration_s": 300,
+      "distance_m": 145.62028604694575,
+      "speed_m_s": 0.48540095348981915,
+      "displacement_xy_m": [
+        18.554867592127025,
+        144.4333223222153
+      ],
+      "fallen": false,
+      "error": null,
+      "result": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/fine.json",
+        "sha256": "86000dfa8ba7d75be9a29f8581217d8cd77612104da3370010528eab86269ae2"
+      },
+      "relative_speed_change": -0.05625995842479699,
+      "endpoint_difference_m": 59.09789153904139
+    },
+    {
+      "name": "contact",
+      "step_s": 0.000625,
+      "inter_link_contact": true,
+      "duration_s": 300,
+      "distance_m": 154.30127626696827,
+      "speed_m_s": 0.5143375875565609,
+      "displacement_xy_m": [
+        76.70894309444273,
+        133.88286636813842
+      ],
+      "fallen": false,
+      "error": null,
+      "result": {
+        "path": "runs/affine-speed300-baseline-fidelity-v1/contact.json",
+        "sha256": "7c3359ddd46f87ade563d386f1906a8a6e10b88995c09c6e13c211d80b0f124b"
+      },
+      "relative_speed_change": 4.691894212285185e-8,
+      "endpoint_difference_m": 0.005812703493420477
+    },
+    {
+      "name": "quarter",
+      "step_s": 0.00015625,
+      "inter_link_contact": false,
+      "duration_s": 300,
+      "distance_m": 136.7917093676898,
+      "speed_m_s": 0.455972364558966,
+      "displacement_xy_m": [
+        -14.924250712032398,
+        135.97513924397694
+      ],
+      "fallen": false,
+      "error": null,
+      "result": {
+        "path": "runs/sustained300-teacher-quarter-v2/result.json",
+        "sha256": "f57fb6a80c9ea791816476daa98bb3f15bdcca614848f5a701da8a8f4729f58b"
+      },
+      "relative_speed_change_from_fine": -0.06062738179493582,
+      "endpoint_difference_from_fine_m": 34.53103275908353
+    }
+  ],
+  "neural_fine": {
+    "step_s": 0.0003125,
+    "duration_s": 300,
+    "distance_m": 156.0464320060871,
+    "speed_m_s": 0.5201547733536236,
+    "fallen": false,
+    "result": {
+      "path": "runs/sustained300-learned-fine-v1/result.json",
+      "sha256": "9ce9682d902274cd1de3f95a13e78fd7c3184bf3dc477c0d79d00a8a793d6a02"
+    }
+  },
+  "followups": [
+    {
+      "name": "third-resolution neural",
+      "status": "running",
+      "inputs": "runs/sustained300-learned-quarter-v1/inputs.json"
+    }
+  ],
+  "scope": "Teacher300s net speed decreases again after the third resolution. Discretization convergence remains unresolved. The new runtime completed1.92million physics steps without sampled fall; the earlier zero-step setup failure was a software cap, not a physical limit. Matched third-resolution neural comparison is still pending."
+}

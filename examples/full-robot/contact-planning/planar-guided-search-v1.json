@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "screen": {
+    "candidates_excluding_baseline": 16,
+    "completed_prefixes": 11,
+    "failed_prefixes": 6,
+    "ranked": [
+      {
+        "ordinal": 0,
+        "prefix_net_speed_m_s": 0.511767998718141,
+        "predicted_speed_m_s": 0.5127835162618181,
+        "windows": [
+          0.5127835162618181,
+          0.5083910118383079
+        ]
+      },
+      {
+        "ordinal": 8,
+        "prefix_net_speed_m_s": 0.3043877245815542,
+        "predicted_speed_m_s": 0.024264152199621608,
+        "windows": [
+          0.02219253329736888,
+          0.024264152199621608
+        ]
+      },
+      {
+        "ordinal": 12,
+        "prefix_net_speed_m_s": 0.11908572406830312,
+        "predicted_speed_m_s": 0.00772667377786605,
+        "windows": [
+          0.0074082228949751165,
+          0.00772667377786605
+        ]
+      },
+      {
+        "ordinal": 13,
+        "prefix_net_speed_m_s": 0.03657392292849373,
+        "predicted_speed_m_s": 0.007452419208635817,
+        "windows": [
+          0.007182722021540807,
+          0.007452419208635817
+        ]
+      },
+      {
+        "ordinal": 9,
+        "prefix_net_speed_m_s": 0.06228202010950362,
+        "predicted_speed_m_s": 0.0043976848703477425,
+        "windows": [
+          0.003932950848142513,
+          0.0043976848703477425
+        ]
+      },
+      {
+        "ordinal": 3,
+        "prefix_net_speed_m_s": 0.0023979410772970574,
+        "predicted_speed_m_s": 0.003016324986158921,
+        "windows": [
+          0.0023623543299647826,
+          0.003016324986158921
+        ]
+      },
+      {
+        "ordinal": 6,
+        "prefix_net_speed_m_s": 0.06307857183701572,
+        "predicted_speed_m_s": 0.0026133321608274463,
+        "windows": [
+          0.0018638425289769793,
+          0.0026133321608274463
+        ]
+      },
+      {
+        "ordinal": 7,
+        "prefix_net_speed_m_s": 0.007282789474421595,
+        "predicted_speed_m_s": 0.0019574239538074647,
+        "windows": [
+          0.00035818656533585504,
+          0.0019574239538074647
+        ]
+      },
+      {
+        "ordinal": 1,
+        "prefix_net_speed_m_s": 0.08069730470622273,
+        "predicted_speed_m_s": 0.0015687024780946708,
+        "windows": [
+          0.0003384809906183916,
+          0.0015687024780946708
+        ]
+      },
+      {
+        "ordinal": 16,
+        "prefix_net_speed_m_s": 0.017474431447182345,
+        "predicted_speed_m_s": 0.0011214067600644779,
+        "windows": [
+          0.0011214067600644779,
+          0.0011147128157745847
+        ]
+      },
+      {
+        "ordinal": 14,
+        "prefix_net_speed_m_s": 0.01025775282183874,
+        "predicted_speed_m_s": 0.0005110054835574671,
+        "windows": [
+          0.0004915736836656157,
+          0.0005110054835574671
+        ]
+      }
+    ],
+    "source": {
+      "path": "runs/planar-trend-rescore-v1/result.json",
+      "sha256": "19cd267b44c3fae812fc1a84ae0e1f43c218fd119117a598e1a1fec30d568c8a"
+    }
+  },
+  "bayesian_proposal": {
+    "failed_indices": [
+      2,
+      4,
+      5,
+      10,
+      11,
+      15
+    ],
+    "method": "egobox-ego-0.38.1 / constrained LogEI / constant-mean Matern-5/2 GP / normalized inputs / zero constraint tolerance",
+    "observed_best_feasible_index": 0,
+    "scope": "Unevaluated Bayesian proposal from explicit same-context completed measurements. Failures are recorded but not imputed or modeled. No SCBO/TREGO state, physical feasibility, runtime qualification or global optimum is claimed.",
+    "seed": 2401,
+    "training_indices": [
+      0,
+      1,
+      3,
+      6,
+      7,
+      8,
+      9,
+      12,
+      13,
+      14,
+      16
+    ],
+    "values": [
+      0.3192649318355741,
+      1.0767092401792033,
+      1.0853200713008562,
+      -0.7533146219623292,
+      0.4014437725479103,
+      1.7767259109068239,
+      -0.4192616920106758,
+      -0.7278864580854479
+    ]
+  },
+  "physical_full_horizon_test": {
+    "status": "running",
+    "inputs": "runs/planar-guided300-v1/selection-inputs.json"
+  },
+  "adaptive_batch": {
+    "status": "running",
+    "specification": "runs/adaptive-planar-inputs-v1/experiment.json"
+  },
+  "scope": "Completed16-candidate physical prefix screen and heading-trend rescoring feed a separate estimated-speed GP. No new screen candidate is predicted faster than baseline. The first model-selected proposal is undergoing a full300s test;12 sequential prefix updates are running. Predicted scores do not qualify actual speed, survival, fidelity or a global physical maximum."
+}

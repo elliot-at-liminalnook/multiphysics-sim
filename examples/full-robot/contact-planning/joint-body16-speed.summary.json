@@ -1,0 +1,353 @@
+{
+  "source": {
+    "path": "examples/full-robot/contact-planning/joint-body16-speed.result.json",
+    "bytes": 3167669,
+    "sha256": "b669dcc1e8459701939a6315c3df906d43451c229ccc1135f994340c38ee9c3a"
+  },
+  "initial": {
+    "speed_m_s": 0.024999999999999998,
+    "force_error_n": 0.2124734093493339,
+    "moment_error_nm": 0.03011423193947904,
+    "torque_margin_nm": 0.685215966339052,
+    "cone_violation_n": 0.00010787329235384391,
+    "maximum_inequality": 3.249468186986678,
+    "maximum_interlink_penetration_m": 0,
+    "maximum_floor_penetration_m": 0.00010107442218260099,
+    "sampled_feasible": false
+  },
+  "final": {
+    "speed_m_s": 0.025224397448258665,
+    "force_error_n": 0.04542206314861019,
+    "moment_error_nm": 0.015216872168813178,
+    "torque_margin_nm": 1.2709580661085829,
+    "cone_violation_n": 1.0711959613579807,
+    "maximum_inequality": 21.42391922715961,
+    "maximum_interlink_penetration_m": 0,
+    "maximum_floor_penetration_m": 1.1102230246251565e-16,
+    "sampled_feasible": false
+  },
+  "returned_candidate_error": null,
+  "best_sampled_feasible_found": false,
+  "model_evaluations": 8000,
+  "model_budget_exhausted": true,
+  "native": {
+    "status": -13,
+    "maximum_constraint_or_bound_violation": null,
+    "value_evaluations": 339,
+    "derivative_evaluations": 35,
+    "rejected_callbacks": 305,
+    "budget_exhausted": false,
+    "callback_panicked": false,
+    "cancelled": false,
+    "last_callback_error": "joint CAD evaluation budget exhausted",
+    "iterations": [
+      {
+        "restoration": false,
+        "iteration": 0,
+        "objective": 15.124999816093746,
+        "primal_infeasibility": 3.249468791634352,
+        "dual_infeasibility": 2.777687146625543,
+        "barrier_parameter": 1,
+        "step_norm": 0
+      },
+      {
+        "restoration": false,
+        "iteration": 1,
+        "objective": 15.01103265031342,
+        "primal_infeasibility": 46.60771926798367,
+        "dual_infeasibility": 618434.7425388003,
+        "barrier_parameter": 0.8047448999853936,
+        "step_norm": 870.0824457717237
+      },
+      {
+        "restoration": false,
+        "iteration": 2,
+        "objective": 15.01941707810401,
+        "primal_infeasibility": 43.963007089826164,
+        "dual_infeasibility": 583602.6343838921,
+        "barrier_parameter": 0.0000999374814274023,
+        "step_norm": 44.47998840079703
+      },
+      {
+        "restoration": false,
+        "iteration": 3,
+        "objective": 15.112354751364279,
+        "primal_infeasibility": 40.07178249700553,
+        "dual_infeasibility": 6595332.358767815,
+        "barrier_parameter": 0.7798041972863307,
+        "step_norm": 43.81867794951631
+      },
+      {
+        "restoration": false,
+        "iteration": 4,
+        "objective": 15.117521796481942,
+        "primal_infeasibility": 38.975679469087424,
+        "dual_infeasibility": 8892927.17116347,
+        "barrier_parameter": 0.767659234571607,
+        "step_norm": 40.48698327174636
+      },
+      {
+        "restoration": false,
+        "iteration": 5,
+        "objective": 15.090949045967536,
+        "primal_infeasibility": 71.38260330750407,
+        "dual_infeasibility": 30675412.583923846,
+        "barrier_parameter": 0.6171530595421326,
+        "step_norm": 36.832881352122655
+      },
+      {
+        "restoration": false,
+        "iteration": 6,
+        "objective": 15.120761603444084,
+        "primal_infeasibility": 70.85489498782147,
+        "dual_infeasibility": 1837520869.7113,
+        "barrier_parameter": 46.550882364119786,
+        "step_norm": 458.9263520120707
+      },
+      {
+        "restoration": false,
+        "iteration": 7,
+        "objective": 15.112440590233621,
+        "primal_infeasibility": 91.86495643474672,
+        "dual_infeasibility": 895643066.2078843,
+        "barrier_parameter": 46.550882364119786,
+        "step_norm": 990.845062491783
+      },
+      {
+        "restoration": false,
+        "iteration": 8,
+        "objective": 15.102661113198494,
+        "primal_infeasibility": 223.6437040001022,
+        "dual_infeasibility": 4792092414.781488,
+        "barrier_parameter": 46.550882364119786,
+        "step_norm": 302.5940146786414
+      },
+      {
+        "restoration": false,
+        "iteration": 9,
+        "objective": 15.102478875972258,
+        "primal_infeasibility": 183.7522247137942,
+        "dual_infeasibility": 1854104055.7623978,
+        "barrier_parameter": 46.550882364119786,
+        "step_norm": 222.79377525396856
+      },
+      {
+        "restoration": false,
+        "iteration": 10,
+        "objective": 15.101872027598128,
+        "primal_infeasibility": 92.79727006683294,
+        "dual_infeasibility": 3018350155.44471,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 75.23935313523802
+      },
+      {
+        "restoration": false,
+        "iteration": 11,
+        "objective": 15.101529653737227,
+        "primal_infeasibility": 84.11802774564933,
+        "dual_infeasibility": 9907746258.618935,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 107.16354607234956
+      },
+      {
+        "restoration": false,
+        "iteration": 12,
+        "objective": 15.103164062507426,
+        "primal_infeasibility": 41.0448590981178,
+        "dual_infeasibility": 21709025741.9588,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 110.04136058505814
+      },
+      {
+        "restoration": false,
+        "iteration": 13,
+        "objective": 15.103234493822196,
+        "primal_infeasibility": 49.945193579786476,
+        "dual_infeasibility": 50249186172.05667,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 139.00945326418403
+      },
+      {
+        "restoration": false,
+        "iteration": 14,
+        "objective": 15.102282039744713,
+        "primal_infeasibility": 49.68549189018711,
+        "dual_infeasibility": 99524152743.47905,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 254.93805557010475
+      },
+      {
+        "restoration": false,
+        "iteration": 15,
+        "objective": 15.10216969297386,
+        "primal_infeasibility": 47.5129277566034,
+        "dual_infeasibility": 151036369764.67297,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 144.9303215683355
+      },
+      {
+        "restoration": false,
+        "iteration": 16,
+        "objective": 15.101737924415033,
+        "primal_infeasibility": 41.14035870318901,
+        "dual_infeasibility": 201383619121.9903,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 92.2333556470455
+      },
+      {
+        "restoration": false,
+        "iteration": 17,
+        "objective": 15.100728679654246,
+        "primal_infeasibility": 454.1990811186147,
+        "dual_infeasibility": 48867226104.56415,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 439.61211419711503
+      },
+      {
+        "restoration": false,
+        "iteration": 18,
+        "objective": 15.100600319616666,
+        "primal_infeasibility": 435.6607327651661,
+        "dual_infeasibility": 14813555389521.625,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 450.2722670885244
+      },
+      {
+        "restoration": false,
+        "iteration": 19,
+        "objective": 15.100478899887817,
+        "primal_infeasibility": 422.18238028864414,
+        "dual_infeasibility": 30007567443631.062,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 431.95863567046473
+      },
+      {
+        "restoration": false,
+        "iteration": 20,
+        "objective": 15.100343703270312,
+        "primal_infeasibility": 409.1210457487643,
+        "dual_infeasibility": 38768972190598.98,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 419.16247829822134
+      },
+      {
+        "restoration": false,
+        "iteration": 21,
+        "objective": 15.100331814628339,
+        "primal_infeasibility": 408.7964366614613,
+        "dual_infeasibility": 46362595174870.7,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 384.5983844603885
+      },
+      {
+        "restoration": false,
+        "iteration": 22,
+        "objective": 15.100327069214586,
+        "primal_infeasibility": 408.68422533426696,
+        "dual_infeasibility": 53789965711501.1,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 767.9737063878048
+      },
+      {
+        "restoration": false,
+        "iteration": 23,
+        "objective": 15.100326450088007,
+        "primal_infeasibility": 408.6662193269097,
+        "dual_infeasibility": 63657155501851.04,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 417.7638937337681
+      },
+      {
+        "restoration": false,
+        "iteration": 24,
+        "objective": 15.100326387367277,
+        "primal_infeasibility": 408.6636643287633,
+        "dual_infeasibility": 73192621084559.75,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 394.8699310480331
+      },
+      {
+        "restoration": false,
+        "iteration": 25,
+        "objective": 15.100326371658207,
+        "primal_infeasibility": 408.66298423894324,
+        "dual_infeasibility": 77326734107800.62,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 432.27443850534
+      },
+      {
+        "restoration": false,
+        "iteration": 26,
+        "objective": 15.100326363529076,
+        "primal_infeasibility": 408.66261827068604,
+        "dual_infeasibility": 81442107678088.92,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 422.2440627101812
+      },
+      {
+        "restoration": false,
+        "iteration": 27,
+        "objective": 15.100326358163295,
+        "primal_infeasibility": 408.662486989218,
+        "dual_infeasibility": 83287502714373.66,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 493.139803976954
+      },
+      {
+        "restoration": false,
+        "iteration": 28,
+        "objective": 15.100326356714055,
+        "primal_infeasibility": 408.6624526756163,
+        "dual_infeasibility": 85389832253301.88,
+        "barrier_parameter": 9.310176472823958,
+        "step_norm": 508.4866620350402
+      },
+      {
+        "restoration": true,
+        "iteration": 29,
+        "objective": 15.100326356714055,
+        "primal_infeasibility": 408.6624526756163,
+        "dual_infeasibility": 1000,
+        "barrier_parameter": 408.6624526756163,
+        "step_norm": 0
+      },
+      {
+        "restoration": true,
+        "iteration": 30,
+        "objective": 15.100326352148416,
+        "primal_infeasibility": 408.6616806223599,
+        "dual_infeasibility": 1296.506281551038,
+        "barrier_parameter": 263.7647366787226,
+        "step_norm": 402262.34754569683
+      },
+      {
+        "restoration": true,
+        "iteration": 31,
+        "objective": 15.100326351722964,
+        "primal_infeasibility": 408.66163236913434,
+        "dual_infeasibility": 1704.112655302362,
+        "barrier_parameter": 158.43785459998844,
+        "step_norm": 126151.51892398887
+      },
+      {
+        "restoration": true,
+        "iteration": 32,
+        "objective": 15.100326351586906,
+        "primal_infeasibility": 408.661608242558,
+        "dual_infeasibility": 1912.3648840222013,
+        "barrier_parameter": 49.672621059022426,
+        "step_norm": 49833.99357142588
+      },
+      {
+        "restoration": true,
+        "iteration": 33,
+        "objective": 15.100326351552505,
+        "primal_infeasibility": 408.6616022109274,
+        "dual_infeasibility": 2160.7015614776947,
+        "barrier_parameter": 26.159488182730673,
+        "step_norm": 24003.003431398945
+      }
+    ]
+  },
+  "scope": "Completed local joint NLP result; native termination is not a physical infeasibility or optimality certificate. Physical summary comes from the independently audited returned candidate. No runtime/browser gait or global maximum established."
+}

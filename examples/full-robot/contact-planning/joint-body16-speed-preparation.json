@@ -1,0 +1,44 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+      "bytes": 161647,
+      "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-refinement.result.json",
+      "bytes": 3129492,
+      "sha256": "c1ce562c16305ffb28adb8d1d22e10840729930b01bbac8fbe09f734538adf37"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-speed.recipe.json",
+      "bytes": 176501,
+      "sha256": "b389917b1f1ef5f82d854efb8b26db4024f7ba6ad091b6e2a60f18bc8995d2f6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body16-speed-initial.result.json",
+      "bytes": 1554438,
+      "sha256": "9fb40ba1258cf04ada4ce167a2153ad4899e20a25fe9c02b54cce39efad5172f"
+    }
+  ],
+  "control_bounds_preserved": true,
+  "maximum_acceleration_error_per_s2": 6.994405055138486e-15,
+  "maximum_normalized_inequality_difference": null,
+  "maximum_rate_error_per_s": 2.220446049250313e-16,
+  "maximum_value_error_m_or_rad": 2.7755575615628914e-17,
+  "new_body_controls": 16,
+  "old_body_controls": 8,
+  "original_variables": 443,
+  "refined_variables": 491,
+  "same_evaluation_mesh": false,
+  "scope": "Exact body spline refinement only: 8 to 16 controls, 443 to 491 joint variables. Same body-channel bounds, other decisions, physical model, objective and recorded search budget. All original frame constraints are retained; 16 additional body-knot frames are audited. No gait qualification or speed gain is claimed.",
+  "trajectory_samples": 4097,
+  "matched_original_frames": 250,
+  "original_frames": 250,
+  "refined_frames": 266,
+  "maximum_normalized_common_frame_difference": 2.220446049250313e-12,
+  "non_body_recipe_identical": true,
+  "initial_sampled_feasible": false
+}

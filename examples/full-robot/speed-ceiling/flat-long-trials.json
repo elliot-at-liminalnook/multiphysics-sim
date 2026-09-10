@@ -1,0 +1,30 @@
+[
+  {
+    "hip": 30,
+    "reference_speed": 0.1,
+    "lift": 8,
+    "gain": 0.5,
+    "hold_lookahead_s": 0.01,
+    "source_scene": "runs/speed-ceiling/hip-refinement/refined.scene.json",
+    "name": "flat-long-hip30-v150",
+    "speed": 0.15,
+    "return_start_s": 0.04,
+    "return_end_s": 0.36,
+    "return_ramp_fraction": 0.25,
+    "return_source": "80 mm stride with flatter return and 8 mm lift"
+  },
+  {
+    "hip": 45,
+    "reference_speed": 0.1,
+    "lift": 8,
+    "gain": 0.5,
+    "hold_lookahead_s": 0.01,
+    "source_scene": "runs/speed-ceiling/hip-refinement/refined.scene.json",
+    "name": "flat-long-hip45-v150",
+    "speed": 0.15,
+    "return_start_s": 0.04,
+    "return_end_s": 0.36,
+    "return_ramp_fraction": 0.25,
+    "return_source": "80 mm stride with flatter return and 8 mm lift"
+  }
+]

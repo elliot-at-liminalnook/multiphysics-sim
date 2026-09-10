@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "mass_kg": 3.976239082561776,
+  "initial_crouched_com_world_m": [
+    0.013125505178880961,
+    0.00009781886785447283,
+    -0.09484698495228298
+  ],
+  "com_height_above_floor_m": 0.3461711379340611,
+  "initial_centroidal_inertia_world_kg_m2": [
+    [
+      0.09540756535817163,
+      0.000009067133155524685,
+      0.010064821690327807
+    ],
+    [
+      0.000009067133155524685,
+      0.11214106528465782,
+      -0.000004036310479964377
+    ],
+    [
+      0.010064821690327807,
+      -0.000004036310479964377,
+      0.1394943291373565
+    ]
+  ],
+  "gravity_m_s2": 9.81,
+  "declared_floor_kinetic_friction": 0.31724137931034485,
+  "equal_four_support_load_n": 9.751726349982757,
+  "equal_pair_support_load_n": 19.503452699965514,
+  "constant_height_lip_lambda_per_s": 5.323399700704144,
+  "unsupported_horizontal_growth_cosh_over_024s": 1.9333881217072775,
+  "estimates": [
+    {
+      "foot": "-Y-foot-surface",
+      "jacobian_m_per_rad": [
+        [
+          0.21655583631416758,
+          -2.1354054133210932e-32,
+          -5.4593142104699506e-17
+        ],
+        [
+          -0.004762999954528165,
+          0.07430651500647345,
+          -0.0000016189713502552008
+        ],
+        [
+          9.483993546702039e-18,
+          -0.027511167262833522,
+          -0.09698598762696707
+        ]
+      ],
+      "vertical_contact_torque_contribution_nm_for_equal_pair_support": [
+        1.849706195448814e-16,
+        -0.5365627494315133,
+        -1.8915616222419929
+      ]
+    },
+    {
+      "foot": "+X-foot-surface",
+      "jacobian_m_per_rad": [
+        [
+          -1.000597692361253e-11,
+          -0.0743252701140062,
+          0.005353389789840051
+        ],
+        [
+          0.2325345538794219,
+          -2.611494838986417e-35,
+          -9.236808496185303e-35
+        ],
+        [
+          7.826272260446017e-20,
+          -0.03070691077588439,
+          -0.09683812790609558
+        ]
+      ],
+      "vertical_contact_torque_contribution_nm_for_equal_pair_support": [
+        1.5263933084866107e-18,
+        -0.5988907818795225,
+        -1.8886778471697456
+      ]
+    },
+    {
+      "foot": "+Y-foot-surface",
+      "jacobian_m_per_rad": [
+        [
+          -0.21655583631902547,
+          3.510515289382835e-33,
+          1.8693624602107088e-17
+        ],
+        [
+          -0.004762000045099384,
+          -0.07430651500646096,
+          0.0000016189726191057796
+        ],
+        [
+          1.8967987093404103e-17,
+          -0.02751116726380509,
+          -0.09698598762696709
+        ]
+      ],
+      "vertical_contact_torque_contribution_nm_for_equal_pair_support": [
+        3.6994123908976326e-16,
+        -0.5365627494504622,
+        -1.891561622241993
+      ]
+    },
+    {
+      "foot": "-X-foot-surface",
+      "jacobian_m_per_rad": [
+        [
+          2.8445740907264477e-11,
+          0.07430650175565495,
+          -0.0000014840028617912611
+        ],
+        [
+          -0.22131831949303216,
+          1.078486939217752e-34,
+          -3.1778352749444676e-34
+        ],
+        [
+          -8.105514294011852e-19,
+          -0.028463663898606446,
+          -0.0969859876291263
+        ]
+      ],
+      "vertical_contact_torque_contribution_nm_for_equal_pair_support": [
+        -1.5808551464215453e-17,
+        -0.5551397225141869,
+        -1.8915616222841054
+      ]
+    }
+  ],
+  "opposite_pair_peak_reference_speed_rad_s": [
+    0.5928713042454928,
+    0.02999063170318969,
+    1.3087634172556306,
+    9.742024772371314e-17,
+    1.760291956527485,
+    1.4873766638573411,
+    0.5928712572420518,
+    0.02999556235610737,
+    1.3087641205073208,
+    2.555721397790832e-17,
+    1.770702692647056,
+    1.5032480497834997
+  ],
+  "effective_servo_limits": {
+    "damping": 0.6742555873943625,
+    "no_load_speed": 5.5115660589294615,
+    "stall_torque": 2.941995,
+    "stiffness": 33.71277936971813
+  },
+  "formulas": {
+    "speed": "v = stride / full foot-cycle duration",
+    "centroidal_translation": "m * c_ddot = sum(f_i) + m*g",
+    "centroidal_rotation": "H_dot = sum((r_i-c) cross f_i)",
+    "unilateral_friction": "f_iz >= 0; ||f_i,xy|| <= mu_i*f_iz",
+    "velocity_mapping": "v_foot = v_base + omega cross r + J(q)*q_dot",
+    "contact_torque": "tau_contact = J(q)^T*f (only this contribution)",
+    "constant_height_screen": "lambda=sqrt(g/h); zero-momentum transverse error grows as cosh(lambda*t), absent support correction"
+  },
+  "limitations": [
+    "CAD mass/inertia/material and actuator model remain provisional, not hardware calibrated.",
+    "Equal load split and initial-Jacobian torques are screening estimates, not a solved full-body force allocation or motor saturation proof.",
+    "This radial quadruped alternates opposite support lines; PLANC humanoid single-support momentum reset is not copied. Full centroidal force/moment balance is the adaptation target.",
+    "Reference-speed maxima exclude feedback and dynamic motor demand; stall torque and no-load speed cannot be demanded together."
+  ],
+  "paper": "https://arxiv.org/html/2601.06286v1"
+}

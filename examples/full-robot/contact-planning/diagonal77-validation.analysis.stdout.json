@@ -1,0 +1,57 @@
+[
+  {
+    name: 'diagonal77-human-1p25ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.06909014618172113,
+    turn_rad: 0.20757181692705523,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'diagonal77-human-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.06457295441988596,
+    turn_rad: 0.20556999312643245,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  },
+  {
+    name: 'diagonal77-dropout-0p625ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.04861974680208697,
+    turn_rad: null,
+    stops: [ [Object], [Object] ],
+    passed_motion_checks: true
+  },
+  {
+    name: 'diagonal77-human-0p3125ms',
+    completed: true,
+    windows: [ [Object], [Object] ],
+    maximum_slip_ratio: 0.06537353414447282,
+    turn_rad: 0.20445688061491182,
+    stops: [ [Object] ],
+    passed_motion_checks: false
+  }
+] [
+  {
+    reference: 'diagonal77-human-0p625ms',
+    candidate: 'diagonal77-human-1p25ms',
+    maximum_body_difference_m: 0.0030006329469745158,
+    maximum_speed_fraction: 0.0031725916928802703,
+    absolute_slip_ratio_difference: 0.004517191761835168,
+    both_motion_checks_passed: false,
+    passed: false
+  },
+  {
+    reference: 'diagonal77-human-0p625ms',
+    candidate: 'diagonal77-human-0p3125ms',
+    maximum_body_difference_m: 0.0015670271835878584,
+    maximum_speed_fraction: 0.0016784605432774715,
+    absolute_slip_ratio_difference: 0.0008005797245868584,
+    both_motion_checks_passed: false,
+    passed: true
+  }
+]

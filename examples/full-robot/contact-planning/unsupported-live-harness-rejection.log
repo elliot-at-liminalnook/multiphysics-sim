@@ -1,0 +1,15 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Declared motion-command presets without step_reference require gait_live_review.mjs; an idle episode is not a walking performance test.
+    at file:///Users/elliot/physics-simulator-gait-exploration/web/tests/live_performance.mjs:34:1 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

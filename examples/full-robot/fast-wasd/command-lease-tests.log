@@ -1,0 +1,17 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control)
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-script)
+    Finished `release` profile [optimized] target(s) in 1.04s
+     Running tests/command_lease.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/command_lease-09ff9f4d6364cfea)
+
+running 2 tests
+test duplicate_and_reordered_packets_expire_and_only_a_new_packet_recovers ... ok
+test registry_schedule_and_units_use_the_same_freshness_kernel ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/command_lease.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/command_lease-e9c4daf7e29e74cf)
+
+running 1 test
+test script_packet_loss_and_replay_match_rust_and_invalid_input_rolls_back ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

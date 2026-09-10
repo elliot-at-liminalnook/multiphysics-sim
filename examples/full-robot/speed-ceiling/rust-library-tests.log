@@ -1,0 +1,22 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 3.73s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_domain_robot-aab60f3d48bdb8e0)
+
+running 15 tests
+test articulated::embedding::factor_blocks::tests::repartitions_every_matrix_and_never_discards_tiny_couplings ... ok
+test motion_capability::tests::coupled_transmission_bound_satisfies_velocity_and_active_rate_constraint ... ok
+test motion_capability::tests::rejects_unreachable_singular_and_redundant_cases ... ok
+test motion_capability::tests::point_support_matches_static_balance_and_identifies_unsupported_moment ... ok
+test sdf::refinement_tests::local_detail_preserves_parent_and_blends_value_and_gradient ... ok
+test sdf::tests::contact_budget_retains_thin_foot_and_all_support_extrema ... ok
+test articulated::broad_phase_tests::moving_sample_bounds_preserve_every_point_box_hit_and_order ... ok
+test sdf::refinement_tests::invalid_or_overlapping_detail_cannot_disable_geometry_silently ... ok
+test articulated::prepared::exclusion_tests::exclusion_cache_preserves_pair_priority_and_refreshes_after_model_edits ... ok
+test actuator_audit::tests::stall_includes_temperature_and_driver_foldback ... ok
+test actuator_audit::tests::stall_matches_independent_electrical_and_torque_balance ... ok
+test sdf::tests::box_distance_and_gradient ... ok
+test articulated::prepared::exclusion_tests::joint_exclusion_follows_translation_rotation_and_preserves_outer_contacts ... ok
+test sdf::band_tests::rotating_boundary_samples_remain_eligible_for_collision ... ok
+test articulated::embedding::factor_blocks::factor_tests::block_least_squares_matches_whole_matrix_and_keeps_global_rank_threshold ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

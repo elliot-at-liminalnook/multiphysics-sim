@@ -1,0 +1,470 @@
+{
+  "name": "synchronized-human-0p3125ms",
+  "policy_replay_samples": 1000,
+  "maximum_command_error_rad": 0,
+  "counts": [
+    {
+      "window_s": [
+        1.4,
+        9.8
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 16,
+      "minimum_expected": 15,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        9.8
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 15,
+      "minimum_expected": 15,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        9.8
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 16,
+      "minimum_expected": 15,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        9.8
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 15,
+      "minimum_expected": 15,
+      "passed": true
+    },
+    {
+      "window_s": [
+        11,
+        15.8
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 8,
+      "minimum_expected": 8,
+      "passed": true
+    },
+    {
+      "window_s": [
+        11,
+        15.8
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 9,
+      "minimum_expected": 8,
+      "passed": true
+    },
+    {
+      "window_s": [
+        11,
+        15.8
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 8,
+      "minimum_expected": 8,
+      "passed": true
+    },
+    {
+      "window_s": [
+        11,
+        15.8
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 9,
+      "minimum_expected": 8,
+      "passed": true
+    }
+  ],
+  "planned_lifts": 96,
+  "passed_planned_lifts": 96,
+  "failed_planned_lifts": [],
+  "inter_link_geometry_audit": {
+    "frames": 1001,
+    "maximum_penetration_m": 0,
+    "penetrating_samples": 0,
+    "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+  },
+  "incidental_stance_unloads": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 11.44,
+      "end_s": 11.46,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001815266449622932
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 11.72,
+      "end_s": 11.72,
+      "samples": 1,
+      "maximum_clearance_m": 0.00001095078868618149
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 11.96,
+      "end_s": 11.98,
+      "samples": 2,
+      "maximum_clearance_m": 0.00017805314187291366
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 12.24,
+      "end_s": 12.24,
+      "samples": 1,
+      "maximum_clearance_m": 0.00000956931764517499
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 12.48,
+      "end_s": 12.5,
+      "samples": 2,
+      "maximum_clearance_m": 0.00017840516611306034
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 12.76,
+      "end_s": 12.76,
+      "samples": 1,
+      "maximum_clearance_m": 0.000009722154572289199
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 13,
+      "end_s": 13.02,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001783620788889939
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 13.280000000000001,
+      "end_s": 13.280000000000001,
+      "samples": 1,
+      "maximum_clearance_m": 0.000009707708206629917
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 13.52,
+      "end_s": 13.540000000000001,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001783659776060098
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 13.8,
+      "end_s": 13.8,
+      "samples": 1,
+      "maximum_clearance_m": 0.000009709221495124432
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 14.040000000000001,
+      "end_s": 14.06,
+      "samples": 2,
+      "maximum_clearance_m": 0.00017836555832689838
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 14.32,
+      "end_s": 14.32,
+      "samples": 1,
+      "maximum_clearance_m": 0.000009709072633368176
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 14.56,
+      "end_s": 14.58,
+      "samples": 2,
+      "maximum_clearance_m": 0.00017836559898687376
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 14.84,
+      "end_s": 14.84,
+      "samples": 1,
+      "maximum_clearance_m": 0.000009709087827991514
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 15.08,
+      "end_s": 15.1,
+      "samples": 2,
+      "maximum_clearance_m": 0.00017836559480272074
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 15.36,
+      "end_s": 15.36,
+      "samples": 1,
+      "maximum_clearance_m": 0.000009709086309928061
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 15.6,
+      "end_s": 15.620000000000001,
+      "samples": 2,
+      "maximum_clearance_m": 0.00017836559521888784
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 11.18,
+      "end_s": 11.18,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002527008022168431
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 11.700000000000001,
+      "end_s": 11.700000000000001,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000025451557951194914
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 12.22,
+      "end_s": 12.22,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002545751076055147
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 12.74,
+      "end_s": 12.74,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000025457221132230146
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 13.26,
+      "end_s": 13.26,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000025457260522387948
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 13.780000000000001,
+      "end_s": 13.780000000000001,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000025457256758176783
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 14.3,
+      "end_s": 14.3,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002545725714564462
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 14.82,
+      "end_s": 14.82,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000025457257107897036
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 15.34,
+      "end_s": 15.34,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000025457257112337928
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 11.44,
+      "end_s": 11.46,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002114427217224657
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 11.96,
+      "end_s": 11.98,
+      "samples": 2,
+      "maximum_clearance_m": 0.000215178692757112
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 12.48,
+      "end_s": 12.5,
+      "samples": 2,
+      "maximum_clearance_m": 0.00021490325663875431
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 13,
+      "end_s": 13.02,
+      "samples": 2,
+      "maximum_clearance_m": 0.00021493497821284402
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 13.52,
+      "end_s": 13.540000000000001,
+      "samples": 2,
+      "maximum_clearance_m": 0.00021493216290013883
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 14.040000000000001,
+      "end_s": 14.06,
+      "samples": 2,
+      "maximum_clearance_m": 0.00021493246990456072
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 14.56,
+      "end_s": 14.58,
+      "samples": 2,
+      "maximum_clearance_m": 0.00021493244037362746
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 15.08,
+      "end_s": 15.1,
+      "samples": 2,
+      "maximum_clearance_m": 0.00021493244342773998
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 15.6,
+      "end_s": 15.620000000000001,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002149324431250932
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 11.18,
+      "end_s": 11.200000000000001,
+      "samples": 2,
+      "maximum_clearance_m": 0.00037450056718368874
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 11.46,
+      "end_s": 11.46,
+      "samples": 1,
+      "maximum_clearance_m": 0.00014376879892824546
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 11.700000000000001,
+      "end_s": 11.72,
+      "samples": 2,
+      "maximum_clearance_m": 0.00037780154169386737
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 11.98,
+      "end_s": 11.98,
+      "samples": 1,
+      "maximum_clearance_m": 0.00014404441711807214
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 12.22,
+      "end_s": 12.24,
+      "samples": 2,
+      "maximum_clearance_m": 0.00037783377868449985
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 12.5,
+      "end_s": 12.5,
+      "samples": 1,
+      "maximum_clearance_m": 0.00014412306097871808
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 12.74,
+      "end_s": 12.76,
+      "samples": 2,
+      "maximum_clearance_m": 0.0003778317482133753
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 13.02,
+      "end_s": 13.02,
+      "samples": 1,
+      "maximum_clearance_m": 0.00014411173213735307
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 13.26,
+      "end_s": 13.280000000000001,
+      "samples": 2,
+      "maximum_clearance_m": 0.00037783199651819643
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 13.540000000000001,
+      "end_s": 13.540000000000001,
+      "samples": 1,
+      "maximum_clearance_m": 0.00014411281048398727
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 13.780000000000001,
+      "end_s": 13.8,
+      "samples": 2,
+      "maximum_clearance_m": 0.00037783197135482505
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 14.06,
+      "end_s": 14.06,
+      "samples": 1,
+      "maximum_clearance_m": 0.000144112698718446
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 14.3,
+      "end_s": 14.32,
+      "samples": 2,
+      "maximum_clearance_m": 0.0003778319738714231
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 14.58,
+      "end_s": 14.58,
+      "samples": 1,
+      "maximum_clearance_m": 0.00014411270979663993
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 14.82,
+      "end_s": 14.84,
+      "samples": 2,
+      "maximum_clearance_m": 0.0003778319736165159
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 15.1,
+      "end_s": 15.1,
+      "samples": 1,
+      "maximum_clearance_m": 0.00014411270867176196
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 15.34,
+      "end_s": 15.36,
+      "samples": 2,
+      "maximum_clearance_m": 0.0003778319736423841
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 15.620000000000001,
+      "end_s": 15.620000000000001,
+      "samples": 1,
+      "maximum_clearance_m": 0.00014411270878422755
+    }
+  ],
+  "scope": "All complete planned swing windows from exact Rhai state replay in declared steady-command windows. Stance unloads are reported separately, including boundary delays; no between-sample guarantee."
+}

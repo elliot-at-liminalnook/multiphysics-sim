@@ -1,0 +1,10 @@
+{
+  "completed": false,
+  "error": "policy output violates software/CAD command bounds at 0.72 s: +X | Foot servo output.target requested -0.015249724092536117 rad; allowed [-2.5, -0.02] rad",
+  "frames": 37,
+  "last_time_s": 0.72,
+  "wall_s": 1.060358926,
+  "nominal_speed_m_s": 0.025224393474652385,
+  "tracking_gain": 0.5,
+  "scope": "Eight-second runtime screen rejected at 0.72 s by existing servo-command bounds. No completed speed, slip, stopping or gait qualification. Nominal servo-target constraints are necessary but do not bound feedback tracking error."
+}

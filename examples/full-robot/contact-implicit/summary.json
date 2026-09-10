@@ -1,0 +1,150 @@
+{
+  "scope": "Planning diagnostics only; no measured walking speed or maximum-speed claim.",
+  "results": [
+    {
+      "name": "diagonal25",
+      "within_planning_tolerances": false,
+      "maximum_force_error_n": 0.0070505477093275905,
+      "maximum_moment_error_nm": 0.0017330235534285384,
+      "minimum_torque_margin_nm": -0.004207344968353344,
+      "maximum_point_penetration_m": 0.008666220791886281,
+      "planned_mean_diagonal_displacement_rate_m_s": 0.23932548371076906,
+      "thresholded_force_patterns_1n": [
+        "1110",
+        "1111",
+        "1111",
+        "0111",
+        "1111",
+        "1110",
+        "1111",
+        "1010",
+        "1110",
+        "1111",
+        "1111",
+        "1111"
+      ],
+      "cost": 13.381182308249281,
+      "initial_cost": 2889.124964405683,
+      "evaluations": 3473,
+      "termination": "iteration_limit"
+    },
+    {
+      "name": "diagonal25-stiffness",
+      "within_planning_tolerances": false,
+      "maximum_force_error_n": 1.6646691092468886,
+      "maximum_moment_error_nm": 0.6803807838208951,
+      "minimum_torque_margin_nm": -0.6037882557207035,
+      "maximum_point_penetration_m": 0.0001506485214376463,
+      "planned_mean_diagonal_displacement_rate_m_s": 0.2502700021479123,
+      "thresholded_force_patterns_1n": [
+        "1100",
+        "1011",
+        "1111",
+        "0101",
+        "1010",
+        "1010",
+        "1110",
+        "1010",
+        "1010",
+        "1010",
+        "1110",
+        "1111"
+      ],
+      "cost": 1160.4746757114533,
+      "initial_cost": 1308107.450844817,
+      "evaluations": 3476,
+      "termination": "iteration_limit"
+    },
+    {
+      "name": "diagonal25-refinement",
+      "within_planning_tolerances": false,
+      "maximum_force_error_n": 1.276007644456378,
+      "maximum_moment_error_nm": 0.6403236675330428,
+      "minimum_torque_margin_nm": -0.5456366474846925,
+      "maximum_point_penetration_m": 0.0001504950115209791,
+      "planned_mean_diagonal_displacement_rate_m_s": 0.25041271638506596,
+      "thresholded_force_patterns_1n": [
+        "1100",
+        "1111",
+        "1111",
+        "0101",
+        "1010",
+        "1010",
+        "1110",
+        "1010",
+        "1010",
+        "1010",
+        "1110",
+        "1111"
+      ],
+      "cost": 671.3839887805392,
+      "initial_cost": 1160.4746757114533,
+      "evaluations": 10414,
+      "termination": "iteration_limit",
+      "geometry": {
+        "poses": 61,
+        "maximum_inter_link_penetration_m": 0.00021791750582100984,
+        "minimum_floor_clearance_m": -0.006679536086232396
+      }
+    },
+    {
+      "name": "diagonal25-scaled",
+      "within_planning_tolerances": false,
+      "maximum_force_error_n": 1.2403479644529032,
+      "maximum_moment_error_nm": 0.6352979777667558,
+      "minimum_torque_margin_nm": -0.5443338673084879,
+      "maximum_point_penetration_m": 0.00015048720455179687,
+      "planned_mean_diagonal_displacement_rate_m_s": 0.2504173713172792,
+      "thresholded_force_patterns_1n": [
+        "1100",
+        "1111",
+        "1111",
+        "0101",
+        "1010",
+        "1010",
+        "1110",
+        "1010",
+        "1010",
+        "1010",
+        "1110",
+        "1111"
+      ],
+      "cost": 663.2637532067597,
+      "initial_cost": 671.3839887805392,
+      "evaluations": 10414,
+      "termination": "iteration_limit",
+      "geometry": {
+        "poses": 61,
+        "maximum_inter_link_penetration_m": 0.00021796873593387636,
+        "minimum_floor_clearance_m": -0.006679536086232396
+      }
+    },
+    {
+      "name": "diagonal25-unscaled-control",
+      "within_planning_tolerances": false,
+      "maximum_force_error_n": 1.275583240177856,
+      "maximum_moment_error_nm": 0.6402482761071947,
+      "minimum_torque_margin_nm": -0.5455994351470901,
+      "maximum_point_penetration_m": 0.00015049469929129256,
+      "planned_mean_diagonal_displacement_rate_m_s": 0.25041277475147244,
+      "thresholded_force_patterns_1n": [
+        "1100",
+        "1111",
+        "1111",
+        "0101",
+        "1010",
+        "1010",
+        "1110",
+        "1010",
+        "1010",
+        "1010",
+        "1110",
+        "1111"
+      ],
+      "cost": 671.0930709731134,
+      "initial_cost": 671.3839887805392,
+      "evaluations": 10424,
+      "termination": "iteration_limit"
+    }
+  ]
+}

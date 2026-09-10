@@ -1,0 +1,64 @@
+{
+  "checks": [
+    {
+      "name": "warm",
+      "rows": 1500,
+      "columns": 366,
+      "whole_curve_lower_bound": 0.587213677636571,
+      "instantaneous_lower_bound": 0.9900981078561713,
+      "maximum_bounded_probe_error": 1.3642420526593924e-12,
+      "contract": {
+        "empty_duplicate_out_of_range_rejected": true,
+        "maximum_normalized_affine_error": 6.821210263296962e-13,
+        "motion_decision_present_and_rejected": true,
+        "selected_reordered_columns": 183
+      },
+      "out_of_box_least_squares_error": 0.0000143503420950708
+    },
+    {
+      "name": "body16",
+      "rows": 1596,
+      "columns": 366,
+      "whole_curve_lower_bound": 0.7043380516324833,
+      "instantaneous_lower_bound": 0.9900981079549038,
+      "maximum_bounded_probe_error": 1.3642420526593924e-12,
+      "contract": {
+        "empty_duplicate_out_of_range_rejected": true,
+        "maximum_normalized_affine_error": 6.821210263296962e-13,
+        "motion_decision_present_and_rejected": true,
+        "selected_reordered_columns": 183
+      },
+      "out_of_box_least_squares_error": 0.000024737618322445698
+    }
+  ],
+  "force_only": {
+    "physical_model_and_motion_preserved": true,
+    "native_constraints_match_full_audit": true,
+    "model_evaluations": 276,
+    "native_status": -1,
+    "sampled_feasible": false
+  },
+  "scope": "Bounded affine verification and failed conditional force-only solve. Bounds below one neither prove nor exclude feasibility. No runtime speed gain or physical maximum.",
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-warm-contract.result.json",
+      "bytes": 94143,
+      "sha256": "97cb4e0e986dd1197b94329ff01a6b1818c41e6754dac86e5d1e7e89698490bf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-support-body16-contract.result.json",
+      "bytes": 99265,
+      "sha256": "e7550f902d95ea296d9e5f302b4e84877c8309570bd4943df4489cf8cc6bcbd6"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-warm-force-only.result.json",
+      "bytes": 3126602,
+      "sha256": "cb97c03f317943b99d9899dba33803912c50bed9ac4c2a7c5b747e14630cd095"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/check_joint_warm_support.mjs",
+      "bytes": 4596,
+      "sha256": "4cc8ab986d3c075bea596f91484ecbd8b1449cbfcf48a2ad77d040e01191db0b"
+    }
+  ]
+}

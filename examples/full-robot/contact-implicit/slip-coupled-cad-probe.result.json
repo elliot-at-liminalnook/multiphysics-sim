@@ -1,0 +1,2600 @@
+{
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "links": [
+    "-X | Hip motor pulley and shaft 3090",
+    "Robot | Chassis and hip mounts"
+  ],
+  "frames": [
+    {
+      "time_s": 0.1516272424446593,
+      "member_distances": [],
+      "contact_point_probes": [
+        {
+          "runtime_contact": {
+            "link": 22,
+            "normal_world": [
+              -0.8603582449930827,
+              0.23889121587765694,
+              0.4502384670915155
+            ],
+            "other": 28,
+            "penetration_m": 1.6649625151071923e-05,
+            "point_m": [
+              -0.006128746569432547,
+              0.05920535260996415,
+              -0.046430040964249644
+            ]
+          },
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.006128746569432547,
+            0.05920535260996415,
+            -0.046430040964249644
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 89.84406060782614,
+              "surface_distance_mm": 89.84406060782614,
+              "nearest_world_mm": [
+                54.73538058955003,
+                -4.422358620422021,
+                -64.29138512588884
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 63.48953097898819,
+              "surface_distance_mm": 63.48953097898819,
+              "nearest_world_mm": [
+                46.42258681798775,
+                24.722744822782325,
+                -37.47305132869166
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 67.26481794314161,
+              "surface_distance_mm": 67.26481794314161,
+              "nearest_world_mm": [
+                44.8341304616813,
+                25.29613465856933,
+                -18.5462493361307
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 93.84653420007498,
+              "surface_distance_mm": 93.84653420007498,
+              "nearest_world_mm": [
+                87.03268251975443,
+                58.33271245888399,
+                -35.14471373846876
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 123.44183175931383,
+              "surface_distance_mm": 123.44183175931383,
+              "nearest_world_mm": [
+                116.31276456553883,
+                53.13866756341204,
+                -60.89231988651365
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 96.42763296588527,
+              "surface_distance_mm": 96.42763296588527,
+              "nearest_world_mm": [
+                85.44119864878107,
+                58.711891593481006,
+                -16.21431611174856
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 83.6342568299208,
+              "surface_distance_mm": 83.6342568299208,
+              "nearest_world_mm": [
+                55.70754695501765,
+                111.80594387082307,
+                -66.53326253839653
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 59.02545731326609,
+              "surface_distance_mm": 59.02545731326609,
+              "nearest_world_mm": [
+                46.98733099625473,
+                83.73025744869373,
+                -38.60597822630155
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 92.21285749386165,
+              "surface_distance_mm": 92.21285749386165,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 63.096502685604996,
+              "surface_distance_mm": 63.096502685604996,
+              "nearest_world_mm": [
+                45.38867860158829,
+                83.92686463798294,
+                -19.672417789697125
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 23.57022186180924,
+              "surface_distance_mm": 23.57022186180924,
+              "nearest_world_mm": [
+                -4.384551492364324,
+                59.67883732394779,
+                -69.93086976609544
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "inside",
+                "outside"
+              ],
+              "distance_mm": 0.0021392847521364416,
+              "surface_distance_mm": 0.0021392847521364416,
+              "nearest_world_mm": [
+                -6.127966220219026,
+                59.20336310078091,
+                -46.42994376566176
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 17.229207073059257,
+              "surface_distance_mm": 17.229207073059257,
+              "nearest_world_mm": [
+                -7.396691108294563,
+                59.54731798535588,
+                -29.250956218700527
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.19977947397622045,
+              "surface_distance_mm": 0.19977947397622045,
+              "nearest_world_mm": [
+                -6.201434087160921,
+                59.39121867447996,
+                -46.43910567881264
+              ]
+            }
+          ]
+        },
+        {
+          "runtime_contact": null,
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.00856819167080744,
+            0.057077635964052506,
+            -0.04818394126739016
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 89.71157938858917,
+              "surface_distance_mm": 89.71157938858917,
+              "nearest_world_mm": [
+                54.546043148287325,
+                -4.606876871959722,
+                -64.30168663636617
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 64.69348079603142,
+              "surface_distance_mm": 64.69348079603142,
+              "nearest_world_mm": [
+                46.37240011071637,
+                24.641552624423966,
+                -37.475144426142435
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 68.84735227313972,
+              "surface_distance_mm": 68.84735227313972,
+              "nearest_world_mm": [
+                44.78293043601289,
+                25.21309586462117,
+                -18.54837531671737
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 96.47082363879628,
+              "surface_distance_mm": 96.47082363879628,
+              "nearest_world_mm": [
+                87.0079135945604,
+                56.21097782729295,
+                -35.104307498624
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 125.58657991733679,
+              "surface_distance_mm": 125.58657991733679,
+              "nearest_world_mm": [
+                116.307764565477,
+                53.011078353084464,
+                -60.89014914400988
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 99.28740705690578,
+              "surface_distance_mm": 99.28740705690578,
+              "nearest_world_mm": [
+                85.41643157863945,
+                56.590159730865274,
+                -16.173909095189686
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 86.39013027538823,
+              "surface_distance_mm": 86.39013027538823,
+              "nearest_world_mm": [
+                55.7008548085265,
+                111.8135746252424,
+                -66.5339083658408
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 62.357787192633154,
+              "surface_distance_mm": 62.357787192633154,
+              "nearest_world_mm": [
+                46.99830366538698,
+                83.7064973369403,
+                -38.60469486707602
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 95.72773594940362,
+              "surface_distance_mm": 95.72773594940362,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 66.67163860280218,
+              "surface_distance_mm": 66.67163860280218,
+              "nearest_world_mm": [
+                45.40073230799777,
+                83.9006708850786,
+                -19.671006725712033
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 22.152757515227965,
+              "surface_distance_mm": 22.152757515227965,
+              "nearest_world_mm": [
+                -6.9178296469650675,
+                59.70483159885219,
+                -70.11836202142963
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.16255078931234124,
+              "surface_distance_mm": 0.16255078931234124,
+              "nearest_world_mm": [
+                -8.708224009788115,
+                57.159309902621274,
+                -48.19590249242489
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 18.84071050165956,
+              "surface_distance_mm": 18.84071050165956,
+              "nearest_world_mm": [
+                -9.954731160846647,
+                57.45158646636096,
+                -29.398041196546338
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.932830329084484,
+              "surface_distance_mm": 0.932830329084484,
+              "nearest_world_mm": [
+                -7.764841742588203,
+                56.608497407314225,
+                -48.11530942149092
+              ]
+            }
+          ],
+          "sdf_cell_node": {
+            "index": [
+              10,
+              24,
+              21
+            ],
+            "stored_distance_m": 0.000167,
+            "weight": 0.1938705330566442,
+            "point_world_m": [
+              -0.00856819167080744,
+              0.057077635964052506,
+              -0.04818394126739016
+            ]
+          }
+        },
+        {
+          "runtime_contact": null,
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.008937859310001767,
+            0.057177335540124434,
+            -0.043175400667415785
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 91.07038340512774,
+              "surface_distance_mm": 91.07038340512774,
+              "nearest_world_mm": [
+                54.546043148287325,
+                -4.606876871959722,
+                -64.30168663636617
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 64.42226111281559,
+              "surface_distance_mm": 64.42226111281559,
+              "nearest_world_mm": [
+                46.350051611771754,
+                24.65096449333071,
+                -37.21638906144221
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 67.18724764858635,
+              "surface_distance_mm": 67.18724764858635,
+              "nearest_world_mm": [
+                44.78293043601638,
+                25.213095864627142,
+                -18.548375316717227
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 96.28878126649855,
+              "surface_distance_mm": 96.28878126649855,
+              "nearest_world_mm": [
+                86.97495030977578,
+                56.218599012641064,
+                -34.72891187628012
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 126.56080085277374,
+              "surface_distance_mm": 126.56080085277374,
+              "nearest_world_mm": [
+                116.307764565477,
+                53.011078353084464,
+                -60.89014914400988
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 98.1435557316643,
+              "surface_distance_mm": 98.1435557316643,
+              "nearest_world_mm": [
+                85.41643157863908,
+                56.590159730833776,
+                -16.17390909518909
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 87.80035231227936,
+              "surface_distance_mm": 87.80035231227936,
+              "nearest_world_mm": [
+                55.7008548085265,
+                111.8135746252424,
+                -66.5339083658408
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 62.07667341732703,
+              "surface_distance_mm": 62.07667341732703,
+              "nearest_world_mm": [
+                46.98197113887517,
+                83.70699749312666,
+                -38.41483538693092
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 94.80243549730557,
+              "surface_distance_mm": 94.80243549730557,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 64.95595219495598,
+              "surface_distance_mm": 64.95595219495598,
+              "nearest_world_mm": [
+                45.40073230800089,
+                83.90067088507195,
+                -19.67100672571167
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 27.136542202172997,
+              "surface_distance_mm": 27.136542202172997,
+              "nearest_world_mm": [
+                -6.917829646965082,
+                59.70483159885219,
+                -70.11836202142963
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.8175568122568332,
+              "surface_distance_mm": 0.8175568122568332,
+              "nearest_world_mm": [
+                -8.998025555082853,
+                57.193562411217336,
+                -42.3602222495986
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 13.817556799996822,
+              "surface_distance_mm": 13.817556799996822,
+              "nearest_world_mm": [
+                -9.95473116084666,
+                57.45158646636096,
+                -29.398041196546338
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.5452431059166422,
+              "surface_distance_mm": 0.5452431059166422,
+              "nearest_world_mm": [
+                -8.999576901196058,
+                57.2256932950679,
+                -43.714976900235236
+              ]
+            }
+          ],
+          "sdf_cell_node": {
+            "index": [
+              10,
+              24,
+              22
+            ],
+            "stored_distance_m": 0.000545,
+            "weight": 0.09157533853694506,
+            "point_world_m": [
+              -0.008937859310001767,
+              0.057177335540124434,
+              -0.043175400667415785
+            ]
+          }
+        },
+        {
+          "runtime_contact": null,
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.008509582870301041,
+            0.062099537113483635,
+            -0.048279581030948565
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 93.17437153460465,
+              "surface_distance_mm": 93.17437153460465,
+              "nearest_world_mm": [
+                54.745240322216475,
+                -4.413096144484108,
+                -64.29084178215044
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 67.31504194681577,
+              "surface_distance_mm": 67.31504194681577,
+              "nearest_world_mm": [
+                46.439984881384554,
+                24.749004375195266,
+                -37.472288105773956
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 71.3027250070804,
+              "surface_distance_mm": 71.3027250070804,
+              "nearest_world_mm": [
+                44.85169590229735,
+                25.32269854042217,
+                -18.545481653981625
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 96.47084026234633,
+              "surface_distance_mm": 96.47084026234633,
+              "nearest_world_mm": [
+                87.06653878201716,
+                61.232878839782906,
+                -35.19994440522234
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 125.77576234171416,
+              "surface_distance_mm": 125.77576234171416,
+              "nearest_world_mm": [
+                116.3221816604441,
+                53.300208359294466,
+                -60.894840451810886
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 99.28741877369397,
+              "surface_distance_mm": 99.28741877369397,
+              "nearest_world_mm": [
+                85.4750524520565,
+                61.61206075638502,
+                -16.269547965242282
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 83.22548395769678,
+              "surface_distance_mm": 83.22548395769678,
+              "nearest_world_mm": [
+                55.4940978596456,
+                112.06005059024413,
+                -66.55407489946198
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 60.34015859337758,
+              "surface_distance_mm": 60.34015859337758,
+              "nearest_world_mm": [
+                46.941668829764104,
+                83.83940926865012,
+                -38.61152110938217
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 92.00928180940583,
+              "surface_distance_mm": 92.00928180940583,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 64.8023935353271,
+              "surface_distance_mm": 64.8023935353271,
+              "nearest_world_mm": [
+                45.34028104248532,
+                84.04285075356398,
+                -19.678298699996056
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 21.939920331159488,
+              "surface_distance_mm": 21.939920331159488,
+              "nearest_world_mm": [
+                -6.894964040252825,
+                61.66407348127497,
+                -70.15567486865878
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "inside",
+                "outside"
+              ],
+              "distance_mm": 0.15928949778643722,
+              "surface_distance_mm": 0.15928949778643722,
+              "nearest_world_mm": [
+                -8.497860319869096,
+                62.09637553485291,
+                -48.4384071318797
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 18.840710501659565,
+              "surface_distance_mm": 18.840710501659565,
+              "nearest_world_mm": [
+                -9.896122360340248,
+                62.47348761579209,
+                -29.493680960104736
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 1.622276310215723,
+              "surface_distance_mm": 1.622276310215723,
+              "nearest_world_mm": [
+                -9.312413212720596,
+                63.506530059850995,
+                -48.36684337592128
+              ]
+            }
+          ],
+          "sdf_cell_node": {
+            "index": [
+              10,
+              25,
+              21
+            ],
+            "stored_distance_m": -0.000187,
+            "weight": 0.14183284120344505,
+            "point_world_m": [
+              -0.008509582870301041,
+              0.062099537113483635,
+              -0.048279581030948565
+            ]
+          }
+        },
+        {
+          "runtime_contact": null,
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.008879250509495368,
+            0.062199236689555557,
+            -0.043271040430974184
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 94.4833888470898,
+              "surface_distance_mm": 94.4833888470898,
+              "nearest_world_mm": [
+                54.745240322216475,
+                -4.413096144484108,
+                -64.29084178215044
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 67.05409312222235,
+              "surface_distance_mm": 67.05409312222235,
+              "nearest_world_mm": [
+                46.4112190674604,
+                24.76023869902708,
+                -37.14431146123833
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 69.70112570831223,
+              "surface_distance_mm": 69.70112570831223,
+              "nearest_world_mm": [
+                44.85169590230102,
+                25.32269854042761,
+                -18.545481653981483
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 96.28879337107837,
+              "surface_distance_mm": 96.28879337107837,
+              "nearest_world_mm": [
+                87.03357116759814,
+                61.24050004154825,
+                -34.82455057802014
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 126.74852918200348,
+              "surface_distance_mm": 126.74852918200348,
+              "nearest_world_mm": [
+                116.3221816604441,
+                53.300208359294466,
+                -60.894840451810886
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 98.14356758501184,
+              "surface_distance_mm": 98.14356758501184,
+              "nearest_world_mm": [
+                85.47505245205613,
+                61.612060756353515,
+                -16.269547965241685
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 84.68841973466428,
+              "surface_distance_mm": 84.68841973466428,
+              "nearest_world_mm": [
+                55.4940978596456,
+                112.06005059024413,
+                -66.55407489946198
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 60.0498000932134,
+              "surface_distance_mm": 60.0498000932134,
+              "nearest_world_mm": [
+                46.93095871361173,
+                83.84053481310278,
+                -38.49053279729596
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 91.04619863181931,
+              "surface_distance_mm": 91.04619863181931,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 63.03585122355541,
+              "surface_distance_mm": 63.03585122355541,
+              "nearest_world_mm": [
+                45.34028104248776,
+                84.04285075355759,
+                -19.678298699995747
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 26.963074032822234,
+              "surface_distance_mm": 26.963074032822234,
+              "nearest_world_mm": [
+                -6.8949640402528365,
+                61.66407348127496,
+                -70.15567486865878
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.817556812256826,
+              "surface_distance_mm": 0.817556812256826,
+              "nearest_world_mm": [
+                -8.939416754576454,
+                62.21546356064846,
+                -42.455862013157
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 13.817556799996822,
+              "surface_distance_mm": 13.817556799996822,
+              "nearest_world_mm": [
+                -9.89612236034026,
+                62.47348761579208,
+                -29.493680960104733
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.5325047537507798,
+              "surface_distance_mm": 0.5325047537507798,
+              "nearest_world_mm": [
+                -8.840062026150006,
+                62.18866753293435,
+                -43.80199604914635
+              ]
+            }
+          ],
+          "sdf_cell_node": {
+            "index": [
+              10,
+              25,
+              22
+            ],
+            "stored_distance_m": 0.000533,
+            "weight": 0.0669951758221419,
+            "point_world_m": [
+              -0.008879250509495368,
+              0.062199236689555557,
+              -0.043271040430974184
+            ]
+          }
+        },
+        {
+          "runtime_contact": null,
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.003559001720769228,
+            0.05702623605742435,
+            -0.047813202539223124
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 86.28839238095853,
+              "surface_distance_mm": 86.28839238095853,
+              "nearest_world_mm": [
+                54.754922180334965,
+                -4.404032929035764,
+                -64.2903076004178
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 60.403532453165575,
+              "surface_distance_mm": 60.403532453165575,
+              "nearest_world_mm": [
+                46.414575860756806,
+                24.71034692060905,
+                -37.47339665028655
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 64.84783899681116,
+              "surface_distance_mm": 64.84783899681116,
+              "nearest_world_mm": [
+                44.825977078630046,
+                25.283489020419218,
+                -18.546599393611444
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 91.45789637242143,
+              "surface_distance_mm": 91.45789637242143,
+              "nearest_world_mm": [
+                87.00791378775803,
+                56.210994376823244,
+                -35.10430781379267
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 120.64480564490727,
+              "surface_distance_mm": 120.64480564490727,
+              "nearest_world_mm": [
+                116.30794419337339,
+                53.01684477630896,
+                -60.89025067205391
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 94.43443642558374,
+              "surface_distance_mm": 94.43443642558374,
+              "nearest_world_mm": [
+                85.41643171992465,
+                56.59017183440959,
+                -16.17390932569387
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 82.84245398665465,
+              "surface_distance_mm": 82.84245398665465,
+              "nearest_world_mm": [
+                55.89614469902756,
+                111.59905100691337,
+                -66.5152242272745
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 57.90088989897801,
+              "surface_distance_mm": 57.90088989897801,
+              "nearest_world_mm": [
+                47.030733356796155,
+                83.6406468596455,
+                -38.60098817317967
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 92.67219641484505,
+              "surface_distance_mm": 92.67219641484505,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 62.53879792157796,
+              "surface_distance_mm": 62.53879792157796,
+              "nearest_world_mm": [
+                45.435344063652906,
+                83.83014100050245,
+                -19.66704815829794
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 22.14296103079883,
+              "surface_distance_mm": 22.14296103079883,
+              "nearest_world_mm": [
+                -1.2125826107872082,
+                59.491647033761716,
+                -69.69302861918871
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "inside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.2245694731103355,
+              "surface_distance_mm": 0.2245694731103355,
+              "nearest_world_mm": [
+                -3.73580123923473,
+                57.16380781438467,
+                -47.82893118221199
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 18.84071050165957,
+              "surface_distance_mm": 18.84071050165957,
+              "nearest_world_mm": [
+                -4.945541210808436,
+                57.4001865597328,
+                -29.027302468379297
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 1.566673896267233,
+              "surface_distance_mm": 1.566673896267233,
+              "nearest_world_mm": [
+                -3.175796769550276,
+                58.545320399750096,
+                -47.81515791826163
+              ]
+            }
+          ],
+          "sdf_cell_node": {
+            "index": [
+              11,
+              24,
+              21
+            ],
+            "stored_distance_m": -0.000225,
+            "weight": 0.19836247281434943,
+            "point_world_m": [
+              -0.003559001720769228,
+              0.05702623605742435,
+              -0.047813202539223124
+            ]
+          }
+        },
+        {
+          "runtime_contact": null,
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.003928669359963555,
+            0.05712593563349628,
+            -0.04280466193924875
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 87.70025038078336,
+              "surface_distance_mm": 87.70025038078336,
+              "nearest_world_mm": [
+                54.754922180334965,
+                -4.404032929035764,
+                -64.2903076004178
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 60.11320070789587,
+              "surface_distance_mm": 60.11320070789587,
+              "nearest_world_mm": [
+                46.39819578349061,
+                24.717058933866422,
+                -37.284856213633034
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 63.08256933675881,
+              "surface_distance_mm": 63.08256933675881,
+              "nearest_world_mm": [
+                44.825977078634,
+                25.283489020425385,
+                -18.546599393611274
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 91.26611720173399,
+              "surface_distance_mm": 91.26611720173399,
+              "nearest_world_mm": [
+                86.98108781807049,
+                56.217209205225195,
+                -34.79876316458922
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 121.65860588655156,
+              "surface_distance_mm": 121.65860588655156,
+              "nearest_world_mm": [
+                116.30794419337339,
+                53.01684477630896,
+                -60.89025067205391
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 93.23106303474293,
+              "surface_distance_mm": 93.23106303474293,
+              "nearest_world_mm": [
+                85.41643171992428,
+                56.59017183437809,
+                -16.173909325693273
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 84.31203614960808,
+              "surface_distance_mm": 84.31203614960808,
+              "nearest_world_mm": [
+                55.89614469902755,
+                111.59905100691337,
+                -66.5152242272745
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 57.59818094021554,
+              "surface_distance_mm": 57.59818094021554,
+              "nearest_world_mm": [
+                47.0206275080117,
+                83.64063481897925,
+                -38.48143127409977
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 91.71607457023907,
+              "surface_distance_mm": 91.71607457023907,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 60.706421217583504,
+              "surface_distance_mm": 60.706421217583504,
+              "nearest_world_mm": [
+                45.435344063656466,
+                83.83014100049553,
+                -19.66704815829754
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 27.12854548945267,
+              "surface_distance_mm": 27.12854548945267,
+              "nearest_world_mm": [
+                -1.2125826107872322,
+                59.49164703376172,
+                -69.69302861918871
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "inside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.7829892229652192,
+              "surface_distance_mm": 0.7829892229652192,
+              "nearest_world_mm": [
+                -3.778430681492016,
+                57.5175980928397,
+                -43.465798067978575
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 13.817556799996822,
+              "surface_distance_mm": 13.817556799996822,
+              "nearest_world_mm": [
+                -4.9455412108084476,
+                57.4001865597328,
+                -29.027302468379297
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 2.6703077710581438,
+              "surface_distance_mm": 2.6703077710581438,
+              "nearest_world_mm": [
+                -3.249448260281074,
+                59.65255583980682,
+                -43.33888345040576
+              ]
+            }
+          ],
+          "sdf_cell_node": {
+            "index": [
+              11,
+              24,
+              22
+            ],
+            "stored_distance_m": -0.000781,
+            "weight": 0.09369712000375123,
+            "point_world_m": [
+              -0.003928669359963555,
+              0.05712593563349628,
+              -0.04280466193924875
+            ]
+          }
+        },
+        {
+          "runtime_contact": null,
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.0035003929202628292,
+            0.06204813720685548,
+            -0.04790884230278153
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 89.87193502654877,
+              "surface_distance_mm": 89.87193502654877,
+              "nearest_world_mm": [
+                54.960643887201094,
+                -4.218716878254941,
+                -64.27881268990308
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 63.197715967914725,
+              "surface_distance_mm": 63.197715967914725,
+              "nearest_world_mm": [
+                46.489352203210835,
+                24.81900957269534,
+                -37.47003290463758
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 67.44370051086541,
+              "surface_distance_mm": 67.44370051086541,
+              "nearest_world_mm": [
+                44.90088276683048,
+                25.39256770432737,
+                -18.54324210618026
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 91.45791299795135,
+              "surface_distance_mm": 91.45791299795135,
+              "nearest_world_mm": [
+                87.06653897521481,
+                61.23289538931576,
+                -35.199944720391066
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 120.84124633655436,
+              "surface_distance_mm": 120.84124633655436,
+              "nearest_world_mm": [
+                116.32338891791348,
+                53.31742194154516,
+                -60.895093999288264
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 94.43444810052387,
+              "surface_distance_mm": 94.43444810052387,
+              "nearest_world_mm": [
+                85.47505259334173,
+                61.61207285992934,
+                -16.269548195746495
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 79.5504018016595,
+              "surface_distance_mm": 79.5504018016595,
+              "nearest_world_mm": [
+                55.67827377428545,
+                111.83947636813426,
+                -66.53609061238271
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 55.72775143550498,
+              "surface_distance_mm": 55.72775143550498,
+              "nearest_world_mm": [
+                46.9655546914332,
+                83.78003714389695,
+                -38.608576885203576
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 88.82592244066782,
+              "surface_distance_mm": 88.82592244066782,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 60.547675177884365,
+              "surface_distance_mm": 60.547675177884365,
+              "nearest_world_mm": [
+                45.36489337425793,
+                83.98143546565396,
+                -19.675259598992337
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 21.93992033115948,
+              "surface_distance_mm": 21.93992033115948,
+              "nearest_world_mm": [
+                -1.885774090214613,
+                61.61267357464681,
+                -69.78493614049174
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "inside",
+                "outside"
+              ],
+              "distance_mm": 0.15928949778643015,
+              "surface_distance_mm": 0.15928949778643015,
+              "nearest_world_mm": [
+                -3.488670369830883,
+                62.044975628224755,
+                -48.06766840371266
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 18.840710501659572,
+              "surface_distance_mm": 18.840710501659572,
+              "nearest_world_mm": [
+                -4.8869324103020375,
+                62.42208770916393,
+                -29.122942231937696
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 2.748316043881437,
+              "surface_distance_mm": 2.748316043881437,
+              "nearest_world_mm": [
+                -3.819650295399231,
+                59.727182081383035,
+                -46.47201137639516
+              ]
+            }
+          ],
+          "sdf_cell_node": {
+            "index": [
+              11,
+              25,
+              21
+            ],
+            "stored_distance_m": -0.000185,
+            "weight": 0.1451190785098845,
+            "point_world_m": [
+              -0.0035003929202628292,
+              0.06204813720685548,
+              -0.04790884230278153
+            ]
+          }
+        },
+        {
+          "runtime_contact": null,
+          "seed_frame_s": null,
+          "point_world_m": [
+            -0.0038700605594571558,
+            0.0621478367829274,
+            -0.04290030170280715
+          ],
+          "target": "Robot | Chassis and hip mounts",
+          "brep_members": [
+            {
+              "member": "1db84241242c",
+              "name": "-Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 91.22835065141774,
+              "surface_distance_mm": 91.22835065141774,
+              "nearest_world_mm": [
+                54.960643887201094,
+                -4.218716878254943,
+                -64.27881268990309
+              ]
+            },
+            {
+              "member": "b17c2308ff96",
+              "name": "-Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 62.92003191204754,
+              "surface_distance_mm": 62.92003191204754,
+              "nearest_world_mm": [
+                46.46645844864611,
+                24.8274575406834,
+                -37.212194533016564
+              ]
+            },
+            {
+              "member": "0702845b41d3",
+              "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 65.74816400607612,
+              "surface_distance_mm": 65.74816400607612,
+              "nearest_world_mm": [
+                44.9008827668346,
+                25.39256770433296,
+                -18.543242106180088
+              ]
+            },
+            {
+              "member": "8cf3e6bcf5ec",
+              "name": "+X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 91.26612930631384,
+              "surface_distance_mm": 91.26612930631384,
+              "nearest_world_mm": [
+                87.03970867589288,
+                61.23911023413238,
+                -34.89440186632923
+              ]
+            },
+            {
+              "member": "15e201e53da1",
+              "name": "+X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 121.85341223508534,
+              "surface_distance_mm": 121.85341223508534,
+              "nearest_world_mm": [
+                116.32338891791348,
+                53.31742194154516,
+                -60.895093999288264
+              ]
+            },
+            {
+              "member": "bc7a7393c49f",
+              "name": "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 93.2310748603782,
+              "surface_distance_mm": 93.2310748603782,
+              "nearest_world_mm": [
+                85.47505259334136,
+                61.612072859897836,
+                -16.269548195745898
+              ]
+            },
+            {
+              "member": "6b83e4df04c2",
+              "name": "+Y | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 81.07967491281215,
+              "surface_distance_mm": 81.07967491281215,
+              "nearest_world_mm": [
+                55.67827377428545,
+                111.83947636813426,
+                -66.53609061238271
+              ]
+            },
+            {
+              "member": "3389914a4e72",
+              "name": "+Y | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 55.41327252837285,
+              "surface_distance_mm": 55.41327252837285,
+              "nearest_world_mm": [
+                46.96555476098912,
+                83.78003697877001,
+                -38.608576876782635
+              ]
+            },
+            {
+              "member": "90aaa1a07b41",
+              "name": "+Y | Hip support surface",
+              "solid_states": [],
+              "distance_mm": 87.82793885579675,
+              "surface_distance_mm": 87.82793885579675,
+              "nearest_world_mm": [
+                50.44189974343725,
+                128.84474516503184,
+                -25.13853872770914
+              ]
+            },
+            {
+              "member": "4f13ca1d8689",
+              "name": "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 58.653126950038875,
+              "surface_distance_mm": 58.653126950038875,
+              "nearest_world_mm": [
+                45.36489337426098,
+                83.9814354656467,
+                -19.675259598991968
+              ]
+            },
+            {
+              "member": "da27110977cd",
+              "name": "-X | Timing belt",
+              "solid_states": [
+                "outside"
+              ],
+              "distance_mm": 26.963074032822227,
+              "surface_distance_mm": 26.963074032822227,
+              "nearest_world_mm": [
+                -1.885774090214625,
+                61.612673574646806,
+                -69.78493614049174
+              ]
+            },
+            {
+              "member": "8c1efc29fefd",
+              "name": "-X | Hip servo internal geometry",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.8175568122568261,
+              "surface_distance_mm": 0.8175568122568261,
+              "nearest_world_mm": [
+                -3.930226804538243,
+                62.1640636540203,
+                -42.08512328498997
+              ]
+            },
+            {
+              "member": "f5009ce295f6",
+              "name": "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+              "solid_states": [],
+              "distance_mm": 13.817556799996826,
+              "surface_distance_mm": 13.817556799996826,
+              "nearest_world_mm": [
+                -4.886932410302049,
+                62.422087709163925,
+                -29.122942231937696
+              ]
+            },
+            {
+              "member": "93c3343067fe",
+              "name": "Robot | Chassis and hip mounts",
+              "solid_states": [
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside",
+                "outside"
+              ],
+              "distance_mm": 0.5325047537507727,
+              "surface_distance_mm": 0.5325047537507727,
+              "nearest_world_mm": [
+                -3.830872076111795,
+                62.1372676263062,
+                -43.431257320979306
+              ]
+            }
+          ],
+          "sdf_cell_node": {
+            "index": [
+              11,
+              25,
+              22
+            ],
+            "stored_distance_m": 0.000533,
+            "weight": 0.06854744005283861,
+            "point_world_m": [
+              -0.0038700605594571558,
+              0.0621478367829274,
+              -0.04290030170280715
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "pair_distances_measured": false,
+  "scope": "Read-only exact B-rep distance and solid classification at captured rigid poses. CAD/world millimetres; runtime inputs metres. Nonnegative shape distance alone cannot distinguish touching from overlap. Point classification uses 1e-6 mm tolerance. No continuous clearance or hardware certification."
+}

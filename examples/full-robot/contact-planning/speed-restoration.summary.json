@@ -1,0 +1,23 @@
+{
+  "last": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.18688464449987333,
+    "sampled_feasible": false,
+    "maximum_force_error_n": 0.05167970196758276,
+    "maximum_moment_error_nm": 0.01677544258289143,
+    "minimum_torque_margin_nm": -0.0009059083652696552,
+    "maximum_penetration_m": 0.000043541045443684645
+  },
+  "best": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.18789494011744332,
+    "sampled_feasible": true,
+    "maximum_force_error_n": 0.04294937457475956,
+    "maximum_moment_error_nm": 0.013843698807075144,
+    "minimum_torque_margin_nm": -0.0012033744752268372,
+    "maximum_penetration_m": 0.000047594143372131636
+  },
+  "cost": 0.06355811608137278,
+  "evaluations": 1581,
+  "termination": "iteration_limit"
+}

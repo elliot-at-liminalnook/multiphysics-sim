@@ -23,7 +23,7 @@ pub fn fit(mut network:Network,samples:&[SupervisedSample],config:&FitConfig)->R
     if config.epochs==0 || config.epochs>100_000 || config.batch_size==0 || !config.learning_rate.is_finite() || config.learning_rate<=0.0 {return Err("invalid distillation optimizer settings".into());}
     let initial_loss=network.supervised_gradient(samples)?.0;
     let mut best=network.clone();let mut best_loss=initial_loss;let mut best_epoch=None;
-    let mut first=vec![0.;network.parameters().len()];let mut second=first.clone();let mut count=0.0;
+    let mut optimizer=crate::optimization::Adam::new(network.parameters().len());
     let mut losses=vec![];
     for epoch in 0..config.epochs {
         // Deterministic cyclic batch order; no validation samples enter fitting.
@@ -31,11 +31,7 @@ pub fn fit(mut network:Network,samples:&[SupervisedSample],config:&FitConfig)->R
         for k in 0..chunks.len(){
             let batch=chunks[(k+epoch)%chunks.len()];
             let (_,gradient)=network.supervised_gradient(batch)?;
-            let mut values=network.parameters();count+=1.0;
-            for i in 0..values.len(){
-                first[i]=0.9*first[i]+0.1*gradient[i];second[i]=0.999*second[i]+0.001*gradient[i]*gradient[i];
-                values[i]-=config.learning_rate*(first[i]/(1.-0.9f64.powf(count)))/((second[i]/(1.-0.999f64.powf(count))).sqrt()+1e-8);
-            }
+            let values=optimizer.step(&network.parameters(),&gradient,config.learning_rate,None)?;
             network=network.with_parameters(&values)?;
         }
         let loss=network.supervised_gradient(samples)?.0;losses.push(loss);

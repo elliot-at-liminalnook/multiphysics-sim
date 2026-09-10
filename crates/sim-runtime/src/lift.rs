@@ -1,8 +1,21 @@
-//! Sampled lift-phase evidence. A lift requires simultaneous clearance,
-//! unloading and support; unrelated peaks do not establish a successful lift.
+//! Sampled lift-phase evidence with explicit named-support or clearance-only scope.
+//! Named-support lifts require simultaneous clearance, unloading and support.
 //! This does not certify landing, continuous clearance, balance or walking.
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SupportCheck {
+    #[default]
+    NamedMinimums,
+    /// For independently scheduled/flight motions, audit foot clearance and
+    /// unloading here and assess body balance separately in the dynamic runtime.
+    ClearanceOnly,
+}
+fn named_minimums(value: &SupportCheck) -> bool {
+    *value == SupportCheck::NamedMinimums
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -15,6 +28,8 @@ pub struct LiftRequirements {
     pub minimum_clearance_m: f64,
     pub maximum_swing_force_n: f64,
     pub minimum_support_forces_n: BTreeMap<String, f64>,
+    #[serde(default, skip_serializing_if = "named_minimums")]
+    pub support_check: SupportCheck,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -57,7 +72,9 @@ pub fn evaluate_lift(samples: &[LiftSample], r: &LiftRequirements) -> Result<Lif
         || r.minimum_clearance_m <= 0.0
         || r.maximum_swing_force_n < 0.0
         || r.swing_link.trim().is_empty()
-        || r.minimum_support_forces_n.is_empty()
+        || (r.support_check == SupportCheck::NamedMinimums && r.minimum_support_forces_n.is_empty())
+        || (r.support_check == SupportCheck::ClearanceOnly
+            && !r.minimum_support_forces_n.is_empty())
         || r.minimum_support_forces_n.contains_key(&r.swing_link)
         || r.minimum_support_forces_n
             .iter()
@@ -110,6 +127,9 @@ pub fn evaluate_lift(samples: &[LiftSample], r: &LiftRequirements) -> Result<Lif
         scope: "Consecutive reporting samples simultaneously meet caller-declared geometric clearance, swing unloading and support-force requirements. No interpolation or between-sample guarantee; not a landing, balance, collision, hardware-transfer or walking certificate.".into(),
     };
     let mut start = None;
+    if r.support_check == SupportCheck::ClearanceOnly {
+        report.scope = "Consecutive reporting samples meet declared foot clearance and unloading only. Support and body balance are unassessed by this check and require separate dynamic evidence. No between-sample, landing, collision or walking certificate.".into();
+    }
     for s in phase {
         let force = s.floor_forces_n[&r.swing_link];
         let clearance = s.swing_clearance_m >= r.minimum_clearance_m;

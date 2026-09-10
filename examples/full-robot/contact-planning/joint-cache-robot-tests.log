@@ -1,0 +1,18 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.86s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/debug/deps/sim_domain_robot-aab60f3d48bdb8e0)
+
+running 10 tests
+test motion_capability::tests::constrained_support_matches_analytic_friction_cone_projection ... ok
+test motion_capability::tests::rejects_unreachable_singular_and_redundant_cases ... ok
+test motion_capability::tests::coupled_transmission_bound_satisfies_velocity_and_active_rate_constraint ... ok
+test motion_capability::tests::force_jacobian_and_cone_residuals_are_physical ... ok
+test motion_capability::tests::constrained_pair_transfers_load_for_moment_and_rejects_tensile_support ... ok
+test motion_capability::tests::affine_force_load_map_matches_moments_joint_work_and_force_derivatives ... ok
+test motion_capability::tests::point_support_matches_static_balance_and_identifies_unsupported_moment ... ok
+test motion_capability::tests::weighted_support_uses_availability_and_disables_zero_weight_points ... ok
+test motion_capability::tests::constrained_support_retains_balance_regularization_and_disabled_points ... ok
+test motion_capability::tests::joint_load_and_speed_search_reaches_analytic_limit_missed_by_equal_allocation ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+

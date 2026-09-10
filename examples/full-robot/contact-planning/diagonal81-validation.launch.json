@@ -1,0 +1,34 @@
+{
+  "cases": "examples/full-robot/contact-planning/diagonal81-validation-cases.json",
+  "cases_sha256": "a0f77f65962663b481df9cd5204441d6135de4f9d36bfad9be7428941b9c1719",
+  "task": "examples/full-robot/fast-wasd/task.json",
+  "task_sha256": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026",
+  "code": [
+    {
+      "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/run_controller_validation.mjs",
+      "sha256": "79716f82d6d5700a746e89c63c66a7bfb3d157bbad79966775ce9f0dde363f39"
+    },
+    {
+      "path": "examples/full-robot/speed-ceiling/analyze_validation.mjs",
+      "sha256": "05d0eed02fda12890ba96528c26ae370f90fbaf8efe1afaef81fafb073883529"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/audit_contact_controller.mjs",
+      "sha256": "34c52d0905eae2264bb9a48760c4b858925c1a859521f758dea84db28e22dd94"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/run_environment",
+      "sha256": "f364502f7563b6221c2736ec4b990c66e6c4194d59c8bd6b36aedcf7762c97ce"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/replay_policy_state",
+      "sha256": "706554e0900a2a552e967d485be88049347a573b98a7d2841257da8cf31600b9"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/evaluate_lift",
+      "sha256": "241130984bd5f2bc987c7c0d9d413e360f7bb387a3b9fb832d7e4480809eecf5"
+    }
+  ]
+}

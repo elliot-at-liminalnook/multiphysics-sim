@@ -1,0 +1,629 @@
+{
+  "version": 1,
+  "base_commit": "7edb7177",
+  "observed_at_utc": "2026-09-10T05:53:30.742Z",
+  "previous_goal_turn": "progress: expanded reference search and launched measured300s comparisons",
+  "shared_tests": 15,
+  "parity": {
+    "version": 1,
+    "frames": 101,
+    "transitions": 101,
+    "all_sampled_physics_and_policy_identical": true,
+    "excluded_frame_fields": [
+      "stepping_wall_s"
+    ],
+    "files": [
+      {
+        "path": "runs/affine-speed2-parity/native.json",
+        "sha256": "554e01e2ce369abdac7efc72970b31f3b9f3b5ffba83bc0f6d8bbd83663ca687"
+      },
+      {
+        "path": "runs/phase-speed300-zero/native2.json",
+        "sha256": "620c75d25edd7879ea59fe74c62bf40592e87863b120bedf2ee294e1d22b57fd"
+      }
+    ],
+    "scope": "Zero phase shifts applied to the reference and all three feedforward curves preserve all sampled physical fields, policy outputs/state and task transitions exactly through2s. The elapsed wall-compute timing diagnostic is excluded; simulation time and every physics field remain compared. Nonzero phases are new authored commands, not injected future physical states. This parity check does not certify a new gait."
+  },
+  "affine_completed": [
+    {
+      "index": 0,
+      "observation": {
+        "context_id": "e930295dc10acb65442fc55b3170ab47a301587beb38ee843948b4c45aafa367",
+        "values": [
+          0.3063303960523922,
+          -0.45774844551837535,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "outcome": {
+          "status": "complete",
+          "objective": -0.5143375634243865,
+          "residuals": [
+            -1
+          ]
+        },
+        "evidence": "runs/affine-speed300-v1/evaluation-000/observation.json"
+      },
+      "elapsed_s": 300,
+      "fallen": false,
+      "completed_speed_m_s": 0.5143375634243865,
+      "result": {
+        "path": "runs/affine-speed300-v1/evaluation-000/result.json",
+        "sha256": "5e44a04427c2e149de175dadd729397b16ac5f44a41c0f4c082c16c6108cb91c"
+      },
+      "execution": {
+        "exit_code": 0,
+        "signal": null,
+        "error": null,
+        "wall_s": 1122.233
+      }
+    },
+    {
+      "index": 1,
+      "observation": {
+        "context_id": "e930295dc10acb65442fc55b3170ab47a301587beb38ee843948b4c45aafa367",
+        "values": [
+          -0.057277280433130295,
+          -1.368522341074434,
+          1.7846514128462658,
+          1.3992643771712037,
+          0.8068378924403852,
+          0.6122874708500652,
+          0.12586951189620632,
+          2.7351678187121
+        ],
+        "outcome": {
+          "status": "failed",
+          "reason": "sampled task termination at 1.08 s: [\"speed task: sampled body ground contact or overturning\"]"
+        },
+        "evidence": "runs/affine-speed300-v1/evaluation-001/observation.json"
+      },
+      "elapsed_s": 1.08,
+      "fallen": true,
+      "completed_speed_m_s": null,
+      "result": {
+        "path": "runs/affine-speed300-v1/evaluation-001/result.json",
+        "sha256": "461b0eef13bb2dd1caa91b98508b87206b2487a603450551123faeede716563f"
+      },
+      "execution": {
+        "exit_code": 1,
+        "signal": null,
+        "error": null,
+        "wall_s": 5.402
+      }
+    },
+    {
+      "index": 2,
+      "observation": {
+        "context_id": "e930295dc10acb65442fc55b3170ab47a301587beb38ee843948b4c45aafa367",
+        "values": [
+          -0.396316824973298,
+          -1.7178376733149123,
+          0.27777746666528547,
+          0.6639353845246008,
+          0.24372252386199356,
+          1.5997366666694366,
+          2.393681856965453,
+          1.2106634878706468
+        ],
+        "outcome": {
+          "status": "failed",
+          "reason": "sampled task termination at 0.48 s: [\"speed task: sampled body ground contact or overturning\"]"
+        },
+        "evidence": "runs/affine-speed300-v1/evaluation-002/observation.json"
+      },
+      "elapsed_s": 0.48,
+      "fallen": true,
+      "completed_speed_m_s": null,
+      "result": {
+        "path": "runs/affine-speed300-v1/evaluation-002/result.json",
+        "sha256": "d840079c22c852baab37bf8f3bec72a9a546d4fd82022e31716c044c172ad9c0"
+      },
+      "execution": {
+        "exit_code": 1,
+        "signal": null,
+        "error": null,
+        "wall_s": 2.227
+      }
+    }
+  ],
+  "phase_variants": [
+    {
+      "index": 0,
+      "preparation": {
+        "version": 1,
+        "requested_cycles": [
+          -0.1646871835017863,
+          0.18807194433389418,
+          0.2267218801937615,
+          -0.2921505575211759
+        ],
+        "integer_group_shifts": [
+          -659,
+          752,
+          907,
+          -1169
+        ],
+        "executed_cycles": [
+          -0.16475,
+          0.188,
+          0.22675,
+          -0.29225
+        ],
+        "controls": 4000,
+        "reference_period_s": 0.39608749046768144,
+        "reference_shift_resolution_s": 0.00009902187261692036,
+        "maximum_reference_time_rounding_error_s": 0.00003938792188332199,
+        "groups": [
+          {
+            "name": "-Y",
+            "targets": [
+              "-Y | Hip servo output.target",
+              "-Y | Worm servo output.target",
+              "-Y | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "+X",
+            "targets": [
+              "+X | Hip servo output.target",
+              "+X | Worm servo output.target",
+              "+X | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "+Y",
+            "targets": [
+              "+Y | Hip servo output.target",
+              "+Y | Worm servo output.target",
+              "+Y | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "-X",
+            "targets": [
+              "-X | Hip servo output.target",
+              "-X | Worm servo output.target",
+              "-X | Foot servo output.target"
+            ]
+          }
+        ],
+        "executions": [
+          {
+            "parameter": "trajectory",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed0/trajectory.original.json",
+              "runs/phase-speed300-seed0/integer-shifts.json",
+              "runs/phase-speed300-seed0/trajectory.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "static_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed0/static_feedforward.original.json",
+              "runs/phase-speed300-seed0/integer-shifts.json",
+              "runs/phase-speed300-seed0/static_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "dynamic_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed0/dynamic_feedforward.original.json",
+              "runs/phase-speed300-seed0/integer-shifts.json",
+              "runs/phase-speed300-seed0/dynamic_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "velocity_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed0/velocity_feedforward.original.json",
+              "runs/phase-speed300-seed0/integer-shifts.json",
+              "runs/phase-speed300-seed0/velocity_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          }
+        ],
+        "scope": "Per-group phases are rounded to the nearest existing control interval (ties toward positive infinity). Rust then exactly permutes periodic controls, preserving each signal shape and derivative curve. Reference and feedforward signals share the shift. Offsets refer to the reference clock, not elapsed simulation time. Actual contact remains determined by unchanged runtime physics."
+      },
+      "inputs": {
+        "path": "runs/phase-speed300-seed0/inputs.json",
+        "sha256": "7db00a79eea64bd5240df6489d9510d79438f885548f534fb5a2d0ec04d6ef6d"
+      }
+    },
+    {
+      "index": 1,
+      "preparation": {
+        "version": 1,
+        "requested_cycles": [
+          0.29685723117289775,
+          -0.3045669694558988,
+          -0.15495762333109792,
+          0.022967697391837016
+        ],
+        "integer_group_shifts": [
+          1187,
+          -1218,
+          -620,
+          92
+        ],
+        "executed_cycles": [
+          0.29675,
+          -0.3045,
+          -0.155,
+          0.023
+        ],
+        "controls": 4000,
+        "reference_period_s": 0.39608749046768144,
+        "reference_shift_resolution_s": 0.00009902187261692036,
+        "maximum_reference_time_rounding_error_s": 0.000042472926172970744,
+        "groups": [
+          {
+            "name": "-Y",
+            "targets": [
+              "-Y | Hip servo output.target",
+              "-Y | Worm servo output.target",
+              "-Y | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "+X",
+            "targets": [
+              "+X | Hip servo output.target",
+              "+X | Worm servo output.target",
+              "+X | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "+Y",
+            "targets": [
+              "+Y | Hip servo output.target",
+              "+Y | Worm servo output.target",
+              "+Y | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "-X",
+            "targets": [
+              "-X | Hip servo output.target",
+              "-X | Worm servo output.target",
+              "-X | Foot servo output.target"
+            ]
+          }
+        ],
+        "executions": [
+          {
+            "parameter": "trajectory",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed1/trajectory.original.json",
+              "runs/phase-speed300-seed1/integer-shifts.json",
+              "runs/phase-speed300-seed1/trajectory.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "static_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed1/static_feedforward.original.json",
+              "runs/phase-speed300-seed1/integer-shifts.json",
+              "runs/phase-speed300-seed1/static_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "dynamic_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed1/dynamic_feedforward.original.json",
+              "runs/phase-speed300-seed1/integer-shifts.json",
+              "runs/phase-speed300-seed1/dynamic_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "velocity_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed1/velocity_feedforward.original.json",
+              "runs/phase-speed300-seed1/integer-shifts.json",
+              "runs/phase-speed300-seed1/velocity_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          }
+        ],
+        "scope": "Per-group phases are rounded to the nearest existing control interval (ties toward positive infinity). Rust then exactly permutes periodic controls, preserving each signal shape and derivative curve. Reference and feedforward signals share the shift. Offsets refer to the reference clock, not elapsed simulation time. Actual contact remains determined by unchanged runtime physics."
+      },
+      "inputs": {
+        "path": "runs/phase-speed300-seed1/inputs.json",
+        "sha256": "14d139357cce1fd8212cb4a283d876b75df495013f4cb3ea9487436e8673080d"
+      }
+    },
+    {
+      "index": 2,
+      "preparation": {
+        "version": 1,
+        "requested_cycles": [
+          -0.30726042233039863,
+          0.3027550479227169,
+          0.41374258102997874,
+          0.3285379031409924
+        ],
+        "integer_group_shifts": [
+          -1229,
+          1211,
+          1655,
+          1314
+        ],
+        "executed_cycles": [
+          -0.30725,
+          0.30275,
+          0.41375,
+          0.3285
+        ],
+        "controls": 4000,
+        "reference_period_s": 0.39608749046768144,
+        "reference_shift_resolution_s": 0.00009902187261692036,
+        "maximum_reference_time_rounding_error_s": 0.00001501295999651855,
+        "groups": [
+          {
+            "name": "-Y",
+            "targets": [
+              "-Y | Hip servo output.target",
+              "-Y | Worm servo output.target",
+              "-Y | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "+X",
+            "targets": [
+              "+X | Hip servo output.target",
+              "+X | Worm servo output.target",
+              "+X | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "+Y",
+            "targets": [
+              "+Y | Hip servo output.target",
+              "+Y | Worm servo output.target",
+              "+Y | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "-X",
+            "targets": [
+              "-X | Hip servo output.target",
+              "-X | Worm servo output.target",
+              "-X | Foot servo output.target"
+            ]
+          }
+        ],
+        "executions": [
+          {
+            "parameter": "trajectory",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed2/trajectory.original.json",
+              "runs/phase-speed300-seed2/integer-shifts.json",
+              "runs/phase-speed300-seed2/trajectory.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "static_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed2/static_feedforward.original.json",
+              "runs/phase-speed300-seed2/integer-shifts.json",
+              "runs/phase-speed300-seed2/static_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "dynamic_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed2/dynamic_feedforward.original.json",
+              "runs/phase-speed300-seed2/integer-shifts.json",
+              "runs/phase-speed300-seed2/dynamic_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "velocity_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed2/velocity_feedforward.original.json",
+              "runs/phase-speed300-seed2/integer-shifts.json",
+              "runs/phase-speed300-seed2/velocity_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          }
+        ],
+        "scope": "Per-group phases are rounded to the nearest existing control interval (ties toward positive infinity). Rust then exactly permutes periodic controls, preserving each signal shape and derivative curve. Reference and feedforward signals share the shift. Offsets refer to the reference clock, not elapsed simulation time. Actual contact remains determined by unchanged runtime physics."
+      },
+      "inputs": {
+        "path": "runs/phase-speed300-seed2/inputs.json",
+        "sha256": "207d7d73bcdfae2c233f5af00750ab95c6b48777d2c0ac4eeb0fdc5e529e391c"
+      }
+    },
+    {
+      "index": 3,
+      "preparation": {
+        "version": 1,
+        "requested_cycles": [
+          0.1790247355502962,
+          -0.23041829077540166,
+          -0.49678604749884964,
+          -0.12396437830462981
+        ],
+        "integer_group_shifts": [
+          716,
+          -922,
+          -1987,
+          -496
+        ],
+        "executed_cycles": [
+          0.179,
+          -0.2305,
+          -0.49675,
+          -0.124
+        ],
+        "controls": 4000,
+        "reference_period_s": 0.39608749046768144,
+        "reference_shift_resolution_s": 0.00009902187261692036,
+        "maximum_reference_time_rounding_error_s": 0.00003236400171922181,
+        "groups": [
+          {
+            "name": "-Y",
+            "targets": [
+              "-Y | Hip servo output.target",
+              "-Y | Worm servo output.target",
+              "-Y | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "+X",
+            "targets": [
+              "+X | Hip servo output.target",
+              "+X | Worm servo output.target",
+              "+X | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "+Y",
+            "targets": [
+              "+Y | Hip servo output.target",
+              "+Y | Worm servo output.target",
+              "+Y | Foot servo output.target"
+            ]
+          },
+          {
+            "name": "-X",
+            "targets": [
+              "-X | Hip servo output.target",
+              "-X | Worm servo output.target",
+              "-X | Foot servo output.target"
+            ]
+          }
+        ],
+        "executions": [
+          {
+            "parameter": "trajectory",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed3/trajectory.original.json",
+              "runs/phase-speed300-seed3/integer-shifts.json",
+              "runs/phase-speed300-seed3/trajectory.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "static_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed3/static_feedforward.original.json",
+              "runs/phase-speed300-seed3/integer-shifts.json",
+              "runs/phase-speed300-seed3/static_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "dynamic_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed3/dynamic_feedforward.original.json",
+              "runs/phase-speed300-seed3/integer-shifts.json",
+              "runs/phase-speed300-seed3/dynamic_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          },
+          {
+            "parameter": "velocity_feedforward",
+            "binary": "runs/shift_periodic_trajectory-v1",
+            "args": [
+              "runs/phase-speed300-seed3/velocity_feedforward.original.json",
+              "runs/phase-speed300-seed3/integer-shifts.json",
+              "runs/phase-speed300-seed3/velocity_feedforward.shifted.json"
+            ],
+            "exit_code": 0,
+            "signal": null,
+            "error": null,
+            "stderr": ""
+          }
+        ],
+        "scope": "Per-group phases are rounded to the nearest existing control interval (ties toward positive infinity). Rust then exactly permutes periodic controls, preserving each signal shape and derivative curve. Reference and feedforward signals share the shift. Offsets refer to the reference clock, not elapsed simulation time. Actual contact remains determined by unchanged runtime physics."
+      },
+      "inputs": {
+        "path": "runs/phase-speed300-seed3/inputs.json",
+        "sha256": "e05ea7879f4859a7b2299913a07195f0850c6b138278016ad21199b3d8202350"
+      }
+    }
+  ],
+  "observed_live_processes": [
+    "73953          22:17 runs/evaluate_policy-reference-v1 runs/affine-speed300-baseline-fidelity-v1/scene.json runs/affine-speed300-baseline-fidelity-v1/fine.config.json runs/affine-speed300-baseline-fidelity-v1/task.json runs/affine-speed300-baseline-fidelity-v1/actions.json runs/affine-speed300-baseline-fidelity-v1/fine.json 1901",
+    "73954          22:17 runs/evaluate_policy-reference-v1 runs/affine-speed300-baseline-fidelity-v1/contact.scene.json runs/affine-speed300-baseline-fidelity-v1/config.json runs/affine-speed300-baseline-fidelity-v1/task.json runs/affine-speed300-baseline-fidelity-v1/actions.json runs/affine-speed300-baseline-fidelity-v1/contact.json 1901",
+    "74459          06:38 runs/evaluate_policy-reference-v1 runs/affine-speed300-v1/evaluation-003/scene.json runs/affine-speed300-inputs/config.json runs/affine-speed300-inputs/task.json runs/affine-speed300-v1/evaluation-003/actions.json runs/affine-speed300-v1/evaluation-003/result.json 1901",
+    "74461          06:37 runs/evaluate_policy-reference-v1 runs/affine-speed300-v1/evaluation-004/scene.json runs/affine-speed300-inputs/config.json runs/affine-speed300-inputs/task.json runs/affine-speed300-v1/evaluation-004/actions.json runs/affine-speed300-v1/evaluation-004/result.json 1901",
+    "74490          05:26 runs/evaluate_policy-reference-v1 runs/phase-speed300-seed0/scene.json runs/affine-speed300-inputs/config.json runs/affine-speed300-inputs/task.json runs/affine-speed300-v1/evaluation-000/actions.json runs/phase-speed300-seed0/result.json 1901"
+  ],
+  "upstream_evidence": "examples/full-robot/contact-planning/affine-speed-search-evidence-v1.json",
+  "scope": "Exact periodic control shifts and independent leg coordination are implemented and physically launched. Identity matches all sampled physical/controller/task fields after excluding only elapsed wall-compute timing. The new300s baseline exactly reproduces the prior teacher; the first two amplitude trials fall and provide no completed speed score. Remaining amplitude, phase and baseline fidelity evaluations are still live at this snapshot. No new speed gain, WASD qualification, physical ceiling or sim-to-real accuracy is claimed."
+}

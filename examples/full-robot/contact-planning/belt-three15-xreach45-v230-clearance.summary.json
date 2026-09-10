@@ -1,0 +1,133 @@
+{
+  "prefix": "runs/contact-planning/belt-three15-xreach45-v230",
+  "counts": [
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        0.8,
+        3
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        4.2,
+        6.4
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        4.2,
+        6.4
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 6
+    },
+    {
+      "window_s": [
+        4.2,
+        6.4
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 5
+    },
+    {
+      "window_s": [
+        4.2,
+        6.4
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 6
+    }
+  ],
+  "policy_replay_samples": 400,
+  "maximum_command_error_rad": 0,
+  "planned_foot_clearances": 42,
+  "passed_foot_clearances": 41,
+  "failed_foot_clearances": [
+    {
+      "report": {
+        "failed_clearance_samples": 11,
+        "failed_support_samples": 0,
+        "failed_unloading_samples": 8,
+        "longest_qualifying_span_s": 0,
+        "minimum_swing_force_n": 0,
+        "passed": false,
+        "peak_clearance_m": 0.0001521811237235604,
+        "qualifying_start_s": null,
+        "samples": 11,
+        "scope": "Consecutive reporting samples meet declared foot clearance and unloading only. Support and body balance are unassessed by this check and require separate dynamic evidence. No between-sample, landing, collision or walking certificate."
+      },
+      "requirements": {
+        "end_s": 4.46,
+        "maximum_sample_gap_s": 0.021,
+        "maximum_swing_force_n": 1,
+        "minimum_clearance_m": 0.002,
+        "minimum_support_forces_n": {},
+        "qualifying_duration_s": 0.019999999,
+        "start_s": 4.26,
+        "support_check": "clearance_only",
+        "swing_link": "+X | Sliding foot crosshead"
+      }
+    }
+  ],
+  "inter_link_geometry_audit": {
+    "frames": 401,
+    "maximum_penetration_m": 0.000012324653488115047,
+    "penetrating_samples": 246,
+    "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+  },
+  "sources": [
+    {
+      "path": "examples/full-robot/contact-planning/belt-three15-xreach45-v230-trial.json",
+      "sha256": "852eaaa51195fe9d937e0cddc09ddf86b5e51433ead7defe496f37ac11e05de7"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.native.json",
+      "sha256": "659f6ab9e5896371158c75d2d8dcce59a9f9dfe6fc6607ad0afbc43cf5c65657"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.policy-state.json",
+      "sha256": "c9958846669bd13683b9c6b98ee5040a54fed44585bc4526693ccf8d01b50238"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.contact-clearance-requirements.json",
+      "sha256": "db52af5fac5cbf6e8c12d506423676d8a3a815114a9257f08b75287f57889ca6"
+    },
+    {
+      "path": "runs/contact-planning/belt-three15-xreach45-v230.contact-geometry.json",
+      "sha256": "e951bd33072b5f1ed8b098f245dcb29e2dc1765e4f2945d29e59e87260301b7c"
+    },
+    {
+      "path": "/Users/elliot/physics-simulator-gait-exploration/examples/full-robot/contact-planning/audit_contact_controller.mjs",
+      "sha256": "34c52d0905eae2264bb9a48760c4b858925c1a859521f758dea84db28e22dd94"
+    }
+  ],
+  "scope": "All complete independent planned swing intervals within explicit windows, reconstructed by exact Rhai replay. Shared Rust checks 2 mm clearance, <=1 N swing force and 20 ms qualifying duration. Clearance-only mode does not certify support or balance; closed-loop control and timestep tests are separate. Full CAD interlink geometry is checked at recorded poses; no between-sample guarantee."
+}

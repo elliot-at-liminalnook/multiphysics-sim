@@ -1,0 +1,65 @@
+{
+  "source": {
+    "path": "examples/full-robot/contact-planning/joint-conic-mesh-pilot.result.json",
+    "bytes": 3290212,
+    "sha256": "a243ef3fa16217b1e926551e8a7bdf9444b22c1ddd81960a522296493275bfd2"
+  },
+  "initial": {
+    "speed_m_s": 0.02518825560741796,
+    "force_error_n": 0.053400682864380225,
+    "moment_error_nm": 0.02136027315035305,
+    "torque_margin_nm": 1.0917911393665394,
+    "cone_violation_n": 0,
+    "maximum_inequality": 0.06801365751765243,
+    "maximum_interlink_penetration_m": 0,
+    "maximum_floor_penetration_m": 0.00001358966172615439,
+    "sampled_feasible": false
+  },
+  "final": {
+    "speed_m_s": 0.02515947236284378,
+    "force_error_n": 0.05312671803529356,
+    "moment_error_nm": 0.02124981288955774,
+    "torque_margin_nm": 1.0919528712689108,
+    "cone_violation_n": 0,
+    "maximum_inequality": 0.06253436070587126,
+    "maximum_interlink_penetration_m": 0,
+    "maximum_floor_penetration_m": 0.000013236260581861448,
+    "sampled_feasible": false
+  },
+  "returned_candidate_error": null,
+  "best_sampled_feasible_found": false,
+  "model_evaluations": 219,
+  "model_budget_exhausted": false,
+  "native": {
+    "status": -1,
+    "maximum_constraint_or_bound_violation": 0.06253436070587126,
+    "value_evaluations": 3,
+    "derivative_evaluations": 2,
+    "rejected_callbacks": 0,
+    "budget_exhausted": false,
+    "callback_panicked": false,
+    "cancelled": false,
+    "last_callback_error": null,
+    "iterations": [
+      {
+        "restoration": false,
+        "iteration": 0,
+        "objective": 15.104298971218768,
+        "primal_infeasibility": 0.06801366751761911,
+        "dual_infeasibility": 5.518333740284644,
+        "barrier_parameter": 1,
+        "step_norm": 0
+      },
+      {
+        "restoration": false,
+        "iteration": 1,
+        "objective": 15.107463126374086,
+        "primal_infeasibility": 0.06780355810340663,
+        "dual_infeasibility": 519719.0763363525,
+        "barrier_parameter": 0.8795352190549803,
+        "step_norm": 20.99987387594112
+      }
+    ]
+  },
+  "scope": "Completed local joint NLP result; native termination is not a physical infeasibility or optimality certificate. Physical summary comes from the independently audited returned candidate. No runtime/browser gait or global maximum established."
+}

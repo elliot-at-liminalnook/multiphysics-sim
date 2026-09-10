@@ -1,0 +1,424 @@
+{
+  "profiling_preserves_values": true,
+  "rows": [
+    {
+      "name": "broyden",
+      "compared_numbers": 1097377,
+      "maximum_numeric_error": 0.00013525397751479318,
+      "maximum_tolerance_fraction": 542.6154484999922,
+      "worst_absolute": {
+        "path": "frames.109.contacts.4.force_n.2",
+        "reference": 21.12806111829587,
+        "candidate": 21.127925864318357,
+        "error": 0.00013525397751479318,
+        "limit": 3.112806111829587e-7
+      },
+      "worst_tolerance_fraction": {
+        "path": "frames.204.policy.observations.marker.+X-foot-surface.floor_force_world.x",
+        "reference": -0.3588826904475604,
+        "candidate": -0.35882648154979,
+        "error": 0.00005620889777036009,
+        "limit": 1.035888269044756e-7
+      },
+      "maximum_body_difference_m": 2.5513248389813133e-8,
+      "differences": 14225,
+      "failures": [
+        {
+          "path": "frames.3.policy.observations.marker.+Y-foot-surface.floor_force_world.y",
+          "reference": -2.5482885724656064,
+          "candidate": -2.548288395570819,
+          "error": 1.7689478726268248e-7,
+          "limit": 1.2548288572465605e-7
+        },
+        {
+          "path": "frames.3.policy.observations.marker.-X-foot-surface.floor_force_world.x",
+          "reference": 2.570193987349997,
+          "candidate": 2.570193677746855,
+          "error": 3.096031422344936e-7,
+          "limit": 1.2570193987349996e-7
+        },
+        {
+          "path": "frames.5.contacts.4.force_n.2",
+          "reference": 10.718918735702688,
+          "candidate": 10.718918976720806,
+          "error": 2.410181174639092e-7,
+          "limit": 2.0718918976720805e-7
+        },
+        {
+          "path": "frames.6.contacts.0.force_n.0",
+          "reference": -0.009625451983676208,
+          "candidate": -0.009625597098866463,
+          "error": 1.4511519025491026e-7,
+          "limit": 1.0009625597098866e-7
+        },
+        {
+          "path": "frames.6.contacts.1.force_n.0",
+          "reference": -0.007003056656978018,
+          "candidate": -0.007003162384136899,
+          "error": 1.0572715888109568e-7,
+          "limit": 1.0007003162384137e-7
+        },
+        {
+          "path": "frames.6.contacts.2.force_n.0",
+          "reference": -0.008367315932176036,
+          "candidate": -0.00836744215028711,
+          "error": 1.262181110739391e-7,
+          "limit": 1.0008367442150287e-7
+        },
+        {
+          "path": "frames.6.contacts.3.force_n.0",
+          "reference": -0.00826147463134546,
+          "candidate": -0.008261599259834737,
+          "error": 1.246284892768984e-7,
+          "limit": 1.0008261599259834e-7
+        },
+        {
+          "path": "frames.6.contacts.4.force_n.0",
+          "reference": -1.4530817047688875,
+          "candidate": -1.453081546473852,
+          "error": 1.5829503552389212e-7,
+          "limit": 1.1453081704768887e-7
+        },
+        {
+          "path": "frames.6.contacts.4.force_n.1",
+          "reference": 0.00022984712882019028,
+          "candidate": 0.000230346028678616,
+          "error": 4.9889985842571e-7,
+          "limit": 1.0000230346028678e-7
+        },
+        {
+          "path": "frames.6.contacts.5.force_n.0",
+          "reference": -0.009587695320679723,
+          "candidate": -0.009587516453143157,
+          "error": 1.7886753656513876e-7,
+          "limit": 1.0009587695320679e-7
+        },
+        {
+          "path": "frames.6.contacts.6.force_n.0",
+          "reference": -0.007035565950247525,
+          "candidate": -0.007035434792795548,
+          "error": 1.3115745197724016e-7,
+          "limit": 1.0007035565950247e-7
+        },
+        {
+          "path": "frames.6.contacts.7.force_n.0",
+          "reference": -0.008258913177797334,
+          "candidate": -0.008258759151873706,
+          "error": 1.5402592362830092e-7,
+          "limit": 1.0008258913177797e-7
+        }
+      ],
+      "passed": false,
+      "profile_wall_s": 26.716643628,
+      "profile_buckets": [
+        {
+          "calls": 49191,
+          "name": "residual evaluations",
+          "seconds": 7.500822377
+        },
+        {
+          "calls": 6711,
+          "name": "jacobian assembly",
+          "seconds": 17.603889023
+        },
+        {
+          "calls": 6711,
+          "name": "factorisation",
+          "seconds": 0.10994787800000001
+        },
+        {
+          "calls": 25607,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.105331829
+        },
+        {
+          "calls": 170017,
+          "name": "embedded closure mapping",
+          "seconds": 12.70711571
+        },
+        {
+          "calls": 170000,
+          "name": "embedded contact history",
+          "seconds": 0.48408052100000004
+        },
+        {
+          "calls": 170000,
+          "name": "embedded dynamics preparation",
+          "seconds": 10.449440715000001
+        },
+        {
+          "calls": 174039,
+          "name": "embedded applied force solve",
+          "seconds": 0.608417373
+        },
+        {
+          "calls": 170017,
+          "name": "  closure Jacobian",
+          "seconds": 3.549351606
+        },
+        {
+          "calls": 170017,
+          "name": "  closure factorization",
+          "seconds": 2.3040969230000004
+        },
+        {
+          "calls": 680469,
+          "name": "    closure SVD",
+          "seconds": 0.8767915770000001
+        },
+        {
+          "calls": 170000,
+          "name": "  embedded rigid inertia",
+          "seconds": 4.1636064390000005
+        },
+        {
+          "calls": 170000,
+          "name": "  embedded inertia projection",
+          "seconds": 0.8366792860000001
+        },
+        {
+          "calls": 170000,
+          "name": "  embedded force evaluation",
+          "seconds": 4.121896898
+        },
+        {
+          "calls": 173000,
+          "name": "contact geometry queries",
+          "seconds": 1.400319128
+        },
+        {
+          "calls": 173000,
+          "name": "contact force evaluation",
+          "seconds": 2.1896131530000003
+        },
+        {
+          "calls": 173000,
+          "name": "  contact sample transforms",
+          "seconds": 0.9062878550000001
+        },
+        {
+          "calls": 1000,
+          "name": "policy script",
+          "seconds": 0.286738667
+        },
+        {
+          "calls": 19666,
+          "name": "Broyden update attempts",
+          "seconds": 0.290085766
+        }
+      ]
+    },
+    {
+      "name": "tangent-broyden",
+      "compared_numbers": 1097377,
+      "maximum_numeric_error": 0.00006403722677106316,
+      "maximum_tolerance_fraction": 359.62115325322003,
+      "worst_absolute": {
+        "path": "frames.421.contacts.4.force_n.2",
+        "reference": 21.837607372358733,
+        "candidate": 21.83754333513196,
+        "error": 0.00006403722677106316,
+        "limit": 3.1837607372358734e-7
+      },
+      "worst_tolerance_fraction": {
+        "path": "frames.412.policy.observations.marker.+X-foot-surface.floor_force_world.x",
+        "reference": -0.29617615697689853,
+        "candidate": -0.2961391297494618,
+        "error": 0.00003702722743670339,
+        "limit": 1.0296176156976898e-7
+      },
+      "maximum_body_difference_m": 5.888286154827936e-9,
+      "differences": 10574,
+      "failures": [
+        {
+          "path": "frames.3.policy.observations.marker.+Y-foot-surface.floor_force_world.y",
+          "reference": -2.5482885724656064,
+          "candidate": -2.548288414409951,
+          "error": 1.5805565523052678e-7,
+          "limit": 1.2548288572465605e-7
+        },
+        {
+          "path": "frames.3.policy.observations.marker.-X-foot-surface.floor_force_world.x",
+          "reference": 2.570193987349997,
+          "candidate": 2.5701938271988465,
+          "error": 1.6015115056333684e-7,
+          "limit": 1.2570193987349996e-7
+        },
+        {
+          "path": "frames.5.contacts.4.force_n.0",
+          "reference": -1.5510782688785738,
+          "candidate": -1.551078442061078,
+          "error": 1.7318250411513247e-7,
+          "limit": 1.1551078442061077e-7
+        },
+        {
+          "path": "frames.6.contacts.4.force_n.1",
+          "reference": 0.00022984712882019028,
+          "candidate": 0.00022997166199053252,
+          "error": 1.245331703422412e-7,
+          "limit": 1.000022997166199e-7
+        },
+        {
+          "path": "frames.6.contacts.10.force_n.2",
+          "reference": 1.9850830815581693,
+          "candidate": 1.9850832018647715,
+          "error": 1.2030660223594225e-7,
+          "limit": 1.198508320186477e-7
+        },
+        {
+          "path": "frames.6.policy.observations.marker.+X-foot-surface.floor_force_world.x",
+          "reference": -1.5510782688785738,
+          "candidate": -1.551078442061078,
+          "error": 1.7318250411513247e-7,
+          "limit": 1.1551078442061077e-7
+        },
+        {
+          "path": "frames.7.contacts.4.force_n.0",
+          "reference": -1.2951659967729205,
+          "candidate": -1.2951661627428483,
+          "error": 1.6596992780115727e-7,
+          "limit": 1.1295166162742848e-7
+        },
+        {
+          "path": "frames.7.policy.observations.marker.+X-foot-surface.floor_force_world.y",
+          "reference": 0.00022984712882019028,
+          "candidate": 0.00022997166199053252,
+          "error": 1.245331703422412e-7,
+          "limit": 1.000022997166199e-7
+        },
+        {
+          "path": "frames.7.policy.observations.marker.+Y-foot-surface.floor_force_world.x",
+          "reference": -0.033246774880521385,
+          "candidate": -0.033246575757630764,
+          "error": 1.9912289062062882e-7,
+          "limit": 1.0033246774880521e-7
+        },
+        {
+          "path": "frames.7.policy.observations.marker.-X-foot-surface.floor_force_world.x",
+          "reference": 1.3233070553069908,
+          "candidate": 1.3233073153904436,
+          "error": 2.600834527743956e-7,
+          "limit": 1.1323307315390444e-7
+        },
+        {
+          "path": "frames.7.policy.observations.marker.-X-foot-surface.floor_force_world.y",
+          "reference": 0.00021448430032130933,
+          "candidate": 0.00021437215077105756,
+          "error": 1.1214955025176838e-7,
+          "limit": 1.000021448430032e-7
+        },
+        {
+          "path": "frames.7.policy.observations.marker.-X-foot-surface.floor_force_world.z",
+          "reference": 9.423182022680672,
+          "candidate": 9.423182429698244,
+          "error": 4.070175716464064e-7,
+          "limit": 1.9423182429698244e-7
+        }
+      ],
+      "passed": false,
+      "profile_wall_s": 18.909033713,
+      "profile_buckets": [
+        {
+          "calls": 49236,
+          "name": "residual evaluations",
+          "seconds": 7.188174567000001
+        },
+        {
+          "calls": 6786,
+          "name": "jacobian assembly",
+          "seconds": 10.191370097
+        },
+        {
+          "calls": 6786,
+          "name": "factorisation",
+          "seconds": 0.11021349800000001
+        },
+        {
+          "calls": 25703,
+          "name": "  factor entries sum/sort",
+          "seconds": 0.105527302
+        },
+        {
+          "calls": 58102,
+          "name": "embedded closure mapping",
+          "seconds": 4.304586608
+        },
+        {
+          "calls": 175300,
+          "name": "embedded contact history",
+          "seconds": 0.46678232500000005
+        },
+        {
+          "calls": 171384,
+          "name": "embedded dynamics preparation",
+          "seconds": 10.13537786
+        },
+        {
+          "calls": 175389,
+          "name": "embedded applied force solve",
+          "seconds": 0.584852401
+        },
+        {
+          "calls": 58102,
+          "name": "  closure Jacobian",
+          "seconds": 1.189461566
+        },
+        {
+          "calls": 58102,
+          "name": "  closure factorization",
+          "seconds": 0.8001316
+        },
+        {
+          "calls": 232512,
+          "name": "    closure SVD",
+          "seconds": 0.297228062
+        },
+        {
+          "calls": 171384,
+          "name": "  embedded rigid inertia",
+          "seconds": 4.088310012
+        },
+        {
+          "calls": 171384,
+          "name": "  embedded inertia projection",
+          "seconds": 0.813243248
+        },
+        {
+          "calls": 171384,
+          "name": "  embedded force evaluation",
+          "seconds": 3.9550938
+        },
+        {
+          "calls": 174384,
+          "name": "contact geometry queries",
+          "seconds": 1.360379161
+        },
+        {
+          "calls": 174384,
+          "name": "contact force evaluation",
+          "seconds": 2.1021377720000003
+        },
+        {
+          "calls": 174384,
+          "name": "  contact sample transforms",
+          "seconds": 0.892354666
+        },
+        {
+          "calls": 1000,
+          "name": "policy script",
+          "seconds": 0.264728892
+        },
+        {
+          "calls": 19671,
+          "name": "Broyden update attempts",
+          "seconds": 0.283553926
+        }
+      ]
+    }
+  ],
+  "numeric_tolerance": {
+    "absolute": 1e-7,
+    "relative": 1e-8
+  },
+  "scope": "Every recorded physical value and task transition compared, excluding only per-frame wall time. Scene, inputs, seeds and non-overridden config values verified. Profiling times are diagnostic with concurrent work, not performance acceptance."
+}

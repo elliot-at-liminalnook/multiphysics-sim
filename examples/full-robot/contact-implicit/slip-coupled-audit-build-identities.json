@@ -1,0 +1,26 @@
+{
+  "base_commit": "441e036",
+  "sources": [
+    {
+      "path": "crates/sim-runtime/src/contact_implicit.rs",
+      "bytes": 51304,
+      "sha256": "a16ffcf4c25ba54c48e90759700bde71833975094cd8d55d31f627de4d60ca54"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_contact_implicit.rs",
+      "bytes": 2721,
+      "sha256": "44a0f8ec49db9f4e57d047202b64b0a66cff76eb63757c8bb8c8ed437c63112e"
+    },
+    {
+      "path": "crates/sim-runtime/tests/contact_implicit.rs",
+      "bytes": 41129,
+      "sha256": "8710980ec816d6a07bbf24bf57e404732cf6910f20a90bb4eda062c00db2bc61"
+    }
+  ],
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_contact_implicit",
+    "bytes": 8659308,
+    "sha256": "6b03ff66890b9ee63c9613d06ae4287bf7763903aaf7c431adc8bb1bfaf8bbb2"
+  },
+  "scope": "New optional detailed geometry reporting; optimizer retains preceding executable and source snapshot."
+}

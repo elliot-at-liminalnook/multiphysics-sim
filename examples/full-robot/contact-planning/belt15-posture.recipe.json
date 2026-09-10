@@ -1,0 +1,83 @@
+{
+  "independent_coordinates": [
+    "joint.-Y | Hip servo output",
+    "joint.-Y | Worm servo output",
+    "joint.-Y | Foot servo output",
+    "joint.+X | Hip servo output",
+    "joint.+X | Worm servo output",
+    "joint.+X | Foot servo output",
+    "joint.+Y | Hip servo output",
+    "joint.+Y | Worm servo output",
+    "joint.+Y | Foot servo output",
+    "joint.-X | Hip servo output",
+    "joint.-X | Worm servo output",
+    "joint.-X | Foot servo output"
+  ],
+  "embedding": {
+    "direct_closure_jacobian": true,
+    "dependent_solve": "pivoted_qr",
+    "block_dependent_factorization": true,
+    "analytic_mechanism_positions": true,
+    "length_scale_m": 0.1,
+    "angle_scale_rad": 1,
+    "scaled_closure_tolerance": 1e-8,
+    "scaled_position_tolerance": 1e-11,
+    "relative_rank_tolerance": 1e-10,
+    "absolute_rank_tolerance": 1e-12,
+    "max_iterations": 30,
+    "max_scaled_correction": 0.25
+  },
+  "samples": [
+    {
+      "id": "baseline",
+      "coordinates": [
+        0,
+        -0.00008346418847292681,
+        -1.0471975511965976,
+        0,
+        -0.27612813350949833,
+        -1.0471975511965976,
+        0,
+        -0.00008346425388696227,
+        -1.0471975511965976,
+        0,
+        -0.00007650604473797781,
+        -1.0471975511965976
+      ]
+    },
+    {
+      "id": "hip-minus15",
+      "coordinates": [
+        -0.2617993877991494,
+        -0.00008346418847292681,
+        -1.0471975511965976,
+        -0.2617993877991494,
+        -0.27612813350949833,
+        -1.0471975511965976,
+        -0.2617993877991494,
+        -0.00008346425388696227,
+        -1.0471975511965976,
+        -0.2617993877991494,
+        -0.00007650604473797781,
+        -1.0471975511965976
+      ]
+    },
+    {
+      "id": "hip-plus15",
+      "coordinates": [
+        0.2617993877991494,
+        -0.00008346418847292681,
+        -1.0471975511965976,
+        0.2617993877991494,
+        -0.27612813350949833,
+        -1.0471975511965976,
+        0.2617993877991494,
+        -0.00008346425388696227,
+        -1.0471975511965976,
+        0.2617993877991494,
+        -0.00007650604473797781,
+        -1.0471975511965976
+      ]
+    }
+  ]
+}

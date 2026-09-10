@@ -17,6 +17,11 @@ use sim_domain_robot::articulated::embedding::{
 };
 use web_time::Instant;
 
+/// Bound one host advance call, independently of a declared episode horizon.
+pub const MAX_ADVANCE_STEPS: usize = 1_000_000;
+/// Step indices are converted to f64 for simulation-time arithmetic.
+pub const MAX_EXACT_CLOCK_STEPS: u64 = 1 << 53;
+
 #[derive(Clone, Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MotionGate {
@@ -30,6 +35,11 @@ pub struct MotionGate {
 #[derive(Clone, Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
+    /// Explicit independent mechanical coordinates, including passive joints.
+    /// None preserves the legacy motor-coordinate selection. This order is
+    /// independent of CAD motor order and never assigns an actuator to a joint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub independent_coordinates: Option<Vec<String>>,
     /// Opt in to the scene's Rhai program over explicitly ideal observations.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub policy: Option<PolicyConfig>,
@@ -39,7 +49,7 @@ pub struct Config {
     pub profile_solver: bool,
     #[serde(default)]
     pub motion_gate: Option<MotionGate>,
-    /// Optional at-rest pose in CAD motor order, radians. Original closure is
+    /// Optional at-rest pose in independent-coordinate order (rad or m). Original closure is
     /// solved first; registered motor gear angles start aligned without preload.
     #[serde(default)]
     pub initial_coordinates: Option<Vec<f64>>,
@@ -47,6 +57,10 @@ pub struct Config {
     /// This changes the initial condition, not source geometry or floor height.
     #[serde(default)]
     pub initial_base_translation_m: Option<[f64; 3]>,
+    /// Explicit world-axis rotation vector applied to the floating initial base.
+    /// Radians; rotates the assembled mechanism about the translated base origin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub initial_base_rotation_vector_rad: Option<[f64; 3]>,
     #[serde(default)]
     pub embedding: EmbeddingConfig,
     /// Absent retains the previous explicit midpoint diagnostic.
@@ -131,6 +145,10 @@ pub enum CaptureMode {
 pub struct EmbeddedRecording {
     pub version: u32,
     pub kind: String,
+    /// Absent in legacy recordings. Newly executed episodes identify the
+    /// library sources/features; binary and host attestations remain external.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runtime_identity: Option<crate::physics_context::RuntimeIdentity>,
     pub scene: Scene,
     pub config: Config,
     pub seed: u64,
@@ -146,6 +164,7 @@ pub struct EmbeddedRecording {
 /// driver and servo components. No robot-specific topology lives here.
 /// The constructor's scene and experiment are immutable for the session.
 pub struct EmbeddedSession {
+    physics_context: crate::physics_context::PhysicsContext,
     world_loads: Option<sim_domain_robot::world_load::BoundWorldLoads>,
     effective_servos: Vec<sim_domain_robot::effective_servo::EffectiveServo>,
     policy: Option<SampledPolicy>,
@@ -159,6 +178,7 @@ pub struct EmbeddedSession {
     retain_solver_diagnostics: bool,
     names: Vec<String>,
     independent_joint_indices: Vec<usize>,
+    motor_joint_indices: Vec<usize>,
     g: sim_domain_robot::Generalized,
     trajectory: Option<sim_domain_control::trajectory::Trajectory>,
     motion_clock: Option<MotionClock>,
@@ -195,13 +215,14 @@ impl EmbeddedSession {
         if !config.step_s.is_finite()
             || config.step_s <= 0.0
             || config.steps == 0
-            || config.steps > 1000000
+            || config.steps as u128 > u128::from(MAX_EXACT_CLOCK_STEPS)
+            || !(config.step_s * config.steps as f64).is_finite()
             || config.report_every == 0
             || config.steps % config.report_every != 0
             || config.trace_trials > 256
         {
             return Err(
-                "positive finite step, 1..1000000 steps and a dividing report_every required"
+                "positive finite step/horizon, 1..2^53 exact clock steps and a dividing report_every required"
                     .into(),
             );
         }
@@ -289,9 +310,9 @@ impl EmbeddedSession {
             .as_ref()
             .map(|g| (g.clock.period_s / config.step_s).round() as usize);
         let clock_state = MotionClockState::default();
-        let names: Vec<String> = session
-            .scene
+        let motor_names: Vec<String> = session
             .robot
+            .model
             .motors
             .iter()
             .map(|m| {
@@ -302,7 +323,7 @@ impl EmbeddedSession {
                     .map(|(_, d)| d.name.clone())
                     .collect();
                 if found.len() != 1 {
-                    return Err("motor does not select one independent coordinate".to_string());
+                    return Err("motor does not select one articulated coordinate".to_string());
                 }
                 Ok(found[0].clone())
             })
@@ -312,15 +333,19 @@ impl EmbeddedSession {
                 .motors
                 .as_ref()
                 .and_then(|m| m.target_coordinates.as_ref())
-                != Some(&names)
+                != Some(&motor_names)
         {
             return Err("target trajectory requires exact named motor coordinates".into());
         }
+        let names = config.independent_coordinates.clone().unwrap_or_else(|| motor_names.clone());
         let map = RigidEmbedding::new(art, &names, config.embedding.clone())?;
+        let motor_joint_indices: Vec<usize> = motor_names.iter().map(|name| {
+            art.dofs().position(|(_, dof)| &dof.name == name).expect("validated motor coordinate")
+        }).collect();
         let effective_servos = config.motors.as_ref().and_then(|m|m.effective.as_ref()).map(|profile| {
             if profile.version!=1 || profile.assumption_reference.trim().is_empty()
-                || names.is_empty() || profile.components.len()!=names.len() || profile.components.iter().zip(&names).any(|(c,n)|&c.dof!=n)
-                || config.motors.as_ref().unwrap().servos.as_ref().unwrap().len()!=names.len()
+                || motor_names.is_empty() || profile.components.len()!=motor_names.len() || profile.components.iter().zip(&motor_names).any(|(c,n)|&c.dof!=n)
+                || config.motors.as_ref().unwrap().servos.as_ref().unwrap().len()!=motor_names.len()
                 || config.motors.as_ref().unwrap().servos.as_ref().unwrap().iter().any(|s|!s.target_rad.is_finite()) {
                 return Err("effective servo profile requires v1, an assumption reference and exact motor-coordinate bindings".into());
             }
@@ -340,7 +365,7 @@ impl EmbeddedSession {
         if let Some(trajectory) = &trajectory {
             let dofs: Vec<_> = art.dofs().map(|(_, d)| d).collect();
             trajectory.validate_value_bounds(
-                &map.independent_joint_indices()
+                &motor_joint_indices
                     .iter()
                     .map(|&i| (dofs[i].lower, dofs[i].upper))
                     .collect::<Vec<_>>(),
@@ -360,6 +385,17 @@ impl EmbeddedSession {
                 g.states[art.bases[0].state + k] += translation[k];
             }
         }
+        if let Some(rotation) = config.initial_base_rotation_vector_rad {
+            let phi=nalgebra::Vector3::from(rotation);
+            if art.bases.len()!=1 || art.bases[0].grounded || !phi.norm().is_finite() {
+                return Err("initial rotation requires one floating base and finite world radians".into());
+            }
+            let base=art.bases[0].state;
+            let initial=sim_domain_robot::math::quat(g.states[base+3],g.states[base+4],
+                g.states[base+5],g.states[base+6]);
+            let rotated=nalgebra::UnitQuaternion::from_scaled_axis(phi)*initial;
+            g.states[base+3..base+7].copy_from_slice(&sim_domain_robot::math::quat_parts(&rotated));
+        }
         if let Some(positions) = &config.initial_coordinates {
             g = map
                 .solve(&g, positions, &vec![0.0; map.reduced_dimension()])?
@@ -370,6 +406,10 @@ impl EmbeddedSession {
                 return Err("initial closed pose violates authored joint limits".into());
             }
         }
+        if config.independent_coordinates.is_some() && config.initial_coordinates.is_none() {
+            let positions: Vec<_> = map.independent_joint_indices().iter().map(|&i| g.q[i]).collect();
+            g = map.solve(&g, &positions, &map.reduced_velocity(&g))?.generalized;
+        }
         if config.motors.is_some() && config.implicit.is_none() {
             return Err("coupled motor diagnostic requires implicit stepping".into());
         }
@@ -378,12 +418,15 @@ impl EmbeddedSession {
             .as_ref()
             .filter(|m|m.effective.is_none())
             .map(|experiment| {
+                // PhysicalRobot applies CAD identification once during assembly.
+                // Use that same resolved definition for the incremental bank;
+                // scene.robot remains the original replay/authoring input.
                 session
-                    .scene
                     .robot
+                    .model
                     .motors
                     .iter()
-                    .zip(&names)
+                    .zip(&motor_names)
                     .enumerate()
                     .map(|(i, (motor, dof))| {
                         let backlash = motor
@@ -399,7 +442,7 @@ impl EmbeddedSession {
                             parameters: sim_domain_robot::motor::cad_motor_unit_parameters(
                                 motor,
                                 backlash,
-                                session.scene.robot.world.ambient_c + 273.15,
+                                session.robot.model.world.ambient_c + 273.15,
                                 false,
                                 experiment.events.is_some(),
                             )
@@ -410,7 +453,7 @@ impl EmbeddedSession {
                                 config
                                     .initial_coordinates
                                     .as_ref()
-                                    .map(|q| ("initial.angle".into(), q[i])),
+                                    .map(|_| ("initial.angle".into(), g.q[motor_joint_indices[i]])),
                             )
                             .collect(),
                         })
@@ -450,11 +493,11 @@ impl EmbeddedSession {
             .is_some_and(|m| m.effective.is_none() && (m.drivers.is_some() || m.servos.is_some()))
         {
             session
-                .scene
                 .robot
+                .model
                 .motors
                 .iter()
-                .zip(&names)
+                .zip(&motor_names)
                 .map(|(m, dof)| EmbeddedDriverConfig {
                     dof: dof.clone(),
                     parameters: sim_domain_robot::motor::cad_h_bridge_parameters(m),
@@ -473,11 +516,11 @@ impl EmbeddedSession {
         };
         let servo_configs: Vec<_> = if config.motors.as_ref().is_some_and(|m| m.effective.is_none() && m.servos.is_some()) {
             session
-                .scene
                 .robot
+                .model
                 .motors
                 .iter()
-                .zip(&names)
+                .zip(&motor_names)
                 .map(|(m, dof)| {
                     if m.firmware.kind == "none" {
                         return Err(format!("CAD motor {} declares no firmware", m.name));
@@ -521,6 +564,10 @@ impl EmbeddedSession {
         }
 
         let independent_joint_indices = map.independent_joint_indices().to_vec();
+        let physics_context=crate::physics_context::PhysicsContext::from_runtime(&session.scene,&config)?;
+        if let Some(bundle)=config.policy.as_ref().and_then(|p|p.trajectory_forecast.as_ref()) {
+            for head in &bundle.heads {head.recipe.validate_physics_context(&physics_context)?;}
+        }
         let policy = config
             .policy
             .as_ref()
@@ -537,8 +584,8 @@ impl EmbeddedSession {
                     .ok_or("sampled policy requires a scene controller program")?;
                 SampledPolicy::new(
                     art,
-                    &names,
-                    &independent_joint_indices,
+                    &motor_names,
+                    &motor_joint_indices,
                     &inputs.iter().map(|s| s.target_rad).collect::<Vec<_>>(),
                     p,
                     program,
@@ -559,6 +606,7 @@ impl EmbeddedSession {
             config.step_s, config.steps,
         )).transpose()?;
         let mut runner = Self {
+            physics_context,
             world_loads,
             effective_servos,
             policy,
@@ -571,6 +619,7 @@ impl EmbeddedSession {
             capture,
             names,
             independent_joint_indices,
+            motor_joint_indices,
             g,
             trajectory,
             motion_clock,
@@ -641,6 +690,8 @@ impl EmbeddedSession {
     pub fn scene(&self) -> &Scene {
         &self.session.scene
     }
+    pub fn physics_context(&self)->&crate::physics_context::PhysicsContext {&self.physics_context}
+    pub fn robot_input_binding(&self)->&crate::robot_contract::InputBinding {&self.session.robot_input}
     pub(crate) fn articulated(&self) -> &sim_domain_robot::Articulated {
         &self.session.robot.art
     }
@@ -653,18 +704,35 @@ impl EmbeddedSession {
     pub fn joint_indices(&self) -> &[usize] {
         &self.independent_joint_indices
     }
+    /// Full articulated DOF indices in CAD motor order, independent of the
+    /// mechanical chart (which can also contain passive coordinates).
+    pub fn motor_joint_indices(&self) -> &[usize] {
+        &self.motor_joint_indices
+    }
 
     /// Layout and physical configuration for bounded diagnostic captures.
     /// Available in Latest mode without retaining an entire episode report.
     /// Values come from the same banks and recipe as the full report.
     pub fn diagnostic_metadata(&self) -> serde_json::Value {
-        json!({"source":self.session.scene.robot.source,"scene_options":self.session.scene.options,
+        let mut metadata = json!({"source":self.session.scene.robot.source,"scene_options":self.session.scene.options,
+            "robot_input":self.session.robot_input,
+            "physics_context":self.physics_context,
             "world":self.session.scene.robot.world,"embedding":self.config.embedding,"implicit":self.config.implicit,
             "independent_coordinates":self.names,"independent_joint_indices":self.independent_joint_indices,
             "motor_components":self.motor_configs,"driver_components":self.driver_configs,"servo_components":self.servo_configs,
             "motor_state_layout":self.bank.as_ref().map(|b|b.state_layout()),
             "servo_state_layout":self.servo_bank.as_ref().map(|b|b.state_layout()),
-            "motor_experiment":self.config.motors})
+            "motor_experiment":self.config.motors});
+        if self.config.independent_coordinates.is_some() {
+            metadata["motor_joint_indices"] = json!(self.motor_joint_indices);
+        }
+        if !self.session.robot.art.imus.is_empty() {
+            metadata["imu_schedule"] = json!({"frame":"sensor",
+                "specific_force_unit":"m/s^2","angular_velocity_unit":"rad/s","time_unit":"s",
+                "semantics":"held authored samples; shared hybrid deadlines and registered sampling equations",
+                "sensors":self.session.robot.art.imus.iter().map(|imu|json!({"name":imu.name,"period_s":imu.period,"latency_s":imu.latency})).collect::<Vec<_>>()});
+        }
+        metadata
     }
 
     pub fn inputs(&self) -> &[crate::session::InputChannel] {
@@ -732,7 +800,7 @@ impl EmbeddedSession {
     /// A failure latches; callers must reset/replay instead of continuing a
     /// potentially failed component transaction. Rendering never chooses dt.
     pub fn advance(&mut self, steps: usize) -> Result<(), String> {
-        if steps == 0 || steps > 1_000_000 {
+        if steps == 0 || steps > MAX_ADVANCE_STEPS {
             return Err("advance count must be 1..1000000".into());
         }
         if let Some(error) = &self.error {
@@ -818,6 +886,7 @@ impl EmbeddedSession {
             session,
             config,
             names,
+            motor_joint_indices,
             g,
             trajectory,
             motion_clock,
@@ -1021,7 +1090,7 @@ impl EmbeddedSession {
                             else {config.motors.as_ref().unwrap().servos.as_ref().unwrap().iter().map(|s|s.target_rad).collect()};
                         let base=map.full_dimension()-g.q.len();
                         for (i,servo) in effective_servos.iter().enumerate() {
-                            let j=map.independent_joint_indices()[i];
+                            let j=motor_joint_indices[i];
                             result.generalized_loads[base+j]+=servo.torque(g.q[j],g.qd[j],targets[i]);
                         }
                     }
@@ -1207,6 +1276,9 @@ impl EmbeddedSession {
             "poses":eval.links.iter().zip(&art.model.links).map(|(k,l)|json!({"name":l.name,"position_m":k.p.as_slice(),
                 "velocity_m_s":k.vel.as_slice(),"angular_velocity_rad_s":k.w.as_slice(),
                 "rotation":(0..3).map(|i|(0..3).map(|j|k.r[(i,j)]).collect::<Vec<_>>()).collect::<Vec<_>>()})).collect::<Vec<_>>()});
+        if !art.imus.is_empty() {
+            frame["imu_samples"] = json!(art.imu_readings(g));
+        }
         if driver_bank.is_none() {
             frame.as_object_mut().unwrap().remove("driver_readings");
         }
@@ -1262,7 +1334,7 @@ impl EmbeddedSession {
                 else {config.motors.as_ref().unwrap().servos.as_ref().unwrap().iter().map(|s|s.target_rad).collect()};
             frame["servo_targets_rad"]=json!(targets);
             frame["motor_readings"]=json!(effective_servos.iter().enumerate().map(|(i,s)| {
-                let j=self.independent_joint_indices[i];
+                let j=self.motor_joint_indices[i];
                 json!({"shaft_torque_nm":s.torque(g.q[j],g.qd[j],targets[i]),"gear_speed_rad_s":g.qd[j]})
             }).collect::<Vec<_>>());
             frame["actuator_profile"]=json!({"kind":"effective_servo","calibrated":false,
@@ -1296,6 +1368,7 @@ impl EmbeddedSession {
         EmbeddedRecording {
             version: 3,
             kind: "embedded_session".into(),
+            runtime_identity: Some(self.physics_context.runtime.clone()),
             scene: self.session.scene.clone(),
             config: self.config.clone(),
             seed: self.seed,
@@ -1418,6 +1491,14 @@ impl EmbeddedSession {
             "Declared external loads are additional to any motor outputs. This reduced diagnostic is not the detailed runtime's powered-hold comparison or a validated walking controller.",
             "The recorded implicit config selects backward Euler; null selects explicit midpoint. Both integrate shared rigid mechanics and contact memory; neither provides adaptive error or impact timing control. Explicit motor event configuration adds backlash guard/deadline processing and records retries.",
             "Stepping wall time includes closure and endpoint evaluation but excludes build, snapshot serialization and rendering."]});
+        let metadata = self.diagnostic_metadata();
+        for (key,value) in metadata.as_object().unwrap() {report[key]=value.clone();}
+        if !session.robot.art.imus.is_empty() {
+            report["notes"][1] = json!("Authored IMU clocks and held samples use the shared hybrid scheduler and registered sensor equations. Motor, driver and firmware integration follow the explicit experiment configuration; no battery or thermal network is inferred.");
+        }
+        if let Some(rotation) = config.initial_base_rotation_vector_rad {
+            report["initial_base_rotation_vector_rad"] = json!(rotation);
+        }
         if self.policy.is_some() {
             report["policy_experiment"] = json!({"config": config.policy, "controller": session.scene.controller, "contract": self.policy_metadata(), "seed": self.seed, "input_events": self.recording().input_events});
         }

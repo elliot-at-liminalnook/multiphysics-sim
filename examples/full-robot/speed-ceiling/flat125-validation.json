@@ -1,0 +1,12 @@
+{
+ "id":"flat125",
+ "speed":0.125,
+ "source":"runs/speed-ceiling/validation/flat-return-hip0-v125-human-fine",
+ "profiles":[
+  ["human-5ms","human",20,0.005,"braked-5ms"],
+  ["human-1p25ms","human",20,0.00125,"braked-5ms"],
+  ["human-0p3125ms","human",20,0.0003125,"braked-5ms"],
+  ["sustained-0p625ms","sustained",60,0.000625,"sustained"],
+  ["dropout-0p625ms","dropout",12,0.000625,"dropout"]
+ ]
+}

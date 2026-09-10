@@ -1,0 +1,192 @@
+{
+  "scope": "Matched initial motion, bounds, physical model, objective scales and optimization budgets; collocation grid and corresponding time quadrature differ. Quality compared on the same independent 512-point grid. No measured robot speed or physical maximum claim.",
+  "baseline_dense": {
+    "samples": 512,
+    "force_error_n": 3.345274279362393,
+    "moment_error_nm": 1.2479553522597302,
+    "minimum_torque_margin_nm": -0.006545573066413679,
+    "within_planning_tolerances": false,
+    "maximum_interlink_overlap_m": 0.000015286210927610626,
+    "maximum_floor_penetration_m": 0.00011439860346362796
+  },
+  "targeted_added_nodes": [
+    {
+      "cell": 0,
+      "phase": 0.001953125,
+      "score": 66.90548558724785,
+      "time_s": 0.0007736083798196903
+    },
+    {
+      "cell": 63,
+      "phase": 0.998046875,
+      "score": 35.78781024306422,
+      "time_s": 0.3953138820878617
+    },
+    {
+      "cell": 23,
+      "phase": 0.365234375,
+      "score": 33.520464858902685,
+      "time_s": 0.1446647670262821
+    },
+    {
+      "cell": 21,
+      "phase": 0.3359375,
+      "score": 25.108671108903845,
+      "time_s": 0.13306064132898673
+    },
+    {
+      "cell": 22,
+      "phase": 0.3515625,
+      "score": 19.185530747048695,
+      "time_s": 0.13924950836754427
+    },
+    {
+      "cell": 20,
+      "phase": 0.322265625,
+      "score": 16.198096034235416,
+      "time_s": 0.1276453826702489
+    },
+    {
+      "cell": 27,
+      "phase": 0.427734375,
+      "score": 14.240889058119516,
+      "time_s": 0.16942023518051216
+    },
+    {
+      "cell": 58,
+      "phase": 0.9140625,
+      "score": 13.840219518295065,
+      "time_s": 0.3620487217556151
+    },
+    {
+      "cell": 59,
+      "phase": 0.9296875,
+      "score": 10.898728627648193,
+      "time_s": 0.36823758879417257
+    },
+    {
+      "cell": 1,
+      "phase": 0.021484375,
+      "score": 8.21850809242521,
+      "time_s": 0.008509692178016594
+    },
+    {
+      "cell": 26,
+      "phase": 0.4140625,
+      "score": 7.725484288192019,
+      "time_s": 0.16400497652177434
+    },
+    {
+      "cell": 48,
+      "phase": 0.7578125,
+      "score": 7.651613872825799,
+      "time_s": 0.3001600513700398
+    },
+    {
+      "cell": 37,
+      "phase": 0.587890625,
+      "score": 7.305398212249965,
+      "time_s": 0.23285612232572678
+    },
+    {
+      "cell": 31,
+      "phase": 0.494140625,
+      "score": 7.16523846680579,
+      "time_s": 0.19572292009438164
+    },
+    {
+      "cell": 24,
+      "phase": 0.3828125,
+      "score": 7.079172198233419,
+      "time_s": 0.1516272424446593
+    },
+    {
+      "cell": 25,
+      "phase": 0.3984375,
+      "score": 6.692159144386469,
+      "time_s": 0.1578161094832168
+    }
+  ],
+  "rows": [
+    {
+      "mode": "control",
+      "optimized": {
+        "samples": 64,
+        "force_error_n": 0.1341531326061366,
+        "moment_error_nm": 0.03750912968971884,
+        "minimum_torque_margin_nm": -0.000023032939972411626,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015200791693487504,
+        "maximum_floor_penetration_m": 0.00011392415027139391
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 3.018066119688002,
+        "moment_error_nm": 1.1235875391293035,
+        "minimum_torque_margin_nm": -0.005908391334084717,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015204946129630654,
+        "maximum_floor_penetration_m": 0.00011400640700354181
+      },
+      "planned_displacement_rate_m_s": 0.2023378002539393,
+      "dense_loaded_slip_ratio": 0.9481215859952048,
+      "dense_sliding_work_j": 0.28479393547408244,
+      "search": {
+        "initial_cost": 8.234069921417616,
+        "cost": 8.092111553160816,
+        "evaluations": 69205,
+        "termination": "iteration_limit",
+        "derivative_refinements": 0,
+        "last": {
+          "accepted": true,
+          "cost": 8.092111553160816,
+          "damping": 913.9181488855515,
+          "difference_step": 1e-7,
+          "evaluations": 69205,
+          "iteration": 59,
+          "projected_gradient": 74.62915697298125
+        }
+      }
+    },
+    {
+      "mode": "recorded",
+      "optimized": {
+        "samples": 80,
+        "force_error_n": 0.17636854731332974,
+        "moment_error_nm": 0.06451054336343987,
+        "minimum_torque_margin_nm": -0.000194122158491572,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.00001519040916281998,
+        "maximum_floor_penetration_m": 0.00011280966662569059
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 1.8782396591179005,
+        "moment_error_nm": 0.7026787496148095,
+        "minimum_torque_margin_nm": -0.004205560102600314,
+        "within_planning_tolerances": false,
+        "maximum_interlink_overlap_m": 0.000015192742429197357,
+        "maximum_floor_penetration_m": 0.00011285744992262092
+      },
+      "planned_displacement_rate_m_s": 0.2023498701641573,
+      "dense_loaded_slip_ratio": 0.9381394795829004,
+      "dense_sliding_work_j": 0.28279934225613024,
+      "search": {
+        "initial_cost": 31.258024948328554,
+        "cost": 8.4913432065151,
+        "evaluations": 69208,
+        "termination": "iteration_limit",
+        "derivative_refinements": 0,
+        "last": {
+          "accepted": true,
+          "cost": 8.4913432065151,
+          "damping": 3760.9800365660544,
+          "difference_step": 1e-7,
+          "evaluations": 69208,
+          "iteration": 59,
+          "projected_gradient": 48.24162441493019
+        }
+      }
+    }
+  ]
+}

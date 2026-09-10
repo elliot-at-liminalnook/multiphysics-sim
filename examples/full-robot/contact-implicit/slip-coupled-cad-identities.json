@@ -1,0 +1,30 @@
+{
+  "python": "3.9.6 (default, Apr 17 2026, 18:15:52) \n[Clang 21.0.0 (clang-2100.1.1.101)]",
+  "executable": "/Users/elliot/physics-simulator/cad/.venv/bin/python",
+  "ocp_version": "7.7.2.0",
+  "numpy_version": "2.0.2",
+  "sources": [
+    {
+      "path": "cad/robocad/capture_geometry.py",
+      "bytes": 12135,
+      "sha256": "25eb72f352dd5918415d9e83a3627820f629d679447a9c5361bb9182d4836954"
+    },
+    {
+      "path": "cad/tests/test_capture_geometry.py",
+      "bytes": 5399,
+      "sha256": "fa190244801980f0821772b7c686c32ffed91fcec6b634d4ded1a921cdb5867b"
+    },
+    {
+      "path": "cad/robocad/kernel/occt.py",
+      "bytes": 55625,
+      "sha256": "8927cd5cba186c7f420715b145f8afdb0f384b75666d0a65d1b7ff4658841c1d"
+    },
+    {
+      "path": "examples/full-robot/audit_captured_geometry.py",
+      "bytes": 1273,
+      "sha256": "a89bcc91a3e7fd988078a410ed20b4305971049182fc2978c88c8cf79c28a4be"
+    }
+  ],
+  "initial_target_only_source_commit": "441e036",
+  "scope": "Read-only CAD queries. Initial target-only query uses prior committed CAD sources; two-sided query uses the recorded extended sources. Robot CAD and scene are unchanged."
+}

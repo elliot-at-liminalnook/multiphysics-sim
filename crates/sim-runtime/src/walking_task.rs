@@ -147,6 +147,7 @@ impl WalkingMonitor {
             Some(evaluate_lift(
                 &active.samples,
                 &LiftRequirements {
+                    support_check: Default::default(),
                     start_s: first,
                     end_s: last,
                     maximum_sample_gap_s: self.period_s * (1. + 1e-8),

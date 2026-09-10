@@ -16,11 +16,15 @@ use std::collections::{BTreeMap, BTreeSet};
 pub struct PolicyConfig {
     /// Explicit acknowledgement; hardware observation bindings are not supplied.
     pub observation_source: ObservationSource,
-    /// Software command envelope in named independent coordinates (rad),
+    /// Software command envelope in named actuator coordinates (rad),
     /// intersected with any authored CAD limits. Not physical travel stops.
     pub target_bounds_rad: BTreeMap<String, [f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub task_observations: Option<TaskObservationConfig>,
+    /// Authored scheduled IMUs. Each adds six physical channels, availability
+    /// and sample age to the shared Rhai/neural observation contract.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub imu_observations: Vec<String>,
     /// Ideal body-state feedback suggestion; it does not replace servo physics.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub body_feedback: Option<BodyFeedbackConfig>,
@@ -32,11 +36,27 @@ pub struct PolicyConfig {
     /// Bounded neural angle corrections applied after baseline Rhai feedback.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub neural_residual: Option<sim_domain_control::neural::Network>,
+    /// Explicitly saturate the combined Rhai + neural request at the existing
+    /// software/CAD command bounds. Does not change actuator torque or dynamics.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub neural_command_saturation: bool,
+    /// Seeded Gaussian samples in normalized neural-output coordinates.
+    /// Raw likelihoods are recorded before the ordinary actuator saturation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub neural_exploration: Option<sim_domain_control::ppo::GaussianExploration>,
+    /// Causal dynamics predictions of a held baseline command, or the explicitly
+    /// optimized sequence when forecast_action_search is configured.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trajectory_forecast: Option<crate::predictive_policy::ForecastBundle>,
+    /// Replan future actuator targets from learned dynamics before neural corrections.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub forecast_action_search: Option<crate::predictive_control::ForecastActionConfig>,
     /// Omit optional body/point motor-feedback suggestions when the controller
     /// does not consume them. Planner definitions remain available separately.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub feedback_observations: Option<bool>,
 }
+fn is_false(value: &bool) -> bool { !value }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ObservationSource {
@@ -53,6 +73,7 @@ pub struct InputEvent {
 pub(crate) struct SampledPolicy {
     policy: Box<dyn Coupler>,
     task_observer: Option<TaskObserver>,
+    imu_observer: crate::imu_observation::ImuObserver,
     body_feedback: Option<BodyFeedback>,
     point_feedback: Option<PointFeedback>,
     step_reference: Option<crate::step_reference::OnlineStepReference>,
@@ -65,6 +86,11 @@ pub(crate) struct SampledPolicy {
     pub targets: Vec<f64>,
     telemetry: serde_json::Value,
     neural: Option<sim_domain_control::neural::BoundNetwork>,
+    neural_command_saturation: bool,
+    neural_exploration: Option<sim_domain_control::ppo::GaussianSampler>,
+    trajectory_forecast: Option<crate::predictive_policy::OnlineForecast>,
+    forecast_action_search: Option<crate::predictive_control::ForecastActionPlanner>,
+    neural_sensors: Vec<Channel>,
     corrections: Vec<f64>,
 }
 impl SampledPolicy {
@@ -96,7 +122,7 @@ impl SampledPolicy {
             || config.target_bounds_rad.len() != names.len()
         {
             return Err(
-                "one named command bound and initial target per independent coordinate required"
+                "one named command bound and initial target per actuator coordinate required"
                     .into(),
             );
         }
@@ -147,6 +173,8 @@ impl SampledPolicy {
         if let Some(observer) = &task_observer {
             sensors.extend_from_slice(observer.channels());
         }
+        let imu_observer = crate::imu_observation::ImuObserver::new(art, &config.imu_observations)?;
+        sensors.extend_from_slice(imu_observer.channels());
         let body_feedback = config
             .body_feedback
             .clone()
@@ -208,7 +236,34 @@ impl SampledPolicy {
             sensors,
             actuators,
         };
-        let neural = config.neural_residual.clone().map(|n| n.bind(&contract.sensors, &contract.actuators)).transpose()?;
+        let trajectory_forecast = config.trajectory_forecast.clone().map(|bundle|
+            crate::predictive_policy::OnlineForecast::new(bundle, art, period, &contract.actuators)
+        ).transpose()?;
+        let forecast_action_search=config.forecast_action_search.clone().map(|c|
+            crate::predictive_control::ForecastActionPlanner::new(c,
+                config.trajectory_forecast.clone().ok_or("forecast action search requires explicit dynamics models")?,
+                &contract.sensors,&limits,period)).transpose()?;
+        let mut neural_sensors = contract.sensors.clone();
+        if let Some(forecast) = &trajectory_forecast {
+            if let Some(actor)=config.neural_residual.as_ref(){
+                if !actor.features.iter().any(|f| f.source == "forecast.valid" && f.subtract.is_none()) {
+                    return Err("predictive actor must consume forecast.valid for missing startup history".into());
+                }
+            }else if forecast_action_search.is_none(){return Err("trajectory forecasts require an explicit neural policy or action search".into());}
+            neural_sensors.extend(forecast.channels()?);
+        }
+        let neural = config.neural_residual.clone().map(|n| {
+            imu_observer.validate_network(&n)?;
+            n.bind(&neural_sensors, &contract.actuators)
+        }).transpose()?;
+        if config.neural_command_saturation && neural.is_none() {
+            return Err("neural command saturation requires an explicit neural policy".into());
+        }
+        let neural_exploration=config.neural_exploration.clone().map(|c| {
+            let n=neural.as_ref().ok_or("Gaussian exploration requires an explicit neural policy")?;
+            if !config.neural_command_saturation {return Err("Gaussian exploration requires explicit command saturation".into());}
+            sim_domain_control::ppo::GaussianSampler::new(c,n.definition().outputs.len(),seed^0x504f4c494359)
+        }).transpose()?;
         let mut policy = RhaiController::with_seed(
             program.sources.clone(),
             parameter_map(&program.parameters).map_err(|e| e.to_string())?,
@@ -240,6 +295,7 @@ impl SampledPolicy {
         Ok(Self {
             policy: Box::new(policy),
             task_observer,
+            imu_observer,
             body_feedback,
             point_feedback,
             step_reference,
@@ -252,6 +308,11 @@ impl SampledPolicy {
             targets: initial.to_vec(),
             telemetry: json!(null),
             neural,
+            neural_command_saturation: config.neural_command_saturation,
+            neural_exploration,
+            trajectory_forecast,
+            forecast_action_search,
+            neural_sensors,
             corrections: vec![0.0; initial.len()],
         })
     }
@@ -317,6 +378,7 @@ impl SampledPolicy {
             sensors
                 .extend(sim_solve::profile::POLICY_OBSERVATIONS.time(|| observer.observe(art, g))?);
         }
+        sensors.extend(self.imu_observer.observe(art, g, time)?);
         let body_feedback = self
             .body_feedback
             .as_ref()
@@ -360,12 +422,49 @@ impl SampledPolicy {
         sim_solve::profile::POLICY_SCRIPT
             .time(|| self.policy.sample(time, &sensors, &mut targets))
             .map_err(|e| e.to_string())?;
-        let corrections = self.neural.as_ref().map(|n| n.sample(&sensors)).transpose()?;
+        if targets.iter().any(|target| !target.is_finite()) {
+            return Err("nonfinite baseline command before trajectory prediction".into());
+        }
+        let mut forecast = self.trajectory_forecast.as_mut().map(|f| {
+            let proposal: Vec<_> = targets.iter().zip(&self.limits)
+                .map(|(v,b)| v.clamp(b[0],b[1])).collect();
+            f.sample(art, g, time, &self.targets, &proposal)
+        }).transpose()?;
+        let action_search=self.forecast_action_search.as_mut().map(|search|{
+            let forecast=forecast.as_mut().ok_or("missing online forecast")?;
+            let motion=crate::motion_data::MotionSnapshot::from_state(art,g,time);
+            let report=search.sample(forecast,&sensors,&motion)?;
+            if report.active {targets=forecast.proposed_targets_rad[0].clone();}
+            Ok::<_,String>(report)
+        }).transpose()?;
+        let mut neural_observations = sensors.clone();
+        if let Some(forecast) = &forecast { neural_observations.extend(forecast.values()); }
+        let mut neural_decision=None;
+        let corrections = self.neural.as_ref().map(|n| {
+            if let Some(sampler)=&mut self.neural_exploration {
+                let inputs=n.normalize(&neural_observations)?;
+                let means=n.definition().normalized_output(&inputs,false)?;
+                let (raw_actions,log_probability)=sampler.sample(&means)?;
+                let corrections=n.scale_outputs(&raw_actions)?;
+                neural_decision=Some(sim_domain_control::ppo::GaussianDecision{inputs,means,raw_actions,log_probability});
+                Ok(corrections)
+            } else { n.sample(&neural_observations) }
+        }).transpose()?;
         if let Some(corrections) = &corrections {
             for (target, correction) in targets.iter_mut().zip(corrections) {
                 if *correction != 0.0 { *target += correction; }
             }
         }
+        let requested_targets = if self.neural_command_saturation {
+            if targets.iter().any(|target| !target.is_finite()) {
+                return Err("nonfinite combined neural command before saturation".into());
+            }
+            let requested = targets.clone();
+            for (target, bounds) in targets.iter_mut().zip(&self.limits) {
+                *target = target.clamp(bounds[0], bounds[1]);
+            }
+            Some(requested)
+        } else { None };
         if let Some((index, (value, bounds))) = targets
             .iter()
             .zip(&self.limits)
@@ -378,6 +477,17 @@ impl SampledPolicy {
             ));
         }
         self.telemetry = json!({"time_s":time,"observations":self.contract.sensors.iter().zip(&sensors).map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>(),"targets":self.contract.actuators.iter().zip(&targets).map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>(),"observation_source":"ideal_joint_state_diagnostics"});
+        if let Some(decision)=neural_decision {self.telemetry["neural_decision"]=json!(decision);}
+        if let Some(report)=action_search {self.telemetry["forecast_action_search"]=json!(report);}
+        if let Some(forecast) = forecast {
+            self.telemetry["trajectory_forecast"] = json!(forecast);
+            self.telemetry["neural_observations"] = json!(self.neural_sensors.iter().zip(&neural_observations)
+                .map(|(c,v)|(c.name.clone(),*v)).collect::<BTreeMap<_,_>>());
+        }
+        if let Some(requested) = requested_targets {
+            let count = requested.iter().zip(&targets).filter(|(a,b)| a != b).count();
+            self.telemetry["neural_command_saturation"] = json!({"requested_targets_rad":requested,"saturated_commands":count});
+        }
         if let Some(corrections) = corrections {
             self.telemetry["neural_residual"] = json!(self.contract.actuators.iter().zip(&corrections).map(|(c,v)| (c.name.clone(),*v)).collect::<BTreeMap<_,_>>());
             self.corrections = corrections;
@@ -405,8 +515,31 @@ impl SampledPolicy {
                 .collect::<Vec<_>>()
         };
         let mut metadata = json!({"period_s":self.contract.period,"observation_source":"ideal_joint_state_diagnostics","deployable":false,"observations":channels(&self.contract.sensors),"actuators":channels(&self.contract.actuators),"software_target_bounds_rad":self.limits,"timing":"Sample committed state before the next physics interval; targets are held until subsequent firmware sampling. Rendering does not set either clock."});
+        if !self.imu_observer.channels().is_empty() {
+            metadata["authored_imu_observations"] = self.imu_observer.metadata().clone();
+        }
         if let Some(neural) = &self.neural {
             metadata["neural_residual"] = json!({"definition":neural.definition(),"scope":"Bounded corrections after Rhai feedback, before software/CAD command validation. Pure Rust inference from current sampled observations; no physics bypass."});
+            if self.neural_command_saturation {
+                metadata["neural_residual"]["command_saturation"] = json!("Combined finite Rhai/neural requests are saturated at existing software/CAD command bounds before the same servo dynamics. Neural correction telemetry records the requested correction; policy targets record the applied command.");
+            }
+            if self.neural_exploration.is_some() {
+                metadata["neural_residual"]["exploration"] = json!("Seeded Gaussian normalized actions before actuator saturation; neural_decision records input, mean, raw action and raw-action log probability. Episode seed and exploration config reproduce the draws.");
+            }
+        }
+        if self.trajectory_forecast.is_some() {
+            metadata["trajectory_forecast"] = json!({"observations":channels(&self.neural_sensors),
+                "scope":"Causal separate horizon heads consume current Rust dynamics, backward finite-interval acceleration, previous applied commands and the current clamped Rhai proposal held for that horizon. No recorded future state or command is read. Forecast valid is zero until a previous sampled state exists; startup forecast values are placeholders. Forecasts describe the baseline proposal, before neural corrections; prediction error under learner commands requires separate validation."});
+        }
+        if let Some(search)=&self.forecast_action_search{
+            metadata["trajectory_forecast"]["scope"]=json!("Causal separate horizon heads use current Rust dynamics, backward finite-interval acceleration, previous applied targets and the optimized future-action prefix for each horizon. Only the first target is applied before replanning. Forecasts precede neural corrections; longer-horizon prediction error requires checking which proposed future targets were actually executed.");
+            metadata["forecast_action_search"]=json!({"config":search.config(),"scope":"Receding-horizon learned displacement search in requested horizontal travel direction. Existing software/CAD actuator bounds apply; command lease and zero requests return to the baseline policy. Forecast telemetry describes the optimized sequence before neural corrections. Only its first action is applied; subsequent actions are replanned from new dynamics. No model prediction certifies contact, speed or absence of falls."});
+            if search.config().reference_proposal.is_some(){
+                metadata["forecast_action_search"]["reference_scope"]=json!("An authored actuator trajectory on episode simulation time is compared with the held command and shifted previous plan. The highest predicted objective initializes optimization; every actuator variable remains free within existing bounds. No future physical state is read and no reference-tracking reward is added.");
+            }
+            if search.config().objective==crate::predictive_control::ForecastActionObjective::EpisodeNetDisplacement{
+                metadata["forecast_action_search"]["scope"]=json!("Speed-discovery planning maximizes predicted increase in XY distance from the reset origin using the evaluator's shared endpoint metric. Every candidate endpoint is transformed from the current reference-link frame to world coordinates. Request direction only chooses a subgradient at zero distance; zero requests and expired command leases return to baseline control. Existing actuator bounds and physical execution remain unchanged. A short-horizon forecast is not a full-episode speed or fall certificate.");
+            }
         }
         if let Some(r) = &self.step_reference {
             let scope = if r.config().sequence.update_command_before_lift {
@@ -418,6 +551,9 @@ impl SampledPolicy {
         }
         if let Some(observer) = &self.task_observer {
             metadata["task_observations"] = json!({"config":observer.config(),"coordinate_frame":"Body gravity direction, absolute COM velocity and angular velocity resolved in reference-link axes. Marker position and its time derivative relative to reference-link COM/axes. Floor force in world axes; link resultant excluding internal contacts, not force at marker."});
+            if observer.config().heading_world_z {
+                metadata["task_observations"]["heading_world_z"] = json!("Ideal atan2(R_yx,R_xx), radians about world Z; undefined for a vertical reference X axis. Explicit simulation observation, not a calibrated hardware sensor.");
+            }
         }
         if let Some(feedback) = &self.body_feedback {
             metadata["body_feedback"] = json!({"config":feedback.config(),"scope":"Bounded angular target suggestions from ideal body COM and floor loads, using shared closure/point Jacobians. No pose mutation, contact guarantee, orientation feedback or deployable sensing. A policy must explicitly consume body_correction channels."});

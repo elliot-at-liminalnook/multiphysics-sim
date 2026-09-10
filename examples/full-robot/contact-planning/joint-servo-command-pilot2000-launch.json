@@ -1,0 +1,41 @@
+{
+  "recorded_at": "2026-09-09T18:29:14.467Z",
+  "session_id": 18259,
+  "command": "VECLIB_MAXIMUM_THREADS=1 OMP_NUM_THREADS=1 /Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json examples/full-robot/gait-exploration/workspace-markers.json examples/full-robot/contact-planning/joint-servo-command.recipe.json /Users/elliot/physics-simulator-gait-exploration/runs/native-ipopt-casadi-3.8.0/minimal/libipopt.dylib examples/full-robot/contact-planning/joint-servo-command-pilot2000.search.json",
+  "source_build": {
+    "path": "examples/full-robot/contact-planning/joint-servo-command-build.json",
+    "bytes": 16783,
+    "sha256": "b10c750cd4fb90b5dc110ef8cf86b8035152860d6e8e3b43cd7c9ad8c7632c50"
+  },
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-contact-timing/release/examples/optimize_joint_ipopt",
+    "bytes": 9221300,
+    "sha256": "278e9c4de8427ac4f97619ff507529feb599272c8887d811f72aea451f977b82"
+  },
+  "inputs": [
+    {
+      "path": "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+      "bytes": 8051250,
+      "sha256": "91b602598243206b44c8fcab69eccaf57dd8aa3414f4fd9ff00e01d77a0316e8"
+    },
+    {
+      "path": "examples/full-robot/gait-exploration/workspace-markers.json",
+      "bytes": 901,
+      "sha256": "9e4dec03f86b976ac1ba93b642124f93001e6763a4ba314835267bc1c62dd92f"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-servo-command.recipe.json",
+      "bytes": 177789,
+      "sha256": "ed68f51ea1416545c7162ca33866ea688b4ec1fa038e9c454cea56c7246b1b51"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-servo-command-pilot2000.search.json",
+      "bytes": 317,
+      "sha256": "c8b78d5a6976127015948e05c216e9e16546550246891a5a9fd8b33909fc8077"
+    }
+  ],
+  "output": "examples/full-robot/contact-planning/joint-servo-command-pilot2000.result.json",
+  "log": "examples/full-robot/contact-planning/joint-servo-command-pilot2000.log",
+  "status": "Launched and observed running; no terminal result yet.",
+  "scope": "Same one-iteration pilot with a larger model budget after the 600-model pilot exhausted its budget during derivatives. No physical bound or target change."
+}

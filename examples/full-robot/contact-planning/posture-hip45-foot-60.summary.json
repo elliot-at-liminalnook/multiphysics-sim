@@ -1,0 +1,25 @@
+{
+  "name": "posture-hip45-foot-60",
+  "exit_code": 0,
+  "elapsed_s": 87.94816857600001,
+  "last": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.030739691377969114,
+    "sampled_feasible": true,
+    "maximum_force_error_n": 0.002084134670235771,
+    "maximum_moment_error_nm": 0.0006815959504997693,
+    "minimum_torque_margin_nm": 0.9986454023214029,
+    "maximum_penetration_m": 0.0000021604238810146725
+  },
+  "best": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.038884177691640626,
+    "sampled_feasible": true,
+    "maximum_force_error_n": 0.024516976903791177,
+    "maximum_moment_error_nm": 0.007907074930302183,
+    "minimum_torque_margin_nm": 0.9810742680983136,
+    "maximum_penetration_m": 0.000009794878527646933
+  },
+  "evaluations": 1270,
+  "termination": "iteration_limit"
+}

@@ -1,0 +1,211 @@
+{
+  "scope": "32 versus 64 exact-refined controls on identical 144 planning times, with 512-point physical audits and fixed displacement up to documented roundoff. A Cauchy-Schwarz upper bound applies to the sampled loaded-slip diagnostic, not unsampled time or hardware. No measured speed or global maximum claim.",
+  "initial_curve_parity": {
+    "scope": "512 identical sample times; exact shared Rust knot insertion preserves the initial physical curve within stated numerical checks. Fixed cycle displacement encoding changes by 6.94e-18 m per horizontal axis.",
+    "maximum_absolute_differences": {
+      "position": 4.440892098500626e-16,
+      "velocity": 2.708944180085382e-14,
+      "acceleration": 1.0870415678709833e-11,
+      "unactuated_wrench": 5.032275290917099e-11,
+      "motor_torques_nm": 4.001243780749064e-12,
+      "gaps_m": 1.1102230246251565e-16,
+      "contact_forces_world_n": 2.2218671347218333e-11,
+      "contact_velocities_world_m_s": 3.247402347028583e-15
+    },
+    "expectations": {
+      "position": 1e-12,
+      "velocity": 1e-10,
+      "acceleration": 1e-7,
+      "unactuated_wrench": 1e-7,
+      "contact_forces_world_n": 1e-7
+    }
+  },
+  "rows": [
+    {
+      "name": "restore32-targeted",
+      "optimized": {
+        "samples": 112,
+        "force_error_n": 0.1320584458310371,
+        "moment_error_nm": 0.038625118354634225,
+        "minimum_torque_margin_nm": -0.000017033126359145,
+        "maximum_point_penetration_m": 0.00011291852775741074,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.00001691073775229903
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.3193024468283362,
+        "moment_error_nm": 0.1188253579554619,
+        "minimum_torque_margin_nm": -0.0003693369355435294,
+        "maximum_point_penetration_m": 0.00011292959636549638,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.00001691073775229903
+      },
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "sampled_loaded_slip_ratio": 0.8990639003624209,
+      "sampled_rms_slip_upper_bound": 1.6942505433101422,
+      "slip_by_foot": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.2756038958459633,
+          "sampled_rms_slip_upper_bound": 0.890971054311916
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.21815472915982595,
+          "sampled_rms_slip_upper_bound": 0.5551275720369014
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.8990639003624209,
+          "sampled_rms_slip_upper_bound": 1.6942505433101422
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.48746825568710994,
+          "sampled_rms_slip_upper_bound": 1.1746437141790176
+        }
+      ],
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34484,
+        "initial_cost": 3352.042476708966,
+        "cost": 81.22674833846189,
+        "last": {
+          "accepted": true,
+          "cost": 81.22674833846189,
+          "damping": 106.22118484416448,
+          "evaluations": 34484,
+          "iteration": 29,
+          "projected_gradient": 523511.2343282485
+        }
+      }
+    },
+    {
+      "name": "restore32-targeted2",
+      "optimized": {
+        "samples": 144,
+        "force_error_n": 0.18016305428590326,
+        "moment_error_nm": 0.05134343607244227,
+        "minimum_torque_margin_nm": -0.00000547955109420073,
+        "maximum_point_penetration_m": 0.0001137340161842526,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000017161867075909682
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.18051954400063894,
+        "moment_error_nm": 0.06987594546455204,
+        "minimum_torque_margin_nm": -0.026307950639393,
+        "maximum_point_penetration_m": 0.0001137340161842526,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.000017161867075909682
+      },
+      "planned_displacement_rate_m_s": 0.20092650990916813,
+      "sampled_loaded_slip_ratio": 0.8948356907568011,
+      "sampled_rms_slip_upper_bound": 1.705175559149669,
+      "slip_by_foot": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.28343768411282605,
+          "sampled_rms_slip_upper_bound": 0.9227367559429728
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.19885698971135266,
+          "sampled_rms_slip_upper_bound": 0.519650363413595
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.8948356907568011,
+          "sampled_rms_slip_upper_bound": 1.705175559149669
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.4500776082680202,
+          "sampled_rms_slip_upper_bound": 1.2329196014222805
+        }
+      ],
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 34485,
+        "initial_cost": 285.17659456338936,
+        "cost": 100.71499180616448,
+        "last": {
+          "accepted": true,
+          "cost": 100.71499180616448,
+          "damping": 13.113726523970923,
+          "evaluations": 34485,
+          "iteration": 29,
+          "projected_gradient": 15692.736612062243
+        }
+      }
+    },
+    {
+      "name": "restore64-targeted2",
+      "optimized": {
+        "samples": 144,
+        "force_error_n": 0.06325530999765021,
+        "moment_error_nm": 0.021362822714616224,
+        "minimum_torque_margin_nm": -0.00007625187234094888,
+        "maximum_point_penetration_m": 0.00011261043653526537,
+        "within_planning_tolerances": false,
+        "geometry_samples": 129,
+        "maximum_interlink_overlap_m": 0.000016908105719040464
+      },
+      "dense": {
+        "samples": 512,
+        "force_error_n": 0.2888240925981509,
+        "moment_error_nm": 0.10724658489609212,
+        "minimum_torque_margin_nm": -0.001924428818156132,
+        "maximum_point_penetration_m": 0.00011263031119146394,
+        "within_planning_tolerances": false,
+        "geometry_samples": 513,
+        "maximum_interlink_overlap_m": 0.00001691043489428962
+      },
+      "planned_displacement_rate_m_s": 0.2009265099091681,
+      "sampled_loaded_slip_ratio": 0.8989529562400388,
+      "sampled_rms_slip_upper_bound": 1.6966265894827954,
+      "slip_by_foot": [
+        {
+          "link": "-Y | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.27538645527550115,
+          "sampled_rms_slip_upper_bound": 0.8819606447189218
+        },
+        {
+          "link": "+X | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.206531093566095,
+          "sampled_rms_slip_upper_bound": 0.5988738510346742
+        },
+        {
+          "link": "+Y | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.8989529562400388,
+          "sampled_rms_slip_upper_bound": 1.6966265894827954
+        },
+        {
+          "link": "-X | Sliding foot crosshead",
+          "sampled_loaded_slip_ratio": 0.5528881771713622,
+          "sampled_rms_slip_upper_bound": 1.1933861589572725
+        }
+      ],
+      "search": {
+        "termination": "iteration_limit",
+        "evaluations": 69046,
+        "initial_cost": 285.1765945632814,
+        "cost": 22.08970390496074,
+        "last": {
+          "accepted": true,
+          "cost": 22.08970390496074,
+          "damping": 31866.355453249347,
+          "evaluations": 69046,
+          "iteration": 29,
+          "projected_gradient": 1799550.5610803852
+        }
+      }
+    }
+  ]
+}

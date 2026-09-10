@@ -1,0 +1,306 @@
+{
+  "reference": "constrained165-human-0p3125ms",
+  "reference_capture_sha256": "e57f70817b9cfedbe22cfe9997d44438dce434937d99ecbec85c0bd0084d39cc",
+  "sampled_s": 0.02,
+  "rows": [
+    {
+      "name": "constrained-front165-scale1-human-fine",
+      "capture_sha256": "d3bb79c64322a1ef8c9cefd3cb03901193ff47c602aa69e6d2d79250bc38b799",
+      "simulated_s": 20,
+      "maximum_body_difference_m": 0.0006646726578096075,
+      "rms_body_difference_m": 0.00045171241152644617,
+      "maximum_body_velocity_difference_m_s": 0.003799209034170247,
+      "maximum_body_rotation_difference_rad": 0.0007874426032386335,
+      "feet": [
+        {
+          "marker": {
+            "id": "-Y-foot-surface",
+            "link": "-Y | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004763,
+              -0.0001,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.0005073579978322532
+        },
+        {
+          "marker": {
+            "id": "+X-foot-surface",
+            "link": "+X | Sliding foot crosshead",
+            "local_point_m": [
+              -0.00473,
+              0,
+              -0.13204
+            ]
+          },
+          "maximum_world_point_difference_m": 0.000703266789628251
+        },
+        {
+          "marker": {
+            "id": "+Y-foot-surface",
+            "link": "+Y | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004762,
+              0.0001,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.0009167775130386283
+        },
+        {
+          "marker": {
+            "id": "-X-foot-surface",
+            "link": "-X | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004863,
+              0,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.0008866367388145795
+        }
+      ],
+      "maximum_steady_speed_fraction": 0.0004166822121594738,
+      "absolute_slip_ratio_difference": 0.00037945570058375844,
+      "maximum_slip_ratio": 0.12515446849871004,
+      "turn_rad": 0.2582423754707434,
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.3,
+          "release_travel_m": 0.017562356398223733,
+          "late_drift_m": 0.0002668374897886742
+        }
+      ],
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_existing_path_speed_screen": true
+    },
+    {
+      "name": "constrained165-preview-5ms",
+      "capture_sha256": "63a76fa32a296ba88e81ec13b74a57d189cf9b14697c4757733334abb28a9ef7",
+      "simulated_s": 20,
+      "maximum_body_difference_m": 0.008939949844572739,
+      "rms_body_difference_m": 0.004479750807810519,
+      "maximum_body_velocity_difference_m_s": 0.031406971725304045,
+      "maximum_body_rotation_difference_rad": 0.009437292930141068,
+      "feet": [
+        {
+          "marker": {
+            "id": "-Y-foot-surface",
+            "link": "-Y | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004763,
+              -0.0001,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.011999098061185175
+        },
+        {
+          "marker": {
+            "id": "+X-foot-surface",
+            "link": "+X | Sliding foot crosshead",
+            "local_point_m": [
+              -0.00473,
+              0,
+              -0.13204
+            ]
+          },
+          "maximum_world_point_difference_m": 0.01016314369532521
+        },
+        {
+          "marker": {
+            "id": "+Y-foot-surface",
+            "link": "+Y | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004762,
+              0.0001,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.006797427863164116
+        },
+        {
+          "marker": {
+            "id": "-X-foot-surface",
+            "link": "-X | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004863,
+              0,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.008954474316337478
+        }
+      ],
+      "maximum_steady_speed_fraction": 0.009586227649065325,
+      "absolute_slip_ratio_difference": 0.0202680298209406,
+      "maximum_slip_ratio": 0.1052658943783532,
+      "turn_rad": 0.24970304663227058,
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.3,
+          "release_travel_m": 0.016570013935958694,
+          "late_drift_m": 0.0003155779081847306
+        }
+      ],
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_existing_path_speed_screen": false
+    },
+    {
+      "name": "constrained165-preview-10ms",
+      "capture_sha256": "b1bb59cae07dbf397ed98d0f887fc8a0902fd284aa2395ce406a7d85d31db773",
+      "simulated_s": 20,
+      "maximum_body_difference_m": 0.025900020570752316,
+      "rms_body_difference_m": 0.013901237177234859,
+      "maximum_body_velocity_difference_m_s": 0.05233436768337308,
+      "maximum_body_rotation_difference_rad": 0.01621243624240461,
+      "feet": [
+        {
+          "marker": {
+            "id": "-Y-foot-surface",
+            "link": "-Y | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004763,
+              -0.0001,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.030951794912358298
+        },
+        {
+          "marker": {
+            "id": "+X-foot-surface",
+            "link": "+X | Sliding foot crosshead",
+            "local_point_m": [
+              -0.00473,
+              0,
+              -0.13204
+            ]
+          },
+          "maximum_world_point_difference_m": 0.026816179959779796
+        },
+        {
+          "marker": {
+            "id": "+Y-foot-surface",
+            "link": "+Y | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004762,
+              0.0001,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.02114775070235022
+        },
+        {
+          "marker": {
+            "id": "-X-foot-surface",
+            "link": "-X | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004863,
+              0,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.026654420001238705
+        }
+      ],
+      "maximum_steady_speed_fraction": 0.020113671464683677,
+      "absolute_slip_ratio_difference": 0.03713294048442377,
+      "maximum_slip_ratio": 0.08840098371487003,
+      "turn_rad": 0.2423888449262102,
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.3,
+          "release_travel_m": 0.015109975702935942,
+          "late_drift_m": 0.00036933384764558546
+        }
+      ],
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_existing_path_speed_screen": false
+    },
+    {
+      "name": "constrained165-human-1p25ms",
+      "capture_sha256": "c31fa7ee4ff3800ba8883d94447205eea7f1209c21949c4818ed1e56db7fabad",
+      "simulated_s": 20,
+      "maximum_body_difference_m": 0.002213296469251089,
+      "rms_body_difference_m": 0.0014056503093355366,
+      "maximum_body_velocity_difference_m_s": 0.01097181574799742,
+      "maximum_body_rotation_difference_rad": 0.0021678127115910602,
+      "feet": [
+        {
+          "marker": {
+            "id": "-Y-foot-surface",
+            "link": "-Y | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004763,
+              -0.0001,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.0018183126692809348
+        },
+        {
+          "marker": {
+            "id": "+X-foot-surface",
+            "link": "+X | Sliding foot crosshead",
+            "local_point_m": [
+              -0.00473,
+              0,
+              -0.13204
+            ]
+          },
+          "maximum_world_point_difference_m": 0.0020765298251282987
+        },
+        {
+          "marker": {
+            "id": "+Y-foot-surface",
+            "link": "+Y | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004762,
+              0.0001,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.002981026006873993
+        },
+        {
+          "marker": {
+            "id": "-X-foot-surface",
+            "link": "-X | Sliding foot crosshead",
+            "local_point_m": [
+              -0.004863,
+              0,
+              -0.129359
+            ]
+          },
+          "maximum_world_point_difference_m": 0.0027232684190194264
+        }
+      ],
+      "maximum_steady_speed_fraction": 0.0016834588713044577,
+      "absolute_slip_ratio_difference": 0.00004208002227651386,
+      "maximum_slip_ratio": 0.1255760042215703,
+      "turn_rad": 0.2568900984382046,
+      "stops": [
+        {
+          "request_or_packet_loss_s": 16,
+          "permanently_below_1mm_s_at": 16.3,
+          "release_travel_m": 0.017446710673513506,
+          "late_drift_m": 0.0002738926242958108
+        }
+      ],
+      "passed_control_checks": true,
+      "passed_contact_quality": false,
+      "passed_existing_path_speed_screen": true
+    }
+  ],
+  "family": "constrained165",
+  "reference_step_s": 0.0003125,
+  "scope": "Human numerical profiles against the declared finest completed family timestep. Scene, task, seed, inputs, controller, actuator/contact model and convergence tolerances must match. Existing screen: <=3 mm maximum body path difference and <=2% steady speed difference. Foot, orientation, contact quality and stop metrics remain explicit; this screen alone does not qualify physical accuracy or realtime performance. The reference is a numerical approximation, not ground truth; no between-sample guarantee."
+}

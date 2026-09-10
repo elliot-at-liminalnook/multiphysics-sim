@@ -1,0 +1,25 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed.recipe.json",
+      "bytes": 161211,
+      "sha256": "e4c026ee7c0336c90d436e7b7802aeba3549a51e6652ccaaee54d6f0933f282e"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-timed-speed.result.json",
+      "bytes": 1984301,
+      "sha256": "14ea48792c23063622c0e79d468aede29f5241569a56bbc263d4d27bb1538521"
+    }
+  ],
+  "output": {
+    "path": "examples/full-robot/contact-planning/joint-ipopt-warm.recipe.json",
+    "bytes": 161647,
+    "sha256": "40aed4b67e7700f02569ed0545d895d332b0b975f73fc67dff420920cd6ae87e"
+  },
+  "recorder": {
+    "path": "examples/full-robot/contact-planning/prepare_joint_ipopt_warm.mjs",
+    "bytes": 1598,
+    "sha256": "415f8bfd13321d309128e26319711900ed506717cb08e5141d95d03cf7f902d6"
+  },
+  "scope": "Use the completed timing-aware AL candidate as the initial point for native joint speed optimization. Target .30 m/s, all variables, bounds, physical definitions and acceptance gates remain unchanged. This is solver warm initialization from an infeasible near-balanced motion, not a slow-gait success criterion or hardware speed claim."
+}

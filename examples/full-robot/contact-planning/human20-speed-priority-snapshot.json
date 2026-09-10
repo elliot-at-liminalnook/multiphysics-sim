@@ -1,0 +1,700 @@
+{
+  "source_context": {
+    "path": "runs/bayesian-human20-pilot-v2/context.json",
+    "sha256": "708f8f38e05c79a96b506b9a26e2593e05a5820eaef7f52828d89a5d368eff86"
+  },
+  "objective": "Maximum of the minimum measured forward/reverse body speed over the full 20-second driving schedule",
+  "removed_acceptance_constraint": {
+    "name": "slip ratio / 0.05 - 1",
+    "unit": "1",
+    "scale": 1
+  },
+  "retained_constraints": [
+    {
+      "name": "speed tracking relative error / 0.05 - 1",
+      "unit": "1",
+      "scale": 1
+    },
+    {
+      "name": "heading error / 0.1 rad - 1",
+      "unit": "1",
+      "scale": 1
+    },
+    {
+      "name": "tilt / 0.1 rad - 1",
+      "unit": "1",
+      "scale": 1
+    },
+    {
+      "name": "settling duration / (0.8 s + existing 1e-9 s roundoff guard) - 1; unsettled gate failure = 1",
+      "unit": "1",
+      "scale": 1
+    },
+    {
+      "name": "late drift / 0.003 m - 1",
+      "unit": "1",
+      "scale": 1
+    },
+    {
+      "name": "failed fraction of all complete planned swing checks",
+      "unit": "1",
+      "scale": 1
+    },
+    {
+      "name": "sampled interlink overlap / 0.0001 m; exact zero required",
+      "unit": "1",
+      "scale": 1
+    },
+    {
+      "name": "absolute turn error from 0.24 rad / 0.06 rad - 1",
+      "unit": "1",
+      "scale": 1
+    }
+  ],
+  "records": [
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-000.evaluation.json",
+      "sha256": "da059804d6a813de5713d20d4a9bf02b7f8e8188cab830728be1cfe25069685d",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.06780678488063342,
+            0.5,
+            1
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.06664697744440759,
+            "residuals": [
+              -0.09756468541666108,
+              -0.6579081464288419,
+              -0.8277385894300785,
+              -0.3800260039065906,
+              -0.5500000005625008,
+              -0.96181818417178,
+              0,
+              0,
+              -0.7457920228305539
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-000.evaluation.json"
+        },
+        "method": "baseline-replay",
+        "metrics": {
+          "speeds_m_s": [
+            0.06664697744440759,
+            0.06760759351975497
+          ],
+          "slip": 0.04512176572916695,
+          "control": true,
+          "planned_lifts": 78,
+          "passed_lifts": 78,
+          "overlap_m": 0,
+          "turn_rad": 0.22474752136983323
+        },
+        "wall_s": 84.27907880199999,
+        "native_exit_code": 0,
+        "capture_sha256": "3fd4d71b50576b4078c387ccf454388b2c1f06aebfddaf02d4c7a10dbde5e415"
+      },
+      "passes_retained_gates": true
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-001.evaluation.json",
+      "sha256": "329920ddf6dc0f33aa391d0fbfb493716c495a7ea5755e7a6e7aff622c4188e8",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.060428777976477305,
+            0.9274310355407382,
+            1.4099168133440918
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.05909091095820988,
+            "residuals": [
+              -0.2703114019069224,
+              -0.5572086469171347,
+              -0.5618080510089417,
+              -0.3952504426641239,
+              -0.6500000004374986,
+              -0.9932235379163253,
+              0,
+              0,
+              -0.992123613755599
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-001.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.05909091095820988,
+            0.05917955650760105
+          ],
+          "slip": 0.036484429904653885,
+          "control": true,
+          "planned_lifts": 70,
+          "passed_lifts": 70,
+          "overlap_m": 0,
+          "turn_rad": 0.24047258317466405
+        },
+        "wall_s": 81.06600712,
+        "native_exit_code": 0,
+        "capture_sha256": "669e183a46fae442108bb61fa60059af6070a6e940a97d0f7f34d5d2dc045509"
+      },
+      "passes_retained_gates": true
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-002.evaluation.json",
+      "sha256": "1c468699d6de2737eed4c50a1144d1d7c364c0e61c0004a54dda170cb0ecc15b",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.09043804803701862,
+            0.41895574135035574,
+            1.1103573441869343
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.09017709373944059,
+            "residuals": [
+              1.0428591402852683,
+              -0.7696513505131,
+              -0.942944104087109,
+              -0.34742726546710756,
+              -0.7000000003749975,
+              -0.9644258030638608,
+              0,
+              0,
+              -0.7419854387568389
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-002.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.09017709373944059,
+            0.09147966214839655
+          ],
+          "slip": 0.10214295701426343,
+          "control": true,
+          "planned_lifts": 103,
+          "passed_lifts": 103,
+          "overlap_m": 0,
+          "turn_rad": 0.25548087367458966
+        },
+        "wall_s": 105.55401629500001,
+        "native_exit_code": 0,
+        "capture_sha256": "d5a99f60b5d10b4bc4bfc71a87c98c00d2ed8544483927633551ef502585dcfb"
+      },
+      "passes_retained_gates": true
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-003.evaluation.json",
+      "sha256": "127e792d415ba735ded72f65f0cac526c000fa0ecc1f235d41dadc894c130a85",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.11909900467347323,
+            1.0353615379545686,
+            0.8217371770648858
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.11650803199910406,
+            "residuals": [
+              0.897409957806595,
+              -0.5649043950497004,
+              -0.2793584348575786,
+              -0.3551978492518314,
+              -0.625000000468749,
+              -0.9916405125794935,
+              0.06521739130434778,
+              0,
+              0.6433199377218461
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-003.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.11803752109441214,
+            0.11650803199910406
+          ],
+          "slip": 0.09487049789032975,
+          "control": false,
+          "planned_lifts": 138,
+          "passed_lifts": 129,
+          "overlap_m": 0,
+          "turn_rad": 0.33859919626331075
+        },
+        "wall_s": 106.04906854299998,
+        "native_exit_code": 0,
+        "capture_sha256": "6ac6ccd9f3e6d9072d9a9a95a696bf5ffd2850dfdff07a200a33ce606d6327a9"
+      },
+      "passes_retained_gates": false
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-004.evaluation.json",
+      "sha256": "0448211f1654dc65e6dda62e4aa9eeac8d7bddb3c8ec1081336fecd91e30fa2a",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.07653230661326836,
+            0.6396138433970865,
+            1.0688525004080054
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07548897149912143,
+            "residuals": [
+              0.15679814470144593,
+              -0.7273477932870644,
+              -0.9408173425003876,
+              -0.3621825486355539,
+              -0.5500000005625008,
+              -0.978855870242604,
+              0,
+              0,
+              -0.3510654235730525
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-004.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.07548897149912143,
+            0.07720112433190365
+          ],
+          "slip": 0.0578399072350723,
+          "control": true,
+          "planned_lifts": 88,
+          "passed_lifts": 88,
+          "overlap_m": 0,
+          "turn_rad": 0.20106392541438314
+        },
+        "wall_s": 89.55656114599999,
+        "native_exit_code": 0,
+        "capture_sha256": "3fe134cb4caaf2e93d9a556ee6183e415ec98a6f861d3b79f11b74c76e91e6de"
+      },
+      "passes_retained_gates": true
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-005.evaluation.json",
+      "sha256": "293825b7472f1ff6995731543f10c13a4675e2aeb2dceaa11b441a3a3baef8e1",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.06655205697863552,
+            1.2385801952714095,
+            0.9444879780284072
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.06520398452364824,
+            "residuals": [
+              -0.5546335798439366,
+              -0.5948818064571517,
+              -0.6981474993238111,
+              -0.39443739248081766,
+              -0.7500000003125009,
+              -0.9972583811882464,
+              0.013157894736842146,
+              0,
+              -0.67858228221318
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-005.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.06623988353884665,
+            0.06520398452364824
+          ],
+          "slip": 0.022268321007803172,
+          "control": true,
+          "planned_lifts": 76,
+          "passed_lifts": 75,
+          "overlap_m": 0,
+          "turn_rad": 0.2207149369327908
+        },
+        "wall_s": 83.37976730399998,
+        "native_exit_code": 0,
+        "capture_sha256": "5737b6900edadedd6c54b43c91b2275b882b62dadd375e4395963914d2120770"
+      },
+      "passes_retained_gates": false
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-006.evaluation.json",
+      "sha256": "82a29709e4f4be9166c06b5b3780e0b46a99d2e40edd985ac0585c6dd5563e20",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.10431397733563812,
+            0.2323579411320026,
+            1.4621136967324202
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.10463874389703214,
+            "residuals": [
+              0.7545140654513562,
+              -0.7327990389032237,
+              -0.4661143152796391,
+              -0.33510482109390327,
+              -0.625000000468749,
+              -0.8837798739005005,
+              0.06666666666666665,
+              0,
+              0.12259078852353844
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-006.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.10463874389703214,
+            0.10570761708563362
+          ],
+          "slip": 0.08772570327256782,
+          "control": false,
+          "planned_lifts": 120,
+          "passed_lifts": 112,
+          "overlap_m": 0,
+          "turn_rad": 0.3073554473114123
+        },
+        "wall_s": 110.24931137000002,
+        "native_exit_code": 0,
+        "capture_sha256": "dcee7d9008ff7017f35c7b7dfdfa2a189e0a32e18758563dcfe8ba9234dab1fa"
+      },
+      "passes_retained_gates": false
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-007.evaluation.json",
+      "sha256": "402a8c8e8c45e6be3a8e4d4d58b2de587a5f19e638374930c47a93ce1f2d9a9b",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.09613516869363284,
+            0.8230206857056912,
+            0.6638196781772892
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.09440876745219157,
+            "residuals": [
+              0.8131130150952526,
+              -0.640838776297771,
+              -0.5769692452002955,
+              -0.35840547471445294,
+              -0.7000000003749975,
+              -0.9784823401872716,
+              0.008928571428571397,
+              0,
+              -0.8381444459154309
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-007.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.09440876745219157,
+            0.09625235546017563
+          ],
+          "slip": 0.09065565075476263,
+          "control": true,
+          "planned_lifts": 112,
+          "passed_lifts": 111,
+          "overlap_m": 0,
+          "turn_rad": 0.24971133324507414
+        },
+        "wall_s": 97.44373564699991,
+        "native_exit_code": 0,
+        "capture_sha256": "996945a86fdc36b2d8df045f0c59843883fa56e768606556f5dbee07f4a1e701"
+      },
+      "passes_retained_gates": false
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-008.evaluation.json",
+      "sha256": "5cd47bac789bca1bfa1631f73d2646305cda5dfb9384c1907d5ed9a243dafd4b",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.11105491739550553,
+            0.5114271544284559,
+            0.582349874850368
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.10779130006598778,
+            "residuals": [
+              -0.10017482219556584,
+              -0.4122516308044468,
+              -0.23461934473959856,
+              -0.3623845505417984,
+              -0.6750000004062481,
+              -0.9429400334010366,
+              0.07692307692307687,
+              0,
+              0.6084783867198194
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-008.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.10779130006598778,
+            0.11140260269428397
+          ],
+          "slip": 0.04499125889022171,
+          "control": false,
+          "planned_lifts": 130,
+          "passed_lifts": 120,
+          "overlap_m": 0,
+          "turn_rad": 0.33650870320318915
+        },
+        "wall_s": 96.53019411000004,
+        "native_exit_code": 0,
+        "capture_sha256": "8044ebd57e7debd796952d08268d4dbdc492f6d5e73df3d81c0a4fbc57591366"
+      },
+      "passes_retained_gates": false
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-009.evaluation.json",
+      "sha256": "2b15301f2cabc3ae021df5e81e593c3f2482254a73202377d45b937f6cca764a",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.07031284890781607,
+            1.4768767407665335,
+            0.6710109311964589
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.06916685240839329,
+            "residuals": [
+              -0.6347355442620783,
+              -0.6740292799328209,
+              -0.7822032901889244,
+              -0.38903946959353,
+              -0.7500000003125009,
+              -0.9838957244082748,
+              0,
+              0,
+              -0.5773885517420326
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-009.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.06916685240839329,
+            0.06922286445348654
+          ],
+          "slip": 0.018263222786896082,
+          "control": true,
+          "planned_lifts": 80,
+          "passed_lifts": 80,
+          "overlap_m": 0,
+          "turn_rad": 0.21464331310452195
+        },
+        "wall_s": 81.13546159000008,
+        "native_exit_code": 0,
+        "capture_sha256": "5b195921699d22c93af070833636e7c28268d49314f70c570a57f4ec6a79080b"
+      },
+      "passes_retained_gates": true
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-010.evaluation.json",
+      "sha256": "70b187ace0459ec1d204f4a5b4a40e0c98befdc1d49b965dd4fcfd2dd76b9b7d",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.10761626975677532,
+            0.08258610862334778,
+            1.2621067481817283
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.10686127457634706,
+            "residuals": [
+              0.37214323299839513,
+              -0.7750826496516607,
+              -0.4423134695192109,
+              -0.34197291167979393,
+              -0.7000000003749975,
+              -0.8628180871044604,
+              0.06349206349206349,
+              0,
+              1.2292837783913613
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-010.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.10686127457634706,
+            0.10882650806917862
+          ],
+          "slip": 0.06860716164991976,
+          "control": false,
+          "planned_lifts": 126,
+          "passed_lifts": 118,
+          "overlap_m": 0,
+          "turn_rad": 0.37375702670348165
+        },
+        "wall_s": 99.15531741799997,
+        "native_exit_code": 0,
+        "capture_sha256": "be84f028a88ca0efa4fe1a076e38a13e9952c5df970b36efa0418974331d62ea"
+      },
+      "passes_retained_gates": false
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-011.evaluation.json",
+      "sha256": "5cbdfa6cbae50c396befcdbf049d8020a19907d8a9302cb66067e83dfb2434be",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.08000021479429618,
+            1.2566203607072621,
+            1.2249898898696578
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.07872732771505195,
+            "residuals": [
+              -0.16383224451827705,
+              -0.6817790845894103,
+              -0.9089377126069872,
+              -0.36318402863739263,
+              -0.40000000074999953,
+              -0.9565806250638774,
+              0,
+              0,
+              0.07175916628504964
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-011.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.07945820916328238,
+            0.07872732771505195
+          ],
+          "slip": 0.04180838777408615,
+          "control": false,
+          "planned_lifts": 90,
+          "passed_lifts": 90,
+          "overlap_m": 0,
+          "turn_rad": 0.17569445002289702
+        },
+        "wall_s": 134.40495040899992,
+        "native_exit_code": 0,
+        "capture_sha256": "0e43d9cc079036731cb5d6e6e26e6ffd73e8e3ee1faad996606a041b5770ab29"
+      },
+      "passes_retained_gates": false
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-012.evaluation.json",
+      "sha256": "18d588938de8b3d0e0c10272be2774a4c6b6c959e57d29feb3f87352d6bbee06",
+      "original": {
+        "observation": {
+          "context_id": "6033f0a83bb1db103d434ac070f55347780cdb53cd9f9be64886b80f71a9da41",
+          "values": [
+            0.08651532655652493,
+            0.26802885443757224,
+            0.853940975856992
+          ],
+          "outcome": {
+            "status": "complete",
+            "objective": -0.0845459282025529,
+            "residuals": [
+              0.5685011104697548,
+              -0.544728447002897,
+              -0.7537336918546935,
+              -0.3499514420519614,
+              -0.7250000003437514,
+              -0.9065102740144204,
+              0,
+              0,
+              -0.7708443910679033
+            ]
+          },
+          "evidence": "runs/bayesian-human20-pilot-v2/evaluation-012.evaluation.json"
+        },
+        "method": "initial-latin-hypercube",
+        "metrics": {
+          "speeds_m_s": [
+            0.0845459282025529,
+            0.08746151210116355
+          ],
+          "slip": 0.07842505552348775,
+          "control": true,
+          "planned_lifts": 100,
+          "passed_lifts": 100,
+          "overlap_m": 0,
+          "turn_rad": 0.2537493365359258
+        },
+        "wall_s": 100.67946234200011,
+        "native_exit_code": 0,
+        "capture_sha256": "61e3915fb745f66486839942b103dfd7a0f74e18502684371c67e51e747769ed"
+      },
+      "passes_retained_gates": true
+    }
+  ],
+  "ranking": [
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-002.evaluation.json",
+      "speed_m_s": 0.09017709373944059,
+      "slip_ratio": 0.10214295701426343
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-012.evaluation.json",
+      "speed_m_s": 0.0845459282025529,
+      "slip_ratio": 0.07842505552348775
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-004.evaluation.json",
+      "speed_m_s": 0.07548897149912143,
+      "slip_ratio": 0.0578399072350723
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-009.evaluation.json",
+      "speed_m_s": 0.06916685240839329,
+      "slip_ratio": 0.018263222786896082
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-000.evaluation.json",
+      "speed_m_s": 0.06664697744440759,
+      "slip_ratio": 0.04512176572916695
+    },
+    {
+      "path": "runs/bayesian-human20-pilot-v2/evaluation-001.evaluation.json",
+      "speed_m_s": 0.05909091095820988,
+      "slip_ratio": 0.036484429904653885
+    }
+  ],
+  "scope": "User clarified maximum speed priority. Slip is recorded as a diagnostic, not a rejection threshold. Original observations remain untouched. This is a finite completed-record snapshot, not a retrained selector, altered friction law, full qualification or physical maximum."
+}

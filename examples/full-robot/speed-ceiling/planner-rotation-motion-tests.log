@@ -1,0 +1,8 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+    Finished `release` profile [optimized] target(s) in 9.95s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-exploration/release/deps/sim_domain_robot-17dca9a13785ac04)
+
+running 1 test
+test math::rotation_motion_tests::angular_rates_match_matrix_derivatives_at_zero_and_finite_rotations ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s

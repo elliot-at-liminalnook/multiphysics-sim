@@ -1,0 +1,21 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-control)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-dynamics)
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-script)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-compile)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-domain-robot)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-runtime)
+warning: field `rotor_speed` is never read
+   --> crates/sim-runtime/src/physical.rs:113:5
+    |
+ 96 | struct MotorIds {
+    |        -------- field in this struct
+...
+113 |     rotor_speed: StateId,
+    |     ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+   Compiling sim-web v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-web)
+    Finished `release` profile [optimized] target(s) in 45.79s

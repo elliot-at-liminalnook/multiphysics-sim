@@ -1,0 +1,25 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/motion-forecast-v1.spec.json",
+      "sha256": "0e3fd204e93c796db717b6695df9a1e16ec778b794cc78c5bb868b450e8c2c4b"
+    },
+    {
+      "path": "runs/bayesian-speed-only-bounded-expanded/evaluation-013.native.json",
+      "sha256": "db0ffe45259d5ec43ed8ab140a5658ea74d8794cf69ea8453e2f31871a4160ab"
+    },
+    {
+      "path": "runs/bayesian-speed-only-fast-short-trial/evaluation-009.native.json",
+      "sha256": "46dcf06bc9b43498c20ef023f45b74d3e56ec6edd4c2c5bcb43ad00902d1c2ca"
+    },
+    {
+      "path": "runs/speed-only-507-validation/long60.native.json",
+      "sha256": "77f2b59cf0948561d1151faf488540a38753e9cae021357d5430ab5e6ba0b493"
+    },
+    {
+      "path": "runs/speed-only-448-validation/long60.native.json",
+      "sha256": "f653351e0ae0b01a303439181f8eab08485f7137233a952777f010ac1a7f9014"
+    }
+  ],
+  "scope": "Training uses first 20 seconds of two gaits; validation uses later 20–60 seconds, without crossing window boundaries. Same nominal CAD/world, not independent disturbances or new robots. Forecasts include position, velocity and acceleration estimates for 12 driven coordinates plus chassis/foot link COMs. Future actuator sequences are conditioning variables."
+}

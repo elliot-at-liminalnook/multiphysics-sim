@@ -1,0 +1,184 @@
+[
+  {
+    "start_s": 0.48,
+    "end_s": 0.72,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "-Y | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "+X | Sliding foot crosshead": 1,
+      "-X | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 0.48,
+    "end_s": 0.72,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "+Y | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "+X | Sliding foot crosshead": 1,
+      "-X | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 0.88,
+    "end_s": 1.12,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "+X | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "-Y | Sliding foot crosshead": 1,
+      "+Y | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 0.88,
+    "end_s": 1.12,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "-X | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "-Y | Sliding foot crosshead": 1,
+      "+Y | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 1.28,
+    "end_s": 1.52,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "-Y | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "+X | Sliding foot crosshead": 1,
+      "-X | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 1.28,
+    "end_s": 1.52,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "+Y | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "+X | Sliding foot crosshead": 1,
+      "-X | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 1.68,
+    "end_s": 1.92,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "+X | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "-Y | Sliding foot crosshead": 1,
+      "+Y | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 1.68,
+    "end_s": 1.92,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "-X | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "-Y | Sliding foot crosshead": 1,
+      "+Y | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 2.08,
+    "end_s": 2.32,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "-Y | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "+X | Sliding foot crosshead": 1,
+      "-X | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 2.08,
+    "end_s": 2.32,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "+Y | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "+X | Sliding foot crosshead": 1,
+      "-X | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 2.48,
+    "end_s": 2.72,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "+X | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "-Y | Sliding foot crosshead": 1,
+      "+Y | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 2.48,
+    "end_s": 2.72,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "-X | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "-Y | Sliding foot crosshead": 1,
+      "+Y | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 2.88,
+    "end_s": 3.12,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "-Y | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "+X | Sliding foot crosshead": 1,
+      "-X | Sliding foot crosshead": 1
+    }
+  },
+  {
+    "start_s": 2.88,
+    "end_s": 3.12,
+    "maximum_sample_gap_s": 0.02,
+    "qualifying_duration_s": 0.04,
+    "swing_link": "+Y | Sliding foot crosshead",
+    "minimum_clearance_m": 0.002,
+    "maximum_swing_force_n": 0.2,
+    "minimum_support_forces_n": {
+      "+X | Sliding foot crosshead": 1,
+      "-X | Sliding foot crosshead": 1
+    }
+  }
+]

@@ -1,0 +1,61 @@
+{
+  "base_commit": "52300b93298f84b40cec88006dd3e5dba093f95d",
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9049396,
+    "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+  },
+  "optimizer_build_reference": {
+    "path": "examples/full-robot/contact-planning/joint-derivative-build.json",
+    "bytes": 9942,
+    "sha256": "cb114b9de8a65e4275015d9f7bf6a58ace26d32b5f17a71b55ec35af4c7e2032"
+  },
+  "reference_report_artifact": {
+    "path": "examples/full-robot/contact-planning/joint-aligned-force-jacobian.result.json",
+    "bytes": 1463534,
+    "sha256": "17ab440e6a955623f0d1cb3ad8458a9b58c2d95a0b73d4486876af2ae069dc19"
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/HEIGHT_SEARCH.md",
+      "bytes": 3057,
+      "sha256": "5817f097e35ff02d77a439e53380d96b6148d5553d749243a1c0cbf5595b0f37"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/README.md",
+      "bytes": 24435,
+      "sha256": "28ba813e90ee0ff613c4a6f85fc0430bec3917ae93c4c6594b3c16e7624a4460"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/prepare_joint_height_workspace.mjs",
+      "bytes": 5443,
+      "sha256": "45ceeab6982ea7317f1d0070486fc4a3373941067a4e021fb614702d4e993bb8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-height-speed.recipe.json",
+      "bytes": 146911,
+      "sha256": "d80afde8b5b8b0c12d0349c6328631a1f845e3645c936fd13f3c9c7cc67738ac"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-height-speed-initial.result.json",
+      "bytes": 1462309,
+      "sha256": "a3be7f5e80e9151f49c47c6efa1ed98c9cdff577dc031115ed33f9344c12a1bb"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-height-speed-initial.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-height-workspace-preparation.json",
+      "bytes": 5942,
+      "sha256": "a7a57cd56dd4bc6fe9036faa6fff5a634e8ba2d846e284583284c3aed17e99e7"
+    }
+  ],
+  "checks": {
+    "complete_initial_native_report_identical": true,
+    "optimizer_matches_recorded_build": true,
+    "only_height_search_bounds_changed": true
+  },
+  "scope": "Completed CAD-workspace height-domain preparation and native initial-report verification. No height-search optimization result; live aligned/body8 output files are excluded."
+}

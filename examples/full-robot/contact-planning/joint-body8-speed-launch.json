@@ -1,0 +1,33 @@
+{
+  "source_commit": "35eda49",
+  "session_id": 82742,
+  "optimizer": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/optimize_joint_contact",
+    "bytes": 9049396,
+    "sha256": "960d66b15b0492bf366b5f0aadfdc71d952b706772efde5811a2671cedc94a46"
+  },
+  "build": {
+    "path": "examples/full-robot/contact-planning/joint-body-refinement-build.json",
+    "bytes": 6266,
+    "sha256": "8f5c419e819ef46bb970fc5a5fb26393bc008c1a2cd3ccc5259cbd50457fcd6b"
+  },
+  "recipe": {
+    "path": "examples/full-robot/contact-planning/joint-body8-speed.recipe.json",
+    "bytes": 70676,
+    "sha256": "a9309ce23eef4a8e0a255a310b252fb4a2f98001da115048e5ee14e8237cabec"
+  },
+  "initial": {
+    "path": "examples/full-robot/contact-planning/joint-body8-speed-initial.result.json",
+    "bytes": 970155,
+    "sha256": "5e752a5431533a261469107ade6c1d07a7b03662de645f6089d64c963f94dfa9"
+  },
+  "arguments": [
+    "runs/speed-ceiling/validation/constrained-front165-scale1-human-fine.scene.json",
+    "examples/full-robot/gait-exploration/workspace-markers.json",
+    "examples/full-robot/contact-planning/joint-body8-speed.recipe.json",
+    "--analytic-forces"
+  ],
+  "stdout": "examples/full-robot/contact-planning/joint-body8-speed.result.json",
+  "stderr": "examples/full-robot/contact-planning/joint-body8-speed.log",
+  "scope": "Live 8000-evaluation body8 joint speed search; no completed optimizer result is included."
+}

@@ -1,0 +1,133 @@
+{
+  "scope": "Matched actual-loaded-slip inequality experiment. Four appended rows start with zero multipliers; all previous physical constraints, objective, motion, grid, bounds, scaling and budgets match the earlier Jacobi control. Loaded-threshold and finite-grid effects remain; no runtime speed or physical maximum claim.",
+  "parent_audit_exactly_equal": true,
+  "control_dense": {
+    "samples": 512,
+    "force_error_n": 0.11968962535121308,
+    "moment_error_nm": 0.04378332640984991,
+    "minimum_torque_margin_nm": 0.2753805832648994,
+    "maximum_point_penetration_m": 0.00010833255423736698,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.07157730874319201,
+    "within_sampled_slip_limit": false,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0
+  },
+  "constrained_coarse": {
+    "samples": 128,
+    "force_error_n": 0.10116537647926298,
+    "moment_error_nm": 0.04209000702210865,
+    "minimum_torque_margin_nm": 0.2528246375293884,
+    "maximum_point_penetration_m": 0.00010834016215005571,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.06960879471225259,
+    "within_sampled_slip_limit": false,
+    "geometry_samples": 129,
+    "maximum_interlink_overlap_m": 0
+  },
+  "constrained_dense": {
+    "samples": 512,
+    "force_error_n": 0.11724582134089273,
+    "moment_error_nm": 0.04209000702210865,
+    "minimum_torque_margin_nm": 0.24713300914480382,
+    "maximum_point_penetration_m": 0.0001083613704023767,
+    "within_planning_tolerances": false,
+    "maximum_loaded_slip_ratio": 0.0752011064875786,
+    "within_sampled_slip_limit": false,
+    "geometry_samples": 513,
+    "maximum_interlink_overlap_m": 0
+  },
+  "dense_slip": {
+    "body_path_m": 0.047299086155208704,
+    "displacement_m": 0.04424654247408857,
+    "duration_s": 0.6597773085746947,
+    "groups": [
+      {
+        "group": "+X | Sliding foot crosshead",
+        "rms_slip_upper_bound": 0.01991469635007645,
+        "sampled_loaded_slip_ratio": 0.008289516898522881
+      },
+      {
+        "group": "+Y | Sliding foot crosshead",
+        "rms_slip_upper_bound": 0.03318786748273181,
+        "sampled_loaded_slip_ratio": 0.009569212173874337
+      },
+      {
+        "group": "-X | Sliding foot crosshead",
+        "rms_slip_upper_bound": 0.3588927945286038,
+        "sampled_loaded_slip_ratio": 0.0752011064875786
+      },
+      {
+        "group": "-Y | Sliding foot crosshead",
+        "rms_slip_upper_bound": 0.09891259449411159,
+        "sampled_loaded_slip_ratio": 0.012387918131124874
+      }
+    ],
+    "scope": "Actual loaded-slip measure and conservative RMS shaping bound at declared samples. Surrogate target is sufficient but not necessary; it does not replace dense/runtime slip, force, collision or speed-optimality checks.",
+    "shaping_residuals": [
+      0,
+      0,
+      6.177855890572076,
+      0.9782518898822318
+    ],
+    "within_sampled_slip_limit": false
+  },
+  "final_actual_slip_inequalities": [
+    -0.8347795552843832,
+    -0.8055581356378353,
+    0.3921758942450518,
+    -0.7704026044530634
+  ],
+  "final_actual_slip_multipliers": [
+    0,
+    0,
+    4.613289401031686,
+    0
+  ],
+  "planned_projected_45deg_rate_m_s": 0.06706268161408929,
+  "search": {
+    "termination": "outer_iteration_limit",
+    "evaluations": 68957,
+    "maximum_violation": 1.104500351105432,
+    "within_constraint_tolerance": false,
+    "history": [
+      {
+        "complementarity": 5.470254581988284,
+        "iteration": 1,
+        "maximum_violation": 1.3203907725840192,
+        "objective_cost": 20.64693768999845,
+        "penalty": 1,
+        "shifted_constraint_norm": 3.072377500933395,
+        "inner_termination": "iteration_limit",
+        "inner_evaluations": 34478,
+        "last_inner": {
+          "accepted": true,
+          "cost": 113.56516052190491,
+          "damping": 0.002867971990792441,
+          "evaluations": 34478,
+          "iteration": 29,
+          "projected_gradient": 359105.37811147387
+        }
+      },
+      {
+        "complementarity": 15.648776166000147,
+        "iteration": 2,
+        "maximum_violation": 1.104500351105432,
+        "objective_cost": 19.537939251432473,
+        "penalty": 10,
+        "shifted_constraint_norm": 1.104500351105432,
+        "inner_termination": "iteration_limit",
+        "inner_evaluations": 34476,
+        "last_inner": {
+          "accepted": true,
+          "cost": 179.093146431541,
+          "damping": 0.0069691719376256305,
+          "evaluations": 34476,
+          "iteration": 29,
+          "projected_gradient": 1441187.1106450655
+        }
+      }
+    ],
+    "next_penalty": 10
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "heads": [
+    {
+      "horizon_ms": 20,
+      "training_samples": 1980,
+      "validation_samples": 3980,
+      "normalized_prior_mse": 1.0310126011097869,
+      "normalized_prediction_mse": 0.042094116089346705,
+      "errors": [
+        {
+          "unit": "rad",
+          "components": 12,
+          "prediction_rmse": 0.012700927894828686,
+          "reference_rmse": 0.0609524577608225
+        },
+        {
+          "unit": "rad/s",
+          "components": 12,
+          "prediction_rmse": 0.6414766336256993,
+          "reference_rmse": 3.342138044961341
+        },
+        {
+          "unit": "rad/s²",
+          "components": 12,
+          "prediction_rmse": 32.073831681284965,
+          "reference_rmse": 167.1069022480671
+        },
+        {
+          "unit": "m",
+          "components": 15,
+          "prediction_rmse": 0.000722708423426813,
+          "reference_rmse": 0.0036059685099182393
+        },
+        {
+          "unit": "m/s",
+          "components": 15,
+          "prediction_rmse": 0.047899311177973566,
+          "reference_rmse": 0.26123380304689303
+        },
+        {
+          "unit": "m/s²",
+          "components": 15,
+          "prediction_rmse": 2.3949655588986776,
+          "reference_rmse": 13.061690152344648
+        }
+      ]
+    },
+    {
+      "horizon_ms": 100,
+      "training_samples": 1980,
+      "validation_samples": 3980,
+      "normalized_prior_mse": 1.0254204138987049,
+      "normalized_prediction_mse": 0.05737435620153992,
+      "errors": [
+        {
+          "unit": "rad",
+          "components": 12,
+          "prediction_rmse": 0.0882433018265501,
+          "reference_rmse": 0.43962758011671416
+        },
+        {
+          "unit": "rad/s",
+          "components": 12,
+          "prediction_rmse": 1.0762091221537333,
+          "reference_rmse": 6.446454022263841
+        },
+        {
+          "unit": "rad/s²",
+          "components": 12,
+          "prediction_rmse": 47.02326797066486,
+          "reference_rmse": 167.08619583985214
+        },
+        {
+          "unit": "m",
+          "components": 15,
+          "prediction_rmse": 0.006252838725970103,
+          "reference_rmse": 0.040533067190564605
+        },
+        {
+          "unit": "m/s",
+          "components": 15,
+          "prediction_rmse": 0.08716800752563779,
+          "reference_rmse": 0.6578568465831407
+        },
+        {
+          "unit": "m/s²",
+          "components": 15,
+          "prediction_rmse": 3.421812323652708,
+          "reference_rmse": 13.056013337273553
+        }
+      ]
+    },
+    {
+      "horizon_ms": 200,
+      "training_samples": 1980,
+      "validation_samples": 3980,
+      "normalized_prior_mse": 1.0158940194025445,
+      "normalized_prediction_mse": 0.055496419694673046,
+      "errors": [
+        {
+          "unit": "rad",
+          "components": 12,
+          "prediction_rmse": 0.15459270571495273,
+          "reference_rmse": 0.8704710747007594
+        },
+        {
+          "unit": "rad/s",
+          "components": 12,
+          "prediction_rmse": 0.9885701313420375,
+          "reference_rmse": 4.820761601837543
+        },
+        {
+          "unit": "rad/s²",
+          "components": 12,
+          "prediction_rmse": 43.476163598853404,
+          "reference_rmse": 167.07769863112205
+        },
+        {
+          "unit": "m",
+          "components": 15,
+          "prediction_rmse": 0.012037056794304599,
+          "reference_rmse": 0.0841457708819778
+        },
+        {
+          "unit": "m/s",
+          "components": 15,
+          "prediction_rmse": 0.07042099873731156,
+          "reference_rmse": 0.4431559360696177
+        },
+        {
+          "unit": "m/s²",
+          "components": 15,
+          "prediction_rmse": 3.189948581256497,
+          "reference_rmse": 13.057511219011722
+        }
+      ]
+    }
+  ],
+  "scope": "Separate causal horizon heads; later segments of the same two nominal recorded gaits. Action-conditioned physical-component RMSE is not counterfactual or closed-loop control validation."
+}

@@ -1,0 +1,21 @@
+{
+  "name": "event-audit",
+  "exit_code": 0,
+  "elapsed_s": 1.38257537,
+  "report": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.19631591447584432,
+    "sampled_feasible": false,
+    "maximum_force_error_n": 41.59419885805295,
+    "maximum_moment_error_nm": 6.653016931302798,
+    "minimum_torque_margin_nm": -0.038748708006285534,
+    "maximum_penetration_m": 0.00029143613089366305
+  },
+  "search": {
+    "cost": 7531.248910088681,
+    "initial_cost": 7531.248910088681,
+    "termination": "evaluation_limit",
+    "evaluations": 1,
+    "rejected": 0
+  }
+}

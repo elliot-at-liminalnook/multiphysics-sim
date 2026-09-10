@@ -1,0 +1,1889 @@
+{
+  "name": "synchronized-sustained-0p625ms",
+  "policy_replay_samples": 3000,
+  "maximum_command_error_rad": 0,
+  "counts": [
+    {
+      "window_s": [
+        1.4,
+        20
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 35,
+      "minimum_expected": 34,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        20
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 35,
+      "minimum_expected": 34,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        20
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 35,
+      "minimum_expected": 34,
+      "passed": true
+    },
+    {
+      "window_s": [
+        1.4,
+        20
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 35,
+      "minimum_expected": 34,
+      "passed": true
+    },
+    {
+      "window_s": [
+        25,
+        40
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 29,
+      "minimum_expected": 27,
+      "passed": true
+    },
+    {
+      "window_s": [
+        25,
+        40
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 28,
+      "minimum_expected": 27,
+      "passed": true
+    },
+    {
+      "window_s": [
+        25,
+        40
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 29,
+      "minimum_expected": 27,
+      "passed": true
+    },
+    {
+      "window_s": [
+        25,
+        40
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 28,
+      "minimum_expected": 27,
+      "passed": true
+    },
+    {
+      "window_s": [
+        45,
+        56
+      ],
+      "link": "-Y | Sliding foot crosshead",
+      "planned_swings": 21,
+      "minimum_expected": 20,
+      "passed": true
+    },
+    {
+      "window_s": [
+        45,
+        56
+      ],
+      "link": "+X | Sliding foot crosshead",
+      "planned_swings": 21,
+      "minimum_expected": 20,
+      "passed": true
+    },
+    {
+      "window_s": [
+        45,
+        56
+      ],
+      "link": "+Y | Sliding foot crosshead",
+      "planned_swings": 21,
+      "minimum_expected": 20,
+      "passed": true
+    },
+    {
+      "window_s": [
+        45,
+        56
+      ],
+      "link": "-X | Sliding foot crosshead",
+      "planned_swings": 21,
+      "minimum_expected": 20,
+      "passed": true
+    }
+  ],
+  "planned_lifts": 338,
+  "passed_planned_lifts": 338,
+  "failed_planned_lifts": [],
+  "inter_link_geometry_audit": {
+    "frames": 3001,
+    "maximum_penetration_m": 0,
+    "penetrating_samples": 0,
+    "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+  },
+  "incidental_stance_unloads": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 25.48,
+      "end_s": 25.5,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010695383970071859
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 26,
+      "end_s": 26.02,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010455883053617221
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 26.52,
+      "end_s": 26.54,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010478455528123432
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 27.04,
+      "end_s": 27.060000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475402463405725
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 27.560000000000002,
+      "end_s": 27.580000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475698233108899
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 28.080000000000002,
+      "end_s": 28.1,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475664003506413
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 28.6,
+      "end_s": 28.62,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667599696425
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 29.12,
+      "end_s": 29.14,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667202403116
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 29.64,
+      "end_s": 29.66,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667245146703
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 30.16,
+      "end_s": 30.18,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240450459
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 30.68,
+      "end_s": 30.7,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240938957
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 31.2,
+      "end_s": 31.220000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240883446
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 31.720000000000002,
+      "end_s": 31.740000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240872344
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 32.24,
+      "end_s": 32.26,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240916753
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 32.76,
+      "end_s": 32.78,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240916753
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 33.28,
+      "end_s": 33.3,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240861242
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 33.8,
+      "end_s": 33.82,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240894548
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 34.32,
+      "end_s": 34.34,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240922304
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 34.84,
+      "end_s": 34.86,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240933406
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 35.36,
+      "end_s": 35.38,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240922304
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 35.88,
+      "end_s": 35.9,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240894548
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 36.4,
+      "end_s": 36.42,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001047566724090565
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 36.92,
+      "end_s": 36.94,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001047566724085014
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 37.44,
+      "end_s": 37.46,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240883446
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 37.96,
+      "end_s": 37.980000000000004,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240839037
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 38.480000000000004,
+      "end_s": 38.5,
+      "samples": 2,
+      "maximum_clearance_m": 0.00010475667240877895
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 39,
+      "end_s": 39.02,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001047566724095006
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 39.52,
+      "end_s": 39.54,
+      "samples": 2,
+      "maximum_clearance_m": 0.000104756672409001
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 25.22,
+      "end_s": 25.22,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028532185696317214
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 25.740000000000002,
+      "end_s": 25.740000000000002,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028590648571968913
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 26.26,
+      "end_s": 26.26,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585682229076426
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 26.78,
+      "end_s": 26.78,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585952324133856
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 27.3,
+      "end_s": 27.3,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002858592325793996
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 27.82,
+      "end_s": 27.82,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926431512476
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 28.34,
+      "end_s": 28.34,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002858592608734334
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 28.86,
+      "end_s": 28.86,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002858592612509092
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 29.38,
+      "end_s": 29.38,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002858592612120514
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 29.900000000000002,
+      "end_s": 29.900000000000002,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926122315364
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 30.42,
+      "end_s": 30.42,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 30.94,
+      "end_s": 30.94,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002858592612120514
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 31.46,
+      "end_s": 31.46,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926122870475
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 31.98,
+      "end_s": 31.98,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 32.5,
+      "end_s": 32.5,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 33.02,
+      "end_s": 33.02,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 33.54,
+      "end_s": 33.54,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 34.06,
+      "end_s": 34.06,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926122315364
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 34.58,
+      "end_s": 34.58,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 35.1,
+      "end_s": 35.1,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926122315364
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 35.62,
+      "end_s": 35.62,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 36.14,
+      "end_s": 36.14,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002858592612120514
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 36.660000000000004,
+      "end_s": 36.660000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926122870475
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 37.18,
+      "end_s": 37.18,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926122315364
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 37.7,
+      "end_s": 37.7,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926122315364
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 38.22,
+      "end_s": 38.22,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002858592612065003
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 38.74,
+      "end_s": 38.74,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926122870475
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 39.26,
+      "end_s": 39.26,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 39.78,
+      "end_s": 39.78,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000028585926121760252
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 25.48,
+      "end_s": 25.5,
+      "samples": 2,
+      "maximum_clearance_m": 0.00013946442924939184
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 26,
+      "end_s": 26.02,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014195727076227183
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 26.52,
+      "end_s": 26.54,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014176792890069345
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 27.04,
+      "end_s": 27.060000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417918713087496
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 27.560000000000002,
+      "end_s": 27.580000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417895662380042
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 28.080000000000002,
+      "end_s": 28.1,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178983447188376
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 28.6,
+      "end_s": 28.62,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980638146488
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 29.12,
+      "end_s": 29.14,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417898094898673
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 29.64,
+      "end_s": 29.66,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980915552364
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 30.16,
+      "end_s": 30.18,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417898091916614
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 30.68,
+      "end_s": 30.7,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918799766
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 31.2,
+      "end_s": 31.220000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417898091882197
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 31.720000000000002,
+      "end_s": 31.740000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918799766
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 32.24,
+      "end_s": 32.26,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918833073
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 32.76,
+      "end_s": 32.78,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918855277
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 33.28,
+      "end_s": 33.3,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918783113
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 33.8,
+      "end_s": 33.82,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417898091882197
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 34.32,
+      "end_s": 34.34,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417898091886638
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 34.84,
+      "end_s": 34.86,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918844175
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 35.36,
+      "end_s": 35.38,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918838624
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 35.88,
+      "end_s": 35.9,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417898091886638
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 36.4,
+      "end_s": 36.42,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918833073
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 36.92,
+      "end_s": 36.94,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918788664
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 37.44,
+      "end_s": 37.46,
+      "samples": 2,
+      "maximum_clearance_m": 0.0001417898091882197
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 37.96,
+      "end_s": 37.980000000000004,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918777562
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 38.480000000000004,
+      "end_s": 38.5,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918788664
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 39,
+      "end_s": 39.02,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918877482
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 39.52,
+      "end_s": 39.54,
+      "samples": 2,
+      "maximum_clearance_m": 0.00014178980918855277
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 25.22,
+      "end_s": 25.240000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002682984010283218
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 25.5,
+      "end_s": 25.5,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003528165452015841
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 25.740000000000002,
+      "end_s": 25.76,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002691961541557708
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 26.02,
+      "end_s": 26.02,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034468126041131697
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 26.26,
+      "end_s": 26.28,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922961777331444
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 26.54,
+      "end_s": 26.54,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003426326514399669
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 26.78,
+      "end_s": 26.8,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692250015138842
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 27.060000000000002,
+      "end_s": 27.060000000000002,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034300858424707314
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 27.3,
+      "end_s": 27.32,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692255143479927
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 27.580000000000002,
+      "end_s": 27.580000000000002,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297145605766133
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 27.82,
+      "end_s": 27.84,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254589221621
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 28.1,
+      "end_s": 28.1,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297567073626745
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 28.34,
+      "end_s": 28.36,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546496221944
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 28.62,
+      "end_s": 28.62,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003429752227557259
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 28.86,
+      "end_s": 28.88,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643073544
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 29.14,
+      "end_s": 29.14,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003429752719497081
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 29.38,
+      "end_s": 29.400000000000002,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643785197
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 29.66,
+      "end_s": 29.66,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003429752666650465
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 29.900000000000002,
+      "end_s": 29.92,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643705816
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 30.18,
+      "end_s": 30.18,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003429752672756692
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 30.42,
+      "end_s": 30.44,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437196937
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 30.7,
+      "end_s": 30.7,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526719795357
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 30.94,
+      "end_s": 30.96,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437180284
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 31.220000000000002,
+      "end_s": 31.220000000000002,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003429752672146069
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 31.46,
+      "end_s": 31.48,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437191386
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 31.740000000000002,
+      "end_s": 31.740000000000002,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526722570915
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 31.98,
+      "end_s": 32,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437191386
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 32.26,
+      "end_s": 32.26,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526718685134
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 32.5,
+      "end_s": 32.52,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643721359
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 32.78,
+      "end_s": 32.78,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526719240246
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 33.02,
+      "end_s": 33.04,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437180284
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 33.3,
+      "end_s": 33.3,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526725346472
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 33.54,
+      "end_s": 33.56,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437258
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 33.82,
+      "end_s": 33.82,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526722015803
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 34.06,
+      "end_s": 34.08,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643716918
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 34.34,
+      "end_s": 34.34,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526718685134
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 34.58,
+      "end_s": 34.6,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437191386
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 34.86,
+      "end_s": 34.86,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526718685134
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 35.1,
+      "end_s": 35.12,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643711367
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 35.38,
+      "end_s": 35.38,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526719795357
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 35.62,
+      "end_s": 35.64,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643716918
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 35.9,
+      "end_s": 35.9,
+      "samples": 1,
+      "maximum_clearance_m": -0.00000342975267170198
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 36.14,
+      "end_s": 36.160000000000004,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643710257
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 36.42,
+      "end_s": 36.42,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003429752672035047
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 36.660000000000004,
+      "end_s": 36.68,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643716918
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 36.94,
+      "end_s": 36.94,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526725346472
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 37.18,
+      "end_s": 37.2,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643721914
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 37.46,
+      "end_s": 37.46,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003429752672035047
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 37.7,
+      "end_s": 37.72,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643716918
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 37.980000000000004,
+      "end_s": 37.980000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -0.000003429752672423625
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 38.22,
+      "end_s": 38.24,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643721359
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 38.5,
+      "end_s": 38.5,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526719795357
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 38.74,
+      "end_s": 38.76,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437146977
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 39.02,
+      "end_s": 39.02,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526715354465
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 39.26,
+      "end_s": 39.28,
+      "samples": 2,
+      "maximum_clearance_m": 0.00026922546437191386
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 39.54,
+      "end_s": 39.54,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000034297526719795357
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 39.78,
+      "end_s": 39.800000000000004,
+      "samples": 2,
+      "maximum_clearance_m": 0.0002692254643712477
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 45.26,
+      "end_s": 45.26,
+      "samples": 1,
+      "maximum_clearance_m": -1.948139347618394e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 45.78,
+      "end_s": 45.78,
+      "samples": 1,
+      "maximum_clearance_m": -1.7063453860988176e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 46.300000000000004,
+      "end_s": 46.300000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -1.7078346375987152e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 46.82,
+      "end_s": 46.82,
+      "samples": 1,
+      "maximum_clearance_m": -1.707778403692295e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 47.34,
+      "end_s": 47.34,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077805114507072e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 47.86,
+      "end_s": 47.86,
+      "samples": 1,
+      "maximum_clearance_m": -1.707780434290207e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 48.38,
+      "end_s": 48.38,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804370657645e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 48.9,
+      "end_s": 48.9,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804370657645e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 49.42,
+      "end_s": 49.42,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804359555415e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 49.94,
+      "end_s": 49.94,
+      "samples": 1,
+      "maximum_clearance_m": -1.707780437620876e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 50.46,
+      "end_s": 50.46,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804381759876e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 50.980000000000004,
+      "end_s": 50.980000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804370657645e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 51.5,
+      "end_s": 51.5,
+      "samples": 1,
+      "maximum_clearance_m": -1.707780436510653e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 52.02,
+      "end_s": 52.02,
+      "samples": 1,
+      "maximum_clearance_m": -1.707780438731099e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 52.54,
+      "end_s": 52.54,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804381759876e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 53.06,
+      "end_s": 53.06,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804370657645e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 53.58,
+      "end_s": 53.58,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804359555415e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 54.1,
+      "end_s": 54.1,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804370657645e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 54.620000000000005,
+      "end_s": 54.620000000000005,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804370657645e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 55.14,
+      "end_s": 55.14,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804359555415e-7
+    },
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "start_s": 55.660000000000004,
+      "end_s": 55.660000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -1.7077804359555415e-7
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 45,
+      "end_s": 45,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012881154092259095
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 45.52,
+      "end_s": 45.52,
+      "samples": 1,
+      "maximum_clearance_m": -0.000001205715330465651
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 46.04,
+      "end_s": 46.04,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012104162866455326
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 46.56,
+      "end_s": 46.56,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102605263519806
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 47.08,
+      "end_s": 47.08,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102664022628495
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 47.6,
+      "end_s": 47.6,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661778867763
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 48.120000000000005,
+      "end_s": 48.120000000000005,
+      "samples": 1,
+      "maximum_clearance_m": -0.00000121026618626896
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 48.64,
+      "end_s": 48.64,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661860469155
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 49.160000000000004,
+      "end_s": 49.160000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661861579378
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 49.68,
+      "end_s": 49.68,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661860469155
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 50.2,
+      "end_s": 50.2,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661859914043
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 50.72,
+      "end_s": 50.72,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661860469155
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 51.24,
+      "end_s": 51.24,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661859914043
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 51.76,
+      "end_s": 51.76,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661860469155
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 52.28,
+      "end_s": 52.28,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661860469155
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 52.800000000000004,
+      "end_s": 52.800000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661859358932
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 53.32,
+      "end_s": 53.32,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661861579378
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 53.84,
+      "end_s": 53.84,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661859358932
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 54.36,
+      "end_s": 54.36,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661861579378
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 54.88,
+      "end_s": 54.88,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661860469155
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 55.4,
+      "end_s": 55.4,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661860469155
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "start_s": 55.92,
+      "end_s": 55.92,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000012102661860469155
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 45.02,
+      "end_s": 45.02,
+      "samples": 1,
+      "maximum_clearance_m": 0.00003599783669627765
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 45.26,
+      "end_s": 45.26,
+      "samples": 1,
+      "maximum_clearance_m": -3.9278827695943264e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 45.54,
+      "end_s": 45.54,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021309037577244005
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 45.78,
+      "end_s": 45.78,
+      "samples": 1,
+      "maximum_clearance_m": -3.6323065122356724e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 46.06,
+      "end_s": 46.06,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021536410627187585
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 46.300000000000004,
+      "end_s": 46.300000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -3.6357418226051763e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 46.58,
+      "end_s": 46.58,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527449881708627
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 46.82,
+      "end_s": 46.82,
+      "samples": 1,
+      "maximum_clearance_m": -3.635615323238639e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 47.1,
+      "end_s": 47.1,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527790904252164
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 47.34,
+      "end_s": 47.34,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356200222575907e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 47.62,
+      "end_s": 47.62,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527777868679543
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 47.86,
+      "end_s": 47.86,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198440667953e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 48.14,
+      "end_s": 48.14,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778368390926
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 48.38,
+      "end_s": 48.38,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 48.660000000000004,
+      "end_s": 48.660000000000004,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778349628157
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 48.9,
+      "end_s": 48.9,
+      "samples": 1,
+      "maximum_clearance_m": -3.635619850173022e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 49.18,
+      "end_s": 49.18,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778350405313
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 49.42,
+      "end_s": 49.42,
+      "samples": 1,
+      "maximum_clearance_m": -3.635619850173022e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 49.7,
+      "end_s": 49.7,
+      "samples": 1,
+      "maximum_clearance_m": 0.00002152777835073838
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 49.94,
+      "end_s": 49.94,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 50.22,
+      "end_s": 50.22,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778349850202
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 50.46,
+      "end_s": 50.46,
+      "samples": 1,
+      "maximum_clearance_m": -3.635619851283245e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 50.74,
+      "end_s": 50.74,
+      "samples": 1,
+      "maximum_clearance_m": 0.00002152777835029429
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 50.980000000000004,
+      "end_s": 50.980000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 51.26,
+      "end_s": 51.26,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778349628157
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 51.5,
+      "end_s": 51.5,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 51.78,
+      "end_s": 51.78,
+      "samples": 1,
+      "maximum_clearance_m": 0.00002152777834968367
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 52.02,
+      "end_s": 52.02,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 52.300000000000004,
+      "end_s": 52.300000000000004,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778349184068
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 52.54,
+      "end_s": 52.54,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 52.82,
+      "end_s": 52.82,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778350072246
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 53.06,
+      "end_s": 53.06,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 53.34,
+      "end_s": 53.34,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778350127758
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 53.58,
+      "end_s": 53.58,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198496179104e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 53.86,
+      "end_s": 53.86,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778350016735
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 54.1,
+      "end_s": 54.1,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 54.38,
+      "end_s": 54.38,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778350405313
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 54.620000000000005,
+      "end_s": 54.620000000000005,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198496179104e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 54.9,
+      "end_s": 54.9,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778349184068
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 55.14,
+      "end_s": 55.14,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198507281334e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 55.42,
+      "end_s": 55.42,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778350127758
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 55.660000000000004,
+      "end_s": 55.660000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -3.6356198496179104e-7
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "start_s": 55.94,
+      "end_s": 55.94,
+      "samples": 1,
+      "maximum_clearance_m": 0.000021527778349961224
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 45,
+      "end_s": 45,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000019505322010338055
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 45.52,
+      "end_s": 45.52,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020909642353128532
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 46.04,
+      "end_s": 46.04,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002090844210878018
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 46.56,
+      "end_s": 46.56,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908605052882834
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 47.08,
+      "end_s": 47.08,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599276392437
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 47.6,
+      "end_s": 47.6,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002090859949843704
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 48.120000000000005,
+      "end_s": 48.120000000000005,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489000146
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 48.64,
+      "end_s": 48.64,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489555257
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 49.160000000000004,
+      "end_s": 49.160000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489555257
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 49.68,
+      "end_s": 49.68,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599488445034
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 50.2,
+      "end_s": 50.2,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599488445034
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 50.72,
+      "end_s": 50.72,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489555257
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 51.24,
+      "end_s": 51.24,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489555257
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 51.76,
+      "end_s": 51.76,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002090859949011037
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 52.28,
+      "end_s": 52.28,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489555257
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 52.800000000000004,
+      "end_s": 52.800000000000004,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489000146
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 53.32,
+      "end_s": 53.32,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002090859949066548
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 53.84,
+      "end_s": 53.84,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599488445034
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 54.36,
+      "end_s": 54.36,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489555257
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 54.88,
+      "end_s": 54.88,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489555257
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 55.4,
+      "end_s": 55.4,
+      "samples": 1,
+      "maximum_clearance_m": -0.0000020908599489000146
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "start_s": 55.92,
+      "end_s": 55.92,
+      "samples": 1,
+      "maximum_clearance_m": -0.000002090859949011037
+    }
+  ],
+  "scope": "All complete planned swing windows from exact Rhai state replay in declared steady-command windows. Stance unloads are reported separately, including boundary delays; no between-sample guarantee."
+}

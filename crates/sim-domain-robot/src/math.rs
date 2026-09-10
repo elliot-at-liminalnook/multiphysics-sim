@@ -19,6 +19,48 @@ pub fn quat_parts(q: &UnitQuaternion<f64>) -> [f64; 4] {
     [q.w, q.i, q.j, q.k]
 }
 
+/// Spatial angular velocity/acceleration for R=exp(skew(phi))*R_initial.
+/// Rotation-vector rates are coordinate derivatives, not angular velocity.
+pub fn rotation_vector_motion(phi: V, rate: V, acceleration: V) -> Result<(V,V),String> {
+    if phi.iter().chain(rate.iter()).chain(acceleration.iter()).any(|v|!v.is_finite()) {
+        return Err("finite rotation vector and derivatives required".into());
+    }
+    let theta=phi.norm();let dot=phi.dot(&rate);
+    let (a,b,ad,bd)=if theta<1e-3 {
+        let s=theta*theta;
+        (0.5-s/24.0+s*s/720.0,1.0/6.0-s/120.0+s*s/5040.0,
+         (-1.0/12.0+s/180.0-s*s/6720.0)*dot,(-1.0/60.0+s/1260.0-s*s/60480.0)*dot)
+    }else{
+        let (sin,cos)=theta.sin_cos();
+        ((1.0-cos)/(theta*theta),(theta-sin)/theta.powi(3),
+         (theta*sin-2.0*(1.0-cos))/theta.powi(4)*dot,
+         (theta*(1.0-cos)-3.0*(theta-sin))/theta.powi(5)*dot)
+    };
+    let omega=rate+a*phi.cross(&rate)+b*phi.cross(&phi.cross(&rate));
+    let alpha=acceleration+a*phi.cross(&acceleration)+b*phi.cross(&phi.cross(&acceleration))
+        +ad*phi.cross(&rate)+bd*phi.cross(&phi.cross(&rate))+b*rate.cross(&phi.cross(&rate));
+    if omega.iter().chain(alpha.iter()).any(|v|!v.is_finite()) {return Err("nonfinite angular motion".into());}
+    Ok((omega,alpha))
+}
+
+#[cfg(test)]
+mod rotation_motion_tests {
+    use super::*;
+    #[test]
+    fn angular_rates_match_matrix_derivatives_at_zero_and_finite_rotations() {
+        for origin in [V::zeros(),V::new(1e-5,2e-5,-1e-5),V::new(0.4,-0.3,0.2)] {
+            let v=V::new(0.7,0.2,-0.4);let a=V::new(-0.1,0.3,0.5);let h=1e-5;
+            let path=|t:f64|origin+v*t+a*(0.5*t*t);
+            let (omega,alpha)=rotation_vector_motion(origin,v,a).unwrap();
+            let r=rot_vec(origin);let dot=(rot_vec(path(h))-rot_vec(path(-h)))/(2.0*h)*r.transpose();
+            assert!((omega-V::new(dot[(2,1)],dot[(0,2)],dot[(1,0)])).norm()<1e-8);
+            let wp=rotation_vector_motion(path(h),v+a*h,a).unwrap().0;
+            let wm=rotation_vector_motion(path(-h),v-a*h,a).unwrap().0;
+            assert!((alpha-(wp-wm)/(2.0*h)).norm()<1e-8);
+        }
+    }
+}
+
 /// Rotation about `axis` (unit) by `angle`.
 pub fn rot_axis(axis: V, angle: f64) -> M {
     let (s, c) = angle.sin_cos();

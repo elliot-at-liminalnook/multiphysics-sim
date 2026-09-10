@@ -1,0 +1,44 @@
+{
+  "inputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed.recipe.json",
+      "bytes": 63323,
+      "sha256": "86f4ba64e79bd640a501c7a93921ffda45a7185ed04d798652006609268b1717"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body-refinement.result.json",
+      "bytes": 1946672,
+      "sha256": "3ba0a247e083f0344826499fba3f0dc23425d4fdd5624c16ced5c8f6393f27db"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed.recipe.json",
+      "bytes": 70676,
+      "sha256": "a9309ce23eef4a8e0a255a310b252fb4a2f98001da115048e5ee14e8237cabec"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-body8-speed-initial.result.json",
+      "bytes": 970155,
+      "sha256": "5e752a5431533a261469107ade6c1d07a7b03662de645f6089d64c963f94dfa9"
+    }
+  ],
+  "control_bounds_preserved": true,
+  "maximum_acceleration_error_per_s2": 7.105427357601002e-15,
+  "maximum_normalized_inequality_difference": null,
+  "maximum_rate_error_per_s": 3.3306690738754696e-16,
+  "maximum_value_error_m_or_rad": 2.0816681711721685e-17,
+  "new_body_controls": 8,
+  "old_body_controls": 4,
+  "original_variables": 173,
+  "refined_variables": 197,
+  "same_evaluation_mesh": false,
+  "scope": "Exact body spline refinement only: four to eight controls, 173 to 197 joint variables. Same body-channel bounds, other decisions, physical model, objective and 8000-evaluation budget. All original frame constraints are retained; eight additional body-knot frames are audited. No gait qualification or speed gain is claimed.",
+  "trajectory_samples": 4097,
+  "matched_original_frames": 160,
+  "original_frames": 160,
+  "refined_frames": 168,
+  "maximum_normalized_common_frame_difference": 1.1102230246251565e-12,
+  "non_body_recipe_identical": true,
+  "initial_sampled_feasible": false
+}

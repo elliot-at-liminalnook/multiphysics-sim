@@ -1,0 +1,21 @@
+{
+  "name": "phase-neighbors",
+  "exit_code": 0,
+  "elapsed_s": 79.48681808300002,
+  "report": {
+    "sampling": "contact_intervals",
+    "speed_m_s": 0.042191919174814754,
+    "sampled_feasible": false,
+    "maximum_force_error_n": 2.4179322149445355,
+    "maximum_moment_error_nm": 1.838745454424414,
+    "minimum_torque_margin_nm": -0.280373033902354,
+    "maximum_penetration_m": 0.0008003269117295986
+  },
+  "search": {
+    "cost": 1296.770582753055,
+    "initial_cost": 33922.04862897341,
+    "termination": "iteration_limit",
+    "evaluations": 974,
+    "rejected": 0
+  }
+}

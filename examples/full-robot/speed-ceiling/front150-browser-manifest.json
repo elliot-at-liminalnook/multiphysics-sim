@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "id": "front150",
+  "wasm": {
+    "artifact_sha256": "06f9d7828e729d78c987e2d6bd07807611f22685e5ad2d7086d98b043aa8ee08",
+    "browser_module_sha256": "411e676e39d1f4146455ad8fedb63a8d4dff1825d54480f574e856904f112d15"
+  },
+  "inputs": {
+    "examples/full-robot/speed-ceiling/front150-browser-spec.json": "d3d913518139f0a743101339f0a17656fb33c508b596ec0833429a93aa50dd2e",
+    "Cargo.lock": "2aece6b0637c79b737cca98a08377b4253d67478280b17162c772ebca02f38f1",
+    "crates/sim-domain-control/src/trajectory.rs": "ba2b436bf4ea7d8335e9444e184145eacebba53cd79057925c55405661a0ae6e",
+    "crates/sim-script/src/lib.rs": "a756a30b2cbf0297e0b7e96af0d9259abe7cb9c1f967f565c6b4e3dc6690718c",
+    "web/viewer/viewer.js": "a9970cd7ec7312e8ef9bd377bed5aca801e80f1446627ddb7701e99efc7b158f",
+    "web/viewer/motion-commands.mjs": "160237d406526efcbe4605111dc3bcbdfc4f7dfe3800646aecca57eed32b05f6",
+    "web/worker.js": "56fcf9a7de4feddd05f24b6f13186376a6c332e0952acb4c4073e7a9ba5efdb9",
+    "web/worker-message.mjs": "05239a3699317229bf74cc3d09eb0018d9a462fdb6200b6b6f4fb09ec56aae2f",
+    "examples/full-robot/speed-ceiling/package_browser_profiles.mjs": "3c6b384f2664fdb06436f29b2e44c1fd398411fcd2bd951522a6abf3e21b3562",
+    "runs/speed-ceiling/validation/front150-preview-5ms.scene.json": "e57d2bd7a55ae532ea34c0e064868ddeb03c363d2c7d80c5ce7616eba201dbfd",
+    "runs/speed-ceiling/validation/front150-preview-5ms.config.json": "7c1c00c843b81b100f6da1d08f61a13ee5d4a88daa05623251d84d7596ca1257",
+    "examples/full-robot/fast-wasd/task.json": "f145aaca17b2a3c15820543b45404001c8e5f19c02edf7e3e126bfce71e1a026",
+    "runs/speed-ceiling/validation/front150-preview-10ms.scene.json": "e57d2bd7a55ae532ea34c0e064868ddeb03c363d2c7d80c5ce7616eba201dbfd",
+    "runs/speed-ceiling/validation/front150-preview-10ms.config.json": "129b02d631a44b7ee817ac6144b5fefafccb08c915414b06811353ac271178af"
+  },
+  "presets": [
+    {
+      "id": "physics-front150-5ms",
+      "label": "Experimental · 150 mm/s command · 5 ms preview",
+      "mode": "embedded",
+      "path": "data/physics-front150-5ms.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "1822337949f363c9f4984557163d0e4e45f8f904a92c35ec0c61ce8e5b44ba57",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "Experimental faster gait with slipping. Preview accuracy and realtime performance are being measured.",
+      "evidence": "Detailed 20 s / 0.625 ms run: 154.6–155.0 mm/s, 11.55% loaded-foot slip, 150/150 planned lifts; no sampled inter-leg overlap. This 5 ms numerical preview has separate accuracy and browser checks. Provisional actuator model and ideal observations; no hardware speed claim."
+    },
+    {
+      "id": "physics-front150-10ms",
+      "label": "Experimental · 150 mm/s command · 10 ms preview",
+      "mode": "embedded",
+      "path": "data/physics-front150-10ms.json",
+      "task": "examples/full-robot/fast-wasd/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "asset_sha256": "874fd6d93ab0dc170b6111cb86bc6c8d3bc8a6ee666cd129fe901c1e9d939c26",
+      "description": "Hold W/S for forward/reverse; combine A/D to steer. Release requests braking after foot transfer. Walking turns; no pivot turn.",
+      "readiness": "Experimental faster gait with slipping. Preview accuracy and realtime performance are being measured.",
+      "evidence": "Detailed 20 s / 0.625 ms run: 154.6–155.0 mm/s, 11.55% loaded-foot slip, 150/150 planned lifts; no sampled inter-leg overlap. This 10 ms numerical preview has separate accuracy and browser checks. Provisional actuator model and ideal observations; no hardware speed claim."
+    }
+  ],
+  "scope": "Shared Rust/WASM runtime and explicit numerical profiles. Native physical qualification, cross-host parity and rendered browser performance are separate requirements. Building this bundle does not establish their acceptance."
+}

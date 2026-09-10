@@ -1,0 +1,55 @@
+{
+  "name": "braked-5ms-loose",
+  "step_s": 0.005,
+  "tolerance": 0.0001,
+  "source": "human-braked-65",
+  "speed_m_s": 0.065,
+  "completed": true,
+  "error": null,
+  "final_time_s": 20,
+  "windows": [
+    {
+      "start_s": 1.4,
+      "end_s": 6,
+      "directed_speed_mm_s": 62.84558179785263
+    },
+    {
+      "start_s": 11,
+      "end_s": 16,
+      "directed_speed_mm_s": 62.28972200700664
+    }
+  ],
+  "turn_rad": 0.21916068163665195,
+  "stop_drift_after_transfer_m": 0.00028926727485886235,
+  "stop_travel_from_release_m": 0.017303535548289926,
+  "maximum_tilt_rad": 0.012225029009252838,
+  "total_horizontal_body_path_m": 0.980268000821129,
+  "maximum_slip_ratio": 0.04359224295696308,
+  "feet": [
+    {
+      "link": "-Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.023728151023746372,
+      "motion_to_total_body_path_ratio": 0.024205779443856483
+    },
+    {
+      "link": "+X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.04273208085473114,
+      "motion_to_total_body_path_ratio": 0.04359224295696308
+    },
+    {
+      "link": "+Y | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.023046443525584225,
+      "motion_to_total_body_path_ratio": 0.023510349727094218
+    },
+    {
+      "link": "-X | Sliding foot crosshead",
+      "loaded_material_motion_m": 0.029288642601329955,
+      "motion_to_total_body_path_ratio": 0.02987819920347915
+    }
+  ],
+  "native": {
+    "wall_s": 18.791633738,
+    "simulation_per_wall": 1.0643034170869596,
+    "p95_transition_s": 0.052528609
+  }
+}

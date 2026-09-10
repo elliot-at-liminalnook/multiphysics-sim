@@ -32,16 +32,67 @@ fn empty_parameters() -> serde_json::Value {
     serde_json::json!({})
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug)]
 pub struct Scene {
     pub version: u32,
     pub robot: PhysicalModel,
     pub options: BuildOptions,
-    #[serde(default)]
     pub controller: Option<ControllerProgram>,
     pub period_s: f64,
     pub duration_s: f64,
+    /// Retained episode input, not proof that its properties were measured in CAD.
+    /// None denotes a caller-created parsed model with unknown original presence.
+    pub robot_input: Option<crate::robot_input::RobotInput>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SceneInput {
+    version: u32,
+    robot: serde_json::Value,
+    options: BuildOptions,
+    #[serde(default)]
+    controller: Option<ControllerProgram>,
+    period_s: f64,
+    duration_s: f64,
+    #[serde(default)]
+    robot_input: Option<crate::robot_input::InputReceipt>,
+}
+impl<'de> Deserialize<'de> for Scene {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self,D::Error> {
+        let input=SceneInput::deserialize(deserializer)?;
+        let robot=serde_json::from_value(input.robot.clone()).map_err(serde::de::Error::custom)?;
+        let robot_input=crate::robot_input::RobotInput::receive(input.robot,input.robot_input,&robot).map_err(serde::de::Error::custom)?;
+        Ok(Self {version:input.version,robot,options:input.options,controller:input.controller,
+            period_s:input.period_s,duration_s:input.duration_s,robot_input:Some(robot_input)})
+    }
+}
+impl Serialize for Scene {
+    fn serialize<S: serde::Serializer>(&self, serializer:S)->Result<S::Ok,S::Error> {
+        use serde::ser::SerializeStruct;
+        let (robot,receipt)=crate::robot_input::RobotInput::serialize_model(self.robot_input.as_ref(),&self.robot).map_err(serde::ser::Error::custom)?;
+        let mut result=serializer.serialize_struct("Scene",6+usize::from(receipt.is_some()))?;
+        result.serialize_field("version",&self.version)?;
+        result.serialize_field("robot",&robot)?;
+        result.serialize_field("options",&self.options)?;
+        result.serialize_field("controller",&self.controller)?;
+        result.serialize_field("period_s",&self.period_s)?;
+        result.serialize_field("duration_s",&self.duration_s)?;
+        if let Some(receipt)=receipt {result.serialize_field("robot_input",&receipt)?;}
+        result.end()
+    }
+}
+impl Scene {
+    /// Replace the document explicitly when accepting a new CAD export. Direct
+    /// edits to `robot` instead remain experimental overrides of the old input.
+    pub fn replace_robot_input(&mut self, document:serde_json::Value)->Result<(),String> {
+        let model=serde_json::from_value(document.clone()).map_err(|e|e.to_string())?;
+        let input=crate::robot_input::RobotInput::receive(document,None,&model)?;
+        self.robot=model;self.robot_input=Some(input);Ok(())
+    }
+    pub fn input_binding(&self)->Result<crate::robot_contract::InputBinding,String> {
+        crate::robot_contract::InputBinding::from_scene(self)
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -167,6 +218,7 @@ pub struct Recording {
 
 pub struct Session {
     pub robot: PhysicalRobot,
+    pub robot_input: crate::robot_contract::InputBinding,
     pub scene: Scene,
     pub contract: Contract,
     pub inputs: Vec<InputChannel>,
@@ -211,6 +263,7 @@ impl Session {
                 "interactive scenes must use held targets or an explicit controller".into(),
             );
         }
+        let robot_input=scene.input_binding()?;
         let mut robot = PhysicalRobot::build(scene.robot.clone(), &registry(), &scene.options)?;
         robot.runtime.seed(seed);
         let seam = robot
@@ -306,6 +359,7 @@ impl Session {
             .map_err(|e| e.to_string())?;
         Ok(Self {
             robot,
+            robot_input,
             scene,
             contract,
             inputs,

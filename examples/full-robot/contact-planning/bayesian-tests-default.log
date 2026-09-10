@@ -1,0 +1,29 @@
+   Compiling egobox-moe v0.35.4
+   Compiling nalgebra v0.34.2
+   Compiling egobox-ego v0.38.1
+   Compiling faer v0.22.6
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator-gait-exploration/crates/sim-solve)
+    Finished `release` profile [optimized] target(s) in 2m 03s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator/target/gait-bayesian/release/deps/sim_solve-d39af073bd04516d)
+
+running 4 tests
+test bayesian::tests::rejects_mixed_context_nonfinite_and_missing_values_without_imputation ... ok
+test bayesian::tests::design_is_stratified_and_seed_reproducible ... ok
+test bayesian::tests::constant_boundary_gate_and_failed_trial_do_not_become_fake_measurements ... ok
+test bayesian::tests::seeded_proposals_improve_an_observed_constrained_optimum ... FAILED
+
+failures:
+
+---- bayesian::tests::seeded_proposals_improve_an_observed_constrained_optimum stdout ----
+
+thread 'bayesian::tests::seeded_proposals_improve_an_observed_constrained_optimum' (6936087) panicked at crates/sim-solve/src/bayesian.rs:447:14:
+called `Result::unwrap()` on an `Err` value: "EGObox repeated a completed or failed point; explicit exploration/restart needed"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    bayesian::tests::seeded_proposals_improve_an_observed_constrained_optimum
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 35 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `-p sim-solve --lib`

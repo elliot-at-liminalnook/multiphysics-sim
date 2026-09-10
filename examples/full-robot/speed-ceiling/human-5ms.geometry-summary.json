@@ -1,0 +1,13 @@
+{
+  "name": "human-5ms",
+  "inter_link_geometry_audit": {
+    "frames": 1001,
+    "maximum_penetration_m": 0,
+    "penetrating_samples": 0,
+    "scope": "Full sampled surface/SDF overlap at every recorded pose, independent of omitted contact forces. Authored exclusions retained; not exact CAD or between-frame collision coverage."
+  },
+  "periodic_lift_count_passed": true,
+  "lift_windows": 98,
+  "passed_lift_windows": 98,
+  "failed_lifts": []
+}

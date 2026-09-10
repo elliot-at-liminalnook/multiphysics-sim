@@ -1,0 +1,149 @@
+{
+  "base_commit": "2b6c3513a5fda719778d524b8913d89590f93902",
+  "source_archive": {
+    "path": "examples/full-robot/contact-planning/joint-force-basis-build-sources.tar.gz",
+    "bytes": 86134,
+    "sha256": "e4b5a58015da5c3a85799c2660a7b7417c85e49dc7b0bd91e0b146ace208f6ed"
+  },
+  "sources": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 163503,
+      "sha256": "5efe33614adf885d49c98e61e464e7db5a8b4021638e7b49421b98b4003d40a9"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/motion_capability.rs",
+      "bytes": 33732,
+      "sha256": "a9b40dceea9c18d5654ccb7391d99579520bb2b139d57289a9a785520463524b"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_audit.rs",
+      "bytes": 25310,
+      "sha256": "ca1c4040cb0208f6f93cee438c3365b404c33fb838bcc1cd9333107ada2b4490"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning.rs",
+      "bytes": 43974,
+      "sha256": "469705ed0dcb59f5605dd3ad4488ea82ac43d73635d2097f5909e726177b0991"
+    },
+    {
+      "path": "crates/sim-runtime/src/contact_planning/joint.rs",
+      "bytes": 24890,
+      "sha256": "9625071bb8cf73b08c83b32705ceff31b2ec6fd08538d4488b35e7e99658b6a2"
+    },
+    {
+      "path": "crates/sim-solve/src/lib.rs",
+      "bytes": 47265,
+      "sha256": "d83d12858d636c7dc25ed6e4cdb43d841781dc9abecec696a39a7a4f67b42902"
+    },
+    {
+      "path": "crates/sim-solve/src/affine_feasibility.rs",
+      "bytes": 4570,
+      "sha256": "544c632d9fd66b118ef8dea6e273520c5705fd17ccdde7bf5faad4819ec3ea61"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_force_basis.rs",
+      "bytes": 5870,
+      "sha256": "98c66da58fd7fb2d0c043468fcb0bda2ecad58e6a5c97ab545d038618715ec76"
+    },
+    {
+      "path": "crates/sim-runtime/examples/audit_joint_force_cache.rs",
+      "bytes": 5072,
+      "sha256": "05319e75084d3430bbd4bd98258ff505bc1296ad9d71791c89935a7ca92fdb73"
+    }
+  ],
+  "binary": {
+    "path": "/Users/elliot/physics-simulator/target/gait-exploration/release/examples/audit_joint_force_basis",
+    "bytes": 9010308,
+    "sha256": "da3ddfcdcd67b641aef3bfc41cfa058bbf4fd8eb570de5e03776af3d5aaa050c"
+  },
+  "artifacts": [
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm.log",
+      "bytes": 20701,
+      "sha256": "191a493cb11bf8ea90e72e0e6584e0faf44bf7ac0c8db6c9899eaa891a62ba70"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm.result.json",
+      "bytes": 1168944,
+      "sha256": "b909394f05ea9167c5a172fdaa27903ee8cc41c98a7d7ec0e0ac69bae90093ab"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm.summary.json",
+      "bytes": 3198,
+      "sha256": "6a5e09c7fd458eded21ae4accb5db5839ca681f18b2592a89db88769e819bea1"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm-cached.log",
+      "bytes": 20701,
+      "sha256": "191a493cb11bf8ea90e72e0e6584e0faf44bf7ac0c8db6c9899eaa891a62ba70"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-x25-warm-cached.result.json",
+      "bytes": 1168944,
+      "sha256": "b909394f05ea9167c5a172fdaa27903ee8cc41c98a7d7ec0e0ac69bae90093ab"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-cache-audit.result.json",
+      "bytes": 2111,
+      "sha256": "c0f71fe6eb5d4dde055dd129e1c11ebd0f6f4455515fa63b18c68c193c9032b4"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-cache-audit.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-cache-build.json",
+      "bytes": 2903,
+      "sha256": "a7b06bbf1d903756689be0cc23c045daf95ff512c38fb6c2900e6fdee27da6c0"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-cache-build.log",
+      "bytes": 277,
+      "sha256": "6f4a67e4ee9b21064d48ad93962be23aff2b9e940acdade8dfac081ad5fefead"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-cache-robot-tests.log",
+      "bytes": 1476,
+      "sha256": "b3776e7a44128fd83ac42d9b3d6a6cdc9b4a717bf18d5c6a22d8521938ae37ed"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-cache-runtime-tests.log",
+      "bytes": 949,
+      "sha256": "ba870d522c43a20483d4fa0fcd5fc34f3bc5f0dff12da71136c9f51815632c29"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-basis-tests.log",
+      "bytes": 521,
+      "sha256": "51031e9d0b02eef25f584efc9fa8ff7495318d5de0897985b89a539752fd58e8"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-basis-build.log",
+      "bytes": 581,
+      "sha256": "cf654d8c531c75b384851bfc680379eddbeb9704a0aed50327636c6dbc203eaf"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-basis.result.json",
+      "bytes": 48035,
+      "sha256": "b4b3c5e285b545ab2c0c6f289b97795bf6f168517867bced5ca31929a2f1c6c3"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-force-basis.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed.recipe.json",
+      "bytes": 63323,
+      "sha256": "86f4ba64e79bd640a501c7a93921ffda45a7185ed04d798652006609268b1717"
+    },
+    {
+      "path": "examples/full-robot/contact-planning/joint-workspace-speed-preparation.json",
+      "bytes": 3843,
+      "sha256": "5fc4cceeea5a63ad8d3138f7d6e55d3bf0cd1fd6da683c7acce157670b8018ae"
+    }
+  ],
+  "source_extraction_verified": true,
+  "scope": "Affine-basis audit build and completed evidence. Cached optimizer binary identity is in joint-cache-build.json; uncached warm-search build identity is in joint-force-v2-build.json. Workspace recipe is prepared but not executed. No new physical gait qualification."
+}

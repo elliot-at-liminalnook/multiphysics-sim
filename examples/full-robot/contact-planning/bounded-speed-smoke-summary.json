@@ -1,0 +1,51 @@
+{
+  "former_failure": "policy output violates software/CAD command bounds at 1.28 s: +X | Foot servo output.target requested 0.17710261576504777 rad; allowed [-2.5, -0.02] rad",
+  "unchanged_pre_failure_frames": 64,
+  "completed": true,
+  "metrics": {
+    "net_distance_m": 0.5557739464196871,
+    "displacement_xy_m": [
+      0.4341455376721094,
+      0.34699039127662934
+    ],
+    "elapsed_s": 2,
+    "requested_duration_s": 2,
+    "speed_m_s": 0.27788697320984357,
+    "minimum_chassis_up_z": 0.9962606990036486,
+    "minimum_chassis_ground_clearance_m": 0.2837774741425885,
+    "chassis_floor_contact": false,
+    "fallen": false,
+    "completed": true,
+    "scope": "Net horizontal chassis displacement divided by the full trial duration. Falling means chassis ground contact or overturning. CAD hull clearance and orientation are sampled at recorded frames; no slip, tracking, lift, steering or stop threshold."
+  },
+  "saturated_command_samples": 4,
+  "policy_replay_samples": 100,
+  "maximum_replay_command_error_rad": 0,
+  "files": [
+    {
+      "path": "runs/contact-planning/bounded-speed-smoke.scene.json",
+      "sha256": "ca52d383ff942ea5acd3412948cf431419080dd8b48c25b763499e1b9ceaf952"
+    },
+    {
+      "path": "runs/contact-planning/bounded-speed-smoke.config.json",
+      "sha256": "26db973874944c725928aab4f246d40e590946a72ca3269afa91340d94f2bf62"
+    },
+    {
+      "path": "runs/contact-planning/bounded-speed-smoke.actions.json",
+      "sha256": "bbd860e16e74c8794c3f710ff13f16bea6eab4f45d890fbc90c77ec3242a6d4b"
+    },
+    {
+      "path": "runs/contact-planning/bounded-speed-smoke.native.json",
+      "sha256": "31bfcb108b8caddf78056797e49deea39eaeb3dadadcd1af44cef1b0302a6d99"
+    },
+    {
+      "path": "runs/contact-planning/bounded-speed-smoke.policy-state.json",
+      "sha256": "b2ff43cdf216f4476de58bbf14629d121249310bad4745fc315324071601f2ae"
+    },
+    {
+      "path": "runs/contact-planning/bounded-speed-smoke.preparation.json",
+      "sha256": "d5d72b7d85eed20ddf3a0531e4687b5e02507930021a1a807eabafe247d39060"
+    }
+  ],
+  "scope": "Two-second controller test passed the original 1.28-second failure with exact preceding physics and replayed bounded outputs. Not a twenty-second speed candidate or physical maximum."
+}

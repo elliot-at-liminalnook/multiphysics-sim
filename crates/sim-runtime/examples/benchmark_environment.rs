@@ -3,6 +3,7 @@
 //! shared environment; this host only manages files, progress and cancellation.
 use serde_json::json;
 use sim_runtime::environment::{EmbeddedEnvironment, EnvironmentRecording};
+use sim_runtime::motion_data::MotionSnapshot;
 use std::{
     fs,
     io::{BufWriter, Write},
@@ -12,8 +13,8 @@ use std::{
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().skip(1).collect();
-    if !(2..=4).contains(&args.len()) {
-        return Err("usage: benchmark_environment input-recording.json fresh-output-directory [prefix-seconds] [cancel-file]".into());
+    if !(2..=5).contains(&args.len()) || args.get(4).is_some_and(|a| a != "--motion") {
+        return Err("usage: benchmark_environment input-recording.json fresh-output-directory [prefix-seconds] [cancel-file] [--motion]".into());
     }
     let bytes = fs::read(&args[0])?;
     let record: EnvironmentRecording = serde_json::from_slice(&bytes)?;
@@ -67,6 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &json!({"version":1,"input_path":args[0],
         "input_blake3":blake3::hash(&bytes).to_hex().to_string(),
         "requested_duration_s":requested,"episode_duration_s":horizon,
+        "motion_stream":args.len()==5,
         "metadata":env.metadata(),"contract":env.contract(),"task":env.task(),
         "construction_wall_s":start.elapsed().as_secs_f64(),
         "scope":"Unchanged production environment. Transition observations retain declared units and timestamps; finite differences are not extra physics states."}),
@@ -83,6 +85,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     trace.write_all(b"\n")?;
     trace.flush()?;
+    let mut motion = if args.len() == 5 {
+        Some(BufWriter::new(
+            fs::OpenOptions::new()
+                .create_new(true)
+                .write(true)
+                .open(output.join("motion.jsonl"))?,
+        ))
+    } else {
+        None
+    };
+    write_motion(&env, &mut motion)?;
     let stepping = Instant::now();
     let mut heartbeat = Instant::now();
     let mut stop = "requested_prefix";
@@ -101,6 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     &json!({"action":action,"transition":transition}),
                 )?;
                 trace.write_all(b"\n")?;
+                write_motion(&env, &mut motion)?;
                 if transition.terminated {
                     stop = "task_terminated";
                     break;
@@ -118,6 +132,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         if heartbeat.elapsed().as_secs_f64() >= 5. {
             trace.flush()?;
+            if let Some(writer) = &mut motion {
+                writer.flush()?;
+            }
             eprintln!(
                 "{}",
                 json!({"simulated_s":env.transition().time_s,"requested_s":requested,
@@ -127,9 +144,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     trace.flush()?;
+    if let Some(writer) = &mut motion {
+        writer.flush()?;
+    }
     let wall_s = stepping.elapsed().as_secs_f64();
     let transition = env.transition();
     let complete = stop == "episode_complete" && error.is_none() && !transition.terminated;
+    let observed_prefix_net_speed = (transition.time_s > 0.)
+        .then(|| {
+            transition
+                .speed
+                .as_ref()
+                .map(|s| s.net_distance_m)
+                .or_else(|| transition.progress.as_ref().map(|p| p.net_distance_m))
+                .map(|distance| distance / transition.time_s)
+        })
+        .flatten();
     let speed = if complete {
         transition
             .speed
@@ -144,8 +174,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &json!({"version":1,"stop":stop,"error":error,
         "requested_steps_completed":completed==count,"episode_complete":complete,
         "eligible_net_speed_m_s":speed,"completed_actions":completed,"final_transition":transition,
+        "observed_prefix_net_speed_m_s":observed_prefix_net_speed,
         "stepping_and_streaming_wall_s":wall_s,"simulated_seconds_per_wall_second":transition.time_s/wall_s,
-        "scope":"Eligibility requires the complete original horizon without task termination or numerical failure. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification."}),
+        "scope":"Eligibility requires the complete original horizon without task termination or numerical failure. observed_prefix_net_speed_m_s divides distance by observed time, while the task transition's net_speed_m_s divides by the original horizon. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification."}),
     )?;
     write_json(
         "recording.json",
@@ -158,5 +189,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "{}",
         json!({"stop":stop,"completed_actions":completed,"eligible_net_speed_m_s":speed,"wall_s":wall_s})
     );
+    Ok(())
+}
+
+fn write_motion(
+    env: &EmbeddedEnvironment,
+    writer: &mut Option<BufWriter<fs::File>>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(writer) = writer {
+        let frame = env.frame()?;
+        // Preserve full kinematics from the shared runtime, without renderer,
+        // solver diagnostics or geometry. Retain actual actuator targets and
+        // held controller inputs for supervised labels and timing checks.
+        let mut compact = serde_json::to_value(MotionSnapshot::from_frame(&frame)?)?;
+        for key in ["policy", "policy_inputs"] {
+            if let Some(value) = frame.get(key) {
+                compact[key] = value.clone();
+            }
+        }
+        serde_json::to_writer(&mut *writer, &compact)?;
+        writer.write_all(b"\n")?;
+    }
     Ok(())
 }

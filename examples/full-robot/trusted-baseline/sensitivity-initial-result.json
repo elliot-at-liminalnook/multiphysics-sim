@@ -1,0 +1,666 @@
+{
+  "version": 1,
+  "source_blake3": "df559a566e1893bc26e2c8aa674417e36527f674d670eb53bf663c269738d571",
+  "baseline": {
+    "case": "fastest300",
+    "time_s": 20,
+    "net_speed_over_prefix_m_s": 0.5636030139253422,
+    "displacement_xy_m": [
+      7.415709426497575,
+      8.489204710928274
+    ],
+    "fallen": false,
+    "speed_difference_from_base_fraction": 0,
+    "endpoint_difference_from_base_m": 0
+  },
+  "cases": [
+    {
+      "name": "stall_torque_low",
+      "receipt": {
+        "edits": [
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/0/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/1/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/2/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/3/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/4/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/5/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/6/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/7/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/8/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/9/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/10/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          },
+          {
+            "factor": 0.9,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/11/parameters/stall_torque",
+            "target": "config",
+            "value": 2.6477955
+          }
+        ],
+        "rationale": "CAD motor_torque fractional uncertainty applied coherently to active effective-servo stall torque."
+      },
+      "input_blake3": "06fd0ca3d0a669968fd4529315ff12e8992afe3f419d969350b70843f5d3c01f",
+      "stop": "requested_prefix",
+      "observed_s": 20,
+      "net_distance_m": 10.505870641911596,
+      "observed_prefix_net_speed_m_s": 0.5252935320955798,
+      "relative_change": -0.06797245735601587,
+      "fallen": false,
+      "eligible_completed_episode_speed": null
+    },
+    {
+      "name": "stall_torque_high",
+      "receipt": {
+        "edits": [
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/0/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/1/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/2/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/3/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/4/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/5/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/6/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/7/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/8/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/9/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/10/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          },
+          {
+            "factor": 1.1,
+            "original": 2.941995,
+            "pointer": "/motors/effective/components/11/parameters/stall_torque",
+            "target": "config",
+            "value": 3.2361945000000003
+          }
+        ],
+        "rationale": "CAD motor_torque fractional uncertainty applied coherently to active effective-servo stall torque."
+      },
+      "input_blake3": "561d42a74f2c584189c2be4b9ed01ad7cda312da5d98d61bc64814f18b35a5f6",
+      "stop": "requested_prefix",
+      "observed_s": 20,
+      "net_distance_m": 11.166656032793535,
+      "observed_prefix_net_speed_m_s": 0.5583328016396767,
+      "relative_change": -0.00935092991955433,
+      "fallen": false,
+      "eligible_completed_episode_speed": null
+    },
+    {
+      "name": "stiffness_low",
+      "receipt": {
+        "edits": [
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/0/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/1/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/2/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/3/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/4/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/5/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/6/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/7/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/8/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/9/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/10/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          },
+          {
+            "factor": 0.85,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/11/parameters/stiffness",
+            "target": "config",
+            "value": 28.65586246426041
+          }
+        ],
+        "rationale": "CAD stiffness fractional uncertainty used as an explicit initial range for the derived effective servo gain; not a measured gain distribution."
+      },
+      "input_blake3": "fc0856aa4011cf0cae084a33f6b9ff0e06efb93e353ab14ada3931d6c36b7c4c",
+      "stop": "requested_prefix",
+      "observed_s": 20,
+      "net_distance_m": 10.912673379519275,
+      "observed_prefix_net_speed_m_s": 0.5456336689759638,
+      "relative_change": -0.031882982357079315,
+      "fallen": false,
+      "eligible_completed_episode_speed": null
+    },
+    {
+      "name": "stiffness_high",
+      "receipt": {
+        "edits": [
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/0/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/1/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/2/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/3/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/4/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/5/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/6/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/7/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/8/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/9/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/10/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          },
+          {
+            "factor": 1.15,
+            "original": 33.71277936971813,
+            "pointer": "/motors/effective/components/11/parameters/stiffness",
+            "target": "config",
+            "value": 38.769696275175846
+          }
+        ],
+        "rationale": "CAD stiffness fractional uncertainty used as an explicit initial range for the derived effective servo gain; not a measured gain distribution."
+      },
+      "input_blake3": "306b950073cfae896e2b6f4794deb08bfba30373375d9951ddc4b58ff49f7f63",
+      "stop": "requested_prefix",
+      "observed_s": 20,
+      "net_distance_m": 11.569578280601048,
+      "observed_prefix_net_speed_m_s": 0.5784789140300524,
+      "relative_change": 0.026394287711670517,
+      "fallen": false,
+      "eligible_completed_episode_speed": null
+    },
+    {
+      "name": "no_load_speed_low",
+      "receipt": {
+        "edits": [
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/0/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/1/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/2/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/3/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/4/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/5/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/6/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/7/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/8/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/9/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/10/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          },
+          {
+            "factor": 0.9,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/11/parameters/no_load_speed",
+            "target": "config",
+            "value": 4.960409453036515
+          }
+        ],
+        "rationale": "Exploratory plus/minus 10 percent no-load speed range; CAD declares no speed uncertainty."
+      },
+      "input_blake3": "2de0c7dcbed9ac17038e1b139c008ae039c170e8863ca32380ba01839b0aadfc",
+      "stop": "requested_prefix",
+      "observed_s": 20,
+      "net_distance_m": 10.171626539514987,
+      "observed_prefix_net_speed_m_s": 0.5085813269757493,
+      "relative_change": -0.09762489835954169,
+      "fallen": false,
+      "eligible_completed_episode_speed": null
+    },
+    {
+      "name": "no_load_speed_high",
+      "receipt": {
+        "edits": [
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/0/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/1/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/2/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/3/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/4/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/5/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/6/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/7/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/8/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/9/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/10/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          },
+          {
+            "factor": 1.1,
+            "original": 5.5115660589294615,
+            "pointer": "/motors/effective/components/11/parameters/no_load_speed",
+            "target": "config",
+            "value": 6.062722664822408
+          }
+        ],
+        "rationale": "Exploratory plus/minus 10 percent no-load speed range; CAD declares no speed uncertainty."
+      },
+      "input_blake3": "71ee27ca8c3a15f5948829fc4eeca4899b940d65912019e1a44e08cdda0d70d3",
+      "stop": "requested_prefix",
+      "observed_s": 20,
+      "net_distance_m": 12.02191615829542,
+      "observed_prefix_net_speed_m_s": 0.601095807914771,
+      "relative_change": 0.06652340932015544,
+      "fallen": false,
+      "eligible_completed_episode_speed": null
+    },
+    {
+      "name": "floor_friction_low",
+      "receipt": {
+        "edits": [
+          {
+            "factor": 0.8,
+            "original": 0.31724137931034485,
+            "pointer": "/world/floor_friction",
+            "target": "robot",
+            "value": 0.2537931034482759
+          }
+        ],
+        "rationale": "CAD friction fractional uncertainty applied to the active world floor coefficient; other material/contact terms unchanged."
+      },
+      "input_blake3": "11cafefc5c3eaeee643bfe4bab9b34673a9643534a8867704958bd0527a99270",
+      "stop": "requested_prefix",
+      "observed_s": 20,
+      "net_distance_m": 11.272060278506844,
+      "observed_prefix_net_speed_m_s": 0.5636030139253422,
+      "relative_change": 0,
+      "fallen": false,
+      "eligible_completed_episode_speed": null
+    },
+    {
+      "name": "floor_friction_high",
+      "receipt": {
+        "edits": [
+          {
+            "factor": 1.2,
+            "original": 0.31724137931034485,
+            "pointer": "/world/floor_friction",
+            "target": "robot",
+            "value": 0.3806896551724138
+          }
+        ],
+        "rationale": "CAD friction fractional uncertainty applied to the active world floor coefficient; other material/contact terms unchanged."
+      },
+      "input_blake3": "9b018100a57b6cff7dd97a39c63bc0eb050e9b863754183c1592a30f6fbbc703",
+      "stop": "requested_prefix",
+      "observed_s": 20,
+      "net_distance_m": 11.272060278506844,
+      "observed_prefix_net_speed_m_s": 0.5636030139253422,
+      "relative_change": 0,
+      "fallen": false,
+      "eligible_completed_episode_speed": null
+    }
+  ],
+  "contact_followup": "material-sensitivity-plan.json",
+  "scope": "Matched 20 s one-factor screens, not complete 300 s acceptance or joint uncertainty propagation. World-field friction perturbations are inactive for this articulated contact path; material-table friction is being tested separately. Speeds divide by observed 20 s, never the original 300 s score denominator. No-load-speed uncertainty range is exploratory."
+}

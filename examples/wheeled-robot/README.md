@@ -25,7 +25,10 @@ The independent analytic check verifies solid-cylinder wheel mass and all inerti
 entries against CAD, plus the persisted source identity and topology. The shared
 inspection API preserves all twelve entities and their relationships.
 
-Locomotion is **not yet qualified**. The shared runtime now supports the passive
+The [predictive baseline](predictive-baseline/README.md) now records a complete
+10 s contact-enabled drive, exact experiment replay, and learned online forecast
+queries. Prediction generalization and hardware calibration remain unresolved.
+The shared runtime supports the passive
 axle through explicit independent-coordinate selection, and advances the authored
 IMU through its existing hybrid scheduler. The sensor and contact smoke recipes
 exercise native/WASM parity and replay with the complete CAD robot. They command

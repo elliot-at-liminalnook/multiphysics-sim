@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "input": "examples/full-robot/trusted-baseline/fastest573.input.json",
+  "input_blake3": "df559a566e1893bc26e2c8aa674417e36527f674d670eb53bf663c269738d571",
+  "physics_context": {
+    "runtime": {
+      "features": [],
+      "library_source_blake3": "f883fed95408cd7dd91cb261970f41370927272084804e936e8684b1892a7e88",
+      "version": 1
+    },
+    "sections": {
+      "/config/applied_generalized_loads": "dff33c97ade82946b99f4004efc778140ca0a8b7fd6f76ac8da8802d61179301",
+      "/config/embedding": "c3676765a922ced473b745cea9691e89612b11f2b62d2129e2756e07e343b40f",
+      "/config/implicit": "9260099d43efbce0c09c9cccc23dee1d7c26c8be51a287633859f781e814c82b",
+      "/config/mechanical_subdivision": "233e632116d1e5309f6d860fe87157dedfed4f29444357750a75c476538da02c",
+      "/config/motors": "b866640b79e33632746394d373bc2f71d38885128dfe65bb7b8b4519f5d867a9",
+      "/config/step_s": "cd81817f1b038ef81d15506e36986ae85df601e6087c2850bbed512e5c3383e3",
+      "/scene/options": "4da4af11868277f3b83e10405b18b831142b466336be48479bc0dcde6c3d530a",
+      "/scene/period_s": "56da4270daae6dac517429f5b197822828dd719f7305821afa0386f61ee9e9cc",
+      "/scene/robot/battery": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+      "/scene/robot/cables": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+      "/scene/robot/control": "16d4ee50d7dec776767086e9a4fcae63a77b02d3b949abcffe5703b2b02463fc",
+      "/scene/robot/gravity": "24abb69f7c4efbb12267ff1babece1e4e10a1085b1cbb58ccc61bd710b7fef6d",
+      "/scene/robot/identification": "359e16502979a53be306f0cdab119e5480288156f65c5a593e70ef7b02fc23d1",
+      "/scene/robot/joints": "8cfa0efc54512606a2951e232353194d68a7c6def261e9d45a4f752cb7c18241",
+      "/scene/robot/links": "4dded23b62bdd5fc7c30e9eb0e137afbb294c38f24ad7fb2d7766fdc4e317bdc",
+      "/scene/robot/materials": "c2b06e4a32b069dc8f2ad2ac89207b26614b6b6d275c5636c843c76fe6c11b50",
+      "/scene/robot/motors": "47e20bb9af4a4b5f924c288ebe22e3d66e262f5662fda38dc52a0a91571c5790",
+      "/scene/robot/planar": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+      "/scene/robot/sensors": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+      "/scene/robot/source": "1915d02b376ff84748a96bb124e5009d802cbc4ebe980289577a0629c53dfff8",
+      "/scene/robot/transmissions": "74ed22a5910169bc01a75ab4a82a58cff0627df33f63b9760e4b9080b6471b8d",
+      "/scene/robot/uncertainty": "0915c95374a1b449b570f2834e4a34f07af3e7abf8b30fc641bd6b6515f4d957",
+      "/scene/robot/version": "01c86025183c26e002c01759185ba3eed188f599a3f597af339a698f51931c76",
+      "/scene/robot/world": "92372ef116ede94c50a46574a85aa188de5f00bd95811d38f0dee2e6a1c304a2",
+      "/scene/version": "404fcbd96dda2dcc2bc01e396366456ab18f7452af65dab00b422a9ab9b9e818"
+    },
+    "version": 1
+  },
+  "execution": {
+    "version": 1,
+    "source_commit": "106d3dbf529966d79fe9790b0c8f083748393fa3",
+    "runtime": {
+      "features": [],
+      "library_source_blake3": "f883fed95408cd7dd91cb261970f41370927272084804e936e8684b1892a7e88",
+      "version": 1
+    },
+    "binary": {
+      "path": "runs/trusted-baseline-v1/benchmark_environment",
+      "sha256": "d9eac96aefd2721c1a931883f913b81ad5294ecbd71cf81615b2305f3213883c"
+    },
+    "host_source": {
+      "path": "crates/sim-runtime/examples/benchmark_environment.rs",
+      "sha256": "c55a06a2e07de1171ca320c5a5a278b5b9b7323a0b80e846e822a4e98c4ef41a"
+    },
+    "input": {
+      "path": "examples/full-robot/trusted-baseline/fastest573.input.json",
+      "sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6"
+    },
+    "checks": {
+      "path": "runs/trusted-baseline-v1/runner-check.json",
+      "cancellation_ineligible": true
+    },
+    "runs": [
+      {
+        "case": "fastest300",
+        "exec_session": 2815,
+        "cancel_path": "runs/trusted-baseline-v1/fastest300.cancel"
+      },
+      {
+        "cases": [
+          "coarser20",
+          "finer20"
+        ],
+        "exec_session": 81493,
+        "cancel_path": "runs/trusted-baseline-v1/fidelity.cancel"
+      }
+    ],
+    "scope": "Run handles are observations of launched processes, not proof of completion. Inspect their final summaries and poll live handles."
+  },
+  "summary": {
+    "completed_actions": 15000,
+    "eligible_net_speed_m_s": 0.5735639102596267,
+    "episode_complete": true,
+    "error": null,
+    "final_transition": {
+      "completed_steps": 1920000,
+      "elapsed_s": 0.02,
+      "observations": [
+        -0.09905371803172747,
+        4.417540914144946,
+        -0.10353736814942364,
+        -1.8995510578061396,
+        -0.7230719893691204,
+        -5.168395318331347,
+        0.2887699575204692,
+        -3.474814283315214,
+        -0.02305877114167267,
+        3.1100814787240134,
+        -1.0073268478320663,
+        -2.0250818994465027,
+        0.4425477278900231,
+        -4.124411925548038,
+        -0.3691233073012376,
+        -5.336187342150312,
+        -1.3369925391508684,
+        -1.6309396800254699,
+        -0.005119704171354265,
+        3.2352665096738997,
+        -0.21660189471320548,
+        0.6206964812729637,
+        -1.0539807329338993,
+        2.574201386403681,
+        110.70357821245379,
+        0.28870048059777714,
+        131.78949971445638,
+        0.5212143475431145,
+        -0.058959973351686304,
+        0.005068543113008514,
+        0.583974948574868,
+        0.08728144455011799,
+        -0.18317962484551065,
+        0.048982837814501856,
+        0.44796365397909543,
+        1.803025418167022,
+        -0.7404430031326078,
+        -0.09361464642789578,
+        -0.16612133988224165,
+        0.08442257245947005,
+        0.4743262263645252,
+        1.5679231796100443,
+        0,
+        0,
+        0,
+        -2.38810235337365,
+        5.054227372844636,
+        22.360052660618045,
+        0,
+        0,
+        0,
+        -1.3146705843219284,
+        3.6139894773384444,
+        15.382732494635334,
+        0.2691047791869865,
+        0.4456274657203596,
+        0.03729675197585482,
+        0.52943420192448,
+        0.6106950295008615,
+        -0.0998447159642376,
+        0.04816738899694068,
+        0.1878656327518504,
+        0.9943037689690574,
+        0.23676486909409844,
+        0,
+        0.1031773451737574,
+        0
+      ],
+      "reward": 0.01183287815803169,
+      "reward_terms": [
+        {
+          "name": "speed.net_progress",
+          "value": 0.01183287815803169
+        }
+      ],
+      "speed": {
+        "body_floor_contact": false,
+        "body_up_z": 0.9943037689690574,
+        "displacement_xy_m": [
+          110.67217692326957,
+          131.75533984917917
+        ],
+        "fallen": false,
+        "hull_floor_clearance_m": 0.29178011127160147,
+        "net_distance_m": 172.06917307788802,
+        "net_speed_m_s": 0.5735639102596267,
+        "progress_reward_m": 0.01183287815803169
+      },
+      "terminated": false,
+      "termination_reasons": [],
+      "time_s": 300,
+      "truncated": true
+    },
+    "requested_steps_completed": true,
+    "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+    "simulated_seconds_per_wall_second": 0.11105337468593972,
+    "stepping_and_streaming_wall_s": 2701.403724546,
+    "stop": "episode_complete",
+    "version": 1
+  },
+  "historical_comparison": {
+    "net_speed_m_s": 0.5735639102596267,
+    "net_distance_m": 172.06917307788802,
+    "exact_speed_match": true,
+    "exact_distance_match": true
+  },
+  "scope": "Complete 300 simulated seconds on the preserved controller, model and seed. No sampled fall or numerical failure. Exact historical endpoint distance/speed match, not a proof of all-frame identity, timestep convergence, hardware accuracy or realtime execution."
+}

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "quad_capture": {
+    "path": "examples/full-robot/trusted-baseline/command-motion.capture.json.gz",
+    "uncompressed_sha256": "0e1e0a47dfe450e78ee41a6ed90dd06328d0f0d5c4fedc5d73c9f8aceb09fbe6",
+    "compressed_bytes": 26849049,
+    "uncompressed_bytes": 109005143
+  },
+  "quad_observation_parity": {
+    "exact_transition_stream": true,
+    "bytes": 8946542
+  },
+  "negative_checks": {
+    "overlap_rejected": "Error: \"training and validation windows overlap in the same capture\"",
+    "numerical_failure_rejected": "Error: \"requires completed motion capture without numerical failure or cancellation\""
+  },
+  "scope": "Completed motion capture and initial learned future-dynamics models. Current state, finite-interval acceleration and held controller commands enter the model. Chronological development splits; separate wheeled forward episode exposes generalization failure. These models do not yet select actuator commands or establish closed-loop improvement."
+}

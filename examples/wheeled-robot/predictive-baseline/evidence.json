@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "forward_summary": {
+    "completed_actions": 500,
+    "eligible_net_speed_m_s": 0.09696186886735168,
+    "episode_complete": true,
+    "error": null,
+    "final_transition": {
+      "completed_steps": 80000,
+      "elapsed_s": 0.02,
+      "imu_samples": [
+        {
+          "angular_velocity_rad_s": [
+            0.0025108613714738123,
+            -0.00119108454669661,
+            0.0016560546938821244
+          ],
+          "link": "chassis",
+          "name": "body imu",
+          "next_sample_time_s": 10.005000000000164,
+          "sample_time_s": 10.000000000000163,
+          "specific_force_m_s2": [
+            0.0402,
+            -0.026999999999999996,
+            9.87
+          ]
+        }
+      ],
+      "observations": [
+        0.9604045342660593,
+        -0.0007844795422014343,
+        0.0004197292878806734,
+        0.9615460881041566,
+        0.1303192703523132,
+        -0.00023226848417497937,
+        -0.0006999053380794138,
+        0.2746408241210498,
+        0.03720568637690127,
+        -0.000046477715371146945,
+        0.000009461740225986656,
+        0.0012402329232519974,
+        35.10179727846546,
+        -0.026320578787219304,
+        35.070535738515524,
+        -0.026286997130587415,
+        -0.023018868032389894,
+        -0.03969257993116495,
+        0,
+        0
+      ],
+      "reward": -0.000015168385045671862,
+      "reward_terms": [
+        {
+          "name": "speed.net_progress",
+          "value": -0.000015168385045671862
+        }
+      ],
+      "speed": {
+        "body_floor_contact": false,
+        "body_up_z": 0.9999991987292063,
+        "displacement_xy_m": [
+          0.9608211535971672,
+          0.1303192703523132
+        ],
+        "fallen": false,
+        "hull_floor_clearance_m": 0.024956361344532593,
+        "net_distance_m": 0.9696186886735169,
+        "net_speed_m_s": 0.09696186886735168,
+        "progress_reward_m": -0.000015168385045671862
+      },
+      "terminated": false,
+      "termination_reasons": [],
+      "time_s": 10,
+      "truncated": true
+    },
+    "requested_steps_completed": true,
+    "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+    "simulated_seconds_per_wall_second": 0.08948663175669253,
+    "stepping_and_streaming_wall_s": 111.74853499,
+    "stop": "episode_complete",
+    "version": 1
+  },
+  "checks": {
+    "wheeled-online-forecast-check": {
+      "passed": true,
+      "queries": 490,
+      "source_sha256": "b5b1a208c24ac3f47c1eeb8f87d8d53f4541965a0284df50e77eac598da6ca50",
+      "supplied_weights_unchanged": true
+    },
+    "wheeled-experiment-check": {
+      "passed": true,
+      "frames": 501,
+      "replayed_actions": 250,
+      "all_replayed_and_resumed_frames_exact": true,
+      "source_sha256": "ce00627c680b7e539e4d6b8ed647c33241dc67c596356e9354ca25d608992956"
+    }
+  },
+  "forecast": {
+    "turn_validation": {
+      "constant_acceleration": 7.355483907848924,
+      "constant_velocity": 0.5292575043609411,
+      "last_observation": 4.306567679970469,
+      "learned": 0.29661975615311903
+    },
+    "independent_forward_validation": {
+      "constant_acceleration": 9.638963265678644,
+      "constant_velocity": 0.6503921571871469,
+      "last_observation": 14.33479074849857,
+      "learned": 1.0224607292541292
+    },
+    "scope": "Per-model training-residual normalization; values from models with different reference priors are not directly comparable. This selected model improves turning-episode validation but loses to constant velocity on the separate forward episode."
+  },
+  "scope": "Shared observation/action, complete 10 s experiment/replay and learned online prediction APIs exercised on the CAD wheeled robot. No claim of calibration, best driving speed or neural action-selection improvement.",
+  "original_solver_failure": "step 47419: hybrid advancement at 5.927499984708784 with step 0.00000000023892525458091285: implicit mechanical solve: Newton did not converge after 5 iterations; residual=7.432172753674138e-6; largest final residual: Some(\"auxiliary row 6: residual=-7.432172753674138e-6, old=-2.4695848712802608e1, candidate=-2.4695848714132197e1\"); last rejected endpoint: None"
+}

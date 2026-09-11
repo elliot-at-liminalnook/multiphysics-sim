@@ -55,3 +55,20 @@ Extract an actual trained state's `actor` for learned-policy comparisons;
 Runtime forecasts describe the baseline controller's proposed actuator targets
 before the actor adds its correction. Better forecast error alone does not prove
 better action selection, speed, command response or disturbance recovery.
+
+## Completed training and initial-state recovery
+
+`training-result.json` records the completed three-update PPO run and hashes of
+all six local compressed rollouts. `final-state.json` retains actor, critic and
+optimizer continuation state; `best-policy.json` is the final short-training
+winner (0.566927 m/s over 20 s). The compressed experiment and seeds allow the
+rollouts to be regenerated; the large rollout files themselves remain in `runs/`.
+
+The earlier `candidate-iteration001.actor.json` was frozen before held-out
+evaluation and remains the subject of the matched comparison. Both authored
+initial-state recovery cases complete without sampled falls, with approximately
+0.23% higher speed than the original gait. `recovery-comparison.json` retains
+both sides, source receipts and sampled clearance diagnostics. Its first 20 s
+in the long run exactly match its training evaluation. Sustained speed and
+command-response evaluation are still pending. These initial-state cases do
+not establish recovery from timed pushes during walking.

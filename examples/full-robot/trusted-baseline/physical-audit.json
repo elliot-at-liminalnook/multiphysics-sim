@@ -312,5 +312,14 @@
     },
     "world_floor_friction_used_by_this_articulated_path": false,
     "scope": "Declared world.floor_friction is retained but not read for these articulated contacts; regularized Coulomb uses resolved material-pair kinetic friction. Missing pairs currently fall back to library constants; all used material/world pairs in this input are authored."
+  },
+  "transmission_motion_validation": {
+    "report": "transmission-motion-audit.json",
+    "samples": 4501,
+    "duration_s": 90,
+    "transmissions": 8,
+    "maximum_position_residual_rad": 1.1102230246251565e-16,
+    "maximum_velocity_residual_rad_s": 7.105427357601002e-15,
+    "scope": "Shared original transmission equations evaluated on recorded coordinates; verifies sampled enforcement of ideal CAD ratios. Hardware properties remain unmeasured."
   }
 }

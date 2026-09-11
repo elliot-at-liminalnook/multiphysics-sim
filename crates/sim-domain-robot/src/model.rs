@@ -1084,6 +1084,9 @@ pub struct Identification {
     pub stiffness_scale: Option<f64>,
     #[serde(default)]
     pub torque_constant_scale: Option<f64>,
+    /// Explicitly separate from torque scale: legacy fits changed torque only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub back_emf_constant_scale: Option<f64>,
     #[serde(default)]
     pub rms_error_rad: f64,
     #[serde(default)]
@@ -1146,9 +1149,12 @@ impl PhysicalModel {
                     j.physics.stiffness.axial *= s;
                     j.physics.stiffness.bending *= s;
                 }
-                if let Some(s) = id.torque_constant_scale {
-                    if let Some(m) = self.motors.iter_mut().find(|m| m.joint.as_deref() == Some(j.name.as_str())) {
+                if let Some(m) = self.motors.iter_mut().find(|m| m.joint.as_deref() == Some(j.name.as_str())) {
+                    if let Some(s) = id.torque_constant_scale {
                         m.electrical.torque_constant *= s;
+                    }
+                    if let Some(s) = id.back_emf_constant_scale {
+                        m.electrical.back_emf_constant *= s;
                     }
                 }
             }

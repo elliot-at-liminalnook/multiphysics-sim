@@ -1391,7 +1391,11 @@ pub fn fit(model: &PhysicalModel, log: &Log, log_path: &str, opts: &BuildOptions
     }
     simplex.sort_by(|a, b| a.1.total_cmp(&b.1));
     let (x, rms) = &simplex[0];
-    let fitted = apply_fit(&model, x, &joints, &motors);
+    identification_from_fit(&model, x, &joints, &motors, log_path, *rms)
+}
+
+fn identification_from_fit(model: &PhysicalModel, x: &[f64], joints: &[String], motors: &[String], log_path: &str, rms: f64) -> Result<Value, String> {
+    let fitted = apply_fit(model, x, joints, motors);
     let mut out = serde_json::Map::new();
     let now = web_time::SystemTime::now().duration_since(web_time::SystemTime::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
     for (k, jname) in joints.iter().enumerate() {
@@ -1407,9 +1411,50 @@ pub fn fit(model: &PhysicalModel, log: &Log, log_path: &str, opts: &BuildOptions
         if let Some(mi) = fitted.motors.iter().position(|m| m.joint.as_deref() == Some(jname.as_str())) {
             if let Some(pos) = motors.iter().position(|m| *m == fitted.motors[mi].name) {
                 entry["torque_constant_scale"] = json!(x[4 * joints.len() + pos].exp());
+                entry["back_emf_constant_scale"] = json!(x[4 * joints.len() + pos].exp());
             }
         }
         out.insert(jname.clone(), entry);
     }
     Ok(Value::Object(out))
+}
+
+#[cfg(test)]
+mod identification_export_tests {
+    use super::*;
+
+    fn fixture() -> PhysicalModel {
+        let scene: Value = serde_json::from_str(include_str!("../../../examples/interactive/pendulum.scene.json")).unwrap();
+        serde_json::from_value(scene["robot"].clone()).unwrap()
+    }
+
+    #[test]
+    fn fitted_motor_constants_survive_serialized_identification() {
+        let model = fixture();
+        let joints = vec![model.motors[0].joint.clone().unwrap()];
+        let motors = vec![model.motors[0].name.clone()];
+        let x = [0.004_f64.ln(), 0.0005_f64.ln(), 0.007, 1.2_f64.ln(), 1.7_f64.ln()];
+        let expected = apply_fit(&model, &x, &joints, &motors);
+        let exported = identification_from_fit(&model, &x, &joints, &motors, "synthetic.csv", 0.01).unwrap();
+        let mut restored = model.clone();
+        restored.identification = serde_json::from_str(&serde_json::to_string(&exported).unwrap()).unwrap();
+        restored.apply_identification();
+        assert_eq!(json!(restored.motors[0].electrical), json!(expected.motors[0].electrical));
+        assert!((restored.motors[0].electrical.back_emf_constant / model.motors[0].electrical.back_emf_constant - 1.7).abs() < 1e-12);
+        assert_eq!(json!(restored.joint(&joints[0]).unwrap().physics.stiffness), json!(expected.joint(&joints[0]).unwrap().physics.stiffness));
+        assert_eq!(json!(restored.joint(&joints[0]).unwrap().physics.friction), json!(expected.joint(&joints[0]).unwrap().physics.friction));
+    }
+
+    #[test]
+    fn legacy_torque_only_fit_keeps_back_emf_unchanged() {
+        let mut model = fixture();
+        let old_ke = model.motors[0].electrical.back_emf_constant;
+        let old_kt = model.motors[0].electrical.torque_constant;
+        let joint = model.motors[0].joint.clone().unwrap();
+        model.identification = serde_json::from_value(json!({joint:{"torque_constant_scale":1.7}})).unwrap();
+        assert!(serde_json::to_value(&model.identification).unwrap().as_object().unwrap().values().all(|v|v.get("back_emf_constant_scale").is_none()));
+        model.apply_identification();
+        assert_eq!(model.motors[0].electrical.torque_constant, old_kt * 1.7);
+        assert_eq!(model.motors[0].electrical.back_emf_constant, old_ke);
+    }
 }

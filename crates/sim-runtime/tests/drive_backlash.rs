@@ -65,8 +65,9 @@ fn identified_motor_parameters_match_explicit_fits_and_replay_without_refitting(
     let unfitted = identified.clone();
     let joint = identified.robot.joints[0].name.clone();
     let source_kt = identified.robot.motors[0].electrical.torque_constant;
+    let source_ke = identified.robot.motors[0].electrical.back_emf_constant;
     identified.robot.identification.insert(joint, sim_domain_robot::model::Identification {
-        torque_constant_scale: Some(1.7), stiffness_scale: Some(1.2),
+        torque_constant_scale: Some(1.7), back_emf_constant_scale: Some(1.3), stiffness_scale: Some(1.2),
         source_log: "synthetic-identification-fixture.csv".into(),
         fitted_at: "fixture only; not a hardware identification".into(),
         ..Default::default()
@@ -76,6 +77,7 @@ fn identified_motor_parameters_match_explicit_fits_and_replay_without_refitting(
     explicit.robot.identification.clear();
     let mut detailed = Session::new(identified.clone(), 7).unwrap();
     assert_eq!(detailed.robot.model.motors[0].electrical.torque_constant, source_kt * 1.7);
+    assert_eq!(detailed.robot.model.motors[0].electrical.back_emf_constant, source_ke * 1.3);
     let mut detailed_explicit = Session::new(explicit.clone(), 7).unwrap();
     let commands: Vec<_> = detailed.inputs.iter().map(|input|input.initial).collect();
     for _ in 0..2 {
@@ -84,6 +86,7 @@ fn identified_motor_parameters_match_explicit_fits_and_replay_without_refitting(
     }
     let mut fitted = EmbeddedSession::new(identified.clone(), config.clone(), 7, CaptureMode::Full).unwrap();
     assert_eq!(fitted.diagnostic_metadata()["motor_components"][0]["parameters"]["torque_constant"], source_kt * 1.7);
+    assert_eq!(fitted.diagnostic_metadata()["motor_components"][0]["parameters"]["back_emf_constant"], source_ke * 1.3);
     let mut explicit = EmbeddedSession::new(explicit, config.clone(), 7, CaptureMode::Full).unwrap();
     let mut original = EmbeddedSession::new(unfitted, config.clone(), 7, CaptureMode::Full).unwrap();
     for _ in 0..config.steps {
@@ -93,6 +96,7 @@ fn identified_motor_parameters_match_explicit_fits_and_replay_without_refitting(
     assert_ne!(fitted.frame().unwrap()["joint_positions"], original.frame().unwrap()["joint_positions"]);
     let recording = fitted.recording();
     assert_eq!(recording.scene.robot.motors[0].electrical.torque_constant, source_kt);
+    assert_eq!(recording.scene.robot.motors[0].electrical.back_emf_constant, source_ke);
     assert_eq!(serde_json::to_value(&recording.scene.robot.identification).unwrap(), serde_json::to_value(&identified.robot.identification).unwrap());
     let (mut replay, steps) = EmbeddedSession::prepare_replay(recording, CaptureMode::Latest).unwrap();
     replay.advance(steps).unwrap();

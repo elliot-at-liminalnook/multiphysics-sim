@@ -89,8 +89,9 @@ The physical declaration audit is in `physical-audit.json` beside the baseline.
 `hardware-calibration.md` maps the influential uncertainties to measurements,
 CAD properties and the existing import path. Hardware data/access remain
 unsupplied. The compatibility fitter does not identify the effective servo
-limits/gains used here; its voltage handling and motor-fit round-trip limitations
-are documented explicitly rather than counted as calibration evidence.
+limits/gains used here, and its reader ignores voltage columns. The motor fit
+now preserves both torque and back-EMF scales through serialization and import;
+that software correction is not counted as hardware calibration evidence.
 All 12 effective actuator parameter sets match their CAD ratings/static gain
 derivation within 1e-12. This does not validate those estimates on hardware.
 `transmission-motion-audit.json` checks the shared original constraint equations

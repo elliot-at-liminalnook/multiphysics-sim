@@ -314,7 +314,7 @@ def test_results_and_identification_round_trip(tmp_path):
     assert out['stale']  # Legacy results have no captured physical identity.
     thigh = next(n for n in doc.walk() if n.name == "thigh")
     assert thigh.results["section"] == "links" and thigh.results["peak_stress_pa"] == 1.2e7
-    fit = {"identification": {"knee": {"friction": {"coulomb": 0.004, "viscous": 0.0005}, "backlash": 0.02, "stiffness_scale": 0.8, "rms_error_rad": 0.01}}, "source_log": "run1.csv"}
+    fit = {"identification": {"knee": {"friction": {"coulomb": 0.004, "viscous": 0.0005}, "backlash": 0.02, "stiffness_scale": 0.8, "torque_constant_scale": 1.7, "back_emf_constant_scale": 1.7, "rms_error_rad": 0.01}}, "source_log": "run1.csv"}
     fp = str(tmp_path / "fit.json")
     with open(fp, "w") as f:
         json.dump(fit, f)
@@ -323,11 +323,14 @@ def test_results_and_identification_round_trip(tmp_path):
     model = export_physical_model(doc, None, flex=False)
     knee = next(j for j in model["joints"] if j["name"] == "knee")
     assert knee["physics"]["identified"]["friction"]["coulomb"] == 0.004 and model["identification"]["knee"]["source_log"] == "run1.csv"
+    assert model["identification"]["knee"]["torque_constant_scale"] == 1.7
+    assert model["identification"]["knee"]["back_emf_constant_scale"] == 1.7
     # Saved and reloaded documents keep settings, results and engineering materials.
     ops.set_material_props("petg", youngs_modulus=2.5e9)
     path = str(tmp_path / "leg.rcad")
     doc.save(path)
     back = Document.load(path)
+    assert back.robot_settings["identification"]["knee"]["back_emf_constant_scale"] == 1.7
     assert back.robot_settings["battery"]["cells"] == 2 and back.results["links"]["thigh"]["yield_margin"] == 2.75
     assert back.materials["petg"].props()["youngs_modulus"] == 2.5e9
     assert next(n for n in back.walk() if n.name == "thigh").results["peak_stress_pa"] == 1.2e7

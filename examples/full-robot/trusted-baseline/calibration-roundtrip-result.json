@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "change": "Explicit optional back_emf_constant_scale survives fitted-parameter serialization, CAD persistence, runtime resolution and replay. Legacy torque-only identification keeps back-EMF unchanged.",
+  "tests": [
+    {
+      "command": "cargo test --locked --release -p sim-runtime --lib identification_export_tests",
+      "passed": 2,
+      "exit_code": 0
+    },
+    {
+      "command": "cargo test --locked --release -p sim-runtime --test drive_backlash",
+      "passed": 5,
+      "exit_code": 0
+    },
+    {
+      "command": "cad/.venv/bin/python -m pytest cad/tests/test_physical.py::test_results_and_identification_round_trip -q",
+      "passed": 1,
+      "exit_code": 0
+    }
+  ],
+  "scope": "Synthetic software consistency tests, not measured motor calibration. The legacy fitter still does not identify the fast profile speed/torque limits or effective servo response, and its CSV reader ignores voltage. Historical gait/forecast evidence retains its pinned runtime source; old forecast physics identities are not relabeled."
+}

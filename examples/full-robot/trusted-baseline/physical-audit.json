@@ -321,5 +321,12 @@
     "maximum_position_residual_rad": 1.1102230246251565e-16,
     "maximum_velocity_residual_rad_s": 7.105427357601002e-15,
     "scope": "Shared original transmission equations evaluated on recorded coordinates; verifies sampled enforcement of ideal CAD ratios. Hardware properties remain unmeasured."
+  },
+  "sampled_geometry_validation": {
+    "summary": "geometry-motion-summary.json",
+    "frames": 4501,
+    "duration_s": 90,
+    "maximum_inter_link_overlap_m": 0.00018894231641632489,
+    "scope": "Shared compiled geometry at recorded poses, including dynamics-omitted contacts. Three reported within-assembly pairs; no sampled pair between distinct legs. Surface/SDF discretization, neighbour exclusions and temporal sampling limit the result; not exact CAD or continuous-time certification."
   }
 }

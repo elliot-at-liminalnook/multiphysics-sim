@@ -10,7 +10,7 @@ the same APIs on the wheeled robot. Work takes place on `main` in
 |---|---|---|
 | Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Complete 300 s reproduction exactly matches historical distance/speed: 172.069173 m and 0.5735639103 m/s, no sampled fall. WASD and three 20 s timestep cases completed. Fresh coarser-step 300 s run gives 0.5621811105 m/s, 1.98% lower; full finer-step comparison is running. |
 | Physical model | Trace actuator/transmission limits, contacts and sensors to CAD; rank influential uncertain parameters using explicit experimental perturbations, then obtain corresponding hardware measurements and promote accepted values through CAD. | Effective actuator derivations match CAD; all eight transmission relations hold across 4,501 captured samples. Winning recipe remains uncalibrated, omits inter-link contact, and declares no sensors. Its observations are ideal simulator values. Hardware availability/interface requested from user. |
-| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Three PPO updates completed: best 20 s training speed 0.566927 m/s (+0.59%). The earlier 0.564950 m/s actor remains frozen for evaluation; both held-out initial-state recovery cases pass with about 0.23% higher speed than baseline. Full sustained and command-response comparisons remain running. |
+| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Three PPO updates completed: best 20 s training speed 0.566927 m/s (+0.59%). The earlier 0.564950 m/s actor remains frozen for evaluation; both held-out initial-state recovery cases pass with about 0.23% higher speed. The 90 s command protocol completes without a sampled fall but shows more forward heading drift. Full sustained comparison remains running. |
 | Second morphology | Use the same observation, action, prediction and experiment contracts on the wheeled robot, including sustained locomotion and predictive evaluation. | Complete 10 s forward run, 490 live forecast queries and exact 501-frame experiment/checkpoint replay passed. Learned forecast is tested on a separate forward episode and exposes generalization failure. Evidence in `../wheeled-robot/predictive-baseline/`. |
 
 Speed remains net displacement divided by the complete requested duration, with
@@ -92,6 +92,13 @@ maximum position residual 1.11e-16 rad and velocity residual 7.11e-15 rad/s.
 A synthetic 0.01 rad driver perturbation produces the expected 0.01 rad residual.
 This verifies sampled enforcement of the ideal CAD ratios, not hardware ratio,
 backlash, efficiency or torque accuracy.
+`geometry-motion-summary.json` and its compressed full report inspect all 4,501
+poses through shared contact geometry, including inter-link pairs omitted from
+the fast dynamics. Maximum sampled overlap is 0.189 mm, on the +Y sector gear /
+hip shaft pair. The other reported pairs are the -X hip shaft/chassis and +X
+sector gear/hip shaft. No reported pair joins different legs. This uses compiled
+surface samples, SDFs and neighbour exclusions; it is not exact CAD geometry or
+continuous-time clearance certification. The audit does not alter gait scoring.
 Thirty-one of 32 moving joints have no declared travel limits, and the robot has
 no declared sensors. The sensitivity plan perturbs active torque (+/-10%), servo
 stiffness (+/-15%), no-load speed (+/-10%, exploratory range) and floor friction
@@ -189,5 +196,17 @@ Those cases do not represent timed mid-gait pushes or measured hardware
 disturbance distributions. The frozen learned candidate completes them at
 0.564887 and 0.564715 m/s, about 0.23% higher, without sampled falls. Its full
 300 s test exactly reproduces the training evaluation's first 20 s observations
-and distance. The full 300 s result and 90 s command comparison remain pending;
-prefix parity is not sustained acceptance. See `recovery-comparison.json`.
+and distance. The full 300 s result remains pending; prefix parity is not
+sustained acceptance. See `recovery-comparison.json`.
+
+The 90 s learned command run completes all 4,500 actions without sampled falls.
+`command-comparison.json` uses the same analyzer on baseline and candidate.
+Forward-start speed rises from 0.563603 to 0.564950 m/s, while sampled heading
+change rises from 3.08 to 11.32 degrees. First braking-stage displacement changes
+from 0.150766 to 0.152126 m. Left-turn heading change is 11.76 versus 15.20 degrees;
+the D combination remains a positive yaw request and produces 1.41 versus 8.00
+degrees. Reversal still rotates heavily: -318.02 versus -308.36 degrees, with
+1.008 versus 1.286 m net displacement. These are measured response tradeoffs,
+not proof of improved control. No heading, style or slip penalty was introduced.
+The full candidate transition/action stream is preserved compressed alongside
+the report, protocol receipt and frozen actor.

@@ -69,6 +69,15 @@ evaluation and remains the subject of the matched comparison. Both authored
 initial-state recovery cases complete without sampled falls, with approximately
 0.23% higher speed than the original gait. `recovery-comparison.json` retains
 both sides, source receipts and sampled clearance diagnostics. Its first 20 s
-in the long run exactly match its training evaluation. Sustained speed and
-command-response evaluation are still pending. These initial-state cases do
-not establish recovery from timed pushes during walking.
+in the long run exactly match its training evaluation. Sustained speed remains
+pending. These initial-state cases do not establish recovery from timed pushes
+during walking.
+
+`command-comparison.json` records the complete 90 s WASD comparison with the
+same analyzer on both policies. All 4,500 commanded actions are verified and
+neither policy has a sampled fall. The candidate is slightly faster, but its
+first forward stage changes heading by 11.32 degrees versus 3.08 degrees for the
+baseline. Braking distance is similar; reversal still produces a large turn.
+`command-transitions.jsonl.gz` retains the full candidate observation/action
+stream and its receipt records the decompressed hash. Short speed gains do not
+establish improved command control. No heading or slip penalty was added.

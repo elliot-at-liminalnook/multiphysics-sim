@@ -56,4 +56,46 @@ step. The 90 s protocol is versioned in `command-protocol.json`: forward, brake,
 restart, left/right while walking, reverse, and stop. Three read-only body-axis
 observations support projected-heading measurement. Its initial actions and all
 pre-existing physical observations match the baseline exactly in a 0.1 s check.
-The complete command-response result remains pending.
+The complete 90 s command-response run finished without sampled termination.
+`../full-robot/trusted-baseline/command-response-result.json` preserves the
+measurements and original capture physics identity. Its 4,500 executed actions
+match the preserved command schedule. The shared `motion_response` API binds
+typed observation sources, handles consistent aliases and measures nonuniform
+sample windows without changing the objective.
+
+The first forward stage covered 11.272 m in 20 s (0.563603 m/s). Releasing the
+keys produced 0.151 m net displacement over the 10 s braking stage and a final
+speed of 0.0000153 m/s. W+A changed sampled unwrapped heading by +11.76 degrees
+over 10 s; W+D still changed it by +1.41 degrees. The preset's positive steering
+trim means W+D requests a small positive yaw rate, not a negative one. S produced
+-318.02 degrees of sampled unwrapped rotation over 20 s and only 1.008 m net
+displacement despite 0.463 m/s mean sampled speed. These are measured shortcomings
+for command-response training, not extra rewards or failure penalties.
+
+Heading is measured from sampled body orientation. Unwrapping assumes less than
+pi true rotation between observations; the largest observed increment is small,
+but that alone cannot rule out hidden turns. Integrating the sampled angular
+velocity gives substantially different changes during walking (for example,
+64.96 versus 3.08 degrees in the first forward stage). Both diagnostics are
+retained; sampling and kinematic consistency need further investigation before
+using the integral as a turn measurement. Acceleration likewise denotes a
+20 ms interval-average velocity difference, not an instantaneous peak.
+
+The physical declaration audit is in `physical-audit.json` beside the baseline.
+All 12 effective actuator parameter sets match their CAD ratings/static gain
+derivation within 1e-12. This does not validate those estimates on hardware.
+Thirty-one of 32 moving joints have no declared travel limits, and the robot has
+no declared sensors. The sensitivity plan perturbs active torque (+/-10%), servo
+stiffness (+/-15%), no-load speed (+/-10%, exploratory range) and floor friction
+(+/-20%). `prepare_physical_sensitivity` reuses the shared Scene input-preservation
+API so floor changes carry original-value receipts; configuration changes carry
+an explicit manifest. Eight matched 20 s prefix runs are executing on the same
+pinned binary as the baseline. They do not replace full-horizon evaluation.
+
+Verification: three analytic response tests pass, including wrap handling,
+nonuniform braking, closed paths, reordered observations and source aliases.
+The analyzer rejects a deliberately wrong command specification and a missing
+transition. Sensitivity preparation preserves action schedule, policy, seed and
+time grid and passes robot receipt readback. Predictive training still needs
+full motion/actuator-target captures; the diagnostic transition stream does not
+contain all link poses and must not be padded with invented state.

@@ -1,0 +1,423 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "stall_torque_low",
+      "rationale": "CAD motor_torque fractional uncertainty applied coherently to active effective-servo stall torque.",
+      "edits": [
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/0/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/1/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/2/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/3/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/4/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/5/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/6/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/7/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/8/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/9/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/10/parameters/stall_torque",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/11/parameters/stall_torque",
+          "factor": 0.9
+        }
+      ]
+    },
+    {
+      "name": "stall_torque_high",
+      "rationale": "CAD motor_torque fractional uncertainty applied coherently to active effective-servo stall torque.",
+      "edits": [
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/0/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/1/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/2/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/3/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/4/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/5/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/6/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/7/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/8/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/9/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/10/parameters/stall_torque",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/11/parameters/stall_torque",
+          "factor": 1.1
+        }
+      ]
+    },
+    {
+      "name": "stiffness_low",
+      "rationale": "CAD stiffness fractional uncertainty used as an explicit initial range for the derived effective servo gain; not a measured gain distribution.",
+      "edits": [
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/0/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/1/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/2/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/3/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/4/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/5/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/6/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/7/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/8/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/9/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/10/parameters/stiffness",
+          "factor": 0.85
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/11/parameters/stiffness",
+          "factor": 0.85
+        }
+      ]
+    },
+    {
+      "name": "stiffness_high",
+      "rationale": "CAD stiffness fractional uncertainty used as an explicit initial range for the derived effective servo gain; not a measured gain distribution.",
+      "edits": [
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/0/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/1/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/2/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/3/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/4/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/5/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/6/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/7/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/8/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/9/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/10/parameters/stiffness",
+          "factor": 1.15
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/11/parameters/stiffness",
+          "factor": 1.15
+        }
+      ]
+    },
+    {
+      "name": "no_load_speed_low",
+      "rationale": "Exploratory plus/minus 10 percent no-load speed range; CAD declares no speed uncertainty.",
+      "edits": [
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/0/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/1/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/2/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/3/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/4/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/5/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/6/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/7/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/8/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/9/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/10/parameters/no_load_speed",
+          "factor": 0.9
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/11/parameters/no_load_speed",
+          "factor": 0.9
+        }
+      ]
+    },
+    {
+      "name": "no_load_speed_high",
+      "rationale": "Exploratory plus/minus 10 percent no-load speed range; CAD declares no speed uncertainty.",
+      "edits": [
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/0/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/1/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/2/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/3/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/4/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/5/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/6/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/7/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/8/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/9/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/10/parameters/no_load_speed",
+          "factor": 1.1
+        },
+        {
+          "target": "config",
+          "pointer": "/motors/effective/components/11/parameters/no_load_speed",
+          "factor": 1.1
+        }
+      ]
+    },
+    {
+      "name": "floor_friction_low",
+      "rationale": "CAD friction fractional uncertainty applied to the active world floor coefficient; other material/contact terms unchanged.",
+      "edits": [
+        {
+          "target": "robot",
+          "pointer": "/world/floor_friction",
+          "factor": 0.8
+        }
+      ]
+    },
+    {
+      "name": "floor_friction_high",
+      "rationale": "CAD friction fractional uncertainty applied to the active world floor coefficient; other material/contact terms unchanged.",
+      "edits": [
+        {
+          "target": "robot",
+          "pointer": "/world/floor_friction",
+          "factor": 1.2
+        }
+      ]
+    }
+  ]
+}

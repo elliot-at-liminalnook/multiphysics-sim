@@ -71,6 +71,7 @@ pub mod ppo_training;
 pub mod motion_data;
 pub mod motion_forecast;
 pub mod motion_parameters;
+pub mod motion_response;
 pub mod experiment;
 #[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
 pub mod experiment_search;

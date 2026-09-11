@@ -116,8 +116,14 @@ The friction audit found `world.floor_friction` is not read by this articulated
 contact path. It resolves material/world table entries through
 `PhysicalModel::friction_between`; regularized Coulomb uses their kinetic value.
 The unchanged world-field tests do not establish friction robustness. Two
-additional material-table perturbations are running from
-`material-sensitivity-plan.json`; the preserved baseline remains unchanged.
+additional material-table perturbations completed from
+`material-sensitivity-plan.json`: -20% gives 0.578085 m/s and +20% gives
+0.553528 m/s over matched 20 s prefixes. Results and receipts are retained in
+`material-sensitivity-result.json`; the preserved baseline remains unchanged.
+Among the screened ranges, no-load speed and stall torque have the largest
+adverse speed effects, followed by servo stiffness and material friction.
+The no-load-speed range is exploratory, and this local ranking does not cover
+coupled uncertainties or replace loaded actuator/contact measurements.
 
 The quadruped forecaster has 309 inputs and 279 outputs: all 28 generalized
 coordinates plus body translation, predicting position, velocity and finite-
@@ -144,3 +150,11 @@ target/release/examples/train_motion_forecast runs/predictive-reproduction/exper
 These tools preserve the capture's original physics identity. The packer rejects
 numerically failed captures; the trainer rejects overlapping training/validation
 windows in identical captures, including byte-identical files at different paths.
+
+Separate actuator-conditioned heads at 20, 100 and 200 ms are training for the
+existing shared predictive actor/planner. They use recorded actuator channel
+names (`*.target`), not generalized-coordinate names. These causal heads can
+supply current dynamics and predicted motion to the actor; command selection,
+closed-loop learning and matched sustained/response/recovery evaluations remain
+required. The controller-conditioned models above remain useful diagnostics and
+are not silently substituted for actuator-conditioned planning models.

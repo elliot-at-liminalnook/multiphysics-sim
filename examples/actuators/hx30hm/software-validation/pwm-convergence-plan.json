@@ -1,0 +1,275 @@
+{
+  "motor": {
+    "driver": {
+      "current_limit": 3,
+      "kind": "servo_internal",
+      "on_resistance": 0.05,
+      "pwm_hz": 50
+    },
+    "electrical": {
+      "back_emf_constant": 2.0139466498848435,
+      "current_limit": 3,
+      "inductance": 0.00148,
+      "no_load_current": 0.1,
+      "poles": 0,
+      "resistance": 3.6999999999999997,
+      "rotor_inertia": 2.2324546035565207e-08,
+      "supply_voltage": 11.1,
+      "torque_constant": 0.980665
+    },
+    "firmware": {
+      "deadband_rad": 0,
+      "kd": 2.543932610380855,
+      "ki": 0,
+      "kind": "servo",
+      "kp": 127.19663051904276,
+      "latency_s": 0.001,
+      "loop_rate_hz": 1000,
+      "output": "voltage",
+      "sensor_resolution_rad": 0.0015339807878856412
+    },
+    "gear_ratio": 1,
+    "gearbox": {
+      "backlash_rad": 0,
+      "efficiency": 1,
+      "inertia": 2.2324546035565207e-08,
+      "max_output_speed": 5.5115660589294615,
+      "max_output_torque": 2.941995,
+      "ratio": 1,
+      "stiffness": 50
+    },
+    "id": "0702845b41d3",
+    "joint": "-Y | Hip servo output",
+    "mount_point": [
+      0,
+      -0.0633937,
+      0.024
+    ],
+    "mounted_on": "Robot | Chassis and hip mounts",
+    "name": "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM",
+    "shaft_axis": [
+      0,
+      0,
+      -1
+    ],
+    "spec": "hx30hm",
+    "thermal": {
+      "case_heat_capacity": 41.184000000000005,
+      "max_winding_c": 110,
+      "r_case_ambient": 45,
+      "r_case_mount": 6,
+      "r_winding_case": 12,
+      "resistance_temp_coeff": 0.0039,
+      "torque_derating_per_c": 0.0012,
+      "winding_heat_capacity": 2.4024
+    }
+  },
+  "cases": [
+    {
+      "voltage_v": 12.6,
+      "duration_s": 0.4,
+      "step_s": 1.5625e-05,
+      "sample_s": 0.005,
+      "load_inertia_kg_m2": 0.0001,
+      "load_torque_nm": 0.0,
+      "locked": false,
+      "thermal": true,
+      "ambient_c": 25,
+      "servo": false,
+      "target_rad": 1.0471975511965976,
+      "frequency_hz": 0,
+      "motor_overrides": {
+        "torque_constant": 0.009734075474443412,
+        "back_emf_constant": 0.009734075474443412,
+        "ratio": 200,
+        "efficiency": 0.5037278591966505,
+        "gear_friction": 0,
+        "gear_inertia": 2e-05,
+        "derating": 0
+      },
+      "firmware_overrides": {},
+      "thermal_resistance_scale": 1,
+      "encoder_parameters": {
+        "counts": 4096,
+        "period": 0.001,
+        "seed": 2301
+      },
+      "name": "fine_d0.2_dt1.5625e-05",
+      "open_loop_duty": 0.2
+    },
+    {
+      "voltage_v": 12.6,
+      "duration_s": 0.4,
+      "step_s": 7.8125e-06,
+      "sample_s": 0.005,
+      "load_inertia_kg_m2": 0.0001,
+      "load_torque_nm": 0.0,
+      "locked": false,
+      "thermal": true,
+      "ambient_c": 25,
+      "servo": false,
+      "target_rad": 1.0471975511965976,
+      "frequency_hz": 0,
+      "motor_overrides": {
+        "torque_constant": 0.009734075474443412,
+        "back_emf_constant": 0.009734075474443412,
+        "ratio": 200,
+        "efficiency": 0.5037278591966505,
+        "gear_friction": 0,
+        "gear_inertia": 2e-05,
+        "derating": 0
+      },
+      "firmware_overrides": {},
+      "thermal_resistance_scale": 1,
+      "encoder_parameters": {
+        "counts": 4096,
+        "period": 0.001,
+        "seed": 2301
+      },
+      "name": "fine_d0.2_dt7.8125e-06",
+      "open_loop_duty": 0.2
+    },
+    {
+      "voltage_v": 12.6,
+      "duration_s": 0.4,
+      "step_s": 3.90625e-06,
+      "sample_s": 0.005,
+      "load_inertia_kg_m2": 0.0001,
+      "load_torque_nm": 0.0,
+      "locked": false,
+      "thermal": true,
+      "ambient_c": 25,
+      "servo": false,
+      "target_rad": 1.0471975511965976,
+      "frequency_hz": 0,
+      "motor_overrides": {
+        "torque_constant": 0.009734075474443412,
+        "back_emf_constant": 0.009734075474443412,
+        "ratio": 200,
+        "efficiency": 0.5037278591966505,
+        "gear_friction": 0,
+        "gear_inertia": 2e-05,
+        "derating": 0
+      },
+      "firmware_overrides": {},
+      "thermal_resistance_scale": 1,
+      "encoder_parameters": {
+        "counts": 4096,
+        "period": 0.001,
+        "seed": 2301
+      },
+      "name": "fine_d0.2_dt3.90625e-06",
+      "open_loop_duty": 0.2
+    },
+    {
+      "voltage_v": 12.6,
+      "duration_s": 0.4,
+      "step_s": 1.5625e-05,
+      "sample_s": 0.005,
+      "load_inertia_kg_m2": 0.0001,
+      "load_torque_nm": 0.0,
+      "locked": false,
+      "thermal": true,
+      "ambient_c": 25,
+      "servo": false,
+      "target_rad": 1.0471975511965976,
+      "frequency_hz": 0,
+      "motor_overrides": {
+        "torque_constant": 0.009734075474443412,
+        "back_emf_constant": 0.009734075474443412,
+        "ratio": 200,
+        "efficiency": 0.5037278591966505,
+        "gear_friction": 0,
+        "gear_inertia": 2e-05,
+        "derating": 0
+      },
+      "firmware_overrides": {},
+      "thermal_resistance_scale": 1,
+      "encoder_parameters": {
+        "counts": 4096,
+        "period": 0.001,
+        "seed": 2301
+      },
+      "name": "fine_d1.0_dt1.5625e-05",
+      "open_loop_duty": 1.0
+    },
+    {
+      "voltage_v": 12.6,
+      "duration_s": 0.4,
+      "step_s": 7.8125e-06,
+      "sample_s": 0.005,
+      "load_inertia_kg_m2": 0.0001,
+      "load_torque_nm": 0.0,
+      "locked": false,
+      "thermal": true,
+      "ambient_c": 25,
+      "servo": false,
+      "target_rad": 1.0471975511965976,
+      "frequency_hz": 0,
+      "motor_overrides": {
+        "torque_constant": 0.009734075474443412,
+        "back_emf_constant": 0.009734075474443412,
+        "ratio": 200,
+        "efficiency": 0.5037278591966505,
+        "gear_friction": 0,
+        "gear_inertia": 2e-05,
+        "derating": 0
+      },
+      "firmware_overrides": {},
+      "thermal_resistance_scale": 1,
+      "encoder_parameters": {
+        "counts": 4096,
+        "period": 0.001,
+        "seed": 2301
+      },
+      "name": "fine_d1.0_dt7.8125e-06",
+      "open_loop_duty": 1.0
+    },
+    {
+      "voltage_v": 12.6,
+      "duration_s": 0.4,
+      "step_s": 3.90625e-06,
+      "sample_s": 0.005,
+      "load_inertia_kg_m2": 0.0001,
+      "load_torque_nm": 0.0,
+      "locked": false,
+      "thermal": true,
+      "ambient_c": 25,
+      "servo": false,
+      "target_rad": 1.0471975511965976,
+      "frequency_hz": 0,
+      "motor_overrides": {
+        "torque_constant": 0.009734075474443412,
+        "back_emf_constant": 0.009734075474443412,
+        "ratio": 200,
+        "efficiency": 0.5037278591966505,
+        "gear_friction": 0,
+        "gear_inertia": 2e-05,
+        "derating": 0
+      },
+      "firmware_overrides": {},
+      "thermal_resistance_scale": 1,
+      "encoder_parameters": {
+        "counts": 4096,
+        "period": 0.001,
+        "seed": 2301
+      },
+      "name": "fine_d1.0_dt3.90625e-06",
+      "open_loop_duty": 1.0
+    }
+  ],
+  "provenance": {
+    "purpose": "Refine timestep after coarse sampled startup-current peaks differed; same sample grid and physical parameters as pwm-physics-plan.",
+    "model_source": "../plan.json unchanged Motor, estimated effective output-side parameters retained",
+    "conditions": "Independent single-axis cases, ideal external voltage supply, explicitly estimated added inertia 0.0001 kg m^2; no claim to model concurrent supply sag",
+    "not_identified": [
+      "PWM internal firmware response",
+      "coast/brake mode",
+      "current scale",
+      "friction",
+      "load inertia",
+      "thermal constants",
+      "actual no-load speed ceiling"
+    ]
+  }
+}

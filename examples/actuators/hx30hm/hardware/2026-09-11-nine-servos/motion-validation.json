@@ -1,0 +1,19 @@
+{
+  "rust_example_tests": {
+    "passed": 5,
+    "failed": 0,
+    "command": "cargo test -p sim-runtime --release --example characterize_hx_bridge"
+  },
+  "shared_codec_tests": {
+    "passed": 3,
+    "failed": 0,
+    "command": "cargo test -p sim-runtime --release --lib acquisition::servo_bus::tests"
+  },
+  "git_diff_check": "passed",
+  "pwm_hardware_servo_count": 9,
+  "pulses_per_servo": 5,
+  "all_final_mode_pwm_zero_torque_disabled_locked": true,
+  "post_pwm_stationary_samples": 500,
+  "post_pwm_nonzero_speed_samples": 0,
+  "post_pwm_fault_samples": 0
+}

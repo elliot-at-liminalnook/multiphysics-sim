@@ -1,6 +1,8 @@
 //! Acquisition records retain device-clock windows and transport evidence.
 //! They are irregular measurements, never implicitly resampled simulator states.
 pub mod servo_bus;
+pub mod servo_safety;
+pub mod actuator_sweep;
 
 use serde::{Deserialize, Serialize};
 

@@ -1,0 +1,403 @@
+{
+  "schema_version": 1,
+  "physics_repository_head": "e9d7f598767a978dc85cfe6d9bfaef22dd68c6d0",
+  "note": "Working source changes and FPGA source are frozen under rust-source/ and fpga-source/. Bitstream is built, not flashed.",
+  "files": {
+    "README.md": {
+      "bytes": 5501,
+      "sha256": "e6fef2099ee99b40a3d5f0ad906feb0cf4a33987ee71bb8d6420583c98288d6f"
+    },
+    "bridge_safety.fs": {
+      "bytes": 6000614,
+      "sha256": "773f1e2ce25df18818ec31edac410afa045b1d5e4924bf4c542cb3a8fd73c340"
+    },
+    "check-physics.mjs": {
+      "bytes": 2498,
+      "sha256": "2b0dedd635f24d07ed029c89d2bc86f5a7b675b9f96d56ee17c5fae39c121c20"
+    },
+    "fpga-source/Makefile": {
+      "bytes": 7878,
+      "sha256": "3f27830698aa1a179bbce8c1d1a67d4d83a1cb81309737b6df5e808860f21144"
+    },
+    "fpga-source/safety.md": {
+      "bytes": 4701,
+      "sha256": "f7a04f8b9befdf20887469c37ae2046f679cdbe71b39dd13c8a225bb9be0ba0a"
+    },
+    "fpga-source/src/bridge.cst": {
+      "bytes": 956,
+      "sha256": "8bd624d5060f5608e6913a292505c98c8a657aa4a2795fca4e46a28f4175a6a0"
+    },
+    "fpga-source/src/bridge.v": {
+      "bytes": 11860,
+      "sha256": "88e99e40146108dcf95de95b40a7428fa2ab46f450c04776d97dbb0c6965a3c3"
+    },
+    "fpga-source/src/bridge_safety.cst": {
+      "bytes": 883,
+      "sha256": "1e3b3d5ece05801e6593b2338194cceb970f8b9294b5ddadd3e250f34f17a058"
+    },
+    "fpga-source/src/button.v": {
+      "bytes": 1978,
+      "sha256": "cb791c547c6a4e09b9ef442e1a8698e62d71d36c5ea418dbc769a21bbcff6e15"
+    },
+    "fpga-source/src/hx_safety.v": {
+      "bytes": 10207,
+      "sha256": "137f0736efa0af6f63bfb85154ba68f9206edfc3f6f1ee3884b79e47129b90cc"
+    },
+    "fpga-source/src/uart_rx.v": {
+      "bytes": 4594,
+      "sha256": "d08e66b6ffd40d2c2e393462a62473fddd4766b2863daeaae023adb90a1ab3b2"
+    },
+    "fpga-source/src/uart_tx.v": {
+      "bytes": 3501,
+      "sha256": "23e6690a69e1c25db555efe9822168c51d370443638c598ca65d7c4709038eb7"
+    },
+    "fpga-source/tb/bridge_release_tb.v": {
+      "bytes": 3425,
+      "sha256": "832b59ef1ce08fd3d2f948902dd36dd7edf69fa8533bb445418faee2d404ad61"
+    },
+    "fpga-source/tb/bridge_safety_tb.v": {
+      "bytes": 6592,
+      "sha256": "5943381f2f8885e51ac722f68a521853aff8c80253a482fa6c123f0d96e89025"
+    },
+    "fpga-source/tb/hx_safety_tb.v": {
+      "bytes": 7059,
+      "sha256": "0c58e46eac7445beb6e25a8b8028c662794b9bdd0ec1e294f63279d66724c2e2"
+    },
+    "logs/fpga-build.log": {
+      "bytes": 1356307,
+      "sha256": "9eaa0acc25c825f0c09ac48775f9cbc80875eed894e32335014e017bbe224d34"
+    },
+    "logs/fpga-simulation.log": {
+      "bytes": 1003,
+      "sha256": "ce34f41dbd14f46f0a4e91464d8c4a7270e0ce1c65e21089aece93c629760380"
+    },
+    "logs/legacy-bridge-build.log": {
+      "bytes": 15688,
+      "sha256": "8b1e03c5ec7fea1ab2eb66849c7411803d10f5604a8cfa43b12b8b981abea686"
+    },
+    "logs/motor-regression-tests.log": {
+      "bytes": 587,
+      "sha256": "703318bfb53cb1506d4ba82958c7c6b5f67a2c351f0eeee649a533c7847e17ac"
+    },
+    "logs/rust-build.log": {
+      "bytes": 589,
+      "sha256": "b6dd3673f0289f438c138a8f091bc23cc8ce8fd420bd6ce8e49c5b5eac3447b1"
+    },
+    "logs/rust-library-tests.log": {
+      "bytes": 1596,
+      "sha256": "b1a33eeb32e929aabbc1809be8d23310ed66c3d87267ff06b8775ab2fcc74724"
+    },
+    "logs/rust-runner-tests.log": {
+      "bytes": 1393,
+      "sha256": "e5e1fc377f00d30ee37df152040c1579c5177af9719f0b25a844941887637c84"
+    },
+    "physics-validation.json": {
+      "bytes": 907,
+      "sha256": "9bd75bb6bfb79ba1f5ff33dfb6f7960a75725579a7ef6739974178d17f587625"
+    },
+    "pwm-convergence-plan.json": {
+      "bytes": 7509,
+      "sha256": "144b07b7f9f2698a4827dabf7532bcd7413061f9e817719508356e99fc12ac0f"
+    },
+    "pwm-convergence-results/fine_d0.2_dt1.5625e-05.csv": {
+      "bytes": 11787,
+      "sha256": "e2235a7bfe6a2697dfb8adf2d8fceab5c5265cdb3c40408b49ca68bd0e106822"
+    },
+    "pwm-convergence-results/fine_d0.2_dt3.90625e-06.csv": {
+      "bytes": 11787,
+      "sha256": "18535b183cef8a74237209bd69b3b5a51b1355cf0ca4491cf9d9a45c631081e7"
+    },
+    "pwm-convergence-results/fine_d0.2_dt7.8125e-06.csv": {
+      "bytes": 11787,
+      "sha256": "4b03cfcb0fbe17e4108d0646b59b95d9949498918c806fdac169944807204239"
+    },
+    "pwm-convergence-results/fine_d1.0_dt1.5625e-05.csv": {
+      "bytes": 11866,
+      "sha256": "342f3fb61a79d35fbb80b605d25c9a938838a87a5810b2416a6001275f748ccb"
+    },
+    "pwm-convergence-results/fine_d1.0_dt3.90625e-06.csv": {
+      "bytes": 11866,
+      "sha256": "d81f405d2536f70706a9b3c1c0ef4c8b1ad380d0a20c4b8ed55f35817cbed463"
+    },
+    "pwm-convergence-results/fine_d1.0_dt7.8125e-06.csv": {
+      "bytes": 11866,
+      "sha256": "3809a51ebe323c6f24d41a2f27bf9fcbeec2e59c7b63490f89b2d9737624d212"
+    },
+    "pwm-convergence-results/plan.json": {
+      "bytes": 7509,
+      "sha256": "144b07b7f9f2698a4827dabf7532bcd7413061f9e817719508356e99fc12ac0f"
+    },
+    "pwm-convergence-results/results.json": {
+      "bytes": 10201,
+      "sha256": "a61a9370673bd7654802204bfffecb259e30084be953ffb70386359fa630f2c3"
+    },
+    "pwm-physics-plan.json": {
+      "bytes": 46762,
+      "sha256": "849105e5a39b3c6ca2bae881ea4c9b81fc725181557dfbc303fb2f167c3c97f5"
+    },
+    "pwm-physics-results/convergence_d0.2_dt0.000125.csv": {
+      "bytes": 11788,
+      "sha256": "8c4daa840604eef03ac086b04ea15e06c8c783d76db1d4138aba0447cff75ea1"
+    },
+    "pwm-physics-results/convergence_d0.2_dt6.25e-05.csv": {
+      "bytes": 11787,
+      "sha256": "f7970f80bcdcd0bb52573dfa8b4cf624c997ff0d110a5b10f04a2ad16165ed95"
+    },
+    "pwm-physics-results/convergence_d1.0_dt0.000125.csv": {
+      "bytes": 11867,
+      "sha256": "a800d5f3adb6abd7f69144bea7b2ffa09bc41d5106a335f355d18996e7a5bd08"
+    },
+    "pwm-physics-results/convergence_d1.0_dt6.25e-05.csv": {
+      "bytes": 11866,
+      "sha256": "18fa72780321742f465495b6c2ebcb69b3dc2d74d2369a5b249c3b2f839d0723"
+    },
+    "pwm-physics-results/plan.json": {
+      "bytes": 46762,
+      "sha256": "849105e5a39b3c6ca2bae881ea4c9b81fc725181557dfbc303fb2f167c3c97f5"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.025.csv": {
+      "bytes": 12188,
+      "sha256": "a827c65ad34dda835c0940a8acd019a227fd261db74475c2277916a33395c316"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.05.csv": {
+      "bytes": 12191,
+      "sha256": "6ff3025f9a8dae4194482e611703e2ceeee33ec2ec4e0294a858cebfed7ebce2"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.1.csv": {
+      "bytes": 12193,
+      "sha256": "aa0eb4752a1358a3baf0ffd263e656efe2567430591e50a0fcbf4aa373b2909f"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.2.csv": {
+      "bytes": 12192,
+      "sha256": "a78e51a624da535172e5f2948469914dc202535eca799b3300e36ef4c68a5a38"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.3.csv": {
+      "bytes": 12192,
+      "sha256": "66e8af990596a1b22008bceea77ea8f6cf17bade72d65e5390bf5013e3098cba"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.4.csv": {
+      "bytes": 12192,
+      "sha256": "acd65d76f78ce9ebabf72094e6c89954c41d587ae2002718d672ed2fcb47ad84"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.5.csv": {
+      "bytes": 12192,
+      "sha256": "6598180ee6fb508b6d318caa50d0976c3b616f4d5d598fc48839a81111c7700d"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.6.csv": {
+      "bytes": 12192,
+      "sha256": "3914b24678dcf7d6c17b23d54eb9326e516b68dfd6ab8d5fa1239b96d172e84b"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.7.csv": {
+      "bytes": 12192,
+      "sha256": "1b8f9bfe0f24ab38a3490da431ee975a9c5d4830c2d38f23866b8664f1f1b896"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.8.csv": {
+      "bytes": 12272,
+      "sha256": "5cd12077006ca25e8c51faf36fc7d3b207513c03b2f094258f082394edef3179"
+    },
+    "pwm-physics-results/pwm_v12.6_d-0.9.csv": {
+      "bytes": 12272,
+      "sha256": "df549e9fc085d91aa7db6ccafc2de98cf4477b18f6c0086e449096353e30b38d"
+    },
+    "pwm-physics-results/pwm_v12.6_d-1.0.csv": {
+      "bytes": 12272,
+      "sha256": "d427aaca5391910d2b0d1e09173dcca49620b33dd230a83ecbc1baa83f622837"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.025.csv": {
+      "bytes": 11788,
+      "sha256": "325775fee35d362321bda62e5d0801d4bf83d672270f7e02c08b286276fa2aa4"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.05.csv": {
+      "bytes": 11788,
+      "sha256": "4b822a9a0e2d20db4d4e4be7ef96441b365703a9c6ca52154d22282e67f940ba"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.1.csv": {
+      "bytes": 11787,
+      "sha256": "a02acc5d133de87b9e847a002ed42baeafa2dd479b65a3cf863975872702ec32"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.2.csv": {
+      "bytes": 11788,
+      "sha256": "07928dff57b6726e563a54650c1acfca3ccec774e37d3f6aafb07cb4cf5f3c21"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.3.csv": {
+      "bytes": 11788,
+      "sha256": "766bfa1f9c3e9d7aea8ce1a5659496de18168dbc753d45a04205ecb041115c07"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.4.csv": {
+      "bytes": 11788,
+      "sha256": "2bd8ef980db7f2d8a6e313b022adecb72217182166d56cdfddc1e5d4f8aaa51f"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.5.csv": {
+      "bytes": 11788,
+      "sha256": "720f96646f3e12e77c32c193b9087ee0a97f8cf0d2a8c1f6f42648cf0822b9e4"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.6.csv": {
+      "bytes": 11788,
+      "sha256": "0b444cd6f846c162e621c00c52286847d6837aa3b3cdf0aa565b1f17bb49d132"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.7.csv": {
+      "bytes": 11788,
+      "sha256": "ca215736078bf6ec217d1385ecf03b6f287ff71c9a6e1428e94cc4f49a68aac4"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.8.csv": {
+      "bytes": 11868,
+      "sha256": "0780847a5ef0b48d5debaa77c4d39de75d8c0f4a1fbac3fd80a39730d4306e82"
+    },
+    "pwm-physics-results/pwm_v12.6_d0.9.csv": {
+      "bytes": 11868,
+      "sha256": "06355a8e635def48ea10632204dce39df6773cb28c893dc4409f0a2d62a4b49b"
+    },
+    "pwm-physics-results/pwm_v12.6_d1.0.csv": {
+      "bytes": 11868,
+      "sha256": "b0f9949f2e1a517908b8fdc37930c7a0d5b22b931686bce0750accac6e425a27"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.025.csv": {
+      "bytes": 12186,
+      "sha256": "e29f2455a3ca0315a089f9f38268feb9b0151149653805cf05f8e7dab555989b"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.05.csv": {
+      "bytes": 12193,
+      "sha256": "40308554c71ac67edffe3ce5c27b9de2ba8053264ab700d2789506f5fc7125b7"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.1.csv": {
+      "bytes": 12192,
+      "sha256": "0145bcaa791cd8409ad6268ba65cdbf84a8cbb4e7e4b6342e20cdc795e73b200"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.2.csv": {
+      "bytes": 12192,
+      "sha256": "2e91622af3783d2f1039b27f243d06f4a3b8bad161f078f1dd024285be9ab6ed"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.3.csv": {
+      "bytes": 12192,
+      "sha256": "d87a5e7b819662eec717d2724a0ced1f098aa6ce4b181ff57025b316972afb26"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.4.csv": {
+      "bytes": 12192,
+      "sha256": "d7ce1af272608019af2f3592e7a45357bd3f320afa91764c0618a02cb7d841a1"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.5.csv": {
+      "bytes": 12192,
+      "sha256": "a0e70728d49907e2606b83b766386b08b7456509728b311bb91180d0d389b5f2"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.6.csv": {
+      "bytes": 12192,
+      "sha256": "01a52e5d1c2e754e525369af6ec632eea2cf1ac7a7eddd939e090ab3825480e4"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.7.csv": {
+      "bytes": 12192,
+      "sha256": "1fa547171f03ecfc7e82d821efa3123611209802e24449598dc2054ed487d510"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.8.csv": {
+      "bytes": 12192,
+      "sha256": "4c3fd57804034346d9b0b703ee172c8080b2dfded510c112e088afccf5df8fa7"
+    },
+    "pwm-physics-results/pwm_v9.0_d-0.9.csv": {
+      "bytes": 12192,
+      "sha256": "50797fcf532b811612c9f209a770be7843468a2462f97738598a7fdfe1121be5"
+    },
+    "pwm-physics-results/pwm_v9.0_d-1.0.csv": {
+      "bytes": 12192,
+      "sha256": "69aa4fff5c6838062b139b737dbf5f291a57de7fb1bc51ec2a158ae5f82df986"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.025.csv": {
+      "bytes": 11788,
+      "sha256": "dbaecbf37ca01a641c1759b4c7cdbcf770c4392b5066ec55325d2d949233f909"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.05.csv": {
+      "bytes": 11786,
+      "sha256": "d905826ebfd121053f5a44379a681edddd1c5fe2a4f66dd359c9910030ee20d0"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.1.csv": {
+      "bytes": 11787,
+      "sha256": "7f9a8f075dcb40706278c60e66005c04492f42e9ab21ff81901c3ebdf7644764"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.2.csv": {
+      "bytes": 11788,
+      "sha256": "410f16412a416205369bb9df8c9d56eda64db005fdb9ad1b4581a52fb963fb88"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.3.csv": {
+      "bytes": 11788,
+      "sha256": "123ce42297d8718aaa167dcb2d3df6f623442178bd12c3e795f61f5636d96b8d"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.4.csv": {
+      "bytes": 11788,
+      "sha256": "e7b646566747d3084fb8a670efac8a7e8e1a2f29cf03b08212c23abbd580f756"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.5.csv": {
+      "bytes": 11788,
+      "sha256": "b938d55fa0e24e4c4294c40abc53035f1c28bcc8de10cccb5acd07808dd64486"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.6.csv": {
+      "bytes": 11788,
+      "sha256": "1be5545115d4a309bbf3afaa62833269668030c187cd2f57abfd49dceec1d5f9"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.7.csv": {
+      "bytes": 11788,
+      "sha256": "0c6fbb5965f69ffd7b79da5c09596e003ede1287b7f90c9c57e4f7840adc739f"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.8.csv": {
+      "bytes": 11788,
+      "sha256": "2353d6541e86b80c5d12f3dcf37030cdbaaed1b04a401b3918d599f26d745f20"
+    },
+    "pwm-physics-results/pwm_v9.0_d0.9.csv": {
+      "bytes": 11788,
+      "sha256": "433d9007846584fd18f659a92199d074c1fde67d70b603ba7e3fb9c128f9e658"
+    },
+    "pwm-physics-results/pwm_v9.0_d1.0.csv": {
+      "bytes": 11788,
+      "sha256": "b900e29051757456717585b40f1e7d8af23440aa883fe8851100efa08592b213"
+    },
+    "pwm-physics-results/results.json": {
+      "bytes": 80325,
+      "sha256": "7ba510fac2f4e44d5515b2a4aa58353e382139d3a86b18030c8c30bafd48d71c"
+    },
+    "pwm-sweep-plan.json": {
+      "bytes": 608,
+      "sha256": "4bd4eb80cfe71adce0e8bb40c5b89032037fbc1681bf0aa02f64d2b7dfbc4e96"
+    },
+    "replay-validation.json": {
+      "bytes": 154,
+      "sha256": "513469bb46332bcfef0e622809a4bd13d239ff94a6e4b75cdb7fda2a3e8b74e1"
+    },
+    "rust-source/actuator_sweep.rs": {
+      "bytes": 4697,
+      "sha256": "2fcf244ab61c05fffafab62d48ccf1304cee6e15e6a5b47b4c09b244bc683aa5"
+    },
+    "rust-source/characterize_actuator.rs": {
+      "bytes": 14664,
+      "sha256": "6a414055f0e479b261fb473c54b1f0089789146ff27019d8837511c3b4ccc649"
+    },
+    "rust-source/characterize_hx_bridge.rs": {
+      "bytes": 43796,
+      "sha256": "4160d72a65602ac00beb94cb02d57702cf97f99c66465dba3d55751ba0ec6590"
+    },
+    "rust-source/hx_sweep_support.rs.inc": {
+      "bytes": 21426,
+      "sha256": "bb2026c281326f1fd0ba6322ec91408293b70fc55843d370579047ea37368519"
+    },
+    "rust-source/servo_bus.rs": {
+      "bytes": 5808,
+      "sha256": "d7ec10d919529f461c79777f08c308ec7a24db94385037c68945bd29da9dece8"
+    },
+    "rust-source/servo_safety.rs": {
+      "bytes": 4062,
+      "sha256": "f451740815dada619e47af837aaeda9993c487374aceede2e457ef3b28c9fe7e"
+    },
+    "sweep-schedule.json": {
+      "bytes": 85613,
+      "sha256": "437055faee4d9243c2a76f826126028e65dabc249851c0e993676b9631def2e4"
+    },
+    "validate-software.sh": {
+      "bytes": 1525,
+      "sha256": "ae288b6ff92ab162619ad86c70aa2a669ca19992731f65083020e63b074d9db6"
+    },
+    "validation.json": {
+      "bytes": 1490,
+      "sha256": "0f1b0bdb5b987c8c1e319f6cbc229294bdee9f117cf5a33602d810043d77de07"
+    },
+    "rust-source/acquisition.rs": {
+      "bytes": 7694,
+      "sha256": "820fdacb5ae71d49479f451adb8cbc8f3c2609cdbc0d06cc4704351ce753086d"
+    }
+  }
+}

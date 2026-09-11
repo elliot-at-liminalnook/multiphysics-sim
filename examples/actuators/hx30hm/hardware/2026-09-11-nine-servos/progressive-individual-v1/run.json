@@ -1,0 +1,636 @@
+{
+  "baud": 115200,
+  "completed": true,
+  "current": "0.001 A/count uncalibrated internal current; not measured total supply current",
+  "ids": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "mode": "progressive_bounded_position_motion",
+  "plan": {
+    "stages": [
+      {
+        "amplitude_counts": 57,
+        "dwell_s": 1.0,
+        "name": "small-slow",
+        "repetitions": 1,
+        "speed_counts_s": 300
+      },
+      {
+        "amplitude_counts": 171,
+        "dwell_s": 1.2,
+        "name": "moderate",
+        "repetitions": 1,
+        "speed_counts_s": 600
+      },
+      {
+        "amplitude_counts": 342,
+        "dwell_s": 1.2,
+        "name": "wide",
+        "repetitions": 1,
+        "speed_counts_s": 1200
+      },
+      {
+        "amplitude_counts": 683,
+        "dwell_s": 1.4,
+        "name": "fast",
+        "repetitions": 1,
+        "speed_counts_s": 2400
+      },
+      {
+        "amplitude_counts": 683,
+        "dwell_s": 1.4,
+        "name": "near-ceiling",
+        "repetitions": 1,
+        "speed_counts_s": 3200
+      },
+      {
+        "amplitude_counts": 683,
+        "dwell_s": 1.4,
+        "name": "ceiling-check",
+        "repetitions": 1,
+        "speed_counts_s": 4000
+      },
+      {
+        "amplitude_counts": 1024,
+        "dwell_s": 1.6,
+        "name": "long-ceiling-repeat",
+        "repetitions": 2,
+        "speed_counts_s": 6000
+      }
+    ],
+    "temperature_cutoff_c": 60
+  },
+  "port": "/dev/cu.usbserial-20250303171",
+  "result": {
+    "completed": true,
+    "completed_stages": [
+      {
+        "id": 4,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 5,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 6,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 7,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 8,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 9,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 10,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 11,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 12,
+        "name": "small-slow",
+        "stage": 0
+      },
+      {
+        "id": 4,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 5,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 6,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 7,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 8,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 9,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 10,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 11,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 12,
+        "name": "moderate",
+        "stage": 1
+      },
+      {
+        "id": 4,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 5,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 6,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 7,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 8,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 9,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 10,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 11,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 12,
+        "name": "wide",
+        "stage": 2
+      },
+      {
+        "id": 4,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 5,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 6,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 7,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 8,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 9,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 10,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 11,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 12,
+        "name": "fast",
+        "stage": 3
+      },
+      {
+        "id": 4,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 5,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 6,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 7,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 8,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 9,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 10,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 11,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 12,
+        "name": "near-ceiling",
+        "stage": 4
+      },
+      {
+        "id": 4,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 5,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 6,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 7,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 8,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 9,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 10,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 11,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 12,
+        "name": "ceiling-check",
+        "stage": 5
+      },
+      {
+        "id": 4,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      },
+      {
+        "id": 5,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      },
+      {
+        "id": 6,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      },
+      {
+        "id": 7,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      },
+      {
+        "id": 8,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      },
+      {
+        "id": 9,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      },
+      {
+        "id": 10,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      },
+      {
+        "id": 11,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      },
+      {
+        "id": 12,
+        "name": "long-ceiling-repeat",
+        "stage": 6
+      }
+    ],
+    "elapsed_s": 297.667741606,
+    "failure": null,
+    "final_states": {
+      "10": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          92,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 2.497320722677824,
+          "position_raw": 1628,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 48,
+          "voltage_raw": 105,
+          "voltage_v": 10.5
+        }
+      },
+      "11": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          119,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.034,
+          "current_raw": 34,
+          "load_raw": 30,
+          "moving": 0,
+          "position_rad": 2.5356702423749646,
+          "position_raw": 1653,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 47,
+          "voltage_raw": 106,
+          "voltage_v": 10.600000000000001
+        }
+      },
+      "12": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          103,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 30,
+          "moving": 0,
+          "position_rad": 2.5111265497687945,
+          "position_raw": 1637,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 46,
+          "voltage_raw": 105,
+          "voltage_v": 10.5
+        }
+      },
+      "4": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          90,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 2.492718780314167,
+          "position_raw": 1625,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 49,
+          "voltage_raw": 104,
+          "voltage_v": 10.4
+        }
+      },
+      "5": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          90,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 2.492718780314167,
+          "position_raw": 1625,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 47,
+          "voltage_raw": 105,
+          "voltage_v": 10.5
+        }
+      },
+      "6": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          95,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.01,
+          "current_raw": 10,
+          "load_raw": 30,
+          "moving": 0,
+          "position_rad": 2.4988547034657094,
+          "position_raw": 1629,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 47,
+          "voltage_raw": 104,
+          "voltage_v": 10.4
+        }
+      },
+      "7": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          76,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 2.471243049283768,
+          "position_raw": 1611,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 47,
+          "voltage_raw": 105,
+          "voltage_v": 10.5
+        }
+      },
+      "8": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          60,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.036000000000000004,
+          "current_raw": 36,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 2.446699356677598,
+          "position_raw": 1595,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 47,
+          "voltage_raw": 105,
+          "voltage_v": 10.5
+        }
+      },
+      "9": {
+        "original_RAM_restored": true,
+        "registers_0_through_39_unchanged": true,
+        "target_time_speed": [
+          82,
+          6,
+          0,
+          0,
+          88,
+          2
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.033,
+          "current_raw": 33,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 2.480446934011082,
+          "position_raw": 1617,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 48,
+          "voltage_raw": 105,
+          "voltage_v": 10.5
+        }
+      }
+    },
+    "recovery": null
+  },
+  "seconds": null,
+  "source_blake3": "b0831abd9d1ef715f31051c8e18aca8b8da6b62b910068f71a170daece225414",
+  "started_unix_s": 1789142121.301571,
+  "timing": "Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.",
+  "voltage": "0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f"
+}

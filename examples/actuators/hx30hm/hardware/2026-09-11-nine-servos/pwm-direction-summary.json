@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "firmware": "3.15",
+  "verified_direction_bit_zero_based": 10,
+  "magnitude_range_tested": [
+    100
+  ],
+  "pulse_ms": 50,
+  "rejected_bits_on_id12": [
+    11,
+    15
+  ],
+  "servos": {
+    "12": {
+      "run": "pwm-direction-bit10-id12-v1",
+      "positive_displacement_counts": 13,
+      "negative_displacement_counts": -11,
+      "final_zero_drive_torque_disabled_locked": true
+    },
+    "10": {
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "positive_displacement_counts": 10,
+      "negative_displacement_counts": -8,
+      "final_zero_drive_torque_disabled_locked": true
+    },
+    "11": {
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "positive_displacement_counts": 12,
+      "negative_displacement_counts": -11,
+      "final_zero_drive_torque_disabled_locked": true
+    },
+    "4": {
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "positive_displacement_counts": 11,
+      "negative_displacement_counts": -10,
+      "final_zero_drive_torque_disabled_locked": true
+    },
+    "5": {
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "positive_displacement_counts": 14,
+      "negative_displacement_counts": -11,
+      "final_zero_drive_torque_disabled_locked": true
+    },
+    "6": {
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "positive_displacement_counts": 11,
+      "negative_displacement_counts": -7,
+      "final_zero_drive_torque_disabled_locked": true
+    },
+    "7": {
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "positive_displacement_counts": 12,
+      "negative_displacement_counts": -9,
+      "final_zero_drive_torque_disabled_locked": true
+    },
+    "8": {
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "positive_displacement_counts": 11,
+      "negative_displacement_counts": -10,
+      "final_zero_drive_torque_disabled_locked": true
+    },
+    "9": {
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "positive_displacement_counts": 10,
+      "negative_displacement_counts": -7,
+      "final_zero_drive_torque_disabled_locked": true
+    }
+  },
+  "limits": "Only small signed pulses verified. This is not maximum-speed, torque, or large-reversal validation."
+}

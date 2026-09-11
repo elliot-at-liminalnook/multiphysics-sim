@@ -1,0 +1,678 @@
+//! Finite HX bench acquisition through the existing transparent FPGA bridge.
+//! Host-monotonic transaction windows, NOT FPGA timestamps or sensor sample times.
+use serde_json::json;
+use sim_runtime::acquisition::servo_bus::{Telemetry, packet, reply};
+use std::{
+    fs::{self, File, OpenOptions},
+    io::{Read, Write},
+    os::unix::fs::OpenOptionsExt,
+    path::PathBuf,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+};
+type E = Box<dyn std::error::Error>;
+struct Bus {
+    serial: File,
+    log: File,
+    start: Instant,
+    seq: u64,
+}
+impl Bus {
+    fn txn(&mut self, id: u8, instruction: u8, params: &[u8], width: usize) -> Result<Vec<u8>, E> {
+        let p = packet(id, instruction, params)?;
+        let t0 = self.start.elapsed().as_nanos();
+        self.serial.write_all(&p)?;
+        let deadline = Instant::now() + Duration::from_millis(150);
+        let mut rx = Vec::new();
+        let mut b = [0; 64];
+        while Instant::now() < deadline {
+            match self.serial.read(&mut b) {
+                Ok(n) if n > 0 => rx.extend_from_slice(&b[..n]),
+                Ok(_) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
+                Err(e) => return Err(e.into()),
+            }
+            if rx.len() >= 4 && rx.len() >= rx[3] as usize + 4 {
+                break;
+            }
+            std::thread::sleep(Duration::from_micros(200));
+        }
+        let result = reply(&rx, id, width);
+        let error = result.as_ref().err().copied();
+        writeln!(
+            self.log,
+            "{}",
+            json!({"sequence":self.seq,"id":id,"instruction":instruction,"request_host_ns":t0,"completion_host_ns":self.start.elapsed().as_nanos(),"tx":p,"rx":rx,"decode_error":error})
+        )?;
+        self.log.flush()?;
+        self.seq += 1;
+        let r = result?;
+        if r.error != 0 {
+            return Err(format!("servo {id} device error {}", r.error).into());
+        }
+        Ok(r.parameters)
+    }
+    fn read(&mut self, id: u8, addr: u8, width: u8) -> Result<Vec<u8>, E> {
+        self.txn(id, 2, &[addr, width], width as usize)
+    }
+}
+fn main() -> Result<(), E> {
+    let args: Vec<_> = std::env::args().collect();
+    if args.len() != 5 && args.len() != 6 {
+        return Err(
+            "usage: characterize_hx_bridge PORT SECONDS IDS_COMMA_SEPARATED NEW_OUTPUT [PROGRESSIVE_MOTION_PLAN.json]".into(),
+        );
+    }
+    let secs: f64 = args[2].parse()?;
+    if !secs.is_finite() || secs <= 0. || secs > 600. {
+        return Err("duration must be 0..600 s".into());
+    }
+    let ids: Vec<u8> = args[3]
+        .split(',')
+        .map(str::parse)
+        .collect::<Result<_, _>>()?;
+    if ids.is_empty() || ids.iter().any(|x| *x > 253) {
+        return Err("invalid IDs".into());
+    }
+    let out = PathBuf::from(&args[4]);
+    fs::create_dir(&out)?;
+    let mut manifest = json!({"completed":false,"mode":"read_only","ids":ids,"port":args[1],"baud":115200,"seconds":secs,"started_unix_s":SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs_f64(),"timing":"Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.","source_blake3":blake3::hash(include_bytes!("characterize_hx_bridge.rs")).to_hex().to_string(),"voltage":"0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f","current":"0.001 A/count uncalibrated internal current; not measured total supply current"});
+    fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+    let nonblock = if cfg!(target_os = "macos") { 4 } else { 2048 };
+    let serial = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .custom_flags(nonblock)
+        .open(&args[1])?;
+    let flag = if cfg!(target_os = "macos") {
+        "-f"
+    } else {
+        "-F"
+    };
+    if !std::process::Command::new("stty")
+        .args([
+            flag, &args[1], "115200", "raw", "-echo", "clocal", "-hupcl", "min", "0", "time", "0",
+        ])
+        .status()?
+        .success()
+    {
+        return Err("stty failed".into());
+    }
+    let mut bus = Bus {
+        serial,
+        log: File::create(out.join("transactions.jsonl"))?,
+        start: Instant::now(),
+        seq: 0,
+    };
+    if let Some(plan_path) = args.get(5) {
+        let plan: MotionPlan = serde_json::from_slice(&fs::read(plan_path)?)?;
+        validate_plan(&plan)?;
+        manifest["mode"] = json!("progressive_bounded_position_motion");
+        manifest["plan"] = serde_json::to_value(&plan)?;
+        manifest["seconds"] = serde_json::Value::Null;
+        fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+        let result = run_motion(&mut bus, &out, &ids, &plan)?;
+        manifest["result"] = result.clone();
+        manifest["completed"] = result["completed"].clone();
+        fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+        println!("Motion run complete: {}", result["completed"]);
+        return if result["completed"] == true {
+            Ok(())
+        } else {
+            Err("motion escalation stopped; inspect run.json".into())
+        };
+    }
+    let mut csv = File::create(out.join("telemetry.csv"))?;
+    writeln!(
+        csv,
+        "id,request_s,completion_s,position_raw,position_rad,speed_raw,speed_rad_s,load_raw,voltage_raw,voltage_v,temperature_c,status,moving,current_raw,current_a_uncalibrated"
+    )?;
+    let end = Instant::now() + Duration::from_secs_f64(secs);
+    let mut count = 0;
+    let mut failures = 0;
+    while Instant::now() < end {
+        for &id in &ids {
+            if Instant::now() >= end {
+                break;
+            }
+            let t0 = bus.start.elapsed().as_secs_f64();
+            match bus
+                .read(id, 0x38, 15)
+                .and_then(|p| Ok(Telemetry::decode(&p)?))
+            {
+                Ok(t) => {
+                    writeln!(
+                        csv,
+                        "{id},{t0:.9},{:.9},{},{:.9},{},{:.9},{},{},{:.3},{},{},{},{},{:.6}",
+                        bus.start.elapsed().as_secs_f64(),
+                        t.position_raw,
+                        t.position_rad,
+                        t.speed_raw,
+                        t.speed_rad_s,
+                        t.load_raw,
+                        t.voltage_raw,
+                        t.voltage_v,
+                        t.temperature_c,
+                        t.status,
+                        t.moving,
+                        t.current_raw,
+                        t.current_a_uncalibrated
+                    )?;
+                    count += 1;
+                }
+                Err(e) => {
+                    failures += 1;
+                    eprintln!("ID {id}: {e}");
+                }
+            }
+        }
+        csv.flush()?;
+        if failures >= 10 {
+            break;
+        }
+    }
+    manifest["completed"] = json!(failures < 10);
+    manifest["stop_reason"] = json!(if failures >= 10 {
+        "failure_threshold"
+    } else {
+        "duration_complete"
+    });
+    manifest["samples"] = json!(count);
+    manifest["failures"] = json!(failures);
+    manifest["elapsed_s"] = json!(bus.start.elapsed().as_secs_f64());
+    fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+    println!("{count} samples, {failures} failures: {}", out.display());
+    Ok(())
+}
+
+#[derive(Clone, serde::Deserialize, serde::Serialize)]
+struct MotionStage {
+    name: String,
+    amplitude_counts: u16,
+    speed_counts_s: u16,
+    dwell_s: f64,
+    repetitions: usize,
+}
+#[derive(serde::Deserialize, serde::Serialize)]
+struct MotionPlan {
+    stages: Vec<MotionStage>,
+    temperature_cutoff_c: u8,
+    #[serde(default)]
+    concurrent: bool,
+}
+fn validate_plan(plan: &MotionPlan) -> Result<(), E> {
+    if plan.stages.is_empty()
+        || plan.stages.len() > 12
+        || !(40..=60).contains(&plan.temperature_cutoff_c)
+    {
+        return Err("invalid motion plan limits".into());
+    }
+    let mut previous_speed = 0;
+    let mut previous_amplitude = 0;
+    for s in &plan.stages {
+        if s.name.is_empty()
+            || s.amplitude_counts == 0
+            || s.amplitude_counts > 1024
+            || s.speed_counts_s == 0
+            || s.speed_counts_s > 6000
+            || !s.dwell_s.is_finite()
+            || s.dwell_s < 0.5
+            || s.dwell_s > 5.
+            || s.repetitions == 0
+            || s.repetitions > 20
+        {
+            return Err("invalid stage bounds".into());
+        }
+        if s.speed_counts_s < previous_speed || s.amplitude_counts < previous_amplitude {
+            return Err("stages must escalate monotonically".into());
+        }
+        if 2. * s.amplitude_counts as f64 / s.speed_counts_s as f64 + 0.3 > s.dwell_s {
+            return Err("insufficient movement and settling time".into());
+        }
+        previous_speed = s.speed_counts_s;
+        previous_amplitude = s.amplitude_counts;
+    }
+    Ok(())
+}
+fn sync_positions(targets: &[(u8, u16)]) -> Result<Vec<u8>, E> {
+    let mut seen = std::collections::BTreeSet::new();
+    if targets.is_empty() || targets.len() > 18 {
+        return Err("SYNC WRITE exceeds bridge capacity".into());
+    }
+    let mut p = vec![0x2a, 2];
+    for &(id, target) in targets {
+        if id > 253 || target > 4095 || !seen.insert(id) {
+            return Err("invalid or duplicate target".into());
+        }
+        p.push(id);
+        p.extend(target.to_le_bytes());
+    }
+    Ok(p)
+}
+fn command_bytes(target: u16, speed: u16) -> Vec<u8> {
+    let mut p = vec![0x2a];
+    p.extend(target.to_le_bytes());
+    p.extend([0, 0]);
+    p.extend(speed.to_le_bytes());
+    p
+}
+fn write_position(bus: &mut Bus, id: u8, target: u16, speed: u16) -> Result<(), E> {
+    let p = command_bytes(target, speed);
+    bus.txn(id, 3, &p, 0)?;
+    if bus.read(id, 0x2a, 6)? != p[1..] {
+        return Err(format!("ID {id}: command readback differs").into());
+    }
+    Ok(())
+}
+fn feedback(bus: &mut Bus, id: u8) -> Result<Telemetry, E> {
+    Ok(Telemetry::decode(&bus.read(id, 0x38, 15)?)?)
+}
+fn check_feedback(t: &Telemetry, home: u16, amplitude: u16, cutoff: u8) -> Result<(), E> {
+    if t.status != 0
+        || t.temperature_c >= cutoff
+        || t.voltage_raw < 90
+        || t.voltage_raw > 126
+        || t.position_raw > 4095
+        || t.position_raw.abs_diff(home) > amplitude + 60
+    {
+        return Err(format!(
+            "feedback limit: position={} home={} temperature={} voltage={:.1} status={}",
+            t.position_raw, home, t.temperature_c, t.voltage_v, t.status
+        )
+        .into());
+    }
+    Ok(())
+}
+fn run_motion(
+    bus: &mut Bus,
+    out: &std::path::Path,
+    ids: &[u8],
+    plan: &MotionPlan,
+) -> Result<serde_json::Value, E> {
+    validate_plan(plan)?;
+    let mut original = std::collections::BTreeMap::new();
+    let mut homes = std::collections::BTreeMap::new();
+    let mut configs = std::collections::BTreeMap::new();
+    let max_amplitude = plan
+        .stages
+        .iter()
+        .map(|s| s.amplitude_counts)
+        .max()
+        .unwrap();
+    for &id in ids {
+        if bus.read(id, 5, 1)? != [id]
+            || bus.read(id, 0x21, 1)? != [0]
+            || bus.read(id, 0x28, 1)? != [1]
+        {
+            return Err(
+                format!("ID {id}: identity/position mode/torque-enable preflight failed").into(),
+            );
+        }
+        let t = feedback(bus, id)?;
+        check_feedback(&t, t.position_raw, max_amplitude, plan.temperature_cutoff_c)?;
+        if t.position_raw < max_amplitude + 60
+            || t.position_raw > 4095 - max_amplitude - 60
+            || t.speed_raw != 0
+        {
+            return Err(format!("ID {id}: insufficient travel margin or already moving").into());
+        }
+        let p = bus.read(id, 0x2a, 6)?;
+        let target = u16::from_le_bytes([p[0], p[1]]);
+        if target.abs_diff(t.position_raw) > 15 {
+            return Err(format!("ID {id}: initial target is not settled").into());
+        }
+        original.insert(id, p);
+        homes.insert(id, t.position_raw);
+        configs.insert(id, bus.read(id, 0, 40)?);
+    }
+    fs::write(
+        out.join("preflight.json"),
+        serde_json::to_vec_pretty(
+            &json!({"homes":homes,"original_target_time_speed":original,"registers_0_through_39":configs,"plan":plan}),
+        )?,
+    )?;
+    let mut csv = File::create(out.join("motion.csv"))?;
+    writeln!(
+        csv,
+        "stage,id,repetition,move_index,command_start_s,request_s,completion_s,target_raw,speed_limit_raw,position_raw,speed_raw,speed_rad_s,voltage_v,temperature_c,current_raw,status"
+    )?;
+    let mut completed = Vec::new();
+    let mut active_ids = Vec::new();
+    let execution = (|| -> Result<(), E> {
+        for (stage_index, stage) in plan.stages.iter().enumerate() {
+            println!(
+                "Stage {} {}: +/-{:.1} degrees, command {:.1} degrees/s",
+                stage_index + 1,
+                stage.name,
+                stage.amplitude_counts as f64 * 360. / 4096.,
+                stage.speed_counts_s as f64 * 360. / 4096.
+            );
+            if plan.concurrent {
+                active_ids = ids.to_vec();
+                for &id in ids {
+                    if bus.read(id, 0x21, 1)? != [0] {
+                        return Err("mode changed during concurrent test".into());
+                    }
+                    let t = feedback(bus, id)?;
+                    check_feedback(
+                        &t,
+                        homes[&id],
+                        stage.amplitude_counts,
+                        plan.temperature_cutoff_c,
+                    )?;
+                    write_position(bus, id, homes[&id], stage.speed_counts_s)?;
+                }
+                for repetition in 0..stage.repetitions {
+                    for (move_index, sign) in [1i32, -1, 0].into_iter().enumerate() {
+                        if out.join("STOP").exists() {
+                            return Err("operator STOP requested".into());
+                        }
+                        let targets: Vec<(u8, u16)> = ids
+                            .iter()
+                            .map(|&id| {
+                                (
+                                    id,
+                                    (homes[&id] as i32 + sign * stage.amplitude_counts as i32)
+                                        as u16,
+                                )
+                            })
+                            .collect();
+                        let command_start = bus.start.elapsed().as_secs_f64();
+                        let params = sync_positions(&targets)?;
+                        let p = packet(254, 0x83, &params)?;
+                        bus.serial.write_all(&p)?;
+                        // 35 bytes take ~3.04 ms on the host UART, then 0.35 ms
+                        // on the servo bus. No ACK for a broadcast SYNC WRITE.
+                        std::thread::sleep(Duration::from_millis(5));
+                        writeln!(
+                            bus.log,
+                            "{}",
+                            json!({"sequence":bus.seq,"id":254,"instruction":131,"request_host_ns":(command_start*1e9) as u64,"completion_host_ns":bus.start.elapsed().as_nanos(),"tx":p,"rx":[],"no_reply_expected":true,"completion_meaning":"host guard elapsed, not device acknowledgement"})
+                        )?;
+                        bus.log.flush()?;
+                        bus.seq += 1;
+                        let until = Instant::now() + Duration::from_secs_f64(stage.dwell_s);
+                        let mut tails: std::collections::BTreeMap<
+                            u8,
+                            std::collections::VecDeque<(Instant, u16)>,
+                        > = ids
+                            .iter()
+                            .map(|&id| (id, std::collections::VecDeque::new()))
+                            .collect();
+                        while Instant::now() < until {
+                            for &(id, target) in &targets {
+                                if out.join("STOP").exists() {
+                                    return Err("operator STOP requested".into());
+                                }
+                                let request = bus.start.elapsed().as_secs_f64();
+                                let t = feedback(bus, id)?;
+                                writeln!(
+                                    csv,
+                                    "{stage_index},{id},{repetition},{move_index},{command_start:.9},{request:.9},{:.9},{target},{},{},{},{:.9},{:.3},{},{},{}",
+                                    bus.start.elapsed().as_secs_f64(),
+                                    stage.speed_counts_s,
+                                    t.position_raw,
+                                    t.speed_raw,
+                                    t.speed_rad_s,
+                                    t.voltage_v,
+                                    t.temperature_c,
+                                    t.current_raw,
+                                    t.status
+                                )?;
+                                check_feedback(
+                                    &t,
+                                    homes[&id],
+                                    stage.amplitude_counts,
+                                    plan.temperature_cutoff_c,
+                                )?;
+                                let tail = tails.get_mut(&id).unwrap();
+                                tail.push_back((Instant::now(), t.position_raw.abs_diff(target)));
+                                while tail
+                                    .front()
+                                    .is_some_and(|(t, _)| t.elapsed() > Duration::from_millis(250))
+                                {
+                                    tail.pop_front();
+                                }
+                            }
+                            csv.flush()?;
+                        }
+                        for &(id, target) in &targets {
+                            let tail = &tails[&id];
+                            if tail.len() < 3 || tail.iter().any(|(_, e)| *e > 12) {
+                                return Err(format!(
+                                    "ID {id}: concurrent {} failed settling",
+                                    stage.name
+                                )
+                                .into());
+                            }
+                            let target_read = bus.read(id, 0x2a, 2)?;
+                            if u16::from_le_bytes([target_read[0], target_read[1]]) != target {
+                                return Err(
+                                    format!("ID {id}: concurrent target readback failed").into()
+                                );
+                            }
+                        }
+                    }
+                }
+                for &id in ids {
+                    let mut p = vec![0x2a];
+                    p.extend(&original[&id]);
+                    bus.txn(id, 3, &p, 0)?;
+                    if bus.read(id, 0x2a, 6)? != original[&id] {
+                        return Err(format!("ID {id}: concurrent RAM restoration failed").into());
+                    }
+                    completed.push(
+                        json!({"stage":stage_index,"id":id,"name":stage.name,"concurrent":true}),
+                    );
+                }
+                fs::write(
+                    out.join("progress.json"),
+                    serde_json::to_vec_pretty(&completed)?,
+                )?;
+                println!(
+                    "  All {} servos passed concurrently; original RAM restored",
+                    ids.len()
+                );
+                active_ids.clear();
+                continue;
+            }
+            for &id in ids {
+                active_ids = vec![id];
+                let home = homes[&id];
+                // Recheck identity/mode each stage; another controller must not own this bus.
+                if bus.read(id, 0x21, 1)? != [0] {
+                    return Err("mode changed during experiment".into());
+                }
+                for repetition in 0..stage.repetitions {
+                    for (move_index, target) in [
+                        home + stage.amplitude_counts,
+                        home - stage.amplitude_counts,
+                        home,
+                    ]
+                    .into_iter()
+                    .enumerate()
+                    {
+                        if out.join("STOP").exists() {
+                            return Err("operator STOP requested".into());
+                        }
+                        let t = feedback(bus, id)?;
+                        check_feedback(
+                            &t,
+                            home,
+                            stage.amplitude_counts,
+                            plan.temperature_cutoff_c,
+                        )?;
+                        let command_start = bus.start.elapsed().as_secs_f64();
+                        write_position(bus, id, target, stage.speed_counts_s)?;
+                        let until = Instant::now() + Duration::from_secs_f64(stage.dwell_s);
+                        let mut last = t;
+                        let mut tail_errors = std::collections::VecDeque::new();
+                        while Instant::now() < until {
+                            if out.join("STOP").exists() {
+                                return Err("operator STOP requested".into());
+                            }
+                            let request = bus.start.elapsed().as_secs_f64();
+                            last = feedback(bus, id)?;
+                            writeln!(
+                                csv,
+                                "{stage_index},{id},{repetition},{move_index},{command_start:.9},{request:.9},{:.9},{target},{},{},{},{:.9},{:.3},{},{},{}",
+                                bus.start.elapsed().as_secs_f64(),
+                                stage.speed_counts_s,
+                                last.position_raw,
+                                last.speed_raw,
+                                last.speed_rad_s,
+                                last.voltage_v,
+                                last.temperature_c,
+                                last.current_raw,
+                                last.status
+                            )?;
+                            check_feedback(
+                                &last,
+                                home,
+                                stage.amplitude_counts,
+                                plan.temperature_cutoff_c,
+                            )?;
+                            tail_errors
+                                .push_back((Instant::now(), last.position_raw.abs_diff(target)));
+                            while tail_errors
+                                .front()
+                                .is_some_and(|(t, _)| t.elapsed() > Duration::from_millis(150))
+                            {
+                                tail_errors.pop_front();
+                            }
+                        }
+                        csv.flush()?;
+                        // Require a stable tail, not just one sample crossing the target.
+                        if tail_errors.len() < 5 || tail_errors.iter().any(|(_, e)| *e > 12) {
+                            return Err(format!(
+                                "ID {id}: stage {} failed settling, final error {} counts",
+                                stage.name,
+                                last.position_raw.abs_diff(target)
+                            )
+                            .into());
+                        }
+                    }
+                }
+                // Restore all six original RAM bytes after every stage, then verify them.
+                let mut restore = vec![0x2a];
+                restore.extend(&original[&id]);
+                bus.txn(id, 3, &restore, 0)?;
+                if bus.read(id, 0x2a, 6)? != original[&id] {
+                    return Err(format!("ID {id}: RAM restore failed").into());
+                }
+                completed.push(json!({"stage":stage_index,"id":id,"name":stage.name}));
+                fs::write(
+                    out.join("progress.json"),
+                    serde_json::to_vec_pretty(&completed)?,
+                )?;
+                println!("  ID {id}: passed; original RAM settings restored");
+                active_ids.clear();
+            }
+        }
+        Ok(())
+    })();
+    let mut recovery = Vec::new();
+    if let Err(ref error) = execution {
+        eprintln!("Stopping escalation: {error}");
+        for id in active_ids {
+            // Stop toward the latest measured position, not a distant home after a fault.
+            let held = (|| -> Result<(), E> {
+                let t = feedback(bus, id)?;
+                if t.position_raw > 4095 {
+                    return Err("cannot hold out-of-range position".into());
+                }
+                write_position(bus, id, t.position_raw, 600)
+            })();
+            recovery.push(
+                json!({"id":id,"hold_confirmed":held.is_ok(),"error":held.err().map(|e|e.to_string()),"original_RAM_restored":false}),
+            );
+        }
+    }
+    let mut final_states = serde_json::Map::new();
+    for &id in ids {
+        let state = (|| -> Result<serde_json::Value, E> {
+            let t = feedback(bus, id)?;
+            let p = bus.read(id, 0x2a, 6)?;
+            let cfg = bus.read(id, 0, 40)?;
+            Ok(
+                json!({"telemetry":t,"target_time_speed":p,"original_RAM_restored":p==original[&id],"registers_0_through_39_unchanged":cfg==configs[&id]}),
+            )
+        })();
+        final_states.insert(
+            id.to_string(),
+            match state {
+                Ok(v) => v,
+                Err(e) => json!({"error":e.to_string()}),
+            },
+        );
+    }
+    Ok(
+        json!({"completed":execution.is_ok(),"failure":execution.err().map(|e|e.to_string()),"completed_stages":completed,"recovery":recovery,"final_states":final_states,"elapsed_s":bus.start.elapsed().as_secs_f64()}),
+    )
+}
+#[cfg(test)]
+mod motion_tests {
+    use super::*;
+    #[test]
+    fn bounded_plan_rejects_unsafe_progression() {
+        let stage = MotionStage {
+            name: "small".into(),
+            amplitude_counts: 57,
+            speed_counts_s: 300,
+            dwell_s: 1.,
+            repetitions: 1,
+        };
+        let mut p = MotionPlan {
+            stages: vec![stage.clone()],
+            temperature_cutoff_c: 60,
+            concurrent: false,
+        };
+        assert!(validate_plan(&p).is_ok());
+        p.stages[0].amplitude_counts = 2000;
+        assert!(validate_plan(&p).is_err());
+        p.stages[0] = stage.clone();
+        p.stages[0].dwell_s = f64::NAN;
+        assert!(validate_plan(&p).is_err());
+        p.stages = vec![
+            stage.clone(),
+            MotionStage {
+                speed_counts_s: 150,
+                ..stage
+            },
+        ];
+        assert!(validate_plan(&p).is_err());
+    }
+    #[test]
+    fn nine_servo_sync_packet_is_bounded_and_targeted() {
+        let targets: Vec<_> = (4..=12).map(|id| (id, 2048)).collect();
+        let p = sync_positions(&targets).unwrap();
+        assert_eq!(packet(254, 0x83, &p).unwrap().len(), 35);
+        assert_eq!(&p[..5], &[0x2a, 2, 4, 0, 8]);
+        assert!(sync_positions(&[(4, 2048), (4, 2048)]).is_err());
+        assert!(sync_positions(&[(4, 4096)]).is_err());
+    }
+    #[test]
+    fn command_changes_only_position_time_and_speed() {
+        assert_eq!(command_bytes(2048, 600), [0x2a, 0, 8, 0, 0, 0x58, 2]);
+    }
+    #[test]
+    fn feedback_gates_faults_temperature_voltage_and_travel() {
+        let mut p = [0; 15];
+        p[1] = 8;
+        p[6] = 105;
+        p[7] = 48;
+        let t = Telemetry::decode(&p).unwrap();
+        assert!(check_feedback(&t, 2048, 57, 60).is_ok());
+        // Use register counts at the inclusive voltage boundary: 126 * 0.1
+        // can round slightly above 12.6 in binary floating point.
+        for voltage in [90, 126] {
+            let mut b = p;
+            b[6] = voltage;
+            assert!(check_feedback(&Telemetry::decode(&b).unwrap(), 2048, 57, 60).is_ok());
+        }
+        for (index, value) in [(7, 60), (6, 89), (6, 127), (9, 1), (1, 9)] {
+            let mut b = p;
+            b[index] = value;
+            assert!(check_feedback(&Telemetry::decode(&b).unwrap(), 2048, 57, 60).is_err());
+        }
+    }
+}

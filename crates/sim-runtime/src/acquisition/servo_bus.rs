@@ -1,6 +1,34 @@
 //! HX-compatible FF FF bus packets and register decoding, independent of serial I/O.
 use serde::{Deserialize, Serialize};
 
+/// Zero-based bit index verified by encoder movement on nine HX-30HM units,
+/// firmware 3.15. See the versioned 2026-09-11 PWM direction measurements.
+pub const HX30HM_PWM_DIRECTION_BIT: u8 = 10;
+
+/// Positive open-loop drive through the HX `Time` register in PWM mode.
+/// Hiwonder's UI documents 0..1000 for this field. This deliberately does not
+/// guess negative-direction encoding. Mode selection is a separate operation.
+pub fn pwm_write_parameters(drive: u16) -> Result<[u8; 3], &'static str> {
+    if drive > 1000 {
+        return Err("PWM drive must be 0..1000");
+    }
+    let [lo, hi] = drive.to_le_bytes();
+    Ok([0x2c, lo, hi])
+}
+
+/// Explicit dialect selection for signed PWM. The direction bit must come
+/// from device documentation or a bounded hardware verification, not from
+/// the unrelated speed-register sign bit.
+pub fn signed_pwm_write_parameters(drive: i16, direction_bit: u8) -> Result<[u8; 3], &'static str> {
+    let magnitude = drive.unsigned_abs();
+    if magnitude > 1000 || !(10..=15).contains(&direction_bit) {
+        return Err("invalid PWM magnitude or direction bit");
+    }
+    let raw = magnitude | if drive < 0 { 1u16 << direction_bit } else { 0 };
+    let [lo, hi] = raw.to_le_bytes();
+    Ok([0x2c, lo, hi])
+}
+
 pub fn packet(id: u8, instruction: u8, parameters: &[u8]) -> Result<Vec<u8>, &'static str> {
     if id > 254 || parameters.len() > 58 {
         return Err("invalid ID or packet exceeds 64-byte FPGA bridge buffer");
@@ -81,6 +109,23 @@ impl Telemetry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn pwm_register_and_bounds() {
+        assert_eq!(pwm_write_parameters(0).unwrap(), [0x2c, 0, 0]);
+        assert_eq!(pwm_write_parameters(1000).unwrap(), [0x2c, 0xe8, 3]);
+        assert!(pwm_write_parameters(1001).is_err());
+        assert_eq!(
+            signed_pwm_write_parameters(-100, 11).unwrap(),
+            [0x2c, 100, 8]
+        );
+        assert_eq!(
+            signed_pwm_write_parameters(-100, HX30HM_PWM_DIRECTION_BIT).unwrap(),
+            [0x2c, 100, 4]
+        );
+        assert_eq!(signed_pwm_write_parameters(0, 11).unwrap(), [0x2c, 0, 0]);
+        assert!(signed_pwm_write_parameters(i16::MIN, 11).is_err());
+        assert!(signed_pwm_write_parameters(-100, 9).is_err());
+    }
     #[test]
     fn documented_position_reply() {
         let b = [255, 255, 1, 4, 0, 0x18, 5, 0xdd];

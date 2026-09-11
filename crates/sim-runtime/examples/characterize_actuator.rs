@@ -23,6 +23,9 @@ struct Case {
     thermal: bool,
     ambient_c: f64,
     servo: bool,
+    /// Explicit normalized open-loop command through the shared H bridge.
+    #[serde(default)]
+    open_loop_duty: Option<f64>,
     target_rad: f64,
     frequency_hz: f64,
     motor_overrides: BTreeMap<String, f64>,
@@ -47,6 +50,11 @@ fn run(
         && c.thermal_resistance_scale > 0.0)
     {
         return Err("invalid experiment clock/thermal scale".into());
+    }
+    if c.open_loop_duty
+        .is_some_and(|d| !d.is_finite() || d.abs() > 1. || c.servo)
+    {
+        return Err("open-loop duty must be finite -1..1 and excludes servo firmware".into());
     }
     let registry = sim_runtime::registry();
     let mut world = ModelWorld::default();
@@ -157,6 +165,34 @@ fn run(
         world.connect([fw.port("command"), bridge.port("command")]);
         duty_port = Some(fw.port("command"));
         command_port = Some(command.port("value"));
+    } else if let Some(duty) = c.open_loop_duty {
+        let bridge = world.part(
+            &registry,
+            "bridge",
+            H_BRIDGE,
+            cad_h_bridge_parameters(motor)
+                .iter()
+                .map(|(k, v)| (k.as_str(), *v)),
+        )?;
+        let command = world.part(
+            &registry,
+            "pwm_command",
+            control::CONSTANT,
+            [("value", duty)],
+        )?;
+        world.connect([supply.port("p"), bridge.port("supply_p")]);
+        world.connect([
+            supply.port("n"),
+            ground.port("pin"),
+            part.port("n"),
+            bridge.port("supply_n"),
+            bridge.port("n"),
+        ]);
+        world.connect([bridge.port("p"), part.port("p")]);
+        world.connect([command.port("value"), bridge.port("command")]);
+        world.connect([angle.port("angle")]);
+        world.connect([speed.port("speed")]);
+        duty_port = Some(command.port("value"));
     } else {
         world.connect([supply.port("n"), ground.port("pin"), part.port("n")]);
         world.connect([supply.port("p"), part.port("p")]);

@@ -1,0 +1,10 @@
+{
+  "candidate_direction_bit": 15,
+  "verified": false,
+  "conclusion": "REJECTED on servo 12 firmware 3.15: both commands moved forward by 11 counts",
+  "initial_position_raw": 2088,
+  "after_positive_raw": 2099,
+  "after_candidate_negative_raw": 2110,
+  "execution_identity": "Same source_blake3 as pwm-direction-id12-v1; the subsequent build with automatic direction-mismatch rejection had not yet replaced the executable",
+  "run_completed_meaning": "Finite pulse sequence and zero-drive stopping completed; direction semantics were rejected by encoder measurements"
+}

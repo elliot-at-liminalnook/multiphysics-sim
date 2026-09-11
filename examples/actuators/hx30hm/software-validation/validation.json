@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "validated_utc": "2026-09-11T17:19:45.340166+00:00",
+  "hardware_accessed": false,
+  "fpga_flashed": false,
+  "rust_tests": {
+    "acquisition_library": 9,
+    "runner_including_all_nine_mock_serial": 7,
+    "analytic_motor_and_thermal": 5
+  },
+  "rtl_core_cases": 16,
+  "uart_integration": "pass including SYNC receipt, zero/off frames, no echo, bus release, temperature/stale/physical stop",
+  "legacy_uart_regression": "pass",
+  "fpga_timing_mhz": 51.55,
+  "fpga_required_mhz": 50,
+  "legacy_release_build": "pass",
+  "physics_cases": 58,
+  "sweep_trials": 720,
+  "tools": {
+    "yosys": "Yosys 0.68+40 (git sha1 0f2bcb94b-dirty, Release, Clang /usr/local/osxcross/target/bin/x86_64-apple-darwin25.5-clang++ 21.1.8)",
+    "nextpnr": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11-1-g62e659ed)",
+    "iverilog": "Icarus Verilog version 14.0 (devel) (s20260301-359-g008b76eae-dirty)",
+    "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)"
+  },
+  "limitations": [
+    "Software validation is not measured stopping performance.",
+    "Internal current scale and sensor update latency remain uncalibrated.",
+    "The FPGA cannot disconnect the power rail or deliver a stop through a broken bus.",
+    "Estimated physics has not been fit to the nine servos; no concurrent electrical-supply model was validated.",
+    "Loaded torque, inertia/compliance, thermal identification and true speed limits require powered measurements."
+  ]
+}

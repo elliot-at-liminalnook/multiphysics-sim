@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "provenance": "User bench-display observation reported after the individual motion run; not synchronized to telemetry",
+  "user_report_verbatim": "bench supplies 11.01 and seems to max out at .45 ams when under speed\nCC is on",
+  "reported_voltage_v": 11.01,
+  "reported_current_max_approx_a": 0.45,
+  "reported_indicator": "CC",
+  "supply_model_user_reported": "DPS3010U",
+  "supply_manual_url": "https://device.report/manual/857355",
+  "cc_led_vs_cc_ocp_switch": "Earlier CC report withdrawn by user",
+  "voltage_is_setpoint_or_live_output": "unconfirmed",
+  "programmed_current_limit_a": null,
+  "interpretation": "User corrected CC to CV. Approximately 0.45 A observed consumption alone does not establish current limiting. No evidence from this report that the original run was current-limited; actuator maximum still requires repeatability and calibrated supply conditions.",
+  "changes_made_to_supply_by_agent": false,
+  "reported_indicator_corrected": "CV",
+  "user_correction_verbatim": "oh it's on cv... my bad"
+}

@@ -1,0 +1,584 @@
+{
+  "version": 1,
+  "candidate": "candidate-iteration001.actor.json",
+  "actor_sha256": "7859de660ad82971023059f42bef82c7172124129be17ec2dd2c60d779625be6",
+  "plan": "../recovery-cases.json",
+  "candidate_preparation": {
+    "version": 1,
+    "source": "runs/trusted-baseline-v1/predictive-candidate001.input.json",
+    "source_sha256": "3bc68f52e1699d3820da7e2524e56028e6e62f635a40e9de1c7065f4eb0ceb09",
+    "plan": "examples/full-robot/trusted-baseline/recovery-cases.json",
+    "cases": [
+      {
+        "name": "raised_10mm",
+        "edits": [
+          {
+            "pointer": "/runtime/config/initial_base_translation_m",
+            "original": [
+              0.032430151192123384,
+              0.03459096947710014,
+              -0.06610631034284638
+            ],
+            "value": [
+              0.032430151192123384,
+              0.03459096947710014,
+              -0.056106310342846376
+            ]
+          },
+          {
+            "pointer": "/runtime/config/initial_base_rotation_vector_rad",
+            "original": [
+              -0.03122992098634629,
+              -0.06405235067559065,
+              -0.02498298579085805
+            ],
+            "value": [
+              -0.03122992098634629,
+              -0.06405235067559065,
+              -0.02498298579085805
+            ]
+          },
+          {
+            "pointer": "/runtime/config/steps",
+            "original": 1920000,
+            "value": 128000
+          },
+          {
+            "pointer": "/runtime/completed_steps",
+            "original": 1920000,
+            "value": 128000
+          },
+          {
+            "pointer": "/runtime/scene/duration_s",
+            "original": 300,
+            "value": 20
+          }
+        ],
+        "sha256": "b7f6ef566833832ac64f6d3d0fba19d8a4bc240923948899c0f26161d84e49c2"
+      },
+      {
+        "name": "tilted_raised",
+        "edits": [
+          {
+            "pointer": "/runtime/config/initial_base_translation_m",
+            "original": [
+              0.032430151192123384,
+              0.03459096947710014,
+              -0.06610631034284638
+            ],
+            "value": [
+              0.032430151192123384,
+              0.03459096947710014,
+              -0.046106310342846374
+            ]
+          },
+          {
+            "pointer": "/runtime/config/initial_base_rotation_vector_rad",
+            "original": [
+              -0.03122992098634629,
+              -0.06405235067559065,
+              -0.02498298579085805
+            ],
+            "value": [
+              -0.0012299209863462918,
+              -0.06405235067559065,
+              -0.02498298579085805
+            ]
+          },
+          {
+            "pointer": "/runtime/config/steps",
+            "original": 1920000,
+            "value": 128000
+          },
+          {
+            "pointer": "/runtime/completed_steps",
+            "original": 1920000,
+            "value": 128000
+          },
+          {
+            "pointer": "/runtime/scene/duration_s",
+            "original": 300,
+            "value": 20
+          }
+        ],
+        "sha256": "25a8fadd28ada2ac3d5fa6d086d7d2ac268126701faf62db4d61834cb58d9369"
+      }
+    ],
+    "scope": "Held-out initial-state recovery cases, not timed mid-gait pushes or measured hardware disturbance distributions. Robot properties, controller, inputs and speed/fall objective remain unchanged.",
+    "action_change": "Retain original scheduled command values/times within the shorter evaluation horizon."
+  },
+  "cases": [
+    {
+      "name": "raised_10mm",
+      "baseline": {
+        "summary": {
+          "completed_actions": 1000,
+          "eligible_net_speed_m_s": 0.5636096257904111,
+          "episode_complete": true,
+          "error": null,
+          "final_transition": {
+            "completed_steps": 128000,
+            "elapsed_s": 0.02,
+            "observations": [
+              0.10822205568593363,
+              -1.385946809751502,
+              -0.31220361585855877,
+              -3.478198263158884,
+              -1.1155727512380462,
+              1.1003997952536468,
+              -0.4050629927533779,
+              1.4016237864156944,
+              0.017334043159724366,
+              -1.1432497772675414,
+              -1.351396732680973,
+              -0.969797180274097,
+              -0.027983677109271205,
+              0.9694490929157805,
+              -0.09808940561020975,
+              4.0105429540110515,
+              -1.1307143909202986,
+              -2.898794016518052,
+              0.314015308330373,
+              -3.5899770547845753,
+              -0.18219289294948526,
+              2.4547502817854308,
+              -1.0551785574492705,
+              -0.8144326012737905,
+              7.437296793871357,
+              0.3085087410746042,
+              8.53210290386588,
+              0.39282151516363145,
+              -0.07577727029351604,
+              -0.08690873969846089,
+              0.11004468960646019,
+              0.6933528297331883,
+              1.690626461609609,
+              1.0350607808451238,
+              0.10306139743014675,
+              0.5194939237947358,
+              -0.29027862879493155,
+              0.8012246287785905,
+              2.3445210955566615,
+              -0.6332480138322683,
+              0.09113163020858539,
+              0.32415134665970025,
+              0.10685185468660272,
+              -3.2798057911020835,
+              17.640192192769042,
+              -1.358549116181513,
+              -1.8015981627876636,
+              9.02566264934599,
+              -1.0739210663316265,
+              1.4522598068153711,
+              26.620435469984045,
+              -0.17077078113097927,
+              -1.1872921274349453,
+              4.79804169311953,
+              0.3225062137660448,
+              -0.2689566579561018,
+              -0.02377347597572854,
+              0.3825300460182441,
+              0.16614979747788292,
+              0.006762878053950972,
+              -0.08185365664668538,
+              0.11659922195289651,
+              0.9996944959938807,
+              0.23676486909409844,
+              0,
+              0.1031773451737574,
+              0
+            ],
+            "reward": 0.010448614178866222,
+            "reward_terms": [
+              {
+                "name": "speed.net_progress",
+                "value": 0.010448614178866222
+              }
+            ],
+            "speed": {
+              "body_floor_contact": false,
+              "body_up_z": 0.9996944959938807,
+              "displacement_xy_m": [
+                7.405895504687144,
+                8.497943038588671
+              ],
+              "fallen": false,
+              "hull_floor_clearance_m": 0.28146334586699623,
+              "net_distance_m": 11.272192515808221,
+              "net_speed_m_s": 0.5636096257904111,
+              "progress_reward_m": 0.010448614178866222
+            },
+            "terminated": false,
+            "termination_reasons": [],
+            "time_s": 20,
+            "truncated": true
+          },
+          "observed_prefix_net_speed_m_s": 0.5636096257904111,
+          "requested_steps_completed": true,
+          "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. observed_prefix_net_speed_m_s divides distance by observed time, while the task transition's net_speed_m_s divides by the original horizon. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+          "simulated_seconds_per_wall_second": 0.1175177398865318,
+          "stepping_and_streaming_wall_s": 170.187071495,
+          "stop": "episode_complete",
+          "version": 1
+        },
+        "sampled_minimum_body_up_z": 0.9933640584291551,
+        "sampled_minimum_hull_clearance_m": 0.28029442737334676
+      },
+      "candidate": {
+        "summary": {
+          "completed_actions": 1000,
+          "eligible_net_speed_m_s": 0.5648871922933218,
+          "episode_complete": true,
+          "error": null,
+          "final_transition": {
+            "completed_steps": 128000,
+            "elapsed_s": 0.02,
+            "observations": [
+              0.10993795513336312,
+              -1.408745896098246,
+              -0.3335743343489182,
+              -3.103290215195364,
+              -1.1167939768683155,
+              1.056642698451349,
+              -0.40450013979929494,
+              1.4562845879902144,
+              0.02144648441465288,
+              -1.2345412966483154,
+              -1.3501064542500711,
+              -0.9494049371550402,
+              -0.027999542399651623,
+              1.0328138476425766,
+              -0.10080823077530497,
+              3.7805613910442415,
+              -1.1256383528623224,
+              -3.020295171503825,
+              0.30856302014109455,
+              -3.60419641115274,
+              -0.18809944239823967,
+              2.5076073955394476,
+              -1.0627748827965242,
+              -0.8768278408734418,
+              6.99418250361637,
+              0.25872785001515314,
+              8.931277025726631,
+              0.42994441792584076,
+              -0.07596397440120285,
+              -0.09283883566024681,
+              -0.0385436278163539,
+              0.8386074128158785,
+              1.7114646977081382,
+              0.9463324398822383,
+              0.05131591021129567,
+              0.29540510276002285,
+              -0.2159105412866279,
+              0.9239854922258047,
+              2.2950320923103433,
+              -0.4499757736285903,
+              0.0824024259218521,
+              0.29022457986345845,
+              1.4604404870019612,
+              -4.231745074707861,
+              17.906670529870315,
+              -0.8233614162878938,
+              -1.3881634463500212,
+              6.4559080236496245,
+              -1.1285881704793461,
+              3.168806286240832,
+              26.228756544103888,
+              -0.0202129119513549,
+              -1.114447779112212,
+              4.458524265588684,
+              0.3306032408919264,
+              -0.32381765534432416,
+              -0.021831570744713244,
+              0.378429210130043,
+              0.1132332426946543,
+              0.008613849265230152,
+              -0.08890546843648381,
+              0.10933022346064562,
+              0.9997245541246121,
+              0.23676486909409844,
+              0,
+              0.1031773451737574,
+              0
+            ],
+            "reward": 0.010315231256507573,
+            "reward_terms": [
+              {
+                "name": "speed.net_progress",
+                "value": 0.010315231256507573
+              }
+            ],
+            "speed": {
+              "body_floor_contact": false,
+              "body_up_z": 0.9997245541246121,
+              "displacement_xy_m": [
+                6.962781214432157,
+                8.897117160449422
+              ],
+              "fallen": false,
+              "hull_floor_clearance_m": 0.2813830087673821,
+              "net_distance_m": 11.297743845866437,
+              "net_speed_m_s": 0.5648871922933218,
+              "progress_reward_m": 0.010315231256507573
+            },
+            "terminated": false,
+            "termination_reasons": [],
+            "time_s": 20,
+            "truncated": true
+          },
+          "observed_prefix_net_speed_m_s": 0.5648871922933218,
+          "requested_steps_completed": true,
+          "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. observed_prefix_net_speed_m_s divides distance by observed time, while the task transition's net_speed_m_s divides by the original horizon. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+          "simulated_seconds_per_wall_second": 0.11105584191324754,
+          "stepping_and_streaming_wall_s": 180.08958066,
+          "stop": "episode_complete",
+          "version": 1
+        },
+        "sampled_minimum_body_up_z": 0.9933273853125569,
+        "sampled_minimum_hull_clearance_m": 0.280086268415935
+      },
+      "relative_speed_change": 0.0022667577778132664
+    },
+    {
+      "name": "tilted_raised",
+      "baseline": {
+        "summary": {
+          "completed_actions": 1000,
+          "eligible_net_speed_m_s": 0.5634036493736452,
+          "episode_complete": true,
+          "error": null,
+          "final_transition": {
+            "completed_steps": 128000,
+            "elapsed_s": 0.02,
+            "observations": [
+              0.10822205568593611,
+              -1.3859468097517793,
+              -0.31220361585862894,
+              -3.478198263157621,
+              -1.115572751238212,
+              1.1003997952550266,
+              -0.40506299275328905,
+              1.4016237864148526,
+              0.017334043159706495,
+              -1.1432497772668755,
+              -1.3513967326809264,
+              -0.9697971802727883,
+              -0.0279836771092961,
+              0.9694490929147278,
+              -0.09808940560934917,
+              4.010542954009892,
+              -1.130714390920251,
+              -2.8987940165176562,
+              0.31401530833031716,
+              -3.5899770547828256,
+              -0.1821928929495802,
+              2.454750281787341,
+              -1.0551785574492774,
+              -0.8144326012730381,
+              7.471066263258634,
+              0.3101921795991134,
+              8.497070353079073,
+              0.3914935475973464,
+              -0.0757772702935103,
+              -0.08690873969839567,
+              0.11004468960671032,
+              0.6933528297330402,
+              1.690626461611583,
+              1.0350607808445258,
+              0.10306139742969034,
+              0.5194939237926481,
+              -0.29027862879336597,
+              0.8012246287792097,
+              2.3445210955550397,
+              -0.6332480138328429,
+              0.09113163020831849,
+              0.3241513466590208,
+              0.09277151291307932,
+              -3.280234258770674,
+              17.64019219279144,
+              -1.366270393253905,
+              -1.795749663428962,
+              9.025662649301633,
+              -1.0676769959469958,
+              1.456856491059199,
+              26.620435469895195,
+              -0.17586594543709236,
+              -1.1865481131385303,
+              4.79804169311954,
+              0.32250621376593974,
+              -0.26824094175712027,
+              -0.02377347597571429,
+              0.38253004601821444,
+              0.16730282790865628,
+              0.006762878054024776,
+              -0.08185365664665528,
+              0.11659922195346589,
+              0.9996944959938803,
+              0.23676486909409844,
+              0,
+              0.1031773451737574,
+              0
+            ],
+            "reward": 0.010448606570951924,
+            "reward_terms": [
+              {
+                "name": "speed.net_progress",
+                "value": 0.010448606570951924
+              }
+            ],
+            "speed": {
+              "body_floor_contact": false,
+              "body_up_z": 0.9996944959938803,
+              "displacement_xy_m": [
+                7.439664974074421,
+                8.462910487801864
+              ],
+              "fallen": false,
+              "hull_floor_clearance_m": 0.2814633458670015,
+              "net_distance_m": 11.268072987472904,
+              "net_speed_m_s": 0.5634036493736452,
+              "progress_reward_m": 0.010448606570951924
+            },
+            "terminated": false,
+            "termination_reasons": [],
+            "time_s": 20,
+            "truncated": true
+          },
+          "observed_prefix_net_speed_m_s": 0.5634036493736452,
+          "requested_steps_completed": true,
+          "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. observed_prefix_net_speed_m_s divides distance by observed time, while the task transition's net_speed_m_s divides by the original horizon. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+          "simulated_seconds_per_wall_second": 0.12527182870265008,
+          "stepping_and_streaming_wall_s": 159.652814261,
+          "stop": "episode_complete",
+          "version": 1
+        },
+        "sampled_minimum_body_up_z": 0.9933640584291853,
+        "sampled_minimum_hull_clearance_m": 0.2802944273734135
+      },
+      "candidate": {
+        "summary": {
+          "completed_actions": 1000,
+          "eligible_net_speed_m_s": 0.564715419659528,
+          "episode_complete": true,
+          "error": null,
+          "final_transition": {
+            "completed_steps": 128000,
+            "elapsed_s": 0.02,
+            "observations": [
+              0.10993795513336249,
+              -1.408745896098248,
+              -0.33357433434891415,
+              -3.103290215195465,
+              -1.1167939768683166,
+              1.0566426984514814,
+              -0.40450013979929195,
+              1.4562845879901405,
+              0.021446484414652703,
+              -1.2345412966484377,
+              -1.3501064542500691,
+              -0.9494049371553419,
+              -0.02799954239965222,
+              1.0328138476426076,
+              -0.10080823077530071,
+              3.7805613910443614,
+              -1.125638352862322,
+              -3.020295171504078,
+              0.30856302014109593,
+              -3.6041964111527713,
+              -0.1880994423982416,
+              2.507607395539272,
+              -1.0627748827965233,
+              -0.8768278408734714,
+              6.993019866495256,
+              0.25878360494242475,
+              8.92782440046924,
+              0.42991086133296375,
+              -0.07596397440120273,
+              -0.09283883566024977,
+              -0.03854362781630383,
+              0.8386074128158265,
+              1.7114646977080263,
+              0.9463324398822357,
+              0.051315910211359284,
+              0.29540510276016635,
+              -0.21591054128658033,
+              0.9239854922257407,
+              2.2950320923105445,
+              -0.4499757736286538,
+              0.08240242592190383,
+              0.29022457986354583,
+              1.459891683211434,
+              -4.231934435539369,
+              17.906670529881513,
+              -0.8235414325693917,
+              -1.3880566575091582,
+              6.4559080236495845,
+              -1.1281772161086239,
+              3.168952619919196,
+              26.228756544048217,
+              -0.020357438322265452,
+              -1.1144451484377642,
+              4.458524265577596,
+              0.3306032408919243,
+              -0.32380296803113234,
+              -0.02183157074471298,
+              0.378429210130037,
+              0.11327523585514965,
+              0.008613849265230566,
+              -0.08890546843648699,
+              0.10933022346064146,
+              0.999724554124612,
+              0.23676486909409844,
+              0,
+              0.1031773451737574,
+              0
+            ],
+            "reward": 0.010315267548048013,
+            "reward_terms": [
+              {
+                "name": "speed.net_progress",
+                "value": 0.010315267548048013
+              }
+            ],
+            "speed": {
+              "body_floor_contact": false,
+              "body_up_z": 0.999724554124612,
+              "displacement_xy_m": [
+                6.961618577311043,
+                8.89366453519203
+              ],
+              "fallen": false,
+              "hull_floor_clearance_m": 0.28138300876738226,
+              "net_distance_m": 11.29430839319056,
+              "net_speed_m_s": 0.564715419659528,
+              "progress_reward_m": 0.010315267548048013
+            },
+            "terminated": false,
+            "termination_reasons": [],
+            "time_s": 20,
+            "truncated": true
+          },
+          "observed_prefix_net_speed_m_s": 0.564715419659528,
+          "requested_steps_completed": true,
+          "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. observed_prefix_net_speed_m_s divides distance by observed time, while the task transition's net_speed_m_s divides by the original horizon. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+          "simulated_seconds_per_wall_second": 0.12378649413324787,
+          "stepping_and_streaming_wall_s": 161.568514724,
+          "stop": "episode_complete",
+          "version": 1
+        },
+        "sampled_minimum_body_up_z": 0.9933273853125569,
+        "sampled_minimum_hull_clearance_m": 0.2800862684159349
+      },
+      "relative_speed_change": 0.0023282956852359593
+    }
+  ],
+  "full_horizon_prefix_parity": {
+    "seconds": 20,
+    "observations_exact": true,
+    "net_distance_exact": true,
+    "net_distance_m": 11.299002311663902,
+    "scope": "Startup reproduction of frozen trained actor; not sustained-horizon acceptance."
+  },
+  "scope": "Two complete held-out initial-state recovery cases, 20 s each. Same authored commands, robot, timestep and seed. Only initial pose offsets and the explicit predictive actor differ. Falls checked at task endpoints; no timed pushes or hardware disturbance qualification."
+}

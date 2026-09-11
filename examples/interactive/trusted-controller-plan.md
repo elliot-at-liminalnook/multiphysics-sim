@@ -9,8 +9,8 @@ the same APIs on the wheeled robot. Work takes place on `main` in
 | Task | Required evidence | Current state |
 |---|---|---|
 | Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Complete 300 s reproduction exactly matches historical distance/speed: 172.069173 m and 0.5735639103 m/s, no sampled fall. WASD and three 20 s timestep cases completed. Fresh coarser-step 300 s run gives 0.5621811105 m/s, 1.98% lower; full finer-step comparison is running. |
-| Physical model | Trace actuator/transmission limits, contacts and sensors to CAD; rank influential uncertain parameters using explicit experimental perturbations, then obtain corresponding hardware measurements and promote accepted values through CAD. | Winning recipe uses uncalibrated effective servos, omits inter-link contact, and declares no sensors. Its observations are ideal simulator values. Hardware availability/interface requested from user. |
-| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Motion data, controller-conditioned model and three actuator-conditioned forecast heads are preserved. A 519-input predictive residual actor exactly preserves the baseline before learning. The second PPO update reaches 0.564950 m/s over 20 s (+0.24%); this actor is frozen for ongoing sustained/response/recovery comparisons. |
+| Physical model | Trace actuator/transmission limits, contacts and sensors to CAD; rank influential uncertain parameters using explicit experimental perturbations, then obtain corresponding hardware measurements and promote accepted values through CAD. | Effective actuator derivations match CAD; all eight transmission relations hold across 4,501 captured samples. Winning recipe remains uncalibrated, omits inter-link contact, and declares no sensors. Its observations are ideal simulator values. Hardware availability/interface requested from user. |
+| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Three PPO updates completed: best 20 s training speed 0.566927 m/s (+0.59%). The earlier 0.564950 m/s actor remains frozen for evaluation; both held-out initial-state recovery cases pass with about 0.23% higher speed than baseline. Full sustained and command-response comparisons remain running. |
 | Second morphology | Use the same observation, action, prediction and experiment contracts on the wheeled robot, including sustained locomotion and predictive evaluation. | Complete 10 s forward run, 490 live forecast queries and exact 501-frame experiment/checkpoint replay passed. Learned forecast is tested on a separate forward episode and exposes generalization failure. Evidence in `../wheeled-robot/predictive-baseline/`. |
 
 Speed remains net displacement divided by the complete requested duration, with
@@ -86,6 +86,12 @@ continuous-time accuracy. The largest finite-interval acceleration rises from
 The physical declaration audit is in `physical-audit.json` beside the baseline.
 All 12 effective actuator parameter sets match their CAD ratings/static gain
 derivation within 1e-12. This does not validate those estimates on hardware.
+`transmission-motion-audit.json` checks the shared original constraint equations
+on all 4,501 frames of the 90 s capture: eight declared belt/worm relations have
+maximum position residual 1.11e-16 rad and velocity residual 7.11e-15 rad/s.
+A synthetic 0.01 rad driver perturbation produces the expected 0.01 rad residual.
+This verifies sampled enforcement of the ideal CAD ratios, not hardware ratio,
+backlash, efficiency or torque accuracy.
 Thirty-one of 32 moving joints have no declared travel limits, and the robot has
 no declared sensors. The sensitivity plan perturbs active torque (+/-10%), servo
 stiffness (+/-15%), no-load speed (+/-10%, exploratory range) and floor friction
@@ -172,10 +178,16 @@ actions. Inputs are ideal simulation observations, not a deployable sensor polic
 The first PPO update completes without a sampled fall at 0.563406 m/s, versus
 0.563603 m/s for the neutral baseline, so it is not accepted as a speed improvement.
 The second reaches 0.564950 m/s (+0.24%) and is frozen before held-out evaluation;
-`candidate-selection.json` identifies its exact actor and selection rule. Training
-and held-out sustained/response/recovery comparisons remain unfinished.
+`candidate-selection.json` identifies its exact actor and selection rule. The
+third and final update reaches 0.566927 m/s (+0.59%) over the training horizon.
+`training-result.json` preserves six completed stochastic rollout receipts,
+all deterministic validation results and the final optimizer state. Its final
+training actor is kept separately from the frozen evaluation candidate.
 `recovery-cases.json` declares initial pose perturbations; the original gait
 completes both 20 s cases without sampled falls at 0.563610 and 0.563404 m/s.
 Those cases do not represent timed mid-gait pushes or measured hardware
-disturbance distributions. The learned candidate is running these same cases,
-the original 90 s command protocol and the full 300 s sustained test.
+disturbance distributions. The frozen learned candidate completes them at
+0.564887 and 0.564715 m/s, about 0.23% higher, without sampled falls. Its full
+300 s test exactly reproduces the training evaluation's first 20 s observations
+and distance. The full 300 s result and 90 s command comparison remain pending;
+prefix parity is not sustained acceptance. See `recovery-comparison.json`.

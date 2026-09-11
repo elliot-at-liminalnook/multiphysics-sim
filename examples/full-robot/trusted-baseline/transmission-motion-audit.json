@@ -1,0 +1,351 @@
+{
+  "cad_source": {
+    "cad_revision": 1357,
+    "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+    "collision_distance_experiment": {
+      "exporter_sha256": "3b1123fb4354ad7c6a1271722072097925301eea0b617e2a555c479c1a54025d",
+      "recipe": {
+        "algorithm": "triangle_aabb_exact_v1",
+        "cad": "examples/full-robot/baseline/robot.rcad",
+        "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+        "links": [
+          "Robot | Chassis and hip mounts"
+        ],
+        "scene": "runs/full-robot/learning/forward-slow/scene.json",
+        "scene_sha256": "0e8d7f6d6427821987223336d6df4eb5730913947465d1cf0454fcf82f55fb43",
+        "sign_algorithm": "solid_union_ray_v1",
+        "tolerance_mm": 0.15
+      },
+      "recipe_sha256": "9599c45f788305cf842a5635743206f7779d3f9013f4092b5e9c311647c48e5b",
+      "scope": "Named grids regenerated from CAD; other grids retain the input derivation. No clearance or walking certification."
+    },
+    "collision_ray_backend": {
+      "name": "embreex",
+      "trimesh": "4.12.2",
+      "version": "4.4.0"
+    },
+    "derivation": {
+      "packages": {
+        "cadquery-ocp": "7.7.2",
+        "numpy": "2.0.2",
+        "scipy": "1.13.1",
+        "trimesh": "4.12.2"
+      },
+      "sources": {
+        "__init__.py": "a05afe9edac1e6873d859321606a264ede3db15ae1e4f132ea51169883beea3d",
+        "analysis.py": "7af2d52680eb6e3b5c8b667fbe729a7462e7689fe8d87b9f7197e16cba7cb8d5",
+        "annotations.py": "b6cf8ffd6e51bd16ac16f8b6731acd38599a4ce4b70f4febee267b47bfef04c1",
+        "api.py": "8193f60f1e8b115e1f5e40dcb31573146c058240d31fa5a6f57a1c7c677bb3d5",
+        "assembly.py": "28e4917b5c6d5f25ed67da642f64bf541f9f432d4ba02e743cbb95cf5cc51e16",
+        "bridge/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bridge/server.py": "06ffda8676d574ddac9490f6f8214a3e9f80b8d6730923b195c5fdd7adfdc793",
+        "bridge/webshare.py": "2ea4b821d9273ba4f122b6dac197122333c82fd2b95049a8176ac332d9670b41",
+        "candidates.py": "c44941cf9b39e138ecdffd7aeb754ab3acce469e7b6fadd8a3d0484d26b05026",
+        "client.py": "585a5da9f906ae85597af8bd844eae0a72026aae06ccff22721852f249236eb9",
+        "commands.py": "166e294086d4f14866ec0619af0dce44397b032426cb868ae35cf557b5496fa8",
+        "component_derivation.py": "0a4185deb272f6be5c061ff01e8d2af380981cf8902ad6f20ff71c2ac3f00f3a",
+        "component_graph.py": "71a5572d195e40cb1f253ffebe37629322049311f4a2136efff4e531f1470b62",
+        "derivation_cache.py": "2293ac19f72309dc2d5b9ebc2feab13f155f912f8e996f8f18ebd3c6db802883",
+        "document.py": "1e6ab7f61c4df4035f935691fead0320fb9196382ee13e4fed0adfd8a5989cb7",
+        "experiment_config.py": "618dbe2dd971e58570b636471e0101d858ac98ffadd9580f1fa89fda467444f0",
+        "experiment_process.py": "1477ecbbf7545ec23624089cc412612c5699b9e0dbb16006fba6b4ca74b66097",
+        "experiment_records.py": "511ce9d1e6dc3aed59af49850190a7a84c785487f69743b3a9f435232be28dff",
+        "experiment_results.py": "0e20d6d77046dc18cea50d38b384aacda401a3d7ce04e6cb4b69785421517967",
+        "experiment_worker.py": "aa23aa157335b13eb063210d605229ad4ad832690dfa7469d2d9ca1f3ae72161",
+        "experiments.py": "8cbd501dd4fdc65fcf6b79a548b636dd178de422ef3989440bba948adcde64c4",
+        "flex.py": "333a54f4192f203672aac3b0bb9efdd44621b004bd501df3c17c3c4ee6f285be",
+        "io/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "io/drawing.py": "827922bf6ea6fc724ce4edfdcd483b137a1715e0994fd03b9093ab6eba2decf9",
+        "io/exporters.py": "451230c97e84b09b5b7d8e62703472b08b5e8da2cfa47583ded8b5ab7ab547c8",
+        "io/importers.py": "053d0784949899db3a44acb80fbf31c95e083e083b0d61fb99aca5141acbe638",
+        "io/snapshot.py": "0cd76598a8f755a1b1d6f122b367709db90cd259fc060f8bd8fd67a0a7e9d128",
+        "kernel/__init__.py": "8f87c28966fbed37cff17606891759ff4f6bf1d3d5154e70b3901f6e94d8e131",
+        "kernel/base.py": "a4abe12a761a69c745a23a2d6998854ad8d2977de6fbe0e3b276b4fddf568fb2",
+        "kernel/occt.py": "2f1249c6e4a07e5ffbd22f4fa4e1434566c9c887e983661e59d95b1b68221c1d",
+        "kernel/sketch.py": "e65eb64782e02b33714303302c85baca90983b7d532f5782da0683da33a1bd70",
+        "measure_worker.py": "31f0acd5862d99be966042246928002b11e7aa46fb30c207c42d571ca71558e0",
+        "motion.py": "daeed1afd950c47561fd03986e8a0a5a83da38d8ae212b127894121304a07a5b",
+        "physical.py": "c6865ba13cd712616e55476e4d77ca3fec1ed3f6d09bb7008eecaa5b7af409cd",
+        "pose.py": "91fd36af0fff4e4fcd1de0fae6a3aa7e29aa49c2674461607342b84ff4e0de98",
+        "printing.py": "48fe1f91e33e8f1dc6e028189d0206ec4052b4085dd8fb38ababa0d4f9b241fd",
+        "references.py": "6ee8055bfc99dd9c729dcf628254e1596ab640505a16dd463dde7b14f9329092",
+        "robotics.py": "b19c3f6a064e53d3b0e720b8712037846b8143132ff73208610fd35f1983b30d",
+        "saved_views.py": "968e1ac064ea7952570ec3e01714410fc946f00781f9701a06c5be2892acbfb5",
+        "simbridge.py": "f506d81c8795878779d1fb0c70d7c29bde7aafec43b86ff56a8ec40bc25f46d8",
+        "snapshots.py": "39e333de49fbb5805fe7a62a344994476ed3ac749f7f6b37c537381a49e74699",
+        "units.py": "cf3aaa761d8f76d711cfbe2b56d8cd40695ff57781e9c0d0c0bd467b25814c37"
+      }
+    },
+    "exported": "2026-09-05T16:08:46",
+    "fidelity": "commissioning model; provisional material, inertia, servo dynamics and losses; ideal transmissions",
+    "file": "/Users/elliot/physics-simulator/examples/full-robot/baseline/robot.rcad",
+    "fixture": "floating",
+    "local_distance_refinement": {
+      "actual_nodes": 10625,
+      "blend_width_m": 0.001,
+      "bounds_local_m": [
+        [
+          -0.005821151202932524,
+          -0.010564754227691112,
+          -0.062320092745826464
+        ],
+        [
+          0.006178848797067476,
+          -0.0025647542276911123,
+          -0.05032009274582647
+        ]
+      ],
+      "cad_probe_local_m": [
+        [
+          0.00017884879706747073,
+          -0.006664419699628582,
+          -0.05643764046695418
+        ],
+        [
+          0.00017884879706748418,
+          -0.0066876446836282855,
+          -0.05646471407447491
+        ],
+        [
+          0.00017884879706747377,
+          -0.0063421982998164705,
+          -0.05605792369605031
+        ]
+      ],
+      "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "cell_m": 0.0005,
+      "link": "-Y | Hip output shaft and pulley",
+      "maximum_nodes": 20000,
+      "provenance": "Derived from versioned CAD B-rep, triangle distance and individual-solid union ray sign. Quintic blend to retained parent; approximate field, not exact CAD clearance. No source geometry or exclusion changes.",
+      "source_scene": "examples/full-robot/fast-wasd/refined.scene.json",
+      "source_scene_sha256": "46f49a21c3aed422cdfe1baf23dc3864d1ce5c7f367e80a173e5d30700c848d8",
+      "tessellation_tolerance_mm": 0.15,
+      "version": 1,
+      "wall_s": 5.430404391
+    },
+    "local_distance_refinements": [
+      {
+        "actual_nodes": 10625,
+        "blend_width_m": 0.001,
+        "bounds_local_m": [
+          [
+            -0.011919821594288992,
+            -0.004417072199587119,
+            -0.06253576593754442
+          ],
+          [
+            0.00008017840571100839,
+            0.0035829278004128814,
+            -0.05053576593754443
+          ]
+        ],
+        "cad_probe_local_m": [
+          [
+            -0.005899066749526893,
+            -0.0004170721995871195,
+            -0.05651095850337852
+          ],
+          [
+            -0.005983064821113854,
+            -0.0004170721995871195,
+            -0.05661136896695431
+          ],
+          [
+            -0.005908583066900119,
+            -0.0004170721995871192,
+            -0.05652236122023591
+          ],
+          [
+            -0.0058885717396151005,
+            -0.0004170721995871168,
+            -0.05649837505960898
+          ]
+        ],
+        "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+        "cell_m": 0.0005,
+        "link": "-X | Hip output shaft and pulley",
+        "maximum_nodes": 20000,
+        "provenance": "Derived from versioned CAD B-rep, triangle distance and individual-solid union ray sign. Quintic blend to retained parent; approximate field, not exact CAD clearance. No source geometry or exclusion changes.",
+        "source_scene": "examples/full-robot/whole-swing/settled-integral-candidate.scene.json",
+        "source_scene_sha256": "cf4e3fef57d516da0ae74afe1d5fb6561832b9615c81d05798efb29325776c01",
+        "tessellation_tolerance_mm": 0.15,
+        "version": 1,
+        "wall_s": 5.1052385319999996
+      },
+      {
+        "actual_nodes": 10625,
+        "blend_width_m": 0.001,
+        "bounds_local_m": [
+          [
+            -0.005821151202932524,
+            -0.010564754227691112,
+            -0.062320092745826464
+          ],
+          [
+            0.006178848797067476,
+            -0.0025647542276911123,
+            -0.05032009274582647
+          ]
+        ],
+        "cad_probe_local_m": [
+          [
+            0.00017884879706747073,
+            -0.006664419699628582,
+            -0.05643764046695418
+          ],
+          [
+            0.00017884879706748418,
+            -0.0066876446836282855,
+            -0.05646471407447491
+          ],
+          [
+            0.00017884879706747377,
+            -0.0063421982998164705,
+            -0.05605792369605031
+          ]
+        ],
+        "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+        "cell_m": 0.0005,
+        "link": "-Y | Hip output shaft and pulley",
+        "maximum_nodes": 20000,
+        "provenance": "Derived from versioned CAD B-rep, triangle distance and individual-solid union ray sign. Quintic blend to retained parent; approximate field, not exact CAD clearance. No source geometry or exclusion changes.",
+        "source_scene": "examples/full-robot/fast-wasd/refined.scene.json",
+        "source_scene_sha256": "46f49a21c3aed422cdfe1baf23dc3864d1ce5c7f367e80a173e5d30700c848d8",
+        "tessellation_tolerance_mm": 0.15,
+        "version": 1,
+        "wall_s": 5.430404391
+      }
+    ]
+  },
+  "capture": "runs/trusted-baseline-v1/command-motion90.capture.json",
+  "capture_blake3": "01ff3545cd6534d15535bc9dc6e7dd5cd7d1bbca29654e5a095398cd8c3b8103",
+  "capture_physics_context": {
+    "runtime": {
+      "features": [],
+      "library_source_blake3": "56acc2aeca9730e9448ea56748a3c5461f0a86317d0531e555890508b1bf4cc1",
+      "version": 1
+    },
+    "sections": {
+      "/config/applied_generalized_loads": "dff33c97ade82946b99f4004efc778140ca0a8b7fd6f76ac8da8802d61179301",
+      "/config/embedding": "c3676765a922ced473b745cea9691e89612b11f2b62d2129e2756e07e343b40f",
+      "/config/implicit": "9260099d43efbce0c09c9cccc23dee1d7c26c8be51a287633859f781e814c82b",
+      "/config/mechanical_subdivision": "233e632116d1e5309f6d860fe87157dedfed4f29444357750a75c476538da02c",
+      "/config/motors": "b866640b79e33632746394d373bc2f71d38885128dfe65bb7b8b4519f5d867a9",
+      "/config/step_s": "cd81817f1b038ef81d15506e36986ae85df601e6087c2850bbed512e5c3383e3",
+      "/scene/options": "4da4af11868277f3b83e10405b18b831142b466336be48479bc0dcde6c3d530a",
+      "/scene/period_s": "56da4270daae6dac517429f5b197822828dd719f7305821afa0386f61ee9e9cc",
+      "/scene/robot/battery": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+      "/scene/robot/cables": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+      "/scene/robot/control": "16d4ee50d7dec776767086e9a4fcae63a77b02d3b949abcffe5703b2b02463fc",
+      "/scene/robot/gravity": "24abb69f7c4efbb12267ff1babece1e4e10a1085b1cbb58ccc61bd710b7fef6d",
+      "/scene/robot/identification": "359e16502979a53be306f0cdab119e5480288156f65c5a593e70ef7b02fc23d1",
+      "/scene/robot/joints": "8cfa0efc54512606a2951e232353194d68a7c6def261e9d45a4f752cb7c18241",
+      "/scene/robot/links": "4dded23b62bdd5fc7c30e9eb0e137afbb294c38f24ad7fb2d7766fdc4e317bdc",
+      "/scene/robot/materials": "c2b06e4a32b069dc8f2ad2ac89207b26614b6b6d275c5636c843c76fe6c11b50",
+      "/scene/robot/motors": "47e20bb9af4a4b5f924c288ebe22e3d66e262f5662fda38dc52a0a91571c5790",
+      "/scene/robot/planar": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+      "/scene/robot/sensors": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+      "/scene/robot/source": "1915d02b376ff84748a96bb124e5009d802cbc4ebe980289577a0629c53dfff8",
+      "/scene/robot/transmissions": "74ed22a5910169bc01a75ab4a82a58cff0627df33f63b9760e4b9080b6471b8d",
+      "/scene/robot/uncertainty": "0915c95374a1b449b570f2834e4a34f07af3e7abf8b30fc641bd6b6515f4d957",
+      "/scene/robot/version": "01c86025183c26e002c01759185ba3eed188f599a3f597af339a698f51931c76",
+      "/scene/robot/world": "92372ef116ede94c50a46574a85aa188de5f00bd95811d38f0dee2e6a1c304a2",
+      "/scene/version": "404fcbd96dda2dcc2bc01e396366456ab18f7452af65dab00b422a9ab9b9e818"
+    },
+    "version": 1
+  },
+  "end_s": 90,
+  "equation": "q_driver - ratio * q_driven = 0; same relation for velocity, evaluated by Articulated::original_closure",
+  "rows": [
+    {
+      "driven": "joint.+X | Hip swing",
+      "driver": "joint.+X | Hip servo output",
+      "maximum_absolute_position_residual": 0,
+      "maximum_absolute_velocity_residual": 2.6645352591003757e-15,
+      "name": "+X | Timing belt 1:1",
+      "position_unit": "rad",
+      "ratio": 1,
+      "velocity_unit": "rad/s"
+    },
+    {
+      "driven": "joint.+X | Thigh elevation",
+      "driver": "joint.+X | Worm servo output",
+      "maximum_absolute_position_residual": 1.1102230246251565e-16,
+      "maximum_absolute_velocity_residual": 3.552713678800501e-15,
+      "name": "+X | Worm reduction 5:1",
+      "position_unit": "rad",
+      "ratio": 5,
+      "velocity_unit": "rad/s"
+    },
+    {
+      "driven": "joint.-Y | Hip swing",
+      "driver": "joint.-Y | Hip servo output",
+      "maximum_absolute_position_residual": 0,
+      "maximum_absolute_velocity_residual": 3.885780586188048e-15,
+      "name": "-Y | Timing belt 1:1",
+      "position_unit": "rad",
+      "ratio": 1,
+      "velocity_unit": "rad/s"
+    },
+    {
+      "driven": "joint.-Y | Thigh elevation",
+      "driver": "joint.-Y | Worm servo output",
+      "maximum_absolute_position_residual": 5.551115123125783e-17,
+      "maximum_absolute_velocity_residual": 3.552713678800501e-15,
+      "name": "-Y | Worm reduction 5:1",
+      "position_unit": "rad",
+      "ratio": 5,
+      "velocity_unit": "rad/s"
+    },
+    {
+      "driven": "joint.+Y | Hip swing",
+      "driver": "joint.+Y | Hip servo output",
+      "maximum_absolute_position_residual": 0,
+      "maximum_absolute_velocity_residual": 2.6645352591003757e-15,
+      "name": "+Y | Timing belt 1:1",
+      "position_unit": "rad",
+      "ratio": 1,
+      "velocity_unit": "rad/s"
+    },
+    {
+      "driven": "joint.+Y | Thigh elevation",
+      "driver": "joint.+Y | Worm servo output",
+      "maximum_absolute_position_residual": 1.1102230246251565e-16,
+      "maximum_absolute_velocity_residual": 3.552713678800501e-15,
+      "name": "+Y | Worm reduction 5:1",
+      "position_unit": "rad",
+      "ratio": 5,
+      "velocity_unit": "rad/s"
+    },
+    {
+      "driven": "joint.-X | Hip swing",
+      "driver": "joint.-X | Hip servo output",
+      "maximum_absolute_position_residual": 0,
+      "maximum_absolute_velocity_residual": 1.7763568394002505e-15,
+      "name": "-X | Timing belt 1:1",
+      "position_unit": "rad",
+      "ratio": 1,
+      "velocity_unit": "rad/s"
+    },
+    {
+      "driven": "joint.-X | Thigh elevation",
+      "driver": "joint.-X | Worm servo output",
+      "maximum_absolute_position_residual": 1.1102230246251565e-16,
+      "maximum_absolute_velocity_residual": 7.105427357601002e-15,
+      "name": "-X | Worm reduction 5:1",
+      "position_unit": "rad",
+      "ratio": 5,
+      "velocity_unit": "rad/s"
+    }
+  ],
+  "samples": 4501,
+  "scope": "Sampled kinematic consistency with the recorded CAD declarations. No independent hardware ratio, backlash, efficiency, torque or continuous-time certification. Other closure rows and accelerations are deliberately not inferred from incomplete solver state.",
+  "start_s": 0,
+  "version": 1,
+  "synthetic_detection_check": {
+    "source": "First two frames of the same capture, with +0.01 rad added to the second frame driver coordinate joint.+X | Hip servo output.",
+    "expected_position_residual_rad": 0.01,
+    "observed_position_residual_rad": 0.010000000000000009,
+    "scope": "Verifies the diagnostic detects a broken transmission relation instead of projecting it away. This is synthetic test data, not a hardware measurement."
+  }
+}

@@ -19,6 +19,18 @@ fn write(path:impl AsRef<Path>,value:&impl Serialize)->Result<(),Box<dyn std::er
 fn main()->Result<(),Box<dyn std::error::Error>>{
     let args=std::env::args().skip(1).collect::<Vec<_>>();if args.len()!=2{return Err("usage: train_motion_forecast experiment.json fresh-output-directory".into());}
     let bytes=fs::read(&args[0])?;let e:Experiment=serde_json::from_slice(&bytes)?;if e.version!=1{return Err("forecast experiment version must be 1".into());}
+    // Refuse an overlapping train/validation window even when identical input
+    // files have been copied to different paths. Sample extraction additionally
+    // keeps every history/target window inside its declared interval.
+    let hashes=|windows:&[CaptureWindow]|->Result<Vec<_>,Box<dyn std::error::Error>> {
+        windows.iter().map(|w|Ok(blake3::hash(&fs::read(&w.path)?))).collect()
+    };
+    let training_hashes=hashes(&e.training)?;let validation_hashes=hashes(&e.validation)?;
+    for (a,ha) in e.training.iter().zip(&training_hashes) { for (b,hb) in e.validation.iter().zip(&validation_hashes) {
+        if ha==hb && a.start_s.max(b.start_s)<=a.end_s.min(b.end_s) {
+            return Err("training and validation windows overlap in the same capture".into());
+        }
+    }}
     e.recipe.validate()?;let root=Path::new(&args[1]);fs::create_dir(root)?;fs::write(root.join("experiment.json"),bytes)?;
     let collect=|windows:&[CaptureWindow]|->Result<Vec<ForecastSample>,Box<dyn std::error::Error>>{
         let mut samples=vec![];for w in windows {let raw=fs::read(&w.path)?;

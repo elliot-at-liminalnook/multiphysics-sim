@@ -297,5 +297,20 @@
     "Joint travel and inter-leg clearances",
     "Available sensor channels, calibration, noise and timestamp latency"
   ],
-  "scope": "Read-only derivation and declaration audit of the preserved simulated candidate. No hardware measurements are available yet. Numerical agreement with CAD-derived estimates is not calibration. Raw input was already serialized upstream; this audit does not recover original upstream field presence."
+  "scope": "Read-only derivation and declaration audit of the preserved simulated candidate. No hardware measurements are available yet. Numerical agreement with CAD-derived estimates is not calibration. Raw input was already serialized upstream; this audit does not recover original upstream field presence.",
+  "contact_resolution": {
+    "source": "crates/sim-domain-robot/src/model.rs: PhysicalModel::friction_between and articulated.rs: Link.floor_mu",
+    "material_world_pairs": {
+      "steel": {
+        "kinetic": 0.4,
+        "static": 0.48
+      },
+      "nylon": {
+        "kinetic": 0.25,
+        "static": 0.3
+      }
+    },
+    "world_floor_friction_used_by_this_articulated_path": false,
+    "scope": "Declared world.floor_friction is retained but not read for these articulated contacts; regularized Coulomb uses resolved material-pair kinetic friction. Missing pairs currently fall back to library constants; all used material/world pairs in this input are authored."
+  }
 }

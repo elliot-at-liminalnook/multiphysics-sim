@@ -8,10 +8,10 @@ the same APIs on the wheeled robot. Work takes place on `main` in
 
 | Task | Required evidence | Current state |
 |---|---|---|
-| Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Exact original input is versioned in `../full-robot/trusted-baseline/`. Current-runtime startup matches historical observations exactly. Full reproduction and two timestep prefixes launched; completion is unproved. |
+| Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Complete 300 s reproduction exactly matches historical distance/speed: 172.069173 m and 0.5735639103 m/s, no sampled fall. WASD and three 20 s timestep cases completed. A fresh coarser-step 300 s comparison is running. |
 | Physical model | Trace actuator/transmission limits, contacts and sensors to CAD; rank influential uncertain parameters using explicit experimental perturbations, then obtain corresponding hardware measurements and promote accepted values through CAD. | Winning recipe uses uncalibrated effective servos, omits inter-link contact, and declares no sensors. Its observations are ideal simulator values. Hardware availability/interface requested from user. |
-| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Existing Rust policy/trajectory-learning components are available. New dataset, matched evaluations and trained-controller acceptance remain pending. Simulator-only teacher inputs must remain distinct from available hardware sensor inputs. |
-| Second morphology | Use the same observation, action, prediction and experiment contracts on the wheeled robot, including sustained locomotion and predictive evaluation. | Streaming runner reproduces the wheeled fixture's final transition exactly; this 30 ms fixture is a replay check, not locomotion acceptance. |
+| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Full 90 s motion data and initial future-dynamics models are preserved. Quadruped prediction improves on constant-velocity and constant-acceleration baselines in a chronological development split. Learned actuator selection and closed-loop speed/response/recovery comparisons remain pending. |
+| Second morphology | Use the same observation, action, prediction and experiment contracts on the wheeled robot, including sustained locomotion and predictive evaluation. | Complete 10 s forward run, 490 live forecast queries and exact 501-frame experiment/checkpoint replay passed. Learned forecast is tested on a separate forward episode and exposes generalization failure. Evidence in `../wheeled-robot/predictive-baseline/`. |
 
 Speed remains net displacement divided by the complete requested duration, with
 no eligible score for failed or incomplete episodes. Slippage is diagnostic;
@@ -96,6 +96,51 @@ Verification: three analytic response tests pass, including wrap handling,
 nonuniform braking, closed paths, reordered observations and source aliases.
 The analyzer rejects a deliberately wrong command specification and a missing
 transition. Sensitivity preparation preserves action schedule, policy, seed and
-time grid and passes robot receipt readback. Predictive training still needs
+time grid and passes robot receipt readback. Predictive training uses
 full motion/actuator-target captures; the diagnostic transition stream does not
-contain all link poses and must not be padded with invented state.
+contain all link poses and must not be padded with invented state. The optional
+`benchmark_environment --motion` capture now supplies these through shared
+`MotionSnapshot`; all 4,501 quadruped transition rows remain byte-identical to
+the earlier WASD run.
+
+## Captures and initial prediction models
+
+`sustained-result.json` retains full baseline outcome and source identity.
+`sensitivity-initial-result.json` uses distance divided by the observed 20 s,
+not the task's original 300 s horizon. Torque -10% gives 0.525294 m/s (6.8%
+lower), not 0.035 m/s: the latter is the unfinished task's horizon-normalized
+diagnostic. The first verbal report used that denominator incorrectly.
+`benchmark_environment` now names both diagnostics explicitly.
+
+The friction audit found `world.floor_friction` is not read by this articulated
+contact path. It resolves material/world table entries through
+`PhysicalModel::friction_between`; regularized Coulomb uses their kinetic value.
+The unchanged world-field tests do not establish friction robustness. Two
+additional material-table perturbations are running from
+`material-sensitivity-plan.json`; the preserved baseline remains unchanged.
+
+The quadruped forecaster has 309 inputs and 279 outputs: all 28 generalized
+coordinates plus body translation, predicting position, velocity and finite-
+interval acceleration at 20, 100 and 200 ms. Current dynamics, gravity direction,
+angular velocity, ground-relative height and the complete held command sequence
+are inputs. Training uses 0–70 s; validation uses 70.02–90 s with complete
+history/target windows kept inside each interval. This is a chronological
+development split within one episode, not independent-episode acceptance.
+Normalized validation MSE: learned 0.207178, constant velocity 0.345705, constant
+acceleration 0.754837. This prediction improvement does not establish better
+actuator commands, speed, command response or recovery.
+
+The compressed capture, model, recipe and reports are versioned beside the
+baseline. `predictive-data.json` records the decompressed SHA-256 and verifies
+transition parity. To repeat training into a fresh directory:
+
+```sh
+mkdir runs/predictive-reproduction
+gzip -dc examples/full-robot/trusted-baseline/command-motion.capture.json.gz > runs/predictive-reproduction/capture.json
+target/release/examples/prepare_motion_training runs/predictive-reproduction/capture.json 'Robot | Chassis and hip mounts' 70 runs/predictive-reproduction/experiment.json
+target/release/examples/train_motion_forecast runs/predictive-reproduction/experiment.json runs/predictive-reproduction/model
+```
+
+These tools preserve the capture's original physics identity. The packer rejects
+numerically failed captures; the trainer rejects overlapping training/validation
+windows in identical captures, including byte-identical files at different paths.

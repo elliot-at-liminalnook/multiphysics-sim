@@ -9,9 +9,9 @@ use sim_runtime::{
 };
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().skip(1).collect();
-    if args.len() != 3 {
+    if !(3..=4).contains(&args.len()) {
         return Err(
-            "usage: check_controller_forecast native-capture.json recipe.json fresh-report.json"
+            "usage: check_controller_forecast native-capture.json recipe.json fresh-report.json [trained-model.json]"
                 .into(),
         );
     }
@@ -25,9 +25,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .as_f64()
         .ok_or("missing end")?;
     let samples = samples_from_capture(&capture, &recipe, start, end)?;
-    let mut model = TrajectoryForecaster::initialize(recipe, &samples, 4, 7)?;
+    let mut model = if let Some(path) = args.get(3) {
+        let model: TrajectoryForecaster = serde_json::from_slice(&std::fs::read(path)?)?;
+        if serde_json::to_value(&model.recipe)? != serde_json::to_value(&recipe)? {
+            return Err("supplied model recipe differs from query recipe".into());
+        }
+        model
+    } else {
+        TrajectoryForecaster::initialize(recipe, &samples, 4, 7)?
+    };
     let initial_loss = model.normalized_loss(&samples)?;
-    let losses = model.fit(&samples, 4, 2, 0.001)?;
+    let losses = if args.len() == 3 {
+        model.fit(&samples, 4, 2, 0.001)?
+    } else {
+        vec![]
+    };
     model.validate()?;
     let record: EmbeddedRecording = serde_json::from_value(capture["recording"].clone())?;
     let task: Task = serde_json::from_value(capture["task"].clone())?;
@@ -66,8 +78,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         previous = MotionSnapshot::from_frame(&current)?;
     }
     let report = json!({"version":1,"passed":true,"source_capture":args[0],"model":model,"queries":queries,
-        "training_samples":samples.len(),"initial_training_loss":initial_loss,"training_losses":losses,
-        "scope":"Complete typed controller action contract; recorded labels, short fitting exercise and live read-only query agreement. All samples are training data. No held-out accuracy, improved control, speed or learned morphology transfer claim."});
+        "training_samples":if args.len()==3 {samples.len()} else {0},
+        "query_samples":samples.len(),"initial_capture_loss":initial_loss,"training_losses":losses,
+        "supplied_model":args.get(3),
+        "scope":"Complete typed controller action contract and live read-only query agreement with recorded inputs/references. Without a supplied model, all samples enter a short fitting exercise. A supplied model is queried without fitting. This checks API consistency, not held-out accuracy, improved control or learned morphology transfer."});
     let file = std::fs::OpenOptions::new()
         .write(true)
         .create_new(true)

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "material_floor_friction_low",
+      "rationale": "Perturb authored material-to-world static/kinetic coefficients by CAD friction uncertainty. The articulated regularized-Coulomb path reads material pair kinetic friction, not world.floor_friction.",
+      "edits": [
+        {
+          "target": "robot",
+          "pointer": "/materials/steel/friction/world/static",
+          "factor": 0.8
+        },
+        {
+          "target": "robot",
+          "pointer": "/materials/steel/friction/world/kinetic",
+          "factor": 0.8
+        },
+        {
+          "target": "robot",
+          "pointer": "/materials/nylon/friction/world/static",
+          "factor": 0.8
+        },
+        {
+          "target": "robot",
+          "pointer": "/materials/nylon/friction/world/kinetic",
+          "factor": 0.8
+        }
+      ]
+    },
+    {
+      "name": "material_floor_friction_high",
+      "rationale": "Perturb authored material-to-world static/kinetic coefficients by CAD friction uncertainty. The articulated regularized-Coulomb path reads material pair kinetic friction, not world.floor_friction.",
+      "edits": [
+        {
+          "target": "robot",
+          "pointer": "/materials/steel/friction/world/static",
+          "factor": 1.2
+        },
+        {
+          "target": "robot",
+          "pointer": "/materials/steel/friction/world/kinetic",
+          "factor": 1.2
+        },
+        {
+          "target": "robot",
+          "pointer": "/materials/nylon/friction/world/static",
+          "factor": 1.2
+        },
+        {
+          "target": "robot",
+          "pointer": "/materials/nylon/friction/world/kinetic",
+          "factor": 1.2
+        }
+      ]
+    }
+  ]
+}

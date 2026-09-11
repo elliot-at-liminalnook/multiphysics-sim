@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "scope": "Synthetic transport and controller verification. No hardware was programmed, moved or measured.",
+  "hardware_repository_revision": "37335821b75c2421f258f7bcf8bc00647ed41395",
+  "source_sha256": {
+    "servo/src/servo.v": "a283bcd12d5297eaa2297fdaedb708a871e3964f7d6a9f6063364d82759837de",
+    "servo/src/hx_bus.v": "ad15377f24bf9fc8f40c9b0105640ba157a072e6f48e7cb4788ddc90207ae2cf",
+    "servo/src/capture_stream.v": "3e95e8d56b619d4be7562074d3eeac6c055f49e0400bc2ec1833a8e0d56a59bc",
+    "servo/src/link_tx.v": "9b2513a3efd8b9f5d09b3b02dce1dbbd9d0c8574602cee13405d76d30db378c9",
+    "servo/src/uart_tx.v": "23e6690a69e1c25db555efe9822168c51d370443638c598ca65d7c4709038eb7",
+    "servo/src/uart_rx.v": "d08e66b6ffd40d2c2e393462a62473fddd4766b2863daeaae023adb90a1ab3b2",
+    "servo/src/servo.cst": "fdf435fb707098d2f1aab2ae48176663153b9866f9742568eeebe8d15b18fbce",
+    "servo/tb/capture_tb.v": "4f4fbc0e675d987778660dc5babdc2432e11eb2021a63ea93cf98ca107dcd118",
+    "crates/sim-runtime/src/acquisition.rs": "4eeada163258ceb6269757266081ea0a65507c9015c75ac8c805c9ce1882e044",
+    "crates/sim-runtime/examples/capture_hx.rs": "d824538182c8eef7c32f1c29a9e62e10ce3420cb0f21561e2355bfac3f1541d5",
+    "crates/sim-runtime/tests/acquisition_wire.rs": "11070389fecfac0113ff58fc1506f8a86bb63f9a36c85b65f82b6dbe23b3b415"
+  },
+  "bitstream": {
+    "path": "servo/impl/capture.fs",
+    "sha256": "b3aee4c4a360c0f82a1006cd1d24d1134d68bee43ea8a5373523fccf65146239",
+    "target_clock_mhz": 50,
+    "reported_final_max_frequency_mhz": 105.42,
+    "programmed": false
+  },
+  "rust_tests": [
+    {
+      "suite": "capture-hx-tests.log",
+      "passed": 3
+    },
+    {
+      "suite": "capture-hx-example-tests.log",
+      "passed": 1
+    },
+    {
+      "suite": "capture-hx-wire-test.log",
+      "passed": 1
+    }
+  ],
+  "fpga_tests": {
+    "legacy_bus_and_link": true,
+    "foreign_reply_id_rejected": true,
+    "legacy_dual_servo_controls": true,
+    "capture_dual_servo_controls": true,
+    "uart_capture_short_replies_and_overflow": true
+  },
+  "fixture_sha256": "bcb1e53ace04862c348df27eb4bda4b8b84192550e081e76fadb54303128d23c",
+  "replay_quality": {
+    "clock_resets": 0,
+    "decoder": {
+      "crc_errors": 0,
+      "discarded_bytes": 0,
+      "frames": 10,
+      "invalid_lengths": 0,
+      "partial_frames_discarded": 0
+    },
+    "duplicate_ids": 0,
+    "failed_transactions": 2,
+    "invalid_records": 0,
+    "max_device_dropped_total": 25,
+    "observations": 7,
+    "records": 10,
+    "transaction_gaps": 25,
+    "transport_sequence_gaps_mod256": 0
+  },
+  "limitations": [
+    "No live serial-device test; acquisition profile must be deliberately loaded before logging.",
+    "Clock timestamps bound bus acquisition, not internal sensor age.",
+    "Position excitation and window-aware parameter fitting are future work.",
+    "User changes to unrelated Sipeed files were preserved."
+  ]
+}

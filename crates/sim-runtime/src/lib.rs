@@ -2,6 +2,7 @@
 
 use sim_core::BehaviorRegistry;
 
+pub mod acquisition;
 pub mod contact_audit;
 pub mod contact_planning;
 pub mod contact_implicit;

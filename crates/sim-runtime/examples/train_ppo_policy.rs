@@ -20,9 +20,17 @@ fn write(path:impl AsRef<Path>,value:&impl Serialize)->Result<(),Box<dyn std::er
     let mut f=fs::OpenOptions::new().write(true).create_new(true).open(path)?;
     serde_json::to_writer(&mut f,value)?;f.write_all(b"\n")?;Ok(())
 }
+fn write_compressed(path:impl AsRef<Path>,value:&impl Serialize)->Result<(),Box<dyn std::error::Error>>{
+    use std::process::{Command,Stdio};
+    let file=fs::OpenOptions::new().write(true).create_new(true).open(path)?;
+    let mut child=Command::new("gzip").arg("-c").stdin(Stdio::piped()).stdout(Stdio::from(file)).spawn()?;
+    let result=serde_json::to_writer(child.stdin.take().ok_or("missing gzip input")?,value);
+    if let Err(error)=result {let _=child.kill();let _=child.wait();return Err(error.into());}
+    if !child.wait()?.success(){return Err("rollout compression failed".into());}Ok(())
+}
 fn main()->Result<(),Box<dyn std::error::Error>>{
     let args=std::env::args().skip(1).collect::<Vec<_>>();
-    if args.len()!=2{return Err("usage: train_ppo_policy experiment.json fresh-output-directory".into());}
+    if !(2..=3).contains(&args.len())||args.get(2).is_some_and(|v|v!="--gzip-rollouts"){return Err("usage: train_ppo_policy experiment.json fresh-output-directory [--gzip-rollouts]".into());}
     let raw=fs::read(&args[0])?;let recipe:Experiment=serde_json::from_slice(&raw)?;
     if recipe.version!=1||recipe.iterations==0||recipe.episodes_per_iteration==0||recipe.task.speed.is_none(){return Err("invalid speed PPO experiment".into());}
     recipe.optimizer.validate()?;
@@ -54,7 +62,8 @@ fn main()->Result<(),Box<dyn std::error::Error>>{
             let seed=recipe.seed.wrapping_add((state.updates as u64).wrapping_mul(recipe.episodes_per_iteration as u64).wrapping_add(episode as u64).wrapping_add(1));
             eprintln!("iteration {iteration}, episode {episode}, seed {seed}: collecting full-horizon stochastic rollout");
             let rollout=collect_speed_episode(recipe.scene.clone(),recipe.config.clone(),recipe.task.clone(),&recipe.actions,&state.actor,&state.critic,&recipe.exploration,seed)?;
-            write(root.join(format!("iteration-{iteration:03}-episode-{episode:03}.json")),&rollout)?;
+            if args.len()==3 {write_compressed(root.join(format!("iteration-{iteration:03}-episode-{episode:03}.json.gz")),&rollout)?;}
+            else {write(root.join(format!("iteration-{iteration:03}-episode-{episode:03}.json")),&rollout)?;}
             eprintln!("episode ended at {} s; fell={}; error={:?}; elapsed {:.1}s",rollout.final_transition.time_s,rollout.final_transition.terminated,rollout.error,start.elapsed().as_secs_f64());
             if rollout.error.is_some(){return Err("numerical rollout failure preserved; no policy update performed".into());}
             rollouts.push(rollout);

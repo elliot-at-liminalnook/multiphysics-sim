@@ -1,0 +1,427 @@
+{
+  "version": 1,
+  "plan": "recovery-cases.json",
+  "preparation": {
+    "version": 1,
+    "source": "examples/full-robot/trusted-baseline/fastest573.input.json",
+    "source_sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6",
+    "plan": "examples/full-robot/trusted-baseline/recovery-cases.json",
+    "cases": [
+      {
+        "name": "raised_10mm",
+        "edits": [
+          {
+            "pointer": "/runtime/config/initial_base_translation_m",
+            "original": [
+              0.032430151192123384,
+              0.03459096947710014,
+              -0.06610631034284638
+            ],
+            "value": [
+              0.032430151192123384,
+              0.03459096947710014,
+              -0.056106310342846376
+            ]
+          },
+          {
+            "pointer": "/runtime/config/initial_base_rotation_vector_rad",
+            "original": [
+              -0.03122992098634629,
+              -0.06405235067559065,
+              -0.02498298579085805
+            ],
+            "value": [
+              -0.03122992098634629,
+              -0.06405235067559065,
+              -0.02498298579085805
+            ]
+          },
+          {
+            "pointer": "/runtime/config/steps",
+            "original": 1920000,
+            "value": 128000
+          },
+          {
+            "pointer": "/runtime/completed_steps",
+            "original": 1920000,
+            "value": 128000
+          },
+          {
+            "pointer": "/runtime/scene/duration_s",
+            "original": 300,
+            "value": 20
+          }
+        ],
+        "sha256": "7121ddd1dd0069e45298d25541645e3340e00b50c01b585bc2abd10d29bc2e25"
+      },
+      {
+        "name": "tilted_raised",
+        "edits": [
+          {
+            "pointer": "/runtime/config/initial_base_translation_m",
+            "original": [
+              0.032430151192123384,
+              0.03459096947710014,
+              -0.06610631034284638
+            ],
+            "value": [
+              0.032430151192123384,
+              0.03459096947710014,
+              -0.046106310342846374
+            ]
+          },
+          {
+            "pointer": "/runtime/config/initial_base_rotation_vector_rad",
+            "original": [
+              -0.03122992098634629,
+              -0.06405235067559065,
+              -0.02498298579085805
+            ],
+            "value": [
+              -0.0012299209863462918,
+              -0.06405235067559065,
+              -0.02498298579085805
+            ]
+          },
+          {
+            "pointer": "/runtime/config/steps",
+            "original": 1920000,
+            "value": 128000
+          },
+          {
+            "pointer": "/runtime/completed_steps",
+            "original": 1920000,
+            "value": 128000
+          },
+          {
+            "pointer": "/runtime/scene/duration_s",
+            "original": 300,
+            "value": 20
+          }
+        ],
+        "sha256": "78e9c3093b48b6803adc801ac5b96f979f4b0e4132bb38729daabe4fb91d1a32"
+      }
+    ],
+    "scope": "Held-out initial-state recovery cases, not timed mid-gait pushes or measured hardware disturbance distributions. Robot properties, controller, inputs and speed/fall objective remain unchanged.",
+    "action_change": "Retain original scheduled command values/times within the shorter evaluation horizon."
+  },
+  "rows": [
+    {
+      "name": "raised_10mm",
+      "summary": {
+        "completed_actions": 1000,
+        "eligible_net_speed_m_s": 0.5636096257904111,
+        "episode_complete": true,
+        "error": null,
+        "final_transition": {
+          "completed_steps": 128000,
+          "elapsed_s": 0.02,
+          "observations": [
+            0.10822205568593363,
+            -1.385946809751502,
+            -0.31220361585855877,
+            -3.478198263158884,
+            -1.1155727512380462,
+            1.1003997952536468,
+            -0.4050629927533779,
+            1.4016237864156944,
+            0.017334043159724366,
+            -1.1432497772675414,
+            -1.351396732680973,
+            -0.969797180274097,
+            -0.027983677109271205,
+            0.9694490929157805,
+            -0.09808940561020975,
+            4.0105429540110515,
+            -1.1307143909202986,
+            -2.898794016518052,
+            0.314015308330373,
+            -3.5899770547845753,
+            -0.18219289294948526,
+            2.4547502817854308,
+            -1.0551785574492705,
+            -0.8144326012737905,
+            7.437296793871357,
+            0.3085087410746042,
+            8.53210290386588,
+            0.39282151516363145,
+            -0.07577727029351604,
+            -0.08690873969846089,
+            0.11004468960646019,
+            0.6933528297331883,
+            1.690626461609609,
+            1.0350607808451238,
+            0.10306139743014675,
+            0.5194939237947358,
+            -0.29027862879493155,
+            0.8012246287785905,
+            2.3445210955566615,
+            -0.6332480138322683,
+            0.09113163020858539,
+            0.32415134665970025,
+            0.10685185468660272,
+            -3.2798057911020835,
+            17.640192192769042,
+            -1.358549116181513,
+            -1.8015981627876636,
+            9.02566264934599,
+            -1.0739210663316265,
+            1.4522598068153711,
+            26.620435469984045,
+            -0.17077078113097927,
+            -1.1872921274349453,
+            4.79804169311953,
+            0.3225062137660448,
+            -0.2689566579561018,
+            -0.02377347597572854,
+            0.3825300460182441,
+            0.16614979747788292,
+            0.006762878053950972,
+            -0.08185365664668538,
+            0.11659922195289651,
+            0.9996944959938807,
+            0.23676486909409844,
+            0,
+            0.1031773451737574,
+            0
+          ],
+          "reward": 0.010448614178866222,
+          "reward_terms": [
+            {
+              "name": "speed.net_progress",
+              "value": 0.010448614178866222
+            }
+          ],
+          "speed": {
+            "body_floor_contact": false,
+            "body_up_z": 0.9996944959938807,
+            "displacement_xy_m": [
+              7.405895504687144,
+              8.497943038588671
+            ],
+            "fallen": false,
+            "hull_floor_clearance_m": 0.28146334586699623,
+            "net_distance_m": 11.272192515808221,
+            "net_speed_m_s": 0.5636096257904111,
+            "progress_reward_m": 0.010448614178866222
+          },
+          "terminated": false,
+          "termination_reasons": [],
+          "time_s": 20,
+          "truncated": true
+        },
+        "observed_prefix_net_speed_m_s": 0.5636096257904111,
+        "requested_steps_completed": true,
+        "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. observed_prefix_net_speed_m_s divides distance by observed time, while the task transition's net_speed_m_s divides by the original horizon. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+        "simulated_seconds_per_wall_second": 0.1175177398865318,
+        "stepping_and_streaming_wall_s": 170.187071495,
+        "stop": "episode_complete",
+        "version": 1
+      },
+      "input_sha256": "7121ddd1dd0069e45298d25541645e3340e00b50c01b585bc2abd10d29bc2e25",
+      "metadata": {
+        "version": 1,
+        "input_path": "runs/trusted-baseline-v1/recovery-baseline/raised_10mm.input.json",
+        "input_blake3": "8373d386ed2936b69ea720a4bf25759853a5c3dee7a5511cdc7d48ce0560ceae",
+        "episode_duration_s": 20,
+        "requested_duration_s": 20,
+        "physics_context": {
+          "runtime": {
+            "features": [],
+            "library_source_blake3": "56acc2aeca9730e9448ea56748a3c5461f0a86317d0531e555890508b1bf4cc1",
+            "version": 1
+          },
+          "sections": {
+            "/config/applied_generalized_loads": "dff33c97ade82946b99f4004efc778140ca0a8b7fd6f76ac8da8802d61179301",
+            "/config/embedding": "c3676765a922ced473b745cea9691e89612b11f2b62d2129e2756e07e343b40f",
+            "/config/implicit": "9260099d43efbce0c09c9cccc23dee1d7c26c8be51a287633859f781e814c82b",
+            "/config/mechanical_subdivision": "233e632116d1e5309f6d860fe87157dedfed4f29444357750a75c476538da02c",
+            "/config/motors": "b866640b79e33632746394d373bc2f71d38885128dfe65bb7b8b4519f5d867a9",
+            "/config/step_s": "cd81817f1b038ef81d15506e36986ae85df601e6087c2850bbed512e5c3383e3",
+            "/scene/options": "4da4af11868277f3b83e10405b18b831142b466336be48479bc0dcde6c3d530a",
+            "/scene/period_s": "56da4270daae6dac517429f5b197822828dd719f7305821afa0386f61ee9e9cc",
+            "/scene/robot/battery": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+            "/scene/robot/cables": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+            "/scene/robot/control": "16d4ee50d7dec776767086e9a4fcae63a77b02d3b949abcffe5703b2b02463fc",
+            "/scene/robot/gravity": "24abb69f7c4efbb12267ff1babece1e4e10a1085b1cbb58ccc61bd710b7fef6d",
+            "/scene/robot/identification": "359e16502979a53be306f0cdab119e5480288156f65c5a593e70ef7b02fc23d1",
+            "/scene/robot/joints": "8cfa0efc54512606a2951e232353194d68a7c6def261e9d45a4f752cb7c18241",
+            "/scene/robot/links": "4dded23b62bdd5fc7c30e9eb0e137afbb294c38f24ad7fb2d7766fdc4e317bdc",
+            "/scene/robot/materials": "c2b06e4a32b069dc8f2ad2ac89207b26614b6b6d275c5636c843c76fe6c11b50",
+            "/scene/robot/motors": "47e20bb9af4a4b5f924c288ebe22e3d66e262f5662fda38dc52a0a91571c5790",
+            "/scene/robot/planar": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+            "/scene/robot/sensors": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+            "/scene/robot/source": "1915d02b376ff84748a96bb124e5009d802cbc4ebe980289577a0629c53dfff8",
+            "/scene/robot/transmissions": "74ed22a5910169bc01a75ab4a82a58cff0627df33f63b9760e4b9080b6471b8d",
+            "/scene/robot/uncertainty": "0915c95374a1b449b570f2834e4a34f07af3e7abf8b30fc641bd6b6515f4d957",
+            "/scene/robot/version": "01c86025183c26e002c01759185ba3eed188f599a3f597af339a698f51931c76",
+            "/scene/robot/world": "92372ef116ede94c50a46574a85aa188de5f00bd95811d38f0dee2e6a1c304a2",
+            "/scene/version": "404fcbd96dda2dcc2bc01e396366456ab18f7452af65dab00b422a9ab9b9e818"
+          },
+          "version": 1
+        },
+        "step_s": 0.00015625,
+        "steps": 128000
+      }
+    },
+    {
+      "name": "tilted_raised",
+      "summary": {
+        "completed_actions": 1000,
+        "eligible_net_speed_m_s": 0.5634036493736452,
+        "episode_complete": true,
+        "error": null,
+        "final_transition": {
+          "completed_steps": 128000,
+          "elapsed_s": 0.02,
+          "observations": [
+            0.10822205568593611,
+            -1.3859468097517793,
+            -0.31220361585862894,
+            -3.478198263157621,
+            -1.115572751238212,
+            1.1003997952550266,
+            -0.40506299275328905,
+            1.4016237864148526,
+            0.017334043159706495,
+            -1.1432497772668755,
+            -1.3513967326809264,
+            -0.9697971802727883,
+            -0.0279836771092961,
+            0.9694490929147278,
+            -0.09808940560934917,
+            4.010542954009892,
+            -1.130714390920251,
+            -2.8987940165176562,
+            0.31401530833031716,
+            -3.5899770547828256,
+            -0.1821928929495802,
+            2.454750281787341,
+            -1.0551785574492774,
+            -0.8144326012730381,
+            7.471066263258634,
+            0.3101921795991134,
+            8.497070353079073,
+            0.3914935475973464,
+            -0.0757772702935103,
+            -0.08690873969839567,
+            0.11004468960671032,
+            0.6933528297330402,
+            1.690626461611583,
+            1.0350607808445258,
+            0.10306139742969034,
+            0.5194939237926481,
+            -0.29027862879336597,
+            0.8012246287792097,
+            2.3445210955550397,
+            -0.6332480138328429,
+            0.09113163020831849,
+            0.3241513466590208,
+            0.09277151291307932,
+            -3.280234258770674,
+            17.64019219279144,
+            -1.366270393253905,
+            -1.795749663428962,
+            9.025662649301633,
+            -1.0676769959469958,
+            1.456856491059199,
+            26.620435469895195,
+            -0.17586594543709236,
+            -1.1865481131385303,
+            4.79804169311954,
+            0.32250621376593974,
+            -0.26824094175712027,
+            -0.02377347597571429,
+            0.38253004601821444,
+            0.16730282790865628,
+            0.006762878054024776,
+            -0.08185365664665528,
+            0.11659922195346589,
+            0.9996944959938803,
+            0.23676486909409844,
+            0,
+            0.1031773451737574,
+            0
+          ],
+          "reward": 0.010448606570951924,
+          "reward_terms": [
+            {
+              "name": "speed.net_progress",
+              "value": 0.010448606570951924
+            }
+          ],
+          "speed": {
+            "body_floor_contact": false,
+            "body_up_z": 0.9996944959938803,
+            "displacement_xy_m": [
+              7.439664974074421,
+              8.462910487801864
+            ],
+            "fallen": false,
+            "hull_floor_clearance_m": 0.2814633458670015,
+            "net_distance_m": 11.268072987472904,
+            "net_speed_m_s": 0.5634036493736452,
+            "progress_reward_m": 0.010448606570951924
+          },
+          "terminated": false,
+          "termination_reasons": [],
+          "time_s": 20,
+          "truncated": true
+        },
+        "observed_prefix_net_speed_m_s": 0.5634036493736452,
+        "requested_steps_completed": true,
+        "scope": "Eligibility requires the complete original horizon without task termination or numerical failure. observed_prefix_net_speed_m_s divides distance by observed time, while the task transition's net_speed_m_s divides by the original horizon. Prefixes and cancellations remain diagnostics. Streaming cost is included; no hardware or realtime qualification.",
+        "simulated_seconds_per_wall_second": 0.12527182870265008,
+        "stepping_and_streaming_wall_s": 159.652814261,
+        "stop": "episode_complete",
+        "version": 1
+      },
+      "input_sha256": "78e9c3093b48b6803adc801ac5b96f979f4b0e4132bb38729daabe4fb91d1a32",
+      "metadata": {
+        "version": 1,
+        "input_path": "runs/trusted-baseline-v1/recovery-baseline/tilted_raised.input.json",
+        "input_blake3": "21f882d6f8e499c618a67451ebc0bc1cd5c554001c47e3aefe63a6762a9a9bfa",
+        "episode_duration_s": 20,
+        "requested_duration_s": 20,
+        "physics_context": {
+          "runtime": {
+            "features": [],
+            "library_source_blake3": "56acc2aeca9730e9448ea56748a3c5461f0a86317d0531e555890508b1bf4cc1",
+            "version": 1
+          },
+          "sections": {
+            "/config/applied_generalized_loads": "dff33c97ade82946b99f4004efc778140ca0a8b7fd6f76ac8da8802d61179301",
+            "/config/embedding": "c3676765a922ced473b745cea9691e89612b11f2b62d2129e2756e07e343b40f",
+            "/config/implicit": "9260099d43efbce0c09c9cccc23dee1d7c26c8be51a287633859f781e814c82b",
+            "/config/mechanical_subdivision": "233e632116d1e5309f6d860fe87157dedfed4f29444357750a75c476538da02c",
+            "/config/motors": "b866640b79e33632746394d373bc2f71d38885128dfe65bb7b8b4519f5d867a9",
+            "/config/step_s": "cd81817f1b038ef81d15506e36986ae85df601e6087c2850bbed512e5c3383e3",
+            "/scene/options": "4da4af11868277f3b83e10405b18b831142b466336be48479bc0dcde6c3d530a",
+            "/scene/period_s": "56da4270daae6dac517429f5b197822828dd719f7305821afa0386f61ee9e9cc",
+            "/scene/robot/battery": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+            "/scene/robot/cables": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+            "/scene/robot/control": "16d4ee50d7dec776767086e9a4fcae63a77b02d3b949abcffe5703b2b02463fc",
+            "/scene/robot/gravity": "24abb69f7c4efbb12267ff1babece1e4e10a1085b1cbb58ccc61bd710b7fef6d",
+            "/scene/robot/identification": "359e16502979a53be306f0cdab119e5480288156f65c5a593e70ef7b02fc23d1",
+            "/scene/robot/joints": "8cfa0efc54512606a2951e232353194d68a7c6def261e9d45a4f752cb7c18241",
+            "/scene/robot/links": "4dded23b62bdd5fc7c30e9eb0e137afbb294c38f24ad7fb2d7766fdc4e317bdc",
+            "/scene/robot/materials": "c2b06e4a32b069dc8f2ad2ac89207b26614b6b6d275c5636c843c76fe6c11b50",
+            "/scene/robot/motors": "47e20bb9af4a4b5f924c288ebe22e3d66e262f5662fda38dc52a0a91571c5790",
+            "/scene/robot/planar": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+            "/scene/robot/sensors": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+            "/scene/robot/source": "1915d02b376ff84748a96bb124e5009d802cbc4ebe980289577a0629c53dfff8",
+            "/scene/robot/transmissions": "74ed22a5910169bc01a75ab4a82a58cff0627df33f63b9760e4b9080b6471b8d",
+            "/scene/robot/uncertainty": "0915c95374a1b449b570f2834e4a34f07af3e7abf8b30fc641bd6b6515f4d957",
+            "/scene/robot/version": "01c86025183c26e002c01759185ba3eed188f599a3f597af339a698f51931c76",
+            "/scene/robot/world": "92372ef116ede94c50a46574a85aa188de5f00bd95811d38f0dee2e6a1c304a2",
+            "/scene/version": "404fcbd96dda2dcc2bc01e396366456ab18f7452af65dab00b422a9ab9b9e818"
+          },
+          "version": 1
+        },
+        "step_s": 0.00015625,
+        "steps": 128000
+      }
+    }
+  ],
+  "scope": "Complete 20 s initial-state recovery episodes; no timed pushes or hardware calibration. Learned candidate comparison pending."
+}

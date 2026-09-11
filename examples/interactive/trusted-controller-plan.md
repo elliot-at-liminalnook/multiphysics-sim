@@ -8,9 +8,9 @@ the same APIs on the wheeled robot. Work takes place on `main` in
 
 | Task | Required evidence | Current state |
 |---|---|---|
-| Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Complete 300 s reproduction exactly matches historical distance/speed: 172.069173 m and 0.5735639103 m/s, no sampled fall. WASD and three 20 s timestep cases completed. A fresh coarser-step 300 s comparison is running. |
+| Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Complete 300 s reproduction exactly matches historical distance/speed: 172.069173 m and 0.5735639103 m/s, no sampled fall. WASD and three 20 s timestep cases completed. Fresh coarser-step 300 s run gives 0.5621811105 m/s, 1.98% lower; full finer-step comparison is running. |
 | Physical model | Trace actuator/transmission limits, contacts and sensors to CAD; rank influential uncertain parameters using explicit experimental perturbations, then obtain corresponding hardware measurements and promote accepted values through CAD. | Winning recipe uses uncalibrated effective servos, omits inter-link contact, and declares no sensors. Its observations are ideal simulator values. Hardware availability/interface requested from user. |
-| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Full 90 s motion data and initial future-dynamics models are preserved. Quadruped prediction improves on constant-velocity and constant-acceleration baselines in a chronological development split. Learned actuator selection and closed-loop speed/response/recovery comparisons remain pending. |
+| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Motion data, controller-conditioned model and three actuator-conditioned forecast heads are preserved. A 519-input predictive residual actor exactly preserves the baseline before learning. The second PPO update reaches 0.564950 m/s over 20 s (+0.24%); this actor is frozen for ongoing sustained/response/recovery comparisons. |
 | Second morphology | Use the same observation, action, prediction and experiment contracts on the wheeled robot, including sustained locomotion and predictive evaluation. | Complete 10 s forward run, 490 live forecast queries and exact 501-frame experiment/checkpoint replay passed. Learned forecast is tested on a separate forward episode and exposes generalization failure. Evidence in `../wheeled-robot/predictive-baseline/`. |
 
 Speed remains net displacement divided by the complete requested duration, with
@@ -74,12 +74,14 @@ for command-response training, not extra rewards or failure penalties.
 
 Heading is measured from sampled body orientation. Unwrapping assumes less than
 pi true rotation between observations; the largest observed increment is small,
-but that alone cannot rule out hidden turns. Integrating the sampled angular
-velocity gives substantially different changes during walking (for example,
-64.96 versus 3.08 degrees in the first forward stage). Both diagnostics are
-retained; sampling and kinematic consistency need further investigation before
-using the integral as a turn measurement. Acceleration likewise denotes a
-20 ms interval-average velocity difference, not an instantaneous peak.
+but that alone cannot rule out hidden turns. Integrating 20 ms angular-velocity
+samples gives substantially different changes during walking. The one-second
+`motion-sampling-audit.json` replays the same trajectory at every physics step:
+integration error falls from 0.035857 rad at 20 ms sampling to 0.000029 rad at
+0.15625 ms sampling, with exactly matching environment endpoint position/velocity.
+This identifies substantial sampling/quadrature error; it does not establish
+continuous-time accuracy. The largest finite-interval acceleration rises from
+6.35 to 40.38 m/s² as sampling gets finer. Report its interval explicitly.
 
 The physical declaration audit is in `physical-audit.json` beside the baseline.
 All 12 effective actuator parameter sets match their CAD ratings/static gain
@@ -89,8 +91,9 @@ no declared sensors. The sensitivity plan perturbs active torque (+/-10%), servo
 stiffness (+/-15%), no-load speed (+/-10%, exploratory range) and floor friction
 (+/-20%). `prepare_physical_sensitivity` reuses the shared Scene input-preservation
 API so floor changes carry original-value receipts; configuration changes carry
-an explicit manifest. Eight matched 20 s prefix runs are executing on the same
-pinned binary as the baseline. They do not replace full-horizon evaluation.
+an explicit manifest. All eight matched 20 s prefix runs and the two active
+material-friction cases completed on the pinned baseline binary. They do not
+replace full-horizon evaluation.
 
 Verification: three analytic response tests pass, including wrap handling,
 nonuniform braking, closed paths, reordered observations and source aliases.
@@ -151,10 +154,28 @@ These tools preserve the capture's original physics identity. The packer rejects
 numerically failed captures; the trainer rejects overlapping training/validation
 windows in identical captures, including byte-identical files at different paths.
 
-Separate actuator-conditioned heads at 20, 100 and 200 ms are training for the
-existing shared predictive actor/planner. They use recorded actuator channel
-names (`*.target`), not generalized-coordinate names. These causal heads can
-supply current dynamics and predicted motion to the actor; command selection,
-closed-loop learning and matched sustained/response/recovery evaluations remain
-required. The controller-conditioned models above remain useful diagnostics and
-are not silently substituted for actuator-conditioned planning models.
+Separate actuator-conditioned heads at 20, 100 and 200 ms completed training.
+Their normalized validation MSEs are respectively 0.14146, 0.11100 and 0.07540,
+versus constant velocity 0.62828, 0.24590 and 0.15430. These aggregate improvements
+do not mean every state channel improves. Models, experiments and per-output
+reports are in `../full-robot/trusted-baseline/predictive-controller-v1/`.
+They use recorded actuator channel names (`*.target`), not generalized-coordinate
+names. A name-based permutation binds their input columns to runtime actuator
+order; 34 real samples per head retain predictions within 3.5e-13 absolute error.
+
+The shared forecast bundle augments a residual actor with motion commands,
+current dynamics and proposed-action forecasts: 519 inputs, 12 actuator outputs.
+Its initially zero output preserves the existing gait exactly at startup and
+through the full 20 s training horizon. Forecasts describe the baseline Rhai
+proposal before neural correction, not a promise about subsequent applied neural
+actions. Inputs are ideal simulation observations, not a deployable sensor policy.
+The first PPO update completes without a sampled fall at 0.563406 m/s, versus
+0.563603 m/s for the neutral baseline, so it is not accepted as a speed improvement.
+The second reaches 0.564950 m/s (+0.24%) and is frozen before held-out evaluation;
+`candidate-selection.json` identifies its exact actor and selection rule. Training
+and held-out sustained/response/recovery comparisons remain unfinished.
+`recovery-cases.json` declares initial pose perturbations; the original gait
+completes both 20 s cases without sampled falls at 0.563610 and 0.563404 m/s.
+Those cases do not represent timed mid-gait pushes or measured hardware
+disturbance distributions. The learned candidate is running these same cases,
+the original 90 s command protocol and the full 300 s sustained test.

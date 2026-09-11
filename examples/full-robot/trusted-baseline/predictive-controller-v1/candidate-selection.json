@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "selection": "First deterministic PPO update exceeding the neutral baseline, frozen before sustained/command/recovery evaluation. Further training may continue; this comparison retains this exact actor.",
+  "iteration": 1,
+  "actor_sha256": "7859de660ad82971023059f42bef82c7172124129be17ec2dd2c60d779625be6",
+  "training_seconds": 20,
+  "baseline_distance_m": 11.272060278506844,
+  "candidate_distance_m": 11.299002311663902,
+  "baseline_speed_m_s": 0.5636030139253422,
+  "candidate_speed_m_s": 0.5649501155831951,
+  "relative_change": 0.002390160493413118,
+  "scope": "Development improvement only. 300 s sustained and held-out command/recovery acceptance pending."
+}

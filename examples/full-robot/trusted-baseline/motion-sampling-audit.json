@@ -1,0 +1,269 @@
+{
+  "endpoint": {
+    "heading_world_z": {
+      "angle_rad": -0.027215222862591704,
+      "rate_rad_s": -0.36992812954701476
+    },
+    "position_world_m": [
+      0.29545349781595753,
+      0.2707358553496956,
+      -0.06582630928625373
+    ],
+    "time_s": 1,
+    "velocity_world_m_s": [
+      0.5492922752759176,
+      0.3256185993648418,
+      0.19148899639609546
+    ]
+  },
+  "input": "examples/full-robot/trusted-baseline/fastest573.input.json",
+  "input_blake3": "df559a566e1893bc26e2c8aa674417e36527f674d670eb53bf663c269738d571",
+  "physics_context": {
+    "runtime": {
+      "features": [],
+      "library_source_blake3": "56acc2aeca9730e9448ea56748a3c5461f0a86317d0531e555890508b1bf4cc1",
+      "version": 1
+    },
+    "sections": {
+      "/config/applied_generalized_loads": "dff33c97ade82946b99f4004efc778140ca0a8b7fd6f76ac8da8802d61179301",
+      "/config/embedding": "c3676765a922ced473b745cea9691e89612b11f2b62d2129e2756e07e343b40f",
+      "/config/implicit": "9260099d43efbce0c09c9cccc23dee1d7c26c8be51a287633859f781e814c82b",
+      "/config/mechanical_subdivision": "233e632116d1e5309f6d860fe87157dedfed4f29444357750a75c476538da02c",
+      "/config/motors": "b866640b79e33632746394d373bc2f71d38885128dfe65bb7b8b4519f5d867a9",
+      "/config/step_s": "cd81817f1b038ef81d15506e36986ae85df601e6087c2850bbed512e5c3383e3",
+      "/scene/options": "4da4af11868277f3b83e10405b18b831142b466336be48479bc0dcde6c3d530a",
+      "/scene/period_s": "56da4270daae6dac517429f5b197822828dd719f7305821afa0386f61ee9e9cc",
+      "/scene/robot/battery": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+      "/scene/robot/cables": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+      "/scene/robot/control": "16d4ee50d7dec776767086e9a4fcae63a77b02d3b949abcffe5703b2b02463fc",
+      "/scene/robot/gravity": "24abb69f7c4efbb12267ff1babece1e4e10a1085b1cbb58ccc61bd710b7fef6d",
+      "/scene/robot/identification": "359e16502979a53be306f0cdab119e5480288156f65c5a593e70ef7b02fc23d1",
+      "/scene/robot/joints": "8cfa0efc54512606a2951e232353194d68a7c6def261e9d45a4f752cb7c18241",
+      "/scene/robot/links": "4dded23b62bdd5fc7c30e9eb0e137afbb294c38f24ad7fb2d7766fdc4e317bdc",
+      "/scene/robot/materials": "c2b06e4a32b069dc8f2ad2ac89207b26614b6b6d275c5636c843c76fe6c11b50",
+      "/scene/robot/motors": "47e20bb9af4a4b5f924c288ebe22e3d66e262f5662fda38dc52a0a91571c5790",
+      "/scene/robot/planar": "506d08787eee38b421e3f16dd947ab7d8b9cf9ce5d95b3fe97f937959deaa4ad",
+      "/scene/robot/sensors": "c890f43b46554be969bc8361a77d0ff1f57386d155563ae2404243e39c274952",
+      "/scene/robot/source": "1915d02b376ff84748a96bb124e5009d802cbc4ebe980289577a0629c53dfff8",
+      "/scene/robot/transmissions": "74ed22a5910169bc01a75ab4a82a58cff0627df33f63b9760e4b9080b6471b8d",
+      "/scene/robot/uncertainty": "0915c95374a1b449b570f2834e4a34f07af3e7abf8b30fc641bd6b6515f4d957",
+      "/scene/robot/version": "01c86025183c26e002c01759185ba3eed188f599a3f597af339a698f51931c76",
+      "/scene/robot/world": "92372ef116ede94c50a46574a85aa188de5f00bd95811d38f0dee2e6a1c304a2",
+      "/scene/version": "404fcbd96dda2dcc2bc01e396366456ab18f7452af65dab00b422a9ab9b9e818"
+    },
+    "version": 1
+  },
+  "rows": [
+    {
+      "heading_integral_minus_sampled_orientation_rad": 0.000029018533400603647,
+      "response": {
+        "axes": "xy",
+        "displacement_world_m": [
+          0.2640522086317446,
+          0.23657599007248675,
+          -0.006399532243356994
+        ],
+        "end_s": 1,
+        "end_speed_m_s": 0.6385526414714106,
+        "integrated_heading_change_rad": -0.003174536388716157,
+        "maximum_interval_acceleration_m_s2": 40.37507369599097,
+        "maximum_sampled_heading_increment_rad": 0.00023579195789355352,
+        "maximum_sampled_speed_m_s": 0.6948065099074925,
+        "mean_speed_m_s": 0.3632722121516332,
+        "net_distance_m": 0.3545303484358987,
+        "net_speed_m_s": 0.3545303484358987,
+        "sampled_unwrapped_heading_change_rad": -0.0032035549221167605,
+        "samples": 6401,
+        "start_s": 0,
+        "start_speed_m_s": 0,
+        "wrapped_heading_change_rad": -0.0032035549221166755
+      },
+      "sample_interval_s": 0.00015625
+    },
+    {
+      "heading_integral_minus_sampled_orientation_rad": 0.00003847302974458464,
+      "response": {
+        "axes": "xy",
+        "displacement_world_m": [
+          0.2640522086317446,
+          0.23657599007248675,
+          -0.006399532243356994
+        ],
+        "end_s": 1,
+        "end_speed_m_s": 0.6385526414714106,
+        "integrated_heading_change_rad": -0.0031650818923719556,
+        "maximum_interval_acceleration_m_s2": 36.22740020458889,
+        "maximum_sampled_heading_increment_rad": 0.0004714393363659704,
+        "maximum_sampled_speed_m_s": 0.6948065099074925,
+        "mean_speed_m_s": 0.36327100761605957,
+        "net_distance_m": 0.3545303484358987,
+        "net_speed_m_s": 0.3545303484358987,
+        "sampled_unwrapped_heading_change_rad": -0.00320355492211654,
+        "samples": 3201,
+        "start_s": 0,
+        "start_speed_m_s": 0,
+        "wrapped_heading_change_rad": -0.0032035549221166755
+      },
+      "sample_interval_s": 0.0003125
+    },
+    {
+      "heading_integral_minus_sampled_orientation_rad": 0.00007675829915381686,
+      "response": {
+        "axes": "xy",
+        "displacement_world_m": [
+          0.2640522086317446,
+          0.23657599007248675,
+          -0.006399532243356994
+        ],
+        "end_s": 1,
+        "end_speed_m_s": 0.6385526414714106,
+        "integrated_heading_change_rad": -0.0031267966229628413,
+        "maximum_interval_acceleration_m_s2": 30.964904201833576,
+        "maximum_sampled_heading_increment_rad": 0.000942837814923058,
+        "maximum_sampled_speed_m_s": 0.6948065099074925,
+        "mean_speed_m_s": 0.36326618627267887,
+        "net_distance_m": 0.3545303484358987,
+        "net_speed_m_s": 0.3545303484358987,
+        "sampled_unwrapped_heading_change_rad": -0.003203554922116658,
+        "samples": 1601,
+        "start_s": 0,
+        "start_speed_m_s": 0,
+        "wrapped_heading_change_rad": -0.0032035549221166755
+      },
+      "sample_interval_s": 0.000625
+    },
+    {
+      "heading_integral_minus_sampled_orientation_rad": 0.0002296490783977971,
+      "response": {
+        "axes": "xy",
+        "displacement_world_m": [
+          0.2640522086317446,
+          0.23657599007248675,
+          -0.006399532243356994
+        ],
+        "end_s": 1,
+        "end_speed_m_s": 0.6385526414714106,
+        "integrated_heading_change_rad": -0.002973905843718913,
+        "maximum_interval_acceleration_m_s2": 27.8811857947611,
+        "maximum_sampled_heading_increment_rad": 0.0018798759565105026,
+        "maximum_sampled_speed_m_s": 0.6948065099074925,
+        "mean_speed_m_s": 0.3632471644242972,
+        "net_distance_m": 0.3545303484358987,
+        "net_speed_m_s": 0.3545303484358987,
+        "sampled_unwrapped_heading_change_rad": -0.00320355492211671,
+        "samples": 801,
+        "start_s": 0,
+        "start_speed_m_s": 0,
+        "wrapped_heading_change_rad": -0.0032035549221166755
+      },
+      "sample_interval_s": 0.00125
+    },
+    {
+      "heading_integral_minus_sampled_orientation_rad": 0.0008701825709576533,
+      "response": {
+        "axes": "xy",
+        "displacement_world_m": [
+          0.2640522086317446,
+          0.23657599007248675,
+          -0.006399532243356994
+        ],
+        "end_s": 1,
+        "end_speed_m_s": 0.6385526414714106,
+        "integrated_heading_change_rad": -0.0023333723511590448,
+        "maximum_interval_acceleration_m_s2": 21.646609267137453,
+        "maximum_sampled_heading_increment_rad": 0.0037448583891879147,
+        "maximum_sampled_speed_m_s": 0.6948065099074925,
+        "mean_speed_m_s": 0.36317523678722125,
+        "net_distance_m": 0.3545303484358987,
+        "net_speed_m_s": 0.3545303484358987,
+        "sampled_unwrapped_heading_change_rad": -0.003203554922116698,
+        "samples": 401,
+        "start_s": 0,
+        "start_speed_m_s": 0,
+        "wrapped_heading_change_rad": -0.0032035549221166755
+      },
+      "sample_interval_s": 0.0025
+    },
+    {
+      "heading_integral_minus_sampled_orientation_rad": 0.003513925132069067,
+      "response": {
+        "axes": "xy",
+        "displacement_world_m": [
+          0.2640522086317446,
+          0.23657599007248675,
+          -0.006399532243356994
+        ],
+        "end_s": 1,
+        "end_speed_m_s": 0.6385526414714106,
+        "integrated_heading_change_rad": 0.00031037020995240347,
+        "maximum_interval_acceleration_m_s2": 14.329460784957792,
+        "maximum_sampled_heading_increment_rad": 0.0071680888817908725,
+        "maximum_sampled_speed_m_s": 0.6948065099074925,
+        "mean_speed_m_s": 0.3629266793843613,
+        "net_distance_m": 0.3545303484358987,
+        "net_speed_m_s": 0.3545303484358987,
+        "sampled_unwrapped_heading_change_rad": -0.0032035549221166634,
+        "samples": 201,
+        "start_s": 0,
+        "start_speed_m_s": 0,
+        "wrapped_heading_change_rad": -0.0032035549221166755
+      },
+      "sample_interval_s": 0.005
+    },
+    {
+      "heading_integral_minus_sampled_orientation_rad": 0.0137744843079176,
+      "response": {
+        "axes": "xy",
+        "displacement_world_m": [
+          0.2640522086317446,
+          0.23657599007248675,
+          -0.006399532243356994
+        ],
+        "end_s": 1,
+        "end_speed_m_s": 0.6385526414714106,
+        "integrated_heading_change_rad": 0.010570929385800936,
+        "maximum_interval_acceleration_m_s2": 9.247884261592386,
+        "maximum_sampled_heading_increment_rad": 0.0142600874212041,
+        "maximum_sampled_speed_m_s": 0.6948065099074925,
+        "mean_speed_m_s": 0.3621208996404205,
+        "net_distance_m": 0.3545303484358987,
+        "net_speed_m_s": 0.3545303484358987,
+        "sampled_unwrapped_heading_change_rad": -0.0032035549221166634,
+        "samples": 101,
+        "start_s": 0,
+        "start_speed_m_s": 0,
+        "wrapped_heading_change_rad": -0.0032035549221166755
+      },
+      "sample_interval_s": 0.01
+    },
+    {
+      "heading_integral_minus_sampled_orientation_rad": 0.03585739121094937,
+      "response": {
+        "axes": "xy",
+        "displacement_world_m": [
+          0.2640522086317446,
+          0.23657599007248675,
+          -0.006399532243356994
+        ],
+        "end_s": 1,
+        "end_speed_m_s": 0.6385526414714106,
+        "integrated_heading_change_rad": 0.0326538362888327,
+        "maximum_interval_acceleration_m_s2": 6.354335923838213,
+        "maximum_sampled_heading_increment_rad": 0.023765657105667665,
+        "maximum_sampled_speed_m_s": 0.6948065099074925,
+        "mean_speed_m_s": 0.35907505112179466,
+        "net_distance_m": 0.3545303484358987,
+        "net_speed_m_s": 0.3545303484358987,
+        "sampled_unwrapped_heading_change_rad": -0.003203554922116672,
+        "samples": 51,
+        "start_s": 0,
+        "start_speed_m_s": 0,
+        "wrapped_heading_change_rad": -0.0032035549221166755
+      },
+      "sample_interval_s": 0.02
+    }
+  ],
+  "scope": "Same shared embedded replay and authored controller clock. Only read-only observation cadence changes. Orientation unwrapping still assumes less than pi rotation between physics endpoints; no continuous-time or hardware certificate.",
+  "version": 1,
+  "environment_endpoint_exact": true
+}

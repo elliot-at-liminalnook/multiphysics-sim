@@ -8,9 +8,9 @@ the same APIs on the wheeled robot. Work takes place on `main` in
 
 | Task | Required evidence | Current state |
 |---|---|---|
-| Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Complete 300 s reproduction exactly matches historical distance/speed: 172.069173 m and 0.5735639103 m/s, no sampled fall. WASD and three 20 s timestep cases completed. Fresh coarser-step 300 s run gives 0.5621811105 m/s, 1.98% lower; full finer-step comparison is running. |
+| Baseline | Reproduce the preserved 300 s gait; report sustained net speed and sampled falls. Measure acceleration, braking, left/right turns and reversal from recorded WASD-equivalent commands. Compare matched physical-time inputs across timesteps. | Complete 300 s reproduction exactly matches historical 0.5735639103 m/s. All three full timestep runs complete without sampled falls: coarse 0.5621811105, baseline 0.5735639103, fine 0.5700867555 m/s. WASD measurements and sampling audit are preserved. Numerical convergence and hardware accuracy remain unproved. |
 | Physical model | Trace actuator/transmission limits, contacts and sensors to CAD; rank influential uncertain parameters using explicit experimental perturbations, then obtain corresponding hardware measurements and promote accepted values through CAD. | Effective actuator derivations match CAD; all eight transmission relations hold across 4,501 captured samples. Winning recipe remains uncalibrated, omits inter-link contact, and declares no sensors. Its observations are ideal simulator values. Hardware availability/interface requested from user. |
-| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Three PPO updates completed: best 20 s training speed 0.566927 m/s (+0.59%). The earlier 0.564950 m/s actor remains frozen for evaluation; both held-out initial-state recovery cases pass with about 0.23% higher speed. The 90 s command protocol completes without a sampled fall but shows more forward heading drift. Full sustained comparison remains running. |
+| Predictive controller | Train with commands and observed dynamics, predict future trajectories alongside actions, and compare against the original gait on sustained speed, command response and recovery using reserved evaluation cases. | Three PPO updates completed; the frozen candidate completes recovery, WASD and 300 s comparisons without sampled falls. Its short gain does not transfer: 300 s net speed is 0.432011 m/s, 24.7% below baseline, with greater path curvature. It is rejected as a speed improvement. The later short-training winner remains unvalidated beyond 20 s. |
 | Second morphology | Use the same observation, action, prediction and experiment contracts on the wheeled robot, including sustained locomotion and predictive evaluation. | Complete 10 s forward run, 490 live forecast queries and exact 501-frame experiment/checkpoint replay passed. Learned forecast is tested on a separate forward episode and exposes generalization failure. Evidence in `../wheeled-robot/predictive-baseline/`. |
 
 Speed remains net displacement divided by the complete requested duration, with
@@ -20,10 +20,12 @@ and recovery are measured separately so a high straight-line speed cannot concea
 poor control behavior.
 
 The original 0.5735639103 m/s result used a 0.15625 ms physics step for 300 s.
-Its own coarser-step result differs by about 2% and has substantial endpoint
-divergence. Neither result establishes numerical convergence or hardware accuracy.
-The new sweep holds robot, controller, task, seed and physical command times fixed;
-only timestep and corresponding integer step indices change.
+The completed 300 s comparison gives 0.5621811105 m/s at 0.3125 ms (-1.98%) and
+0.5700867555 m/s at 0.078125 ms (-0.61%). Endpoint differences from baseline are
+61.83 m and 30.24 m. These results do not establish an asymptotic convergence
+rate or hardware accuracy. The input check holds robot, controller, task, seed
+and physical command times fixed. Every physical-context section except timestep
+matches, including the runtime source identity. See `timestep-sustained-result.json`.
 
 `benchmark_environment` streams ordinary typed environment transitions, their
 held actions, metadata and a replay recording. It uses the same `EmbeddedEnvironment`
@@ -201,8 +203,8 @@ Those cases do not represent timed mid-gait pushes or measured hardware
 disturbance distributions. The frozen learned candidate completes them at
 0.564887 and 0.564715 m/s, about 0.23% higher, without sampled falls. Its full
 300 s test exactly reproduces the training evaluation's first 20 s observations
-and distance. The full 300 s result remains pending; prefix parity is not
-sustained acceptance. See `recovery-comparison.json`.
+and distance. See `recovery-comparison.json` for that prefix check; the completed
+long result below demonstrates why prefix parity is not sustained acceptance.
 
 The 90 s learned command run completes all 4,500 actions without sampled falls.
 `command-comparison.json` uses the same analyzer on baseline and candidate.
@@ -215,3 +217,14 @@ degrees. Reversal still rotates heavily: -318.02 versus -308.36 degrees, with
 not proof of improved control. No heading, style or slip penalty was introduced.
 The full candidate transition/action stream is preserved compressed alongside
 the report, protocol receipt and frozen actor.
+
+The frozen candidate's complete 300 s run reaches 129.603 m net displacement,
+0.432011 m/s, versus baseline 172.069 m and 0.573564 m/s. Neither has a sampled
+fall or numerical error. Their 20 ms sampled chord-path lengths are 177.572 m
+and 176.751 m, respectively: the candidate's net-distance loss is consistent
+with increased path curvature rather than less overall sampled motion. Those
+chord lengths are not continuous-time path length. `sustained-comparison.json`
+and `sustained-paths.json.gz` preserve outcomes, physical identities and both
+sampled paths. The candidate is not promoted; the original fastest gait remains
+the baseline. Future speed training must address the 300 s objective rather
+than treating a 20 s training gain as sufficient.

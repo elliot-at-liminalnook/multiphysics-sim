@@ -151,5 +151,13 @@
     "initial_output": "Exactly zero residual; output envelope comes from existing software actuator bounds.",
     "observation_source": "ideal_runtime_teacher_only"
   },
-  "scope": "Chronological forecast development split within one 90 s episode. Models predict position, velocity and finite-interval acceleration conditioned on applied actuator targets. Runtime actor receives command inputs, observed dynamics and forecasts of the baseline controller proposal before its neural correction. Neutral 20 s mean preserves baseline exactly. Learned closed-loop comparison remains pending."
+  "scope": "Chronological forecast development split within one 90 s episode. Models predict position, velocity and finite-interval acceleration conditioned on actuator targets. Runtime actor receives commands, observed dynamics and forecasts of the baseline controller proposal before neural correction. Neutral 20 s output preserves the baseline. Completed frozen-candidate comparisons show small short-horizon/recovery gains but worse 300 s net speed and command heading drift; no sustained or hardware improvement claim.",
+  "runtime_source_revision": "81304004",
+  "closed_loop": {
+    "actor": "candidate-iteration001.actor.json",
+    "sustained": "sustained-comparison.json",
+    "command_response": "command-comparison.json",
+    "initial_state_recovery": "recovery-comparison.json",
+    "accepted_as_speed_improvement": false
+  }
 }

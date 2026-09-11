@@ -1,0 +1,35 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib test) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 16.91s
+     Running unittests src/lib.rs (/Users/elliot/physics-simulator-gait-exploration/target/release/deps/sim_runtime-4cc6a936afda9f43)
+
+running 13 tests
+test acquisition::actuator_sweep::tests::invalid_progression_and_travel_projection_fail_closed ... ok
+test acquisition::servo_bus::tests::pwm_register_and_bounds ... ok
+test acquisition::actuator_sweep::waveform_tests::stationary_evidence_uses_final_consecutive_span_and_rejects_gaps ... ok
+test acquisition::servo_bus::tests::voltage_is_not_temperature ... ok
+test acquisition::actuator_sweep::waveform_tests::concurrent_only_preserves_explicit_cohort_and_legacy_defaults ... ok
+test acquisition::servo_bus::tests::documented_position_reply ... ok
+test acquisition::actuator_sweep::waveform_tests::old_pulse_checkpoints_decode_without_waveform_fields ... ok
+test acquisition::tests::framing_survives_fragmentation_noise_and_corruption ... ok
+test acquisition::tests::incomplete_input_and_timeout_do_not_invent_samples ... ok
+test acquisition::servo_safety::tests::matches_wire_protocol_and_rejects_invalid_profiles ... ok
+test acquisition::tests::windows_and_failed_payloads_are_validated ... ok
+test acquisition::actuator_sweep::waveform_tests::preserves_reversal_order_terminal_coast_and_resume_identity ... ok
+test acquisition::actuator_sweep::tests::all_servos_then_concurrent_both_directions_and_exact_resume ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 0.00s
+

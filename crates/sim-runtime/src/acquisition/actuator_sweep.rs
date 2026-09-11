@@ -1,12 +1,107 @@
 //! Deterministic, resumable signed-drive experiment schedule. This is an
 //! acquisition policy; it contains no motor equations or guessed properties.
 use serde::{Deserialize, Serialize};
+/// Unwrap a cyclic encoder only when the sampling windows and an explicit
+/// speed bound exclude a half-turn of unobserved travel. The bound is an
+/// acquisition assumption, not a fitted actuator property. Failed updates
+/// leave the last accepted observation unchanged.
+#[derive(Clone, Debug)]
+pub struct CyclicEncoder {
+    modulus: u32,
+    maximum_counts_s: f64,
+    previous: Option<(u32, f64)>,
+    position: i64,
+}
+impl CyclicEncoder {
+    pub fn new(modulus: u32, maximum_counts_s: f64) -> Result<Self, &'static str> {
+        if modulus < 4 || !maximum_counts_s.is_finite() || maximum_counts_s <= 0. {
+            return Err("invalid cyclic encoder acquisition policy");
+        }
+        Ok(Self {
+            modulus,
+            maximum_counts_s,
+            previous: None,
+            position: 0,
+        })
+    }
+    pub fn observe(
+        &mut self,
+        raw: u32,
+        request_s: f64,
+        completion_s: f64,
+    ) -> Result<i64, &'static str> {
+        if raw >= self.modulus
+            || !request_s.is_finite()
+            || !completion_s.is_finite()
+            || request_s < 0.
+            || completion_s < request_s
+        {
+            return Err("invalid cyclic encoder observation");
+        }
+        let next = if let Some((previous_raw, previous_request)) = self.previous {
+            if request_s <= previous_request {
+                return Err("cyclic encoder observations must advance time");
+            }
+            let bound = self.maximum_counts_s * (completion_s - previous_request) + 2.;
+            if bound >= self.modulus as f64 / 2. {
+                return Err("ambiguous encoder wrap: observation gap exceeds speed bound");
+            }
+            let modulus = self.modulus as i64;
+            let delta =
+                (raw as i64 - previous_raw as i64 + modulus / 2).rem_euclid(modulus) - modulus / 2;
+            if delta.unsigned_abs() as f64 > bound {
+                return Err("encoder movement exceeds declared speed bound");
+            }
+            self.position
+                .checked_add(delta)
+                .ok_or("encoder accumulation overflow")?
+        } else {
+            raw as i64
+        };
+        self.position = next;
+        self.previous = Some((raw, request_s));
+        Ok(next)
+    }
+    pub fn position(&self) -> i64 {
+        self.position
+    }
+}
+/// Require consecutive stationary observations at the end of a history.
+/// The caller defines stationarity from measured signals; times are seconds.
+/// Earlier settling does not invalidate a subsequent complete stationary span.
+pub fn stationary_tail(
+    samples: &[(f64, bool)],
+    minimum_samples: usize,
+    minimum_span_s: f64,
+    maximum_gap_s: f64,
+) -> Result<bool, &'static str> {
+    if minimum_samples < 2
+        || !minimum_span_s.is_finite()
+        || minimum_span_s <= 0.
+        || !maximum_gap_s.is_finite()
+        || maximum_gap_s <= 0.
+        || samples.iter().any(|s| !s.0.is_finite())
+        || samples.windows(2).any(|w| w[1].0 <= w[0].0)
+    {
+        return Err("invalid stationary evidence or policy");
+    }
+    let first = samples.iter().rposition(|s| !s.1).map_or(0, |i| i + 1);
+    let tail = &samples[first..];
+    Ok(tail.len() >= minimum_samples
+        && tail.last().unwrap().0 - tail[0].0 >= minimum_span_s
+        && tail.windows(2).all(|w| w[1].0 - w[0].0 <= maximum_gap_s))
+}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SweepSchedule {
     pub levels: Vec<u16>,
     pub repetitions: u16,
     pub include_concurrent: bool,
+    #[serde(default = "default_individual")]
+    pub include_individual: bool,
+}
+fn default_individual() -> bool {
+    true
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Trial {
@@ -14,8 +109,94 @@ pub struct Trial {
     pub ids: Vec<u8>,
     pub drive: i16,
     pub repetition: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub segments: Vec<DriveSegment>,
+}
+/// Piecewise constant command. Torque-off is terminal within a trial: an
+/// experiment cannot re-enable drive while coasting without a new preflight.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DriveSegment {
+    pub drive: i16,
+    pub duration_ms: u64,
+    pub torque_enabled: bool,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct WaveformTemplate {
+    pub name: String,
+    pub segments: Vec<DriveSegment>,
+}
+impl WaveformTemplate {
+    pub fn validate(&self) -> Result<(), &'static str> {
+        if self.name.trim().is_empty()
+            || self.name.len() > 100
+            || self.segments.is_empty()
+            || self.segments.len() > 128
+        {
+            return Err("named nonempty bounded waveform required");
+        }
+        let mut disabled = false;
+        for segment in &self.segments {
+            if segment.drive.unsigned_abs() > 1000
+                || !(20..=300).contains(&segment.duration_ms)
+                || (!segment.torque_enabled && segment.drive != 0)
+                || (disabled && segment.torque_enabled)
+            {
+                return Err("invalid waveform command/duration or re-enable after torque-off");
+            }
+            disabled |= !segment.torque_enabled;
+        }
+        if self.segments.iter().map(|s| s.duration_ms).sum::<u64>() > 3000
+            || self.segments.iter().all(|s| s.drive == 0)
+        {
+            return Err("waveform must excite the actuator and last at most 3 seconds");
+        }
+        Ok(())
+    }
 }
 impl SweepSchedule {
+    pub fn waveform_trials(
+        &self,
+        ids: &[u8],
+        templates: &[WaveformTemplate],
+    ) -> Result<Vec<Trial>, &'static str> {
+        // Reuse the ordinary schedule's ID/group/repetition validation. Levels
+        // are empty in waveform plans so there are never two competing inputs.
+        if !self.levels.is_empty() || templates.is_empty() || templates.len() > 100 {
+            return Err("waveform plans require templates and an empty levels list");
+        }
+        let base = SweepSchedule {
+            levels: vec![25],
+            repetitions: self.repetitions,
+            include_concurrent: self.include_concurrent,
+            include_individual: self.include_individual,
+        }
+        .trials(ids)?;
+        for (i, t) in templates.iter().enumerate() {
+            t.validate()?;
+            if templates[..i].iter().any(|other| other.name == t.name) {
+                return Err("duplicate waveform name");
+            }
+        }
+        let mut out = Vec::new();
+        // Base has +/- pairs. Emit templates once per group/repetition.
+        for anchor in base.iter().step_by(2) {
+            for t in templates {
+                out.push(Trial {
+                    index: out.len(),
+                    ids: anchor.ids.clone(),
+                    drive: t.segments.iter().find(|s| s.drive != 0).unwrap().drive,
+                    repetition: anchor.repetition,
+                    label: Some(t.name.clone()),
+                    segments: t.segments.clone(),
+                });
+            }
+        }
+        Ok(out)
+    }
     pub fn trials(&self, ids: &[u8]) -> Result<Vec<Trial>, &'static str> {
         if ids.is_empty()
             || ids.iter().any(|id| *id > 253)
@@ -29,12 +210,17 @@ impl SweepSchedule {
                 .windows(2)
                 .any(|w| w[1] <= w[0] || w[1] - w[0] > 100)
             || !(1..=20).contains(&self.repetitions)
+            || (!self.include_individual && (!self.include_concurrent || ids.len() < 2))
         {
             return Err(
                 "invalid progressive sweep: unique IDs, start <=25, increments <=100, drive <=1000, repeats 1..20",
             );
         }
-        let mut groups: Vec<Vec<u8>> = ids.iter().map(|id| vec![*id]).collect();
+        let mut groups: Vec<Vec<u8>> = if self.include_individual {
+            ids.iter().map(|id| vec![*id]).collect()
+        } else {
+            Vec::new()
+        };
         if self.include_concurrent && ids.len() > 1 {
             groups.push(ids.to_vec());
         }
@@ -48,6 +234,8 @@ impl SweepSchedule {
                             ids: group.clone(),
                             drive: level as i16 * sign,
                             repetition,
+                            label: None,
+                            segments: Vec::new(),
                         });
                     }
                 }
@@ -91,11 +279,33 @@ pub fn travel_guard(
 mod tests {
     use super::*;
     #[test]
+    fn cyclic_encoder_tracks_both_directions_and_rejects_ambiguous_gaps() {
+        let mut e = CyclicEncoder::new(4096, 8192.).unwrap();
+        assert_eq!(e.observe(4090, 0., 0.006).unwrap(), 4090);
+        assert_eq!(e.observe(14, 0.01, 0.016).unwrap(), 4110);
+        assert_eq!(e.observe(4090, 0.02, 0.026).unwrap(), 4090);
+        assert!(e.observe(2000, 0.03, 0.036).is_err());
+        assert_eq!(e.position(), 4090);
+        assert!(e.observe(4090, 0.3, 0.306).is_err());
+        assert!(e.observe(4096, 0.03, 0.036).is_err());
+        assert!(e.observe(0, f64::NAN, 0.036).is_err());
+        assert_eq!(e.observe(4070, 0.03, 0.036).unwrap(), 4070);
+        let mut e = CyclicEncoder::new(4096, 8192.).unwrap();
+        for i in 0..100 {
+            assert_eq!(
+                e.observe((i * 1000) % 4096, i as f64 * 0.15, i as f64 * 0.15 + 0.006)
+                    .unwrap(),
+                i as i64 * 1000
+            );
+        }
+    }
+    #[test]
     fn all_servos_then_concurrent_both_directions_and_exact_resume() {
         let plan = SweepSchedule {
             levels: vec![25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
             repetitions: 3,
             include_concurrent: true,
+            include_individual: true,
         };
         let t = plan.trials(&(4..=12).collect::<Vec<_>>()).unwrap();
         assert_eq!(t.len(), 720);
@@ -116,7 +326,8 @@ mod tests {
                 SweepSchedule {
                     levels,
                     repetitions: 1,
-                    include_concurrent: false
+                    include_concurrent: false,
+                    include_individual: true,
                 }
                 .trials(&[4])
                 .is_err()
@@ -125,5 +336,101 @@ mod tests {
         assert!(travel_guard(10., 0., 100., 50., 0.3).is_ok());
         assert!(travel_guard(25., 0., 100., 50., 0.3).is_err());
         assert!(travel_guard(f64::NAN, 0., 0., 50., 0.3).is_err());
+    }
+}
+
+#[cfg(test)]
+mod waveform_tests {
+    use super::*;
+    #[test]
+    fn concurrent_only_preserves_explicit_cohort_and_legacy_defaults() {
+        let mut schedule: SweepSchedule =
+            serde_json::from_str(r#"{"levels":[25,50],"repetitions":2,"include_concurrent":true}"#)
+                .unwrap();
+        assert!(schedule.include_individual);
+        schedule.include_individual = false;
+        let ids: Vec<_> = (4..=12).collect();
+        let trials = schedule.trials(&ids).unwrap();
+        assert_eq!(trials.len(), 8);
+        assert!(trials.iter().all(|t| t.ids == ids));
+        assert!(schedule.trials(&[4]).is_err());
+        schedule.include_concurrent = false;
+        assert!(schedule.trials(&ids).is_err());
+    }
+    #[test]
+    fn stationary_evidence_uses_final_consecutive_span_and_rejects_gaps() {
+        assert!(
+            stationary_tail(
+                &[(0., false), (0.01, true), (0.1, true), (0.17, true)],
+                3,
+                0.15,
+                0.2
+            )
+            .unwrap()
+        );
+        assert!(!stationary_tail(&[(0., true), (0.1, false), (0.17, true)], 3, 0.15, 0.2).unwrap());
+        assert!(!stationary_tail(&[(0., true), (0.1, true), (0.31, true)], 3, 0.15, 0.2).unwrap());
+        assert!(!stationary_tail(&[], 3, 0.15, 0.2).unwrap());
+        assert!(stationary_tail(&[(0., true), (0., true)], 3, 0.15, 0.2).is_err());
+        assert!(stationary_tail(&[(f64::NAN, true)], 3, 0.15, 0.2).is_err());
+    }
+    #[test]
+    fn preserves_reversal_order_terminal_coast_and_resume_identity() {
+        let s = SweepSchedule {
+            levels: vec![],
+            repetitions: 2,
+            include_concurrent: true,
+            include_individual: true,
+        };
+        let wave = WaveformTemplate {
+            name: "reversal".into(),
+            segments: vec![
+                DriveSegment {
+                    drive: 100,
+                    duration_ms: 50,
+                    torque_enabled: true,
+                },
+                DriveSegment {
+                    drive: -100,
+                    duration_ms: 50,
+                    torque_enabled: true,
+                },
+                DriveSegment {
+                    drive: 0,
+                    duration_ms: 150,
+                    torque_enabled: false,
+                },
+            ],
+        };
+        let trials = s.waveform_trials(&[4, 5], &[wave.clone()]).unwrap();
+        assert_eq!(trials.len(), 6);
+        assert_eq!(trials[4].ids, vec![4, 5]);
+        assert_eq!(trials[4].segments, wave.segments);
+        let saved = serde_json::to_vec(&trials[..3]).unwrap();
+        let prefix: Vec<Trial> = serde_json::from_slice(&saved).unwrap();
+        assert_eq!(resume_index(&trials, &prefix).unwrap(), 3);
+        let mut altered = prefix;
+        altered[0].segments[1].drive = -50;
+        assert!(resume_index(&trials, &altered).is_err());
+        let mut bad = wave.clone();
+        bad.segments.push(DriveSegment {
+            drive: 100,
+            duration_ms: 50,
+            torque_enabled: true,
+        });
+        assert!(bad.validate().is_err());
+        bad = wave;
+        bad.segments[2].drive = 1;
+        assert!(bad.validate().is_err());
+    }
+    #[test]
+    fn old_pulse_checkpoints_decode_without_waveform_fields() {
+        let t: Trial =
+            serde_json::from_str(r#"{"index":0,"ids":[4],"drive":25,"repetition":0}"#).unwrap();
+        assert!(t.segments.is_empty() && t.label.is_none());
+        assert_eq!(
+            serde_json::to_value(t).unwrap(),
+            serde_json::json!({"index":0,"ids":[4],"drive":25,"repetition":0})
+        );
     }
 }

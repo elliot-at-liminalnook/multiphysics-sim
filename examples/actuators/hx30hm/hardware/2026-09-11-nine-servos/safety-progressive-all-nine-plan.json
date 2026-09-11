@@ -1,0 +1,28 @@
+{
+  "control": "pwm_sweep",
+  "schedule": {
+    "levels": [
+      25,
+      50,
+      100,
+      200,
+      300,
+      400,
+      500,
+      600,
+      700,
+      800,
+      900,
+      1000
+    ],
+    "repetitions": 1,
+    "include_concurrent": true
+  },
+  "pulse_ms": 150,
+  "rest_ms": 1000,
+  "travel_limit_counts": 1500,
+  "temperature_cutoff_c": 60,
+  "direction_bit": 10,
+  "bench_condition": "Unloaded HX-30HM firmware 3.15; IDs 4-12; setpoint 12.6 V; last confirmed supply current limit 1 A. Record any supply, fixture, load, or ambient change in this field before execution.",
+  "resume_from": null
+}

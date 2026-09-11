@@ -1,0 +1,634 @@
+{
+  "schema_version": 1,
+  "run": "rotation-full-drive-3s",
+  "completed": true,
+  "failure": null,
+  "completed_trials": 18,
+  "plan": {
+    "bench_condition": "User confirms 12.6 V setpoint, increased bench current limit to 3 A, and all nine shafts free for continuous rotation without linkage, cable, or physical stops. Unloaded HX-30HM firmware 3.15 IDs 4-12. This experiment retains short bounded pulses; total bench current is not independently logged. Bench observed CV at 12.6 V and up to 0.9 A during prior group pulses. Free-rotation encoder ambiguity bound 8192 counts/s (720 deg/s) is provisional acquisition policy, not measured maximum.",
+    "control": "pwm_sweep",
+    "direction_bit": 10,
+    "free_rotation_maximum_counts_s": 8192,
+    "pulse_ms": 300,
+    "rest_ms": 1000,
+    "resume_from": null,
+    "schedule": {
+      "include_concurrent": false,
+      "include_individual": true,
+      "levels": [],
+      "repetitions": 1
+    },
+    "temperature_cutoff_c": 60,
+    "travel_limit_counts": 1500,
+    "waveforms": [
+      {
+        "name": "full_drive_positive_3s",
+        "segments": [
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          }
+        ]
+      },
+      {
+        "name": "full_drive_negative_3s",
+        "segments": [
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          }
+        ]
+      }
+    ]
+  },
+  "inputs": {
+    "run.json": "d9a6a8dea8fc5eaa704f050b9bafd9dff9762f27438b739920bf819eba8e2099",
+    "checkpoint.json": "f60aca707058a890f736412dfa90ec5876a539ab49fa709341f3ee946aaaf70a",
+    "sweep.csv": "33552fe61aa515f9c1e0d4546a226e8c707fd2dc95e3996b1be86173877fa31d"
+  },
+  "trials": [
+    {
+      "trial": 0,
+      "id": 4,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 8804,
+      "turns": 2.1494140625,
+      "pulse_samples": 245,
+      "observed_pulse_span_s": 3.011702829,
+      "constant_command_encoder_speed_deg_s": 254.82046936221332,
+      "peak_reported_speed_deg_s": 272.46093747447543,
+      "late_encoder_speed_deg_s": 256.5351813364503,
+      "previous_encoder_speed_deg_s": 255.22863569530327,
+      "late_reported_speed_deg_s": 256.59775152451414,
+      "fractional_speed_change": 0.005093046631422776,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.2,
+        12.1
+      ],
+      "sampled_temperature_c": [
+        50,
+        50
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 1,
+      "id": 4,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -9155,
+      "turns": -2.235107421875,
+      "pulse_samples": 243,
+      "observed_pulse_span_s": 3.029857688,
+      "constant_command_encoder_speed_deg_s": -264.0399133219385,
+      "peak_reported_speed_deg_s": 276.8554687591805,
+      "late_encoder_speed_deg_s": -262.7272041941053,
+      "previous_encoder_speed_deg_s": -264.45602261355884,
+      "late_reported_speed_deg_s": -263.4626116115051,
+      "fractional_speed_change": 0.006580279437588347,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.4,
+        12.1
+      ],
+      "sampled_temperature_c": [
+        50,
+        50
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 2,
+      "id": 5,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 9470,
+      "turns": 2.31201171875,
+      "pulse_samples": 250,
+      "observed_pulse_span_s": 3.0355670230000005,
+      "constant_command_encoder_speed_deg_s": 272.5394328089232,
+      "peak_reported_speed_deg_s": 290.0390624987042,
+      "late_encoder_speed_deg_s": 275.1014101010575,
+      "previous_encoder_speed_deg_s": 272.66286714533265,
+      "late_reported_speed_deg_s": 274.6582031168279,
+      "fractional_speed_change": 0.008864160146722184,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.4,
+        12.3
+      ],
+      "sampled_temperature_c": [
+        49,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 3,
+      "id": 5,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -9321,
+      "turns": -2.275634765625,
+      "pulse_samples": 247,
+      "observed_pulse_span_s": 3.0177975210000003,
+      "constant_command_encoder_speed_deg_s": -269.9499155265988,
+      "peak_reported_speed_deg_s": 285.6445312712949,
+      "late_encoder_speed_deg_s": -271.08377682267314,
+      "previous_encoder_speed_deg_s": -269.84767323713095,
+      "late_reported_speed_deg_s": -271.62388392372003,
+      "fractional_speed_change": 0.004559858210736016,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.4,
+        12.3
+      ],
+      "sampled_temperature_c": [
+        49,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 4,
+      "id": 6,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 9136,
+      "turns": 2.23046875,
+      "pulse_samples": 248,
+      "observed_pulse_span_s": 3.0236016130000003,
+      "constant_command_encoder_speed_deg_s": 264.24303533741517,
+      "peak_reported_speed_deg_s": 272.46093747447543,
+      "late_encoder_speed_deg_s": 266.3483286003542,
+      "previous_encoder_speed_deg_s": 265.6142637804898,
+      "late_reported_speed_deg_s": 266.39229911281484,
+      "fractional_speed_change": 0.0027560331379658225,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.2,
+        12.1
+      ],
+      "sampled_temperature_c": [
+        49,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 5,
+      "id": 6,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -9100,
+      "turns": -2.2216796875,
+      "pulse_samples": 247,
+      "observed_pulse_span_s": 3.0175605899999987,
+      "constant_command_encoder_speed_deg_s": -263.34855913086824,
+      "peak_reported_speed_deg_s": 272.46093747447543,
+      "late_encoder_speed_deg_s": -263.23351618543825,
+      "previous_encoder_speed_deg_s": -263.1912181882715,
+      "late_reported_speed_deg_s": -263.25334822381626,
+      "fractional_speed_change": 0.00016068621420143437,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.3,
+        12.1
+      ],
+      "sampled_temperature_c": [
+        49,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 6,
+      "id": 7,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 8534,
+      "turns": 2.08349609375,
+      "pulse_samples": 243,
+      "observed_pulse_span_s": 3.029539847999999,
+      "constant_command_encoder_speed_deg_s": 245.62475845682837,
+      "peak_reported_speed_deg_s": 254.8828125075424,
+      "late_encoder_speed_deg_s": 246.62457732154587,
+      "previous_encoder_speed_deg_s": 246.88454675769964,
+      "late_reported_speed_deg_s": 246.61690847897418,
+      "fractional_speed_change": 0.0010541100119750941,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.5,
+        12.2
+      ],
+      "sampled_temperature_c": [
+        48,
+        48
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 7,
+      "id": 7,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -8866,
+      "turns": -2.16455078125,
+      "pulse_samples": 246,
+      "observed_pulse_span_s": 3.0359303280000027,
+      "constant_command_encoder_speed_deg_s": -255.35784766681462,
+      "peak_reported_speed_deg_s": 263.67187501965685,
+      "late_encoder_speed_deg_s": -256.9627484198253,
+      "previous_encoder_speed_deg_s": -254.43327170924914,
+      "late_reported_speed_deg_s": -256.2430245500288,
+      "fractional_speed_change": 0.0098437486605782,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.4,
+        12.2
+      ],
+      "sampled_temperature_c": [
+        48,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 8,
+      "id": 8,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 9280,
+      "turns": 2.265625,
+      "pulse_samples": 249,
+      "observed_pulse_span_s": 3.029515416999999,
+      "constant_command_encoder_speed_deg_s": 267.588135906353,
+      "peak_reported_speed_deg_s": 281.24999998658984,
+      "late_encoder_speed_deg_s": 268.6977524024055,
+      "previous_encoder_speed_deg_s": 271.64318852429716,
+      "late_reported_speed_deg_s": 267.85714285801305,
+      "fractional_speed_change": 0.010961893412046557,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.6,
+        12.3
+      ],
+      "sampled_temperature_c": [
+        48,
+        48
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 9,
+      "id": 8,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -9457,
+      "turns": -2.308837890625,
+      "pulse_samples": 249,
+      "observed_pulse_span_s": 3.035706855000001,
+      "constant_command_encoder_speed_deg_s": -271.9651012932786,
+      "peak_reported_speed_deg_s": 285.6445312712949,
+      "late_encoder_speed_deg_s": -273.975001491446,
+      "previous_encoder_speed_deg_s": -274.45025201763724,
+      "late_reported_speed_deg_s": -273.50725445520936,
+      "fractional_speed_change": 0.0017346492329742146,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.6,
+        12.3
+      ],
+      "sampled_temperature_c": [
+        48,
+        48
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 10,
+      "id": 9,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 9004,
+      "turns": 2.1982421875,
+      "pulse_samples": 248,
+      "observed_pulse_span_s": 3.0297276819999936,
+      "constant_command_encoder_speed_deg_s": 259.5541261062772,
+      "peak_reported_speed_deg_s": 272.46093747447543,
+      "late_encoder_speed_deg_s": 260.1564285285188,
+      "previous_encoder_speed_deg_s": 260.5335069227924,
+      "late_reported_speed_deg_s": 260.53292411292364,
+      "fractional_speed_change": 0.0014494294698248222,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.6,
+        12.3
+      ],
+      "sampled_temperature_c": [
+        49,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 11,
+      "id": 9,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -9201,
+      "turns": -2.246337890625,
+      "pulse_samples": 249,
+      "observed_pulse_span_s": 3.030024935,
+      "constant_command_encoder_speed_deg_s": -265.09772268274554,
+      "peak_reported_speed_deg_s": 276.8554687591805,
+      "late_encoder_speed_deg_s": -268.58526309013695,
+      "previous_encoder_speed_deg_s": -264.9437291629959,
+      "late_reported_speed_deg_s": -267.6478794662315,
+      "fractional_speed_change": 0.013558204516675009,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.5,
+        12.3
+      ],
+      "sampled_temperature_c": [
+        49,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 12,
+      "id": 10,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 9016,
+      "turns": 2.201171875,
+      "pulse_samples": 250,
+      "observed_pulse_span_s": 3.0355730309999984,
+      "constant_command_encoder_speed_deg_s": 259.23186127503703,
+      "peak_reported_speed_deg_s": 272.46093747447543,
+      "late_encoder_speed_deg_s": 261.5031770540181,
+      "previous_encoder_speed_deg_s": 263.1710082411704,
+      "late_reported_speed_deg_s": 260.9514508978506,
+      "fractional_speed_change": 0.0063778620433653605,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.4,
+        12.2
+      ],
+      "sampled_temperature_c": [
+        49,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 13,
+      "id": 10,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -9084,
+      "turns": -2.2177734375,
+      "pulse_samples": 250,
+      "observed_pulse_span_s": 3.0345979980000024,
+      "constant_command_encoder_speed_deg_s": -261.2056796511651,
+      "peak_reported_speed_deg_s": 272.46093747447543,
+      "late_encoder_speed_deg_s": -262.8071749932184,
+      "previous_encoder_speed_deg_s": -262.7799329687543,
+      "late_reported_speed_deg_s": -261.68387277454224,
+      "fractional_speed_change": 0.00010365784139951334,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.5,
+        12.2
+      ],
+      "sampled_temperature_c": [
+        49,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 14,
+      "id": 11,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 9402,
+      "turns": 2.29541015625,
+      "pulse_samples": 248,
+      "observed_pulse_span_s": 3.0299353159999995,
+      "constant_command_encoder_speed_deg_s": 271.0201124495652,
+      "peak_reported_speed_deg_s": 281.24999998658984,
+      "late_encoder_speed_deg_s": 272.7067612046578,
+      "previous_encoder_speed_deg_s": 272.0439206129093,
+      "late_reported_speed_deg_s": 272.04241071001115,
+      "fractional_speed_change": 0.0024305983057423828,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.8,
+        12.4
+      ],
+      "sampled_temperature_c": [
+        48,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 15,
+      "id": 11,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -9506,
+      "turns": -2.32080078125,
+      "pulse_samples": 245,
+      "observed_pulse_span_s": 3.0234163029999976,
+      "constant_command_encoder_speed_deg_s": -274.7563173833139,
+      "peak_reported_speed_deg_s": 290.0390624987042,
+      "late_encoder_speed_deg_s": -277.8669482604757,
+      "previous_encoder_speed_deg_s": -277.4515385996479,
+      "late_reported_speed_deg_s": -277.1693638373033,
+      "fractional_speed_change": 0.001494994865090493,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.7,
+        12.4
+      ],
+      "sampled_temperature_c": [
+        48,
+        49
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 16,
+      "id": 12,
+      "drive_counts": 1000,
+      "label": "full_drive_positive_3s",
+      "concurrent": false,
+      "displacement_counts": 9209,
+      "turns": 2.248291015625,
+      "pulse_samples": 248,
+      "observed_pulse_span_s": 3.0290902719999906,
+      "constant_command_encoder_speed_deg_s": 266.00652357223953,
+      "peak_reported_speed_deg_s": 285.6445312712949,
+      "late_encoder_speed_deg_s": 265.34436870176376,
+      "previous_encoder_speed_deg_s": 267.05958522557614,
+      "late_reported_speed_deg_s": 263.5672433019391,
+      "fractional_speed_change": 0.006464115037392109,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.6,
+        12.2
+      ],
+      "sampled_temperature_c": [
+        48,
+        48
+      ],
+      "stationary_verified": true
+    },
+    {
+      "trial": 17,
+      "id": 12,
+      "drive_counts": -1000,
+      "label": "full_drive_negative_3s",
+      "concurrent": false,
+      "displacement_counts": -9423,
+      "turns": -2.300537109375,
+      "pulse_samples": 245,
+      "observed_pulse_span_s": 3.0179228169999988,
+      "constant_command_encoder_speed_deg_s": -273.2188778615943,
+      "peak_reported_speed_deg_s": 290.0390624987042,
+      "late_encoder_speed_deg_s": -270.39444064441795,
+      "previous_encoder_speed_deg_s": -272.98979755804635,
+      "late_reported_speed_deg_s": -271.3891006079084,
+      "fractional_speed_change": 0.009598410778871802,
+      "plateau_within_5_percent": true,
+      "sampled_voltage_v": [
+        11.7,
+        12.2
+      ],
+      "sampled_temperature_c": [
+        48,
+        48
+      ],
+      "stationary_verified": true
+    }
+  ],
+  "limitations": [
+    "Plateau compares encoder slopes in the last two half-second windows; it is a finite-duration repeatability criterion, not proof of a physical maximum.",
+    "Sensor timestamps are host request/reply windows. Current and connector voltage are not independently calibrated.",
+    "Displacement ends at the last stationary rest sample. Only fully completed trials are summarized."
+  ]
+}

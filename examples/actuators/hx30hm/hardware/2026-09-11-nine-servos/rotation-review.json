@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "conditions": {
+    "supply_setpoint_v": 12.6,
+    "current_limit_a": 3,
+    "unloaded": true,
+    "shafts_free_for_continuous_rotation": true,
+    "power_topology": "single daisy chain",
+    "bench_display_during_earlier_abrupt_run": "User observed CV, 12.6 V, up to 0.9 A",
+    "connector_voltage_independently_measured": false
+  },
+  "individual_3s": [
+    {
+      "id": 4,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 256.5351813364503,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.005093046631422776,
+      "turns": 2.1494140625
+    },
+    {
+      "id": 4,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -262.7272041941053,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.006580279437588347,
+      "turns": -2.235107421875
+    },
+    {
+      "id": 5,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 275.1014101010575,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.008864160146722184,
+      "turns": 2.31201171875
+    },
+    {
+      "id": 5,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -271.08377682267314,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.004559858210736016,
+      "turns": -2.275634765625
+    },
+    {
+      "id": 6,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 266.3483286003542,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.0027560331379658225,
+      "turns": 2.23046875
+    },
+    {
+      "id": 6,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -263.23351618543825,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.00016068621420143437,
+      "turns": -2.2216796875
+    },
+    {
+      "id": 7,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 246.62457732154587,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.0010541100119750941,
+      "turns": 2.08349609375
+    },
+    {
+      "id": 7,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -256.9627484198253,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.0098437486605782,
+      "turns": -2.16455078125
+    },
+    {
+      "id": 8,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 268.6977524024055,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.010961893412046557,
+      "turns": 2.265625
+    },
+    {
+      "id": 8,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -273.975001491446,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.0017346492329742146,
+      "turns": -2.308837890625
+    },
+    {
+      "id": 9,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 260.1564285285188,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.0014494294698248222,
+      "turns": 2.1982421875
+    },
+    {
+      "id": 9,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -268.58526309013695,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.013558204516675009,
+      "turns": -2.246337890625
+    },
+    {
+      "id": 10,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 261.5031770540181,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.0063778620433653605,
+      "turns": 2.201171875
+    },
+    {
+      "id": 10,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -262.8071749932184,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.00010365784139951334,
+      "turns": -2.2177734375
+    },
+    {
+      "id": 11,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 272.7067612046578,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.0024305983057423828,
+      "turns": 2.29541015625
+    },
+    {
+      "id": 11,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -277.8669482604757,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.001494994865090493,
+      "turns": -2.32080078125
+    },
+    {
+      "id": 12,
+      "drive_counts": 1000,
+      "late_encoder_speed_deg_s": 265.34436870176376,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.006464115037392109,
+      "turns": 2.248291015625
+    },
+    {
+      "id": 12,
+      "drive_counts": -1000,
+      "late_encoder_speed_deg_s": -270.39444064441795,
+      "plateau_within_5_percent": true,
+      "fractional_change": 0.009598410778871802,
+      "turns": -2.300537109375
+    }
+  ],
+  "groups": [
+    {
+      "name": "rotation-three-ramp",
+      "completed": true,
+      "min_servo_voltage_v": 11.2,
+      "encoder_full_command_speed_range_deg_s": [
+        243.10752246197958,
+        257.92695215232897
+      ],
+      "max_temperature_c": 49
+    },
+    {
+      "name": "rotation-six-ramp",
+      "completed": true,
+      "min_servo_voltage_v": 10.4,
+      "encoder_full_command_speed_range_deg_s": [
+        229.47189959128562,
+        241.01478643039616
+      ],
+      "max_temperature_c": 50
+    },
+    {
+      "name": "rotation-nine-ramp",
+      "completed": true,
+      "min_servo_voltage_v": 9.8,
+      "encoder_full_command_speed_range_deg_s": [
+        217.077228903202,
+        240.1059975882594
+      ],
+      "max_temperature_c": 50
+    }
+  ],
+  "stopping": [
+    {
+      "run": "rotation-id12-1500ms",
+      "id": 12,
+      "drive": 1000,
+      "stop_mode": "zero_pwm",
+      "last_moving_observation_after_receipt_s": 0.09526475300000214,
+      "final_stationary_interval_start_after_receipt_s": 0.1074553999999992,
+      "displacement_from_last_pre_command_sample_deg": 9.31640625
+    },
+    {
+      "run": "rotation-id12-1500ms",
+      "id": 12,
+      "drive": -1000,
+      "stop_mode": "zero_pwm",
+      "last_moving_observation_after_receipt_s": 0.08380159399999343,
+      "final_stationary_interval_start_after_receipt_s": 0.09567916799999665,
+      "displacement_from_last_pre_command_sample_deg": -9.052734375
+    },
+    {
+      "run": "rotation-id12-coast",
+      "id": 12,
+      "drive": 1000,
+      "stop_mode": "torque_off",
+      "last_moving_observation_after_receipt_s": 0.3900933969999998,
+      "final_stationary_interval_start_after_receipt_s": 0.40199508800000006,
+      "displacement_from_last_pre_command_sample_deg": 52.470703125
+    },
+    {
+      "run": "rotation-id12-coast",
+      "id": 12,
+      "drive": -1000,
+      "stop_mode": "torque_off",
+      "last_moving_observation_after_receipt_s": 0.49809986100000003,
+      "final_stationary_interval_start_after_receipt_s": 0.5098849130000005,
+      "displacement_from_last_pre_command_sample_deg": -65.478515625
+    }
+  ],
+  "quiet_reference": {
+    "id": 12,
+    "source": "User observation",
+    "smoothness": [
+      {
+        "id": 4,
+        "drive_counts": 1000,
+        "speed_cv_percent": 1.262290566404819
+      },
+      {
+        "id": 4,
+        "drive_counts": -1000,
+        "speed_cv_percent": 1.2672518140724363
+      },
+      {
+        "id": 5,
+        "drive_counts": 1000,
+        "speed_cv_percent": 1.4900459305676654
+      },
+      {
+        "id": 5,
+        "drive_counts": -1000,
+        "speed_cv_percent": 1.7814854147723902
+      },
+      {
+        "id": 6,
+        "drive_counts": 1000,
+        "speed_cv_percent": 0.6291618249331269
+      },
+      {
+        "id": 6,
+        "drive_counts": -1000,
+        "speed_cv_percent": 0.45342837258579094
+      },
+      {
+        "id": 7,
+        "drive_counts": 1000,
+        "speed_cv_percent": 1.5521249835790858
+      },
+      {
+        "id": 7,
+        "drive_counts": -1000,
+        "speed_cv_percent": 1.3832902310668747
+      },
+      {
+        "id": 8,
+        "drive_counts": 1000,
+        "speed_cv_percent": 1.2883335047764186
+      },
+      {
+        "id": 8,
+        "drive_counts": -1000,
+        "speed_cv_percent": 1.556091156578453
+      },
+      {
+        "id": 9,
+        "drive_counts": 1000,
+        "speed_cv_percent": 1.0405523080287609
+      },
+      {
+        "id": 9,
+        "drive_counts": -1000,
+        "speed_cv_percent": 1.34189925339949
+      },
+      {
+        "id": 10,
+        "drive_counts": 1000,
+        "speed_cv_percent": 1.517302945172181
+      },
+      {
+        "id": 10,
+        "drive_counts": -1000,
+        "speed_cv_percent": 1.3895147018561143
+      },
+      {
+        "id": 11,
+        "drive_counts": 1000,
+        "speed_cv_percent": 0.6075248103035668
+      },
+      {
+        "id": 11,
+        "drive_counts": -1000,
+        "speed_cv_percent": 1.0003677854812465
+      },
+      {
+        "id": 12,
+        "drive_counts": 1000,
+        "speed_cv_percent": 2.907097433136631
+      },
+      {
+        "id": 12,
+        "drive_counts": -1000,
+        "speed_cv_percent": 1.926812919643246
+      }
+    ],
+    "interpretation": "ID12 quietness does not coincide with the smallest measured output speed variation; no microphone measurement or diagnosis of the noise source."
+  },
+  "final_state": {
+    "stationary_samples": 476,
+    "failed_transactions": 0,
+    "all_ids_stationary": true,
+    "all_pwm_zero": true,
+    "all_torque_disabled": true,
+    "all_nvs_locked": true,
+    "voltage_v": [
+      12.1,
+      12.4
+    ],
+    "maximum_temperature_c": 49
+  },
+  "inputs": {
+    "rotation-full-drive-3s-report.json": "e64cd954c21c53288338f48b5cc0577590cee012daa2459c88d2ac9b7d327e67",
+    "rotation-smoothness-report.json": "bb6d9a3f925284ccd91cb7a36453257fc580c03ad019023b70e89815d3b3ba3d",
+    "rotation-three-ramp-report.json": "60d413a71b57b9f19d79b2c4fb53aaca85bcfe265110bf73c6d6ea37e4c93c3c",
+    "rotation-six-ramp-report.json": "f0d56dbd3b1ee993aab12a38233192281a0f8c536b053cfafb6d947047e07a8c",
+    "rotation-nine-ramp-report.json": "ef83b36132e8de4d83f6c27ac35b1ce806ab5879d5fa676a2e5a9c1906e6035b",
+    "rotation-id12-1500ms/checkpoint.json": "93e6c0b77615d48ec5d28541324e37de7e0c57de5c40a1e7fed1a521e10001e4",
+    "rotation-id12-1500ms/sweep.csv": "5b18bbfc11fef29f9216b188b7180b345d357ae6218d0b1203e807401be271f2",
+    "rotation-id12-coast/checkpoint.json": "ed4821228fcfb84a6b7e602a5467729dc22b1ae65b5a4bd2b65fdb5a1adf0eca",
+    "rotation-id12-coast/sweep.csv": "01c8c420d2b1e00408004af51347bc4f588efe003d4e1029a0ab378c741709fe",
+    "rotation-final-stationary/telemetry.csv": "88716ce6425fe39820c161d21961e37c7bdfc40e2c277dff48fc46ff7f7a77b7",
+    "rotation-final-stationary/run.json": "637d4acddc057ed4239b126f199cc2f83e445d554f065bd9823f5a1ce2e176cd",
+    "rotation-full-drive-3s/run.json": "d9a6a8dea8fc5eaa704f050b9bafd9dff9762f27438b739920bf819eba8e2099",
+    "rotation-id12-coast/run.json": "ba0a80aa014e0d185d046a0a0d9c4deb1f80971ebb5f19c0a0e8a4ee8d8d1405"
+  },
+  "limitations": [
+    "No physical maximum certification; measured unloaded plateaus at this supply, temperature, firmware, and wiring.",
+    "Ramp success is consistent with reduced startup stress; transient current, connector voltage and noise have not been independently measured.",
+    "Coast distances include travel after the last pre-command sample, not an exact command-edge stopping distance.",
+    "No new CAD physical values or validated full-range simulation fit."
+  ]
+}

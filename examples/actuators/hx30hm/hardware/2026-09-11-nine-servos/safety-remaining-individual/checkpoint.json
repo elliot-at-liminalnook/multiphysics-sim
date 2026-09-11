@@ -1,0 +1,921 @@
+{
+  "completed_trials": [
+    {
+      "drive": 25,
+      "ids": [
+        9
+      ],
+      "index": 0,
+      "repetition": 0
+    },
+    {
+      "drive": -25,
+      "ids": [
+        9
+      ],
+      "index": 1,
+      "repetition": 0
+    },
+    {
+      "drive": 50,
+      "ids": [
+        9
+      ],
+      "index": 2,
+      "repetition": 0
+    },
+    {
+      "drive": -50,
+      "ids": [
+        9
+      ],
+      "index": 3,
+      "repetition": 0
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 4,
+      "repetition": 0
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 5,
+      "repetition": 0
+    },
+    {
+      "drive": 200,
+      "ids": [
+        9
+      ],
+      "index": 6,
+      "repetition": 0
+    },
+    {
+      "drive": -200,
+      "ids": [
+        9
+      ],
+      "index": 7,
+      "repetition": 0
+    },
+    {
+      "drive": 300,
+      "ids": [
+        9
+      ],
+      "index": 8,
+      "repetition": 0
+    },
+    {
+      "drive": -300,
+      "ids": [
+        9
+      ],
+      "index": 9,
+      "repetition": 0
+    },
+    {
+      "drive": 400,
+      "ids": [
+        9
+      ],
+      "index": 10,
+      "repetition": 0
+    },
+    {
+      "drive": -400,
+      "ids": [
+        9
+      ],
+      "index": 11,
+      "repetition": 0
+    },
+    {
+      "drive": 500,
+      "ids": [
+        9
+      ],
+      "index": 12,
+      "repetition": 0
+    },
+    {
+      "drive": -500,
+      "ids": [
+        9
+      ],
+      "index": 13,
+      "repetition": 0
+    },
+    {
+      "drive": 600,
+      "ids": [
+        9
+      ],
+      "index": 14,
+      "repetition": 0
+    },
+    {
+      "drive": -600,
+      "ids": [
+        9
+      ],
+      "index": 15,
+      "repetition": 0
+    }
+  ],
+  "outcomes_this_run": [
+    {
+      "displacement_counts": {
+        "9": 0
+      },
+      "drive_request_s": 0.390551986,
+      "elapsed_s": 1.187916693,
+      "peak_observed_speed_rad_s": {
+        "9": 0.0
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 25,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 0.540691281,
+          "receipt_s": 0.39671205,
+          "request_s": 0.390577725,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 1.542841872,
+          "receipt_s": 0.548059626,
+          "request_s": 0.540701086,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 25,
+        "ids": [
+          9
+        ],
+        "index": 0,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 0.548059626,
+      "zero_request_s": 0.540701086
+    },
+    {
+      "displacement_counts": {
+        "9": 0
+      },
+      "drive_request_s": 1.620841682,
+      "elapsed_s": 1.193495373,
+      "peak_observed_speed_rad_s": {
+        "9": 0.0
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -25,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 1.776430676,
+          "receipt_s": 1.626655715,
+          "request_s": 1.620864643,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 2.778542392,
+          "receipt_s": 1.782526947,
+          "request_s": 1.7764446170000001,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -25,
+        "ids": [
+          9
+        ],
+        "index": 1,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 1.782526947,
+      "zero_request_s": 1.7764446170000001
+    },
+    {
+      "displacement_counts": {
+        "9": 6
+      },
+      "drive_request_s": 2.856326789,
+      "elapsed_s": 1.18762747,
+      "peak_observed_speed_rad_s": {
+        "9": 0.15339807878856412
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 50,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 3.006524644,
+          "receipt_s": 2.86232402,
+          "request_s": 2.856338989,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 4.00851364,
+          "receipt_s": 3.012220664,
+          "request_s": 3.006538429,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 50,
+        "ids": [
+          9
+        ],
+        "index": 2,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 3.012220664,
+      "zero_request_s": 3.006538429
+    },
+    {
+      "displacement_counts": {
+        "9": -8
+      },
+      "drive_request_s": 4.08633531,
+      "elapsed_s": 1.1935569400000001,
+      "peak_observed_speed_rad_s": {
+        "9": 0.15339807878856412
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -50,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 4.242359141,
+          "receipt_s": 4.093006534,
+          "request_s": 4.086353131,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 5.244375752,
+          "receipt_s": 4.248177738,
+          "request_s": 4.242369443,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -50,
+        "ids": [
+          9
+        ],
+        "index": 3,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 4.248177738,
+      "zero_request_s": 4.242369443
+    },
+    {
+      "displacement_counts": {
+        "9": 25
+      },
+      "drive_request_s": 5.322163362,
+      "elapsed_s": 1.187897212,
+      "peak_observed_speed_rad_s": {
+        "9": 0.38349519697141027
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 100,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 5.472326389,
+          "receipt_s": 5.328129779,
+          "request_s": 5.322175682,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 6.47414566,
+          "receipt_s": 5.478137329,
+          "request_s": 5.472335536,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 100,
+        "ids": [
+          9
+        ],
+        "index": 4,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 5.478137329,
+      "zero_request_s": 5.472335536
+    },
+    {
+      "displacement_counts": {
+        "9": -29
+      },
+      "drive_request_s": 6.552128355,
+      "elapsed_s": 1.187676166,
+      "peak_observed_speed_rad_s": {
+        "9": 0.38349519697141027
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -100,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 6.7023660849999995,
+          "receipt_s": 6.558008557,
+          "request_s": 6.552145215,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 7.7040220569999995,
+          "receipt_s": 6.708054054,
+          "request_s": 6.702376774,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -100,
+        "ids": [
+          9
+        ],
+        "index": 5,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 6.708054054,
+      "zero_request_s": 6.702376774
+    },
+    {
+      "displacement_counts": {
+        "9": 73
+      },
+      "drive_request_s": 7.78184869,
+      "elapsed_s": 1.187864761,
+      "peak_observed_speed_rad_s": {
+        "9": 0.8436894333371027
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 200,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 7.932097659,
+          "receipt_s": 7.787773648,
+          "request_s": 7.781860868,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 8.933852061,
+          "receipt_s": 7.937867392,
+          "request_s": 7.932109035,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 200,
+        "ids": [
+          9
+        ],
+        "index": 6,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 7.937867392,
+      "zero_request_s": 7.932109035
+    },
+    {
+      "displacement_counts": {
+        "9": -75
+      },
+      "drive_request_s": 9.0118235,
+      "elapsed_s": 1.187769213,
+      "peak_observed_speed_rad_s": {
+        "9": 0.8436894333371027
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -200,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 9.16187773,
+          "receipt_s": 9.017863238,
+          "request_s": 9.011839753,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 10.163818383,
+          "receipt_s": 9.16779519,
+          "request_s": 9.161887439,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -200,
+        "ids": [
+          9
+        ],
+        "index": 7,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 9.16779519,
+      "zero_request_s": 9.161887439
+    },
+    {
+      "displacement_counts": {
+        "9": 127
+      },
+      "drive_request_s": 10.241835462,
+      "elapsed_s": 1.193651994,
+      "peak_observed_speed_rad_s": {
+        "9": 1.380582709097077
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 300,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 10.397504835,
+          "receipt_s": 10.247840638,
+          "request_s": 10.241851961,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 11.399889709,
+          "receipt_s": 10.403833366,
+          "request_s": 10.397513172,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 300,
+        "ids": [
+          9
+        ],
+        "index": 8,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 10.403833366,
+      "zero_request_s": 10.397513172
+    },
+    {
+      "displacement_counts": {
+        "9": -121
+      },
+      "drive_request_s": 11.477716564,
+      "elapsed_s": 1.187637019,
+      "peak_observed_speed_rad_s": {
+        "9": 1.380582709097077
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -300,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 11.628047949,
+          "receipt_s": 11.483619632,
+          "request_s": 11.477730403,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 12.629635704,
+          "receipt_s": 11.633663997,
+          "request_s": 11.628057222,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -300,
+        "ids": [
+          9
+        ],
+        "index": 9,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 11.633663997,
+      "zero_request_s": 11.628057222
+    },
+    {
+      "displacement_counts": {
+        "9": 169
+      },
+      "drive_request_s": 12.707768637000001,
+      "elapsed_s": 1.193443729,
+      "peak_observed_speed_rad_s": {
+        "9": 1.8407769454627694
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 400,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 12.863380107,
+          "receipt_s": 12.713817998,
+          "request_s": 12.70778504,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 13.865342043,
+          "receipt_s": 12.869394842,
+          "request_s": 12.863398084,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 400,
+        "ids": [
+          9
+        ],
+        "index": 10,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 12.869394842,
+      "zero_request_s": 12.863398084
+    },
+    {
+      "displacement_counts": {
+        "9": -167
+      },
+      "drive_request_s": 13.943262249,
+      "elapsed_s": 1.187903411,
+      "peak_observed_speed_rad_s": {
+        "9": 1.8407769454627694
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -400,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 14.093660625,
+          "receipt_s": 13.949289384,
+          "request_s": 13.943277203,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 15.095653263,
+          "receipt_s": 14.100744864,
+          "request_s": 14.093669158,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -400,
+        "ids": [
+          9
+        ],
+        "index": 11,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 14.100744864,
+      "zero_request_s": 14.093669158
+    },
+    {
+      "displacement_counts": {
+        "9": 215
+      },
+      "drive_request_s": 15.173730102,
+      "elapsed_s": 1.19340269,
+      "peak_observed_speed_rad_s": {
+        "9": 2.2242721424341796
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 500,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 15.329127376,
+          "receipt_s": 15.179662206,
+          "request_s": 15.173749156,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 16.331341735,
+          "receipt_s": 15.335192671,
+          "request_s": 15.329140748,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 500,
+        "ids": [
+          9
+        ],
+        "index": 12,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 15.335192671,
+      "zero_request_s": 15.329140748
+    },
+    {
+      "displacement_counts": {
+        "9": -215
+      },
+      "drive_request_s": 16.466273566,
+      "elapsed_s": 1.190517003,
+      "peak_observed_speed_rad_s": {
+        "9": 2.2242721424341796
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -500,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 16.619336246,
+          "receipt_s": 16.47519116,
+          "request_s": 16.466299125,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 17.621117905,
+          "receipt_s": 16.624992309,
+          "request_s": 16.619353679,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -500,
+        "ids": [
+          9
+        ],
+        "index": 13,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 16.624992309,
+      "zero_request_s": 16.619353679
+    },
+    {
+      "displacement_counts": {
+        "9": 262
+      },
+      "drive_request_s": 17.69972463,
+      "elapsed_s": 1.192973206,
+      "peak_observed_speed_rad_s": {
+        "9": 2.684466378799872
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 600,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 17.855776934,
+          "receipt_s": 17.704988246,
+          "request_s": 17.699743038,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 18.856991396,
+          "receipt_s": 17.861131889,
+          "request_s": 17.855794486,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 600,
+        "ids": [
+          9
+        ],
+        "index": 14,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 17.861131889,
+      "zero_request_s": 17.855794486
+    },
+    {
+      "displacement_counts": {
+        "9": -253
+      },
+      "drive_request_s": 18.934685991,
+      "elapsed_s": 1.187931246,
+      "peak_observed_speed_rad_s": {
+        "9": 2.684466378799872
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -600,
+            "duration_ms": 150,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 19.084999122,
+          "receipt_s": 18.940880528,
+          "request_s": 18.934699281,
+          "samples": 12,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 20.087418454,
+          "receipt_s": 19.090732938,
+          "request_s": 19.085011331,
+          "samples": 83,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -600,
+        "ids": [
+          9
+        ],
+        "index": 15,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 19.090732938,
+      "zero_request_s": 19.085011331
+    }
+  ],
+  "plan_identity": "dfbb917031438dcc8885d00390556a82de85bf2c787daa332fd3681ffa830607",
+  "runner_identity": "ff39889877bbc0544dc52c768e0265a31ec809b2f211b45ae0fd5a445a0bdd16",
+  "schema_version": 2
+}

@@ -13,6 +13,7 @@ use std::{
 };
 type E = Box<dyn std::error::Error>;
 include!("hx_sweep_support.rs.inc");
+include!("hx_safety_probe.rs.inc");
 trait SerialIo: Read + Write {}
 impl<T: Read + Write> SerialIo for T {}
 struct Bus {
@@ -75,7 +76,7 @@ fn main() -> Result<(), E> {
         println!(
             "{}",
             serde_json::to_string_pretty(
-                &json!({"software_only":true,"plan_identity":plan.identity()?,"trials":trials,"minimum_excitation_and_rest_s":trials.len() as f64*(plan.pulse_ms+plan.rest_ms) as f64/1000.})
+                &json!({"software_only":true,"plan_identity":plan.identity()?,"trials":trials,"minimum_excitation_and_rest_s":trials.iter().map(|t| (if t.segments.is_empty(){plan.pulse_ms}else{t.segments.iter().map(|s|s.duration_ms).sum::<u64>()})+plan.rest_ms).sum::<u64>() as f64/1000.})
             )?
         );
         return Ok(());
@@ -129,6 +130,29 @@ fn main() -> Result<(), E> {
     };
     if let Some(plan_path) = args.get(5) {
         let value: serde_json::Value = serde_json::from_slice(&fs::read(plan_path)?)?;
+        if value["control"] == "safety_probe" {
+            manifest["mode"] = json!("low_drive_hardware_watchdog_commissioning");
+            manifest["plan"] = value;
+            manifest["probe_source_blake3"] = json!(
+                blake3::hash(include_bytes!("hx_safety_probe.rs.inc"))
+                    .to_hex()
+                    .to_string()
+            );
+            fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+            match run_safety_probe(&mut bus, &out, &ids) {
+                Ok(result) => {
+                    manifest["completed"] = result["completed"].clone();
+                    manifest["result"] = result;
+                }
+                Err(e) => manifest["error"] = json!(e.to_string()),
+            }
+            fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+            return if manifest["completed"] == true {
+                Ok(())
+            } else {
+                Err("hardware watchdog commissioning failed; inspect run.json".into())
+            };
+        }
         if value["control"] == "pwm_sweep" {
             let plan: SweepPlan = serde_json::from_value(value)?;
             plan.validate(&ids)?;

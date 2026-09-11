@@ -1,0 +1,1611 @@
+{
+  "completed_trials": [
+    {
+      "drive": 25,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 0,
+      "repetition": 0
+    },
+    {
+      "drive": -25,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 1,
+      "repetition": 0
+    },
+    {
+      "drive": 50,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 2,
+      "repetition": 0
+    },
+    {
+      "drive": -50,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 3,
+      "repetition": 0
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 4,
+      "repetition": 0
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 5,
+      "repetition": 0
+    },
+    {
+      "drive": 200,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 6,
+      "repetition": 0
+    },
+    {
+      "drive": -200,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 7,
+      "repetition": 0
+    },
+    {
+      "drive": 300,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 8,
+      "repetition": 0
+    },
+    {
+      "drive": -300,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 9,
+      "repetition": 0
+    },
+    {
+      "drive": 400,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 10,
+      "repetition": 0
+    },
+    {
+      "drive": -400,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 11,
+      "repetition": 0
+    },
+    {
+      "drive": 500,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 12,
+      "repetition": 0
+    },
+    {
+      "drive": -500,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 13,
+      "repetition": 0
+    },
+    {
+      "drive": 600,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 14,
+      "repetition": 0
+    },
+    {
+      "drive": -600,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 15,
+      "repetition": 0
+    },
+    {
+      "drive": 700,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 16,
+      "repetition": 0
+    },
+    {
+      "drive": -700,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 17,
+      "repetition": 0
+    }
+  ],
+  "outcomes_this_run": [
+    {
+      "displacement_counts": {
+        "10": 0,
+        "11": 0,
+        "12": 0,
+        "4": 0,
+        "5": 8,
+        "6": 0,
+        "7": 1,
+        "8": 0,
+        "9": 0
+      },
+      "drive_request_s": 1.080461364,
+      "elapsed_s": 0.983622732,
+      "peak_observed_speed_rad_s": {
+        "10": 0.0,
+        "11": 0.0,
+        "12": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0,
+        "7": 0.0,
+        "8": 0.0,
+        "9": 0.0
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 25,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 1.284665972,
+          "receipt_s": 1.092728062,
+          "request_s": 1.080486565,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 1.788701803,
+          "receipt_s": 1.296620994,
+          "request_s": 1.284682716,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 25,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 0,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 1.296620994,
+      "zero_request_s": 1.284682716
+    },
+    {
+      "displacement_counts": {
+        "10": 0,
+        "11": 0,
+        "12": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "drive_request_s": 2.358459763,
+      "elapsed_s": 0.983690988,
+      "peak_observed_speed_rad_s": {
+        "10": 0.0,
+        "11": 0.0,
+        "12": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0,
+        "7": 0.0,
+        "8": 0.0,
+        "9": 0.0
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -25,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 2.562367783,
+          "receipt_s": 2.370898752,
+          "request_s": 2.3584703940000002,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 3.066895659,
+          "receipt_s": 2.5748650509999997,
+          "request_s": 2.562378282,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -25,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 1,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 2.5748650509999997,
+      "zero_request_s": 2.562378282
+    },
+    {
+      "displacement_counts": {
+        "10": 18,
+        "11": 19,
+        "12": 21,
+        "4": 20,
+        "5": 24,
+        "6": 13,
+        "7": 18,
+        "8": 18,
+        "9": 17
+      },
+      "drive_request_s": 3.630595747,
+      "elapsed_s": 0.983547899,
+      "peak_observed_speed_rad_s": {
+        "10": 0.15339807878856412,
+        "11": 0.15339807878856412,
+        "12": 0.15339807878856412,
+        "4": 0.07669903939428206,
+        "5": 0.15339807878856412,
+        "6": 0.15339807878856412,
+        "7": 0.07669903939428206,
+        "8": 0.15339807878856412,
+        "9": 0.23009711818284617
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 50,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 3.83420476,
+          "receipt_s": 3.642732327,
+          "request_s": 3.630618107,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 4.33818938,
+          "receipt_s": 3.846357841,
+          "request_s": 3.834217748,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 50,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 2,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 3.846357841,
+      "zero_request_s": 3.834217748
+    },
+    {
+      "displacement_counts": {
+        "10": -19,
+        "11": -19,
+        "12": -17,
+        "4": -21,
+        "5": -19,
+        "6": -15,
+        "7": -16,
+        "8": -17,
+        "9": -15
+      },
+      "drive_request_s": 4.902218695,
+      "elapsed_s": 0.983962267,
+      "peak_observed_speed_rad_s": {
+        "10": 0.15339807878856412,
+        "11": 0.15339807878856412,
+        "12": 0.15339807878856412,
+        "4": 0.15339807878856412,
+        "5": 0.23009711818284617,
+        "6": 0.15339807878856412,
+        "7": 0.15339807878856412,
+        "8": 0.15339807878856412,
+        "9": 0.07669903939428206
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -50,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 5.106313762,
+          "receipt_s": 4.914504471,
+          "request_s": 4.902236774,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 5.609975761,
+          "receipt_s": 5.118438602,
+          "request_s": 5.106321533,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -50,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 3,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 5.118438602,
+      "zero_request_s": 5.106321533
+    },
+    {
+      "displacement_counts": {
+        "10": 46,
+        "11": 49,
+        "12": 50,
+        "4": 50,
+        "5": 49,
+        "6": 41,
+        "7": 46,
+        "8": 46,
+        "9": 44
+      },
+      "drive_request_s": 6.1740386560000005,
+      "elapsed_s": 0.983903176,
+      "peak_observed_speed_rad_s": {
+        "10": 0.38349519697141027,
+        "11": 0.46019423636569234,
+        "12": 0.38349519697141027,
+        "4": 0.38349519697141027,
+        "5": 0.46019423636569234,
+        "6": 0.38349519697141027,
+        "7": 0.30679615757712825,
+        "8": 0.38349519697141027,
+        "9": 0.38349519697141027
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 100,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 6.378129187,
+          "receipt_s": 6.186261407,
+          "request_s": 6.174054445,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 6.882232809,
+          "receipt_s": 6.390139516,
+          "request_s": 6.378140061,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 100,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 4,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 6.390139516,
+      "zero_request_s": 6.378140061
+    },
+    {
+      "displacement_counts": {
+        "10": -46,
+        "11": -48,
+        "12": -48,
+        "4": -49,
+        "5": -48,
+        "6": -43,
+        "7": -46,
+        "8": -45,
+        "9": -45
+      },
+      "drive_request_s": 7.446395888,
+      "elapsed_s": 0.983330886,
+      "peak_observed_speed_rad_s": {
+        "10": 0.38349519697141027,
+        "11": 0.46019423636569234,
+        "12": 0.38349519697141027,
+        "4": 0.46019423636569234,
+        "5": 0.38349519697141027,
+        "6": 0.38349519697141027,
+        "7": 0.38349519697141027,
+        "8": 0.38349519697141027,
+        "9": 0.46019423636569234
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -100,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 7.650158745,
+          "receipt_s": 7.458253909,
+          "request_s": 7.4464173129999995,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 8.154359207,
+          "receipt_s": 7.661989942,
+          "request_s": 7.650173544,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -100,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 5,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 7.661989942,
+      "zero_request_s": 7.650173544
+    },
+    {
+      "displacement_counts": {
+        "10": 104,
+        "11": 107,
+        "12": 110,
+        "4": 106,
+        "5": 108,
+        "6": 98,
+        "7": 104,
+        "8": 101,
+        "9": 103
+      },
+      "drive_request_s": 8.723547908,
+      "elapsed_s": 0.983821597,
+      "peak_observed_speed_rad_s": {
+        "10": 0.9203884727313847,
+        "11": 0.8436894333371027,
+        "12": 0.8436894333371027,
+        "4": 0.8436894333371027,
+        "5": 0.8436894333371027,
+        "6": 0.7669903939428205,
+        "7": 0.8436894333371027,
+        "8": 0.7669903939428205,
+        "9": 0.7669903939428205
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 200,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 8.92800073,
+          "receipt_s": 8.736117252,
+          "request_s": 8.723563766,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 9.431840399,
+          "receipt_s": 8.939793293,
+          "request_s": 8.928016396,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 200,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 6,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 8.939793293,
+      "zero_request_s": 8.928016396
+    },
+    {
+      "displacement_counts": {
+        "10": -104,
+        "11": -109,
+        "12": -104,
+        "4": -107,
+        "5": -107,
+        "6": -102,
+        "7": -104,
+        "8": -107,
+        "9": -104
+      },
+      "drive_request_s": 10.001737982,
+      "elapsed_s": 0.983720137,
+      "peak_observed_speed_rad_s": {
+        "10": 0.9203884727313847,
+        "11": 0.9203884727313847,
+        "12": 0.9203884727313847,
+        "4": 0.8436894333371027,
+        "5": 0.9203884727313847,
+        "6": 0.8436894333371027,
+        "7": 0.8436894333371027,
+        "8": 0.8436894333371027,
+        "9": 0.8436894333371027
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -200,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 10.205811187,
+          "receipt_s": 10.013836421,
+          "request_s": 10.001754626,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 10.709511784,
+          "receipt_s": 10.217705342,
+          "request_s": 10.205824026,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -200,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 7,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 10.217705342,
+      "zero_request_s": 10.205824026
+    },
+    {
+      "displacement_counts": {
+        "10": 160,
+        "11": 167,
+        "12": 155,
+        "4": 159,
+        "5": 166,
+        "6": 153,
+        "7": 160,
+        "8": 157,
+        "9": 157
+      },
+      "drive_request_s": 11.273554121,
+      "elapsed_s": 0.98382852,
+      "peak_observed_speed_rad_s": {
+        "10": 1.303883669702795,
+        "11": 1.303883669702795,
+        "12": 0.9970875121256667,
+        "4": 1.227184630308513,
+        "5": 1.303883669702795,
+        "6": 1.227184630308513,
+        "7": 1.303883669702795,
+        "8": 1.227184630308513,
+        "9": 1.303883669702795
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 300,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 11.478062369,
+          "receipt_s": 11.285969859,
+          "request_s": 11.27356921,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 11.981809459,
+          "receipt_s": 11.490255268,
+          "request_s": 11.478077988999999,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 300,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 8,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 11.490255268,
+      "zero_request_s": 11.478077988999999
+    },
+    {
+      "displacement_counts": {
+        "10": -162,
+        "11": -164,
+        "12": -168,
+        "4": -160,
+        "5": -166,
+        "6": -157,
+        "7": -160,
+        "8": -163,
+        "9": -160
+      },
+      "drive_request_s": 12.545397893,
+      "elapsed_s": 1.211881976,
+      "peak_observed_speed_rad_s": {
+        "10": 1.303883669702795,
+        "11": 1.303883669702795,
+        "12": 1.303883669702795,
+        "4": 1.303883669702795,
+        "5": 1.303883669702795,
+        "6": 1.227184630308513,
+        "7": 1.303883669702795,
+        "8": 1.227184630308513,
+        "9": 1.303883669702795
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -300,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 12.749703083,
+          "receipt_s": 12.557717,
+          "request_s": 12.545415364,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 13.481552408,
+          "receipt_s": 12.761845872,
+          "request_s": 12.749712535,
+          "samples": 60,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -300,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 9,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 12.761845872,
+      "zero_request_s": 12.749712535
+    },
+    {
+      "displacement_counts": {
+        "10": 211,
+        "11": 222,
+        "12": 224,
+        "4": 201,
+        "5": 218,
+        "6": 203,
+        "7": 210,
+        "8": 211,
+        "9": 207
+      },
+      "drive_request_s": 14.045320512,
+      "elapsed_s": 0.983677837,
+      "peak_observed_speed_rad_s": {
+        "10": 1.6873788666742053,
+        "11": 1.7640779060684872,
+        "12": 1.6873788666742053,
+        "4": 1.6106798272799232,
+        "5": 1.6873788666742053,
+        "6": 1.6106798272799232,
+        "7": 1.6873788666742053,
+        "8": 1.6873788666742053,
+        "9": 1.6873788666742053
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 400,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 14.249768844,
+          "receipt_s": 14.057582853,
+          "request_s": 14.045339693,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 14.75343519,
+          "receipt_s": 14.261644468,
+          "request_s": 14.249784967,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 400,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 10,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 14.261644468,
+      "zero_request_s": 14.249784967
+    },
+    {
+      "displacement_counts": {
+        "10": -211,
+        "11": -219,
+        "12": -222,
+        "4": -209,
+        "5": -216,
+        "6": -208,
+        "7": -210,
+        "8": -212,
+        "9": -213
+      },
+      "drive_request_s": 15.317015939000001,
+      "elapsed_s": 0.98385787,
+      "peak_observed_speed_rad_s": {
+        "10": 1.7640779060684872,
+        "11": 1.7640779060684872,
+        "12": 1.6106798272799232,
+        "4": 1.6873788666742053,
+        "5": 1.6873788666742053,
+        "6": 1.6873788666742053,
+        "7": 1.6873788666742053,
+        "8": 1.6873788666742053,
+        "9": 1.7640779060684872
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -400,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 15.521285788,
+          "receipt_s": 15.329445001,
+          "request_s": 15.317027354,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 16.02521454,
+          "receipt_s": 15.533581452,
+          "request_s": 15.52129848,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -400,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 11,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 15.533581452,
+      "zero_request_s": 15.52129848
+    },
+    {
+      "displacement_counts": {
+        "10": 257,
+        "11": 272,
+        "12": 270,
+        "4": 254,
+        "5": 265,
+        "6": 245,
+        "7": 254,
+        "8": 258,
+        "9": 256
+      },
+      "drive_request_s": 16.589080344,
+      "elapsed_s": 0.983899546,
+      "peak_observed_speed_rad_s": {
+        "10": 2.0708740636456158,
+        "11": 2.2242721424341796,
+        "12": 2.0708740636456158,
+        "4": 1.8407769454627694,
+        "5": 2.3009711818284617,
+        "6": 1.9174759848570515,
+        "7": 2.0708740636456158,
+        "8": 2.0708740636456158,
+        "9": 2.0708740636456158
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 500,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 16.793269347,
+          "receipt_s": 16.601335959,
+          "request_s": 16.589101963,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 17.297118976,
+          "receipt_s": 16.805432668,
+          "request_s": 16.793280649,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 500,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 12,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 16.805432668,
+      "zero_request_s": 16.793280649
+    },
+    {
+      "displacement_counts": {
+        "10": -258,
+        "11": -267,
+        "12": -269,
+        "4": -253,
+        "5": -260,
+        "6": -253,
+        "7": -254,
+        "8": -260,
+        "9": -259
+      },
+      "drive_request_s": 17.861401055,
+      "elapsed_s": 0.983394543,
+      "peak_observed_speed_rad_s": {
+        "10": 2.0708740636456158,
+        "11": 2.1475731030398975,
+        "12": 2.0708740636456158,
+        "4": 1.9174759848570515,
+        "5": 2.0708740636456158,
+        "6": 2.0708740636456158,
+        "7": 2.0708740636456158,
+        "8": 2.0708740636456158,
+        "9": 2.1475731030398975
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -500,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 18.065403732,
+          "receipt_s": 17.873280499,
+          "request_s": 17.861421645,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 18.568952342,
+          "receipt_s": 18.078475584,
+          "request_s": 18.065414704,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -500,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 13,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 18.078475584,
+      "zero_request_s": 18.065414704
+    },
+    {
+      "displacement_counts": {
+        "10": 300,
+        "11": 316,
+        "12": 312,
+        "4": 291,
+        "5": 307,
+        "6": 284,
+        "7": 293,
+        "8": 297,
+        "9": 296
+      },
+      "drive_request_s": 19.139096893,
+      "elapsed_s": 0.989508187,
+      "peak_observed_speed_rad_s": {
+        "10": 2.454369260617026,
+        "11": 2.377670221222744,
+        "12": 2.377670221222744,
+        "4": 2.377670221222744,
+        "5": 2.454369260617026,
+        "6": 2.3009711818284617,
+        "7": 2.454369260617026,
+        "8": 2.454369260617026,
+        "9": 2.377670221222744
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 600,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 19.343008412,
+          "receipt_s": 19.151200397,
+          "request_s": 19.139118464,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 19.847481607,
+          "receipt_s": 19.355451393,
+          "request_s": 19.343017423,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 600,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 14,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 19.355451393,
+      "zero_request_s": 19.343017423
+    },
+    {
+      "displacement_counts": {
+        "10": -301,
+        "11": -312,
+        "12": -313,
+        "4": -293,
+        "5": -300,
+        "6": -294,
+        "7": -296,
+        "8": -301,
+        "9": -300
+      },
+      "drive_request_s": 20.416422239,
+      "elapsed_s": 0.98391292,
+      "peak_observed_speed_rad_s": {
+        "10": 2.454369260617026,
+        "11": 2.531068300011308,
+        "12": 2.454369260617026,
+        "4": 2.2242721424341796,
+        "5": 2.531068300011308,
+        "6": 2.377670221222744,
+        "7": 2.454369260617026,
+        "8": 2.454369260617026,
+        "9": 2.454369260617026
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -600,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 20.620932418,
+          "receipt_s": 20.428654248,
+          "request_s": 20.416450335,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 21.124511732,
+          "receipt_s": 20.633574351,
+          "request_s": 20.620946688,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -600,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 15,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 20.633574351,
+      "zero_request_s": 20.620946688
+    },
+    {
+      "displacement_counts": {
+        "10": 328,
+        "11": 348,
+        "12": 344,
+        "4": 313,
+        "5": 333,
+        "6": 310,
+        "7": 320,
+        "8": 319,
+        "9": 324
+      },
+      "drive_request_s": 21.688422588,
+      "elapsed_s": 0.9839275,
+      "peak_observed_speed_rad_s": {
+        "10": 2.761165418194154,
+        "11": 2.9145634969827183,
+        "12": 2.60776733940559,
+        "4": 2.454369260617026,
+        "5": 2.684466378799872,
+        "6": 2.531068300011308,
+        "7": 2.684466378799872,
+        "8": 2.684466378799872,
+        "9": 2.837864457588436
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 700,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 21.892623234,
+          "receipt_s": 21.701507365,
+          "request_s": 21.688439654,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 22.396535462,
+          "receipt_s": 21.905942207,
+          "request_s": 21.89263275,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 700,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 16,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 21.905942207,
+      "zero_request_s": 21.89263275
+    },
+    {
+      "displacement_counts": {
+        "10": -328,
+        "11": -339,
+        "12": -341,
+        "4": -320,
+        "5": -334,
+        "6": -318,
+        "7": -321,
+        "8": -328,
+        "9": -329
+      },
+      "drive_request_s": 22.960323479,
+      "elapsed_s": 0.990242878,
+      "peak_observed_speed_rad_s": {
+        "10": 2.761165418194154,
+        "11": 2.837864457588436,
+        "12": 2.531068300011308,
+        "4": 2.454369260617026,
+        "5": 2.684466378799872,
+        "6": 2.684466378799872,
+        "7": 2.684466378799872,
+        "8": 2.684466378799872,
+        "9": 2.684466378799872
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -700,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          "phase": "pulse",
+          "poll_end_s": 23.164431807,
+          "receipt_s": 22.972884294,
+          "request_s": 22.96034141,
+          "samples": 16,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 500,
+            "torque_enabled": true
+          },
+          "phase": "rest",
+          "poll_end_s": 23.669473064,
+          "receipt_s": 23.17676742,
+          "request_s": 23.164441922,
+          "samples": 41,
+          "segment": 1
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -700,
+        "ids": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "index": 17,
+        "repetition": 0
+      },
+      "zero_bridge_receipt_s": 23.17676742,
+      "zero_request_s": 23.164441922
+    }
+  ],
+  "plan_identity": "cbd94a85e69a40255e9516fa4a5ce4c8506fe9212a5ff8d4343e7ca0a15fdca3",
+  "runner_identity": "f4bfc42b775a8a8c803d1b0a90da123267cac2c4031475fa4f2f3b121b86d30d",
+  "schema_version": 2
+}

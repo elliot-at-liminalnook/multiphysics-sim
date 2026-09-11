@@ -1,0 +1,399 @@
+{
+  "completed_trials": [
+    {
+      "drive": 1000,
+      "ids": [
+        12
+      ],
+      "index": 0,
+      "label": "full_drive_positive_coast",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 300,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -1000,
+      "ids": [
+        12
+      ],
+      "index": 1,
+      "label": "full_drive_negative_coast",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 300,
+          "torque_enabled": false
+        }
+      ]
+    }
+  ],
+  "outcomes_this_run": [
+    {
+      "displacement_counts": {
+        "12": 5105
+      },
+      "drive_request_s": 0.139940476,
+      "elapsed_s": 2.891620314,
+      "peak_observed_speed_rad_s": {
+        "12": 4.985437560628334
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 0.446067655,
+          "receipt_s": 0.145871804,
+          "request_s": 0.139971686,
+          "samples": 25,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 0.752181541,
+          "receipt_s": 0.451930998,
+          "request_s": 0.44608998,
+          "samples": 25,
+          "segment": 1
+        },
+        {
+          "command": {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 1.05805307,
+          "receipt_s": 0.757889135,
+          "request_s": 0.752193952,
+          "samples": 25,
+          "segment": 2
+        },
+        {
+          "command": {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 1.3641288120000001,
+          "receipt_s": 1.06398908,
+          "request_s": 1.058066016,
+          "samples": 25,
+          "segment": 3
+        },
+        {
+          "command": {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 1.670064633,
+          "receipt_s": 1.369895669,
+          "request_s": 1.364145341,
+          "samples": 25,
+          "segment": 4
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 300,
+            "torque_enabled": false
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 1.982145042,
+          "receipt_s": 1.675720192,
+          "request_s": 1.670078774,
+          "samples": 25,
+          "segment": 5
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": false
+          },
+          "command_sent": false,
+          "phase": "rest",
+          "poll_end_s": 2.98996949,
+          "receipt_s": 1.982161104,
+          "request_s": 1.9821608290000001,
+          "samples": 84,
+          "segment": 6
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": 1000,
+        "ids": [
+          12
+        ],
+        "index": 0,
+        "label": "full_drive_positive_coast",
+        "repetition": 0,
+        "segments": [
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 0,
+            "duration_ms": 300,
+            "torque_enabled": false
+          }
+        ]
+      },
+      "zero_bridge_receipt_s": 1.982161104,
+      "zero_request_s": 1.9821608290000001
+    },
+    {
+      "displacement_counts": {
+        "12": -5369
+      },
+      "drive_request_s": 3.073733378,
+      "elapsed_s": 2.8793474789999998,
+      "peak_observed_speed_rad_s": {
+        "12": 5.062136600022616
+      },
+      "segment_events": [
+        {
+          "command": {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 3.379709935,
+          "receipt_s": 3.07957349,
+          "request_s": 3.073749663,
+          "samples": 25,
+          "segment": 0
+        },
+        {
+          "command": {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 3.685930128,
+          "receipt_s": 3.3855824930000002,
+          "request_s": 3.379723245,
+          "samples": 25,
+          "segment": 1
+        },
+        {
+          "command": {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 3.991878792,
+          "receipt_s": 3.691713897,
+          "request_s": 3.685944249,
+          "samples": 25,
+          "segment": 2
+        },
+        {
+          "command": {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 4.297806286,
+          "receipt_s": 3.9974701169999998,
+          "request_s": 3.991894202,
+          "samples": 25,
+          "segment": 3
+        },
+        {
+          "command": {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 4.603858114,
+          "receipt_s": 4.303961359,
+          "request_s": 4.297821905,
+          "samples": 25,
+          "segment": 4
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 300,
+            "torque_enabled": false
+          },
+          "command_sent": true,
+          "phase": "excitation",
+          "poll_end_s": 4.904041521,
+          "receipt_s": 4.609550356,
+          "request_s": 4.6038745070000004,
+          "samples": 24,
+          "segment": 5
+        },
+        {
+          "command": {
+            "drive": 0,
+            "duration_ms": 1000,
+            "torque_enabled": false
+          },
+          "command_sent": false,
+          "phase": "rest",
+          "poll_end_s": 5.911747415,
+          "receipt_s": 4.904065426,
+          "request_s": 4.904065214,
+          "samples": 84,
+          "segment": 6
+        }
+      ],
+      "stationary_verified": true,
+      "trial": {
+        "drive": -1000,
+        "ids": [
+          12
+        ],
+        "index": 1,
+        "label": "full_drive_negative_coast",
+        "repetition": 0,
+        "segments": [
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 0,
+            "duration_ms": 300,
+            "torque_enabled": false
+          }
+        ]
+      },
+      "zero_bridge_receipt_s": 4.904065426,
+      "zero_request_s": 4.904065214
+    }
+  ],
+  "plan_identity": "0b08a18f7eb9639d6eac24242e8f340f735b7a2c1e65516ad401c8ce6d832adc",
+  "runner_identity": "8286c0008ffc2c4caebb6cb81c8a50164b6f873d3cdd22ae909ce83c5facb9f9",
+  "schema_version": 2
+}

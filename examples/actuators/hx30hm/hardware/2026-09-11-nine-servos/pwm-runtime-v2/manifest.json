@@ -1,0 +1,25 @@
+{
+  "sha256": {
+    "crates/sim-runtime/examples/characterize_hx_bridge.rs": "22eda5119f8b6be3283a79ab1a01d59ecc1c64d36a0ecdc31732691896a272d5",
+    "crates/sim-runtime/examples/hx_sweep_support.rs.inc": "a0f638b6ed5d743d8242011e9f5c1ad3f47177b45706962fa31b7d8319a8e55b",
+    "crates/sim-runtime/examples/hx_safety_probe.rs.inc": "df11e2b81be175acfef07e143e29cb5586991c31889cb4467bed7093d7bf06f1",
+    "crates/sim-runtime/examples/identify_hx_pwm.rs": "ee28b8e4d0a46f28d65c7e1eb32997917dbc27e6f53412b96b3b2d4e2cf73941",
+    "crates/sim-runtime/examples/hx_sweep_identification.rs.inc": "de87da11f496f030b2ae3e3176bf4a76387586f8ba4e07ecb0facd3944050134",
+    "crates/sim-runtime/src/acquisition/actuator_sweep.rs": "3ef1b6b18813a0fdc676e657ca33a4b80b4d6debf5e12b8d20ba2fc6eede59ff",
+    "crates/sim-runtime/src/acquisition/servo_bus.rs": "d7ec10d919529f461c79777f08c308ec7a24db94385037c68945bd29da9dece8",
+    "crates/sim-runtime/src/acquisition/servo_safety.rs": "f451740815dada619e47af837aaeda9993c487374aceede2e457ef3b28c9fe7e",
+    "crates/sim-solve/src/pulse_response.rs": "6613446c71ca688ebca3f97b4a8b60e586c406fcd1bdf65c617b0ea134b1cf08",
+    "crates/sim-solve/src/least_squares.rs": "2523d17ca2eecc3a529259ce297796c45f84d13c48653d33493dd19c0085a59c",
+    "hx-cohort-library-tests.log": "c68617bef324fd7c0bf593b7c595fffce7cc8c16c1d4f751f8478666003fa8ce",
+    "hx-cohort-runner-tests.log": "cca68876817f7781ab49948b1bac10f71e80d9ac51cbea618e1d3dea0387f8f1",
+    "hx-cohort-build.log": "336c9c061b6293d2b6d147f30df163b838bfbf1dc0326005709b7ec02ad75f99"
+  },
+  "fpga": "../safety-commissioned-deployment",
+  "changes": [
+    "Explicit concurrent-only cohorts; legacy individual default retained",
+    "Consecutive stationary span >=150 ms, >=3 samples, gaps <=200 ms",
+    "Up to 500 ms extra zero-drive observation for late settling",
+    "All9 setup and cleanup grouped to fit measured USB/FPGA lease budget"
+  ],
+  "validation": "13 shared acquisition tests and 10 complete runner tests passed; includes independent virtual 6 ms transport clock and late settling case"
+}

@@ -13,6 +13,7 @@ use std::{
 };
 type E = Box<dyn std::error::Error>;
 const QUANTUM: f64 = std::f64::consts::TAU / 4096.;
+include!("hx_sweep_identification.rs.inc");
 #[derive(Clone)]
 struct Row {
     id: u8,
@@ -233,11 +234,12 @@ fn metrics(model: &PulseResponse, p: &PulseObservation) -> Result<Metrics, E> {
 }
 fn main() -> Result<(), E> {
     let args: Vec<_> = std::env::args().skip(1).collect();
-    if args.len() != 2 {
-        return Err("usage: identify_hx_pwm HARDWARE_ROOT NEW_OUTPUT".into());
+    let sweep = args.first().is_some_and(|a| a == "--sweep");
+    if (!sweep && args.len() != 2) || (sweep && args.len() != 4) {
+        return Err("usage: identify_hx_pwm HARDWARE_ROOT NEW_OUTPUT | --sweep HARDWARE_ROOT RUN_NAME NEW_OUTPUT".into());
     }
-    let root = PathBuf::from(&args[0]);
-    let out = PathBuf::from(&args[1]);
+    let root = PathBuf::from(&args[if sweep { 1 } else { 0 }]);
+    let out = PathBuf::from(&args[if sweep { 3 } else { 1 }]);
     fs::create_dir(&out)?;
     let names = [
         ("pwm-pilot-id12-v1", "pilot"),
@@ -247,14 +249,34 @@ fn main() -> Result<(), E> {
     ];
     let mut trials = vec![];
     let mut inputs = BTreeMap::new();
-    for (name, kind) in names {
-        trials.extend(load(&root, name, kind)?);
-        for file in [
-            "run.json",
-            "preflight.json",
-            "pwm.csv",
-            "transactions.jsonl",
-        ] {
+    let selected: Vec<_> = if sweep {
+        vec![(args[2].as_str(), "sweep")]
+    } else {
+        names.to_vec()
+    };
+    for (name, kind) in selected {
+        trials.extend(if sweep {
+            load_sweep(&root, name)?
+        } else {
+            load(&root, name, kind)?
+        });
+        let files = if sweep {
+            vec![
+                "run.json",
+                "preflight.json",
+                "sweep.csv",
+                "transactions.jsonl",
+                "checkpoint.json",
+            ]
+        } else {
+            vec![
+                "run.json",
+                "preflight.json",
+                "pwm.csv",
+                "transactions.jsonl",
+            ]
+        };
+        for file in files {
             let path = root.join(name).join(file);
             inputs.insert(
                 path.to_string_lossy().to_string(),
@@ -299,14 +321,22 @@ fn main() -> Result<(), E> {
     )?;
     for id in 4..=12 {
         let rows: Vec<_> = trials.iter().filter(|t| t.id == id).collect();
-        let training = |t: &&Trial| t.kind == "pilot" && [0, 2, 4].contains(&t.stage);
+        let training = |t: &&Trial| {
+            if sweep {
+                t.kind == "sweep_individual"
+                    && [25, 100, 300, 500, 700, 900]
+                        .contains(&((t.observation.input * 1000.).round() as i32))
+            } else {
+                t.kind == "pilot" && [0, 2, 4].contains(&t.stage)
+            }
+        };
         let train: Vec<_> = rows
             .iter()
             .copied()
             .filter(training)
             .map(|t| t.observation.clone())
             .collect();
-        if train.len() != 3 {
+        if train.len() != if sweep { 6 } else { 3 } {
             return Err("unexpected training partition".into());
         }
         let mut fit = fit_pulses(&train, &bounds, &starts, &config)?;
@@ -341,6 +371,12 @@ fn main() -> Result<(), E> {
         for t in &rows {
             let split = if training(t) {
                 "train"
+            } else if t.kind == "sweep_concurrent" {
+                "held_out_concurrent"
+            } else if t.kind == "sweep_individual" && t.observation.input < 0. {
+                "held_out_direction"
+            } else if t.kind == "sweep_individual" {
+                "held_out_drive"
             } else if t.kind == "pilot" {
                 "held_out_drive"
             } else {
@@ -404,10 +440,10 @@ fn main() -> Result<(), E> {
         fs::write(
             out.join("results.json"),
             serde_json::to_vec_pretty(
-                &json!({"schema_version":1,"models":results,"bounds":bounds,"optimizer":config,"initial_points":starts,"source_blake3":blake3::hash(include_bytes!("identify_hx_pwm.rs")).to_hex().to_string(),"input_blake3":inputs,
-                    "interpretation":"Empirical encoder-displacement fit only. Fits gain, deadband, on/release lags and combined delay; does not identify physical R/L/Ke/Kt/inertia/friction separately. No prediction beyond observed 2.5..20% drive is validated.",
+                &json!({"schema_version":1,"models":results,"bounds":bounds,"optimizer":config,"initial_points":starts,"source_blake3":blake3::hash(include_bytes!("identify_hx_pwm.rs")).to_hex().to_string(),"sweep_loader_blake3":blake3::hash(include_bytes!("hx_sweep_identification.rs.inc")).to_hex().to_string(),"input_blake3":inputs,
+                    "interpretation":if sweep {"Empirical encoder-displacement fit over measured PWM sweeps. Held-out errors determine validity per trial. Does not separately identify physical R/L/Ke/Kt/inertia/friction or certify maximum speed."} else {"Empirical encoder-displacement fit only. Fits gain, deadband, on/release lags and combined delay; does not identify physical R/L/Ke/Kt/inertia/friction separately. No prediction beyond observed 2.5..20% drive is validated."},
                     "weights":"One encoder count plus observed peak speed times half the request/reply window; descriptive scale, not a calibrated noise standard deviation. Each pulse has equal aggregate weight.",
-                    "split":"Train positive pilot 25/100/200. Hold out pilot 50/150 and separate +/-100 short pulses. Timing perturbation covers serialization window only, not unknown internal sample age.",
+                    "split":if sweep {"Train individual positive PWM 25/100/300/500/700/900. Hold out all reverse pulses, other positive duties, and every concurrent pulse. Timing perturbation covers serialization window only, not unknown internal sample age."} else {"Train positive pilot 25/100/200. Hold out pilot 50/150 and separate +/-100 short pulses. Timing perturbation covers serialization window only, not unknown internal sample age."},
                     "acceptance":"Predeclared held-out encoder RMSE <=3 counts AND final displacement error <=5 counts per pulse; otherwise flag this model as insufficient. Not a physical calibration confidence interval."
                 }),
             )?,

@@ -1,0 +1,8647 @@
+{
+  "minimum_excitation_and_rest_s": 504.0,
+  "plan_identity": "fa70ffc145aa7d0cc4ce06efe86c851481a53a8af345506861de0df1fe3d3e7a",
+  "software_only": true,
+  "trials": [
+    {
+      "drive": 25,
+      "ids": [
+        4
+      ],
+      "index": 0,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 1,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 2,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 3,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 4,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        4
+      ],
+      "index": 5,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 6,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 7,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 8,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 9,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        4
+      ],
+      "index": 10,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 11,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 12,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 13,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 14,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        4
+      ],
+      "index": 15,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 16,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 17,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 18,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 19,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        4
+      ],
+      "index": 20,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 21,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 22,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 23,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4
+      ],
+      "index": 24,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        4
+      ],
+      "index": 25,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 26,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 27,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 28,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4
+      ],
+      "index": 29,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        5
+      ],
+      "index": 30,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 31,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 32,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 33,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 34,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        5
+      ],
+      "index": 35,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 36,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 37,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 38,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 39,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        5
+      ],
+      "index": 40,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 41,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 42,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 43,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 44,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        5
+      ],
+      "index": 45,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 46,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 47,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 48,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 49,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        5
+      ],
+      "index": 50,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 51,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 52,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 53,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        5
+      ],
+      "index": 54,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        5
+      ],
+      "index": 55,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 56,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 57,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 58,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        5
+      ],
+      "index": 59,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        6
+      ],
+      "index": 60,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 61,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 62,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 63,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 64,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        6
+      ],
+      "index": 65,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 66,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 67,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 68,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 69,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        6
+      ],
+      "index": 70,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 71,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 72,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 73,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 74,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        6
+      ],
+      "index": 75,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 76,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 77,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 78,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 79,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        6
+      ],
+      "index": 80,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 81,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 82,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 83,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        6
+      ],
+      "index": 84,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        6
+      ],
+      "index": 85,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 86,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 87,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 88,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        6
+      ],
+      "index": 89,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        7
+      ],
+      "index": 90,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 91,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 92,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 93,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 94,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        7
+      ],
+      "index": 95,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 96,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 97,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 98,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 99,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        7
+      ],
+      "index": 100,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 101,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 102,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 103,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 104,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        7
+      ],
+      "index": 105,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 106,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 107,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 108,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 109,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        7
+      ],
+      "index": 110,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 111,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 112,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 113,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        7
+      ],
+      "index": 114,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        7
+      ],
+      "index": 115,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 116,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 117,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 118,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        7
+      ],
+      "index": 119,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        8
+      ],
+      "index": 120,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 121,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 122,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 123,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 124,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        8
+      ],
+      "index": 125,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 126,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 127,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 128,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 129,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        8
+      ],
+      "index": 130,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 131,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 132,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 133,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 134,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        8
+      ],
+      "index": 135,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 136,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 137,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 138,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 139,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        8
+      ],
+      "index": 140,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 141,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 142,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 143,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        8
+      ],
+      "index": 144,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        8
+      ],
+      "index": 145,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 146,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 147,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 148,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        8
+      ],
+      "index": 149,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        9
+      ],
+      "index": 150,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 151,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 152,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 153,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 154,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        9
+      ],
+      "index": 155,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 156,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 157,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 158,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 159,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        9
+      ],
+      "index": 160,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 161,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 162,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 163,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 164,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        9
+      ],
+      "index": 165,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 166,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 167,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 168,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 169,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        9
+      ],
+      "index": 170,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 171,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 172,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 173,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        9
+      ],
+      "index": 174,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        9
+      ],
+      "index": 175,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 176,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 177,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 178,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        9
+      ],
+      "index": 179,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        10
+      ],
+      "index": 180,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 181,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 182,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 183,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 184,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        10
+      ],
+      "index": 185,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 186,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 187,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 188,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 189,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        10
+      ],
+      "index": 190,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 191,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 192,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 193,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 194,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        10
+      ],
+      "index": 195,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 196,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 197,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 198,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 199,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        10
+      ],
+      "index": 200,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 201,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 202,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 203,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        10
+      ],
+      "index": 204,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        10
+      ],
+      "index": 205,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 206,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 207,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 208,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        10
+      ],
+      "index": 209,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        11
+      ],
+      "index": 210,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 211,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 212,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 213,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 214,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        11
+      ],
+      "index": 215,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 216,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 217,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 218,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 219,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        11
+      ],
+      "index": 220,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 221,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 222,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 223,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 224,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        11
+      ],
+      "index": 225,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 226,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 227,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 228,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 229,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        11
+      ],
+      "index": 230,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 231,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 232,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 233,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        11
+      ],
+      "index": 234,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        11
+      ],
+      "index": 235,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 236,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 237,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 238,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        11
+      ],
+      "index": 239,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        12
+      ],
+      "index": 240,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 241,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 242,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 243,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 244,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        12
+      ],
+      "index": 245,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 246,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 247,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 248,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 249,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        12
+      ],
+      "index": 250,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 251,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 252,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 253,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 254,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        12
+      ],
+      "index": 255,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 256,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 257,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 258,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 259,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        12
+      ],
+      "index": 260,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 261,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 262,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 263,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        12
+      ],
+      "index": 264,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        12
+      ],
+      "index": 265,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 266,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 267,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 268,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        12
+      ],
+      "index": 269,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 270,
+      "label": "coarse_staircase_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 271,
+      "label": "duration_1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 272,
+      "label": "reversal_1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 273,
+      "label": "release_1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 274,
+      "label": "release_1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 275,
+      "label": "coarse_staircase_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 276,
+      "label": "duration_-1_100_200ms",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 277,
+      "label": "reversal_-1",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 278,
+      "label": "release_-1_zero",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 279,
+      "label": "release_-1_off",
+      "repetition": 0,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 280,
+      "label": "coarse_staircase_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 281,
+      "label": "duration_1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 282,
+      "label": "reversal_1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 283,
+      "label": "release_1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 284,
+      "label": "release_1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 285,
+      "label": "coarse_staircase_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 286,
+      "label": "duration_-1_100_200ms",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 287,
+      "label": "reversal_-1",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 288,
+      "label": "release_-1_zero",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 289,
+      "label": "release_-1_off",
+      "repetition": 1,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": 25,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 290,
+      "label": "coarse_staircase_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 291,
+      "label": "duration_1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 292,
+      "label": "reversal_1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 293,
+      "label": "release_1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": 100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 294,
+      "label": "release_1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "drive": -25,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 295,
+      "label": "coarse_staircase_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 296,
+      "label": "duration_-1_100_200ms",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 297,
+      "label": "reversal_-1",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 298,
+      "label": "release_-1_zero",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "drive": -100,
+      "ids": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "index": 299,
+      "label": "release_-1_off",
+      "repetition": 2,
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "loaded": "SRAM via openFPGALoader -b tangprimer25k; no permanent flash",
+  "date_utc": "2026-09-11T18:01:08.744358+00:00",
+  "sha256": {
+    "hx_sweep_support.rs.inc": "515f847219f131f3f58e4eff43a62c873d396957fa1bfbb22b7e6a108b697767",
+    "actuator_sweep.rs": "d41716dfef437f79113fa81fb9be7c51e914da5df97bdeab303f4afd13419592",
+    "characterize_hx_bridge.rs": "4805b640f3857b6ca8f355b19950f0ee2bf64ad8958eb8aece2891f99447d993",
+    "hx_safety_probe.rs.inc": "3d82e3c667f4566b5060342b0b93a21dce8c87384c6581a46740c3748f1ca802",
+    "fpga/impl/bridge_safety.fs": "17424755de69cbf18815c0afa312039a0020ad78f6ff353a5c659465dff388ae",
+    "fpga/tb/hx_safety_tb.v": "d1d65551cf074e246886edc1039412e24911c7fcf21fd07d494395ea01294ac6",
+    "fpga/tb/bridge_safety_tb.v": "59423677721ab2935b03a36f8f51959b7d6ca3cdd775b60e7dbfaf2ba49eb1c3",
+    "fpga/src/bridge_safety.cst": "1e3b3d5ece05801e6593b2338194cceb970f8b9294b5ddadd3e250f34f17a058",
+    "fpga/src/bridge.v": "88e99e40146108dcf95de95b40a7428fa2ab46f450c04776d97dbb0c6965a3c3",
+    "fpga/src/hx_safety.v": "f51abfa3b8157f8843b3b692c28be4cd0d878e258da4676b8df96a4795c76aa5"
+  }
+}

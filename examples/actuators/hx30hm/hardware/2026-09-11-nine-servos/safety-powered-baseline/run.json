@@ -1,0 +1,27 @@
+{
+  "baud": 115200,
+  "completed": true,
+  "current": "0.001 A/count uncalibrated internal current; not measured total supply current",
+  "elapsed_s": 3.004589864,
+  "failures": 0,
+  "ids": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "mode": "read_only",
+  "port": "/dev/cu.usbserial-20250303171",
+  "samples": 501,
+  "seconds": 3.0,
+  "source_blake3": "5885fedfebf00bf2dfd6dd6d6e198921d4b9226df383f60df9e2799147f1611e",
+  "started_unix_s": 1789149523.199162,
+  "stop_reason": "duration_complete",
+  "timing": "Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.",
+  "voltage": "0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f"
+}

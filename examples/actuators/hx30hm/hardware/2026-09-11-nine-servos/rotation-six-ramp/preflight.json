@@ -1,0 +1,520 @@
+{
+  "homes": {
+    "4": 1952,
+    "5": 2684,
+    "6": 1865,
+    "7": 2293,
+    "8": 2432,
+    "9": 2582
+  },
+  "plan": {
+    "bench_condition": "User confirms 12.6 V setpoint, increased bench current limit to 3 A, and all nine shafts free for continuous rotation without linkage, cable, or physical stops. Unloaded HX-30HM firmware 3.15 IDs 4-12. This experiment retains short bounded pulses; total bench current is not independently logged. Bench observed CV at 12.6 V and up to 0.9 A during prior group pulses. Free-rotation encoder ambiguity bound 8192 counts/s (720 deg/s) is provisional acquisition policy, not measured maximum.",
+    "control": "pwm_sweep",
+    "direction_bit": 10,
+    "free_rotation_maximum_counts_s": 8192.0,
+    "pulse_ms": 300,
+    "rest_ms": 1000,
+    "resume_from": null,
+    "schedule": {
+      "include_concurrent": true,
+      "include_individual": false,
+      "levels": [],
+      "repetitions": 1
+    },
+    "temperature_cutoff_c": 60,
+    "travel_limit_counts": 1500,
+    "waveforms": [
+      {
+        "name": "progressive_positive_ramp",
+        "segments": [
+          {
+            "drive": 25,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 100,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 200,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 300,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 400,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 500,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 600,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 700,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 800,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 900,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": 1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          }
+        ]
+      },
+      {
+        "name": "progressive_negative_ramp",
+        "segments": [
+          {
+            "drive": -25,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -100,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -200,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -300,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -400,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -500,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -600,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -700,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -800,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -900,
+            "duration_ms": 200,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          },
+          {
+            "drive": -1000,
+            "duration_ms": 300,
+            "torque_enabled": true
+          }
+        ]
+      }
+    ]
+  },
+  "plan_identity": "27c154b35ceee9f0a80d19578f0af7aa7006d7dceac3325b8c4abdf8d9c252a0",
+  "servos": {
+    "4": {
+      "configuration": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        4,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 2.9943304979527716,
+        "position_raw": 1952,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 50,
+        "voltage_raw": 121,
+        "voltage_v": 12.100000000000001
+      }
+    },
+    "5": {
+      "configuration": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        5,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 4.1172044346850605,
+        "position_raw": 2684,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 49,
+        "voltage_raw": 123,
+        "voltage_v": 12.3
+      }
+    },
+    "6": {
+      "configuration": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        6,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0.007,
+        "current_raw": 7,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 2.8608741694067206,
+        "position_raw": 1865,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 49,
+        "voltage_raw": 121,
+        "voltage_v": 12.100000000000001
+      }
+    },
+    "7": {
+      "configuration": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        7,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 3.517417946621775,
+        "position_raw": 2293,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 48,
+        "voltage_raw": 122,
+        "voltage_v": 12.200000000000001
+      }
+    },
+    "8": {
+      "configuration": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        8,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0.033,
+        "current_raw": 33,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 3.730641276137879,
+        "position_raw": 2432,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 48,
+        "voltage_raw": 123,
+        "voltage_v": 12.3
+      }
+    },
+    "9": {
+      "configuration": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        9,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0.028,
+        "current_raw": 28,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 3.9607383943207255,
+        "position_raw": 2582,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 49,
+        "voltage_raw": 123,
+        "voltage_v": 12.3
+      }
+    }
+  }
+}

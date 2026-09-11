@@ -6,14 +6,14 @@ Objective: identify the capabilities and limits of all nine HX-30HM servos, incl
 |---|---|---|
 | Identity, firmware, register interpretation | All nine IDs 4–12, firmware 3.15, verified voltage/temperature byte separation | Calibrate onboard voltage/current/temperature against external instruments |
 | Position motion in both directions | Completed individual amplitude/speed ladders at two reported supply conditions | Repeated trajectories, acceleration limits, near-target behavior, load dependence |
-| PWM control | All nine passed positive 2.5–20% requested drive pulses; verified zero-drive stopping | Reverse bit 10 verified on all nine; full-duty speed and repeatability remain |
+| PWM control | Direction bit 10 verified on all nine; all nine completed individual short pulses through full duty in both directions | Sustained encoder slopes, repeated full-rotation holds, coast versus zero-PWM braking |
 | Velocity control | Documented; historical non-versioned bench notes | Repeat validated signed velocity trials on all nine with retained raw logs |
-| Concurrent speed and transients | All nine passed small position stages, then rail sag stopped escalation | Adequate current headroom, power-distribution measurements, repeated concurrent PWM/velocity tests |
+| Concurrent speed and transients | At user-reported 12.6 V / 3 A, all-nine abrupt PWM passed through 70%, lost telemetry at 80%; servo voltage fell to 9.4 V while user observed bench CV / 12.6 V / up to 0.9 A | Connector voltage, transient current, group-size dependence and ramp versus abrupt starts; do not assume bench current limiting |
 | Deadband, asymmetry, friction | Low-drive response differs between servos; ID 8 did not move at 25 or 50/1000 | Dense bidirectional drive sweep with repetitions and known load; separate stiction from controller thresholds |
 | Torque-speed envelope and saturation | Manufacturer ratings only | Known lever geometry and calibrated external force/weight; controlled load increments on each servo |
 | Acceleration, inertia, compliance, backlash | Host-window step records; mechanisms not separately identified | Known attached inertia and reversible load, independently measured output angle/force |
 | Thermal behavior and protection | Reported warm-bench temperatures and test stop gates | Ambient measurement, current calibration, heating/cooling curves under known loads, repeatability and controlled protection approach |
-| Timing, sensor freshness, command-loss behavior | Host timestamp windows and verified checksums | FPGA timestamps, sensor update-rate measurement, hardware verification of the software-tested FPGA timeout, bus-load sensitivity |
+| Timing, sensor freshness, command-loss behavior | Host windows/checksums; hardware command, telemetry and host-traffic watchdog probes passed at low PWM on ID12, final stop all nine | FPGA timestamps, sensor update rate, physical S2 button test, bus-load sensitivity; no claim of stopping over a disconnected bus |
 | Simulation agreement | Earlier multiphysics model contains explicit estimates | Fit identifiable parameters in shared Rust components; evaluate held-out measured trajectories and confidence intervals; promote accepted physical values into CAD with provenance |
 
 ## Experimental order
@@ -27,14 +27,14 @@ Objective: identify the capabilities and limits of all nine HX-30HM servos, incl
 
 ## Physical inputs currently requested
 
-- Confirmation of a 2 A current limit at the user's selected 12.6 V before retrying demanding all-nine motion. Last confirmed limit is 1 A; a measured rail collapse is retained.
+- User confirmed all nine shafts unrestricted, then a 2 A limit and subsequently 3 A at 12.6 V. During the 3 A run the bench displayed CV / 12.6 V / up to 0.9 A. Awaiting power-wiring details and an independent connector-voltage measurement; earlier manifests retain their originally known conditions.
 - Available horn/lever, known weights, or force scale/load cell for torque and loaded thermal tests. No load has been invented or assumed from internal current readings.
 
 Never infer an absolute mechanical speed limit from a command plateau alone, nor calibrated torque from open-loop PWM or an uncalibrated current register. Each measured limit belongs to its stated supply, load, temperature, mode, and timing conditions.
 
 ## Offline preparation after power removal
 
-See [software validation](../../software-validation/README.md): FPGA supervisor built and simulated, Rust full-duty individual/concurrent PWM schedule and serial rehearsal, shared-physics direction/timestep checks. No new hardware measurements were taken. The safety image is not yet flashed; hardware commissioning precedes the full sweep.
+See [software validation](../../software-validation/README.md) for the historical power-off preparation: FPGA simulation, serial rehearsal and shared-physics direction/timestep checks. This phase was subsequently followed by the deployed safety image and [successful hardware watchdog commissioning](safety-watchdog-reply-window/run.json).
 
 ## Initial identification from existing PWM records
 

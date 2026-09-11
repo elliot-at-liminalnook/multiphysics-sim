@@ -1,0 +1,179 @@
+{
+  "control": "pwm_sweep",
+  "schedule": {
+    "levels": [],
+    "repetitions": 1,
+    "include_concurrent": true,
+    "include_individual": false
+  },
+  "pulse_ms": 300,
+  "rest_ms": 1000,
+  "travel_limit_counts": 1500,
+  "temperature_cutoff_c": 60,
+  "direction_bit": 10,
+  "bench_condition": "User confirms 12.6 V setpoint, increased bench current limit to 3 A, and all nine shafts free for continuous rotation without linkage, cable, or physical stops. Unloaded HX-30HM firmware 3.15 IDs 4-12. This experiment retains short bounded pulses; total bench current is not independently logged. Bench observed CV at 12.6 V and up to 0.9 A during prior group pulses. Free-rotation encoder ambiguity bound 8192 counts/s (720 deg/s) is provisional acquisition policy, not measured maximum.",
+  "resume_from": null,
+  "free_rotation_maximum_counts_s": 8192,
+  "waveforms": [
+    {
+      "name": "progressive_positive_ramp",
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 200,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 300,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 400,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 500,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 600,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 700,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 800,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 900,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "progressive_negative_ramp",
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -200,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -300,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -400,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -500,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -600,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -700,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -800,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -900,
+          "duration_ms": 150,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1000,
+          "duration_ms": 300,
+          "torque_enabled": true
+        }
+      ]
+    }
+  ]
+}

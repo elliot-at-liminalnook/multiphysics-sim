@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "condition": {
+    "voltage_setpoint_v": 12.6,
+    "total_supply_current_limit_a": 3,
+    "source": "User confirmation; supply current not digitally logged",
+    "all_shafts_free": true
+  },
+  "manufacturer": {
+    "url": "https://www.hiwonder.com/products/hx-30hm",
+    "checked_date": "2026-09-11",
+    "operating_voltage_v": [
+      9,
+      12.6
+    ],
+    "stall_current_per_servo_a": 3,
+    "note": "Stall-current specification is not a continuous current rating or an aggregate bank limit."
+  },
+  "completed_trials": 18,
+  "total_trials": 24,
+  "failure": "bad framing or length",
+  "failed_transaction": {
+    "completion_host_ns": 24196454680,
+    "decode_error": "bad framing or length",
+    "id": 4,
+    "instruction": 2,
+    "request_host_ns": 24046230094,
+    "rx": [],
+    "sequence": 3930,
+    "tx": [
+      255,
+      255,
+      4,
+      4,
+      2,
+      56,
+      15,
+      174
+    ]
+  },
+  "preceding_transactions": [
+    {
+      "completion_host_ns": 24039599642,
+      "decode_error": null,
+      "id": 254,
+      "instruction": 131,
+      "request_host_ns": 24028259613,
+      "rx": [
+        255,
+        255,
+        254,
+        15,
+        0,
+        1,
+        0,
+        0,
+        254,
+        255,
+        1,
+        255,
+        1,
+        60,
+        90,
+        126,
+        208,
+        7,
+        8
+      ],
+      "sequence": 3928,
+      "tx": [
+        255,
+        255,
+        254,
+        31,
+        131,
+        44,
+        2,
+        4,
+        32,
+        3,
+        5,
+        32,
+        3,
+        6,
+        32,
+        3,
+        7,
+        32,
+        3,
+        8,
+        32,
+        3,
+        9,
+        32,
+        3,
+        10,
+        32,
+        3,
+        11,
+        32,
+        3,
+        12,
+        32,
+        3,
+        174
+      ]
+    },
+    {
+      "completion_host_ns": 24045729893,
+      "decode_error": null,
+      "id": 254,
+      "instruction": 160,
+      "request_host_ns": 24040411639,
+      "rx": [
+        255,
+        255,
+        254,
+        15,
+        0,
+        1,
+        0,
+        0,
+        254,
+        255,
+        1,
+        255,
+        1,
+        60,
+        90,
+        126,
+        208,
+        7,
+        8
+      ],
+      "sequence": 3929,
+      "tx": [
+        255,
+        255,
+        254,
+        4,
+        160,
+        3,
+        4,
+        86
+      ]
+    }
+  ],
+  "levels": [
+    {
+      "pwm_counts": 25,
+      "minimum_sampled_voltage_v": 11.8,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 4.394531227409302
+    },
+    {
+      "pwm_counts": -25,
+      "minimum_sampled_voltage_v": 11.8,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 0
+    },
+    {
+      "pwm_counts": 50,
+      "minimum_sampled_voltage_v": 11.8,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 13.183593739523687
+    },
+    {
+      "pwm_counts": -50,
+      "minimum_sampled_voltage_v": 11.8,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 13.183593739523687
+    },
+    {
+      "pwm_counts": 100,
+      "minimum_sampled_voltage_v": 11.7,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 21.97265625163807
+    },
+    {
+      "pwm_counts": -100,
+      "minimum_sampled_voltage_v": 11.7,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 26.367187479047374
+    },
+    {
+      "pwm_counts": 200,
+      "minimum_sampled_voltage_v": 11.5,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 52.734375015390526
+    },
+    {
+      "pwm_counts": -200,
+      "minimum_sampled_voltage_v": 11.5,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 52.734375015390526
+    },
+    {
+      "pwm_counts": 300,
+      "minimum_sampled_voltage_v": 11.3,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 79.1015624944379
+    },
+    {
+      "pwm_counts": -300,
+      "minimum_sampled_voltage_v": 11.2,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 74.7070312670286
+    },
+    {
+      "pwm_counts": 400,
+      "minimum_sampled_voltage_v": 10.9,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 101.07421874607596
+    },
+    {
+      "pwm_counts": -400,
+      "minimum_sampled_voltage_v": 10.8,
+      "maximum_sampled_temperature_c": 49,
+      "peak_reported_speed_deg_s": 105.46874997348526
+    },
+    {
+      "pwm_counts": 500,
+      "minimum_sampled_voltage_v": 10.5,
+      "maximum_sampled_temperature_c": 50,
+      "peak_reported_speed_deg_s": 123.04687499771404
+    },
+    {
+      "pwm_counts": -500,
+      "minimum_sampled_voltage_v": 10.5,
+      "maximum_sampled_temperature_c": 50,
+      "peak_reported_speed_deg_s": 123.04687499771404
+    },
+    {
+      "pwm_counts": 600,
+      "minimum_sampled_voltage_v": 9.9,
+      "maximum_sampled_temperature_c": 50,
+      "peak_reported_speed_deg_s": 145.0195312493521
+    },
+    {
+      "pwm_counts": -600,
+      "minimum_sampled_voltage_v": 9.9,
+      "maximum_sampled_temperature_c": 50,
+      "peak_reported_speed_deg_s": 145.0195312493521
+    },
+    {
+      "pwm_counts": 700,
+      "minimum_sampled_voltage_v": 9.4,
+      "maximum_sampled_temperature_c": 50,
+      "peak_reported_speed_deg_s": 158.2031249888758
+    },
+    {
+      "pwm_counts": -700,
+      "minimum_sampled_voltage_v": 9.4,
+      "maximum_sampled_temperature_c": 50,
+      "peak_reported_speed_deg_s": 162.59765627358087
+    }
+  ],
+  "stop_verification": {
+    "all_stationary": true,
+    "samples": 480,
+    "recovery": {
+      "4": {
+        "pwm_zero_readback_sequence": 3938,
+        "torque_off_readback_sequence": 3934,
+        "stationary_samples": 54
+      },
+      "5": {
+        "pwm_zero_readback_sequence": 3946,
+        "torque_off_readback_sequence": 3942,
+        "stationary_samples": 54
+      },
+      "6": {
+        "pwm_zero_readback_sequence": 3954,
+        "torque_off_readback_sequence": 3950,
+        "stationary_samples": 54
+      },
+      "7": {
+        "pwm_zero_readback_sequence": 3962,
+        "torque_off_readback_sequence": 3958,
+        "stationary_samples": 53
+      },
+      "8": {
+        "pwm_zero_readback_sequence": 3970,
+        "torque_off_readback_sequence": 3966,
+        "stationary_samples": 53
+      },
+      "9": {
+        "pwm_zero_readback_sequence": 3978,
+        "torque_off_readback_sequence": 3974,
+        "stationary_samples": 53
+      },
+      "10": {
+        "pwm_zero_readback_sequence": 3986,
+        "torque_off_readback_sequence": 3982,
+        "stationary_samples": 53
+      },
+      "11": {
+        "pwm_zero_readback_sequence": 3994,
+        "torque_off_readback_sequence": 3990,
+        "stationary_samples": 53
+      },
+      "12": {
+        "pwm_zero_readback_sequence": 4002,
+        "torque_off_readback_sequence": 3998,
+        "stationary_samples": 53
+      }
+    }
+  },
+  "interpretation": "Both directions through 70% PWM completed. The first addressed telemetry read at +80% returned no bytes. No telemetry at that failed level; voltage sag is observed at earlier levels, but supply limiting, wiring drop, and communication interference are not distinguished. Host STOP replaces the FPGA fault reason, so an undervoltage trip is not established. Immediate cleanup observed coasting on IDs 4/5; subsequent passive observation verified all nine stationary. No steady-state maximum speed claim.",
+  "inputs": {
+    "pwm-concurrent-3a/run.json": "3de575b77dc4135fd0489ee160f8c51d26aadb3e57176c75483cdbd299a2851e",
+    "pwm-concurrent-3a/checkpoint.json": "b7ca3333dca36b0365cc7d1d46f7c6690ebeab16a4ef32159cffb6cf6fecbf6e",
+    "pwm-concurrent-3a/sweep.csv": "03a592cc5837e4533df81328a2bdd95e0dcd3b640262a0bb677b9d470efec2d4",
+    "post-3a-stop-observation/telemetry.csv": "974082fe3b5999a12b59dd974cc218baea14d54d987476a69c2e63aeb60bb1a3",
+    "pwm-concurrent-3a/transactions.jsonl": "22ff4c5be9cf79216fabefbf9a9cc88c625ec0bd398969fb424ed23ae057f438"
+  }
+}

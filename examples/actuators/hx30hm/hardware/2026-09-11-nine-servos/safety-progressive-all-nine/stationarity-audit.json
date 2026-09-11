@@ -1,0 +1,15 @@
+{
+  "csv_sha256": "309a7e6f2e4a7fa7a8dcd09258d8e882a1705a901fb05291d7bb7965c9a38f93",
+  "trial": 118,
+  "id": 8,
+  "reported_speed_of_last_nonzero_rad_s": 0.153398079,
+  "encoder_counts_before_and_after": [
+    2228,
+    2228
+  ],
+  "last_nonzero_completion_s": 147.196546235,
+  "final_consecutive_zero_samples": 14,
+  "final_consecutive_zero_span_s": 0.1557758980000017,
+  "largest_gap_s": 0.012622015999994574,
+  "interpretation": "The failed 500 ms all-zero history test was stricter than the declared 150 ms consecutive stationary span. Preserve trial as failed in original run; do not rewrite its checkpoint."
+}

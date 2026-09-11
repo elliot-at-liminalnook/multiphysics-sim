@@ -1,0 +1,96 @@
+{
+  "homes": {
+    "12": 2520
+  },
+  "plan": {
+    "bench_condition": "User confirms 12.6 V setpoint, increased bench current limit to 3 A, and all nine shafts free for continuous rotation without linkage, cable, or physical stops. Unloaded HX-30HM firmware 3.15 IDs 4-12. This experiment retains short bounded pulses; total bench current is not independently logged. Bench observed CV at 12.6 V and up to 0.9 A during prior group pulses. Free-rotation encoder ambiguity bound 8192 counts/s (720 deg/s) is provisional acquisition policy, not measured maximum.",
+    "control": "pwm_sweep",
+    "direction_bit": 10,
+    "free_rotation_maximum_counts_s": 8192.0,
+    "pulse_ms": 300,
+    "rest_ms": 1000,
+    "resume_from": null,
+    "schedule": {
+      "include_concurrent": false,
+      "include_individual": true,
+      "levels": [
+        25,
+        50,
+        100,
+        200,
+        300,
+        400,
+        500,
+        600,
+        700,
+        800,
+        900,
+        1000
+      ],
+      "repetitions": 1
+    },
+    "temperature_cutoff_c": 60,
+    "travel_limit_counts": 1500
+  },
+  "plan_identity": "b1d02531598d38a557f742649756051d1da5a600a4466408329920aa2a040b8b",
+  "servos": {
+    "12": {
+      "configuration": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        12,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 3.865631585471816,
+        "position_raw": 2520,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 47,
+        "voltage_raw": 122,
+        "voltage_v": 12.200000000000001
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "source": "User report following pwm-concurrent-3a",
+  "related_run": "pwm-concurrent-3a",
+  "bench_mode": "CV",
+  "displayed_voltage_v": 12.6,
+  "maximum_observed_display_current_a": 0.9,
+  "current_limit_a": 3,
+  "measurement_limitations": "Visual bench-display observation; unsynchronized and potentially slower than transient current/voltage changes.",
+  "interpretation": "No observed bench current limiting. Servo-reported voltage decreased with PWM; investigate downstream wiring/connector voltage drop, telemetry accuracy, or brief transients before assigning cause. Low unloaded current does not establish unused speed capacity."
+}

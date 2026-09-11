@@ -1,10 +1,14 @@
 # Nine HX-30HM servos: first hardware characterization
 
+**Latest results:** [full-rotation speed, concurrent ramps, braking/coasting, and smoothness comparison](rotation-report.md). All nine reached full PWM together using ramps; individual sustained speeds, power-distribution evidence and remaining measurement gaps are recorded there.
+
 Measured on 2026-09-11 through the Sipeed Tang Primer 25K FPGA release bridge, USB UART channel B /dev/cu.usbserial-20250303171. Physical chain reported by user as 12→4; responding addresses verified as 4–12. Firmware registers report 3.15 for all nine.
 
 Subsequent authorized motion tests are documented separately in [motion-report.md](motion-report.md), with per-run supply conditions, target trajectories, raw transactions, and final configuration readbacks. The stationary results below retain their original scope.
 
-The user then selected PWM control. All nine passed bounded individual PWM pulses; see [pwm-report.md](pwm-report.md). **Latest verified bench state: IDs 4–12 are configured in PWM mode 2, at zero PWM, with torque disabled and NVS locked.** The earlier position-mode state below is historical. Fast concurrent PWM and an independent FPGA watchdog are not yet validated.
+The user then selected PWM control. Initial bounded pulses are in [pwm-report.md](pwm-report.md). Later commissioning verified the FPGA command, telemetry, and host-traffic watchdogs in [safety-watchdog-reply-window/run.json](safety-watchdog-reply-window/run.json); the deployed source/image is in [safety-commissioned-deployment](safety-commissioned-deployment). All nine completed the individual short-pulse full-duty sweep. See [current-bench-state.json](current-bench-state.json) for the last recorded state and its verification provenance; the earlier position-mode state below is historical.
+
+At the user-confirmed 12.6 V / 3 A bench setting, abrupt all-nine pulses completed through 70% PWM but lost a reply at 80%. [The review](bench-3a-review.json) records servo-reported voltage down to 9.4 V. The user's [bench-display observation](bench-3a-user-display-observation.json) was CV, 12.6 V and up to 0.9 A, so bench current limiting is not established. Connector voltage and transient current remain unmeasured. Longer unrestricted-shaft measurements use [the rotation runtime](rotation-runtime/manifest.json) and retain raw and unwrapped encoder readings.
 
 [Subsequent direction tests](pwm-direction-report.md) verified that zero-based bit 10 reverses PWM on all nine units. Bits 11 and 15 were rejected on ID 12. The [full characterization plan](characterization-plan.md) tracks the remaining measurements; commissioning is not completion of the sim-to-real characterization goal.
 
@@ -32,7 +36,7 @@ The earlier code read two bytes at 0x3E and called the result millivolts. Byte 0
 
 ## Acquisition and limitations
 
-The active FPGA release bridge is retained; no bitstream was loaded this turn. Prior bench notes identify TX 220 ohms / RX 1 kohm and RELEASE_TX=1. A saved build hash identifies a candidate on disk, not independent proof of the running SRAM image.
+During the initial stationary phase, the FPGA release bridge was retained. Later safety deployment and hardware commissioning are linked above. Prior bench notes identify TX 220 ohms / RX 1 kohm and RELEASE_TX=1. A saved build hash alone identifies a candidate on disk, not independent proof of the running SRAM image.
 
 A separate 15-second compatibility-driver run yielded 2358 clean replies (262 per unit). The first Rust attempt returned no bytes because configuring the macOS FTDI port before opening the persistent descriptor allowed its settings to reset. The recorder was corrected to configure the port while open; the subsequent 30-second run above succeeded. The failed attempt is retained under stationary-30s and excluded from servo reliability statistics; its original completed flag means the process finished, not successful acquisition. Current code distinguishes duration completion from a failure-threshold exit.
 

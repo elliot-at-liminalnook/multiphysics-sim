@@ -16,19 +16,41 @@
   "pwm_raw": 0,
   "torque_enable": 0,
   "nvs_lock": 1,
-  "verification": "Per-servo configuration-audit.json plus post-pwm-stationary-check: all speed and status readings zero",
-  "stationary_samples": 500,
-  "fpga_profile": "Existing transparent release bridge, no reflash during these tests",
-  "independent_fpga_pwm_watchdog": false,
+  "verification": "rotation-review.json: all-nine final zero PWM / torque disabled / NVS locked readbacks, followed by 476 stationary samples with no failed transactions",
+  "stationary_samples": 476,
+  "fpga_profile": "Safety bridge with 2 ms broadcast processing gaps and bounded reply reservation; safety-commissioned-deployment",
+  "independent_fpga_pwm_watchdog": true,
   "last_user_reported_supply_voltage_v": 12.6,
-  "last_user_confirmed_supply_current_limit_a": 1.0,
-  "requested_supply_current_limit_a": 2.0,
-  "request_confirmed": false,
+  "last_user_confirmed_supply_current_limit_a": 3,
+  "requested_supply_current_limit_a": 3,
+  "request_confirmed": true,
   "pwm_direction_bit_zero_based": 10,
-  "latest_verification": "pwm-direction-summary.json: all nine passed signed pulses, final zero drive / torque disabled / mode 2 / locked / zero speed and status",
+  "latest_verification": "rotation-review.json: all-nine final zero PWM / torque disabled / NVS locked readbacks, followed by 476 stationary samples with no failed transactions",
   "power_state_update": {
-    "source": "User stated servos unplugged for software validation",
-    "powered": false,
-    "register_state": "Fields above are the last powered readback, not a measurement after power cycling. RAM defaults on reconnect still require verification."
-  }
+    "powered": true,
+    "source": "User bench setting and rotation-final-stationary telemetry",
+    "register_state": "All nine verified stationary with PWM zero, torque disabled and NVS locked after rotation tests. Mode 2 confirmed during preflight."
+  },
+  "shaft_clearance": {
+    "free_continuous_rotation": true,
+    "source": "Explicit user confirmation for all nine shafts"
+  },
+  "condition_history_note": "Earlier runs recorded last-known 1 A; user subsequently confirmed 2 A and now explicitly increased to 3 A. Do not infer exact earlier setting change times.",
+  "last_user_reported_bench_display": {
+    "schema_version": 1,
+    "source": "User report following pwm-concurrent-3a",
+    "related_run": "pwm-concurrent-3a",
+    "bench_mode": "CV",
+    "displayed_voltage_v": 12.6,
+    "maximum_observed_display_current_a": 0.9,
+    "current_limit_a": 3,
+    "measurement_limitations": "Visual bench-display observation; unsynchronized and potentially slower than transient current/voltage changes.",
+    "interpretation": "No observed bench current limiting. Servo-reported voltage decreased with PWM; investigate downstream wiring/connector voltage drop, telemetry accuracy, or brief transients before assigning cause. Low unloaded current does not establish unused speed capacity."
+  },
+  "power_distribution": {
+    "topology": "single daisy chain",
+    "source": "User confirmation during rotation testing",
+    "connector_voltage_independently_measured": false
+  },
+  "quiet_reference_id_user_reported": 12
 }

@@ -1,0 +1,2522 @@
+{
+  "control": "pwm_sweep",
+  "schedule": {
+    "levels": [],
+    "repetitions": 3,
+    "include_concurrent": false
+  },
+  "waveforms": [
+    {
+      "name": "prbs7_seed93_amplitude25",
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "chirp_0p5_to12hz_amplitude25",
+      "segments": [
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 2,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 4,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 6,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 9,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 12,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 15,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 18,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 21,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 23,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 24,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 24,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 19,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 14,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 7,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -8,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -15,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -21,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -24,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -21,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -14,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -5,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 6,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 16,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 23,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 13,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -12,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -20,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -9,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 6,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 19,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 21,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 8,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -9,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -16,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 2,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 18,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 18,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -18,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -16,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 4,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 23,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 8,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -14,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -16,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 6,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 23,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 20,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -23,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -19,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 6,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 14,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -13,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -5,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 21,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 20,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -8,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -7,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 21,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 19,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -11,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -24,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 24,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 10,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -21,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -18,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 15,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 22,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -9,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -24,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 4,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "prbs7_seed93_amplitude50",
+      "segments": [
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "chirp_0p5_to12hz_amplitude50",
+      "segments": [
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 4,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 8,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 13,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 18,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 24,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 30,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 36,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 41,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 46,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 45,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 37,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 27,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 14,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -16,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -31,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -42,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -42,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -29,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -10,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 12,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 31,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 45,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 43,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 1,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -44,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -40,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -17,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 13,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 38,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 42,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 16,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -17,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -43,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -31,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 3,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 36,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 35,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -36,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -31,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 9,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 43,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 47,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 16,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -28,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -32,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 13,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 47,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 40,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -3,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -44,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -43,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 43,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 43,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -2,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -45,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -39,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 12,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 29,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -26,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -10,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 42,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 39,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -16,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -14,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 42,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 37,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -23,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 20,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -41,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -35,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 30,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 44,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -18,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -48,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 8,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "prbs7_seed93_amplitude100",
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "chirp_0p5_to12hz_amplitude100",
+      "segments": [
+        {
+          "drive": 0,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 7,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 15,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 36,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 47,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 59,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 71,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 82,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 91,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 98,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 98,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 89,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 54,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 28,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -32,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -61,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -84,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -98,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -99,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -85,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -58,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -20,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 23,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 63,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 91,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 86,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 51,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 2,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -49,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -87,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -81,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -34,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 77,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 83,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 32,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -35,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -87,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -98,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -62,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 6,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 73,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 71,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -73,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -62,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 18,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 87,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 94,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 32,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -55,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -64,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 94,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 81,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -5,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -87,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -87,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -2,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 86,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 86,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -4,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -91,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -78,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 23,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 98,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 58,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -53,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -99,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -20,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 84,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 79,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -32,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -28,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 84,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -45,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -98,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -1,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 98,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 41,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -82,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -70,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 59,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 88,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -36,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": -97,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 15,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 20,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    }
+  ],
+  "pulse_ms": 200,
+  "rest_ms": 1000,
+  "travel_limit_counts": 1200,
+  "temperature_cutoff_c": 60,
+  "direction_bit": 10,
+  "bench_condition": "Prepared template, not executed as a complete campaign. Latest user-confirmed setup: unloaded free shafts IDs4-12, single daisy chain, 12.6 V / 3 A bench limit; prior displayed CV and up to 0.9 A. Recheck actual conditions before execution. This template retains bounded-travel policy.",
+  "resume_from": null
+}

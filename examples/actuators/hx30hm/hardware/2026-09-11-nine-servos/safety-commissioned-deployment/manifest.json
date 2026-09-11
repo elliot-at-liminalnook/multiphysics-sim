@@ -1,0 +1,27 @@
+{
+  "loaded": "SRAM via openFPGALoader -b tangprimer25k; no permanent flash",
+  "date_utc": "2026-09-11T18:20:08.582758+00:00",
+  "hardware_watchdog_evidence": "../safety-watchdog-reply-window/run.json",
+  "fpga_final_fmax_mhz": 51.52,
+  "sha256": {
+    "hx_sweep_support.rs.inc": "eb7a1884a7f511d0f71071c30d75c8c9b684f9ff629e5403c8d9344d6d4c5835",
+    "actuator_sweep.rs": "d41716dfef437f79113fa81fb9be7c51e914da5df97bdeab303f4afd13419592",
+    "characterize_hx_bridge.rs": "4805b640f3857b6ca8f355b19950f0ee2bf64ad8958eb8aece2891f99447d993",
+    "hx-reply-narrow-tests.log": "15d002294fb56ed8de0189e01f2bf77ddfdda7fa79e6e48c46ba6984d9eb0dcf",
+    "hx-reply-narrow-build.log": "1cd3f95e277a86e5277386c4f333f4e43a062549b8ed2d8078eb466285031aaa",
+    "hx_safety_probe.rs.inc": "3d82e3c667f4566b5060342b0b93a21dce8c87384c6581a46740c3748f1ca802",
+    "fpga/Makefile": "3f27830698aa1a179bbce8c1d1a67d4d83a1cb81309737b6df5e808860f21144",
+    "fpga/safety.md": "36c26aaddb1047395632b39caf449ba1f90aaa22aad5a3fb4b34d328af348804",
+    "fpga/impl/bridge_safety.fs": "a5edabaabf24b6e644b3ae683fce7243ff88b08b00a43b0f07ec90947a64a423",
+    "fpga/tb/hx_safety_tb.v": "d1d65551cf074e246886edc1039412e24911c7fcf21fd07d494395ea01294ac6",
+    "fpga/tb/bridge_safety_tb.v": "09ca66cddf392f7173773e25d9c6103c9525b0206a5de9ff9ea44eadadac700f",
+    "fpga/src/button.v": "cb791c547c6a4e09b9ef442e1a8698e62d71d36c5ea418dbc769a21bbcff6e15",
+    "fpga/src/bridge_safety.cst": "1e3b3d5ece05801e6593b2338194cceb970f8b9294b5ddadd3e250f34f17a058",
+    "fpga/src/uart_tx.v": "23e6690a69e1c25db555efe9822168c51d370443638c598ca65d7c4709038eb7",
+    "fpga/src/uart_rx.v": "d08e66b6ffd40d2c2e393462a62473fddd4766b2863daeaae023adb90a1ab3b2",
+    "fpga/src/bridge.v": "f7b74108d548f811fb544f72619f4ab346047580a763d18960c0a600e00c4a6c",
+    "fpga/src/hx_safety.v": "a56393a608ecaba97b5c64c591b8fca93bf3dae6ca7a628d140e9f099a9e554e",
+    "hx-final-batch-tests-resumed.log": "0ce5b11ae6994bea9aa7a26847a95e73e476f102759a87106ce6483c57a1b0ce",
+    "hx-final-batch-build-resumed.log": "7f1191fdb89fec7c6ebfd3cf898e0fea22b8c7433f484c13af6180041c5ee4e0"
+  }
+}

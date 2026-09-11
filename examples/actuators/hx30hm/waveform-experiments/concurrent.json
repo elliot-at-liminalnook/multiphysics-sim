@@ -1,0 +1,237 @@
+{
+  "control": "pwm_sweep",
+  "schedule": {
+    "levels": [],
+    "repetitions": 3,
+    "include_concurrent": true
+  },
+  "waveforms": [
+    {
+      "name": "coarse_staircase_1",
+      "segments": [
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "duration_1_100_200ms",
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "reversal_1",
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "release_1_zero",
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "release_1_off",
+      "segments": [
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "name": "coarse_staircase_-1",
+      "segments": [
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -75,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": -25,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "duration_-1_100_200ms",
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "reversal_-1",
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "release_-1_zero",
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "release_-1_off",
+      "segments": [
+        {
+          "drive": -100,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 200,
+          "torque_enabled": false
+        }
+      ]
+    }
+  ],
+  "pulse_ms": 200,
+  "rest_ms": 1000,
+  "travel_limit_counts": 1200,
+  "temperature_cutoff_c": 60,
+  "direction_bit": 10,
+  "bench_condition": "Prepared template, not executed as a complete campaign. Latest user-confirmed setup: unloaded free shafts IDs4-12, single daisy chain, 12.6 V / 3 A bench limit; prior displayed CV and up to 0.9 A. Recheck actual conditions before execution. This template retains bounded-travel policy.",
+  "resume_from": null
+}

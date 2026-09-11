@@ -1,0 +1,301 @@
+{
+  "version": 1,
+  "input": "examples/full-robot/trusted-baseline/fastest573.input.json",
+  "input_sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6",
+  "cad": "/Users/elliot/physics-simulator/examples/full-robot/baseline/robot.rcad",
+  "cad_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "cad_revision": 1357,
+  "source_fidelity": "commissioning model; provisional material, inertia, servo dynamics and losses; ideal transmissions",
+  "actuator_checks": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "cad_motor": "-Y · Hip swing (belt) · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "cad_motor": "-Y · Worm drive · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "cad_motor": "-Y · Foot slide · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "cad_motor": "+X · Hip swing (belt) · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "cad_motor": "+X · Worm drive · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "cad_motor": "+X · Foot slide · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "cad_motor": "+Y · Hip swing (belt) · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "cad_motor": "+Y · Worm drive · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "cad_motor": "+Y · Foot slide · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "cad_motor": "-X · Hip swing (belt) · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "cad_motor": "-X · Worm drive · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "cad_motor": "-X · Foot slide · HX-30HM",
+      "derived_parameters": {
+        "stall_torque": 2.941995,
+        "no_load_speed": 5.5115660589294615,
+        "stiffness": 33.71277936971813,
+        "damping": 0.6742555873943625
+      },
+      "maximum_abs_difference": 0
+    }
+  ],
+  "actuator_derivation": "Effective torque/speed equal CAD gearbox ratings; stiffness and damping equal voltage-output firmware gains times torque_constant / resistance. Agreement validates derivation, not physical ratings or dynamic accuracy.",
+  "transmissions": [
+    {
+      "driven_joint": "+X | Hip swing",
+      "driver_joint": "+X | Hip servo output",
+      "name": "+X | Timing belt 1:1",
+      "ratio": 1
+    },
+    {
+      "driven_joint": "+X | Thigh elevation",
+      "driver_joint": "+X | Worm servo output",
+      "name": "+X | Worm reduction 5:1",
+      "ratio": 5
+    },
+    {
+      "driven_joint": "-Y | Hip swing",
+      "driver_joint": "-Y | Hip servo output",
+      "name": "-Y | Timing belt 1:1",
+      "ratio": 1
+    },
+    {
+      "driven_joint": "-Y | Thigh elevation",
+      "driver_joint": "-Y | Worm servo output",
+      "name": "-Y | Worm reduction 5:1",
+      "ratio": 5
+    },
+    {
+      "driven_joint": "+Y | Hip swing",
+      "driver_joint": "+Y | Hip servo output",
+      "name": "+Y | Timing belt 1:1",
+      "ratio": 1
+    },
+    {
+      "driven_joint": "+Y | Thigh elevation",
+      "driver_joint": "+Y | Worm servo output",
+      "name": "+Y | Worm reduction 5:1",
+      "ratio": 5
+    },
+    {
+      "driven_joint": "-X | Hip swing",
+      "driver_joint": "-X | Hip servo output",
+      "name": "-X | Timing belt 1:1",
+      "ratio": 1
+    },
+    {
+      "driven_joint": "-X | Thigh elevation",
+      "driver_joint": "-X | Worm servo output",
+      "name": "-X | Worm reduction 5:1",
+      "ratio": 5
+    }
+  ],
+  "sensors": [],
+  "identification": {},
+  "world": {
+    "ambient_c": 20,
+    "floor_damping": 2000,
+    "floor_friction": 0.31724137931034485,
+    "floor_stiffness": 200000,
+    "floor_z": -0.4410181228863441,
+    "terrain": null
+  },
+  "contact_profile": {
+    "contact": true,
+    "omit_inter_link_contact": true,
+    "floor_friction": {
+      "kind": "regularized_coulomb",
+      "slip_speed_m_s": 0.001
+    },
+    "flex": false
+  },
+  "joint_limits": {
+    "total_moving_joints": 32,
+    "with_explicit_limits": [
+      {
+        "name": "+X | Foot servo output",
+        "type": "revolute",
+        "limits": [
+          -2.5743606466916362,
+          0.07853981633974483
+        ]
+      }
+    ],
+    "missing": [
+      "-Y | Hip servo output",
+      "-Y | Hip swing",
+      "-Y | Worm servo output",
+      "-Y | Thigh elevation",
+      "-Y | Foot servo output",
+      "-Y | Crank to curved link",
+      "-Y | Foot translation",
+      "-Y | Curved link closes foot loop",
+      "+X | Hip servo output",
+      "+X | Hip swing",
+      "+X | Worm servo output",
+      "+X | Crank to curved link",
+      "+X | Foot translation",
+      "+X | Curved link closes foot loop",
+      "+X | Thigh elevation",
+      "+Y | Hip servo output",
+      "+Y | Hip swing",
+      "+Y | Worm servo output",
+      "+Y | Thigh elevation",
+      "+Y | Foot servo output",
+      "+Y | Crank to curved link",
+      "+Y | Foot translation",
+      "+Y | Curved link closes foot loop",
+      "-X | Hip servo output",
+      "-X | Hip swing",
+      "-X | Worm servo output",
+      "-X | Thigh elevation",
+      "-X | Foot servo output",
+      "-X | Crank to curved link",
+      "-X | Foot translation",
+      "-X | Curved link closes foot loop"
+    ],
+    "scope": "Missing limits are unvalidated physical travel ranges, not implicit unrestricted hardware capability. No limits invented or commands restricted."
+  },
+  "uncertainty": {
+    "backlash": {
+      "sigma": 0,
+      "sigma_fraction": 0.3
+    },
+    "com_m": {
+      "sigma": 0.0005,
+      "sigma_fraction": 0
+    },
+    "dimension_m": {
+      "sigma": 0.00015,
+      "sigma_fraction": 0
+    },
+    "friction": {
+      "sigma": 0,
+      "sigma_fraction": 0.2
+    },
+    "mass": {
+      "sigma": 0,
+      "sigma_fraction": 0.05
+    },
+    "motor_torque": {
+      "sigma": 0,
+      "sigma_fraction": 0.1
+    },
+    "seed": 0,
+    "stiffness": {
+      "sigma": 0,
+      "sigma_fraction": 0.15
+    }
+  },
+  "sensitivity_plan": "examples/full-robot/trusted-baseline/sensitivity-plan.json",
+  "physical_measurements_pending": [
+    "Loaded output torque versus speed and supply voltage",
+    "Command step response, delay, stiffness and damping",
+    "Belt/worm direction, ratio, backlash and losses under load",
+    "Foot/surface friction and contact compliance",
+    "Joint travel and inter-leg clearances",
+    "Available sensor channels, calibration, noise and timestamp latency"
+  ],
+  "scope": "Read-only derivation and declaration audit of the preserved simulated candidate. No hardware measurements are available yet. Numerical agreement with CAD-derived estimates is not calibration. Raw input was already serialized upstream; this audit does not recover original upstream field presence."
+}

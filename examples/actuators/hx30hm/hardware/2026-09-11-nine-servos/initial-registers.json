@@ -1,0 +1,3013 @@
+{
+  "utc": "2026-09-11T15:36:16Z",
+  "port": "/dev/cu.usbserial-20250303171",
+  "transport": "FPGA release bridge, host 115200, servo 1Mbaud; loaded identity inferred from bench notes",
+  "ids": {
+    "4": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 104093160,
+        "completion_host_ns": 111928807,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 111934492,
+        "completion_host_ns": 117650223,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 117653630,
+        "completion_host_ns": 123675919,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            4
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 123678196,
+        "completion_host_ns": 129566496,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 129568902,
+        "completion_host_ns": 135622511,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 135624496,
+        "completion_host_ns": 141553084,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 141555912,
+        "completion_host_ns": 148023614,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 148028551,
+        "completion_host_ns": 154033441,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 154038560,
+        "completion_host_ns": 160032728,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 160037689,
+        "completion_host_ns": 165647413,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 165649753,
+        "completion_host_ns": 171806020,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 171815119,
+        "completion_host_ns": 178031335,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            5,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 178036370,
+        "completion_host_ns": 183578997,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 183581161,
+        "completion_host_ns": 189634472,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 189637549,
+        "completion_host_ns": 195712068,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 195714622,
+        "completion_host_ns": 201594590,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            6,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 201596442,
+        "completion_host_ns": 207813231,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 207816194,
+        "completion_host_ns": 213823042,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 213826519,
+        "completion_host_ns": 219572216,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            104,
+            49
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 219574595,
+        "completion_host_ns": 225579827,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            49
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 225582672,
+        "completion_host_ns": 231518557,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 231520588,
+        "completion_host_ns": 237635189,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 237643969,
+        "completion_host_ns": 243853420,
+        "reply": {
+          "id": 4,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    },
+    "5": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 245481577,
+        "completion_host_ns": 249644436,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 249647791,
+        "completion_host_ns": 255657488,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 255659227,
+        "completion_host_ns": 261687767,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            5
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 261690768,
+        "completion_host_ns": 268010217,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 268015140,
+        "completion_host_ns": 274018546,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 274023989,
+        "completion_host_ns": 280016904,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 280022947,
+        "completion_host_ns": 286030522,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 286035790,
+        "completion_host_ns": 292007708,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 292012802,
+        "completion_host_ns": 297725629,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 297729467,
+        "completion_host_ns": 303529168,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 303530942,
+        "completion_host_ns": 309644126,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 309649289,
+        "completion_host_ns": 315503862,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            4,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 315505668,
+        "completion_host_ns": 321528864,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 321531029,
+        "completion_host_ns": 327700868,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 327703801,
+        "completion_host_ns": 333608697,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 333611212,
+        "completion_host_ns": 339761793,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            6,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 339765262,
+        "completion_host_ns": 345838525,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 345842432,
+        "completion_host_ns": 352020886,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            30,
+            4
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 352026211,
+        "completion_host_ns": 357852245,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            105,
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 357857520,
+        "completion_host_ns": 363560242,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 363562262,
+        "completion_host_ns": 369851057,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 369854690,
+        "completion_host_ns": 375864297,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 375875353,
+        "completion_host_ns": 381973787,
+        "reply": {
+          "id": 5,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    },
+    "6": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 384279807,
+        "completion_host_ns": 387841143,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 387844835,
+        "completion_host_ns": 394026192,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 394031111,
+        "completion_host_ns": 399585483,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            6
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 399588163,
+        "completion_host_ns": 405850511,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 405855540,
+        "completion_host_ns": 411531533,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 411533762,
+        "completion_host_ns": 417507593,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 417510510,
+        "completion_host_ns": 423503412,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 423506117,
+        "completion_host_ns": 429479858,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 429482085,
+        "completion_host_ns": 435608093,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 435610698,
+        "completion_host_ns": 441547982,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 441550445,
+        "completion_host_ns": 447590726,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 447596390,
+        "completion_host_ns": 454082989,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            5,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 454087952,
+        "completion_host_ns": 459890401,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 459895328,
+        "completion_host_ns": 465662721,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 465666205,
+        "completion_host_ns": 471545089,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 471546961,
+        "completion_host_ns": 477845057,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            9,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 477850188,
+        "completion_host_ns": 483617980,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 483621229,
+        "completion_host_ns": 489617142,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            44,
+            4
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 489620173,
+        "completion_host_ns": 495688744,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            103,
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 495692048,
+        "completion_host_ns": 501609943,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 501613270,
+        "completion_host_ns": 507621340,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 507624397,
+        "completion_host_ns": 513601741,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 513608537,
+        "completion_host_ns": 519602727,
+        "reply": {
+          "id": 6,
+          "error": 0,
+          "params": [
+            13,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    },
+    "7": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 521881314,
+        "completion_host_ns": 525559427,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 525562043,
+        "completion_host_ns": 531592652,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 531595285,
+        "completion_host_ns": 537543636,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            7
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 537546550,
+        "completion_host_ns": 543551874,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 543554656,
+        "completion_host_ns": 549618361,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 549622037,
+        "completion_host_ns": 555621990,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 555626066,
+        "completion_host_ns": 561549232,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 561552290,
+        "completion_host_ns": 567640348,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 567644207,
+        "completion_host_ns": 573689008,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 573691813,
+        "completion_host_ns": 579834045,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 579838737,
+        "completion_host_ns": 585546727,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 585552389,
+        "completion_host_ns": 591695782,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            247,
+            7
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 591700200,
+        "completion_host_ns": 597743989,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 597746935,
+        "completion_host_ns": 603602136,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 603605002,
+        "completion_host_ns": 609602402,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 609605360,
+        "completion_host_ns": 615905377,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            246,
+            7
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 615910607,
+        "completion_host_ns": 621615145,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 621619163,
+        "completion_host_ns": 627785958,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 627789329,
+        "completion_host_ns": 633842313,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            104,
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 633849099,
+        "completion_host_ns": 639582479,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 639585938,
+        "completion_host_ns": 645635199,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 645638155,
+        "completion_host_ns": 651864711,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 651885361,
+        "completion_host_ns": 657612821,
+        "reply": {
+          "id": 7,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    },
+    "8": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 660407560,
+        "completion_host_ns": 663530370,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 663533532,
+        "completion_host_ns": 669677616,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 669680666,
+        "completion_host_ns": 675599711,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 675602863,
+        "completion_host_ns": 681625973,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 681628732,
+        "completion_host_ns": 687605606,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 687608846,
+        "completion_host_ns": 693765996,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 693773474,
+        "completion_host_ns": 699679814,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 699686518,
+        "completion_host_ns": 705654889,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 705658791,
+        "completion_host_ns": 711669404,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 711672146,
+        "completion_host_ns": 717554570,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 717557887,
+        "completion_host_ns": 723622154,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 723627659,
+        "completion_host_ns": 729954055,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            235,
+            7
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 729961316,
+        "completion_host_ns": 735591615,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 735594837,
+        "completion_host_ns": 741599323,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 741602110,
+        "completion_host_ns": 747590477,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 747594258,
+        "completion_host_ns": 753569031,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            232,
+            7
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 753572188,
+        "completion_host_ns": 759764096,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 759771378,
+        "completion_host_ns": 765580739,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            37,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 765584050,
+        "completion_host_ns": 771768032,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            105,
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 771771989,
+        "completion_host_ns": 777943056,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 777948357,
+        "completion_host_ns": 783752364,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 783756058,
+        "completion_host_ns": 789824810,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 789838350,
+        "completion_host_ns": 795790492,
+        "reply": {
+          "id": 8,
+          "error": 0,
+          "params": [
+            40,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    },
+    "9": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 799493596,
+        "completion_host_ns": 807953439,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 807958076,
+        "completion_host_ns": 813536015,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 813538986,
+        "completion_host_ns": 819552183,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            9
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 819554767,
+        "completion_host_ns": 826243600,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 826250986,
+        "completion_host_ns": 831514585,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 831517790,
+        "completion_host_ns": 837563703,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 837566886,
+        "completion_host_ns": 843657483,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 843661419,
+        "completion_host_ns": 849963626,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 849969116,
+        "completion_host_ns": 855832377,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 855837674,
+        "completion_host_ns": 861720596,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 861724342,
+        "completion_host_ns": 867829741,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 867840201,
+        "completion_host_ns": 873962072,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            253,
+            7
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 873967165,
+        "completion_host_ns": 879808881,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 879812635,
+        "completion_host_ns": 885764387,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 885768355,
+        "completion_host_ns": 891709259,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 891713674,
+        "completion_host_ns": 897802768,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            253,
+            7
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 897806422,
+        "completion_host_ns": 903533605,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 903536454,
+        "completion_host_ns": 909841924,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 909845777,
+        "completion_host_ns": 915525171,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            105,
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 915527577,
+        "completion_host_ns": 921407607,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 921409559,
+        "completion_host_ns": 927398658,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 927400576,
+        "completion_host_ns": 933501960,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 933508935,
+        "completion_host_ns": 939719373,
+        "reply": {
+          "id": 9,
+          "error": 0,
+          "params": [
+            33,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    },
+    "10": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 944450128,
+        "completion_host_ns": 951969081,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 951973933,
+        "completion_host_ns": 957934772,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 957939846,
+        "completion_host_ns": 963939875,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            10
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 963944802,
+        "completion_host_ns": 969831476,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 969836348,
+        "completion_host_ns": 975938171,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 975943168,
+        "completion_host_ns": 981830871,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 981837140,
+        "completion_host_ns": 987942044,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 987947558,
+        "completion_host_ns": 993851151,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 993856481,
+        "completion_host_ns": 999929955,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 999934962,
+        "completion_host_ns": 1005638676,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 1005642004,
+        "completion_host_ns": 1011452846,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 1011457039,
+        "completion_host_ns": 1017738450,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            5,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 1017741924,
+        "completion_host_ns": 1023960373,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 1023965265,
+        "completion_host_ns": 1029963583,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 1029968661,
+        "completion_host_ns": 1035508666,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 1035511365,
+        "completion_host_ns": 1041585294,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            7,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 1041588051,
+        "completion_host_ns": 1047735379,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 1047739666,
+        "completion_host_ns": 1053953471,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            30,
+            4
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 1053958431,
+        "completion_host_ns": 1059940098,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            104,
+            48
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 1059945433,
+        "completion_host_ns": 1065936475,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            48
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 1065941507,
+        "completion_host_ns": 1071967543,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 1071972739,
+        "completion_host_ns": 1077817456,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 1077830424,
+        "completion_host_ns": 1083796265,
+        "reply": {
+          "id": 10,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    },
+    "11": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 1089035190,
+        "completion_host_ns": 1095618383,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 1095622330,
+        "completion_host_ns": 1101411754,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 1101413355,
+        "completion_host_ns": 1107475765,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            11
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 1107477875,
+        "completion_host_ns": 1113493647,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 1113496195,
+        "completion_host_ns": 1119485940,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 1119488067,
+        "completion_host_ns": 1125478245,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 1125480714,
+        "completion_host_ns": 1131465409,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 1131467966,
+        "completion_host_ns": 1137502187,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 1137504953,
+        "completion_host_ns": 1143455103,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 1143457218,
+        "completion_host_ns": 1149463550,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 1149466057,
+        "completion_host_ns": 1155505760,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 1155510821,
+        "completion_host_ns": 1161459866,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            14,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 1161462074,
+        "completion_host_ns": 1167413867,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 1167415757,
+        "completion_host_ns": 1173416714,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 1173418990,
+        "completion_host_ns": 1179442569,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 1179444348,
+        "completion_host_ns": 1185463011,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            18,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 1185465775,
+        "completion_host_ns": 1191484490,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 1191486770,
+        "completion_host_ns": 1197583120,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            44,
+            4
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 1197585658,
+        "completion_host_ns": 1203460035,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            106,
+            48
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 1203462360,
+        "completion_host_ns": 1209438498,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            48
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 1209440682,
+        "completion_host_ns": 1215465837,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 1215469275,
+        "completion_host_ns": 1221386996,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 1221393195,
+        "completion_host_ns": 1227388925,
+        "reply": {
+          "id": 11,
+          "error": 0,
+          "params": [
+            39,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    },
+    "12": {
+      "fw_major": {
+        "address": 0,
+        "width": 1,
+        "request_host_ns": 1231387065,
+        "completion_host_ns": 1239458578,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            3
+          ],
+          "bad_checksum": false
+        }
+      },
+      "fw_minor": {
+        "address": 1,
+        "width": 1,
+        "request_host_ns": 1239460850,
+        "completion_host_ns": 1245509525,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            15
+          ],
+          "bad_checksum": false
+        }
+      },
+      "id": {
+        "address": 5,
+        "width": 1,
+        "request_host_ns": 1245512113,
+        "completion_host_ns": 1251448442,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            12
+          ],
+          "bad_checksum": false
+        }
+      },
+      "baud_idx": {
+        "address": 6,
+        "width": 1,
+        "request_host_ns": 1251451043,
+        "completion_host_ns": 1257420923,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "resp_level": {
+        "address": 8,
+        "width": 1,
+        "request_host_ns": 1257423450,
+        "completion_host_ns": 1263409917,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            1
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_limit": {
+        "address": 13,
+        "width": 1,
+        "request_host_ns": 1263412231,
+        "completion_host_ns": 1269472674,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            70
+          ],
+          "bad_checksum": false
+        }
+      },
+      "max_torque": {
+        "address": 19,
+        "width": 1,
+        "request_host_ns": 1269474615,
+        "completion_host_ns": 1275658690,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            44
+          ],
+          "bad_checksum": false
+        }
+      },
+      "protect_ctrl": {
+        "address": 20,
+        "width": 1,
+        "request_host_ns": 1275662580,
+        "completion_host_ns": 1281798740,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            47
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_limit_mA": {
+        "address": 31,
+        "width": 2,
+        "request_host_ns": 1281804328,
+        "completion_host_ns": 1287701512,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "ctrl_mode": {
+        "address": 33,
+        "width": 1,
+        "request_host_ns": 1287705485,
+        "completion_host_ns": 1293762580,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "reg_0x28": {
+        "address": 40,
+        "width": 2,
+        "request_host_ns": 1293767695,
+        "completion_host_ns": 1299473792,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            1,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "target_pos": {
+        "address": 42,
+        "width": 2,
+        "request_host_ns": 1299479005,
+        "completion_host_ns": 1305730637,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            5,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_time": {
+        "address": 44,
+        "width": 2,
+        "request_host_ns": 1305734063,
+        "completion_host_ns": 1311941879,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "run_speed": {
+        "address": 46,
+        "width": 2,
+        "request_host_ns": 1311946683,
+        "completion_host_ns": 1317448963,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            88,
+            2
+          ],
+          "bad_checksum": false
+        }
+      },
+      "nvs_lock": {
+        "address": 55,
+        "width": 1,
+        "request_host_ns": 1317451451,
+        "completion_host_ns": 1323519155,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_pos": {
+        "address": 56,
+        "width": 2,
+        "request_host_ns": 1323521354,
+        "completion_host_ns": 1329453965,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            7,
+            8
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_speed": {
+        "address": 58,
+        "width": 2,
+        "request_host_ns": 1329455862,
+        "completion_host_ns": 1335550739,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "cur_load": {
+        "address": 60,
+        "width": 2,
+        "request_host_ns": 1335553790,
+        "completion_host_ns": 1341438395,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            30,
+            4
+          ],
+          "bad_checksum": false
+        }
+      },
+      "voltage_mV": {
+        "address": 62,
+        "width": 2,
+        "request_host_ns": 1341440234,
+        "completion_host_ns": 1347722294,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            105,
+            46
+          ],
+          "bad_checksum": false
+        }
+      },
+      "temp_C": {
+        "address": 63,
+        "width": 1,
+        "request_host_ns": 1347725184,
+        "completion_host_ns": 1353914335,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            46
+          ],
+          "bad_checksum": false
+        }
+      },
+      "status_bits": {
+        "address": 65,
+        "width": 1,
+        "request_host_ns": 1353919501,
+        "completion_host_ns": 1359939373,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "moving": {
+        "address": 66,
+        "width": 1,
+        "request_host_ns": 1359944689,
+        "completion_host_ns": 1365913331,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0
+          ],
+          "bad_checksum": false
+        }
+      },
+      "current_mA": {
+        "address": 69,
+        "width": 2,
+        "request_host_ns": 1365927720,
+        "completion_host_ns": 1371924533,
+        "reply": {
+          "id": 12,
+          "error": 0,
+          "params": [
+            0,
+            0
+          ],
+          "bad_checksum": false
+        }
+      }
+    }
+  }
+}

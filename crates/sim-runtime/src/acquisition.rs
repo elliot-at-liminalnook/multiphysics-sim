@@ -1,5 +1,7 @@
 //! Acquisition records retain device-clock windows and transport evidence.
 //! They are irregular measurements, never implicitly resampled simulator states.
+pub mod servo_bus;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

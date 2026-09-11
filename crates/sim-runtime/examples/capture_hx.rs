@@ -14,6 +14,22 @@ fn observation(t: &BusTransaction) -> Option<(Channel, f64, u16)> {
     if t.outcome != 0 || t.device_error != 0 || t.instruction != 2 || t.request.len() != 2 {
         return None;
     }
+    // Older FPGA captures read two bytes here: the second byte is temperature,
+    // not the upper voltage byte. Accept both widths while retaining raw packets.
+    if t.request[0] == 0x3e {
+        if ![1, 2].contains(&t.request[1]) || t.reply.len() != t.request[1] as usize {
+            return None;
+        }
+        let raw = t.reply[0] as u16;
+        return Some((
+            Channel {
+                name: format!("servo.{}.voltage", t.device_id),
+                kind: QuantityKind::Voltage,
+            },
+            raw as f64 * 0.1,
+            raw,
+        ));
+    }
     let (name, kind, width, scale, signed) = match t.request[0] {
         0x38 => (
             "position",
@@ -30,7 +46,6 @@ fn observation(t: &BusTransaction) -> Option<(Channel, f64, u16)> {
             true,
         ),
         0x45 => ("current", QuantityKind::Current, 2, 0.001, false),
-        0x3e => ("voltage", QuantityKind::Voltage, 2, 0.001, false),
         0x3f => ("case_temperature", QuantityKind::Temperature, 1, 1., false),
         0x2a => (
             "target_position_readback",
@@ -142,6 +157,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "completed":false});
     fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
     let mut source = if let Some(p) = &port {
+        // Keep the device open while configuring it; FTDI macOS defaults reset
+        // when the final descriptor closes.
+        let serial = OpenOptions::new().read(true).open(p)?;
         let flag = if cfg!(target_os = "macos") {
             "-f"
         } else {
@@ -156,7 +174,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         {
             return Err("serial configuration failed".into());
         }
-        OpenOptions::new().read(true).open(p)?
+        serial
     } else {
         File::open(input.as_ref().unwrap())?
     };
@@ -346,7 +364,10 @@ mod tests {
         assert!((v + std::f64::consts::TAU / 16.).abs() < 1e-12);
         t.request = vec![0x3e, 2];
         t.reply = 11119u16.to_le_bytes().to_vec();
-        assert_eq!(observation(&t).unwrap().1, 11.119);
+        assert!((observation(&t).unwrap().1 - 11.1).abs() < 1e-12);
+        t.request = vec![0x3e, 1];
+        t.reply = vec![104];
+        assert!((observation(&t).unwrap().1 - 10.4).abs() < 1e-12);
         t.request = vec![0x3f, 1];
         t.reply = vec![25];
         assert_eq!(observation(&t).unwrap().1, 298.15);

@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "cases": 58,
+  "maximum_direction_symmetry_error_rad_s": 5.329070518200751e-15,
+  "convergence": [
+    {
+      "duty": 0.2,
+      "final_step_s": 0.00000390625,
+      "steady_speed_relative_change": 4.114864920273438e-10,
+      "sampled_peak_current_relative_change": 0.0011250486121537604,
+      "sampled_peak_speed_relative_change": 0.0006847778444414782
+    },
+    {
+      "duty": 1,
+      "final_step_s": 0.00000390625,
+      "steady_speed_relative_change": 2.738260802735267e-9,
+      "sampled_peak_current_relative_change": 0.0023420573917217,
+      "sampled_peak_speed_relative_change": 0.0006529612452545375
+    }
+  ],
+  "interpretation": "Numerical and software-path validation only. 5 ms sampling does not resolve true startup extrema. Estimated motor/thermal/driver parameters are not calibrated to these nine servos. No concurrent electrical-supply model was validated."
+}

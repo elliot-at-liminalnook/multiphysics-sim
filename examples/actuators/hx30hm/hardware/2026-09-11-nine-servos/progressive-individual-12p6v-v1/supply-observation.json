@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "provenance": "User-reported bench settings; not remotely programmed or independently measured",
+  "supply_model": "WANPTEK DPS3010U",
+  "voltage_setpoint_v": 12.6,
+  "current_limit_a": 1.0,
+  "current_limit_provenance": "Last user-reported current setting, carried forward; only voltage subsequently changed",
+  "user_authorization_verbatim": "no. I just set to 12.6v. start the testing",
+  "cv_cc_during_run": "Not observed by software; prior user correction established CV before this run",
+  "comparison_run": "progressive-individual-v1",
+  "initial_condition": "Warm servos following previous motion tests; ID4 starts at its verified stop-hold position from interrupted run",
+  "recorded_utc": "2026-09-11T16:09:58.037162+00:00"
+}

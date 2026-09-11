@@ -6,6 +6,7 @@ pub mod bayesian;
 #[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
 pub mod composite;
 pub mod affine_response;
+pub mod pulse_response;
 pub mod uncertainty;
 #[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
 pub mod local_global;

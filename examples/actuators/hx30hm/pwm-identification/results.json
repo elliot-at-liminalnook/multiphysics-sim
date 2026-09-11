@@ -1,0 +1,4279 @@
+{
+  "acceptance": "Predeclared held-out encoder RMSE <=3 counts AND final displacement error <=5 counts per pulse; otherwise flag this model as insufficient. Not a physical calibration confidence interval.",
+  "bounds": [
+    {
+      "lower": 0.0,
+      "upper": 20.0
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.08
+    },
+    {
+      "lower": 0.001,
+      "upper": 0.2
+    },
+    {
+      "lower": 0.001,
+      "upper": 0.2
+    },
+    {
+      "lower": 0.0,
+      "upper": 0.04
+    }
+  ],
+  "initial_points": [
+    [
+      5.0,
+      0.0,
+      0.01,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.0,
+      0.01,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.0,
+      0.01,
+      0.02,
+      0.03
+    ],
+    [
+      5.0,
+      0.0,
+      0.04,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.0,
+      0.04,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.0,
+      0.04,
+      0.02,
+      0.03
+    ],
+    [
+      5.0,
+      0.0,
+      0.1,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.0,
+      0.1,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.0,
+      0.1,
+      0.02,
+      0.03
+    ],
+    [
+      5.0,
+      0.02,
+      0.01,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.02,
+      0.01,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.02,
+      0.01,
+      0.02,
+      0.03
+    ],
+    [
+      5.0,
+      0.02,
+      0.04,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.02,
+      0.04,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.02,
+      0.04,
+      0.02,
+      0.03
+    ],
+    [
+      5.0,
+      0.02,
+      0.1,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.02,
+      0.1,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.02,
+      0.1,
+      0.02,
+      0.03
+    ],
+    [
+      5.0,
+      0.05,
+      0.01,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.05,
+      0.01,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.05,
+      0.01,
+      0.02,
+      0.03
+    ],
+    [
+      5.0,
+      0.05,
+      0.04,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.05,
+      0.04,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.05,
+      0.04,
+      0.02,
+      0.03
+    ],
+    [
+      5.0,
+      0.05,
+      0.1,
+      0.02,
+      0.0
+    ],
+    [
+      5.0,
+      0.05,
+      0.1,
+      0.02,
+      0.012
+    ],
+    [
+      5.0,
+      0.05,
+      0.1,
+      0.02,
+      0.03
+    ]
+  ],
+  "input_blake3": {
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-id12-v1/preflight.json": "2fc1e761939b7e0afa30b0fe8187d88ebf0795e05ec78225750b6f7569e2e3e7",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-id12-v1/pwm.csv": "c1402e18600bf244b3ee2d2f3f2700342efacde67d356c5aa0d569b4000da622",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-id12-v1/run.json": "81668fb40a3e15732cf40797933cd560d4bab88c77537cceb7a1b1f0a3881b01",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-id12-v1/transactions.jsonl": "6fe0cfb8d357a35a878f8aaa372b1daddf2abae0149feeed2253e986505f9f89",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-ids4-11-v1/preflight.json": "02a5256ab724c50e1b9378d3402b7900bfec44b5b2b5013c50882548a2a5c682",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-ids4-11-v1/pwm.csv": "5ad7fdc8033768178807158045519d27c367055b81d8fd38b245c94791b7ba19",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-ids4-11-v1/run.json": "0cfa606d19169b15e232582fe149ee14acf26bde29e9fab759bd1ccfae312a8b",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-ids4-11-v1/transactions.jsonl": "89c5f74db9897dfdc43201b3bc7e1e586c19d26670a9590ddc2bf500b15c9a90",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-ids4-11-v1/preflight.json": "582ada6da8370932ddd42bf92debe0907989e5d075fdca062cc4f09b74010db7",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-ids4-11-v1/pwm.csv": "90bf86f8695d7c3dbc7b1897172c278f60f434a57adf68025448c41f6399613b",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-ids4-11-v1/run.json": "f5eed8de2087dff0ee2ac57bb232e2a262e615de1c64c5369452f5a645224444",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-ids4-11-v1/transactions.jsonl": "d49da7e34904dbebf5684a39cd826fbbf6e69c0db075f91a481159038b8a79f9",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-pilot-id12-v1/preflight.json": "73b0d76b98ac0be34fd229ce845948c1d3b6dbb9ae51c0ccdcd04316e46d42cc",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-pilot-id12-v1/pwm.csv": "4ace70b0f59a69b64f3d97497b672df866c35d8a5e874e56001842dfe5bfa39e",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-pilot-id12-v1/run.json": "8cb402699e1a758fdfa5c0290a43df62c17ae96752458f0de9549f6fc7ac8456",
+    "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-pilot-id12-v1/transactions.jsonl": "c50ee10ebdd3ee4164e704c81d5121b31b7e7dd80267f0bac41d28e64c5ea8cd"
+  },
+  "interpretation": "Empirical encoder-displacement fit only. Fits gain, deadband, on/release lags and combined delay; does not identify physical R/L/Ke/Kt/inertia/friction separately. No prediction beyond observed 2.5..20% drive is validated.",
+  "models": [
+    {
+      "active_parameter_bounds_indices": [],
+      "bound_refinement": null,
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.15001035600000007,
+          "metrics": {
+            "final_displacement_error_counts": 0.4288382658509018,
+            "maximum_error_encoder_counts": 0.4288382658509018,
+            "rmse_encoder_counts": 0.3206876471433866,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            55.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.14998187200000013,
+          "metrics": {
+            "final_displacement_error_counts": -0.5440327722900133,
+            "maximum_error_encoder_counts": 1.6880634293650525,
+            "rmse_encoder_counts": 0.7786127249827857,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            55.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.15007592349999976,
+          "metrics": {
+            "final_displacement_error_counts": -2.464756914068909,
+            "maximum_error_encoder_counts": 3.2602399785872844,
+            "rmse_encoder_counts": 1.9723742869802317,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            55.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.15014991150000023,
+          "metrics": {
+            "final_displacement_error_counts": -0.36153881049720055,
+            "maximum_error_encoder_counts": 1.3413064805407073,
+            "rmse_encoder_counts": 0.5449684778514525,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            55.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.15010451949999926,
+          "metrics": {
+            "final_displacement_error_counts": 2.6943502126453516,
+            "maximum_error_encoder_counts": 3.160542753932363,
+            "rmse_encoder_counts": 2.0334359712554457,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            55.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.05405515649999998,
+          "metrics": {
+            "final_displacement_error_counts": 0.5134212715882662,
+            "maximum_error_encoder_counts": 0.9068994233109073,
+            "rmse_encoder_counts": 0.4744009813996256,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            47.0,
+            48.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.054092674500000104,
+          "metrics": {
+            "final_displacement_error_counts": -1.522783519930102,
+            "maximum_error_encoder_counts": 1.7861190813680794,
+            "rmse_encoder_counts": 1.2870641149741118,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            48.0,
+            48.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.8634177868952247,
+        "evaluations": 199,
+        "history": [
+          {
+            "accepted": true,
+            "cost": 55.28404634573019,
+            "damping": 0.003,
+            "evaluations": 11,
+            "iteration": 0,
+            "projected_gradient": 517.2044767330378
+          },
+          {
+            "accepted": true,
+            "cost": 27.585936969335386,
+            "damping": 0.003,
+            "evaluations": 20,
+            "iteration": 1,
+            "projected_gradient": 1059.797423645587
+          },
+          {
+            "accepted": true,
+            "cost": 1.7078741537812772,
+            "damping": 0.001,
+            "evaluations": 30,
+            "iteration": 2,
+            "projected_gradient": 279.40449442381754
+          },
+          {
+            "accepted": true,
+            "cost": 1.2281531746617358,
+            "damping": 100.0,
+            "evaluations": 46,
+            "iteration": 3,
+            "projected_gradient": 85.20014327490709
+          },
+          {
+            "accepted": true,
+            "cost": 0.8771555273064805,
+            "damping": 33.333333333333336,
+            "evaluations": 57,
+            "iteration": 4,
+            "projected_gradient": 23.862400520045497
+          },
+          {
+            "accepted": true,
+            "cost": 0.8719711832145629,
+            "damping": 11.111111111111112,
+            "evaluations": 68,
+            "iteration": 5,
+            "projected_gradient": 2.0973254907227745
+          },
+          {
+            "accepted": true,
+            "cost": 0.870694893758037,
+            "damping": 3.703703703703704,
+            "evaluations": 79,
+            "iteration": 6,
+            "projected_gradient": 0.31081400029799466
+          },
+          {
+            "accepted": true,
+            "cost": 0.8683087780529342,
+            "damping": 1.234567901234568,
+            "evaluations": 90,
+            "iteration": 7,
+            "projected_gradient": 0.09575118403093541
+          },
+          {
+            "accepted": true,
+            "cost": 0.8652571609745437,
+            "damping": 0.41152263374485604,
+            "evaluations": 101,
+            "iteration": 8,
+            "projected_gradient": 0.09103741737132154
+          },
+          {
+            "accepted": true,
+            "cost": 0.8636931745374635,
+            "damping": 0.13717421124828535,
+            "evaluations": 112,
+            "iteration": 9,
+            "projected_gradient": 0.22679597360877812
+          },
+          {
+            "accepted": true,
+            "cost": 0.8634310874600027,
+            "damping": 0.045724737082761785,
+            "evaluations": 123,
+            "iteration": 10,
+            "projected_gradient": 0.26918350345071884
+          },
+          {
+            "accepted": true,
+            "cost": 0.8634180069270748,
+            "damping": 0.015241579027587262,
+            "evaluations": 134,
+            "iteration": 11,
+            "projected_gradient": 0.08603782869851306
+          },
+          {
+            "accepted": true,
+            "cost": 0.8634177892292533,
+            "damping": 0.005080526342529088,
+            "evaluations": 145,
+            "iteration": 12,
+            "projected_gradient": 0.005594991918798975
+          },
+          {
+            "accepted": true,
+            "cost": 0.8634177869164003,
+            "damping": 0.0016935087808430292,
+            "evaluations": 156,
+            "iteration": 13,
+            "projected_gradient": 0.00023769061778988743
+          },
+          {
+            "accepted": true,
+            "cost": 0.8634177868954096,
+            "damping": 0.0005645029269476764,
+            "evaluations": 167,
+            "iteration": 14,
+            "projected_gradient": 0.000027005373896993312
+          },
+          {
+            "accepted": true,
+            "cost": 0.8634177868952277,
+            "damping": 0.00018816764231589214,
+            "evaluations": 178,
+            "iteration": 15,
+            "projected_gradient": 2.591972625531902e-6
+          },
+          {
+            "accepted": true,
+            "cost": 0.8634177868952247,
+            "damping": 0.00006272254743863071,
+            "evaluations": 189,
+            "iteration": 16,
+            "projected_gradient": 2.4015691180157006e-7
+          },
+          {
+            "accepted": false,
+            "cost": 0.8634177868952247,
+            "damping": 0.00006272254743863071,
+            "evaluations": 199,
+            "iteration": 17,
+            "projected_gradient": 2.2117482845196434e-8
+          }
+        ],
+        "initial_cost": 57.00338834771613,
+        "rejected_evaluations": 0,
+        "residuals": [
+          0.00005138002878414669,
+          0.0006065090100682331,
+          0.0016018902630690376,
+          0.002997607057776785,
+          0.004688163209664043,
+          0.006580242928681305,
+          0.008696670839027422,
+          0.010986129066602556,
+          0.01336588232888645,
+          0.01578363216889716,
+          0.018311833436589584,
+          0.020905522560374885,
+          0.023549881979376335,
+          0.026257496447544763,
+          0.028932359045287296,
+          0.03165724465948289,
+          0.03441102726806133,
+          0.037135208187952844,
+          0.039938629960750295,
+          0.04270333238426209,
+          0.04547908566226297,
+          0.04834184063693189,
+          0.051123199658211146,
+          0.05386269684631699,
+          0.06121590537277262,
+          0.06246052189546001,
+          0.06326646486413665,
+          0.06377461803598995,
+          0.064068067710072,
+          0.06427390644609494,
+          0.06440801925983945,
+          0.0644944423449276,
+          0.06455019970995705,
+          0.06458605111751829,
+          0.06460880319963744,
+          0.06462332573587691,
+          0.0646327215097194,
+          0.0646387324734723,
+          0.06464266692919311,
+          0.06464521898450913,
+          0.06464685273972383,
+          0.06464791269598608,
+          0.06464858990413679,
+          0.06464980107155092,
+          0.002071972293283027,
+          0.0271248907642976,
+          -0.006060289031193015,
+          -0.024642355122785224,
+          0.050932166478469286,
+          -0.02092777133182569,
+          -0.003953301891674656,
+          -0.06458374726482906,
+          -0.036384159280682254,
+          -0.08619049488804767,
+          -0.05022370306362345,
+          -0.09751731689238725,
+          -0.054655248862540334,
+          -0.0939038195876316,
+          -0.13552271565174226,
+          -0.09138999111647905,
+          -0.044492154151543555,
+          -0.16167120117037279,
+          -0.11785942371038181,
+          -0.0690123778000401,
+          -0.18730859270693917,
+          -0.1394930713208995,
+          -0.17010021389961938,
+          -0.20813146205792177,
+          -0.192262960081536,
+          -0.21795513393787908,
+          -0.2617477459803161,
+          -0.24387853166283927,
+          -0.2280333926197196,
+          -0.21642434951941592,
+          -0.21144973066785763,
+          -0.2074346546646402,
+          -0.20118740526008858,
+          -0.20453299805132072,
+          -0.2026425326221688,
+          -0.1970162101994166,
+          -0.2068408882277101,
+          -0.1971954653060491,
+          -0.20136214070943503,
+          -0.1992256766873718,
+          -0.20256719772366802,
+          -0.196317964255857,
+          -0.19793578351944002,
+          -0.19907515482154545,
+          0.003426013807322266,
+          0.04155170919538413,
+          0.005428938257687703,
+          -0.0037864855410027097,
+          0.009384273388001517,
+          -0.07104475380858676,
+          -0.02948465857148213,
+          0.019577330590327992,
+          0.02311105810530819,
+          0.03745778257943204,
+          0.05303256764191087,
+          0.01786793322408723,
+          0.042475421519277475,
+          0.07052672200033737,
+          0.10171568279853156,
+          0.07666138579408108,
+          0.10973567886023929,
+          0.08829167796321889,
+          0.12195680146597258,
+          0.10416752090862391,
+          0.08445169162981096,
+          0.11381335984518934,
+          0.04869764207484529,
+          0.13230547578212604,
+          0.1593488867688521,
+          0.1498995344860417,
+          0.14537969484021526,
+          0.13285207167333452,
+          0.10265767519648297,
+          0.11457425797921306,
+          0.12636024195627887,
+          0.12888907854607495,
+          0.13749843835152686,
+          0.13450830911613482,
+          0.14093814658028356,
+          0.14213225430650486,
+          0.13572320439998103,
+          0.14114373448383052,
+          0.1421414806169412,
+          0.14322798228148959,
+          0.13956765449574038,
+          0.14472480048873765,
+          0.14050944469589177,
+          0.14160992886520815
+        ],
+        "termination": "stationary",
+        "values": [
+          5.34578410959771,
+          0.0241087923600183,
+          0.025568167559167302,
+          0.013601502079487921,
+          0.003898487400700052
+        ]
+      },
+      "id": 4,
+      "model": {
+        "deadband": 0.0241087923600183,
+        "delay_s": 0.003898487400700052,
+        "drive_tau_s": 0.025568167559167302,
+        "gain": 5.34578410959771,
+        "release_tau_s": 0.013601502079487921
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.8622274588373404,
+          "model": {
+            "deadband": 0.024108749971838647,
+            "delay_s": 0.00105006457739083,
+            "drive_tau_s": 0.02554501141517374,
+            "gain": 5.346182821462541,
+            "release_tau_s": 0.013566446278162222
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.864749347099837,
+          "model": {
+            "deadband": 0.02410883470762665,
+            "delay_s": 0.006747176245077384,
+            "drive_tau_s": 0.025591378972445195,
+            "gain": 5.345406929577475,
+            "release_tau_s": 0.013635980671439642
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    },
+    {
+      "active_parameter_bounds_indices": [],
+      "bound_refinement": null,
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.15016703550000088,
+          "metrics": {
+            "final_displacement_error_counts": -0.16519494919923491,
+            "maximum_error_encoder_counts": 1.1163697360564322,
+            "rmse_encoder_counts": 0.4501381113452075,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.1502111355000011,
+          "metrics": {
+            "final_displacement_error_counts": -1.6208430376183443,
+            "maximum_error_encoder_counts": 1.823327497226463,
+            "rmse_encoder_counts": 1.1744371017847037,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.14994780349999903,
+          "metrics": {
+            "final_displacement_error_counts": 0.39326230810975993,
+            "maximum_error_encoder_counts": 0.8232059193950796,
+            "rmse_encoder_counts": 0.39236127925334774,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.14998035449999847,
+          "metrics": {
+            "final_displacement_error_counts": -0.5494918720882329,
+            "maximum_error_encoder_counts": 1.0765012632430022,
+            "rmse_encoder_counts": 0.5604812152397557,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.15031171500000085,
+          "metrics": {
+            "final_displacement_error_counts": -0.30129683097506943,
+            "maximum_error_encoder_counts": 2.806357877074717,
+            "rmse_encoder_counts": 0.6079715228208178,
+            "samples": 42
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.0,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.05430573549999984,
+          "metrics": {
+            "final_displacement_error_counts": -1.6489861960375978,
+            "maximum_error_encoder_counts": 2.3423441204047233,
+            "rmse_encoder_counts": 1.6027799297796808,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.3
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.054085688500000284,
+          "metrics": {
+            "final_displacement_error_counts": -1.2927051911582226,
+            "maximum_error_encoder_counts": 1.7698850911494524,
+            "rmse_encoder_counts": 1.1537313686884678,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.3,
+            12.3
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.09778139368276617,
+        "evaluations": 117,
+        "history": [
+          {
+            "accepted": true,
+            "cost": 5.322785072348054,
+            "damping": 0.03333333333333333,
+            "evaluations": 10,
+            "iteration": 0,
+            "projected_gradient": 665.8784791016686
+          },
+          {
+            "accepted": true,
+            "cost": 0.2898445615580391,
+            "damping": 0.011111111111111112,
+            "evaluations": 19,
+            "iteration": 1,
+            "projected_gradient": 53.19066916855314
+          },
+          {
+            "accepted": true,
+            "cost": 0.111922594193344,
+            "damping": 0.003703703703703704,
+            "evaluations": 30,
+            "iteration": 2,
+            "projected_gradient": 37.74863912818876
+          },
+          {
+            "accepted": true,
+            "cost": 0.09809587395405805,
+            "damping": 0.0012345679012345679,
+            "evaluations": 41,
+            "iteration": 3,
+            "projected_gradient": 8.637363058002046
+          },
+          {
+            "accepted": true,
+            "cost": 0.09778154875177543,
+            "damping": 0.00041152263374485596,
+            "evaluations": 52,
+            "iteration": 4,
+            "projected_gradient": 2.584385527756024
+          },
+          {
+            "accepted": true,
+            "cost": 0.09778139474307407,
+            "damping": 0.00013717421124828533,
+            "evaluations": 63,
+            "iteration": 5,
+            "projected_gradient": 0.019016939767588836
+          },
+          {
+            "accepted": true,
+            "cost": 0.09778139369102905,
+            "damping": 0.000045724737082761774,
+            "evaluations": 74,
+            "iteration": 6,
+            "projected_gradient": 0.000143882276329374
+          },
+          {
+            "accepted": true,
+            "cost": 0.0977813936828305,
+            "damping": 0.000015241579027587257,
+            "evaluations": 85,
+            "iteration": 7,
+            "projected_gradient": 0.000014955887659443001
+          },
+          {
+            "accepted": true,
+            "cost": 0.09778139368276682,
+            "damping": 5.0805263425290855e-6,
+            "evaluations": 96,
+            "iteration": 8,
+            "projected_gradient": 1.3512782914559818e-6
+          },
+          {
+            "accepted": true,
+            "cost": 0.09778139368276617,
+            "damping": 1.6935087808430284e-6,
+            "evaluations": 107,
+            "iteration": 9,
+            "projected_gradient": 1.1931329077508046e-7
+          },
+          {
+            "accepted": false,
+            "cost": 0.09778139368276617,
+            "damping": 1.6935087808430284e-6,
+            "evaluations": 117,
+            "iteration": 10,
+            "projected_gradient": 1.0525969373897937e-8
+          }
+        ],
+        "initial_cost": 45.774104615743326,
+        "rejected_evaluations": 0,
+        "residuals": [
+          0.0,
+          0.0025797493637852347,
+          0.009506170062085834,
+          0.01968479855593055,
+          0.03202397307611012,
+          0.045952428716980125,
+          0.06195250421904467,
+          0.07772839830715604,
+          0.09495752136163568,
+          0.11327031986533807,
+          0.12957343237898275,
+          0.032310549970403814,
+          0.05069281334823347,
+          0.06904690157584677,
+          0.08849298859989485,
+          0.10670315610772751,
+          0.1250367035184245,
+          0.028211384355671113,
+          0.04727724073469686,
+          0.06684495068725772,
+          -0.03148571874028469,
+          -0.012188799136005556,
+          0.007013614549613359,
+          -0.09200189901516619,
+          -0.03766549885896329,
+          -0.029792522335564765,
+          -0.025095683132879076,
+          -0.022690769910790085,
+          -0.021038471611210627,
+          -0.020420789958720653,
+          -0.01987409464406696,
+          -0.019715772111706675,
+          -0.0195304912117062,
+          -0.019503714266936843,
+          -0.01948352613696477,
+          -0.019384373430186917,
+          -0.019272086567807812,
+          -0.01924868017623522,
+          -0.019423282156968598,
+          -0.019299450841217525,
+          -0.019358632293986235,
+          -0.019389901827685192,
+          -0.019396462772534116,
+          -0.019250398988093498,
+          -8.429250672554878e-15,
+          0.01830631102589183,
+          0.06674019485368886,
+          0.05548991291333567,
+          0.060861934506650464,
+          -0.003455956323809549,
+          0.022965156912329313,
+          -0.025237370092620056,
+          0.011293631242570842,
+          -0.030483274526023025,
+          0.013304633138326215,
+          -0.01795486368850207,
+          0.032292316746601823,
+          -0.003339387452710711,
+          -0.03560302277889999,
+          0.015403262744555687,
+          -0.014554526451083984,
+          -0.04387000515327276,
+          0.007639581774248729,
+          -0.023663538839417356,
+          -0.054866526759320945,
+          -0.004263665991250243,
+          -0.03442340392707915,
+          -0.06311849644882325,
+          -0.018221946019518452,
+          -0.03944386026250234,
+          -0.008311570577697037,
+          0.009308387042970337,
+          0.0192719845943132,
+          0.024574051854186065,
+          0.028308691736272543,
+          0.02969655076750789,
+          0.03032530772175987,
+          0.03061172532325012,
+          0.031095753281065147,
+          0.03194672916970414,
+          0.03215621906138717,
+          0.03135419037542289,
+          0.0314623312977931,
+          0.03178641000043207,
+          0.03167664073994562,
+          0.031442494719894375,
+          0.032689539084282654,
+          0.03198932277786624,
+          -9.78572831909344e-16,
+          0.0256510399945677,
+          -0.01624060390364177,
+          -0.01925372160671319,
+          -0.00029109607101685344,
+          -0.02314445653541363,
+          -0.02650076941598258,
+          -0.020137141664670795,
+          -0.009598321261889763,
+          -0.05295698324887941,
+          -0.024147331702402557,
+          0.014755872354891269,
+          0.07603766545102274,
+          0.0422774183186208,
+          -0.0026206566620823493,
+          0.02306489722024481,
+          0.004319860616014376,
+          -0.020140848609892403,
+          0.011809428908556387,
+          -0.012064602647031339,
+          0.023697681186386828,
+          0.005350171183928526,
+          0.0580174781817546,
+          0.040588344388782116,
+          0.034003535569706804,
+          0.004565148596351458,
+          -0.03720505297551934,
+          -0.027643970580021656,
+          -0.023137150583944343,
+          -0.020644262119374143,
+          -0.018816951513467912,
+          -0.01778447375096711,
+          -0.01782922889233631,
+          -0.01746931738953685,
+          -0.017325321571276996,
+          -0.017204344219239272,
+          -0.017097799281862218,
+          -0.017263957998577262,
+          -0.017015242434573512,
+          -0.017394046128069742,
+          -0.016910466435456236,
+          -0.01662840817668173
+        ],
+        "termination": "stationary",
+        "values": [
+          5.049138523986448,
+          0.016692016728772616,
+          0.020204964448601776,
+          0.010265073669951483,
+          0.006597770820628925
+        ]
+      },
+      "id": 5,
+      "model": {
+        "deadband": 0.016692016728772616,
+        "delay_s": 0.006597770820628925,
+        "drive_tau_s": 0.020204964448601776,
+        "gain": 5.049138523986448,
+        "release_tau_s": 0.010265073669951483
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.09420332084519092,
+          "model": {
+            "deadband": 0.016698679523796556,
+            "delay_s": 0.00405090795216328,
+            "drive_tau_s": 0.01943762332674058,
+            "gain": 5.029476592958611,
+            "release_tau_s": 0.010047813995951269
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.1086481622733129,
+          "model": {
+            "deadband": 0.01668497254774269,
+            "delay_s": 0.009181677265195979,
+            "drive_tau_s": 0.020892563270901457,
+            "gain": 5.066161020639966,
+            "release_tau_s": 0.010479780081650649
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    },
+    {
+      "active_parameter_bounds_indices": [],
+      "bound_refinement": null,
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.15017727700000094,
+          "metrics": {
+            "final_displacement_error_counts": 0.0,
+            "maximum_error_encoder_counts": 0.0,
+            "rmse_encoder_counts": 0.0,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.1559316605000003,
+          "metrics": {
+            "final_displacement_error_counts": -1.165672354807304,
+            "maximum_error_encoder_counts": 2.811074890971497,
+            "rmse_encoder_counts": 1.3179115706885227,
+            "samples": 45
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.150115830499999,
+          "metrics": {
+            "final_displacement_error_counts": 0.005523771904473999,
+            "maximum_error_encoder_counts": 0.7549549288599269,
+            "rmse_encoder_counts": 0.2704940661950008,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.14998536850000121,
+          "metrics": {
+            "final_displacement_error_counts": -0.5253584674553554,
+            "maximum_error_encoder_counts": 0.738701222617806,
+            "rmse_encoder_counts": 0.44095541084299245,
+            "samples": 43
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            11.9
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.15001418200000138,
+          "metrics": {
+            "final_displacement_error_counts": -0.010580458431970875,
+            "maximum_error_encoder_counts": 0.8409473676452851,
+            "rmse_encoder_counts": 0.3071890767063418,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            11.9,
+            12.0
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.05417957849999944,
+          "metrics": {
+            "final_displacement_error_counts": -0.6327759788169726,
+            "maximum_error_encoder_counts": 1.4906333871331858,
+            "rmse_encoder_counts": 0.737622902713409,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.054095751999999386,
+          "metrics": {
+            "final_displacement_error_counts": -3.348671164452509,
+            "maximum_error_encoder_counts": 3.748507738358245,
+            "rmse_encoder_counts": 2.957621285319911,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.018577544058022668,
+        "evaluations": 87,
+        "history": [
+          {
+            "accepted": true,
+            "cost": 0.3311303834809548,
+            "damping": 0.0003333333333333333,
+            "evaluations": 11,
+            "iteration": 0,
+            "projected_gradient": 520.1242714118604
+          },
+          {
+            "accepted": true,
+            "cost": 0.039194653480970655,
+            "damping": 0.0001111111111111111,
+            "evaluations": 22,
+            "iteration": 1,
+            "projected_gradient": 65.25102889217014
+          },
+          {
+            "accepted": true,
+            "cost": 0.018578238918954274,
+            "damping": 0.000037037037037037037,
+            "evaluations": 33,
+            "iteration": 2,
+            "projected_gradient": 20.024089103969327
+          },
+          {
+            "accepted": true,
+            "cost": 0.018577544334877703,
+            "damping": 0.000012345679012345678,
+            "evaluations": 44,
+            "iteration": 3,
+            "projected_gradient": 0.034105718590929625
+          },
+          {
+            "accepted": true,
+            "cost": 0.018577544058320187,
+            "damping": 4.115226337448559e-6,
+            "evaluations": 55,
+            "iteration": 4,
+            "projected_gradient": 0.00012002458564766951
+          },
+          {
+            "accepted": true,
+            "cost": 0.018577544058023115,
+            "damping": 1.371742112482853e-6,
+            "evaluations": 66,
+            "iteration": 5,
+            "projected_gradient": 8.388833249190798e-6
+          },
+          {
+            "accepted": true,
+            "cost": 0.018577544058022668,
+            "damping": 4.5724737082761767e-7,
+            "evaluations": 77,
+            "iteration": 6,
+            "projected_gradient": 1.4160055931316043e-7
+          },
+          {
+            "accepted": false,
+            "cost": 0.018577544058022668,
+            "damping": 4.5724737082761767e-7,
+            "evaluations": 87,
+            "iteration": 7,
+            "projected_gradient": 8.64556260870425e-9
+          }
+        ],
+        "initial_cost": 37.76153914676095,
+        "rejected_evaluations": 0,
+        "residuals": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -8.916632170061382e-15,
+          0.009066739735709697,
+          0.047817827997631804,
+          0.021153083747403666,
+          0.01277338201872022,
+          0.016916236191717806,
+          0.03136675347068639,
+          0.045030613013082504,
+          0.06606976214390901,
+          0.004082382720090769,
+          0.0300168257853494,
+          0.05688036916938488,
+          -0.0015732346966717023,
+          0.026052965921674318,
+          -0.03087983847452981,
+          -0.00042484175783697126,
+          0.031160466063525814,
+          -0.02699212728651977,
+          0.0030328051376544854,
+          0.0389407393740705,
+          -0.016276159712609716,
+          0.01064895374662175,
+          -0.043085774611846255,
+          -0.012536319358620622,
+          -0.022790493194441975,
+          0.03352668089448333,
+          -0.026773784308758954,
+          -0.013512337882491376,
+          -0.006357074949688625,
+          -0.0029759210112515334,
+          -0.0012673590543524032,
+          -0.00040023483873201,
+          0.0000442758536866951,
+          0.00026559703648338035,
+          0.0003752686184146688,
+          0.0004297468594395619,
+          0.00045826107532558627,
+          0.0004795156146294125,
+          0.000471849357087541,
+          0.0004841148673462009,
+          0.0004791592615025265,
+          0.0004869402831915002,
+          0.0004821315013676105,
+          0.000493246949860323,
+          -5.707124133907207e-15,
+          0.013310583213937506,
+          0.016859775066858748,
+          0.0040205002577274156,
+          -0.03756509029728019,
+          -0.005925157222757211,
+          -0.01959618279165749,
+          -0.020926094048797937,
+          -0.017872748669030995,
+          -0.01101268628136576,
+          -0.0007743036834866189,
+          0.01615402029364665,
+          -0.021171212367323854,
+          -0.005966116082381916,
+          0.010721136160537433,
+          -0.027692969346555185,
+          -0.011729058711144547,
+          -0.04303749356367241,
+          -0.02305318090084518,
+          -0.008060005724460252,
+          0.010920350596536533,
+          -0.024667091934406606,
+          -0.0028988012303924763,
+          0.017730247545163773,
+          0.04519615757079876,
+          0.024102642263371457,
+          0.011759206332628901,
+          0.033286655441554756,
+          -0.011624065764586808,
+          -0.005963393737291568,
+          -0.00323980504228867,
+          -0.0019474935856536929,
+          -0.0012773848310462862,
+          -0.000904131233285871,
+          -0.0007614842624950363,
+          -0.0006726151945834489,
+          -0.0006265326852461363,
+          -0.0006120925281487575,
+          -0.0005939482168723727,
+          -0.0005928958695670032,
+          -0.000592701210408423,
+          -0.0005907483722348388,
+          -0.00058480260439696,
+          -0.0005795050084440763
+        ],
+        "termination": "stationary",
+        "values": [
+          5.106282587743126,
+          0.03196212915294068,
+          0.01748971040419163,
+          0.008687568977018518,
+          0.008426430445657553
+        ]
+      },
+      "id": 6,
+      "model": {
+        "deadband": 0.03196212915294068,
+        "delay_s": 0.008426430445657553,
+        "drive_tau_s": 0.01748971040419163,
+        "gain": 5.106282587743126,
+        "release_tau_s": 0.008687568977018518
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.01834225115428495,
+          "model": {
+            "deadband": 0.03196226740496548,
+            "delay_s": 0.0055492913690642545,
+            "drive_tau_s": 0.017528921705197594,
+            "gain": 5.108268140773954,
+            "release_tau_s": 0.008671297664108879
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.019030545863537925,
+          "model": {
+            "deadband": 0.03196200344225725,
+            "delay_s": 0.011302788925411549,
+            "drive_tau_s": 0.017451414392333556,
+            "gain": 5.104308802776282,
+            "release_tau_s": 0.008704464486679593
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    },
+    {
+      "active_parameter_bounds_indices": [],
+      "bound_refinement": null,
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.15011636049999844,
+          "metrics": {
+            "final_displacement_error_counts": 0.23386913421365468,
+            "maximum_error_encoder_counts": 0.6817697442125862,
+            "rmse_encoder_counts": 0.28396989502668163,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.150166779500001,
+          "metrics": {
+            "final_displacement_error_counts": -2.1260056937284753,
+            "maximum_error_encoder_counts": 2.2876025158403293,
+            "rmse_encoder_counts": 1.5286624147405263,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.1500335315000001,
+          "metrics": {
+            "final_displacement_error_counts": -0.8796436227094663,
+            "maximum_error_encoder_counts": 1.726166123621645,
+            "rmse_encoder_counts": 0.8882986657812652,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.15029662850000136,
+          "metrics": {
+            "final_displacement_error_counts": -2.5142912246268874,
+            "maximum_error_encoder_counts": 2.738333512373147,
+            "rmse_encoder_counts": 1.7846860175887203,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.15594404900000214,
+          "metrics": {
+            "final_displacement_error_counts": -0.010982339475259364,
+            "maximum_error_encoder_counts": 2.339038877298857,
+            "rmse_encoder_counts": 0.8456087174449501,
+            "samples": 45
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.0,
+            12.1
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.05408491300000051,
+          "metrics": {
+            "final_displacement_error_counts": 0.3564104986933133,
+            "maximum_error_encoder_counts": 1.223509441233758,
+            "rmse_encoder_counts": 0.5853644836477309,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            46.0,
+            46.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.0540583115000004,
+          "metrics": {
+            "final_displacement_error_counts": -3.3498600704767316,
+            "maximum_error_encoder_counts": 3.3498600704767316,
+            "rmse_encoder_counts": 2.916319961210989,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            46.0,
+            46.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.1913928862130983,
+        "evaluations": 120,
+        "history": [
+          {
+            "accepted": true,
+            "cost": 2.233630300707787,
+            "damping": 0.0003333333333333333,
+            "evaluations": 12,
+            "iteration": 0,
+            "projected_gradient": 433.0114690910848
+          },
+          {
+            "accepted": true,
+            "cost": 0.28339457605361196,
+            "damping": 0.0001111111111111111,
+            "evaluations": 22,
+            "iteration": 1,
+            "projected_gradient": 193.94085772267283
+          },
+          {
+            "accepted": true,
+            "cost": 0.1914312470538579,
+            "damping": 0.000037037037037037037,
+            "evaluations": 33,
+            "iteration": 2,
+            "projected_gradient": 42.86781336369245
+          },
+          {
+            "accepted": true,
+            "cost": 0.1913929810664289,
+            "damping": 0.000012345679012345678,
+            "evaluations": 44,
+            "iteration": 3,
+            "projected_gradient": 0.23736240712828463
+          },
+          {
+            "accepted": true,
+            "cost": 0.19139288749871775,
+            "damping": 4.115226337448559e-6,
+            "evaluations": 55,
+            "iteration": 4,
+            "projected_gradient": 0.005463741932451458
+          },
+          {
+            "accepted": true,
+            "cost": 0.19139288623919415,
+            "damping": 1.371742112482853e-6,
+            "evaluations": 66,
+            "iteration": 5,
+            "projected_gradient": 0.00030538014344165575
+          },
+          {
+            "accepted": true,
+            "cost": 0.19139288621364367,
+            "damping": 4.5724737082761767e-7,
+            "evaluations": 77,
+            "iteration": 6,
+            "projected_gradient": 0.000046604915013633876
+          },
+          {
+            "accepted": true,
+            "cost": 0.19139288621311135,
+            "damping": 1.5241579027587256e-7,
+            "evaluations": 88,
+            "iteration": 7,
+            "projected_gradient": 6.663155464184129e-6
+          },
+          {
+            "accepted": true,
+            "cost": 0.19139288621309974,
+            "damping": 5.0805263425290854e-8,
+            "evaluations": 99,
+            "iteration": 8,
+            "projected_gradient": 9.63332333276442e-7
+          },
+          {
+            "accepted": true,
+            "cost": 0.1913928862130983,
+            "damping": 1.6935087808430285e-8,
+            "evaluations": 110,
+            "iteration": 9,
+            "projected_gradient": 1.3922056838052907e-7
+          },
+          {
+            "accepted": false,
+            "cost": 0.1913928862130983,
+            "damping": 1.6935087808430285e-8,
+            "evaluations": 120,
+            "iteration": 10,
+            "projected_gradient": 2.0147114010958533e-8
+          }
+        ],
+        "initial_cost": 24.524638243093474,
+        "rejected_evaluations": 0,
+        "residuals": [
+          0.0,
+          0.0007785742697767764,
+          0.0034950080749387843,
+          0.007533275331468991,
+          0.012579859110053474,
+          0.018080207928396617,
+          0.024222664590871534,
+          0.03028751758859607,
+          0.03690091826438451,
+          0.043517984596302815,
+          0.04968699716993582,
+          0.05648214885108103,
+          0.0632537789830659,
+          0.06950442747194274,
+          0.07660422865951481,
+          0.08261685889183525,
+          0.09031319110641163,
+          -0.035575164218331845,
+          -0.028716009330217094,
+          -0.02176344751390325,
+          -0.015207987859383721,
+          -0.008592977548039307,
+          -0.0018924705093823907,
+          0.004793722774685078,
+          0.023518622914104236,
+          0.02710141758702678,
+          0.028699390393330828,
+          0.029579371480895924,
+          0.03023908296460998,
+          0.030600256646930144,
+          0.0305643510422738,
+          0.03077453436962729,
+          0.030832379861354925,
+          0.030796295444180465,
+          0.030854204869598622,
+          0.03077030671796369,
+          0.030657028268496617,
+          0.030946308698560368,
+          0.03077609524247833,
+          0.030889180801855955,
+          0.03084749789513446,
+          0.030968829909755483,
+          0.030683647584825176,
+          0.03081336124229586,
+          -4.260908365885296e-15,
+          0.013601683051755286,
+          -0.018766598887261517,
+          -0.02552372965496255,
+          -0.014782943250102836,
+          0.004001061689319984,
+          0.0286050735190113,
+          -0.022405068798071,
+          0.012175208307834801,
+          -0.03285199579687216,
+          0.004245148753014593,
+          -0.03825345324958479,
+          -0.0004499562280308488,
+          -0.041297792939681305,
+          -0.08573409967436126,
+          -0.044568358909739036,
+          -0.08827701993889395,
+          -0.047227350978856754,
+          -0.08809428986089829,
+          -0.05013756526016124,
+          -0.09174954790288904,
+          -0.13206827817457886,
+          -0.0933213781761838,
+          -0.13451098086870533,
+          -0.11473265610564216,
+          -0.14023771630581547,
+          -0.10713171964041483,
+          -0.092467331106304,
+          -0.0807022636375373,
+          -0.07697996729871541,
+          -0.07514478118786529,
+          -0.07263314806152257,
+          -0.07211786330250125,
+          -0.0714047202155607,
+          -0.07146791140474029,
+          -0.07131979835081918,
+          -0.07168320608903997,
+          -0.07219210671463877,
+          -0.07004018898972231,
+          -0.07228525819108356,
+          -0.06980715344987239,
+          -0.07162320098101778,
+          -0.07135163675084626,
+          -0.07103057805604428,
+          -3.810557060972068e-15,
+          -0.03495049939308143,
+          -0.013961460901916658,
+          -0.012256390305786248,
+          -0.034597020376724,
+          0.012661424119421748,
+          0.012643395710185884,
+          0.021181342501659924,
+          0.035105714293477225,
+          0.05308132701476113,
+          0.012309359043410927,
+          0.03138253805171193,
+          0.05275463527323597,
+          0.020511894733545394,
+          0.04010732992239918,
+          0.005442139952621059,
+          0.029558691586711597,
+          0.04966102362313672,
+          0.012074100804626741,
+          0.0343805840647494,
+          0.05703876815435727,
+          0.02547156784360042,
+          0.05151739835839862,
+          0.01675012846760112,
+          0.08796280503984404,
+          0.12275628270113814,
+          0.05645440362681703,
+          0.051742553319182136,
+          0.022599401701417512,
+          0.03699437866923287,
+          0.04498603333792605,
+          0.04844802996952307,
+          0.051502139540468936,
+          0.05249045521075514,
+          0.05389037261831158,
+          0.05334162820269484,
+          0.05165520556453834,
+          0.05437886501526439,
+          0.054190014324786116,
+          0.05302122787422888,
+          0.054721879001459986,
+          0.05430243453539742,
+          0.053421868332298623,
+          0.05492388631271307,
+          -0.0005850650754848478
+        ],
+        "termination": "stationary",
+        "values": [
+          4.897636755344158,
+          0.0223489521782911,
+          0.014189166049962842,
+          0.009848311816815777,
+          0.007884976105356139
+        ]
+      },
+      "id": 7,
+      "model": {
+        "deadband": 0.0223489521782911,
+        "delay_s": 0.007884976105356139,
+        "drive_tau_s": 0.014189166049962842,
+        "gain": 4.897636755344158,
+        "release_tau_s": 0.009848311816815777
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.19123801651843095,
+          "model": {
+            "deadband": 0.02234919620767928,
+            "delay_s": 0.005026146684641634,
+            "drive_tau_s": 0.014192525784416033,
+            "gain": 4.899333606614158,
+            "release_tau_s": 0.009798857533580924
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.19170765930715666,
+          "model": {
+            "deadband": 0.022348700858558192,
+            "delay_s": 0.010742613511779875,
+            "drive_tau_s": 0.014188056364938376,
+            "gain": 4.896002906285824,
+            "release_tau_s": 0.009898074076199068
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    },
+    {
+      "active_parameter_bounds_indices": [],
+      "bound_refinement": null,
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.15586526649999755,
+          "metrics": {
+            "final_displacement_error_counts": 0.0,
+            "maximum_error_encoder_counts": 0.0,
+            "rmse_encoder_counts": 0.0,
+            "samples": 45
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            52.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.15010535549999915,
+          "metrics": {
+            "final_displacement_error_counts": 6.669526479480645,
+            "maximum_error_encoder_counts": 6.669526479480645,
+            "rmse_encoder_counts": 4.980717695346412,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            52.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.14995432199999925,
+          "metrics": {
+            "final_displacement_error_counts": -0.7389755010016745,
+            "maximum_error_encoder_counts": 1.2194426940150065,
+            "rmse_encoder_counts": 0.5413052747399039,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            52.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.15017921099999754,
+          "metrics": {
+            "final_displacement_error_counts": 3.9486522450821315,
+            "maximum_error_encoder_counts": 3.9587136591566754,
+            "rmse_encoder_counts": 3.010342943633177,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            52.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.15595934500000297,
+          "metrics": {
+            "final_displacement_error_counts": -0.11859037544251358,
+            "maximum_error_encoder_counts": 1.12033360261637,
+            "rmse_encoder_counts": 0.4821592102078753,
+            "samples": 45
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            52.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.054473158999999605,
+          "metrics": {
+            "final_displacement_error_counts": -0.775181530311949,
+            "maximum_error_encoder_counts": 1.2837730120783095,
+            "rmse_encoder_counts": 0.7518131277171509,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            46.0,
+            46.0
+          ],
+          "voltage_range_v": [
+            12.3,
+            12.3
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.05417677600000026,
+          "metrics": {
+            "final_displacement_error_counts": -0.16095671898861427,
+            "maximum_error_encoder_counts": 1.0921422881708809,
+            "rmse_encoder_counts": 0.42344530337190356,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            46.0,
+            46.0
+          ],
+          "voltage_range_v": [
+            12.3,
+            12.3
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.06687799389053115,
+        "evaluations": 95,
+        "history": [
+          {
+            "accepted": true,
+            "cost": 8.829050815331918,
+            "damping": 0.0003333333333333333,
+            "evaluations": 10,
+            "iteration": 0,
+            "projected_gradient": 441.2084153231898
+          },
+          {
+            "accepted": true,
+            "cost": 0.619976820537798,
+            "damping": 0.1111111111111111,
+            "evaluations": 20,
+            "iteration": 1,
+            "projected_gradient": 231.37805303105628
+          },
+          {
+            "accepted": true,
+            "cost": 0.10123144744739897,
+            "damping": 0.037037037037037035,
+            "evaluations": 30,
+            "iteration": 2,
+            "projected_gradient": 47.327893380938875
+          },
+          {
+            "accepted": true,
+            "cost": 0.06698344380478355,
+            "damping": 0.012345679012345678,
+            "evaluations": 41,
+            "iteration": 3,
+            "projected_gradient": 25.622273630237505
+          },
+          {
+            "accepted": true,
+            "cost": 0.0668779994466913,
+            "damping": 0.004115226337448559,
+            "evaluations": 52,
+            "iteration": 4,
+            "projected_gradient": 0.1657218361651615
+          },
+          {
+            "accepted": true,
+            "cost": 0.06687799389133446,
+            "damping": 0.0013717421124828531,
+            "evaluations": 63,
+            "iteration": 5,
+            "projected_gradient": 0.004333426531793277
+          },
+          {
+            "accepted": true,
+            "cost": 0.06687799389053142,
+            "damping": 0.0004572473708276177,
+            "evaluations": 74,
+            "iteration": 6,
+            "projected_gradient": 9.088921705965869e-6
+          },
+          {
+            "accepted": true,
+            "cost": 0.06687799389053115,
+            "damping": 0.00015241579027587258,
+            "evaluations": 85,
+            "iteration": 7,
+            "projected_gradient": 1.2118029719260237e-7
+          },
+          {
+            "accepted": false,
+            "cost": 0.06687799389053115,
+            "damping": 0.00015241579027587258,
+            "evaluations": 95,
+            "iteration": 8,
+            "projected_gradient": 2.978254400043401e-9
+          }
+        ],
+        "initial_cost": 43.60827281263093,
+        "rejected_evaluations": 0,
+        "residuals": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.006615156433198489,
+          0.03976982475571568,
+          0.09810959394402041,
+          0.07873748565857062,
+          0.0752911913226183,
+          0.08066626580551531,
+          0.0951575954491394,
+          0.10540219287941606,
+          0.03975172711740773,
+          0.06269369748360373,
+          0.0026794234274147414,
+          0.022083438506192682,
+          0.048365907674674996,
+          -0.010474488850014705,
+          0.016966120793997903,
+          -0.04538435299227106,
+          -0.0181779061945924,
+          0.01079417690226132,
+          -0.04630724287963883,
+          -0.01736869022182956,
+          -0.07761858396498643,
+          -0.04796254822531099,
+          -0.1074409134851159,
+          -0.036297300029713375,
+          -0.05681257398050019,
+          -0.02185486617623298,
+          -0.002415626240814406,
+          0.008580286308728768,
+          0.01460197494389584,
+          0.01900758843233497,
+          0.020017150799894842,
+          0.02190710702281109,
+          0.02192520574752232,
+          0.022713342311763488,
+          0.02233041972007878,
+          0.022444924222705703,
+          0.023012889338761635,
+          0.023013061267786343,
+          0.022803465978939348,
+          0.02278315650612347,
+          0.023030667009338035,
+          0.022454286052944916,
+          -0.06499284085660646,
+          7.95066364461144e-15,
+          0.010397842762503497,
+          -0.04940667644606055,
+          -0.012977455597147107,
+          -0.06480474802604769,
+          -0.04058199645061475,
+          -0.05556914746993509,
+          -0.057920149898499605,
+          -0.05750222056643874,
+          -0.04630416454013226,
+          -0.03556713347004991,
+          -0.01874449613639886,
+          -0.0014008416675643908,
+          0.015252280685752743,
+          -0.018404360328610033,
+          0.003662777303669085,
+          0.024379080221930464,
+          -0.010366608529038278,
+          0.01209932168640044,
+          0.034003970980949656,
+          0.00037264742507512363,
+          0.025731847223218515,
+          0.04985589577033407,
+          0.016145273788218728,
+          0.036333937628359576,
+          0.029425564964754954,
+          0.027931498213279646,
+          0.031598189140894996,
+          0.008032421445195462,
+          -0.03127617398443639,
+          -0.020859758941206563,
+          -0.014594231878881692,
+          -0.010893887935383068,
+          -0.009269569527569266,
+          -0.008208435543022226,
+          -0.007697424790571853,
+          -0.007158097803562997,
+          -0.007080079531338121,
+          -0.006944000656672515,
+          -0.006943251843730238,
+          -0.006939774338608299,
+          -0.006842763125003429,
+          -0.006705000411039229,
+          -0.006614207566113385,
+          -0.006810988589469064
+        ],
+        "termination": "stationary",
+        "values": [
+          5.347734077073522,
+          0.03645778597253078,
+          0.019250374097266054,
+          0.010413177744591755,
+          0.008842766152359792
+        ]
+      },
+      "id": 8,
+      "model": {
+        "deadband": 0.03645778597253078,
+        "delay_s": 0.008842766152359792,
+        "drive_tau_s": 0.019250374097266054,
+        "gain": 5.347734077073522,
+        "release_tau_s": 0.010413177744591755
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.06689516356291067,
+          "model": {
+            "deadband": 0.036462413376770975,
+            "delay_s": 0.005965209633985724,
+            "drive_tau_s": 0.019274083671852293,
+            "gain": 5.3501426497869575,
+            "release_tau_s": 0.010375300040047827
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.06706633885170916,
+          "model": {
+            "deadband": 0.03645308622259865,
+            "delay_s": 0.011716056226307463,
+            "drive_tau_s": 0.019233844288735872,
+            "gain": 5.345493521546353,
+            "release_tau_s": 0.010453690490775679
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    },
+    {
+      "active_parameter_bounds_indices": [],
+      "bound_refinement": null,
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.1499777679999994,
+          "metrics": {
+            "final_displacement_error_counts": 0.12464379562958554,
+            "maximum_error_encoder_counts": 0.12464379562958554,
+            "rmse_encoder_counts": 0.09302964615230837,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.15025028950000063,
+          "metrics": {
+            "final_displacement_error_counts": 1.5158769004508008,
+            "maximum_error_encoder_counts": 3.266134193261661,
+            "rmse_encoder_counts": 1.8276062968694982,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.1500990439999974,
+          "metrics": {
+            "final_displacement_error_counts": -0.7387400879697273,
+            "maximum_error_encoder_counts": 1.1491237059342156,
+            "rmse_encoder_counts": 0.6695457108039718,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.14998436549999994,
+          "metrics": {
+            "final_displacement_error_counts": 0.9727446858223352,
+            "maximum_error_encoder_counts": 0.9727446858223352,
+            "rmse_encoder_counts": 0.6578430015796664,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.15004246550000033,
+          "metrics": {
+            "final_displacement_error_counts": 0.7447228203752397,
+            "maximum_error_encoder_counts": 1.4622613341336392,
+            "rmse_encoder_counts": 0.6345160574360643,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.05419912650000036,
+          "metrics": {
+            "final_displacement_error_counts": 1.2223462023026501,
+            "maximum_error_encoder_counts": 1.2223462023026501,
+            "rmse_encoder_counts": 0.9211784544222712,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.3
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.05423633850000087,
+          "metrics": {
+            "final_displacement_error_counts": -4.23105076638228,
+            "maximum_error_encoder_counts": 4.738127946164005,
+            "rmse_encoder_counts": 3.8038169447556016,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.3
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.09933919598559005,
+        "evaluations": 189,
+        "history": [
+          {
+            "accepted": true,
+            "cost": 12.533819511260802,
+            "damping": 0.03333333333333333,
+            "evaluations": 11,
+            "iteration": 0,
+            "projected_gradient": 488.40352751458744
+          },
+          {
+            "accepted": true,
+            "cost": 1.541714387383168,
+            "damping": 0.011111111111111112,
+            "evaluations": 20,
+            "iteration": 1,
+            "projected_gradient": 494.6827318100965
+          },
+          {
+            "accepted": true,
+            "cost": 0.1469486849660283,
+            "damping": 0.003703703703703704,
+            "evaluations": 31,
+            "iteration": 2,
+            "projected_gradient": 113.29746026606372
+          },
+          {
+            "accepted": true,
+            "cost": 0.12107642409235282,
+            "damping": 370.3703703703703,
+            "evaluations": 47,
+            "iteration": 3,
+            "projected_gradient": 20.23990146241885
+          },
+          {
+            "accepted": true,
+            "cost": 0.11274808270662919,
+            "damping": 123.45679012345677,
+            "evaluations": 58,
+            "iteration": 4,
+            "projected_gradient": 2.2657791222797177
+          },
+          {
+            "accepted": true,
+            "cost": 0.10518579225956821,
+            "damping": 41.15226337448559,
+            "evaluations": 69,
+            "iteration": 5,
+            "projected_gradient": 0.9633827473406342
+          },
+          {
+            "accepted": true,
+            "cost": 0.10043694216482647,
+            "damping": 13.717421124828531,
+            "evaluations": 80,
+            "iteration": 6,
+            "projected_gradient": 0.7447902635082068
+          },
+          {
+            "accepted": true,
+            "cost": 0.09947538827444435,
+            "damping": 4.572473708276177,
+            "evaluations": 91,
+            "iteration": 7,
+            "projected_gradient": 0.7059371610085852
+          },
+          {
+            "accepted": true,
+            "cost": 0.09940802960196123,
+            "damping": 1.5241579027587255,
+            "evaluations": 102,
+            "iteration": 8,
+            "projected_gradient": 0.2066396885918561
+          },
+          {
+            "accepted": true,
+            "cost": 0.09936616474738669,
+            "damping": 0.5080526342529085,
+            "evaluations": 113,
+            "iteration": 9,
+            "projected_gradient": 0.01174878520153433
+          },
+          {
+            "accepted": true,
+            "cost": 0.09934282728708886,
+            "damping": 0.16935087808430282,
+            "evaluations": 124,
+            "iteration": 10,
+            "projected_gradient": 0.006906468127035437
+          },
+          {
+            "accepted": true,
+            "cost": 0.09933930973528204,
+            "damping": 0.05645029269476761,
+            "evaluations": 135,
+            "iteration": 11,
+            "projected_gradient": 0.0034800731009899666
+          },
+          {
+            "accepted": true,
+            "cost": 0.09933919688415806,
+            "damping": 0.018816764231589202,
+            "evaluations": 146,
+            "iteration": 12,
+            "projected_gradient": 0.0009188694122670982
+          },
+          {
+            "accepted": true,
+            "cost": 0.09933919598861224,
+            "damping": 0.006272254743863067,
+            "evaluations": 157,
+            "iteration": 13,
+            "projected_gradient": 0.00012523005457737435
+          },
+          {
+            "accepted": true,
+            "cost": 0.09933919598559739,
+            "damping": 0.002090751581287689,
+            "evaluations": 168,
+            "iteration": 14,
+            "projected_gradient": 8.483397704317497e-6
+          },
+          {
+            "accepted": true,
+            "cost": 0.09933919598559005,
+            "damping": 0.000696917193762563,
+            "evaluations": 179,
+            "iteration": 15,
+            "projected_gradient": 3.995576340343199e-7
+          },
+          {
+            "accepted": false,
+            "cost": 0.09933919598559005,
+            "damping": 0.000696917193762563,
+            "evaluations": 189,
+            "iteration": 16,
+            "projected_gradient": 1.8226788078834488e-8
+          }
+        ],
+        "initial_cost": 49.90216948117116,
+        "rejected_evaluations": 0,
+        "residuals": [
+          2.010899676780005e-6,
+          0.00013843506392337648,
+          0.00043804345062411695,
+          0.0008176105473681969,
+          0.0013165336216952766,
+          0.001913201969863987,
+          0.0025655784756156022,
+          0.003197512984717309,
+          0.0038818023884139917,
+          0.004589757183691746,
+          0.00532800632704305,
+          0.0060771265995539555,
+          0.00684194932690218,
+          0.007618103680928678,
+          0.008395129026397791,
+          0.009185365045502143,
+          0.009958354170628457,
+          0.010743579370998593,
+          0.011534214496246928,
+          0.01232510220383885,
+          0.013135101081304385,
+          0.013929326099869833,
+          0.014708702433865215,
+          0.015498261356148789,
+          0.01768649602056755,
+          0.018084741802790613,
+          0.018332289965437714,
+          0.01849725604389307,
+          0.018601468756525144,
+          0.018668433729831596,
+          0.018712354992318613,
+          0.0187401672053503,
+          0.018758165589435404,
+          0.018769741264258566,
+          0.018777136515948915,
+          0.018781983822976894,
+          0.018785096442049558,
+          0.01878708679611401,
+          0.01878839173391179,
+          0.018789243504657827,
+          0.018789785254017,
+          0.018790125549321805,
+          0.018790348984685384,
+          0.018790759206776156,
+          0.00031998481918747034,
+          0.020319075316130784,
+          0.06227530200265162,
+          0.041828191797181245,
+          0.0338400042993747,
+          0.03911290803114978,
+          -0.03116798267238786,
+          0.0654376885616755,
+          0.0067918280480638625,
+          0.03168965609306713,
+          -0.022433838222821727,
+          0.008621313648489974,
+          0.041236118758387445,
+          -0.007589861691967726,
+          0.025798919076750276,
+          -0.021207207457158445,
+          0.013970370148455648,
+          -0.029726579184651145,
+          -0.0764427989482067,
+          -0.03838858309966613,
+          -0.08446300715076221,
+          -0.04911811117906624,
+          -0.0932409882142419,
+          -0.057643637987639634,
+          -0.06003515704418112,
+          -0.08204917738484968,
+          -0.04635836500409519,
+          -0.021825763167899394,
+          -0.08919360686942242,
+          -0.0780761226385056,
+          -0.07098101881849005,
+          -0.06795255812496703,
+          -0.06304769788579771,
+          -0.06390351505787903,
+          -0.061134935601740686,
+          -0.06198421796164412,
+          -0.059081615336726415,
+          -0.061331050500158704,
+          -0.059910836068343645,
+          -0.060183242846198935,
+          -0.059267511728736746,
+          -0.06012972859062095,
+          -0.06026092774799269,
+          -0.059772781225105896,
+          0.0006112240910306404,
+          -0.02393937259167868,
+          -0.012886346768800893,
+          -0.029691233338333897,
+          -0.023149954586049515,
+          0.002055390797032045,
+          -0.015912904946143985,
+          -0.02681192175554873,
+          -0.08707529686352157,
+          0.03252557306650247,
+          -0.016920982507145254,
+          -0.006699429216305005,
+          0.0044845201558275085,
+          0.02146977750640361,
+          0.042578489022308874,
+          0.0011045645568502748,
+          0.01740680211758555,
+          0.04052222554065903,
+          -0.05588131754726538,
+          0.019575205541507837,
+          0.04043733448543111,
+          0.06317026387225745,
+          0.02931543282003971,
+          0.05072657400399453,
+          0.060019982860154635,
+          0.0454425844073852,
+          0.04930363841739714,
+          0.030096191293919848,
+          -0.0032854263393330804,
+          0.013210121382778967,
+          0.024424067293912142,
+          0.031050092970444046,
+          0.03562583348263646,
+          0.03790207722767764,
+          0.040605175073247415,
+          0.04149057351647782,
+          0.041732200177707277,
+          0.043192593632896834,
+          0.0418685902272866,
+          0.04363100413819048,
+          0.04327483690161561,
+          0.043397528896684044,
+          0.042994058287048144,
+          0.043446614520080994
+        ],
+        "termination": "stationary",
+        "values": [
+          4.934075680602143,
+          0.024725915157906106,
+          0.022278096630684995,
+          0.013673908125530397,
+          0.005388986052852574
+        ]
+      },
+      "id": 9,
+      "model": {
+        "deadband": 0.024725915157906106,
+        "delay_s": 0.005388986052852574,
+        "drive_tau_s": 0.022278096630684995,
+        "gain": 4.934075680602143,
+        "release_tau_s": 0.013673908125530397
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.09803950558834175,
+          "model": {
+            "deadband": 0.024725919929770197,
+            "delay_s": 0.002561660889538988,
+            "drive_tau_s": 0.022237680869064382,
+            "gain": 4.934284498958988,
+            "release_tau_s": 0.013624632521396295
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.1007876558980143,
+          "model": {
+            "deadband": 0.02472590949780954,
+            "delay_s": 0.008216855556281166,
+            "drive_tau_s": 0.022317691048114624,
+            "gain": 4.933859452355144,
+            "release_tau_s": 0.01372248604953594
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    },
+    {
+      "active_parameter_bounds_indices": [
+        4
+      ],
+      "bound_refinement": {
+        "conditional": {
+          "cost": 0.45966922137116273,
+          "evaluations": 46,
+          "history": [
+            {
+              "accepted": true,
+              "cost": 0.45966922140082533,
+              "damping": 0.0003333333333333333,
+              "evaluations": 10,
+              "iteration": 0,
+              "projected_gradient": 0.001490868300704884
+            },
+            {
+              "accepted": true,
+              "cost": 0.4596692213712415,
+              "damping": 0.0001111111111111111,
+              "evaluations": 19,
+              "iteration": 1,
+              "projected_gradient": 0.00004018760289781209
+            },
+            {
+              "accepted": true,
+              "cost": 0.45966922137116323,
+              "damping": 0.000037037037037037037,
+              "evaluations": 28,
+              "iteration": 2,
+              "projected_gradient": 1.9672496703870834e-6
+            },
+            {
+              "accepted": true,
+              "cost": 0.45966922137116273,
+              "damping": 0.0001234567901234568,
+              "evaluations": 38,
+              "iteration": 3,
+              "projected_gradient": 1.0696891550310283e-7
+            },
+            {
+              "accepted": false,
+              "cost": 0.45966922137116273,
+              "damping": 0.0001234567901234568,
+              "evaluations": 46,
+              "iteration": 4,
+              "projected_gradient": 5.538414504790978e-9
+            }
+          ],
+          "initial_cost": 0.45966923520514197,
+          "rejected_evaluations": 0,
+          "residuals": [
+            0.00021444221506365654,
+            0.0008005400804171587,
+            0.0016363687484578146,
+            0.0027282311874696186,
+            0.004064122404812392,
+            0.005537634968769578,
+            0.007090214589652982,
+            0.00873583943093248,
+            0.010541576412021735,
+            0.01243372555163888,
+            0.014371988892970618,
+            0.01636099234633566,
+            0.0184025034881625,
+            0.020516561803836594,
+            0.022620527687034864,
+            0.024789618378658295,
+            0.026946566296963237,
+            0.02911247086151197,
+            0.03135628189009557,
+            0.0335919991546213,
+            0.035814480253801344,
+            0.03803916147676019,
+            0.04030491777106913,
+            0.042558544224289056,
+            0.04777754176173837,
+            0.04860443635539399,
+            0.049136872662277974,
+            0.04949903773274955,
+            0.04972785383848991,
+            0.049879286826352946,
+            0.04998276030172404,
+            0.050050462766464174,
+            0.05009626906691062,
+            0.05012677140385147,
+            0.05014715779598535,
+            0.05016051394958723,
+            0.05016944149972346,
+            0.05017549101546565,
+            0.050179469345177426,
+            0.050182067663564374,
+            0.050183803650688474,
+            0.05018499792950975,
+            0.050185780927433206,
+            0.0501872961223599,
+            0.012121154867253873,
+            -0.038105879548745135,
+            0.0138837998568549,
+            -0.006538925769531463,
+            -0.014179518974649205,
+            -0.011584069544911068,
+            -0.00040147943751663164,
+            -0.0663470193175437,
+            -0.04281009210439614,
+            -0.10420076625229076,
+            -0.06963460108151538,
+            -0.11525229649398787,
+            -0.0779875625657807,
+            -0.11959018591611066,
+            -0.07686898762245041,
+            -0.12125854422546875,
+            -0.07055993505557227,
+            -0.10774937594074407,
+            -0.06276962075097299,
+            -0.0979954591617402,
+            -0.13574139181270775,
+            -0.0830021363054715,
+            -0.11487653860622565,
+            -0.063734690906175,
+            -0.10208422836599539,
+            -0.11972086568191441,
+            -0.16010920595253136,
+            -0.12440108064729186,
+            -0.10594987374559399,
+            -0.08802182753185733,
+            -0.08155256870679367,
+            -0.16108840625536422,
+            -0.1550732281965633,
+            -0.15585941430234,
+            -0.15201970326239578,
+            -0.14846372952503945,
+            -0.14958426948137363,
+            -0.15044681605286384,
+            -0.14943363267368048,
+            -0.1489556319876436,
+            -0.14593696764204248,
+            -0.14800630930036685,
+            -0.1494964321715491,
+            -0.1479779849083763,
+            -0.14838192240718717,
+            0.01829231804352766,
+            0.016207599954892456,
+            0.03867879997502842,
+            0.02497141159547806,
+            0.03165388938659921,
+            0.05264228590265448,
+            0.033223458462110285,
+            0.023657756758250353,
+            0.021664571694202335,
+            0.025284844185749077,
+            0.03627603771266105,
+            -0.0008976569981064712,
+            0.02160488798957427,
+            -0.007612705874598537,
+            0.02197760024292217,
+            -0.003135256339099517,
+            0.029258810540440657,
+            0.06189909915004831,
+            0.04104076237302305,
+            0.07935819271812666,
+            0.11345391860335308,
+            0.09515206417688515,
+            0.13837674383356136,
+            0.17319073651780476,
+            0.15438182215174578,
+            0.11929934249640238,
+            0.11568412448514705,
+            0.09327849890002275,
+            0.058645330089366586,
+            0.07254525649929883,
+            0.08088426822844148,
+            0.08873380917850762,
+            0.09139415193610548,
+            0.09468997170716845,
+            0.09939933692394366,
+            0.09911417731578098,
+            0.09744209497149747,
+            0.09999271069451997,
+            0.10003486844992646,
+            0.09976851471498417,
+            0.10236683182871621,
+            0.10004157749965437,
+            0.09902360367131278,
+            0.10301026749464455
+          ],
+          "termination": "stationary",
+          "values": [
+            5.493055285171614,
+            0.024294210145674282,
+            0.03322389050855377,
+            0.014695933967835181,
+            0.0
+          ]
+        },
+        "original_cost": 0.45966923520514197,
+        "original_termination": "iteration_limit",
+        "reopened_cost": 0.45966922137116273,
+        "reopened_termination": "stationary"
+      },
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.1500451159999976,
+          "metrics": {
+            "final_displacement_error_counts": 0.3329048609606525,
+            "maximum_error_encoder_counts": 0.3329048609606525,
+            "rmse_encoder_counts": 0.24966584399260633,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            54.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.15003261000000023,
+          "metrics": {
+            "final_displacement_error_counts": 2.123686401863877,
+            "maximum_error_encoder_counts": 3.468392377784486,
+            "rmse_encoder_counts": 2.0989163900699053,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            54.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.15592533200000958,
+          "metrics": {
+            "final_displacement_error_counts": -1.7061207107021017,
+            "maximum_error_encoder_counts": 1.8520556197074016,
+            "rmse_encoder_counts": 1.2872416860681484,
+            "samples": 45
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            54.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.15011324249999802,
+          "metrics": {
+            "final_displacement_error_counts": 0.3230132164326927,
+            "maximum_error_encoder_counts": 1.2212781479715316,
+            "rmse_encoder_counts": 0.5273231815109289,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            54.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.1499647035000038,
+          "metrics": {
+            "final_displacement_error_counts": 1.826099019920646,
+            "maximum_error_encoder_counts": 3.1516013830550964,
+            "rmse_encoder_counts": 1.4880286168935184,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            54.0,
+            55.0
+          ],
+          "voltage_range_v": [
+            12.1,
+            12.2
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.05398268699999953,
+          "metrics": {
+            "final_displacement_error_counts": 0.6008778891038344,
+            "maximum_error_encoder_counts": 1.182234611421033,
+            "rmse_encoder_counts": 0.6408546827338942,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.05393564199999901,
+          "metrics": {
+            "final_displacement_error_counts": -2.5895259340823515,
+            "maximum_error_encoder_counts": 3.0437479789664157,
+            "rmse_encoder_counts": 2.367334233642142,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.45966922137116273,
+        "evaluations": 10,
+        "history": [
+          {
+            "accepted": false,
+            "cost": 0.45966922137116273,
+            "damping": 0.001,
+            "evaluations": 10,
+            "iteration": 0,
+            "projected_gradient": 5.538414504790978e-9
+          }
+        ],
+        "initial_cost": 0.45966922137116273,
+        "rejected_evaluations": 0,
+        "residuals": [
+          0.00021444221506365654,
+          0.0008005400804171587,
+          0.0016363687484578146,
+          0.0027282311874696186,
+          0.004064122404812392,
+          0.005537634968769578,
+          0.007090214589652982,
+          0.00873583943093248,
+          0.010541576412021735,
+          0.01243372555163888,
+          0.014371988892970618,
+          0.01636099234633566,
+          0.0184025034881625,
+          0.020516561803836594,
+          0.022620527687034864,
+          0.024789618378658295,
+          0.026946566296963237,
+          0.02911247086151197,
+          0.03135628189009557,
+          0.0335919991546213,
+          0.035814480253801344,
+          0.03803916147676019,
+          0.04030491777106913,
+          0.042558544224289056,
+          0.04777754176173837,
+          0.04860443635539399,
+          0.049136872662277974,
+          0.04949903773274955,
+          0.04972785383848991,
+          0.049879286826352946,
+          0.04998276030172404,
+          0.050050462766464174,
+          0.05009626906691062,
+          0.05012677140385147,
+          0.05014715779598535,
+          0.05016051394958723,
+          0.05016944149972346,
+          0.05017549101546565,
+          0.050179469345177426,
+          0.050182067663564374,
+          0.050183803650688474,
+          0.05018499792950975,
+          0.050185780927433206,
+          0.0501872961223599,
+          0.012121154867253873,
+          -0.038105879548745135,
+          0.0138837998568549,
+          -0.006538925769531463,
+          -0.014179518974649205,
+          -0.011584069544911068,
+          -0.00040147943751663164,
+          -0.0663470193175437,
+          -0.04281009210439614,
+          -0.10420076625229076,
+          -0.06963460108151538,
+          -0.11525229649398787,
+          -0.0779875625657807,
+          -0.11959018591611066,
+          -0.07686898762245041,
+          -0.12125854422546875,
+          -0.07055993505557227,
+          -0.10774937594074407,
+          -0.06276962075097299,
+          -0.0979954591617402,
+          -0.13574139181270775,
+          -0.0830021363054715,
+          -0.11487653860622565,
+          -0.063734690906175,
+          -0.10208422836599539,
+          -0.11972086568191441,
+          -0.16010920595253136,
+          -0.12440108064729186,
+          -0.10594987374559399,
+          -0.08802182753185733,
+          -0.08155256870679367,
+          -0.16108840625536422,
+          -0.1550732281965633,
+          -0.15585941430234,
+          -0.15201970326239578,
+          -0.14846372952503945,
+          -0.14958426948137363,
+          -0.15044681605286384,
+          -0.14943363267368048,
+          -0.1489556319876436,
+          -0.14593696764204248,
+          -0.14800630930036685,
+          -0.1494964321715491,
+          -0.1479779849083763,
+          -0.14838192240718717,
+          0.01829231804352766,
+          0.016207599954892456,
+          0.03867879997502842,
+          0.02497141159547806,
+          0.03165388938659921,
+          0.05264228590265448,
+          0.033223458462110285,
+          0.023657756758250353,
+          0.021664571694202335,
+          0.025284844185749077,
+          0.03627603771266105,
+          -0.0008976569981064712,
+          0.02160488798957427,
+          -0.007612705874598537,
+          0.02197760024292217,
+          -0.003135256339099517,
+          0.029258810540440657,
+          0.06189909915004831,
+          0.04104076237302305,
+          0.07935819271812666,
+          0.11345391860335308,
+          0.09515206417688515,
+          0.13837674383356136,
+          0.17319073651780476,
+          0.15438182215174578,
+          0.11929934249640238,
+          0.11568412448514705,
+          0.09327849890002275,
+          0.058645330089366586,
+          0.07254525649929883,
+          0.08088426822844148,
+          0.08873380917850762,
+          0.09139415193610548,
+          0.09468997170716845,
+          0.09939933692394366,
+          0.09911417731578098,
+          0.09744209497149747,
+          0.09999271069451997,
+          0.10003486844992646,
+          0.09976851471498417,
+          0.10236683182871621,
+          0.10004157749965437,
+          0.09902360367131278,
+          0.10301026749464455
+        ],
+        "termination": "stationary",
+        "values": [
+          5.493055285171614,
+          0.024294210145674282,
+          0.03322389050855377,
+          0.014695933967835181,
+          0.0
+        ]
+      },
+      "id": 10,
+      "model": {
+        "deadband": 0.024294210145674282,
+        "delay_s": 0.0,
+        "drive_tau_s": 0.03322389050855377,
+        "gain": 5.493055285171614,
+        "release_tau_s": 0.014695933967835181
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.4662862614969619,
+          "model": {
+            "deadband": 0.024283549469814144,
+            "delay_s": 0.0,
+            "drive_tau_s": 0.02673252438827654,
+            "gain": 5.305120230589563,
+            "release_tau_s": 0.012978671121118824
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.4573908480102248,
+          "model": {
+            "deadband": 0.024306922635286277,
+            "delay_s": 0.0,
+            "drive_tau_s": 0.041083544050469364,
+            "gain": 5.744957409596366,
+            "release_tau_s": 0.016390386893726707
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    },
+    {
+      "active_parameter_bounds_indices": [],
+      "bound_refinement": null,
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.15010682999999858,
+          "metrics": {
+            "final_displacement_error_counts": 0.14086748996015605,
+            "maximum_error_encoder_counts": 0.14086748996015605,
+            "rmse_encoder_counts": 0.10549191212917491,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.4,
+            12.4
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.15024661450000565,
+          "metrics": {
+            "final_displacement_error_counts": -1.369400337570284,
+            "maximum_error_encoder_counts": 2.045423036308877,
+            "rmse_encoder_counts": 1.18826861215528,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.4,
+            12.4
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.15029086300000216,
+          "metrics": {
+            "final_displacement_error_counts": -1.3785584340683574,
+            "maximum_error_encoder_counts": 1.8700434964246693,
+            "rmse_encoder_counts": 0.8018224659261735,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.4,
+            12.4
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.14996598349999601,
+          "metrics": {
+            "final_displacement_error_counts": -0.5340204804206095,
+            "maximum_error_encoder_counts": 1.031460963977912,
+            "rmse_encoder_counts": 0.4296047785364025,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            53.0,
+            53.0
+          ],
+          "voltage_range_v": [
+            12.4,
+            12.4
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.15015704499999316,
+          "metrics": {
+            "final_displacement_error_counts": 0.5132399407344176,
+            "maximum_error_encoder_counts": 2.1362502720009093,
+            "rmse_encoder_counts": 0.9360158218738439,
+            "samples": 44
+          },
+          "run": "pwm-individual-ids4-11-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            53.0,
+            54.0
+          ],
+          "voltage_range_v": [
+            12.3,
+            12.4
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.05422132800000057,
+          "metrics": {
+            "final_displacement_error_counts": 0.45368363671615447,
+            "maximum_error_encoder_counts": 0.9657523269604026,
+            "rmse_encoder_counts": 0.4418672158627462,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.4,
+            12.4
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.054378791500001356,
+          "metrics": {
+            "final_displacement_error_counts": -1.4940869901271665,
+            "maximum_error_encoder_counts": 1.7520537166780135,
+            "rmse_encoder_counts": 1.3470800443073168,
+            "samples": 27
+          },
+          "run": "pwm-direction-bit10-ids4-11-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            47.0,
+            47.0
+          ],
+          "voltage_range_v": [
+            12.4,
+            12.4
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.1512331939283017,
+        "evaluations": 190,
+        "history": [
+          {
+            "accepted": true,
+            "cost": 6.089102542293416,
+            "damping": 0.03333333333333333,
+            "evaluations": 11,
+            "iteration": 0,
+            "projected_gradient": 727.9553400223043
+          },
+          {
+            "accepted": true,
+            "cost": 1.9130846567002464,
+            "damping": 0.03333333333333333,
+            "evaluations": 20,
+            "iteration": 1,
+            "projected_gradient": 337.2242879222972
+          },
+          {
+            "accepted": true,
+            "cost": 0.18441424865301065,
+            "damping": 0.011111111111111112,
+            "evaluations": 31,
+            "iteration": 2,
+            "projected_gradient": 47.19417157647121
+          },
+          {
+            "accepted": true,
+            "cost": 0.1611257447327342,
+            "damping": 370.3703703703704,
+            "evaluations": 47,
+            "iteration": 3,
+            "projected_gradient": 18.392445986303304
+          },
+          {
+            "accepted": true,
+            "cost": 0.15763943526561602,
+            "damping": 123.4567901234568,
+            "evaluations": 58,
+            "iteration": 4,
+            "projected_gradient": 1.4450993833937464
+          },
+          {
+            "accepted": true,
+            "cost": 0.15409623801383668,
+            "damping": 41.1522633744856,
+            "evaluations": 69,
+            "iteration": 5,
+            "projected_gradient": 0.8192226169513037
+          },
+          {
+            "accepted": true,
+            "cost": 0.15194645781710683,
+            "damping": 13.717421124828533,
+            "evaluations": 80,
+            "iteration": 6,
+            "projected_gradient": 0.3995982855254834
+          },
+          {
+            "accepted": true,
+            "cost": 0.1515001072909785,
+            "damping": 4.572473708276178,
+            "evaluations": 91,
+            "iteration": 7,
+            "projected_gradient": 0.32682648189272456
+          },
+          {
+            "accepted": true,
+            "cost": 0.15139952476239413,
+            "damping": 1.524157902758726,
+            "evaluations": 102,
+            "iteration": 8,
+            "projected_gradient": 0.08430570689478034
+          },
+          {
+            "accepted": true,
+            "cost": 0.1512895351913379,
+            "damping": 0.5080526342529087,
+            "evaluations": 113,
+            "iteration": 9,
+            "projected_gradient": 0.018184500088090475
+          },
+          {
+            "accepted": true,
+            "cost": 0.15123815972722426,
+            "damping": 0.1693508780843029,
+            "evaluations": 124,
+            "iteration": 10,
+            "projected_gradient": 0.011820876744117748
+          },
+          {
+            "accepted": true,
+            "cost": 0.15123323510664052,
+            "damping": 0.05645029269476764,
+            "evaluations": 135,
+            "iteration": 11,
+            "projected_gradient": 0.006518322890671113
+          },
+          {
+            "accepted": true,
+            "cost": 0.15123319394701024,
+            "damping": 0.018816764231589213,
+            "evaluations": 146,
+            "iteration": 12,
+            "projected_gradient": 0.0010620977322130243
+          },
+          {
+            "accepted": true,
+            "cost": 0.15123319392834056,
+            "damping": 0.006272254743863071,
+            "evaluations": 157,
+            "iteration": 13,
+            "projected_gradient": 0.00007397187091501278
+          },
+          {
+            "accepted": true,
+            "cost": 0.1512331939283025,
+            "damping": 0.0020907515812876904,
+            "evaluations": 168,
+            "iteration": 14,
+            "projected_gradient": 1.3832716745654228e-6
+          },
+          {
+            "accepted": true,
+            "cost": 0.1512331939283017,
+            "damping": 0.006969171937625634,
+            "evaluations": 180,
+            "iteration": 15,
+            "projected_gradient": 1.0698692368138474e-7
+          },
+          {
+            "accepted": false,
+            "cost": 0.1512331939283017,
+            "damping": 0.006969171937625634,
+            "evaluations": 190,
+            "iteration": 16,
+            "projected_gradient": 7.251872047309149e-9
+          }
+        ],
+        "initial_cost": 69.92135651385786,
+        "rejected_evaluations": 0,
+        "residuals": [
+          3.9915918552081e-6,
+          0.0001740939579959377,
+          0.0005252681060536637,
+          0.0009976920028292261,
+          0.001584264008756771,
+          0.0022665338544714474,
+          0.0029973769821674606,
+          0.0037605777451017934,
+          0.004551617159536063,
+          0.0053703993142516,
+          0.006201907692578107,
+          0.007066644603990901,
+          0.007946297082901836,
+          0.008806346060194512,
+          0.009661833597191343,
+          0.01053874063848987,
+          0.01141698755093008,
+          0.012298848108640579,
+          0.013202355762578973,
+          0.014090551858454594,
+          0.014962138503043211,
+          0.015858493717358042,
+          0.01676400079140032,
+          0.01766835071767831,
+          0.020091290511948464,
+          0.02051989191610655,
+          0.020782643125709176,
+          0.02094842586480967,
+          0.021054851072647505,
+          0.02112145378399438,
+          0.0211631227739876,
+          0.021190153184873634,
+          0.021207607061103775,
+          0.021218324966195683,
+          0.02122497737674146,
+          0.02122919296929248,
+          0.02123190434687644,
+          0.021233638840265655,
+          0.02123473593045065,
+          0.02123539887863084,
+          0.02123582377628293,
+          0.02123609992115174,
+          0.021236274863663317,
+          0.021236573152590636,
+          0.0006906017505842949,
+          0.023735485262844098,
+          -0.006055544163804566,
+          -0.015276291296244728,
+          -0.011252302847960229,
+          0.0035545959250829298,
+          0.026519577671327507,
+          -0.02802670575004361,
+          0.005082826099273894,
+          -0.03574942027975087,
+          0.003920562499867257,
+          -0.033406116354868,
+          -0.0714680429025173,
+          -0.027928638616843394,
+          -0.06726274832872264,
+          -0.10170527854160859,
+          -0.05522015575339549,
+          -0.09064174252269398,
+          -0.12988679725196223,
+          -0.07996461109828418,
+          -0.11578616635397576,
+          -0.15294897061667306,
+          -0.09967168353470483,
+          -0.13459034598397418,
+          -0.10996871837302845,
+          -0.0526547252868437,
+          -0.09387322741739718,
+          -0.07161993150376784,
+          -0.05646498241237435,
+          -0.04737072056220314,
+          -0.04125934567960905,
+          -0.03716481589716912,
+          -0.03467799598537218,
+          -0.033800742844597186,
+          -0.03134798255655866,
+          -0.032660013931640065,
+          -0.030889038601366024,
+          -0.030968724045235683,
+          -0.03129707010057845,
+          -0.03058866744400452,
+          -0.031098759974344255,
+          -0.0305319039450144,
+          -0.03106318642778656,
+          -0.11229473089947285,
+          0.0009691579553265058,
+          0.03667663950777604,
+          0.008382915891457995,
+          0.009814169608696814,
+          -0.02141494838880656,
+          0.017176339572768737,
+          0.07064489899384421,
+          -0.026878629121831667,
+          0.03998931169311448,
+          0.009626236841749514,
+          -0.020026388248193756,
+          0.0584949258576364,
+          0.08539445428440419,
+          0.06692649963674165,
+          -0.0053460578708197475,
+          0.027099157916120966,
+          -0.045987936918049116,
+          0.03996684338779703,
+          0.07591554213454524,
+          0.05734871780172631,
+          0.09341987975938883,
+          0.07533617911365233,
+          0.11018730390005453,
+          0.04612133050899176,
+          0.09215099910331953,
+          0.08345807557486384,
+          0.08710456766082102,
+          0.06897163269635899,
+          0.04098333284327704,
+          0.0023640735237297366,
+          0.011157014552046263,
+          0.016778930844111185,
+          0.020864878939406205,
+          0.022994438318483915,
+          0.024790151263148905,
+          0.02558488858078469,
+          0.025876072922087254,
+          0.026243552844339317,
+          0.026837507211093462,
+          0.02690477131756036,
+          0.02695533303788752,
+          0.02715634167811796,
+          0.02669580291184185,
+          0.026773890603157668
+        ],
+        "termination": "stationary",
+        "values": [
+          5.367790085695497,
+          0.024717754010670712,
+          0.020575082634660423,
+          0.01309202927658942,
+          0.005153913004952866
+        ]
+      },
+      "id": 11,
+      "model": {
+        "deadband": 0.024717754010670712,
+        "delay_s": 0.005153913004952866,
+        "drive_tau_s": 0.020575082634660423,
+        "gain": 5.367790085695497,
+        "release_tau_s": 0.01309202927658942
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.1499280284675499,
+          "model": {
+            "deadband": 0.024717950664932528,
+            "delay_s": 0.0022456720090759876,
+            "drive_tau_s": 0.020674681571695008,
+            "gain": 5.371717450545168,
+            "release_tau_s": 0.013086052521201569
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.1526583810640928,
+          "model": {
+            "deadband": 0.024717560152980572,
+            "delay_s": 0.008061810466562602,
+            "drive_tau_s": 0.020476387469004542,
+            "gain": 5.363897822696701,
+            "release_tau_s": 0.013098099752203933
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    },
+    {
+      "active_parameter_bounds_indices": [],
+      "bound_refinement": null,
+      "evaluations": [
+        {
+          "drive": 0.025,
+          "duration_s": 0.15010055049999999,
+          "metrics": {
+            "final_displacement_error_counts": 0.09766357700913933,
+            "maximum_error_encoder_counts": 0.09766357700913933,
+            "rmse_encoder_counts": 0.07325109654137377,
+            "samples": 44
+          },
+          "run": "pwm-pilot-id12-v1",
+          "split": "train",
+          "stage": 0,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ]
+        },
+        {
+          "drive": 0.05,
+          "duration_s": 0.15017589500000006,
+          "metrics": {
+            "final_displacement_error_counts": -1.410376763659638,
+            "maximum_error_encoder_counts": 1.9083436485572998,
+            "rmse_encoder_counts": 1.2377656230188756,
+            "samples": 43
+          },
+          "run": "pwm-pilot-id12-v1",
+          "split": "held_out_drive",
+          "stage": 1,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.15005853999999985,
+          "metrics": {
+            "final_displacement_error_counts": -0.4567351574837648,
+            "maximum_error_encoder_counts": 1.2914922423935324,
+            "rmse_encoder_counts": 0.6239332726056105,
+            "samples": 44
+          },
+          "run": "pwm-pilot-id12-v1",
+          "split": "train",
+          "stage": 2,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ]
+        },
+        {
+          "drive": 0.15,
+          "duration_s": 0.15679387349999985,
+          "metrics": {
+            "final_displacement_error_counts": 1.3906005152454621,
+            "maximum_error_encoder_counts": 10.090244395949577,
+            "rmse_encoder_counts": 2.321840066332665,
+            "samples": 32
+          },
+          "run": "pwm-pilot-id12-v1",
+          "split": "held_out_drive",
+          "stage": 3,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ]
+        },
+        {
+          "drive": 0.2,
+          "duration_s": 0.15004992350000101,
+          "metrics": {
+            "final_displacement_error_counts": 0.4656084480134965,
+            "maximum_error_encoder_counts": 1.5873448262589918,
+            "rmse_encoder_counts": 0.5894165192629156,
+            "samples": 44
+          },
+          "run": "pwm-pilot-id12-v1",
+          "split": "train",
+          "stage": 4,
+          "temperature_range_c": [
+            52.0,
+            52.0
+          ],
+          "voltage_range_v": [
+            12.0,
+            12.0
+          ]
+        },
+        {
+          "drive": 0.1,
+          "duration_s": 0.05432898749999998,
+          "metrics": {
+            "final_displacement_error_counts": -0.028811523416333803,
+            "maximum_error_encoder_counts": 0.7979478731719836,
+            "rmse_encoder_counts": 0.23685711318264083,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-id12-v1",
+          "split": "held_out_duration_direction",
+          "stage": 0,
+          "temperature_range_c": [
+            46.0,
+            46.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        },
+        {
+          "drive": -0.1,
+          "duration_s": 0.05404617900000008,
+          "metrics": {
+            "final_displacement_error_counts": -1.8992086542490978,
+            "maximum_error_encoder_counts": 1.8992086542490978,
+            "rmse_encoder_counts": 1.5133010880565194,
+            "samples": 28
+          },
+          "run": "pwm-direction-bit10-id12-v1",
+          "split": "held_out_duration_direction",
+          "stage": 1,
+          "temperature_range_c": [
+            46.0,
+            46.0
+          ],
+          "voltage_range_v": [
+            12.2,
+            12.2
+          ]
+        }
+      ],
+      "fit": {
+        "cost": 0.08147662020021244,
+        "evaluations": 108,
+        "history": [
+          {
+            "accepted": true,
+            "cost": 13.567042498390348,
+            "damping": 0.0003333333333333333,
+            "evaluations": 12,
+            "iteration": 0,
+            "projected_gradient": 715.5291929499417
+          },
+          {
+            "accepted": true,
+            "cost": 10.539808139970324,
+            "damping": 0.001,
+            "evaluations": 22,
+            "iteration": 1,
+            "projected_gradient": 426.81824665589113
+          },
+          {
+            "accepted": true,
+            "cost": 1.1084647228555953,
+            "damping": 0.0003333333333333333,
+            "evaluations": 32,
+            "iteration": 2,
+            "projected_gradient": 411.9450158975957
+          },
+          {
+            "accepted": true,
+            "cost": 0.08410626043000148,
+            "damping": 0.0001111111111111111,
+            "evaluations": 43,
+            "iteration": 3,
+            "projected_gradient": 42.7893556985832
+          },
+          {
+            "accepted": true,
+            "cost": 0.08147679128000544,
+            "damping": 0.000037037037037037037,
+            "evaluations": 54,
+            "iteration": 4,
+            "projected_gradient": 6.269201563467594
+          },
+          {
+            "accepted": true,
+            "cost": 0.08147662033301094,
+            "damping": 0.000012345679012345678,
+            "evaluations": 65,
+            "iteration": 5,
+            "projected_gradient": 0.0063418776065801985
+          },
+          {
+            "accepted": true,
+            "cost": 0.08147662020034323,
+            "damping": 4.115226337448559e-6,
+            "evaluations": 76,
+            "iteration": 6,
+            "projected_gradient": 0.00012168057421485523
+          },
+          {
+            "accepted": true,
+            "cost": 0.08147662020021312,
+            "damping": 1.371742112482853e-6,
+            "evaluations": 87,
+            "iteration": 7,
+            "projected_gradient": 6.681570727889996e-6
+          },
+          {
+            "accepted": true,
+            "cost": 0.08147662020021244,
+            "damping": 4.5724737082761767e-7,
+            "evaluations": 98,
+            "iteration": 8,
+            "projected_gradient": 1.5228488040031074e-7
+          },
+          {
+            "accepted": false,
+            "cost": 0.08147662020021244,
+            "damping": 4.5724737082761767e-7,
+            "evaluations": 108,
+            "iteration": 9,
+            "projected_gradient": 6.474795199995498e-9
+          }
+        ],
+        "initial_cost": 72.93023210422031,
+        "rejected_evaluations": 0,
+        "residuals": [
+          8.271071699924662e-7,
+          0.00011719138826340101,
+          0.0003726536880020717,
+          0.00074139639945219,
+          0.0011755104089148998,
+          0.0016410065394792778,
+          0.002165998780505522,
+          0.002721613747616092,
+          0.003293641774995782,
+          0.003861360383742362,
+          0.004426014460753949,
+          0.005017668267430934,
+          0.005614155633415263,
+          0.006216120178929765,
+          0.006813430771789466,
+          0.007416777628753406,
+          0.008018487588453062,
+          0.008616219630945271,
+          0.009215907973270257,
+          0.009815691995280922,
+          0.010431376309467758,
+          0.011033214028837796,
+          0.011636621773635404,
+          0.012248750647978457,
+          0.013903348563703977,
+          0.014205561328262773,
+          0.014395412745357002,
+          0.014516245258358944,
+          0.014592537306981493,
+          0.014640407806382967,
+          0.014669969834843248,
+          0.014689461855076857,
+          0.014702069245939623,
+          0.014709769177828354,
+          0.014714632656673192,
+          0.014717853726209647,
+          0.014719853147166452,
+          0.014721098245965118,
+          0.014721907390609907,
+          0.014722434253695129,
+          0.014722766522458896,
+          0.014722972515987661,
+          0.014723105781246647,
+          0.01472333821014978,
+          0.00021650388099892152,
+          0.023780272822843826,
+          0.0742320734551,
+          0.07107869397001113,
+          0.07611689368290049,
+          0.09638941545197446,
+          0.04049004757553043,
+          0.07341166138803806,
+          0.026860774290720868,
+          -0.017691422342099437,
+          0.021468524624120494,
+          -0.019210991242152507,
+          0.021271764386299484,
+          -0.016023918916868708,
+          -0.05422456425016725,
+          -0.010740635999092763,
+          -0.0490118559016806,
+          -0.004837461807685046,
+          -0.04031918753721436,
+          -0.07746338291169724,
+          -0.03499956334505644,
+          -0.06925759001039598,
+          -0.027315406300509125,
+          -0.06431252115962771,
+          -0.043480772542767575,
+          -0.06172571550834547,
+          -0.10495108305339566,
+          -0.08204414911977137,
+          -0.06374050017985117,
+          -0.05369857805053708,
+          -0.048761275762711435,
+          -0.043667501037979194,
+          -0.04133117236581376,
+          -0.038583516538831165,
+          -0.039439055932025645,
+          -0.038301903854869396,
+          -0.03772064903609801,
+          -0.036977915461840795,
+          -0.03768417084947178,
+          -0.03709964150323176,
+          -0.037191491554800164,
+          -0.036284785078875524,
+          -0.03731340565287517,
+          -0.03663778127663177,
+          0.0003470212232605129,
+          -0.01718421773536961,
+          -0.041562378706060124,
+          -0.03312333029998138,
+          -0.055196578499860316,
+          -0.010204802729618037,
+          -0.007551687730816481,
+          -0.0455859295351327,
+          -0.027966452938530145,
+          -0.007586567630407179,
+          0.01925035852743896,
+          -0.009407429668461309,
+          0.019644947831516796,
+          -0.005206778864389808,
+          0.023725460652079422,
+          0.002578250226099091,
+          0.03383982526651882,
+          0.011401636548926647,
+          -0.009741622055974463,
+          0.023646242441671135,
+          0.00048363690044222313,
+          0.03174529348976094,
+          0.008747842733707772,
+          0.0416434242367906,
+          0.08504882939471842,
+          0.07646406482514759,
+          0.029729768458374186,
+          0.06884387331621164,
+          0.03807516525636773,
+          0.054026082171422,
+          0.008046790707134368,
+          0.014321397894353867,
+          0.01865843618307549,
+          0.021789013008326596,
+          0.022965238560553325,
+          0.02392317603625095,
+          0.023833828024466323,
+          0.02497195482439437,
+          0.025331733965114525,
+          0.025980022269054267,
+          0.02520096251603507,
+          0.025173207509022678,
+          0.02579821163463601,
+          0.026472893205679006
+        ],
+        "termination": "stationary",
+        "values": [
+          5.24588517738919,
+          0.02480444550185238,
+          0.017300634705810808,
+          0.013237417760796434,
+          0.0056633139343020755
+        ]
+      },
+      "id": 12,
+      "model": {
+        "deadband": 0.02480444550185238,
+        "delay_s": 0.0056633139343020755,
+        "drive_tau_s": 0.017300634705810808,
+        "gain": 5.24588517738919,
+        "release_tau_s": 0.013237417760796434
+      },
+      "timing_sensitivity": [
+        {
+          "cost": 0.08141588801136658,
+          "model": {
+            "deadband": 0.024804291703152938,
+            "delay_s": 0.0027841540965419303,
+            "drive_tau_s": 0.01730572021789769,
+            "gain": 5.247150235571933,
+            "release_tau_s": 0.013205442961058769
+          },
+          "observation_assignment": "request"
+        },
+        {
+          "cost": 0.08170323628669811,
+          "model": {
+            "deadband": 0.02480459636723073,
+            "delay_s": 0.0085413718518854,
+            "drive_tau_s": 0.017297539752317983,
+            "gain": 5.2446749345311705,
+            "release_tau_s": 0.013269857398308067
+          },
+          "observation_assignment": "completion"
+        }
+      ]
+    }
+  ],
+  "optimizer": {
+    "difference_step": 0.00001,
+    "gradient_tolerance": 1e-7,
+    "initial_damping": 0.001,
+    "maximum_evaluations": 1200,
+    "maximum_iterations": 100
+  },
+  "schema_version": 1,
+  "source_blake3": "fbae172a6cf673c0c21aff79eff62b4ae8ce0bf2932350992e93a1c1f66eac4c",
+  "split": "Train positive pilot 25/100/200. Hold out pilot 50/150 and separate +/-100 short pulses. Timing perturbation covers serialization window only, not unknown internal sample age.",
+  "weights": "One encoder count plus observed peak speed times half the request/reply window; descriptive scale, not a calibrated noise standard deviation. Each pulse has equal aggregate weight."
+}

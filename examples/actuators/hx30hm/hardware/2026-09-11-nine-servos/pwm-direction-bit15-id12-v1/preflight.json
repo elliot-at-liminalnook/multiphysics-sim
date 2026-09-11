@@ -1,0 +1,92 @@
+{
+  "encoding": "Time-register drive; negative commands require explicit direction_bit in the recorded plan",
+  "intent": "Persist PWM mode on tested servos; finish at zero drive with torque disabled",
+  "plan": {
+    "control": "pwm",
+    "direction_bit": 15,
+    "drive_counts": [
+      100,
+      -100
+    ],
+    "pulse_ms": 50,
+    "rest_ms": 800,
+    "temperature_cutoff_c": 60,
+    "travel_limit_counts": 342
+  },
+  "servos": {
+    "12": {
+      "lock": [
+        1
+      ],
+      "mode": 2,
+      "original_target_time_speed": [
+        66,
+        7,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registers_0_through_39": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        12,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 3.2029518851052186,
+        "position_raw": 2088,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 46,
+        "voltage_raw": 122,
+        "voltage_v": 12.200000000000001
+      },
+      "torque_enable": [
+        0
+      ]
+    }
+  },
+  "timing": "Host-timed pulses, not an autonomous FPGA watchdog. Nonzero drive is not a self-expiring servo command."
+}

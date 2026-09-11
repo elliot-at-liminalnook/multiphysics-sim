@@ -1,0 +1,8 @@
+{
+  "source_url": "https://raw.githubusercontent.com/Hiwonder-official/lerobot-nexarm/main/src/lerobot/motors/feetech/feetech.py",
+  "sha256_full_source": "0460413cd6a641cede015ac19ac53d2cfe9c343af1bd18ed74e1951229f64ff2",
+  "interpretation": "Hiwonder-maintained Feetech implementation specifies PWM direction bit 11. This is a hypothesis for HX-30HM, pending bounded hardware verification; do not infer HX support for every mode in the generic enum.",
+  "gear_ratio_reference": "https://docs.hiwonder.com/projects/LeRobot/en/latest/docs/SO_ARM101_Open_Source_6_Axis_Robotic_Arm_User_Manual.html",
+  "gear_ratio_reported_by_manufacturer": 345,
+  "gear_ratio_measurement_status": "Not independently measured on these nine servos; do not silently replace earlier estimated CAD transmission values."
+}

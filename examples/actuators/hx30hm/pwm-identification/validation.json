@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "source_pulses_verified": 63,
+  "training_pulses": 27,
+  "held_out_pulses": 36,
+  "held_out_passes": 33,
+  "criteria": {
+    "maximum_rmse_counts": 3,
+    "maximum_absolute_final_error_counts": 5
+  },
+  "per_servo": [
+    {
+      "id": 4,
+      "held_out_pulses": 4,
+      "held_out_passes": 4,
+      "all_held_out_within_tolerance": true,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": []
+    },
+    {
+      "id": 5,
+      "held_out_pulses": 4,
+      "held_out_passes": 4,
+      "all_held_out_within_tolerance": true,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": []
+    },
+    {
+      "id": 6,
+      "held_out_pulses": 4,
+      "held_out_passes": 4,
+      "all_held_out_within_tolerance": true,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": []
+    },
+    {
+      "id": 7,
+      "held_out_pulses": 4,
+      "held_out_passes": 4,
+      "all_held_out_within_tolerance": true,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": []
+    },
+    {
+      "id": 8,
+      "held_out_pulses": 4,
+      "held_out_passes": 2,
+      "all_held_out_within_tolerance": false,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": []
+    },
+    {
+      "id": 9,
+      "held_out_pulses": 4,
+      "held_out_passes": 3,
+      "all_held_out_within_tolerance": false,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": []
+    },
+    {
+      "id": 10,
+      "held_out_pulses": 4,
+      "held_out_passes": 4,
+      "all_held_out_within_tolerance": true,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": [
+        4
+      ]
+    },
+    {
+      "id": 11,
+      "held_out_pulses": 4,
+      "held_out_passes": 4,
+      "all_held_out_within_tolerance": true,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": []
+    },
+    {
+      "id": 12,
+      "held_out_pulses": 4,
+      "held_out_passes": 4,
+      "all_held_out_within_tolerance": true,
+      "optimizer_stationary": true,
+      "active_parameter_bounds_indices": []
+    }
+  ],
+  "failures": [
+    {
+      "id": 8,
+      "drive": 0.05,
+      "duration_s": 0.15010535549999915,
+      "metrics": {
+        "final_displacement_error_counts": 6.669526479480645,
+        "maximum_error_encoder_counts": 6.669526479480645,
+        "rmse_encoder_counts": 4.980717695346412,
+        "samples": 44
+      },
+      "run": "pwm-individual-ids4-11-v1",
+      "split": "held_out_drive",
+      "stage": 1,
+      "temperature_range_c": [
+        52,
+        53
+      ],
+      "voltage_range_v": [
+        12.2,
+        12.2
+      ]
+    },
+    {
+      "id": 8,
+      "drive": 0.15,
+      "duration_s": 0.15017921099999754,
+      "metrics": {
+        "final_displacement_error_counts": 3.9486522450821315,
+        "maximum_error_encoder_counts": 3.9587136591566754,
+        "rmse_encoder_counts": 3.010342943633177,
+        "samples": 44
+      },
+      "run": "pwm-individual-ids4-11-v1",
+      "split": "held_out_drive",
+      "stage": 3,
+      "temperature_range_c": [
+        52,
+        53
+      ],
+      "voltage_range_v": [
+        12.2,
+        12.2
+      ]
+    },
+    {
+      "id": 9,
+      "drive": -0.1,
+      "duration_s": 0.05423633850000087,
+      "metrics": {
+        "final_displacement_error_counts": -4.23105076638228,
+        "maximum_error_encoder_counts": 4.738127946164005,
+        "rmse_encoder_counts": 3.8038169447556016,
+        "samples": 28
+      },
+      "run": "pwm-direction-bit10-ids4-11-v1",
+      "split": "held_out_duration_direction",
+      "stage": 1,
+      "temperature_range_c": [
+        47,
+        47
+      ],
+      "voltage_range_v": [
+        12.2,
+        12.3
+      ]
+    }
+  ],
+  "physical_calibration_accepted": false,
+  "acquisition_limits": [
+    {
+      "run": "pwm-pilot-id12-v1",
+      "speed_raw_gcd_counts_per_s": 50,
+      "speed_increment_deg_s": 4.39453125,
+      "maximum_host_read_window_ms": 49.109555999999884
+    },
+    {
+      "run": "pwm-individual-ids4-11-v1",
+      "speed_raw_gcd_counts_per_s": 50,
+      "speed_increment_deg_s": 4.39453125,
+      "maximum_host_read_window_ms": 58.741627999999935
+    }
+  ]
+}

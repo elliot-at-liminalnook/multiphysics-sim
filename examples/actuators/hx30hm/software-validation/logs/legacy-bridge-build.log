@@ -1,0 +1,253 @@
+nextpnr-himbaechel --json impl/bridge_release.json --write impl/bridge_release_pnr.json --device "GW5A-LV25MG121NC1/I0" \
+	  --vopt cst=src/bridge.cst --vopt sspi_as_gpio --freq 50
+Info: Using uarch 'gowin' for device 'GW5A-LV25MG121NC1/I0'
+
+Info: Reading constraints...
+Info: Create constant nets...
+Info: Modify LUTs...
+Info: Pack IOBs...
+Info: Pack I3C IOs...
+Info: Pack MIPI IOs...
+Info: Pack diff IOBs...
+Info: Pack FFs into IO cells...
+Info: Pack IODELAY...
+Info: Pack Input Edge Monitors...
+Info: Pack IO logic...
+Info: Pack DESER16 logic...
+Info: Pack GSR...
+Info: Pack PINCFG...
+Info: Pack HCLK cells...
+Info: Pack DLLDLYs...
+Info: Pack wide LUTs...
+Info: Packed MUX2_LUT8:8, MUX2_LU7:10, MUX2_LUT6:4, MUX2_LUT5:95
+Info: Pack ALUs...
+Info: Pack SSRAMs...
+Info: Constrained 110 LUTFF pairs.
+Info: Pack PLL...
+Info: Pack ADC...
+Info: Pack BSRAMs...
+Info: Pack DSP...
+Info: Pack INV...
+Info: Pack buffered nets...
+Info: Pack EMCU and UserFlash cells...
+Info: Pack UserFlash cells...
+Info: Pack DQCE cells...
+Info: Pack DCS cells...
+Info: Checksum: 0x9876207c
+
+Info: Device utilisation:
+Info: 	                 VCC:       1/      1   100%
+Info: 	                 IOB:       7/    240     2%
+Info: 	                LUT4:    1119/  23040     4%
+Info: 	            IOLOGICI:       0/    230     0%
+Info: 	            IOLOGICO:       0/    230     0%
+Info: 	           MUX2_LUT5:     207/  11520     1%
+Info: 	           MUX2_LUT6:      56/   5760     0%
+Info: 	           MUX2_LUT7:      26/   2880     0%
+Info: 	           MUX2_LUT8:       8/   2880     0%
+Info: 	                 ALU:     166/  17280     0%
+Info: 	                 GND:       1/      1   100%
+Info: 	                 DFF:     730/  23040     3%
+Info: 	               BSRAM:       1/     56     1%
+Info: 	           MULT12X12:       0/     56     0%
+Info: 	        MULTALU27X18:       0/     28     0%
+Info: 	     MULTADDALU12X12:       0/     28     0%
+Info: 	                 GSR:       1/      1   100%
+Info: 	              PINCFG:       1/      1   100%
+Info: 	                OSCA:       0/      1     0%
+Info: 	                PLLA:       0/      6     0%
+Info: 	                 ADC:       0/      1     0%
+Info: 	                BUFG:       0/     18     0%
+Info: 	                 DCS:       0/      8     0%
+Info: 	              CLKDIV:       0/     16     0%
+Info: 	             CLKDIV2:       0/     16     0%
+
+Info: Running custom HCLK placer...
+Info: Placed 0 cells based on constraints.
+Info: Creating initial analytic placement for 1297 cells, random placement wirelen = 71628.
+Info:     at initial placer iter 0, wirelen = 900
+Info:     at initial placer iter 1, wirelen = 719
+Info:     at initial placer iter 2, wirelen = 774
+Info:     at initial placer iter 3, wirelen = 683
+Info: Running main analytical placer, max placement attempts per cell = 675703.
+Info:     at iteration #1, type ALL: wirelen solved = 651, spread = 5168, legal = 11134; time = 0.12s
+Info:     at iteration #2, type ALL: wirelen solved = 914, spread = 4683, legal = 10419; time = 0.12s
+Info:     at iteration #3, type ALL: wirelen solved = 1094, spread = 4335, legal = 9745; time = 0.11s
+Info:     at iteration #4, type ALL: wirelen solved = 1403, spread = 5021, legal = 10259; time = 0.11s
+Info:     at iteration #5, type ALL: wirelen solved = 1503, spread = 6163, legal = 9944; time = 0.09s
+Info:     at iteration #6, type ALL: wirelen solved = 1881, spread = 4237, legal = 9153; time = 0.09s
+Info:     at iteration #7, type ALL: wirelen solved = 1871, spread = 4382, legal = 8643; time = 0.11s
+Info:     at iteration #8, type ALL: wirelen solved = 2041, spread = 4625, legal = 8921; time = 0.10s
+Info:     at iteration #9, type ALL: wirelen solved = 2192, spread = 4187, legal = 8654; time = 0.09s
+Info:     at iteration #10, type ALL: wirelen solved = 2326, spread = 4655, legal = 8494; time = 0.08s
+Info:     at iteration #11, type ALL: wirelen solved = 2455, spread = 4141, legal = 8140; time = 0.10s
+Info:     at iteration #12, type ALL: wirelen solved = 2620, spread = 4609, legal = 8112; time = 0.08s
+Info:     at iteration #13, type ALL: wirelen solved = 2738, spread = 4644, legal = 7695; time = 0.07s
+Info:     at iteration #14, type ALL: wirelen solved = 2866, spread = 4852, legal = 7851; time = 0.07s
+Info:     at iteration #15, type ALL: wirelen solved = 3041, spread = 4623, legal = 7136; time = 0.06s
+Info:     at iteration #16, type ALL: wirelen solved = 3096, spread = 4536, legal = 7156; time = 0.06s
+Info:     at iteration #17, type ALL: wirelen solved = 3119, spread = 5003, legal = 7349; time = 0.06s
+Info:     at iteration #18, type ALL: wirelen solved = 3259, spread = 4343, legal = 6960; time = 0.06s
+Info:     at iteration #19, type ALL: wirelen solved = 3326, spread = 4235, legal = 6845; time = 0.06s
+Info:     at iteration #20, type ALL: wirelen solved = 3355, spread = 6529, legal = 7104; time = 0.05s
+Info:     at iteration #21, type ALL: wirelen solved = 3640, spread = 4362, legal = 6085; time = 0.04s
+Info:     at iteration #22, type ALL: wirelen solved = 3382, spread = 4421, legal = 6325; time = 0.05s
+Info:     at iteration #23, type ALL: wirelen solved = 3505, spread = 6686, legal = 7205; time = 0.04s
+Info:     at iteration #24, type ALL: wirelen solved = 3814, spread = 4733, legal = 6181; time = 0.04s
+Info:     at iteration #25, type ALL: wirelen solved = 3751, spread = 4599, legal = 6191; time = 0.04s
+Info:     at iteration #26, type ALL: wirelen solved = 3715, spread = 4628, legal = 6354; time = 0.05s
+Info: HeAP Placer Time: 2.26s
+Info:   of which solving equations: 0.54s
+Info:   of which spreading cells: 0.13s
+Info:   of which strict legalisation: 1.32s
+
+Info: Running simulated annealing placer for refinement.
+Info:   at iteration #1: temp = 0.000000, timing cost = 134, wirelen = 6085
+Info:   at iteration #5: temp = 0.000000, timing cost = 189, wirelen = 5196
+Info:   at iteration #10: temp = 0.000000, timing cost = 171, wirelen = 4853
+Info:   at iteration #14: temp = 0.000000, timing cost = 131, wirelen = 4757 
+Info: SA placement time 0.68s
+
+Info: Max frequency for clock 'u_hrx.clk': 134.34 MHz (PASS at 50.00 MHz)
+
+Info: Slack histogram:
+Info:  legend: * represents 2 endpoint(s)
+Info:          + represents [1,2) endpoint(s)
+Info: [ 12556,  12915) |*+
+Info: [ 12915,  13274) |+
+Info: [ 13274,  13633) |+
+Info: [ 13633,  13992) | 
+Info: [ 13992,  14351) |+
+Info: [ 14351,  14710) |****+
+Info: [ 14710,  15069) |**************************+
+Info: [ 15069,  15428) |******************************+
+Info: [ 15428,  15787) |************************+
+Info: [ 15787,  16146) |*********************************+
+Info: [ 16146,  16505) |***********************+
+Info: [ 16505,  16864) |************************************************ 
+Info: [ 16864,  17223) |*********************************+
+Info: [ 17223,  17582) |*************************************+
+Info: [ 17582,  17941) |*********************************************+
+Info: [ 17941,  18300) |********************************+
+Info: [ 18300,  18659) |************************************************************ 
+Info: [ 18659,  19018) |**********************************************+
+Info: [ 19018,  19377) |************************+
+Info: [ 19377,  19736) |**********************+
+Info: Checksum: 0xfab878d1
+Info: Routing globals...
+Info:     'u_hrx.clk' net was routed using global resources only.
+
+Info: Routing..
+Info: Setting up routing queue.
+Info: Routing 6281 arcs.
+Info:            |   (re-)routed arcs  |   delta    | remaining|       time spent     |
+Info:    IterCnt |  w/ripup   wo/ripup |  w/r  wo/r |      arcs| batch(sec) total(sec)|
+Info:       1000 |       15        890 |   15   890 |      5299|       0.33       0.33|
+Info:       2000 |       23       1753 |    8   863 |      4307|       0.23       0.56|
+Info:       3000 |       36       2643 |   13   890 |      3321|       0.25       0.81|
+Info:       4000 |       48       3505 |   12   862 |      2336|       0.27       1.08|
+Info:       5000 |       77       4354 |   29   849 |      1368|       0.32       1.40|
+Info:       6000 |      108       5210 |   31   856 |       409|       0.40       1.80|
+Info:       6435 |      130       5577 |   22   367 |         0|       0.18       1.97|
+Info: Routing complete.
+Info: Router1 time 1.97s
+Info: Checksum: 0xdb659953
+
+Info: Critical path report for clock 'u_hrx.clk' (posedge -> posedge):
+Info:       type curr  total name
+Info:   clk-to-q  0.23  0.23 Source pcnt_DFFRE_Q_2.Q
+Info:    routing  0.55  0.78 Net cstate_DFFRE_Q_CE_LUT4_F_I0_LUT4_F_I3[0] (35,3) -> (37,2)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN_ALU_COUT_CIN_ALU_COUT_CIN_ALU_COUT.I1
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.57  1.35 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN_ALU_COUT_CIN_ALU_COUT_CIN_ALU_COUT.COUT
+Info:    routing  0.00  1.35 Net pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN_ALU_COUT_CIN_ALU_COUT_CIN (37,2) -> (37,2)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN_ALU_COUT_CIN_ALU_COUT.CIN
+Info:                          Defined in:
+Info:                               src/bridge.v:193.42-193.53
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/arith_map.v:57.7-63.5
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_sim.v:1033.25-1033.29
+Info:      logic  0.04  1.38 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN_ALU_COUT_CIN_ALU_COUT.COUT
+Info:    routing  0.00  1.38 Net pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN_ALU_COUT_CIN (37,2) -> (37,2)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN_ALU_COUT.CIN
+Info:                          Defined in:
+Info:                               src/bridge.v:193.42-193.53
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/arith_map.v:57.7-63.5
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_sim.v:1033.25-1033.29
+Info:      logic  0.04  1.42 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN_ALU_COUT.COUT
+Info:    routing  0.00  1.42 Net pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT_CIN (37,2) -> (37,2)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT.CIN
+Info:                          Defined in:
+Info:                               src/bridge.v:193.42-193.53
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/arith_map.v:57.7-63.5
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_sim.v:1033.25-1033.29
+Info:      logic  0.04  1.45 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN_ALU_COUT.COUT
+Info:    routing  0.00  1.45 Net pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM_CIN (37,2) -> (38,2)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM.CIN
+Info:                          Defined in:
+Info:                               src/bridge.v:193.42-193.53
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/arith_map.v:57.7-63.5
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_sim.v:1033.25-1033.29
+Info:      logic  0.47  1.92 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_SUM.SUM
+Info:    routing  0.38  2.30 Net pcnt_DFFRE_Q_4_D_LUT2_F_I1[1] (38,2) -> (36,2)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0.I0
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.55  2.85 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0.COUT
+Info:    routing  0.00  2.85 Net pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0_TAIL_ALULC (36,2) -> (36,2)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0_TAIL_ALULC.CIN
+Info:      logic  0.47  3.32 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0_TAIL_ALULC.SUM
+Info:    routing  0.40  3.72 Net pcnt_DFFRE_Q_4_D_LUT2_F_I0[3] (36,2) -> (35,3)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0_COUT_LUT4_I3.I3
+Info:                          Defined in:
+Info:                               src/bridge.v:193.41-193.62
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/arith_map.v:57.7-63.5
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_sim.v:1033.25-1033.29
+Info:      logic  0.37  4.09 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0_COUT_LUT4_I3.F
+Info:    routing  0.40  4.49 Net cstate_DFFRE_Q_CE_LUT4_F_I0_MUX2_LUT5_S0_O[2] (35,3) -> (34,2)
+Info:                          Sink pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0_COUT_LUT4_I3_F_LUT4_I2.I2
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.46  4.96 Source pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0_COUT_LUT4_I3_F_LUT4_I2.F
+Info:    routing  0.55  5.50 Net pcnt_DFFRE_Q_4_D_LUT2_F_I1_ALU_I0_COUT_LUT4_I3_F_LUT4_I2_F (34,2) -> (36,1)
+Info:                          Sink pcnt_DFFRE_Q_4.CE
+Info:      setup  0.04  5.54 Source pcnt_DFFRE_Q_4.CE
+Info: 3.26 ns logic, 2.28 ns routing
+
+Info: Max frequency for clock 'u_hrx.clk': 180.57 MHz (PASS at 50.00 MHz)
+
+Info: Slack histogram:
+Info:  legend: * represents 2 endpoint(s)
+Info:          + represents [1,2) endpoint(s)
+Info: [ 14462,  14706) |***+
+Info: [ 14706,  14950) |+
+Info: [ 14950,  15194) |+
+Info: [ 15194,  15438) | 
+Info: [ 15438,  15682) | 
+Info: [ 15682,  15926) | 
+Info: [ 15926,  16170) |**+
+Info: [ 16170,  16414) |***** 
+Info: [ 16414,  16658) |+
+Info: [ 16658,  16902) |**+
+Info: [ 16902,  17146) |***************+
+Info: [ 17146,  17390) |************************+
+Info: [ 17390,  17634) |************************************************************ 
+Info: [ 17634,  17878) |*********************************************************+
+Info: [ 17878,  18122) |*****************************************+
+Info: [ 18122,  18366) |***************************+
+Info: [ 18366,  18610) |*************+
+Info: [ 18610,  18854) |*******+
+Info: [ 18854,  19098) |**+
+Info: [ 19098,  19342) |+
+
+Info: Program finished normally.
+gowin_pack -d GW5A-25A -o impl/bridge_release.fs --sspi_as_gpio --done_as_gpio --ready_as_gpio impl/bridge_release_pnr.json
+/Users/elliot/.local/opt/oss-cad-suite/lib/python3.11/site-packages/apycula/bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.
+  warnings.warn("Numpy is not available, performance will be degraded.")
+/Users/elliot/.local/opt/oss-cad-suite/lib/python3.11/site-packages/apycula/chipdb.py:241: UserWarning: Msgspec is not available, performance will be degraded.
+  warnings.warn("Msgspec is not available, performance will be degraded.")
+/Users/elliot/.local/opt/oss-cad-suite/lib/python3.11/site-packages/apycula/crc16.py:19: UserWarning: fastcrc is not available, performance will be degraded.
+  warnings.warn("fastcrc is not available, performance will be degraded.")
+Enable spine SPINE16 <- BBDHCLK1 (19, 44) by 5A_PCLK_ENABLE_16 at (18, 44)
+Enable spine SPINE8 <- BBDHCLK1 (19, 45) by 5A_PCLK_ENABLE_08 at (18, 45)
+Enable spine SPINE0 <- BBDHCLK1 (19, 48) by 5A_PCLK_ENABLE_00 at (18, 46)

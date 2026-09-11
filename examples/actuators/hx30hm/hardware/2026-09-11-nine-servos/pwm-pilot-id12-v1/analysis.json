@@ -1,0 +1,142 @@
+{
+  "name": "pwm-pilot-id12-v1",
+  "completed": true,
+  "failure": null,
+  "samples": 776,
+  "segments": [
+    {
+      "id": 12,
+      "stage": 0,
+      "drive_raw": 25,
+      "displacement_including_coast_deg": 0,
+      "peak_reported_speed_during_pulse_deg_s": 0,
+      "final_speed_raw": 0,
+      "samples": 157,
+      "voltage_min_v": 12,
+      "temperature_max_c": 52,
+      "fault_samples": 0
+    },
+    {
+      "id": 12,
+      "stage": 1,
+      "drive_raw": 50,
+      "displacement_including_coast_deg": 1.23046875,
+      "peak_reported_speed_during_pulse_deg_s": 13.183593739523687,
+      "final_speed_raw": 0,
+      "samples": 157,
+      "voltage_min_v": 12,
+      "temperature_max_c": 52,
+      "fault_samples": 0
+    },
+    {
+      "id": 12,
+      "stage": 2,
+      "drive_raw": 100,
+      "displacement_including_coast_deg": 3.33984375,
+      "peak_reported_speed_during_pulse_deg_s": 26.367187479047374,
+      "final_speed_raw": 0,
+      "samples": 158,
+      "voltage_min_v": 12,
+      "temperature_max_c": 52,
+      "fault_samples": 0
+    },
+    {
+      "id": 12,
+      "stage": 3,
+      "drive_raw": 150,
+      "displacement_including_coast_deg": 5.625,
+      "peak_reported_speed_during_pulse_deg_s": 35.15624999116175,
+      "final_speed_raw": 0,
+      "samples": 146,
+      "voltage_min_v": 12,
+      "temperature_max_c": 52,
+      "fault_samples": 0
+    },
+    {
+      "id": 12,
+      "stage": 4,
+      "drive_raw": 200,
+      "displacement_including_coast_deg": 7.646484375,
+      "peak_reported_speed_during_pulse_deg_s": 52.734375015390526,
+      "final_speed_raw": 0,
+      "samples": 158,
+      "voltage_min_v": 12,
+      "temperature_max_c": 52,
+      "fault_samples": 0
+    }
+  ],
+  "final_states": {
+    "12": {
+      "lock": [
+        1
+      ],
+      "mode": [
+        2
+      ],
+      "pwm": [
+        0,
+        0
+      ],
+      "registers_0_through_39": [
+        3,
+        15,
+        0,
+        9,
+        3,
+        12,
+        0,
+        0,
+        1,
+        0,
+        0,
+        255,
+        15,
+        70,
+        140,
+        45,
+        232,
+        3,
+        12,
+        44,
+        47,
+        32,
+        32,
+        0,
+        16,
+        0,
+        1,
+        1,
+        184,
+        11,
+        0,
+        0,
+        0,
+        2,
+        20,
+        200,
+        80,
+        10,
+        200,
+        200
+      ],
+      "telemetry": {
+        "current_a_uncalibrated": 0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 3.163068384620192,
+        "position_raw": 2062,
+        "speed_rad_s": 0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 52,
+        "voltage_raw": 120,
+        "voltage_v": 12
+      },
+      "torque_enable": [
+        0
+      ]
+    }
+  },
+  "method": "Positive PWM pulses, 150 ms requested duration. Displacement includes subsequent coast during zero drive. Peak speed is the largest observed internal speed-register reading, not a calibrated peak or steady-state measurement. Host-timed UART commands; not an FPGA watchdog."
+}

@@ -2,6 +2,12 @@
 
 Measured on 2026-09-11 through the Sipeed Tang Primer 25K FPGA release bridge, USB UART channel B /dev/cu.usbserial-20250303171. Physical chain reported by user as 12→4; responding addresses verified as 4–12. Firmware registers report 3.15 for all nine.
 
+Subsequent authorized motion tests are documented separately in [motion-report.md](motion-report.md), with per-run supply conditions, target trajectories, raw transactions, and final configuration readbacks. The stationary results below retain their original scope.
+
+The user then selected PWM control. All nine passed bounded individual PWM pulses; see [pwm-report.md](pwm-report.md). **Latest verified bench state: IDs 4–12 are configured in PWM mode 2, at zero PWM, with torque disabled and NVS locked.** The earlier position-mode state below is historical. Fast concurrent PWM and an independent FPGA watchdog are not yet validated.
+
+[Subsequent direction tests](pwm-direction-report.md) verified that zero-based bit 10 reverses PWM on all nine units. Bits 11 and 15 were rejected on ID 12. The [full characterization plan](characterization-plan.md) tracks the remaining measurements; commissioning is not completion of the sim-to-real characterization goal.
+
 ## Stationary measurements
 
 4922 valid 15-byte telemetry replies in 30.003 s, 0 failed transactions. Each unit received about 18.2 polls/s, sequentially over the shared bus. All report position mode, zero status flags and zero speed. Reported encoder counts stayed constant on every unit during this window. Reported initial target tracking error spans −3 to +4 counts (−0.264° to +0.352°); this is not a calibrated accuracy measurement.
@@ -36,11 +42,11 @@ Host monotonic request/reply windows include USB buffering and FPGA forwarding. 
 - Unchanged reported position is not proof of zero mechanical motion or absolute encoder accuracy.
 - Current 1 mA/count interpretation is uncalibrated; raw current is retained. Zero internal current does not imply zero servo supply consumption.
 - Targets are initial register readbacks, not independently measured angle references.
-- No speed, acceleration, torque, backlash, inertia, thermal resistance or dynamic controller gains were identified.
+- This stationary acquisition did not identify speed, acceleration, torque, backlash, inertia, thermal resistance or dynamic controller gains. See the separate motion report for subsequent speed and step-response measurements.
 
 ## Next measurements
 
-Motion awaits confirmation that the housings are secured and horns/linkages have clearance. With that established: measure one servo at a time using bounded bidirectional position steps and sinusoidal trajectories, record commanded targets and feedback, restore original RAM settings, and compare speed, rise/settling time, overshoot and tracking lag. Torque/friction and thermal identification additionally need a known external load/lever arm or torque measurement. No servo configuration was written or motion commanded in this acquisition.
+The user subsequently confirmed secured housings and clearance and authorized progressive individual and all-nine concurrent motion. Bounded bidirectional position steps are recorded in the motion report. Torque/friction and thermal identification additionally need a known external load/lever arm or torque measurement. No servo configuration was written or motion commanded during the stationary acquisition itself.
 
 ## Reproduce
 

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "provenance": "User report; not remotely programmed or independently measured",
+  "supply_model": "WANPTEK DPS3010U",
+  "current_limit_a_user_reported": 1.0,
+  "voltage_v_prior_user_report": 11.01,
+  "voltage_instruction": "Keep voltage setting unchanged at approximately 11.0 V",
+  "cv_cc_indicator_during_run": "User corrected earlier statement: CV indicator was lit",
+  "comparison_run": "progressive-individual-v1",
+  "started_note_utc": "2026-09-11T16:07:10.558742+00:00",
+  "voltage_changed_during_run_user_report_v": 13.0,
+  "voltage_change_host_time_unknown": true,
+  "stop_reason": "User reported 13 V above manufacturer 12.6 V maximum; operator STOP requested and process terminated normally through recovery",
+  "comparison_validity": "Interrupted run with unsynchronized voltage change; do not treat as a constant-voltage 1 A comparison",
+  "correction_recorded_utc": "2026-09-11T16:08:18.212242+00:00"
+}

@@ -1,0 +1,14 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 33.51s

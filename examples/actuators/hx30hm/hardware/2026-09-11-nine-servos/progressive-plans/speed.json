@@ -1,0 +1,9 @@
+{"temperature_cutoff_c":60,"stages":[
+{"name":"small-slow","amplitude_counts":57,"speed_counts_s":300,"dwell_s":1.0,"repetitions":1},
+{"name":"moderate","amplitude_counts":171,"speed_counts_s":600,"dwell_s":1.2,"repetitions":1},
+{"name":"wide","amplitude_counts":342,"speed_counts_s":1200,"dwell_s":1.2,"repetitions":1},
+{"name":"fast","amplitude_counts":683,"speed_counts_s":2400,"dwell_s":1.4,"repetitions":1},
+{"name":"near-ceiling","amplitude_counts":683,"speed_counts_s":3200,"dwell_s":1.4,"repetitions":1},
+{"name":"ceiling-check","amplitude_counts":683,"speed_counts_s":4000,"dwell_s":1.4,"repetitions":1},
+{"name":"long-ceiling-repeat","amplitude_counts":1024,"speed_counts_s":6000,"dwell_s":1.6,"repetitions":2}
+]}

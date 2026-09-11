@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "capture": "command-motion.capture.json.gz",
+  "frames": 4501,
+  "duration_s": 90,
+  "positive_overlap_frames": 1713,
+  "maximum_sampled_inter_link_penetration_m": 0.00018894231641632489,
+  "pairs": [
+    {
+      "links": [
+        "+Y | Hip output shaft and pulley",
+        "+Y | Thigh sector gear"
+      ],
+      "hits": 103,
+      "maximum_penetration_m": 0.00018894231641632489,
+      "frames": 103
+    },
+    {
+      "links": [
+        "-X | Hip motor pulley and shaft 3090",
+        "Robot | Chassis and hip mounts"
+      ],
+      "hits": 1632,
+      "maximum_penetration_m": 0.00008125348122208443,
+      "frames": 1632
+    },
+    {
+      "links": [
+        "+X | Hip output shaft and pulley b6c0",
+        "+X | Thigh sector gear"
+      ],
+      "hits": 78,
+      "maximum_penetration_m": 0.000004523642127898363,
+      "frames": 78
+    }
+  ],
+  "report": {
+    "path": "geometry-motion-audit.json.gz",
+    "uncompressed_sha256": "507f7fc340d3e7fd91ae5629e5fc17854933165669d86c24636d94c6bf7e925e",
+    "uncompressed_bytes": 14545392,
+    "compressed_bytes": 1616058
+  },
+  "checks": {
+    "pairs_and_summary_modes_exact": true,
+    "legacy_partial_capture_matches_selected_frames": true
+  },
+  "scope": "Read-only shared geometry inspection of the preserved baseline command trajectory, including contacts omitted from its dynamics profile. Compiled surface samples/SDF and authored neighbour exclusions apply. No continuous-time or exact CAD collision certificate; tiny sampled overlaps do not independently establish physical interference or clearance."
+}

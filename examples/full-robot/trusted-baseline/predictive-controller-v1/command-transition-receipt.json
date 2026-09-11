@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "path": "command-transitions.jsonl.gz",
+  "uncompressed_sha256": "73c8feea4e9fbef6815c46f8ecefa2a3c31f2d8fa3f0f902e34adaa73c24e7a2",
+  "uncompressed_bytes": 8947422,
+  "compressed_bytes": 3008516,
+  "rows": 4501,
+  "input_materialization": {
+    "source": "runs/trusted-baseline-v1/command-response.input.json",
+    "bundle": "forecast-bundle.json",
+    "actor": "candidate-iteration001.actor.json"
+  },
+  "scope": "Full measured transition/action stream. Reconstruct input with the shared materializer and preserved baseline command recipe."
+}

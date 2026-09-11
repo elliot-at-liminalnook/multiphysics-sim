@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "kind": "planned_command_benchmark",
+  "source": "examples/full-robot/trusted-baseline/fastest573.input.json",
+  "preset": "examples/full-robot/trusted-baseline/keyboard-preset.json",
+  "protocol": "examples/full-robot/trusted-baseline/command-protocol.json",
+  "input_sha256": "3e972980cf1b44f6826da50b59c8153655397f8e9a585f3f5c18b06ef7f93b38",
+  "duration_s": 90,
+  "stages": [
+    {
+      "name": "forward_start",
+      "duration_s": 20,
+      "keys": [
+        "w"
+      ],
+      "start_s": 0,
+      "end_s": 20,
+      "requested_motion": [
+        0.23676486909409844,
+        0,
+        0.1031773451737574
+      ]
+    },
+    {
+      "name": "brake",
+      "duration_s": 10,
+      "keys": [],
+      "start_s": 20,
+      "end_s": 30,
+      "requested_motion": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "forward_restart",
+      "duration_s": 10,
+      "keys": [
+        "w"
+      ],
+      "start_s": 30,
+      "end_s": 40,
+      "requested_motion": [
+        0.23676486909409844,
+        0,
+        0.1031773451737574
+      ]
+    },
+    {
+      "name": "left_while_walking",
+      "duration_s": 10,
+      "keys": [
+        "w",
+        "a"
+      ],
+      "start_s": 40,
+      "end_s": 50,
+      "requested_motion": [
+        0.23676486909409844,
+        0,
+        0.2031773451737574
+      ]
+    },
+    {
+      "name": "right_while_walking",
+      "duration_s": 10,
+      "keys": [
+        "w",
+        "d"
+      ],
+      "start_s": 50,
+      "end_s": 60,
+      "requested_motion": [
+        0.23676486909409844,
+        0,
+        0.0031773451737573954
+      ]
+    },
+    {
+      "name": "reverse",
+      "duration_s": 20,
+      "keys": [
+        "s"
+      ],
+      "start_s": 60,
+      "end_s": 80,
+      "requested_motion": [
+        -0.23676486909409844,
+        0,
+        -0.1031773451737574
+      ]
+    },
+    {
+      "name": "stop",
+      "duration_s": 10,
+      "keys": [],
+      "start_s": 80,
+      "end_s": 90,
+      "requested_motion": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "changes": [
+    "runtime.config.steps",
+    "runtime.completed_steps",
+    "runtime.scene.duration_s",
+    "runtime.input_events",
+    "task.observations: read-only projected body axis"
+  ],
+  "scope": "Matched original WASD protocol, robot, world, task observations, seeds and timestep. Only the explicit predictive residual policy is attached through the shared materializer.",
+  "baseline_spec": "runs/trusted-baseline-v1/command-response.input.json.spec.json",
+  "predictive_actor": "examples/full-robot/trusted-baseline/predictive-controller-v1/candidate-iteration001.actor.json"
+}

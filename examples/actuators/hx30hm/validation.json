@@ -1,0 +1,86 @@
+{
+  "scope": "Simulation acceptance thresholds for this uncalibrated fixture, not hardware accuracy bounds. Thresholds selected after exploratory runs; no independent holdout claim.",
+  "checks": [
+    {
+      "name": "failed_or_incomplete_cases",
+      "value": 0,
+      "limit": 0,
+      "passed": true
+    },
+    {
+      "name": "no_load_relative_speed_error",
+      "value": 7.682743330406083e-14,
+      "limit": 0.01,
+      "passed": true
+    },
+    {
+      "name": "stall_relative_torque_error",
+      "value": 0.00009432780310292266,
+      "limit": 0.01,
+      "passed": true
+    },
+    {
+      "name": "step_final_angle_timestep_delta_rad",
+      "value": 0.0000034648957376592904,
+      "limit": 0.001,
+      "passed": true
+    },
+    {
+      "name": "sine_gain_timestep_delta",
+      "value": 0.0002962157336721116,
+      "limit": 0.005,
+      "passed": true
+    },
+    {
+      "name": "sine_phase_timestep_delta_deg",
+      "value": 0.022467034256322904,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "name": "startup_peak_current_relative_timestep_delta",
+      "value": 0.002548597273229869,
+      "limit": 0.01,
+      "passed": true
+    },
+    {
+      "name": "thermal_winding_timestep_delta_c",
+      "value": 0.0020327034090996676,
+      "limit": 0.1,
+      "passed": true
+    },
+    {
+      "name": "sine_f2_aligned_quantization_error_rad",
+      "value": 0.0007669775999999962,
+      "limit": 0.0007669913939428206,
+      "passed": true
+    },
+    {
+      "name": "encoder_period0.005_aligned_quantization_error_rad",
+      "value": 0.0007646159000000013,
+      "limit": 0.0007669913939428206,
+      "passed": true
+    },
+    {
+      "name": "encoder_period0.02_aligned_quantization_error_rad",
+      "value": 0.000759333299999998,
+      "limit": 0.0007669913939428206,
+      "passed": true
+    }
+  ],
+  "library_test_suites": [
+    {
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "passed": 2,
+      "failed": 0
+    }
+  ],
+  "all_passed": true
+}

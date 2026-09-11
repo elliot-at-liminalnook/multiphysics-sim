@@ -54,7 +54,7 @@ fn residual(motor: &dyn Behavior, x: &[f64], rates: &[f64], voltage: f64) -> [f6
         &mut signals,
     ));
     assert!((signals[1] - (50.0 * x[2] + 0.1 * x[1])).abs() < 1e-12);
-    assert!((-through[4] - 2.0 * x[0] * x[0]).abs() < 1e-12);
+    assert!((-through[4] - 2.0 * x[0] * x[0] - 0.1*x[1]*x[1]).abs() < 1e-12);
     residual
 }
 

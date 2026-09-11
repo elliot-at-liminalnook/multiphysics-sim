@@ -1,0 +1,65 @@
+{
+  "driver": {
+    "current_limit": 3,
+    "kind": "servo_internal",
+    "on_resistance": 0.05,
+    "pwm_hz": 50
+  },
+  "electrical": {
+    "back_emf_constant": 2.0139466498848435,
+    "current_limit": 3,
+    "inductance": 0.00148,
+    "no_load_current": 0.1,
+    "poles": 0,
+    "resistance": 3.6999999999999997,
+    "rotor_inertia": 2.2324546035565207e-8,
+    "supply_voltage": 11.1,
+    "torque_constant": 0.980665
+  },
+  "firmware": {
+    "deadband_rad": 0,
+    "kd": 2.543932610380855,
+    "ki": 0,
+    "kind": "servo",
+    "kp": 127.19663051904276,
+    "latency_s": 0.001,
+    "loop_rate_hz": 1000,
+    "output": "voltage",
+    "sensor_resolution_rad": 0.0015339807878856412
+  },
+  "gear_ratio": 1,
+  "gearbox": {
+    "backlash_rad": 0,
+    "efficiency": 1,
+    "inertia": 2.2324546035565207e-8,
+    "max_output_speed": 5.5115660589294615,
+    "max_output_torque": 2.941995,
+    "ratio": 1,
+    "stiffness": 50
+  },
+  "id": "0702845b41d3",
+  "joint": "-Y | Hip servo output",
+  "mount_point": [
+    0,
+    -0.0633937,
+    0.024
+  ],
+  "mounted_on": "Robot | Chassis and hip mounts",
+  "name": "-Y · Hip swing (belt) · HX-30HM",
+  "shaft_axis": [
+    0,
+    0,
+    -1
+  ],
+  "spec": "hx30hm",
+  "thermal": {
+    "case_heat_capacity": 41.184000000000005,
+    "max_winding_c": 110,
+    "r_case_ambient": 45,
+    "r_case_mount": 6,
+    "r_winding_case": 12,
+    "resistance_temp_coeff": 0.0039,
+    "torque_derating_per_c": 0.0012,
+    "winding_heat_capacity": 2.4024
+  }
+}

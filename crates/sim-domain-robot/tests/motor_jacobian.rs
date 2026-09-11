@@ -272,3 +272,34 @@ fn discontinuous_backlash_damping_can_leave_an_implicit_step_without_a_root() {
     // Therefore zero lies in the residual jump, not on a physical branch.
     // More Newton iterations or a different Jacobian cannot supply that root.
 }
+
+#[test]
+fn reciprocal_motor_accounts_for_heat_and_stored_energy_in_both_power_directions() {
+    let mut registry = BehaviorRegistry::default();
+    sim_domain_robot::register(&mut registry).unwrap();
+    let parameters: BTreeMap<String, f64> = [
+        ("resistance", 2.), ("inductance", 0.003), ("torque_constant", 0.8),
+        ("back_emf_constant", 0.8), ("derating", 0.), ("temp_coeff", 0.),
+        ("ratio", 3.), ("efficiency", 0.73), ("no_load_current", 0.1),
+        ("rotor_inertia", 0.02), ("gear_inertia", 0.01),
+        ("gear_stiffness", 50.), ("gear_damping", 0.1), ("gear_friction", 0.03),
+    ].into_iter().map(|(k,v)|(k.into(),v)).collect();
+    let motor = registry.get(&sim_domain_robot::MOTOR_UNIT.into()).unwrap().equations.unwrap()(&parameters).unwrap();
+    for current in [-2., 2.] {
+        let mut x = [current, 7., 0.2, 12., 0., 0.1, 0., 293.15, 0., 0., 0., 0., 0., 0.5, 0., 0.];
+        let r = residual(&*motor, &x);
+        x[8] = -r[0]/0.003;
+        x[9] = -r[1]/((0.02*9.+0.01)/3.);
+        x[10] = -r[2];
+        let r = residual(&*motor,&x);
+        assert!(r[..3].iter().all(|v|v.abs()<1e-10));
+        let input_power = 12.*current + r[5]*x[13] + r[7];
+        let h = 1e-7;
+        let mut before=x; let mut after=x;
+        for k in 0..3 { before[k]-=h*x[8+k];after[k]+=h*x[8+k]; }
+        before[5]-=h*x[13];after[5]+=h*x[13];
+        let storage_rate=(motor.energy(&view(&after))-motor.energy(&view(&before)))/(2.*h);
+        assert!((input_power-storage_rate).abs()<1e-6,"current={current}: net input {input_power}, storage {storage_rate}");
+        assert!(r[7]<0.,"motor must emit dissipated heat");
+    }
+}

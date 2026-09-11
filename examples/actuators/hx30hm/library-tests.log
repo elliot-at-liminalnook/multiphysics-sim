@@ -1,0 +1,40 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+   Compiling sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator/crates/sim-dynamics)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Finished `release` profile [optimized] target(s) in 1m 06s
+     Running tests/motor.rs (/Users/elliot/physics-simulator-gait-exploration/target/release/deps/motor-fdcf2f9ce47d20de)
+
+running 5 tests
+test actuator_discovery_declares_units_defaults_and_rejects_invalid_values ... ok
+test backlash_opens_a_dead_zone ... ok
+test stall_torque_and_no_load_speed_match_the_spec ... ok
+test winding_heats_with_the_thermal_time_constant ... ok
+test battery_bridge_and_firmware_drive_a_motor ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/motor_jacobian.rs (/Users/elliot/physics-simulator-gait-exploration/target/release/deps/motor_jacobian-8985b8dc669edc58)
+
+running 7 tests
+test discontinuous_backlash_damping_can_leave_an_implicit_step_without_a_root ... ok
+test zero_backlash_keeps_the_spring_derivative_at_zero_deflection ... ok
+test exact_motor_partials_require_explicit_opt_in ... ok
+test backlash_probe_crossing_reproduces_false_stiffness_but_local_derivative_is_zero ... ok
+test reciprocal_motor_accounts_for_heat_and_stored_energy_in_both_power_directions ... ok
+test quasistatic_motor_partials_match_each_reduced_equation ... ok
+test all_motor_partials_match_independent_differences_in_smooth_modes ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/motor_reduction.rs (/Users/elliot/physics-simulator-gait-exploration/target/release/deps/motor_reduction-887b04b2c3d1eabd)
+
+running 2 tests
+test quasistatic_transmission_keeps_compliance_and_converges_to_its_relaxation_law ... ok
+test each_motor_reduction_matches_an_independent_linear_circuit_and_rotor_step ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

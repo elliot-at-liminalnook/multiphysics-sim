@@ -253,9 +253,15 @@ impl Behavior for MotorUnit {
         ctx.set_state_residual(Self::W, inertia_torque - self.ratio * eta * tau_m + tau_c + gear_friction);
         ctx.set_state_residual(Self::TH, ctx.state_rate(Self::TH) - w_g);
         ctx.add_through(2, -tau_c);
-        // Heat: copper loss plus gear loss.
-        let gear_loss = ((1.0 - self.efficiency) * (self.ratio * tau_m * w_g).abs()).max(0.0) + (gear_friction * w_g).abs();
-        ctx.add_through(3, -(r * i * i + gear_loss));
+        // All modeled mechanical dissipation returns to the lumped thermal
+        // port. Use the same directional efficiency as the torque equation,
+        // including when a load back-drives the motor.
+        let gear_loss = ((1.0 - eta) * power).abs() + (gear_friction * w_g).abs();
+        let engaged = if self.event_backlash {
+            self.mode(ctx.state(Self::MODE), th_g-th_s) != 0.0
+        } else { self.backlash <= 0.0 || (th_g-th_s).abs() > 0.5*self.backlash };
+        let coupling_loss = self.gear_c * if engaged { 1.0 } else { 0.05 } * (w_g-w_s).powi(2);
+        ctx.add_through(3, -(r * i * i + loss*w_r + gear_loss + coupling_loss));
         ctx.set_signal(0, i);
         ctx.set_signal(1, tau_c);
         ctx.set_signal(2, w_g);
@@ -335,11 +341,16 @@ impl Behavior for MotorUnit {
         ] {
             let dp = dtau*wr+tau*dwr;
             out.set(Output::State(Self::W),input,-self.ratio*(eta*dtau+tau*deta_dp*dp)+dfriction*dwr);
+            let dloss = kt*di + i*if matches!(input, Input::Across(3,0)) { dkt } else { 0.0 } - dtau;
             let dheat = dresistance*i*i+2.0*r*i*di
-                +(1.0-self.efficiency)*power.signum()*dp
+                + dloss*wr + self.no_load_current*kt*loss_tanh*dwr
+                + ((1.0-eta)*power).signum()*((1.0-eta)*dp-deta_dp*dp*power)
                 +(friction*wg).signum()*(dfriction*wg+friction/self.ratio)*dwr;
             out.through(3,input,-dheat);
         }
+        let relative_speed = wg-view.across_rates[view.offsets[2]];
+        out.through(3,Input::State(Self::W),-2.0*damping*relative_speed/self.ratio);
+        out.through(3,Input::AcrossDerivative(2,0),2.0*damping*relative_speed);
         for (input,value) in [
             (Input::State(Self::TH),stiffness),
             (Input::Across(2,0),-stiffness),
@@ -354,9 +365,12 @@ impl Behavior for MotorUnit {
     }
     fn energy(&self, view: &View) -> f64 {
         let w = view.state(Self::W);
-        let kinetic = if self.quasistatic_rotor { 0.0 } else { 0.5 * self.rotor_inertia * w * w };
+        let kinetic = if self.quasistatic_rotor { 0.0 } else {
+            0.5 * (self.rotor_inertia + self.gear_inertia/self.ratio.powi(2)) * w * w
+        };
         let magnetic = if self.quasistatic_winding { 0.0 } else { 0.5 * self.inductance * view.state(Self::I).powi(2) };
-        kinetic + magnetic
+        let gap = dead_zone(view.state(Self::TH)-view.across(2),0.5*self.backlash);
+        kinetic + magnetic + 0.5*self.gear_k*gap*gap
     }
 }
 

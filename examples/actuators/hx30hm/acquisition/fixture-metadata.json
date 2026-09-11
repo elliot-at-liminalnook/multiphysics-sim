@@ -1,0 +1,17 @@
+{
+  "source": "Synthetic UART bytes emitted by the Verilog capture_tb test, not hardware measurements",
+  "generator": "sipeed-tang-primer-25k/servo/tb/capture_tb.v",
+  "expected_transactions": 35,
+  "expected_records": 10,
+  "expected_fpga_drops": 25,
+  "injected_failures": [
+    "bad reply",
+    "timeout",
+    "FIFO overflow",
+    "unset unused reply lanes"
+  ],
+  "voltage_v": null,
+  "attached_inertia_kg_m2": null,
+  "load_torque_nm": null,
+  "expected_command_requests": 1
+}

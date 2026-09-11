@@ -1,0 +1,59 @@
+{
+  "baud": 1000000,
+  "command": "Write transactions are requests with reply status, not measured instant of actuator application. Preserve request bytes even for timeout.",
+  "completed": true,
+  "created_unix_ns": 1789134557198565000,
+  "current": "Internal current register from prior bench notes, not independently calibrated total supply current.",
+  "device": null,
+  "elapsed_host_s": 0.090883979,
+  "experiment": {
+    "attached_inertia_kg_m2": null,
+    "expected_command_requests": 1,
+    "expected_fpga_drops": 25,
+    "expected_records": 10,
+    "expected_transactions": 35,
+    "generator": "sipeed-tang-primer-25k/servo/tb/capture_tb.v",
+    "injected_failures": [
+      "bad reply",
+      "timeout",
+      "FIFO overflow",
+      "unset unused reply lanes"
+    ],
+    "load_torque_nm": null,
+    "source": "Synthetic UART bytes emitted by the Verilog capture_tb test, not hardware measurements",
+    "voltage_v": null
+  },
+  "input_file": "examples/actuators/hx30hm/acquisition/fixture.bin",
+  "logger_source_blake3": "4d0685d17cc17703ff291c1b1f99d5f617424036058f1ceffc71931a81616318",
+  "position": "Unsigned 16-bit raw register preserved. SI angle has no zero calibration or rollover unwrapping; never silently assume a 4096-count wrap.",
+  "quality": {
+    "clock_resets": 0,
+    "decoder": {
+      "crc_errors": 0,
+      "discarded_bytes": 0,
+      "frames": 10,
+      "invalid_lengths": 0,
+      "partial_frames_discarded": 0
+    },
+    "duplicate_ids": 0,
+    "failed_transactions": 2,
+    "invalid_records": 0,
+    "max_device_dropped_total": 25,
+    "observations": 7,
+    "records": 10,
+    "transaction_gaps": 25,
+    "transport_sequence_gaps_mod256": 0
+  },
+  "read_error": null,
+  "requested_duration_s": 10.0,
+  "resampling": "None. Separate reads remain separate records. This long-form log is not direct input to the legacy uniform-time fitter.",
+  "runtime_identity": {
+    "features": [],
+    "library_source_blake3": "2d9c0e252f77f6c1e4bdc92e0b7d76f9304ad199ad3df8dfe5efa1bfb253498e",
+    "version": 1
+  },
+  "source": "offline_wire_replay",
+  "timing": "FPGA request acceptance and reply completion bracket bus acquisition; internal servo sensor age is unknown. Host arrival time is not sample time.",
+  "version": 1,
+  "wire_blake3": "fa6e5aaf00d1288b6ce0bdf4c12d47b4ef193ec748fabfe43c0c775922ed3bb6"
+}

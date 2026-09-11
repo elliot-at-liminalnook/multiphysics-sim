@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "artifacts": [
+    {
+      "path": "h1.model.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h1-model/model.json",
+      "bytes": 411575,
+      "sha256": "4aec9c79ca496fe7b8383df8092be9969f14a953051c87d29b9bc4a7763215bf"
+    },
+    {
+      "path": "h1.training.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h1-experiment.json",
+      "bytes": 6160,
+      "sha256": "ac8bd3836f7d053bc3736ec26f30193107caf0ccc8cb038f48336a041598994c"
+    },
+    {
+      "path": "h1.training-report.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h1-model/report.json",
+      "bytes": 15006,
+      "sha256": "aac1328c9bed81377d269e72cb5adabdefbb9c60554789b7afdbd40cba068a00"
+    },
+    {
+      "path": "h1.validation.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h1-evaluation.json",
+      "bytes": 20765,
+      "sha256": "90c5fe53a83b1160e7cd8f702287fcca609e4af9f7fb85534a0c8d92c910be42"
+    },
+    {
+      "path": "h5.model.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h5-model/model.json",
+      "bytes": 484297,
+      "sha256": "c8e3758451e85eaa2d9774aa7a451714e5ed4e14caa450d57a08b1428be0e18b"
+    },
+    {
+      "path": "h5.training.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h5-experiment.json",
+      "bytes": 6160,
+      "sha256": "c2d869ca650bf153103ad5cb541293e308e4bc836470bb75ec79971393398f50"
+    },
+    {
+      "path": "h5.training-report.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h5-model/report.json",
+      "bytes": 14895,
+      "sha256": "7321eb5c6d69214d3b0ab36edd61cfec6baf8960bf4e4a4088cdab0a196cca73"
+    },
+    {
+      "path": "h5.validation.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h5-evaluation.json",
+      "bytes": 20585,
+      "sha256": "4f55c5cc12dc04e7a435bdd265a0f08fb24e0dc975abb2ef088b0ccae2dd6280"
+    },
+    {
+      "path": "h10.model.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h10-model/model.json",
+      "bytes": 574607,
+      "sha256": "f812b8bb4adc27f8c6f934adfbfade1572d4a09a0f4c8f894161e0b874bc8b04"
+    },
+    {
+      "path": "h10.training.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h10-experiment.json",
+      "bytes": 6161,
+      "sha256": "4ce24a2d6c5206507a8cc91859a0a11c34f91ea65d819f5cac400f74ea84a995"
+    },
+    {
+      "path": "h10.training-report.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h10-model/report.json",
+      "bytes": 14975,
+      "sha256": "9ca9a8079d96a51dd0d9a88bc457d91c916b87d1fc96d994a6d1076e90c9d9f8"
+    },
+    {
+      "path": "h10.validation.json",
+      "source": "runs/trusted-baseline-v1/actuator-v2-h10-evaluation.json",
+      "bytes": 20653,
+      "sha256": "64d946b010cd57a13af44686e7d14ef50078a972079571bb8b8b95e9e769edd8"
+    },
+    {
+      "path": "forecast-bundle.json",
+      "source": "runs/trusted-baseline-v1/predictive-actor/input.json#/runtime/config/policy/trajectory_forecast",
+      "bytes": 1470491,
+      "sha256": "9de995f7221cf93aee78cf031f8c45a9730fc7afefb7d782be6f22046995be3e"
+    },
+    {
+      "path": "initial-actor.json",
+      "source": "runs/trusted-baseline-v1/predictive-actor/actor.json",
+      "bytes": 463471,
+      "sha256": "c89e31773f2225b06ef5a9ecdac30ef0aac80bb5900514cd50ecee88fc7c30c6"
+    },
+    {
+      "path": "preparation.json",
+      "source": "runs/trusted-baseline-v1/predictive-actor/preparation.json",
+      "bytes": 784584,
+      "sha256": "f8dbeeeb6aacab6595ac15a72b048dba798a8cf1bf3966f9f63fd071f23465c6"
+    },
+    {
+      "path": "neutral-startup-check.json",
+      "source": "runs/trusted-baseline-v1/predictive-neutral-check.json",
+      "bytes": 233,
+      "sha256": "c0edb8b0bb2f3fb53d53223cd3b9c465311aa5218fbc6c02ed388bcb45278f26"
+    },
+    {
+      "path": "neutral-20s-evaluation.json",
+      "source": "runs/trusted-baseline-v1/predictive-ppo/baseline.json",
+      "bytes": 1963,
+      "sha256": "42cc262583cffcc382457a5b755d296368bff5968ac79dfccd0a9204ca724431"
+    },
+    {
+      "path": "ppo-experiment.json.gz",
+      "source": "runs/trusted-baseline-v1/predictive-ppo-experiment.json",
+      "bytes": 4405449,
+      "sha256": "8de2b459a25bc890307783b3c5f58742baabff29866eefc9298aa7194c56c010"
+    }
+  ],
+  "ppo_experiment_uncompressed_sha256": "04c351406aaeb27cf80d7d5ebc795f5dc975253a59870269d215f8c8865791f8",
+  "forecast_evaluations": [
+    {
+      "horizon_s": 0.02,
+      "samples": 998,
+      "normalized_mse": {
+        "constant_acceleration": 0.753407925737088,
+        "constant_velocity": 0.6282767080649356,
+        "last_observation": 3.9391563255293263,
+        "learned": 0.14146167429001283
+      }
+    },
+    {
+      "horizon_s": 0.1,
+      "samples": 994,
+      "normalized_mse": {
+        "constant_acceleration": 0.7595955013431204,
+        "constant_velocity": 0.2459043534057053,
+        "last_observation": 0.43446871406117776,
+        "learned": 0.1109955095519631
+      }
+    },
+    {
+      "horizon_s": 0.2,
+      "samples": 989,
+      "normalized_mse": {
+        "constant_acceleration": 0.7384554903607811,
+        "constant_velocity": 0.1543048016953772,
+        "last_observation": 0.27861766432042695,
+        "learned": 0.07539622202812597
+      }
+    }
+  ],
+  "training_capture": "../command-motion.capture.json.gz",
+  "training_capture_uncompressed_sha256": "0e1e0a47dfe450e78ee41a6ed90dd06328d0f0d5c4fedc5d73c9f8aceb09fbe6",
+  "actor": {
+    "inputs": 519,
+    "outputs": 12,
+    "initial_output": "Exactly zero residual; output envelope comes from existing software actuator bounds.",
+    "observation_source": "ideal_runtime_teacher_only"
+  },
+  "scope": "Chronological forecast development split within one 90 s episode. Models predict position, velocity and finite-interval acceleration conditioned on applied actuator targets. Runtime actor receives command inputs, observed dynamics and forecasts of the baseline controller proposal before its neural correction. Neutral 20 s mean preserves baseline exactly. Learned closed-loop comparison remains pending."
+}

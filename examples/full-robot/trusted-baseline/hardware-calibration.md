@@ -33,14 +33,15 @@ cannot consume them. Its simple CSV reader lacks robust missing-data validation;
 incomplete or nonfinite rows must not be treated as measured zeros.
 
 This fitter adjusts joint Coulomb/viscous friction, drive backlash, structural
-joint stiffness and selected motor torque constants. It does not identify the
+joint stiffness and paired motor torque/back-EMF constant scales. It does not identify the
 fast profile's no-load speed, stall torque, effective servo stiffness/damping,
-firmware delay, or floor material coefficients. An existing mismatch must also
-be resolved before relying on its motor fit: optimization scales both torque and
-back-EMF constants, while saved identification application scales only the torque
-constant. These findings come from `read_log`, `apply_fit` and `fit` in
-`crates/sim-runtime/src/physical.rs`, and `apply_identification` in
-`crates/sim-domain-robot/src/model.rs`; no hardware fit was run or accepted.
+firmware delay, or floor material coefficients. Motor fits now explicitly save
+both `torque_constant_scale` and `back_emf_constant_scale`, preserving the
+constants used by the optimizer. Legacy torque-only fits keep their previous
+meaning. Serialization, CAD persistence and runtime replay are checked with
+synthetic fixtures; no hardware fit has been run or accepted. The implementation
+is in `crates/sim-runtime/src/physical.rs` and
+`crates/sim-domain-robot/src/model.rs`.
 
 Accepted measured properties belong in CAD with source logs and uncertainty.
 The existing `ops.apply_identification(path)` / `POST /identification/apply`

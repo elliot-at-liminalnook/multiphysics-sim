@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "simulation baseline and requested measurements complete",
+      "evidence": [
+        "sustained-result.json",
+        "timestep-sustained-result.json",
+        "command-response-result.json",
+        "motion-sampling-audit.json"
+      ],
+      "limits": "No numerical convergence or hardware-accuracy certificate; fall checks are sampled."
+    },
+    {
+      "number": 2,
+      "status": "incomplete: actual hardware measurements required",
+      "evidence": [
+        "physical-audit.json",
+        "sensitivity-initial-result.json",
+        "material-sensitivity-result.json",
+        "transmission-motion-audit.json",
+        "geometry-motion-summary.json",
+        "calibration-roundtrip-result.json"
+      ],
+      "missing": [
+        "Loaded actuator torque/speed and response measurements",
+        "External transmission losses/backlash and travel/clearance measurements",
+        "Actual foot/floor friction and compliance measurements",
+        "Sensor inventory, calibration and timing data"
+      ],
+      "handoff": "hardware-calibration.md",
+      "limits": "Declarations and synthetic checks do not establish physical accuracy; no measured properties were invented."
+    },
+    {
+      "number": 3,
+      "status": "predictive training and frozen-candidate comparison complete; candidate rejected as speed improvement",
+      "evidence": [
+        "predictive-controller-v1/training-result.json",
+        "predictive-controller-v1/sustained-comparison.json",
+        "predictive-controller-v1/command-comparison.json",
+        "predictive-controller-v1/recovery-comparison.json"
+      ],
+      "limits": "Initial-state recovery cases only, not timed pushes. Ideal simulator inputs, not a deployable sensor policy. Later short-training winner lacks full-horizon evaluation; no general control improvement claimed."
+    },
+    {
+      "number": 4,
+      "status": "shared APIs exercised on wheeled robot",
+      "evidence": [
+        "../../wheeled-robot/predictive-baseline/evidence.json"
+      ],
+      "limits": "Prediction generalization fails on separate forward episode; no calibrated driving or maximum-speed claim."
+    }
+  ],
+  "goal_complete": false,
+  "remaining_dependency": "Hardware access or measured logs, including operating conditions and provenance, have been requested but not supplied. Software-only experiments cannot complete task 2.",
+  "runtime_reproduction": "Historical forecast artifacts retain their bound source identity; use pinned revision 81304004 for their reproduction. Calibration software changes do not relabel old models."
+}

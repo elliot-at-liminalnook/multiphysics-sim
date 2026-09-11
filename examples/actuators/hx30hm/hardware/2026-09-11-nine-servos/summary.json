@@ -1,0 +1,626 @@
+{
+  "kind": "measured_stationary_bench_telemetry",
+  "ids": [
+    {
+      "id": 4,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 547,
+      "poll_hz": 18.22725267003849,
+      "target_raw_initial": 2053,
+      "position_raw": {
+        "min": 2054,
+        "max": 2054,
+        "mean": 2054,
+        "sd": 0,
+        "median": 2054,
+        "p95": 2054
+      },
+      "position_minus_initial_target_deg": {
+        "min": 0.087890625,
+        "max": 0.087890625,
+        "mean": 0.087890625,
+        "sd": 0,
+        "median": 0.087890625,
+        "p95": 0.087890625
+      },
+      "voltage_v": {
+        "min": 10.4,
+        "max": 10.4,
+        "mean": 10.399999999999944,
+        "sd": 5.684341886080802e-14,
+        "median": 10.4,
+        "p95": 10.4
+      },
+      "temperature_c": {
+        "min": 49,
+        "max": 49,
+        "mean": 49,
+        "sd": 0,
+        "median": 49,
+        "p95": 49
+      },
+      "current_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 4.6633990000000125,
+        "max": 105.08311199999909,
+        "mean": 6.091167502742278,
+        "sd": 4.37331669788814,
+        "median": 5.827442999999377,
+        "p95": 6.107319999999916
+      }
+    },
+    {
+      "id": 5,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 547,
+      "poll_hz": 18.22750172995049,
+      "target_raw_initial": 2052,
+      "position_raw": {
+        "min": 2054,
+        "max": 2054,
+        "mean": 2054,
+        "sd": 0,
+        "median": 2054,
+        "p95": 2054
+      },
+      "position_minus_initial_target_deg": {
+        "min": 0.17578125,
+        "max": 0.17578125,
+        "mean": 0.17578125,
+        "sd": 0,
+        "median": 0.17578125,
+        "p95": 0.17578125
+      },
+      "voltage_v": {
+        "min": 10.5,
+        "max": 10.5,
+        "mean": 10.5,
+        "sd": 0,
+        "median": 10.5,
+        "p95": 10.5
+      },
+      "temperature_c": {
+        "min": 47,
+        "max": 47,
+        "mean": 47,
+        "sd": 0,
+        "median": 47,
+        "p95": 47
+      },
+      "current_raw": {
+        "min": 0,
+        "max": 1,
+        "mean": 0.005484460694698354,
+        "sd": 0.07385378382714493,
+        "median": 0,
+        "p95": 0
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 4.655845999998576,
+        "max": 16.338450000001004,
+        "mean": 5.858751897623498,
+        "sd": 0.6599586286551232,
+        "median": 5.802200000001534,
+        "p95": 6.147198000000742
+      }
+    },
+    {
+      "id": 6,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 547,
+      "poll_hz": 18.227477559694435,
+      "target_raw_initial": 2053,
+      "position_raw": {
+        "min": 2057,
+        "max": 2057,
+        "mean": 2057,
+        "sd": 0,
+        "median": 2057,
+        "p95": 2057
+      },
+      "position_minus_initial_target_deg": {
+        "min": 0.3515625,
+        "max": 0.3515625,
+        "mean": 0.3515625,
+        "sd": 0,
+        "median": 0.3515625,
+        "p95": 0.3515625
+      },
+      "voltage_v": {
+        "min": 10.3,
+        "max": 10.3,
+        "mean": 10.300000000000104,
+        "sd": 1.0302869668521453e-13,
+        "median": 10.3,
+        "p95": 10.3
+      },
+      "temperature_c": {
+        "min": 47,
+        "max": 48,
+        "mean": 47.063985374771484,
+        "sd": 0.24472688161874226,
+        "median": 47,
+        "p95": 48
+      },
+      "current_raw": {
+        "min": 13,
+        "max": 14,
+        "mean": 13.550274223034735,
+        "sd": 0.4974660817565889,
+        "median": 14,
+        "p95": 14
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 4.716285000000653,
+        "max": 16.053148000001016,
+        "mean": 5.879360915904947,
+        "sd": 0.763101811365227,
+        "median": 5.8259600000027945,
+        "p95": 6.089412000000016
+      }
+    },
+    {
+      "id": 7,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 547,
+      "poll_hz": 18.22755493321748,
+      "target_raw_initial": 2039,
+      "position_raw": {
+        "min": 2038,
+        "max": 2038,
+        "mean": 2038,
+        "sd": 0,
+        "median": 2038,
+        "p95": 2038
+      },
+      "position_minus_initial_target_deg": {
+        "min": -0.087890625,
+        "max": -0.087890625,
+        "mean": -0.087890625,
+        "sd": 0,
+        "median": -0.087890625,
+        "p95": -0.087890625
+      },
+      "voltage_v": {
+        "min": 10.4,
+        "max": 10.5,
+        "mean": 10.403473491773255,
+        "sd": 0.018310762743033015,
+        "median": 10.4,
+        "p95": 10.4
+      },
+      "temperature_c": {
+        "min": 47,
+        "max": 47,
+        "mean": 47,
+        "sd": 0,
+        "median": 47,
+        "p95": 47
+      },
+      "current_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 4.9923739999968575,
+        "max": 28.477277000000356,
+        "mean": 5.916707530164502,
+        "sd": 1.1803192436931538,
+        "median": 5.83116600000011,
+        "p95": 6.122252999999134
+      }
+    },
+    {
+      "id": 8,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 547,
+      "poll_hz": 18.22745763986391,
+      "target_raw_initial": 2027,
+      "position_raw": {
+        "min": 2024,
+        "max": 2024,
+        "mean": 2024,
+        "sd": 0,
+        "median": 2024,
+        "p95": 2024
+      },
+      "position_minus_initial_target_deg": {
+        "min": -0.263671875,
+        "max": -0.263671875,
+        "mean": -0.263671875,
+        "sd": 0,
+        "median": -0.263671875,
+        "p95": -0.263671875
+      },
+      "voltage_v": {
+        "min": 10.5,
+        "max": 10.5,
+        "mean": 10.5,
+        "sd": 0,
+        "median": 10.5,
+        "p95": 10.5
+      },
+      "temperature_c": {
+        "min": 47,
+        "max": 47,
+        "mean": 47,
+        "sd": 0,
+        "median": 47,
+        "p95": 47
+      },
+      "current_raw": {
+        "min": 40,
+        "max": 41,
+        "mean": 40.09506398537477,
+        "sd": 0.2933032970483558,
+        "median": 40,
+        "p95": 41
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 4.66250500000065,
+        "max": 36.76986400000004,
+        "mean": 5.926008972577717,
+        "sd": 1.4844839792160305,
+        "median": 5.823427999999353,
+        "p95": 6.115365999999511
+      }
+    },
+    {
+      "id": 9,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 547,
+      "poll_hz": 18.227560042227335,
+      "target_raw_initial": 2045,
+      "position_raw": {
+        "min": 2045,
+        "max": 2045,
+        "mean": 2045,
+        "sd": 0,
+        "median": 2045,
+        "p95": 2045
+      },
+      "position_minus_initial_target_deg": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "voltage_v": {
+        "min": 10.5,
+        "max": 10.5,
+        "mean": 10.5,
+        "sd": 0,
+        "median": 10.5,
+        "p95": 10.5
+      },
+      "temperature_c": {
+        "min": 47,
+        "max": 48,
+        "mean": 47.85923217550274,
+        "sd": 0.3477818915406138,
+        "median": 48,
+        "p95": 48
+      },
+      "current_raw": {
+        "min": 32,
+        "max": 34,
+        "mean": 33.0127970749543,
+        "sd": 0.17582617972277298,
+        "median": 33,
+        "p95": 33
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 3.8769639999998162,
+        "max": 19.946148999999025,
+        "mean": 5.8960404296160505,
+        "sd": 1.0869676569681321,
+        "median": 5.8093630000009,
+        "p95": 6.0926029999990305
+      }
+    },
+    {
+      "id": 10,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 547,
+      "poll_hz": 18.227562704438824,
+      "target_raw_initial": 2053,
+      "position_raw": {
+        "min": 2055,
+        "max": 2055,
+        "mean": 2055,
+        "sd": 0,
+        "median": 2055,
+        "p95": 2055
+      },
+      "position_minus_initial_target_deg": {
+        "min": 0.17578125,
+        "max": 0.17578125,
+        "mean": 0.17578125,
+        "sd": 0,
+        "median": 0.17578125,
+        "p95": 0.17578125
+      },
+      "voltage_v": {
+        "min": 10.4,
+        "max": 10.4,
+        "mean": 10.399999999999944,
+        "sd": 5.684341886080802e-14,
+        "median": 10.4,
+        "p95": 10.4
+      },
+      "temperature_c": {
+        "min": 48,
+        "max": 48,
+        "mean": 48,
+        "sd": 0,
+        "median": 48,
+        "p95": 48
+      },
+      "current_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 4.060974000001494,
+        "max": 18.987352999999985,
+        "mean": 5.87462450639856,
+        "sd": 0.7709610485542113,
+        "median": 5.823831999997253,
+        "p95": 6.109487999999996
+      }
+    },
+    {
+      "id": 11,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 547,
+      "poll_hz": 18.227393522596522,
+      "target_raw_initial": 2062,
+      "position_raw": {
+        "min": 2066,
+        "max": 2066,
+        "mean": 2066,
+        "sd": 0,
+        "median": 2066,
+        "p95": 2066
+      },
+      "position_minus_initial_target_deg": {
+        "min": 0.3515625,
+        "max": 0.3515625,
+        "mean": 0.3515625,
+        "sd": 0,
+        "median": 0.3515625,
+        "p95": 0.3515625
+      },
+      "voltage_v": {
+        "min": 10.6,
+        "max": 10.6,
+        "mean": 10.600000000000062,
+        "sd": 6.217248937900877e-14,
+        "median": 10.6,
+        "p95": 10.6
+      },
+      "temperature_c": {
+        "min": 48,
+        "max": 48,
+        "mean": 48,
+        "sd": 0,
+        "median": 48,
+        "p95": 48
+      },
+      "current_raw": {
+        "min": 37,
+        "max": 40,
+        "mean": 38.20840950639854,
+        "sd": 0.5578774679382669,
+        "median": 38,
+        "p95": 39
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 4.533459999997547,
+        "max": 17.063407000000197,
+        "mean": 5.89025820658139,
+        "sd": 0.7854253995298647,
+        "median": 5.8225359999983795,
+        "p95": 6.155559999999838
+      }
+    },
+    {
+      "id": 12,
+      "firmware": "3.15",
+      "mode": 0,
+      "samples": 546,
+      "poll_hz": 18.226984931407888,
+      "target_raw_initial": 2053,
+      "position_raw": {
+        "min": 2055,
+        "max": 2055,
+        "mean": 2055,
+        "sd": 0,
+        "median": 2055,
+        "p95": 2055
+      },
+      "position_minus_initial_target_deg": {
+        "min": 0.17578125,
+        "max": 0.17578125,
+        "mean": 0.17578125,
+        "sd": 0,
+        "median": 0.17578125,
+        "p95": 0.17578125
+      },
+      "voltage_v": {
+        "min": 10.4,
+        "max": 10.5,
+        "mean": 10.482051282051266,
+        "sd": 0.03837597319768129,
+        "median": 10.5,
+        "p95": 10.5
+      },
+      "temperature_c": {
+        "min": 46,
+        "max": 46,
+        "mean": 46,
+        "sd": 0,
+        "median": 46,
+        "p95": 46
+      },
+      "current_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "reported_speed_raw": {
+        "min": 0,
+        "max": 0,
+        "mean": 0,
+        "sd": 0,
+        "median": 0,
+        "p95": 0
+      },
+      "fault_samples": 0,
+      "transaction_window_ms": {
+        "min": 4.067187000000416,
+        "max": 16.146340000000592,
+        "mean": 5.851968139194153,
+        "sd": 0.6623949613956944,
+        "median": 5.799870000000013,
+        "p95": 6.1024500000002035
+      }
+    }
+  ],
+  "run": {
+    "baud": 115200,
+    "completed": true,
+    "current": "0.001 A/count uncalibrated internal current; not measured total supply current",
+    "elapsed_s": 30.003172226,
+    "failures": 0,
+    "ids": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "mode": "read_only",
+    "port": "/dev/cu.usbserial-20250303171",
+    "samples": 4922,
+    "seconds": 30,
+    "source_blake3": "e032ab14c384aefeb1410cb42725e8a697ed30c4a40a9df2d84715af88ff72bd",
+    "started_unix_s": 1789141399.553505,
+    "stop_reason": "duration_complete",
+    "timing": "Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.",
+    "voltage": "0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f"
+  },
+  "geometry_and_load": "Not confirmed by user this turn; no motion commanded",
+  "voltage_source": "https://wiki.hiwonder.com/projects/NexArm/en/esp32-version/docs/2_ESP32_Development_Basics.html",
+  "limitations": [
+    "Host timestamps include USB and FPGA store-and-forward delay; no FPGA timestamps in the currently loaded bridge.",
+    "Unchanged reported position is not proof of zero mechanical motion or absolute encoder accuracy.",
+    "Current 1 mA/count interpretation is uncalibrated; raw current is retained. Zero internal current does not imply zero servo supply consumption.",
+    "Targets are initial register readbacks, not independently measured angle references.",
+    "No speed, acceleration, torque, backlash, inertia, thermal resistance or dynamic controller gains were identified."
+  ]
+}

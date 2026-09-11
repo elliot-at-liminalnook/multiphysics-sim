@@ -10,6 +10,18 @@ FPGA device-clock windows. `capture_hx` converts recognized HX registers into
 typed SI readings while retaining raw counts, raw packets, command requests,
 reply status, device errors, losses and clock discontinuities.
 
+## Hardware correction — 2026-09-11
+
+Live IDs 4–12 established that voltage register `0x3E` is **one byte at
+0.1 V/count**; the next byte `0x3F` is temperature. The earlier millivolt
+interpretation was wrong. The Rust decoder now accepts historical two-byte
+reads but uses only their voltage byte. Raw historical logs are unchanged.
+The currently loaded transparent release bridge does not emit FPGA timestamp
+frames: use `characterize_hx_bridge` for host-timed reads through that image.
+See [the first nine-servo hardware results](../hardware/2026-09-11-nine-servos/README.md).
+The legacy FPGA cached dashboard field still needs its own voltage fix;
+its existing field label is not evidence of units.
+
 ## Record hardware
 
 After the acquisition profile is deliberately loaded, use an explicit USB

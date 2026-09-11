@@ -1,0 +1,25 @@
+{
+  "hash_algorithm": "sha256",
+  "raw_files": {
+    "initial-registers.json": "dd008abfc8454a3f9073ad7176744871947bd0e7531114bd77517f3a5b468664",
+    "raw-config.json": "97eedc320ccdc73407274b4301195d23f1582f9c8b3f41ea4b30925b218ca408",
+    "compatibility-stationary.jsonl": "91214d6c2bdb322c91c04cb2e447d030063c170cf02114de0887b54e247314d0",
+    "stationary-30s-v2/telemetry.csv": "f31e6748e118a56223c35b5ee6a34f09c91a79912609b802e7b3c6c12ffd4a38",
+    "stationary-30s-v2/transactions.jsonl": "5d23ad15d49b697cb02486550b369340b6150113f2bac6f55119cb5036500034",
+    "stationary-30s-v2/run.json": "061920bee9e2196eda8120dd27fb4deac262959552a14add2e7265914b6633ed"
+  },
+  "fpga_files_on_disk": {
+    "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/src/bridge.v": "1e7088f7673883e171a4ebd947b64a4bf9f200ba39b4a5406ea64fe6a2d302b7",
+    "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/impl/bridge_release.fs": "11129b4ca4b75f2e3db64310701443c5bbc61c8550e2dec6be5c8f48420a71b2"
+  },
+  "loaded_fpga_identity": "inferred from prior bench notes; no readback performed",
+  "motion_commanded": false,
+  "executed_logger_binary_sha256": "696fd9f7133c5123f58d2070a4d636a0b37e224453f586ba24b3c8935b681b1a",
+  "validation": {
+    "rust_protocol_tests": 2,
+    "rust_capture_voltage_test": 1,
+    "compatibility_bench_and_id_tests": 20,
+    "live_rust_telemetry_samples": 4922,
+    "live_rust_failures": 0
+  }
+}

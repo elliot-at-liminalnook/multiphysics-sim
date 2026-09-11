@@ -179,13 +179,21 @@ the outliner/properties and the Robot panel, and serve it at `GET /results`.
 ## System identification
 
 `sim-cad fit <model.simrobot.json> <log.csv> [--out fitted.json]`. Log columns:
-`t`, `<joint>.angle`, `<joint>.target` (rad) and optionally `<motor>.current`,
-`<motor>.voltage`. The fitter adjusts per-joint `friction.coulomb`,
+`t` (seconds), `<joint>.angle`, `<joint>.target` (rad) and optionally
+`<motor>.current` (A). The current reader ignores voltage columns; retain those
+measurements separately. The fitter adjusts per-joint `friction.coulomb`,
 `friction.viscous`, `backlash`, `stiffness` scale and motor `torque_constant`
 to minimise trajectory (and current) error, and writes an `identification`
 block: `{joint: {"friction": {...}, "backlash", "stiffness_scale", "rms_error_rad", "source_log", "fitted_at"}}`.
 The CAD tool imports it (`ops.apply_identification(path)`); the exporter
 copies it into the next model file, and Rust applies it over the inferred values.
+
+This compatibility fitter does not estimate effective servo speed/torque limits
+or servo response gains; its stiffness scale concerns structural joint stiffness.
+Its motor fitting path currently scales both torque and back-EMF constants during
+optimization, while identification application only scales the torque constant.
+That mismatch must be resolved before accepting a motor fit as a reproducible
+calibration. See the [baseline hardware measurement handoff](../examples/full-robot/trusted-baseline/hardware-calibration.md).
 
 ## Rust layout
 

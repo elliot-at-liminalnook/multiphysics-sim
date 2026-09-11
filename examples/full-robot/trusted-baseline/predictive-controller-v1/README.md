@@ -3,7 +3,8 @@
 The three actuator-conditioned heads predict position, velocity and finite-
 interval acceleration at 20, 100 and 200 ms. They use current dynamics and the
 action prefix for their own horizon. Validation is chronological within the
-preserved 90 s episode; independent closed-loop acceptance remains required.
+preserved 90 s episode. The completed closed-loop comparisons below do not
+establish a sustained-speed improvement.
 `evidence.json` records artifact hashes, data identity and aggregate errors.
 The individual validation files retain errors by channel and physical unit.
 
@@ -14,7 +15,13 @@ software command envelopes. Startup transition parity and the exact full 20 s
 baseline evaluation are preserved. Inputs are ideal simulation observations;
 the current CAD model declares no hardware sensors.
 
-Build the example hosts from the repository root:
+The trained artifacts bind runtime source hash
+`56acc2aeca9730e9448ea56748a3c5461f0a86317d0531e555890508b1bf4cc1`.
+Git revision `81304004` contains that source and these example hosts. Preserve
+that revision for reproduction if later library changes alter the physics
+identity; never edit the models' identity to bypass a mismatch.
+
+Build the example hosts from a matching repository revision:
 
 ```sh
 cargo build --locked --release -p sim-runtime \
@@ -69,9 +76,8 @@ evaluation and remains the subject of the matched comparison. Both authored
 initial-state recovery cases complete without sampled falls, with approximately
 0.23% higher speed than the original gait. `recovery-comparison.json` retains
 both sides, source receipts and sampled clearance diagnostics. Its first 20 s
-in the long run exactly match its training evaluation. Sustained speed remains
-pending. These initial-state cases do not establish recovery from timed pushes
-during walking.
+in the long run exactly match its training evaluation. These initial-state cases
+do not establish recovery from timed pushes during walking.
 
 `command-comparison.json` records the complete 90 s WASD comparison with the
 same analyzer on both policies. All 4,500 commanded actions are verified and
@@ -81,3 +87,14 @@ baseline. Braking distance is similar; reversal still produces a large turn.
 `command-transitions.jsonl.gz` retains the full candidate observation/action
 stream and its receipt records the decompressed hash. Short speed gains do not
 establish improved command control. No heading or slip penalty was added.
+
+The full 300 s comparison is in `sustained-comparison.json`. The candidate
+completes without a sampled fall at **0.432011 m/s**, versus **0.573564 m/s** for
+the preserved gait, a **24.7% reduction**. Sampled chord-path lengths are
+177.572 m and 176.751 m, but net displacements are 129.603 m and 172.069 m.
+This is consistent with increased path curvature rather than less sampled
+motion. `sustained-paths.json.gz` preserves both paths at 20 ms intervals; these
+are not continuous-time path lengths. The candidate is rejected as a speed
+improvement. The later short-training winner has no corresponding 300 s result.
+Future optimization must address the long-horizon net-displacement objective;
+the original fastest gait remains the accepted baseline.

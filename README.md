@@ -37,7 +37,7 @@ cad/run.sh examples/components/quadruped-parametric/model/robot.rcad
 
 ![Rust schematic viewer running the motor-thermal model live, with typed ports, nets and a time graph](docs/images/schematic-viewer.png)
 
-![Rust physical viewer running the motor-driver board live: CAD-built component models tinted by temperature, the outline of the top level, and live readouts in the inspector](docs/images/physical-viewer.png)
+![Rust physical viewer running the motor-driver board live: CAD-built component models tinted by temperature, the outline of the top level, and live readouts in the inspector](docs/images/physical-viewer-live.png)
 
 Two linked Rust hosts present one compiled system. The schematic (egui) shows
 components, typed ports and nets, and plots live measurements. The physical

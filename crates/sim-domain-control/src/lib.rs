@@ -25,3 +25,13 @@ pub mod optimization;
 
 pub mod contact_slip;
 pub mod displacement;
+
+pub mod pulse;
+
+pub mod pwm_feedback;
+pub mod fixed_pd;
+pub mod sampled_fixed_pd;
+pub mod reference_governor;
+pub mod motion_primitives;
+
+pub mod adaptive_braking;

@@ -5,7 +5,7 @@
 //! of state decides phase, density and temperature from (p, h).
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, Provision, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, Provision, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or, signal_out,
 };
 use std::collections::BTreeMap;
@@ -390,7 +390,7 @@ fn wall_heat(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::{FluidPh as F, Thermal as H};
+    use sim_core::connectors::{FluidPh as F, Thermal as H};
     for descriptor in [
         BehaviorDescriptor::new(VOLUME_PH, "Two-phase volume", vec![acausal("node", F)], volume_ph).with_parameters(vec![P::required("volume", "m³").positive(), P::optional("initial.pressure", "Pa", ATMOSPHERE).positive(), P::optional("initial.enthalpy", "J/kg", Water::liquid_enthalpy(293.15))]),
         BehaviorDescriptor::new(PIPE_PH, "Two-phase pipe", vec![acausal("a", F), acausal("b", F)], pipe_ph).with_parameters(vec![P::required("length", "m").positive(), P::required("diameter", "m").positive(), P::optional("friction", "1", 0.02).nonnegative(), P::optional("rise", "m", 0.0), P::optional("initial.flow", "kg/s", 0.0)]),

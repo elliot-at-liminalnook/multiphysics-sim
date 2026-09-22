@@ -215,7 +215,7 @@ fn thermoelastic_layer(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::{Electrical as E, Rotational as R, Thermal as H};
+    use sim_core::connectors::{Electrical as E, Rotational as R, Thermal as H};
     for descriptor in [
         BehaviorDescriptor::new(THERMISTOR, "Temperature-dependent resistor", vec![acausal("p", E), acausal("n", E), acausal("heat", H)], thermistor).with_parameters(vec![P::required("resistance", "Ω").positive(), P::required("coefficient", "1/K"), P::required("reference", "K").positive()]),
         BehaviorDescriptor::new(BRUSHED_MOTOR, "Brushed DC motor", vec![acausal("p", E), acausal("n", E), acausal("shaft", R), acausal("case", R)], brushed_motor).with_parameters(vec![P::required("resistance", "Ω").positive(), P::optional("inductance", "H", 0.0).nonnegative(), P::required("torque_constant", "N·m/A"), P::required("back_emf_constant", "V·s/rad")]),

@@ -62,7 +62,7 @@ fn walker_time_scale_preserves_the_dimensionless_trajectory_in_physical_seconds(
         runtime.advance(0.2 * scale, 0.001 * scale).unwrap();
         let state: Vec<_> = ["theta", "phi", "theta_dot", "phi_dot"].iter().enumerate().map(|(i, name)| {
             let id = runtime.state_id(parts["walker"].behavior, name);
-            let quantity = runtime.model.state.iter().find(|(key, _)| *key == id).unwrap().1.quantity;
+            let quantity = &runtime.model.state.iter().find(|(key, _)| *key == id).unwrap().1.quantity;
             assert_eq!(quantity.unit(), if i < 2 { "rad" } else { "rad/s" });
             runtime.get(id) * if i < 2 { 1. } else { scale }
         }).collect();

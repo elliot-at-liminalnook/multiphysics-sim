@@ -14,7 +14,12 @@ pub struct ParameterDeclaration {
     pub maximum: Option<f64>,
     pub exclusive_minimum: bool,
     pub integer: bool,
+    /// Host-local factory binding, not a physical model value or durable input.
+    #[serde(skip_serializing_if = "is_false")]
+    pub implementation_reference: bool,
 }
+
+fn is_false(value: &bool) -> bool { !*value }
 
 impl ParameterDeclaration {
     pub fn alternative(name: impl Into<String>, unit: &str) -> Self {
@@ -34,7 +39,12 @@ impl ParameterDeclaration {
             maximum: None,
             exclusive_minimum: false,
             integer: false,
+            implementation_reference: false,
         }
+    }
+    pub fn implementation_reference(mut self) -> Self {
+        self.implementation_reference = true;
+        self
     }
     pub fn optional(name: impl Into<String>, unit: &str, default: f64) -> Self {
         Self {
@@ -75,41 +85,41 @@ impl ParameterDeclaration {
 }
 
 impl BehaviorDescriptor {
-    pub fn with_parameters(mut self, mut parameters: Vec<ParameterDeclaration>) -> Self {
-        let acausal: Vec<_> = self
-            .ports
-            .iter()
-            .filter_map(|port| match port.schema {
-                PortSchema::Acausal(kind) => Some((port.name.to_string(), kind)),
-                _ => None,
-            })
-            .flat_map(|(name, kind)| match kind {
-                ConnectorKind::Composite(members) => members
-                    .iter()
-                    .map(|member| (format!("{name}.{}", member.name()), *member))
-                    .collect::<Vec<_>>(),
-                _ => vec![(name, kind)],
-            })
-            .collect();
-        // Initial node values follow the compiler's native lane names and units.
-        // Preserve explicitly declared initial states such as inertia.speed.
+    pub fn with_parameters(mut self, parameters: Vec<ParameterDeclaration>) -> Self {
+        self.parameters = Some(parameters);
+        self
+    }
+    pub(crate) fn resolve_parameters(&mut self, definitions: &crate::definitions::FrozenDefinitions) -> Result<(), crate::definitions::DefinitionError> {
+        use crate::definitions::{ConnectionRule, DefinitionError, FrozenDefinitions};
+        fn leaves(name: String, kind: &ConnectorKind, d: &FrozenDefinitions, out: &mut Vec<(String, ConnectorKind)>) -> Result<(), DefinitionError> {
+            match &d.connector_by_id(&kind.definition_id())?.rule {
+                ConnectionRule::Composite { members } => for member in members {
+                    leaves(format!("{name}.{}", member.name), &ConnectorKind::from_id(member.connector.clone()), d, out)?;
+                },
+                _ => out.push((name, kind.clone())),
+            }
+            Ok(())
+        }
+        let Some(parameters) = &mut self.parameters else { return Ok(()); };
+        let mut acausal = Vec::new();
+        for port in &self.ports {
+            if let PortSchema::Acausal(kind) = &port.schema { leaves(port.name.into(), kind, definitions, &mut acausal)?; }
+        }
         for (name, kind) in &acausal {
-            for lane in kind.lanes() {
-                let mut names = vec![format!("initial.{name}.{}", lane.across)];
-                if acausal.len() == 1 && !name.contains('*') {
-                    names.push(format!("initial.{}", lane.across));
-                }
+            for lane in &kind.resolve(definitions)?.lanes {
+                let unit = &definitions.quantity(definitions.quantity_handle(&lane.across.quantity)?).unwrap().canonical_unit;
+                let mut names = vec![format!("initial.{name}.{}", lane.across.name)];
+                if acausal.len() == 1 && !name.contains('*') { names.push(format!("initial.{}", lane.across.name)); }
                 for name in names {
                     if !parameters.iter().any(|p| p.name == name) {
-                        let mut initial = ParameterDeclaration::alternative(name, lane.across_kind.unit());
+                        let mut initial = ParameterDeclaration::alternative(name, unit);
                         initial.default_label = Some("native state or connected constraint; otherwise 0".into());
                         parameters.push(initial);
                     }
                 }
             }
         }
-        self.parameters = Some(parameters);
-        self
+        Ok(())
     }
 
     pub fn validate_parameters(&self, values: &BTreeMap<String, f64>) -> Result<(), EquationError> {

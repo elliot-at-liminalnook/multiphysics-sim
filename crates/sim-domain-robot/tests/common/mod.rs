@@ -88,6 +88,7 @@ pub fn box_link(name: &str, size: [f64; 3], mass: f64, com: [f64; 3], ground: bo
         inertia: [[ixx, 0.0, 0.0], [0.0, iyy, 0.0], [0.0, 0.0, izz]],
         bbox: vec![[-h[0], -h[1], -h[2]], [h[0], h[1], h[2]]],
         collision: Collision {
+            sign_derivation: None,
             vertices,
             triangles: vec![],
             hull,

@@ -37,6 +37,9 @@ pub use drivers::{
 };
 mod servos;
 pub use servos::{EmbeddedServoBank, EmbeddedServoConfig, EmbeddedServoControl, ServoBoundary};
+mod power;
+pub use power::{EmbeddedPowerBank, EmbeddedPowerConfig, PowerBranchConfig, EmbeddedPowerReading, PowerBranchReading, PowerOperatingLimits};
+pub use servos::{PoweredServoControl, PoweredServoState};
 mod motor_step;
 pub use motor_step::{
     EmbeddedContactSample, EmbeddedContactStep, EmbeddedControlledAdvance, EmbeddedMotorAdvance,
@@ -69,6 +72,14 @@ pub struct EmbeddingConfig {
     /// Rank, tangent, curvature and every original closure check remain numeric.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub analytic_mechanism_positions: bool,
+    /// Use certified mechanism derivatives for tangent and curvature. Requires
+    /// analytic positions; original numeric rank and closure checks remain.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub analytic_mechanism_motion: bool,
+    /// Assemble T-transpose M T in reduced coordinates and share its exact
+    /// kinematics with force evaluation. All physical loads/checks remain.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub direct_projected_inertia: bool,
     pub length_scale_m: f64,
     pub angle_scale_rad: f64,
     pub scaled_closure_tolerance: f64,
@@ -87,6 +98,8 @@ impl Default for EmbeddingConfig {
             dependent_solve: DependentSolve::Svd,
             block_dependent_factorization: false,
             analytic_mechanism_positions: false,
+            analytic_mechanism_motion: false,
+            direct_projected_inertia: false,
             length_scale_m: 0.1,
             angle_scale_rad: 1.0,
             scaled_closure_tolerance: 1e-8,
@@ -252,6 +265,9 @@ impl<'a> RigidEmbedding<'a> {
         }
         let base_columns = if art.bases[0].grounded { 0 } else { 6 };
         let dependent: Vec<_> = (0..dofs.len()).filter(|i| !selected.contains(i)).collect();
+        if config.analytic_mechanism_motion && !config.analytic_mechanism_positions {
+            return Err("analytic mechanism motion requires analytic mechanism positions".into());
+        }
         let analytic_positions = if config.analytic_mechanism_positions {
             Some(slider_crank::AnalyticPositions::new(
                 art, &selected, &dependent,
@@ -415,9 +431,12 @@ impl<'a> RigidEmbedding<'a> {
         Ok(matrix)
     }
     fn factor_dependent(&self, jac: &DMatrix<f64>) -> Result<(DependentFactor, f64), String> {
-        sim_solve::profile::EMBEDDED_CLOSURE_FACTOR.time(|| self.factor_dependent_impl(jac))
+        self.factor_dependent_mode(jac, false)
     }
-    fn factor_dependent_impl(&self, jac: &DMatrix<f64>) -> Result<(DependentFactor, f64), String> {
+    fn factor_dependent_mode(&self, jac: &DMatrix<f64>, rank_only: bool) -> Result<(DependentFactor, f64), String> {
+        sim_solve::profile::EMBEDDED_CLOSURE_FACTOR.time(|| self.factor_dependent_impl(jac, rank_only))
+    }
+    fn factor_dependent_impl(&self, jac: &DMatrix<f64>, rank_only: bool) -> Result<(DependentFactor, f64), String> {
         if self.dependent.is_empty() {
             return Ok((DependentFactor::Empty, 1.0));
         }
@@ -436,7 +455,7 @@ impl<'a> RigidEmbedding<'a> {
                 for (rows, cols) in groups {
                     let local =
                         DMatrix::from_fn(rows.len(), cols.len(), |i, j| a[(rows[i], cols[j])]);
-                    let (factor, min, max) = self.factor_matrix(local)?;
+                    let (factor, min, max) = self.factor_matrix(local, rank_only)?;
                     global_min = global_min.min(min);
                     global_max = global_max.max(max);
                     factors.push((rows, cols, factor));
@@ -451,7 +470,7 @@ impl<'a> RigidEmbedding<'a> {
                 ));
             }
         }
-        let (factor, min, _) = self.factor_matrix(a)?;
+        let (factor, min, _) = self.factor_matrix(a, rank_only)?;
         Ok((factor, min))
     }
     fn check_rank(&self, min: f64, max: f64) -> Result<f64, String> {
@@ -466,13 +485,13 @@ impl<'a> RigidEmbedding<'a> {
         }
         Ok(cutoff)
     }
-    fn factor_matrix(&self, a: DMatrix<f64>) -> Result<(DependentFactor, f64, f64), String> {
+    fn factor_matrix(&self, a: DMatrix<f64>, rank_only: bool) -> Result<(DependentFactor, f64, f64), String> {
         if a.nrows() < a.ncols() {
             return Err("singular dependent-coordinate chart: underconstrained block".into());
         }
         // QR needs the singular VALUES for the unchanged rank diagnostic,
         // but never uses SVD's left/right vectors. Avoid constructing them.
-        let vectors = matches!(self.config.dependent_solve, DependentSolve::Svd);
+        let vectors = !rank_only && matches!(self.config.dependent_solve, DependentSolve::Svd);
         let svd = sim_solve::profile::EMBEDDED_CLOSURE_SVD.time(|| a.clone().svd(vectors, vectors));
         let max = svd.singular_values.iter().copied().fold(0.0, f64::max);
         let min = svd
@@ -481,6 +500,7 @@ impl<'a> RigidEmbedding<'a> {
             .copied()
             .fold(f64::INFINITY, f64::min);
         let cutoff = self.check_rank(min, max)?;
+        if rank_only { return Ok((DependentFactor::Empty, min, max)); }
         let factor = match self.config.dependent_solve {
             DependentSolve::Svd => DependentFactor::Svd {
                 decomposition: svd,
@@ -527,9 +547,11 @@ impl<'a> RigidEmbedding<'a> {
         for (&i, &q) in self.independent.iter().zip(positions) {
             g.q[i] = q;
         }
-        if let Some(analytic) = &self.analytic_positions {
-            analytic.apply(self.art, seed, &mut g)?;
-        }
+        let analytic_motion = if let Some(analytic) = &self.analytic_positions {
+            if self.config.analytic_mechanism_motion {
+                Some(analytic.apply_motion(self.art, seed, &mut g, self.base_columns, &self.independent, velocities)?)
+            } else { analytic.apply(self.art, seed, &mut g)?; None }
+        } else { None };
         let zeros = vec![0.0; self.full_dimension()];
         self.set_motion(&mut g, &zeros, &zeros);
         let mut iterations = 0;
@@ -583,8 +605,12 @@ impl<'a> RigidEmbedding<'a> {
         let selected: Vec<_> = (0..self.base_columns)
             .chain(self.independent.iter().map(|i| self.base_columns + i))
             .collect();
+        let (factor, min_singular) = self.factor_dependent_mode(&jac, analytic_motion.is_some())?;
+        let (scaled, analytic_bias) = if let Some((tangent, bias)) = analytic_motion {
+            (DMatrix::from_fn(tangent.nrows(), tangent.ncols(), |i, j|
+                tangent[(i, j)] * self.column_scales[selected[j]] / self.column_scales[i]), Some(bias))
+        } else {
         let rhs = DMatrix::from_fn(jac.nrows(), selected.len(), |i, j| -jac[(i, selected[j])]);
-        let (factor, min_singular) = self.factor_dependent(&jac)?;
         let dependent = factor.solve(&rhs)?;
         let mut scaled = DMatrix::zeros(self.full_dimension(), self.reduced_dimension());
         for (j, &i) in selected.iter().enumerate() {
@@ -595,6 +621,8 @@ impl<'a> RigidEmbedding<'a> {
                 scaled[(self.base_columns + d, j)] = dependent[(i, j)];
             }
         }
+        (scaled, None)
+        };
         let tangent_error = (&jac * &scaled).amax();
         if tangent_error > self.config.scaled_closure_tolerance {
             return Err(format!(
@@ -605,6 +633,7 @@ impl<'a> RigidEmbedding<'a> {
             scaled[(i, j)] * self.column_scales[i] / self.column_scales[selected[j]]
         });
         let full_v = &tangent * DVector::from_column_slice(velocities);
+        let acceleration_bias = if let Some(bias) = analytic_bias { bias } else {
         self.set_motion(&mut g, full_v.as_slice(), &zeros);
         let rows = self.art.original_closure_values(&g);
         let rhs = DMatrix::from_fn(rows.len(), 1, |i, _| {
@@ -616,6 +645,8 @@ impl<'a> RigidEmbedding<'a> {
             acceleration_bias[self.base_columns + d] =
                 bias[(i, 0)] * self.column_scales[self.base_columns + d];
         }
+        acceleration_bias
+        };
         self.set_motion(&mut g, full_v.as_slice(), acceleration_bias.as_slice());
         let rows = self.art.original_closure_values(&g);
         let error = |get: fn(&super::constraints::ClosureValues) -> f64| {

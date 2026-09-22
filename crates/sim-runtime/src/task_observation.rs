@@ -76,7 +76,7 @@ impl TaskObserver {
         let mut vector = |name: &str, kind: QuantityKind| {
             channels.extend(["x", "y", "z"].map(|axis| Channel {
                 name: format!("{name}.{axis}"),
-                kind,
+                kind: kind.clone(),
             }));
         };
         vector("body.gravity_direction", QuantityKind::Dimensionless);

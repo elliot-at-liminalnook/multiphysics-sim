@@ -165,6 +165,14 @@ fn registered_motor_and_mechanics_match_independent_linear_circuit() {
                     |t, h, g, x| bank.evaluate(t, h, g, &state, x, &boundary).map(|r| r.0),
                 )
                 .unwrap();
+            let predicted=map.step_implicit_coupled(&g,&state,i as f64*h,h,
+                &sim_domain_robot::articulated::embedding::ImplicitStepConfig {
+                    mechanical_predictor:true,..Default::default()
+                },|t,h,g,x|bank.evaluate(t,h,g,&state,x,&boundary).map(|r|r.0)).unwrap();
+            assert_eq!(predicted.diagnostics.mechanical_prediction_used,Some(true));
+            let actual=DVector::from_column_slice(&[predicted.auxiliary[0],predicted.auxiliary[1],
+                predicted.auxiliary[2],predicted.endpoint.generalized.qd[0],predicted.endpoint.generalized.q[0]]);
+            assert!((&actual-&reference).amax()<2e-8);
             let cached = map
                 .step_implicit_coupled(
                     &g,
@@ -207,6 +215,20 @@ fn registered_motor_and_mechanics_match_independent_linear_circuit() {
                 )
                 .unwrap();
             assert_eq!(prepared.auxiliary, step.auxiliary);
+            // Outer geometry secants need not change the inner motor solve.
+            // Both levels still reproduce the independent circuit/mechanics solve.
+            let outer_secant = map.step_implicit_coupled(
+                &g, &state, i as f64 * h, h,
+                &sim_domain_robot::articulated::embedding::ImplicitStepConfig {
+                    condense_auxiliary: true,
+                    auxiliary_broyden_updates: Some(false),
+                    newton: sim_solve::NewtonConfig { broyden_updates: true, ..Default::default() },
+                    ..Default::default()
+                },
+                |t,h,g,x| bank.evaluate(t,h,g,&state,x,&boundary).map(|r|r.0),
+            ).unwrap();
+            assert!(outer_secant.auxiliary.iter().zip(step.auxiliary.iter()).all(|(a,b)|(a-b).abs()<1e-7));
+            assert!((outer_secant.endpoint.generalized.qd[0]-reference[3]).abs()<1e-7);
             assert_eq!(
                 prepared.endpoint.generalized.states,
                 step.endpoint.generalized.states
@@ -280,13 +302,14 @@ fn registered_motor_and_mechanics_match_independent_linear_circuit() {
             }
             assert!(step.diagnostics.maximum_auxiliary_residual < 1e-8);
             assert!(step.diagnostics.maximum_scaled_velocity_residual < 1e-8);
-            for (auxiliary_rate_unknowns, auxiliary_endpoint_correction_scale) in [(false,false),(true,false),(true,true)] {
+            for (auxiliary_rate_unknowns, auxiliary_endpoint_correction_scale, reuse_auxiliary_solve) in [(false,false),(true,false),(true,true)].into_iter().flat_map(|(a,b)|[false,true].map(move |r|(a,b,r))) {
                 let condensed = map.step_implicit_coupled_with_rates(
                     &g, &state, i as f64 * h, h,
                     &sim_domain_robot::articulated::embedding::ImplicitStepConfig {
                         condense_auxiliary: true,
                         auxiliary_rate_unknowns,
                         auxiliary_endpoint_correction_scale,
+                        reuse_auxiliary_solve,
                         ..Default::default()
                     },
                     |t, _, g, x, rates| bank.evaluate_with_rates(t, g, x, rates, &boundary).map(|r| r.0),
@@ -314,7 +337,22 @@ fn registered_motor_and_mechanics_match_independent_linear_circuit() {
             assert!(
                 (readings[0].shaft_torque_nm - jload * (g.qd[0] - before_g.qd[0]) / h).abs() < 1e-8
             );
-            assert!((readings[0].heating_w - resistance * state[0].powi(2)).abs() < 1e-10);
+            // The independent circuit includes a damped gearbox: its relative
+            // motion dissipates heat as well as the winding's Joule loss.
+            let expected_heat = resistance * reference[0].powi(2)
+                + c * (reference[1] / ratio - reference[3]).powi(2);
+            assert!((readings[0].heating_w - expected_heat).abs() < 1e-10);
+            let terms = [
+                (inductance, before[0], state[0]),
+                (jout, before[1] / ratio, state[1] / ratio),
+                (jload, before_g.qd[0], g.qd[0]),
+                (k, before[2] - before_g.q[0], state[2] - g.q[0]),
+            ];
+            // Backward Euler dissipates an additional known quadratic amount;
+            // distinguish that numerical loss from heat delivered to the model.
+            let storage_and_numerical_loss: f64 = terms.iter().map(|(weight,old,new)|
+                0.5 * weight * (new*new - old*old + (new-old).powi(2)) / h).sum();
+            assert!((voltage * state[0] - readings[0].heating_w - storage_and_numerical_loss).abs() < 1e-9);
             assert!((readings[0].gear_speed_rad_s - state[1] / ratio).abs() < 1e-12);
         }
     }
@@ -1492,6 +1530,7 @@ fn servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run()
     let art=Articulated::new(Arc::new(model),&Options {contact:false,flex:false,..Default::default()}).unwrap();
     let g=art.generalized(art.states().iter().map(|s|s.initial).collect(),vec![0.0;art.state_count],&vec![0.0;art.port_names.len()+1],vec![]);
     let mut a=cfg.clone();a.parameters.insert("backlash".into(),0.002);
+    a.parameters.insert("jacobian.analytic".into(),1.0);
     let mut b=a.clone();b.dof="joint.shaft_b".into();b.parameters.insert("ratio".into(),3.0);
     let mut motors=EmbeddedMotorBank::new_with_events(&art,&[a,b]).unwrap();
     let names=motors.dof_names();
@@ -1519,17 +1558,37 @@ fn servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run()
         }}
     }
     let map=RigidEmbedding::new(&art,&names,Default::default()).unwrap();
-    let mut run=|colored| {
+    let mut run=|colored,supplied,rate_unknowns,sdirk2| {
         let mut control=servos.connect(&motors,&drivers,&boundaries).unwrap();
-        motors.advance_with_control(&map,&g,&initial,&held,0.0,0.008,&ImplicitStepConfig {condense_auxiliary:true,color_auxiliary_jacobian:colored,auxiliary_rate_unknowns:true,..Default::default()},&Default::default(),&mut control,|_,_|Ok(vec![0.0;2])).unwrap()
+        motors.advance_with_control(&map,&g,&initial,&held,0.0,0.008,&ImplicitStepConfig {
+            condense_auxiliary:true,color_auxiliary_jacobian:colored,auxiliary_rate_unknowns:rate_unknowns,
+            supplied_auxiliary_jacobian:supplied,sdirk2,..Default::default()
+        },&Default::default(),&mut control,|_,_|Ok(vec![0.0;2])).unwrap()
     };
-    let ordinary=run(false);let colored=run(true);
+    let ordinary=run(false,false,true,false);let colored=run(true,false,true,false);
     assert_eq!(ordinary.motor.motor_states,colored.motor.motor_states);
     assert_eq!(ordinary.motor.endpoint.generalized.states,colored.motor.endpoint.generalized.states);
     assert_eq!(ordinary.control_state,colored.control_state);
     assert_eq!(serde_json::to_value(&ordinary.motor.hybrid).unwrap(),serde_json::to_value(&colored.motor.hybrid).unwrap());
     assert_eq!(colored.motor.solves.successful_trial_colored_auxiliary_solves,colored.motor.solves.successful_trial_auxiliary_solves);
     assert!(colored.motor.solves.successful_trial_auxiliary_evaluations<ordinary.motor.solves.successful_trial_auxiliary_evaluations);
+    for rate_unknowns in [false,true] { for sdirk2 in [false,true] {
+        let numeric=run(true,false,rate_unknowns,sdirk2);
+        let supplied=run(true,true,rate_unknowns,sdirk2);
+        assert!(supplied.motor.solves.successful_trial_supplied_auxiliary_jacobians>0);
+        for (a,b) in numeric.motor.motor_states.iter().zip(&supplied.motor.motor_states) {
+            assert!((a-b).abs()<2e-7,"rate={rate_unknowns},sdirk={sdirk2}: {a} vs {b}");
+        }
+        for (a,b) in numeric.motor.endpoint.generalized.q.iter().zip(&supplied.motor.endpoint.generalized.q) { assert!((a-b).abs()<1e-9); }
+        // This fixture uses floating PD, so roundoff in measured velocity may
+        // change a controller lane by an ulp. Its clock remains exactly equal.
+        for (a,b) in numeric.control_state.iter().zip(&supplied.control_state) {assert!((a-b).abs()<1e-12);}
+        assert_eq!(numeric.control_state.last(),supplied.control_state.last());
+        assert_eq!(numeric.motor.hybrid.events.len(),supplied.motor.hybrid.events.len());
+        for (a,b) in numeric.motor.hybrid.events.iter().zip(&supplied.motor.hybrid.events) {
+            assert_eq!(a.guard,b.guard);assert!((a.time-b.time).abs()<2e-8);
+        }
+    }}
     assert!(!FixedDrive.independent_motor_boundaries());
 }
 
@@ -1543,7 +1602,11 @@ fn unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation() {
     let mut run=|config:&ImplicitStepConfig|motors.advance_with_control(&map,&g,&initial,&2.0,0.0,0.002,config,&Default::default(),&mut FixedDrive,|_,_|Ok(vec![0.0]));
     let config=ImplicitStepConfig {condense_auxiliary:true,..Default::default()};
     let a=run(&config).unwrap();
-    let b=run(&ImplicitStepConfig {color_auxiliary_jacobian:true,..config}).unwrap();
+    let b=run(&ImplicitStepConfig {color_auxiliary_jacobian:true,..config.clone()}).unwrap();
+    let supplied=run(&ImplicitStepConfig {supplied_auxiliary_jacobian:true,..config}).unwrap();
+    assert_eq!(a.motor.motor_states,supplied.motor.motor_states);
+    assert_eq!(supplied.motor.solves.successful_trial_supplied_auxiliary_jacobians,0);
+    assert!(run(&ImplicitStepConfig {supplied_auxiliary_jacobian:true,..Default::default()}).is_err());
     assert_eq!(a.motor.motor_states,b.motor.motor_states);
     assert_eq!(a.motor.solves.successful_trial_auxiliary_evaluations,b.motor.solves.successful_trial_auxiliary_evaluations);
     assert_eq!(b.motor.solves.successful_trial_colored_auxiliary_solves,0);
@@ -1556,4 +1619,228 @@ fn unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation() {
         }).is_err());
     }
     assert!(serde_json::to_value(ImplicitStepConfig::default()).unwrap().get("auxiliary_endpoint_correction_scale").is_none());
+}
+
+#[test]
+fn fpga_integer_controller_drives_shared_motor_with_exact_subperiod_latency() {
+    use sim_domain_robot::articulated::embedding::{
+        EmbeddedDriverBank, EmbeddedDriverConfig, EmbeddedServoBank, EmbeddedServoConfig,
+        ImplicitStepConfig, ServoBoundary,
+    };
+    for sdirk2 in [false, true] {
+    let (art, g, cfg) = fixture(0.003);
+    let map = RigidEmbedding::new(&art, &["joint.shaft".into()], Default::default()).unwrap();
+    let mut motors = EmbeddedMotorBank::new_with_events(&art, &[cfg]).unwrap();
+    let drivers = EmbeddedDriverBank::new(&motors, &[EmbeddedDriverConfig {
+        dof: "joint.shaft".into(),
+        parameters: [("on_resistance".into(),0.05),("current_limit".into(),3.)].into(),
+    }]).unwrap();
+    let config = EmbeddedServoConfig { dof:"joint.shaft".into(), parameters:[
+        ("kp_q8".into(),4096.),("kd_q8".into(),0.),("kv_q8".into(),4096.),
+        ("limit".into(),350.),("period".into(),0.01),("latency".into(),0.004),
+        ("offset".into(),0.),("encoder_quantum".into(),std::f64::consts::TAU/4096.),
+        ("encoder_zero".into(),2048.),("encoder_direction".into(),1.),("initial_target".into(),0.),
+    ].into() };
+    let mut servos = EmbeddedServoBank::new_with_kinds(&motors, &[config],
+        &[sim_domain_control::sampled_fixed_pd::KIND]).unwrap();
+    let inputs=[ServoBoundary {target_rad:0.1,supply_voltage_v:11.1,winding_temperature_k:293.15}];
+    let held=servos.initial_states();
+    let initial=motors.initial_states();
+    let run=|end:f64, motors:&mut EmbeddedMotorBank, servos:&mut EmbeddedServoBank| {
+        let mut controller=servos.connect(motors,&drivers,&inputs).unwrap();
+        motors.advance_with_control(&map,&g,&initial,&held,0.,end,&ImplicitStepConfig {sdirk2, ..Default::default()},
+            &Default::default(),&mut controller,|_,_|Ok(vec![0.])).unwrap()
+    };
+    let waiting=run(0.003,&mut motors,&mut servos);
+    assert!(waiting.motor.endpoint.generalized.q[0].abs()<1e-12);
+    assert_eq!(waiting.control_state[0],0.);
+    let moving=run(0.035,&mut motors,&mut servos);
+    assert!(moving.motor.endpoint.generalized.q[0]>0.);
+    let times:Vec<_>=moving.motor.hybrid.events.iter().map(|e|e.time).collect();
+    for expected in [0.,0.004,0.01,0.014,0.02,0.024,0.03,0.034] {
+        assert!(times.iter().any(|t|(t-expected).abs()<1e-10),"missing deadline {expected}: {times:?}");
+    }
+    // Running again from the same input state must not retain controller history.
+    let replay=run(0.035,&mut motors,&mut servos);
+    assert_eq!(moving.control_state,replay.control_state);
+    assert_eq!(moving.motor.motor_states,replay.motor.motor_states);
+    assert_eq!(moving.motor.endpoint.generalized.q,replay.motor.endpoint.generalized.q);
+    }
+}
+
+#[test]
+fn coupled_sdirk_matches_independent_differential_and_algebraic_circuit_stages() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    let gamma = sim_dynamics::sdirk::GAMMA;
+    for (inductance, reuse, predictor) in [0.003, 0.0].into_iter()
+        .flat_map(|inductance| [false, true].map(move |reuse| (inductance, reuse)))
+        .flat_map(|(inductance,reuse)| [false,true].map(move |predictor| (inductance,reuse,predictor))) {
+        let (art, mut g, config) = fixture(inductance);
+        let map = RigidEmbedding::new(&art, &["joint.shaft".into()], Default::default()).unwrap();
+        let mut bank = EmbeddedMotorBank::new(&art, &[config]).unwrap();
+        let mut state = bank.initial_states();
+        let mut reference = DVector::zeros(5);
+        let h = 0.002;
+        let d = gamma * h;
+        let (ratio, jout, jload, kt, ke, resistance, k, c) =
+            (5.0, 0.0028, 2.0 * 0.1 * 0.1 / 6.0, 0.08, 0.08, 2.0, 20.0, 0.04);
+        // Independently assembled circuit, rotor, compliant gearbox, load and
+        // shaft kinematics; no production residual/matrix helper is called.
+        let matrix = DMatrix::from_row_slice(5, 5, &[
+            inductance/d+resistance, ke, 0., 0., 0.,
+            -ratio*kt, jout/(ratio*d)+c/ratio, k, -c, -k,
+            0., -1./ratio, 1./d, 0., 0.,
+            0., -c/ratio, -k, jload/d+c, k,
+            0., 0., 0., -1., 1./d,
+        ]).lu();
+        let stage = |anchor: &DVector<f64>| matrix.solve(&DVector::from_column_slice(&[
+            2.+inductance/d*anchor[0], jout/(ratio*d)*anchor[1], anchor[2]/d,
+            jload/d*anchor[3], anchor[4]/d,
+        ])).unwrap();
+        let implicit = ImplicitStepConfig { sdirk2: true, reuse_sdirk_jacobian: reuse,
+            reuse_step_jacobian: reuse, mechanical_predictor:predictor, ..Default::default() };
+        let boundary = [MotorBoundary { voltage_v: 2., winding_temperature_k: 293.15 }];
+        for i in 0..10 {
+            let first = stage(&reference);
+            let mut anchor = &reference + (1.-gamma)/gamma * (&first - &reference);
+            if inductance == 0. { anchor[0] = first[0]; }
+            reference = stage(&anchor);
+            let times = std::cell::RefCell::new(Vec::new());
+            let t = i as f64 * h;
+            let step = bank.advance_with_events(&map, &g, &state, t, h,
+                &implicit, &Default::default(), &boundary, |clock, _| {
+                    times.borrow_mut().push(clock); Ok(vec![0.])
+                }).unwrap();
+            let actual = DVector::from_column_slice(&[
+                step.motor_states[0], step.motor_states[1], step.motor_states[2],
+                step.endpoint.generalized.qd[0], step.endpoint.generalized.q[0],
+            ]);
+            assert!((&actual - &reference).amax() < 2e-8, "L={inductance} step={i}: {}", (&actual - &reference).amax());
+            assert_eq!(step.hybrid.accepted_segments, 1);
+            assert_eq!(step.solves.successful_trial_implicit_stages, 2);
+            if reuse { assert!(step.solves.successful_trial_stages_with_reused_jacobian > 0); }
+            assert_eq!(step.time_s, t+h);
+            assert!(times.borrow().iter().all(|clock| *clock == t+gamma*h || *clock == t+h));
+            g = step.endpoint.generalized;
+            state = step.motor_states;
+        }
+        bank.set_contact_step_audit(true);
+        let failed = bank.advance_with_events(&map, &g, &state, 0.02, h,
+            &implicit, &Default::default(), &boundary, |_, _| Ok(vec![0.]));
+        assert!(failed.unwrap_err().contains("contact impulse"));
+    }
+}
+
+#[test]
+fn coupled_sdirk_current_has_second_order_accuracy_against_exact_rl_transient() {
+    use sim_domain_robot::articulated::embedding::ImplicitStepConfig;
+    let mut errors = Vec::new();
+    for h in [0.0002, 0.0001, 0.00005] {
+        let (art, mut g, mut config) = fixture(0.003);
+        config.parameters.insert("back_emf_constant".into(), 0.0);
+        let map = RigidEmbedding::new(&art, &["joint.shaft".into()], Default::default()).unwrap();
+        let mut bank = EmbeddedMotorBank::new(&art, &[config]).unwrap();
+        let mut state = bank.initial_states();
+        let implicit = ImplicitStepConfig { sdirk2: true, ..Default::default() };
+        for i in 0..(0.002/h) as usize {
+            let step = bank.advance_with_events(&map, &g, &state, i as f64*h, h,
+                &implicit, &Default::default(),
+                &[MotorBoundary {voltage_v:2., winding_temperature_k:293.15}],
+                |_,_|Ok(vec![0.])).unwrap();
+            g=step.endpoint.generalized;state=step.motor_states;
+        }
+        errors.push((state[0]-(1.0-(-2.0_f64*0.002/0.003).exp())).abs());
+    }
+    assert!(errors.windows(2).all(|e| e[0]/e[1]>3.7 && e[0]/e[1]<4.3), "{errors:?}");
+}
+
+#[test]
+fn sdirk_stage_proposals_preserve_changed_steps_and_rollback_failed_intervals() {
+    use sim_domain_robot::articulated::embedding::{ImplicitStepConfig, ImplicitSolverWorkspace};
+    let (art, mut g, config) = fixture(0.003);
+    let map = RigidEmbedding::new(&art, &["joint.shaft".into()], Default::default()).unwrap();
+    let mut bank = EmbeddedMotorBank::new(&art, &[config]).unwrap();
+    let mut state = bank.initial_states();
+    let mut workspace = ImplicitSolverWorkspace::default();
+    let implicit = ImplicitStepConfig { sdirk2: true, reuse_sdirk_jacobian: true,
+        reuse_step_jacobian: true, reuse_mechanical_endpoint: true,
+        reuse_mechanical_dynamics: true, ..Default::default() };
+    let cold = ImplicitStepConfig { reuse_sdirk_jacobian: false, ..implicit.clone() };
+    let mut time = 0.;
+    let mut reused_stages = 0;
+    for (i,h) in [0.002,0.002,0.001,0.001,0.002].into_iter().enumerate() {
+        let voltage=if i<2 {2.} else {-1.};
+        let expected=bank.advance_with_control(&map,&g,&state,&voltage,time,h,
+            &cold,&Default::default(),&mut FixedDrive,|_,_|Ok(vec![0.])).unwrap();
+        let actual=bank.advance_with_control_cached(&map,&g,&state,&voltage,time,h,
+            &implicit,&Default::default(),&mut FixedDrive,&mut workspace,|_,_|Ok(vec![0.])).unwrap();
+        reused_stages+=actual.motor.solves.successful_trial_stages_with_reused_jacobian;
+        assert!(actual.motor.solves.successful_trials_with_reused_jacobian<=actual.motor.solves.successful_trials);
+        for(a,b)in actual.motor.motor_states.iter().zip(&expected.motor.motor_states){assert!((a-b).abs()<2e-8);}
+        assert!((actual.motor.endpoint.generalized.q[0]-expected.motor.endpoint.generalized.q[0]).abs()<1e-10);
+        g=actual.motor.endpoint.generalized;state=actual.motor.motor_states;time+=h;
+    }
+    assert!(reused_stages>=5);
+    // A discontinuous caller clock must still invalidate the first-stage
+    // proposal; only the second stage may reuse its freshly built matrix.
+    let mut gap_workspace=workspace.clone();
+    let gap=bank.advance_with_control_cached(&map,&g,&state,&2.,time+0.1,0.002,
+        &implicit,&Default::default(),&mut FixedDrive,&mut gap_workspace,|_,_|Ok(vec![0.])).unwrap();
+    assert_eq!(gap.motor.solves.successful_trial_stages_with_reused_jacobian,1);
+    let before=workspace.clone();
+    let failed=bank.advance_with_control_cached(&map,&g,&state,&2.,time,0.002,
+        &implicit,&sim_dynamics::hybrid::HybridConfig {maximum_halvings:0,..Default::default()},
+        &mut FixedDrive,&mut workspace,|_,_|Err("deliberate stage failure".into()));
+    assert!(failed.is_err());
+    let mut replay_workspace=before;
+    let replay=bank.advance_with_control_cached(&map,&g,&state,&2.,time,0.002,
+        &implicit,&Default::default(),&mut FixedDrive,&mut replay_workspace,|_,_|Ok(vec![0.])).unwrap();
+    let after=bank.advance_with_control_cached(&map,&g,&state,&2.,time,0.002,
+        &implicit,&Default::default(),&mut FixedDrive,&mut workspace,|_,_|Ok(vec![0.])).unwrap();
+    assert_eq!(after.motor.motor_states,replay.motor.motor_states);
+    assert_eq!(after.motor.endpoint.generalized.states,replay.motor.endpoint.generalized.states);
+    assert_eq!(after.motor.endpoint.generalized.q,replay.motor.endpoint.generalized.q);
+    let invalid=ImplicitStepConfig{reuse_sdirk_jacobian:true,..Default::default()};
+    assert!(bank.advance_with_control(&map,&g,&state,&2.,time,0.002,&invalid,
+        &Default::default(),&mut FixedDrive,|_,_|Ok(vec![0.])).unwrap_err().contains("require"));
+}
+
+#[test]
+fn registered_motor_derivative_chains_match_nonlinear_residual_differences() {
+    for inductance in [0.0,0.003] { for quasistatic in [false,true] {
+        let (art,g,mut config)=fixture(inductance);
+        for (key,value) in [("jacobian.analytic",1.0),("dynamics.quasistatic_rotor",if quasistatic {1.0}else{0.0}),
+            ("efficiency",0.72),("no_load_current",0.1),("loss_speed_scale",0.3),
+            ("gear_friction",0.02),("temp_coeff",0.0039),("derating",0.001),("backlash",0.01),("backlash.events",1.0)] {
+            config.parameters.insert(key.into(),value);
+        }
+        let bank=EmbeddedMotorBank::new_with_events(&art,&[config.clone()]).unwrap();
+        let boundary=|x:&[f64]|vec![MotorBoundary {voltage_v:2.0-0.4*x[0]-0.1*(4.0*x[0]).tanh(),winding_temperature_k:293.15+0.7*x[0]*x[0]}];
+        for direction in [-1.0,1.0] { for rate_unknowns in [false,true] {
+            let x:Vec<f64>=vec![direction*0.4,direction*1.2,direction*0.03,direction];
+            let rates=vec![0.1,0.3,0.2,0.0];let h=0.001;
+            let (state_coefficient,rate_coefficient)=if rate_unknowns {(h,1.0)}else{(1.0,1.0/h)};
+            let partials=[(0,0,-0.4-0.4*(1.0-(4.0*x[0]).tanh().powi(2)),1.4*x[0])];
+            let jac=bank.supplied_auxiliary_derivative(0.1,&g,&x,&rates,&boundary(&x),&partials,state_coefficient,rate_coefficient).unwrap().unwrap();
+            let mut matrix=DMatrix::<f64>::zeros(x.len(),x.len());
+            for (r,c,v) in jac.triplets {matrix[(r,c)]+=v;}
+            for col in 0..x.len() {
+                let epsilon=1e-6;
+                let evaluate=|sign:f64| {
+                    let mut trial=x.clone();let mut velocity=rates.clone();
+                    trial[col]+=sign*epsilon*state_coefficient;velocity[col]+=sign*epsilon*rate_coefficient;
+                    bank.evaluate_forces_with_rates(0.1,&g,&trial,&velocity,&boundary(&trial)).unwrap().auxiliary_residuals
+                };
+                let plus=evaluate(1.0);let minus=evaluate(-1.0);
+                for row in 0..x.len() {
+                    let fd=(plus[row]-minus[row])/(2.0*epsilon);
+                    assert!((matrix[(row,col)]-fd).abs()<2e-7*(1.0+fd.abs()),"row={row},col={col}: {} != {fd}",matrix[(row,col)]);
+                }
+            }
+        }}
+        config.parameters.insert("jacobian.analytic".into(),0.0);
+        let numeric=EmbeddedMotorBank::new_with_events(&art,&[config]).unwrap();
+        let x=numeric.initial_states();
+        assert!(numeric.supplied_auxiliary_derivative(0.1,&g,&x,&vec![0.0;x.len()],&boundary(&x),&[],1.0,1.0).unwrap().is_none());
+    }}
 }

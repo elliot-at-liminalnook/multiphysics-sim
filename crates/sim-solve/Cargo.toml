@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [features]
+evolution = ["bayesian", "dep:cmaes"]
 native-ipopt = ["dep:libloading"]
 conic = ["dep:clarabel"]
 bayesian = ["dep:egobox-ego", "dep:egobox-doe", "dep:egobox-gp", "dep:linfa", "dep:ndarray", "dep:rand", "dep:rand_xoshiro"]
@@ -21,6 +22,7 @@ serde_json.workspace = true
 sim-domain-control = { path = "../sim-domain-control" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+cmaes = { version = "=0.2.2", default-features = false, optional = true }
 egobox-ego = { version = "=0.38.1", optional = true }
 egobox-doe = { version = "=0.35.1", optional = true }
 egobox-gp = { version = "=0.36.3", optional = true }

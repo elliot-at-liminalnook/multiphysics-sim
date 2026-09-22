@@ -100,7 +100,7 @@ impl CheckedScalar {
                     .parameters
                     .pointer(pointer)
                     .ok_or("missing checked controller scalar")?;
-                Ok((*kind, numeric(value)?))
+                Ok((kind.clone(), numeric(value)?))
             }
         }
     }
@@ -341,7 +341,7 @@ impl MotionParameterization {
             let value =
                 binding
                     .value
-                    .resolve(&self.space, values, binding.kind, binding.integer)?;
+                    .resolve(&self.space, values, binding.kind.clone(), binding.integer)?;
             // Preserve Int/Float and signed zero on identity; Rhai distinguishes
             // these number types. Changed integer outputs must be explicitly opted in.
             let replacement = if value == reference {
@@ -392,10 +392,10 @@ impl MotionParameterization {
                     .resolve(&self.space, values, QuantityKind::Dimensionless, false)?;
             let center = binding
                 .center
-                .resolve(&self.space, values, binding.kind, false)?;
+                .resolve(&self.space, values, binding.kind.clone(), false)?;
             let offset = binding
                 .offset
-                .resolve(&self.space, values, binding.kind, false)?;
+                .resolve(&self.space, values, binding.kind.clone(), false)?;
             for row in &mut actions {
                 row[index] = affine_value(row[index], scale, center, offset)?;
             }

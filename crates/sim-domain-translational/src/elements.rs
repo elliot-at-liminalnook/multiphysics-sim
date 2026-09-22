@@ -220,7 +220,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
     registry.register(BehaviorDescriptor::new(DOUBLE_WELL, "Bistable spring", vec![acausal("axis", ConnectorKind::Translational)], double_well).with_parameters(vec![P::required("a", "N/m"), P::required("b", "N/m³")]))?;
     registry.register(BehaviorDescriptor::new(LANGEVIN, "Langevin bath with drive", vec![acausal("axis", ConnectorKind::Translational)], langevin).with_parameters(vec![P::required("damping", "N·s/m"), P::optional("intensity", "N²·s", 0.0).nonnegative(), P::optional("drive_amplitude", "N", 0.0), P::optional("drive_frequency", "Hz", 0.0)]))?;
-    use ConnectorKind::Translational as T;
+    use sim_core::connectors::Translational as T;
     for descriptor in [
         BehaviorDescriptor::new(MASS, "Point mass", vec![acausal("axis", T)], mass).with_parameters(vec![P::required("mass", "kg").positive(), P::optional("damping", "N·s/m", 0.0), P::optional("initial.velocity", "m/s", 0.0)]),
         BehaviorDescriptor::new(SPRING, "Linear spring", vec![acausal("a", T), acausal("b", T)], spring).with_parameters(vec![P::required("stiffness", "N/m"), P::optional("rest", "m", 0.0)]),

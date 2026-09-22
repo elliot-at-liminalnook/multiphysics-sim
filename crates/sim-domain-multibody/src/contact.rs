@@ -498,7 +498,7 @@ fn drag(p: &Params) -> Made {
 }
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
-    use ConnectorKind::PlanarFrame as F;
+    use sim_core::connectors::PlanarFrame as F;
     use sim_core::ParameterDeclaration as P;
     let point_parameters = || vec![P::optional("px", "m", 0.), P::optional("py", "m", 0.)];
     let mut unilateral = point_parameters();

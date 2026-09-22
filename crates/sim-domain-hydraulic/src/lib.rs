@@ -2,7 +2,7 @@
 //! Volume flow is positive into an element at its first port.
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or,
 };
 use std::collections::BTreeMap;
@@ -135,7 +135,7 @@ fn valve(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::Hydraulic as Y;
+    use sim_core::connectors::Hydraulic as Y;
     for descriptor in [
         BehaviorDescriptor::new(VOLUME, "Compressible volume", vec![acausal("port", Y)], volume).with_parameters(vec![P::required("compliance", "m³/Pa").positive()]),
         BehaviorDescriptor::new(INERTANCE, "Fluid inertance", vec![acausal("a", Y), acausal("b", Y)], inertance).with_parameters(vec![P::required("inertance", "Pa·s²/m³").positive(), P::optional("initial.flow", "m³/s", 0.0)]),

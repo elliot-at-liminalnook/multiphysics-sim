@@ -2,7 +2,7 @@
 //! an element at its `p` pin.
 
 use sim_core::{
-    Behavior, Input, LocalJacobian, Output, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, Input, LocalJacobian, Output, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or, signal_in,
 };
 use std::collections::BTreeMap;
@@ -205,7 +205,7 @@ fn chua_diode(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::Electrical as E;
+    use sim_core::connectors::Electrical as E;
     let two = || vec![acausal("p", E), acausal("n", E)];
     for descriptor in [
         BehaviorDescriptor::new(GROUND, "Electrical ground", vec![acausal("pin", E)], ground).with_parameters(vec![]),
@@ -219,5 +219,5 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     ] {
         registry.register(descriptor)?;
     }
-    Ok(())
+    crate::voltage_history::register(registry)
 }

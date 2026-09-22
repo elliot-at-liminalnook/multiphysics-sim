@@ -26,6 +26,8 @@ fn default_version() -> u32 {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PhysicalModel {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub actuator_profiles: Option<crate::actuator_profile::Profiles>,
     #[serde(default = "default_version")]
     pub version: u32,
     #[serde(default)]
@@ -268,6 +270,10 @@ pub struct SdfRefinement {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Collision {
+    /// CAD geometry derivation evidence; retained through Rust replay/export.
+    /// It documents approximations and does not select alternative runtime physics.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sign_derivation: Option<serde_json::Value>,
     #[serde(default)]
     pub vertices: Vec<V3>,
     #[serde(default)]
@@ -334,7 +340,7 @@ pub enum ModalNormalization {
 
 impl ModalNormalization {
     pub fn quantities(self) -> (sim_core::QuantityKind, sim_core::QuantityKind) {
-        use sim_core::QuantityKind::*;
+        use sim_core::quantities::*;
         match self {
             Self::Unspecified => (ModalCoordinate, ModalVelocity),
             Self::Displacement => (Length, LinearVelocity),
@@ -645,6 +651,10 @@ pub struct MotorElectrical {
     pub back_emf_constant: f64,
     #[serde(default)]
     pub no_load_current: f64,
+    /// Optional model regularization in rotor rad/s, not a measured breakaway speed.
+    /// None retains the motor component's historical 5 rad/s smooth-loss default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loss_speed_scale: Option<f64>,
     #[serde(default = "MotorElectrical::default_rotor")]
     pub rotor_inertia: f64,
     #[serde(default = "MotorElectrical::default_v")]
@@ -844,6 +854,9 @@ impl Default for Driver {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Motor {
+    /// Host-derived cache; never deserialize it as a second source of truth.
+    #[serde(skip)]
+    pub resolved_actuator: Option<crate::actuator_profile::Resolved>,
     pub name: String,
     #[serde(default)]
     pub id: String,

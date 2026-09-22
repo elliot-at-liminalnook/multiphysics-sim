@@ -37,19 +37,28 @@ impl EmbeddedServoBank {
         motors: &EmbeddedMotorBank,
         configs: &[EmbeddedServoConfig],
     ) -> Result<Self, String> {
+        Self::new_with_kinds(motors, configs, &vec![crate::SERVO_FIRMWARE; configs.len()])
+    }
+    /// Select registered sampled controllers explicitly. The same event adapter
+    /// executes catalog firmware and the FPGA integer controller; declarations
+    /// retain their own parameter validation, quantization and delay semantics.
+    pub fn new_with_kinds(
+        motors: &EmbeddedMotorBank,
+        configs: &[EmbeddedServoConfig],
+        kinds: &[&str],
+    ) -> Result<Self, String> {
         let names = motors.dof_names();
         let layout = motors.state_layout();
-        if configs.len() != names.len() || configs.iter().zip(&names).any(|(c, n)| &c.dof != n) {
+        if configs.len() != names.len() || kinds.len() != configs.len() || configs.iter().zip(&names).any(|(c, n)| &c.dof != n) {
             return Err("one servo per motor in exact named order is required".into());
         }
         let mut registry = BehaviorRegistry::default();
         crate::motor::register(&mut registry).map_err(|e| e.to_string())?;
-        let descriptor = registry
-            .get(&crate::SERVO_FIRMWARE.into())
-            .map_err(|e| e.to_string())?;
+        sim_domain_control::sampled_fixed_pd::register(&mut registry).map_err(|e| e.to_string())?;
         let mut servos = Vec::new();
         let mut state_count = 0;
-        for (config, motor) in configs.iter().zip(&layout) {
+        for ((config, motor), kind) in configs.iter().zip(&layout).zip(kinds) {
+            let descriptor = registry.get(&(*kind).into()).map_err(|e| e.to_string())?;
             descriptor
                 .validate_parameters(&config.parameters)
                 .map_err(|e| e.to_string())?;
@@ -60,7 +69,7 @@ impl EmbeddedServoBank {
                     .copied()
                     .unwrap_or(50.0)
                     .max(1.0);
-            if !delay.is_finite() || delay.round() > 65536.0 {
+            if *kind == crate::SERVO_FIRMWARE && (!delay.is_finite() || delay.round() > 65536.0) {
                 return Err("servo delay queue exceeds 65536-sample adapter capacity".into());
             }
             let equations =
@@ -69,7 +78,7 @@ impl EmbeddedServoBank {
             let states = equations.states();
             if states.len() < 5
                 || states[0].name != "command"
-                || states.last().unwrap().name != "next_sample"
+                || !["next_sample", "next_event"].contains(&states.last().unwrap().name.as_str())
             {
                 return Err("registered servo state layout changed".into());
             }
@@ -286,6 +295,15 @@ pub struct EmbeddedServoControl<'a> {
     target_law: Option<&'a dyn Fn(f64) -> Result<Vec<f64>, String>>,
 }
 impl EmbeddedServoControl<'_> {
+    fn driver_inputs(&self, t: f64, g: &Generalized, held: &[f64]) -> Result<Vec<DriverBoundary>, String> {
+        let boundaries = self.inputs_at(t)?;
+        let commands = self.servos.commands(t, g, held, &boundaries)?;
+        Ok(boundaries.iter().zip(commands).map(|(i, duty)| DriverBoundary {
+            supply_voltage_v: i.supply_voltage_v,
+            duty,
+            winding_temperature_k: i.winding_temperature_k,
+        }).collect())
+    }
     fn inputs_at(&self, t: f64) -> Result<std::borrow::Cow<'_, [ServoBoundary]>, String> {
         let Some(law) = self.target_law else {
             return Ok(std::borrow::Cow::Borrowed(self.inputs));
@@ -321,17 +339,7 @@ impl SampledMotorControl for EmbeddedServoControl<'_> {
         motors: &[f64],
         held: &Self::State,
     ) -> Result<Vec<MotorBoundary>, String> {
-        let boundaries = self.inputs_at(t)?;
-        let commands = self.servos.commands(t, g, held, &boundaries)?;
-        let inputs: Vec<_> = boundaries
-            .iter()
-            .zip(commands)
-            .map(|(i, duty)| DriverBoundary {
-                supply_voltage_v: i.supply_voltage_v,
-                duty,
-                winding_temperature_k: i.winding_temperature_k,
-            })
-            .collect();
+        let inputs = self.driver_inputs(t, g, held)?;
         self.drivers.evaluate(t, motors, &inputs).map(|r| r.0)
     }
     fn guards(&self, t: f64, g: &Generalized, held: &Self::State) -> Result<Vec<f64>, String> {
@@ -363,5 +371,73 @@ impl SampledMotorControl for EmbeddedServoControl<'_> {
     ) -> Result<(), String> {
         let inputs = self.inputs_at(t)?.into_owned();
         self.servos.jump(i, t, g, held, &inputs)
+    }
+}
+
+/// All physical and held states needed to resume a powered controller.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PoweredServoState {
+    pub servo: Vec<f64>,
+    pub power: Vec<f64>,
+}
+
+pub struct PoweredServoControl<'a> {
+    servo: EmbeddedServoControl<'a>,
+    power: &'a super::EmbeddedPowerBank,
+}
+
+impl<'a> EmbeddedServoControl<'a> {
+    /// Explicitly replace imposed supply voltage with a coupled power network.
+    /// Servo temperature and target inputs retain their declared meaning.
+    pub fn with_power(self, power: &'a super::EmbeddedPowerBank) -> Result<PoweredServoControl<'a>, String> {
+        power.validate_binding(&self.servos.names)?;
+        Ok(PoweredServoControl { servo: self, power })
+    }
+}
+
+impl SampledMotorControl for PoweredServoControl<'_> {
+    type State = PoweredServoState;
+    fn boundaries_and_residuals(&self, t: f64, g: &Generalized, motors: &[f64], held: &Self::State, rates: &[f64]) -> Result<(Vec<MotorBoundary>, Vec<f64>), String> {
+        let (boundaries, _, residuals, _) = self.power.evaluate(
+            t, self.servo.drivers, motors, &self.servo.driver_inputs(t, g, &held.servo)?,
+            &held.power, rates,
+        )?;
+        Ok((boundaries, residuals))
+    }
+    fn validate_endpoint(&self, held: &Self::State) -> Result<(), String> {
+        self.power.validate_endpoint(&held.power)
+    }
+    // Keep the default false: even separate branches share the battery current.
+    fn continuous_states(&self, held: &Self::State) -> Vec<f64> { held.power.clone() }
+    fn set_continuous_states(&self, held: &mut Self::State, states: &[f64]) -> Result<(), String> {
+        self.power.validate_states(states)?;
+        held.power.clear();
+        held.power.extend_from_slice(states);
+        Ok(())
+    }
+    fn reconcile_continuous_states(&self, t: f64, g: &Generalized, motors: &[f64], held: &mut Self::State) -> Result<(), String> {
+        self.power.reconcile(t, self.servo.drivers, motors,
+            &self.servo.driver_inputs(t, g, &held.servo)?, &mut held.power)
+    }
+    fn boundaries(&self, t: f64, g: &Generalized, motors: &[f64], held: &Self::State) -> Result<Vec<MotorBoundary>, String> {
+        self.power.evaluate(t, self.servo.drivers, motors, &self.servo.driver_inputs(t, g, &held.servo)?,
+            &held.power, &vec![0.0; held.power.len()]).map(|r| r.0)
+    }
+    fn continuous_residuals(&self, t: f64, g: &Generalized, motors: &[f64], held: &Self::State, rates: &[f64]) -> Result<Vec<f64>, String> {
+        self.power.evaluate(t, self.servo.drivers, motors, &self.servo.driver_inputs(t, g, &held.servo)?,
+            &held.power, rates).map(|r| r.2)
+    }
+    fn guards(&self, t: f64, g: &Generalized, held: &Self::State) -> Result<Vec<f64>, String> {
+        self.servo.guards(t, g, &held.servo)
+    }
+    fn scheduled(&self, t: f64, g: &Generalized, held: &Self::State) -> Result<Vec<(usize, f64)>, String> {
+        self.servo.scheduled(t, g, &held.servo)
+    }
+    fn permits_jacobian_reuse_after_sample(&self, guard: usize) -> bool {
+        self.servo.permits_jacobian_reuse_after_sample(guard)
+    }
+    fn jump(&mut self, i: usize, t: f64, g: &Generalized, held: &mut Self::State) -> Result<(), String> {
+        self.servo.jump(i, t, g, &mut held.servo)
     }
 }

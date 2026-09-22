@@ -4,7 +4,7 @@
 //! *into* the behavior, and every node sums its ports' throughs to zero.
 
 use sim_core::{
-    Behavior, Input, LocalJacobian, Output, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, Provision, QuantityKind, RegistryError,
+    Behavior, Input, LocalJacobian, Output, BehaviorDescriptor, BehaviorRegistry, Context, Provision, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or, signal_in, signal_out,
 };
 use std::collections::BTreeMap;
@@ -277,7 +277,7 @@ fn speed_trip(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::Rotational as R;
+    use sim_core::connectors::Rotational as R;
     for descriptor in [
         BehaviorDescriptor::new(INERTIA, "Rotational inertia", vec![acausal("shaft", R)], inertia).with_parameters(vec![P::required("inertia", "kg·m²").positive(), P::optional("damping", "N·m·s/rad", 0.0), P::optional("initial.speed", "rad/s", 0.0)]),
         BehaviorDescriptor::new(SPRING, "Torsional spring", vec![acausal("a", R), acausal("b", R)], spring).with_parameters(vec![P::required("stiffness", "N·m/rad")]),

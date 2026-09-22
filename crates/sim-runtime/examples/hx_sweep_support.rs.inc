@@ -806,6 +806,8 @@ mod sweep_tests {
             }
         }
         let mut bus = Bus {
+            pending: PacketBuffer::default(),
+            raw_log: None,
             serial: Box::new(Mock {
                 state: state.clone(),
                 rx: VecDeque::new(),
@@ -890,6 +892,26 @@ mod sweep_tests {
         assert!(plan.validate(&(4..=12).collect::<Vec<_>>()).is_ok());
         plan.free_rotation_maximum_counts_s = None;
         assert!(plan.validate(&(4..=12).collect::<Vec<_>>()).is_err());
+    }
+    #[test]
+    fn captured_controller_commands_and_fault_cleanup_use_the_supervised_protocol() {
+        use sim_runtime::controller_refinement::control::{Experiment, Knot, Policy};
+        for fault in [false,true] {
+            let out=std::env::temp_dir().join(format!("hx-controller-mock-{}-{fault}",std::process::id()));
+            if out.exists(){fs::remove_dir_all(&out).unwrap();}fs::create_dir(&out).unwrap();
+            let state=Arc::new(Mutex::new(State::new(fault)));
+            let mut bus=Bus{pending:PacketBuffer::default(),raw_log:None,serial:Box::new(Mock{state:state.clone(),rx:VecDeque::new()}),log:File::create(out.join("transactions.jsonl")).unwrap(),start:Instant::now(),seq:0};
+            let evidence=out.join("cadence.json");fs::write(&evidence,b"synthetic protocol-double cadence").unwrap();
+            let mut e=Experiment::default();e.duration_s=0.3;e.timing.period_s=0.05;e.timing.observation_delay_ticks=0;e.timing.command_delay_ticks=0;e.timing.maximum_observation_age_s=0.1;
+            e.trajectory=vec![Knot{time_s:0.,position_rad:0.},Knot{time_s:0.02,position_rad:0.1}];
+            if let Policy::RustPid{parameters}=&mut e.controller{parameters.duty_limit=0.05;}
+            let plan=ControllerBenchPlan{control:"closed_loop_pwm".into(),experiment:e,cadence_evidence:evidence.display().to_string(),cadence_evidence_blake3:blake3::hash(&fs::read(&evidence).unwrap()).to_hex().to_string()};
+            let result=run_controller_bench(&mut bus,&out,&(4..=12).collect::<Vec<_>>(),&plan).unwrap();
+            assert_eq!(result["completed"],!fault,"{result}");
+            let s=state.lock().unwrap();assert!(s.latched&&s.armed==0);assert!(s.registers.iter().all(|r|r[0x28]==0&&r[0x2c]==0&&r[0x2d]==0));
+            assert!(s.motion_packets>0);
+            if !fault {let r:sim_runtime::controller_refinement::recording::Recording=serde_json::from_slice(&fs::read(out.join("recording.json")).unwrap()).unwrap();r.validate().unwrap();assert!(r.stop_verified);}
+        }
     }
     #[test]
     fn late_settling_extends_zero_drive_observation_without_restarting_motion() {

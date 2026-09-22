@@ -50,6 +50,13 @@ pub enum ObservationSource {
     NeuralCorrection { actuator: String },
     MotorCurrent { motor: String },
     MotorTorque { motor: String },
+    BatteryVoltage,
+    BatteryCurrent,
+    BatteryPower,
+    BatteryStateOfCharge,
+    BatteryEnergy,
+    PowerBranchVoltage { branch: String },
+    PowerBranchCurrent { branch: String },
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -281,6 +288,18 @@ impl EmbeddedEnvironment {
             let mut floor_force = None;
             let mut neural = None;
             let (pointer, kind) = match &o.source {
+                BatteryVoltage => ("/power/voltage_v".into(), QuantityKind::Voltage),
+                BatteryCurrent => ("/power/current_a".into(), QuantityKind::Current),
+                BatteryPower => ("/power/power_w".into(), QuantityKind::Power),
+                BatteryStateOfCharge => ("/power/state_of_charge".into(), QuantityKind::Dimensionless),
+                BatteryEnergy => ("/power/terminal_energy_j".into(), QuantityKind::Energy),
+                PowerBranchVoltage { branch } | PowerBranchCurrent { branch } => {
+                    let branches=frame.pointer("/power/branches").and_then(|v|v.as_array()).ok_or("Branch observations require CAD power dynamics")?;
+                    let i=branches.iter().position(|b|b["id"]==*branch).ok_or_else(||format!("Unknown power branch {branch}"))?;
+                    if matches!(&o.source, PowerBranchVoltage { .. }) {
+                        (format!("/power/branches/{i}/voltage_v"),QuantityKind::Voltage)
+                    } else { (format!("/power/branches/{i}/current_a"),QuantityKind::Current) }
+                }
                 CoordinatePosition { coordinate: name } => {
                     let (i, (kind, _)) = coordinate(name)?;
                     (format!("/joint_positions/{i}"), kind)
@@ -324,7 +343,7 @@ impl EmbeddedEnvironment {
                     let i = session.inputs().iter().position(|c| &c.name == name)
                         .ok_or_else(|| format!("unknown controller input {name}"))?;
                     input_index = Some(i);
-                    (format!("/policy_inputs/{i}"), session.inputs()[i].kind)
+                    (format!("/policy_inputs/{i}"), session.inputs()[i].kind.clone())
                 }
                 NeuralCorrection { actuator } => {
                     session.neural_correction(actuator).ok_or_else(|| format!("unknown neural correction {actuator}"))?;
@@ -647,6 +666,12 @@ impl EmbeddedEnvironment {
     }
     pub fn interval_diagnostics(&self) -> &[sim_dynamics::hybrid::HybridDiagnostics] {
         self.session.interval_diagnostics()
+    }
+    /// Read-only motor-trial work; see the session's accounting scope.
+    pub fn motor_solve_statistics(
+        &self,
+    ) -> &[sim_domain_robot::articulated::embedding::MotorSolveStatistics] {
+        self.session.motor_solve_statistics()
     }
     /// Host-only bounded-run diagnostics; does not alter the recorded recipe.
     pub fn retain_solver_diagnostics(&mut self, enabled: bool) {

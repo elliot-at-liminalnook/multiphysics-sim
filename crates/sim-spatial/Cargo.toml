@@ -1,0 +1,15 @@
+[package]
+name = "sim-spatial"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sim-render = { path = "../sim-render" }
+sim-api = { path = "../sim-api" }
+serde.workspace = true
+# Match the existing spatial host, without audio/gamepad/animation dependencies.
+bevy = { version = "=0.16.1", default-features = false, features = ["std", "async_executor", "multi_threaded", "bevy_asset", "bevy_log", "bevy_render", "bevy_pbr", "bevy_gizmos", "bevy_ui", "bevy_winit", "bevy_mesh_picking_backend", "bevy_ui_picking_backend", "default_font", "png", "x11"] }
+sim-inspect = { path = "../sim-inspect" }
+serde_json.workspace = true
+clap.workspace = true

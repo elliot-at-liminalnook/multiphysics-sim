@@ -238,11 +238,12 @@ fn component_channels(runtime: &Runtime, plan: &sim_script::System, parts: &BTre
             }
         }
         for (&id, port) in instance.ports.values().map(|id| (id, &runtime.model.ports[*id])) {
-        match port.schema {
+        match &port.schema {
             PortSchema::Acausal(kind) => {
-                for (lane_index, lane) in kind.lanes().iter().enumerate() {
-                    channels.insert(format!("{name}.{}.{}", port.name, lane.across),
-                        (runtime.across_lane_id(id, lane_index), lane.across_kind.unit().to_owned()));
+                for (lane_index, lane) in kind.resolve(&runtime.definitions).expect("compiled port definition").lanes.iter().enumerate() {
+                    let unit = &runtime.definitions.quantity(runtime.definitions.quantity_handle(&lane.across.quantity).unwrap()).unwrap().canonical_unit;
+                    channels.insert(format!("{name}.{}.{}", port.name, lane.across.name),
+                        (runtime.across_lane_id(id, lane_index), unit.clone()));
                 }
             }
             PortSchema::SignalIn(kind) | PortSchema::SignalOut(kind) => {
@@ -261,7 +262,7 @@ fn add_component_trace(result: &mut Value, ids: &[(StateId, String, String)], si
     for (_, name, unit) in ids { result["signal_units"][name] = json!(unit); }
 }
 
-fn describe_components(world: &ModelWorld, cad_names: &[(String, String)]) -> Value {
+fn describe_components(world: &ModelWorld, cad_names: &[(String, String)], definitions: &sim_core::definitions::FrozenDefinitions) -> Value {
     json!(world.behaviors.iter().map(|(id, behavior)| {
         let name = &world.objects[behavior.object].name;
         let identity = cad_names.iter().filter(|(body, _)| !body.is_empty()).find_map(|(body, display)|
@@ -272,7 +273,7 @@ fn describe_components(world: &ModelWorld, cad_names: &[(String, String)]) -> Va
             "parameters":behavior.parameters.iter().map(|(key, value)|
                 (key, if value.value_si.is_finite() {json!(value.value_si)} else {json!(value.value_si.to_string())})).collect::<BTreeMap<_,_>>(),
             "ports":world.ports.iter().filter(|(_, port)| port.owner == id)
-                .map(|(_, port)| sim_script::describe_port(&port.name, port.schema)).collect::<Vec<_>>()})
+                .map(|(_, port)| sim_script::describe_port(&port.name, port.schema.clone(), definitions)).collect::<Vec<_>>()})
     }).collect::<Vec<_>>())
 }
 
@@ -298,10 +299,8 @@ fn validate_composition(world: &ModelWorld, registry: &sim_core::BehaviorRegistr
             if let Some(port) = world.ports.get(*id) {
                 let Some(behavior) = world.behaviors.get(port.owner) else { continue; };
                 let Some(object) = world.objects.get(behavior.object) else { continue; };
-                let schema = match port.schema {
-                    PortSchema::Acausal(kind) => format!("{} [{}]", kind.name(), kind.lanes().iter()
-                        .map(|lane| format!("{} / {}", lane.across_kind.unit(), lane.through_kind.unit()))
-                        .collect::<Vec<_>>().join(", ")),
+                let schema = match &port.schema {
+                    PortSchema::Acausal(kind) => format!("{} (schema {})", kind.name(), kind.definition_id().version),
                     PortSchema::SignalIn(kind) => format!("input [{}]", kind.unit()),
                     PortSchema::SignalOut(kind) => format!("output [{}]", kind.unit()),
                 };
@@ -366,6 +365,7 @@ pub fn run(
     std::fs::create_dir_all(output).map_err(|e| e.to_string())?;
     let begin = Instant::now();
     let registry = registry();
+    let definitions = registry.frozen_definitions().map_err(|e| e.to_string())?;
     progress(json!({"state":"building","stage":"script"}));
     let plan = sim_script::evaluate_seeded(
         &spec.system,
@@ -417,7 +417,7 @@ pub fn run(
         let mut runtime = Runtime::new(world, &registry, Integrator::BackwardEuler(newton()))
             .map_err(|e| script_runtime_diagnostic(e.to_string(), &plan, &native_names))?;
         runtime.seed(spec.seed);
-        write_json(&output.join("resolved_components.json"), &describe_components(&runtime.model, &[]))?;
+        write_json(&output.join("resolved_components.json"), &describe_components(&runtime.model, &[], definitions))?;
         if let Some(c) = &spec.controller {
             let name = c.seam.as_deref().unwrap_or("controller");
             let seam = parts
@@ -502,7 +502,7 @@ pub fn run(
         let mut native_names = BTreeMap::new();
         let mut robot =
             PhysicalRobot::build_with(model, &registry, &options, |world, assembly| {
-                write_json(&output.join("imported_components.json"), &describe_components(world, &cad_names))?;
+                write_json(&output.join("imported_components.json"), &describe_components(world, &cad_names, definitions))?;
                 let mut parts = sim_script::instances(world);
                 // Stable CAD IDs survive display-name changes. Roles retain
                 // their native suffix (case, winding, unit, g_wc, mount, ...).
@@ -529,7 +529,7 @@ pub fn run(
                 Ok(())
             }).map_err(|error| script_runtime_diagnostic(error, &plan, &native_names))?;
         robot.runtime.seed(spec.seed);
-        write_json(&output.join("resolved_components.json"), &describe_components(&robot.runtime.model, &cad_names))?;
+        write_json(&output.join("resolved_components.json"), &describe_components(&robot.runtime.model, &cad_names, definitions))?;
         if let Some(c) = &spec.controller {
             let seam = robot
                 .seam

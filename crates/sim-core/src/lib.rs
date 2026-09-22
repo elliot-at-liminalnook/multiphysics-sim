@@ -1,8 +1,10 @@
 //! Stable authoring identities, typed ports, the behavior registry, and transactional state.
 
 pub mod couple;
+pub mod definitions;
 pub mod equations;
 pub mod parameters;
+pub mod primitive;
 pub use parameters::ParameterDeclaration;
 pub use couple::{Channel, Contract, Coupler, CouplerError, FnCoupler};
 pub use equations::{linearization_batch_columns, Behavior, Branch, Context, EquationError, Equations, Input, Lane, LocalJacobian, Output, PreparedResidual, Provision, StateDeclaration, View, param, param_or};
@@ -19,84 +21,10 @@ new_key_type! {
     pub struct StateId;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum QuantityKind {
-    Dimensionless,
-    Time,
-    Voltage,
-    Current,
-    Angle,
-    AngularVelocity,
-    AngularAcceleration,
-    Torque,
-    Length,
-    LinearVelocity,
-    LinearAcceleration,
-    MassNormalizedDisplacement,
-    MassNormalizedVelocity,
-    ModalCoordinate,
-    ModalVelocity,
-    Force,
-    Impulse,
-    AngularImpulse,
-    Energy,
-    Power,
-    Temperature,
-    HeatFlow,
-    Entropy,
-    Pressure,
-    VolumeFlow,
-    Frequency,
-    Mass,
-    MassFlow,
-    SpecificEnthalpy,
-    ChemicalPotential,
-    MolarFlow,
-    Radiosity,
-    MagneticFlux,
-}
+mod quantity;
+pub use quantity::{QuantityKind, quantities};
 
-impl QuantityKind {
-    pub const fn unit(self) -> &'static str {
-        match self {
-            Self::Dimensionless => "1",
-            Self::Time => "s",
-            Self::Voltage => "V",
-            Self::Current => "A",
-            Self::Angle => "rad",
-            Self::AngularVelocity => "rad/s",
-            Self::AngularAcceleration => "rad/s²",
-            Self::Torque => "N·m",
-            Self::Length => "m",
-            Self::LinearVelocity => "m/s",
-            Self::LinearAcceleration => "m/s²",
-            Self::MassNormalizedDisplacement => "m·√kg",
-            Self::MassNormalizedVelocity => "m·√kg/s",
-            Self::ModalCoordinate => "modal",
-            Self::ModalVelocity => "modal/s",
-            Self::Force => "N",
-            Self::Impulse => "N·s",
-            Self::AngularImpulse => "N·m·s",
-            Self::Energy => "J",
-            Self::Power => "W",
-            Self::Temperature => "K",
-            Self::HeatFlow => "W",
-            Self::Entropy => "J/K",
-            Self::Pressure => "Pa",
-            Self::VolumeFlow => "m³/s",
-            Self::Frequency => "Hz",
-            Self::Mass => "kg",
-            Self::MassFlow => "kg/s",
-            Self::SpecificEnthalpy => "J/kg",
-            Self::ChemicalPotential => "J/mol",
-            Self::MolarFlow => "mol/s",
-            Self::Radiosity => "W/m²",
-            Self::MagneticFlux => "Wb",
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Quantity {
     pub value_si: f64,
     pub kind: QuantityKind,
@@ -108,176 +36,10 @@ impl Quantity {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ConnectorKind {
-    Electrical,
-    Rotational,
-    Translational,
-    Frame,
-    /// Across: temperature; through: heat flow. Power is not across × through
-    /// here — the port carries signed heat and tracks entropy separately.
-    Thermal,
-    Hydraulic,
-    Acoustic,
-    /// Normalized pressure and source flow for nondimensional duct models.
-    /// Requires explicit scaling to connect to a physical acoustic model.
-    NormalizedAcoustic,
-    /// Magnetic circuit, power-conjugate: across mmf (A), through flux rate (Wb/s).
-    Magnetic,
-    /// Two-phase fluid: across (pressure, specific enthalpy), through
-    /// (mass flow, enthalpy flow). Volumes provide both across lanes.
-    FluidPh,
-    /// One chemical species: across chemical potential (J/mol), through molar flow (mol/s).
-    Chemical,
-    /// Radiative exchange in one band: across radiosity (W/m²), through radiant power (W).
-    Radiative,
-    /// Granular material: across the stress on a plane (Pa), through grain mass flow (kg/s).
-    Granular,
-    /// Two translational lanes (x, y) for planar mechanics.
-    Planar,
-    /// Owned planar rigid-body frame: pose (x, y, θ) and twist (vx, vy, ω)
-    /// across, planar wrench (fx, fy, torque) through.
-    PlanarFrame,
-    /// A bundle of other connectors behind one port — a motor plug is
-    /// `Electrical ⊕ Rotational ⊕ Thermal`. The model fans a composite port
-    /// out into member ports (`plug.electrical`, `plug.rotational`, …), so
-    /// the compiler only ever sees the members; the behavior sees one flat
-    /// lane bundle laid out member after member.
-    Composite(#[serde(deserialize_with = "leak_members")] &'static [ConnectorKind]),
-}
+mod connector;
+pub use connector::{ConnectorKind, ConnectorSchema, connectors};
 
-fn leak_members<'de, D: serde::Deserializer<'de>>(d: D) -> Result<&'static [ConnectorKind], D::Error> {
-    let members: Vec<ConnectorKind> = serde::Deserialize::deserialize(d)?;
-    Ok(Box::leak(members.into_boxed_slice()))
-}
-
-impl ConnectorKind {
-    /// Motor plug: winding terminal (return via chassis), shaft, case.
-    pub const MOTOR: ConnectorKind = ConnectorKind::Composite(&[ConnectorKind::Electrical, ConnectorKind::Rotational, ConnectorKind::Thermal]);
-    /// Battery terminal: electrical, the case, and the electrolyte species.
-    pub const BATTERY: ConnectorKind = ConnectorKind::Composite(&[ConnectorKind::Electrical, ConnectorKind::Thermal, ConnectorKind::Chemical]);
-
-    /// Member connectors of a composite; a plain connector is its own single member.
-    pub fn members(self) -> &'static [ConnectorKind] {
-        match self {
-            ConnectorKind::Composite(members) => members,
-            ConnectorKind::Electrical => &[ConnectorKind::Electrical],
-            ConnectorKind::Rotational => &[ConnectorKind::Rotational],
-            ConnectorKind::Translational => &[ConnectorKind::Translational],
-            ConnectorKind::Frame => &[ConnectorKind::Frame],
-            ConnectorKind::Thermal => &[ConnectorKind::Thermal],
-            ConnectorKind::Hydraulic => &[ConnectorKind::Hydraulic],
-            ConnectorKind::Acoustic => &[ConnectorKind::Acoustic],
-            ConnectorKind::NormalizedAcoustic => &[ConnectorKind::NormalizedAcoustic],
-            ConnectorKind::Magnetic => &[ConnectorKind::Magnetic],
-            ConnectorKind::FluidPh => &[ConnectorKind::FluidPh],
-            ConnectorKind::Chemical => &[ConnectorKind::Chemical],
-            ConnectorKind::Radiative => &[ConnectorKind::Radiative],
-            ConnectorKind::Granular => &[ConnectorKind::Granular],
-            ConnectorKind::Planar => &[ConnectorKind::Planar],
-            ConnectorKind::PlanarFrame => &[ConnectorKind::PlanarFrame],
-        }
-    }
-
-    pub fn name(self) -> &'static str {
-        match self {
-            ConnectorKind::Electrical => "electrical",
-            ConnectorKind::Rotational => "rotational",
-            ConnectorKind::Translational => "translational",
-            ConnectorKind::Frame => "frame",
-            ConnectorKind::Thermal => "thermal",
-            ConnectorKind::Hydraulic => "hydraulic",
-            ConnectorKind::Acoustic => "acoustic",
-            ConnectorKind::NormalizedAcoustic => "normalized_acoustic",
-            ConnectorKind::Magnetic => "magnetic",
-            ConnectorKind::FluidPh => "fluid_ph",
-            ConnectorKind::Chemical => "chemical",
-            ConnectorKind::Radiative => "radiative",
-            ConnectorKind::Granular => "granular",
-            ConnectorKind::Planar => "planar",
-            ConnectorKind::PlanarFrame => "planar_frame",
-            ConnectorKind::Composite(_) => "composite",
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ConnectorSchema {
-    pub across: QuantityKind,
-    pub through: QuantityKind,
-}
-
-impl ConnectorKind {
-    pub const fn schema(self) -> ConnectorSchema {
-        match self {
-            Self::Composite(members) => members[0].schema(),
-            Self::Magnetic => ConnectorSchema {
-                across: QuantityKind::Current,
-                through: QuantityKind::Voltage,
-            },
-            Self::FluidPh => ConnectorSchema {
-                across: QuantityKind::Pressure,
-                through: QuantityKind::MassFlow,
-            },
-            Self::Chemical => ConnectorSchema {
-                across: QuantityKind::ChemicalPotential,
-                through: QuantityKind::MolarFlow,
-            },
-            Self::Radiative => ConnectorSchema {
-                across: QuantityKind::Radiosity,
-                through: QuantityKind::Power,
-            },
-            Self::Granular => ConnectorSchema {
-                across: QuantityKind::Pressure,
-                through: QuantityKind::MassFlow,
-            },
-            Self::Electrical => ConnectorSchema {
-                across: QuantityKind::Voltage,
-                through: QuantityKind::Current,
-            },
-            Self::Rotational => ConnectorSchema {
-                across: QuantityKind::Angle,
-                through: QuantityKind::Torque,
-            },
-            Self::Translational => ConnectorSchema {
-                across: QuantityKind::Length,
-                through: QuantityKind::Force,
-            },
-            Self::Frame => ConnectorSchema {
-                across: QuantityKind::Length,
-                through: QuantityKind::Force,
-            },
-            Self::Thermal => ConnectorSchema {
-                across: QuantityKind::Temperature,
-                through: QuantityKind::HeatFlow,
-            },
-            Self::Hydraulic | Self::Acoustic => ConnectorSchema {
-                across: QuantityKind::Pressure,
-                through: QuantityKind::VolumeFlow,
-            },
-            Self::NormalizedAcoustic => ConnectorSchema {
-                across: QuantityKind::Dimensionless,
-                through: QuantityKind::Dimensionless,
-            },
-            Self::Planar | Self::PlanarFrame => ConnectorSchema {
-                across: QuantityKind::Length,
-                through: QuantityKind::Force,
-            },
-        }
-    }
-
-    pub const fn power_unit(self) -> &'static str {
-        "W"
-    }
-
-    /// Whether across × through is a power. Thermal ports carry heat flow
-    /// directly, so their conservation law is a heat balance instead.
-    pub const fn is_power_conjugate(self) -> bool {
-        !matches!(self, Self::Thermal)
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PortSchema {
     Acausal(ConnectorKind),
     SignalIn(QuantityKind),
@@ -389,11 +151,9 @@ impl ModelWorld {
             self.connections.push(Connection { ports });
             return;
         }
-        let members: Vec<ConnectorKind> = match self.ports[composites[0]].schema {
-            PortSchema::Acausal(kind) => kind.members().to_vec(),
-            _ => Vec::new(),
-        };
-        let same_shape = composites.iter().all(|c| matches!(self.ports[*c].schema, PortSchema::Acausal(kind) if kind.members() == members.as_slice()));
+        let parent_schema = &self.ports[composites[0]].schema;
+        let members: Vec<_> = self.ports[composites[0]].members.iter().map(|id| self.ports[*id].schema.clone()).collect();
+        let same_shape = composites.iter().all(|c| &self.ports[*c].schema == parent_schema && self.ports[*c].members.iter().map(|id| &self.ports[*id].schema).eq(members.iter()));
         if !same_shape {
             self.connections.push(Connection { ports });
             return;
@@ -405,11 +165,7 @@ impl ModelWorld {
             acc
         });
         for port in ports.iter().filter(|p| self.ports[**p].members.is_empty()) {
-            let kind = match self.ports[*port].schema {
-                PortSchema::Acausal(kind) => Some(kind),
-                _ => None,
-            };
-            match kind.and_then(|k| members.iter().position(|m| *m == k)) {
+            match members.iter().position(|schema| schema == &self.ports[*port].schema) {
                 Some(k) => per_member[k].push(*port),
                 None => {
                     // Unresolvable: keep the connection as written.
@@ -419,7 +175,7 @@ impl ModelWorld {
             }
         }
         for ports in per_member {
-            self.connections.push(Connection { ports });
+            self.connect(ports);
         }
     }
 
@@ -434,6 +190,7 @@ impl ModelWorld {
     ) -> Result<Instance, RegistryError> {
         let descriptor = registry.get(&BehaviorTypeId::from(kind))?;
         let declared = descriptor.ports.clone();
+        let definitions = registry.frozen_definitions()?;
         let behavior = self.add_behavior(object, kind);
         for (name, value) in parameters {
             self.behaviors[behavior]
@@ -447,25 +204,30 @@ impl ModelWorld {
             if port.name.contains('*') {
                 let members: Vec<String> = self.behaviors[behavior].parameters.keys().filter(|k| port.matches(k)).cloned().collect();
                 for name in members {
-                    let id = self.add_port(behavior, name.clone(), port.schema);
-                    ports.insert(name, id);
+                    self.add_declared_port(behavior, name, port.schema.clone(), definitions, &mut ports)?;
                 }
                 continue;
             }
-            let id = self.add_port(behavior, port.name, port.schema);
-            ports.insert(port.name.to_owned(), id);
-            if let PortSchema::Acausal(ConnectorKind::Composite(members)) = port.schema {
-                // Fan the composite out: one member port per member kind.
+            self.add_declared_port(behavior, port.name.into(), port.schema, definitions, &mut ports)?;
+        }
+        Ok(Instance { behavior, ports })
+    }
+
+    fn add_declared_port(&mut self, behavior: BehaviorId, name: String, schema: PortSchema,
+        definitions: &definitions::FrozenDefinitions, ports: &mut BTreeMap<String, PortId>) -> Result<PortId, RegistryError> {
+        let id = self.add_port(behavior, name.clone(), schema.clone());
+        ports.insert(name.clone(), id);
+        if let PortSchema::Acausal(kind) = schema {
+            if let definitions::ConnectionRule::Composite { members } = &definitions.connector_by_id(&kind.definition_id())?.rule {
                 for (index, member) in members.iter().enumerate() {
-                    let name = format!("{}.{}", port.name, member.name());
-                    let member_id = self.add_port(behavior, name.clone(), PortSchema::Acausal(*member));
-                    self.ports[member_id].member_of = Some((id, index));
-                    self.ports[id].members.push(member_id);
-                    ports.insert(name, member_id);
+                    let child = self.add_declared_port(behavior, format!("{name}.{}", member.name),
+                        PortSchema::Acausal(ConnectorKind::from_id(member.connector.clone())), definitions, ports)?;
+                    self.ports[child].member_of = Some((id, index));
+                    self.ports[id].members.push(child);
                 }
             }
         }
-        Ok(Instance { behavior, ports })
+        Ok(id)
     }
 
     /// Instantiate on a fresh object of the same name.
@@ -561,15 +323,22 @@ impl Instance {
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum RegistryError {
+    #[error("invalid primitive: {0}")]
+    Primitive(String),
     #[error("behavior type `{0}` is already registered")]
     Duplicate(String),
     #[error("behavior type `{0}` is not registered")]
     Missing(String),
+    #[error(transparent)]
+    Definition(#[from] definitions::DefinitionError),
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct BehaviorRegistry {
+    primitives: primitive::Entries,
     descriptors: BTreeMap<BehaviorTypeId, BehaviorDescriptor>,
+    physical_definitions: Option<definitions::DefinitionRegistry>,
+    frozen: std::sync::OnceLock<definitions::FrozenDefinitions>,
 }
 
 impl BehaviorRegistry {
@@ -578,12 +347,64 @@ impl BehaviorRegistry {
         self.descriptors.values()
     }
 
-    pub fn register(&mut self, descriptor: BehaviorDescriptor) -> Result<(), RegistryError> {
+    pub fn register(&mut self, mut descriptor: BehaviorDescriptor) -> Result<(), RegistryError> {
         let id = descriptor.type_id.clone();
-        if self.descriptors.insert(id.clone(), descriptor).is_some() {
+        if self.descriptors.contains_key(&id) {
             return Err(RegistryError::Duplicate(id.0));
         }
+        // Stage anonymous compatibility definitions and parameter metadata;
+        // a rejected component must not poison the caller's shared registry.
+        let mut physical = match &self.physical_definitions {
+            Some(registry) => registry.clone(),
+            None => definitions::builtins::registry()?,
+        };
+        for port in &descriptor.ports {
+            if let PortSchema::Acausal(kind) = &port.schema {
+                definitions::builtins::include_connector(&mut physical, kind.clone())?;
+            }
+        }
+        let frozen = physical.freeze()?;
+        descriptor.resolve_parameters(&frozen)?;
+        self.physical_definitions = Some(physical);
+        self.frozen = std::sync::OnceLock::from(frozen);
+        self.descriptors.insert(id, descriptor);
         Ok(())
+    }
+
+    pub fn register_definition(&mut self, definition: &dyn definitions::ComponentDefinition) -> Result<(), RegistryError> {
+        self.register(definition.descriptor())
+    }
+
+    fn physical_definitions_mut(&mut self) -> Result<&mut definitions::DefinitionRegistry, RegistryError> {
+        self.frozen.take();
+        if self.physical_definitions.is_none() {
+            self.physical_definitions = Some(definitions::builtins::registry()?);
+        }
+        Ok(self.physical_definitions.as_mut().unwrap())
+    }
+
+    pub fn register_quantity(&mut self, definition: &dyn definitions::QuantityDefinition) -> Result<definitions::DefinitionId, RegistryError> {
+        Ok(self.physical_definitions_mut()?.register_quantity(definition)?)
+    }
+
+    pub fn register_connector(&mut self, definition: &dyn definitions::ConnectorDefinition) -> Result<definitions::DefinitionId, RegistryError> {
+        Ok(self.physical_definitions_mut()?.register_connector(definition)?)
+    }
+
+    /// One physical catalog for compiler, CAD/Rhai inspection and viewers.
+    /// The migration bridge includes legacy anonymous composite declarations.
+    pub fn definitions(&self) -> Result<definitions::FrozenDefinitions, RegistryError> {
+        Ok(self.frozen_definitions()?.clone())
+    }
+    pub fn frozen_definitions(&self) -> Result<&definitions::FrozenDefinitions, RegistryError> {
+        if self.frozen.get().is_none() {
+            let registry = match &self.physical_definitions {
+                Some(registry) => registry.clone(),
+                None => definitions::builtins::registry()?,
+            };
+            let _ = self.frozen.set(registry.freeze()?);
+        }
+        Ok(self.frozen.get().unwrap())
     }
 
     pub fn get(&self, id: &BehaviorTypeId) -> Result<&BehaviorDescriptor, RegistryError> {
@@ -600,6 +421,9 @@ impl BehaviorRegistry {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StateEntry {
     pub name: String,
+    /// Component-local declaration identity, independent of its display label.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declaration_name: Option<String>,
     pub quantity: QuantityKind,
     pub committed: f64,
 }
@@ -634,6 +458,7 @@ impl StateStore {
         }
         Ok(self.entries.insert(StateEntry {
             name: name.into(),
+            declaration_name: None,
             quantity,
             committed: initial,
         }))
@@ -648,6 +473,11 @@ impl StateStore {
 
     pub fn entry(&self, id: StateId) -> Result<&StateEntry, StateError> {
         self.entries.get(id).ok_or(StateError::Unknown)
+    }
+
+    pub fn set_declaration_name(&mut self, id: StateId, name: impl Into<String>) -> Result<(), StateError> {
+        self.entries.get_mut(id).ok_or(StateError::Unknown)?.declaration_name = Some(name.into());
+        Ok(())
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (StateId, &StateEntry)> {

@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [features]
+evolution = ["bayesian", "sim-solve/evolution"]
 native-ipopt = ["sim-solve/native-ipopt"]
 conic = ["sim-solve/conic"]
 bayesian = ["sim-solve/bayesian"]
@@ -14,7 +15,19 @@ name = "search_motion"
 required-features = ["bayesian"]
 
 [[example]]
+name = "compare_gait_search"
+required-features = ["evolution"]
+
+[[example]]
+name = "report_gait_search"
+required-features = ["evolution"]
+
+[[example]]
 name = "solve_joint_force_cones"
+required-features = ["conic"]
+
+[[example]]
+name = "prepare_contact_order_neighbors"
 required-features = ["conic"]
 
 [[example]]
@@ -29,6 +42,10 @@ required-features = ["native-ipopt"]
 name = "optimize_joint_ipopt_events"
 required-features = ["native-ipopt"]
 
+[[example]]
+name = "optimize_joint_ipopt_steps"
+required-features = ["native-ipopt"]
+
 [dependencies]
 blake3 = "=1.8.7"
 nalgebra.workspace = true
@@ -36,6 +53,7 @@ serde.workspace = true
 serde_json.workspace = true
 sim-compile = { path = "../sim-compile" }
 sim-core = { path = "../sim-core" }
+sim-inspect = { path = "../sim-inspect", features = ["runtime"] }
 sim-couple = { path = "../sim-couple" }
 sim-domain-acoustic = { path = "../sim-domain-acoustic" }
 sim-domain-bridges = { path = "../sim-domain-bridges" }

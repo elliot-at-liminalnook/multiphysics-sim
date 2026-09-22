@@ -15,6 +15,10 @@ sim-solve = { path = "../sim-solve" }
 thiserror.workspace = true
 
 [dev-dependencies]
+serde_json.workspace = true
+sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-thermal = { path = "../sim-domain-thermal" }
+sim-domain-bridges = { path = "../sim-domain-bridges" }
 sim-domain-rotational = { path = "../sim-domain-rotational" }
 sim-domain-multibody = { path = "../sim-domain-multibody" }
 sim-domain-sensing = { path = "../sim-domain-sensing" }

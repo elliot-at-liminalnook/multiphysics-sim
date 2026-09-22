@@ -5,7 +5,7 @@
 //! ordinary one — no special cases.
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, Provision, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, Provision, QuantityKind, RegistryError,
     StateDeclaration, acausal, param, param_or,
 };
 use std::collections::BTreeMap;
@@ -161,7 +161,7 @@ fn electrode(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::{Chemical as C, Electrical as E, Thermal as H};
+    use sim_core::connectors::{Chemical as C, Electrical as E, Thermal as H};
     for descriptor in [
         BehaviorDescriptor::new(RESERVOIR, "Fixed-concentration bath", vec![acausal("node", C), acausal("heat", H)], reservoir).with_parameters(vec![P::required("concentration", "mol/m³").positive(), P::optional("reference", "mol/m³", 1.0).positive()]),
         BehaviorDescriptor::new(SPECIES, "Well-mixed amount of a species", vec![acausal("node", C), acausal("heat", H)], species).with_parameters(vec![P::required("volume", "m³").positive(), P::optional("reference", "mol/m³", 1.0).positive(), P::optional("initial.concentration", "mol/m³", 1.0).positive(), P::optional("initial.temperature", "K", 298.15).positive()]),

@@ -11,7 +11,7 @@
 //! shaft, heat into the node); a source therefore adds negative through.
 
 use sim_core::{
-    acausal, param, param_or, signal_in, signal_out, Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, Input, LocalJacobian, Output, QuantityKind, RegistryError, StateDeclaration, View,
+    acausal, param, param_or, signal_in, signal_out, Behavior, BehaviorDescriptor, BehaviorRegistry, Context, Input, LocalJacobian, Output, QuantityKind, RegistryError, StateDeclaration, View,
 };
 use std::collections::BTreeMap;
 
@@ -52,6 +52,7 @@ impl MotorDynamics {
 /// Existing CAD driver derivation shared by detailed and reduced adapters.
 /// Retains the detailed runtime's parameter floors; this is not calibration.
 pub fn cad_h_bridge_parameters(motor: &crate::model::Motor) -> BTreeMap<String, f64> {
+    if let Some(profile) = &motor.resolved_actuator { return profile.driver.clone(); }
     [
         ("on_resistance".into(), motor.driver.on_resistance.max(0.0)),
         ("current_limit".into(), motor.driver.current_limit.min(motor.electrical.current_limit).max(0.01)),
@@ -95,7 +96,7 @@ pub fn cad_motor_unit_parameters(
     let e = &motor.electrical;
     let gb = &motor.gearbox;
     let th = &motor.thermal;
-    [
+    let mut result: BTreeMap<&'static str, f64> = [
         ("jacobian.analytic", if analytic_jacobian { 1.0 } else { 0.0 }),
         ("backlash.events", if backlash_events { 1.0 } else { 0.0 }),
         ("resistance", e.resistance.max(1e-3)),
@@ -114,7 +115,16 @@ pub fn cad_motor_unit_parameters(
         ("temp_coeff", th.resistance_temp_coeff),
         ("derating", th.torque_derating_per_c),
         ("reference", ambient_k),
-    ].into_iter().collect()
+    ].into_iter().chain(e.loss_speed_scale.map(|value|("loss_speed_scale",value))).collect();
+    if let Some(profile) = &motor.resolved_actuator {
+        result.insert("loss_speed_scale", profile.motor["loss_speed_scale"]);
+        for (key, value) in &mut result {
+            if let Some(explicit) = profile.motor.get(*key) { *value = *explicit; }
+        }
+        result.insert("ratio", profile.motor["ratio"] * motor.gear_ratio);
+        result.insert("backlash", profile.motor["backlash"] + drive_connection_backlash_rad);
+    }
+    result
 }
 
 fn dead_zone(x: f64, half: f64) -> f64 {
@@ -135,7 +145,9 @@ fn dead_zone(x: f64, half: f64) -> f64 {
 /// `winding` (thermal); signals out `current`, `torque`, `speed`.
 ///
 /// Parameters: `resistance`, `inductance`, `torque_constant`,
-/// `back_emf_constant`, `no_load_current`, `rotor_inertia` (rotor side),
+/// `back_emf_constant`, `no_load_current`, `loss_speed_scale` (rotor rad/s;
+/// smooth loss transition, default 5, not a static-friction threshold),
+/// `rotor_inertia` (rotor side),
 /// `ratio`, `efficiency`, `backlash` (rad, output side), `gear_stiffness`
 /// (N·m/rad), `gear_damping`, `gear_inertia` (output side), `gear_friction`
 /// (Coulomb, N·m at the output), `temp_coeff`
@@ -158,6 +170,7 @@ pub struct MotorUnit {
     kt: f64,
     ke: f64,
     no_load_current: f64,
+    loss_speed_scale: f64,
     rotor_inertia: f64,
     ratio: f64,
     efficiency: f64,
@@ -228,8 +241,10 @@ impl Behavior for MotorUnit {
         }
         ctx.add_through(0, i);
         ctx.add_through(1, -i);
-        // Rotor and gearbox, referred to the output side.
-        let loss = self.no_load_current * kt * (w_r / 5.0).tanh();
+        // Rotor and gearbox, referred to the output side. The rotor loss is a
+        // regularized Coulomb law, not a static hold constraint. Its explicit
+        // rotor-speed scale controls low-speed creep; it does not measure breakaway.
+        let loss = self.no_load_current * kt * (w_r / self.loss_speed_scale).tanh();
         let tau_m = kt * i - loss;
         // Driving unless the load clearly back-drives the gear train.
         let power = tau_m * w_r;
@@ -247,8 +262,7 @@ impl Behavior for MotorUnit {
         // must identify the rotor equation as algebraic, not differential.
         let inertia_torque = if self.quasistatic_rotor { 0.0 }
             else { j_out * (ctx.state_rate(Self::W) / self.ratio) };
-        // Coulomb friction of the gear train at its output (what makes a
-        // servo hold without buzzing and resist back-driving).
+        // Regularized output friction resists motion but allows low-speed creep.
         let gear_friction = self.gear_friction * (w_g / 0.05).tanh();
         ctx.set_state_residual(Self::W, inertia_torque - self.ratio * eta * tau_m + tau_c + gear_friction);
         ctx.set_state_residual(Self::TH, ctx.state_rate(Self::TH) - w_g);
@@ -302,7 +316,7 @@ impl Behavior for MotorUnit {
         let raw_kt = self.kt * (1.0-self.derating*(temp-self.reference_c));
         let kt = raw_kt.max(0.3*self.kt);
         let dkt = if raw_kt > 0.3*self.kt { -self.kt*self.derating } else { 0.0 };
-        let loss_tanh = (wr/5.0).tanh();
+        let loss_tanh = (wr/self.loss_speed_scale).tanh();
         let tau = kt*i - self.no_load_current*kt*loss_tanh;
         let power = tau*wr;
         let t = ((power+5e-3)/1e-3).tanh();
@@ -336,7 +350,7 @@ impl Behavior for MotorUnit {
         out.set(Output::Signal(2),Input::State(Self::W),1.0/self.ratio);
         for (input,dtau,dwr,dresistance,di) in [
             (Input::State(Self::I),kt,0.0,0.0,1.0),
-            (Input::State(Self::W),-self.no_load_current*kt*(1.0-loss_tanh*loss_tanh)/5.0,1.0,0.0,0.0),
+            (Input::State(Self::W),-self.no_load_current*kt*(1.0-loss_tanh*loss_tanh)/self.loss_speed_scale,1.0,0.0,0.0),
             (Input::Across(3,0),dkt*(i-self.no_load_current*loss_tanh),0.0,dr,0.0),
         ] {
             let dp = dtau*wr+tau*dwr;
@@ -387,6 +401,7 @@ fn motor_unit(p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationError> 
         kt,
         ke: param_or(p, "back_emf_constant", kt),
         no_load_current: param_or(p, "no_load_current", 0.0),
+        loss_speed_scale: param_or(p, "loss_speed_scale", 5.0),
         rotor_inertia: param_or(p, "rotor_inertia", 1e-7),
         ratio: param_or(p, "ratio", 1.0).max(1e-6),
         efficiency: param_or(p, "efficiency", 0.8).clamp(0.05, 1.0),
@@ -434,7 +449,7 @@ impl Behavior for HBridge {
     }
 }
 
-fn h_bridge(p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationError> {
+pub(crate) fn h_bridge(p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationError> {
     Ok(Box::new(HBridge { on_resistance: param_or(p, "on_resistance", 0.1), current_limit: param_or(p, "current_limit", f64::INFINITY) }))
 }
 
@@ -518,9 +533,9 @@ impl ServoFirmware {
 impl Behavior for ServoFirmware {
     fn states(&self) -> Vec<StateDeclaration> {
         let d = QuantityKind::Dimensionless;
-        let mut out = vec![StateDeclaration::new("command", d, 0.0), StateDeclaration::new("integrator", d, 0.0), StateDeclaration::new("previous_error", d, 0.0), StateDeclaration::new("derivative", d, 0.0)];
+        let mut out = vec![StateDeclaration::new("command", d.clone(), 0.0), StateDeclaration::new("integrator", d.clone(), 0.0), StateDeclaration::new("previous_error", d.clone(), 0.0), StateDeclaration::new("derivative", d.clone(), 0.0)];
         for k in 0..self.delay {
-            out.push(StateDeclaration::new(format!("queue{k}"), d, 0.0));
+            out.push(StateDeclaration::new(format!("queue{k}"), d.clone(), 0.0));
         }
         out.push(StateDeclaration::new("next_sample", QuantityKind::Time, self.offset));
         out
@@ -616,7 +631,7 @@ fn thermal_probe(_p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationErr
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::{Electrical as E, Rotational as R, Thermal as H};
+    use sim_core::connectors::{Electrical as E, Rotational as R, Thermal as H};
     use QuantityKind as Q;
     let inherited_default = |name: &str, unit: &str, label: &str| {
         let mut p = P::alternative(name, unit);
@@ -643,6 +658,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
         P::optional("inductance", "H", 0.).nonnegative(),
         inherited_default("back_emf_constant", "V·s/rad", "torque_constant").nonnegative(),
         P::optional("no_load_current", "A", 0.).nonnegative(),
+        P::optional("loss_speed_scale", "rad/s", 5.).positive(),
         P::optional("rotor_inertia", "kg·m²", 1e-7).positive(),
         P::optional("ratio", "1", 1.).positive(), efficiency,
         P::optional("backlash", "rad", 0.).nonnegative(),

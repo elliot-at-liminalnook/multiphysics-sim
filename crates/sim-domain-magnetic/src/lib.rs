@@ -5,7 +5,7 @@
 
 use nalgebra::{UnitQuaternion, Vector3};
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or,
 };
 use std::collections::BTreeMap;
@@ -323,7 +323,7 @@ fn magnetic_top(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::{Electrical as E, Frame as F, Magnetic as M, Thermal as H, Translational as T};
+    use sim_core::connectors::{Electrical as E, Frame as F, Magnetic as M, Thermal as H, Translational as T};
     for descriptor in [
         BehaviorDescriptor::new(GROUND, "mmf reference", vec![acausal("node", M)], ground).with_parameters(vec![]),
         BehaviorDescriptor::new(RELUCTANCE, "Linear reluctance", vec![acausal("a", M), acausal("b", M)], reluctance).with_parameters(vec![P::alternative("reluctance", "1/H").positive(), P::alternative("length", "m").positive(), P::alternative("area", "m²").positive(), P::optional("relative_permeability", "1", 1.0).positive(), P::optional("initial.flux", "Wb", 0.0)]),

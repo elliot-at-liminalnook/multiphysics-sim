@@ -220,7 +220,7 @@ impl SampledPolicy {
             }
             sensors.push(Channel {
                 name: input.name.clone(),
-                kind: input.kind,
+                kind: input.kind.clone(),
             });
         }
         if initial
@@ -264,10 +264,11 @@ impl SampledPolicy {
             if !config.neural_command_saturation {return Err("Gaussian exploration requires explicit command saturation".into());}
             sim_domain_control::ppo::GaussianSampler::new(c,n.definition().outputs.len(),seed^0x504f4c494359)
         }).transpose()?;
-        let mut policy = RhaiController::with_seed(
+        let mut policy = RhaiController::with_seed_and_registry(
             program.sources.clone(),
             parameter_map(&program.parameters).map_err(|e| e.to_string())?,
             seed,
+            &crate::registry(),
         )
         .map_err(|e| e.to_string())?;
         policy.open(&contract).map_err(|e| e.to_string())?;

@@ -4,7 +4,7 @@
 //! at all, if it is too small for the grain.
 
 use sim_core::{
-    Behavior, BehaviorDescriptor, BehaviorRegistry, ConnectorKind, Context, QuantityKind, RegistryError,
+    Behavior, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
     StateDeclaration, View, acausal, param, param_or,
 };
 use std::collections::BTreeMap;
@@ -151,7 +151,7 @@ fn orifice(p: &Params) -> Made {
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
-    use ConnectorKind::Granular as Gr;
+    use sim_core::connectors::Granular as Gr;
     for descriptor in [
         BehaviorDescriptor::new(HOPPER, "Grain source", vec![acausal("out", Gr)], hopper).with_parameters(vec![P::required("rate", "kg/s").nonnegative()]),
         BehaviorDescriptor::new(COLUMN, "Silo column with Janssen walls", vec![acausal("top", Gr), acausal("base", Gr)], column).with_parameters(vec![P::required("diameter", "m").positive(), P::required("density", "kg/m³").positive(), P::optional("friction", "1", 0.0).nonnegative(), P::optional("janssen_k", "1", 0.5).nonnegative(), P::optional("initial.mass", "kg", 0.0).nonnegative()]),

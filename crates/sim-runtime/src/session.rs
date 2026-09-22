@@ -294,7 +294,7 @@ impl Session {
                 .zip(&bounds)
                 .map(|(a, &(lo, hi))| InputChannel {
                     name: a.name.clone(),
-                    kind: a.kind,
+                    kind: a.kind.clone(),
                     lower: lo.unwrap_or(-f64::MAX),
                     upper: hi.unwrap_or(f64::MAX),
                     initial: scene
@@ -331,7 +331,9 @@ impl Session {
             .as_ref()
             .map(|program| {
                 let parameters = parameter_map(&program.parameters).map_err(|e| e.to_string())?;
-                RhaiController::with_seed(program.sources.clone(), parameters, seed)
+                RhaiController::with_seed_and_registry(
+                    program.sources.clone(), parameters, seed, &crate::registry(),
+                )
                     .map(|c| Box::new(c) as Box<dyn Coupler>)
                     .map_err(|e| e.to_string())
             })
@@ -348,7 +350,7 @@ impl Session {
                         .iter()
                         .map(|i| Channel {
                             name: i.name.clone(),
-                            kind: i.kind,
+                            kind: i.kind.clone(),
                         })
                         .collect(),
                     command_values: values.clone(),

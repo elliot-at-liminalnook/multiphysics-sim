@@ -1,0 +1,16 @@
+[package]
+name = "sim-example-diffusion"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sim-core = { path = "../sim-core" }
+sim-compile = { path = "../sim-compile" }
+sim-dynamics = { path = "../sim-dynamics" }
+sim-inspect = { path = "../sim-inspect", features = ["runtime"] }
+serde_json.workspace = true
+
+[dev-dependencies]
+sim-script = { path = "../sim-script" }
+sim-diagram = { path = "../sim-diagram" }

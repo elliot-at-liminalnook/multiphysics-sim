@@ -340,7 +340,7 @@ fn anchored_spring(p: &Params) -> Made {
 }
 
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
-    use ConnectorKind::Planar as C;
+    use sim_core::connectors::Planar as C;
     use sim_core::ParameterDeclaration as P;
     let joint = || vec![P::optional("ax", "m", 0.), P::optional("ay", "m", 0.),
         P::optional("bx", "m", 0.), P::optional("by", "m", 0.), P::optional("stabilisation", "1/s", 20.).nonnegative()];

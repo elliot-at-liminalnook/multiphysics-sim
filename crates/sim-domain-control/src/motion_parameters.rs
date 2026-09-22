@@ -325,8 +325,8 @@ impl TrajectoryTemplate {
                 } => {
                     let scale = scale.resolve(space, values, Q::Dimensionless, false)?;
                     for j in indices(channels)? {
-                        let center = center.resolve(space, values, self.channels[j].kind, false)?;
-                        let offset = offset.resolve(space, values, self.channels[j].kind, false)?;
+                        let center = center.resolve(space, values, self.channels[j].kind.clone(), false)?;
+                        let offset = offset.resolve(space, values, self.channels[j].kind.clone(), false)?;
                         for k in &mut config.keyframes {
                             k.values[j] = affine_value(k.values[j], scale, center, offset)?;
                         }
@@ -363,7 +363,7 @@ impl TrajectoryTemplate {
                         return Err("motion control index outside unique controls".into());
                     }
                     for j in indices(channels)? {
-                        let offset = offset.resolve(space, values, self.channels[j].kind, false)?;
+                        let offset = offset.resolve(space, values, self.channels[j].kind.clone(), false)?;
                         config.keyframes[*control].values[j] =
                             affine_value(config.keyframes[*control].values[j], 1., 0., offset)?;
                     }
@@ -450,11 +450,11 @@ pub fn register(registry: &mut sim_core::BehaviorRegistry) -> Result<(), sim_cor
                 &format!("control.affine_{name}"),
                 "Affine motion reference",
                 vec![
-                    signal_in("value", kind),
+                    signal_in("value", kind.clone()),
                     signal_in("scale", Q::Dimensionless),
-                    signal_in("center", kind),
-                    signal_in("offset", kind),
-                    signal_out("result", kind),
+                    signal_in("center", kind.clone()),
+                    signal_in("offset", kind.clone()),
+                    signal_out("result", kind.clone()),
                 ],
                 make,
             )
@@ -469,9 +469,9 @@ pub fn register(registry: &mut sim_core::BehaviorRegistry) -> Result<(), sim_cor
                 &format!("control.scale_power_{name}"),
                 "Scale a motion quantity by a dimensionless integer power",
                 vec![
-                    signal_in("value", kind),
+                    signal_in("value", kind.clone()),
                     signal_in("factor", Q::Dimensionless),
-                    signal_out("result", kind),
+                    signal_out("result", kind.clone()),
                 ],
                 make_scale_power,
             )

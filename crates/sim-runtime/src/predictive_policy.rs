@@ -52,18 +52,18 @@ impl ForecastBundle {
                 .iter()
                 .map(|f| Channel {
                     name: format!("forecast.input.{}", f.source),
-                    kind: f.kind,
+                    kind: f.kind.clone(),
                 }),
         );
         for head in &self.heads {
             for output in &head.network.outputs {
                 out.push(Channel {
                     name: format!("forecast.prediction.{}", output.target),
-                    kind: output.kind,
+                    kind: output.kind.clone(),
                 });
                 out.push(Channel {
                     name: format!("forecast.prior.{}", output.target),
-                    kind: output.kind,
+                    kind: output.kind.clone(),
                 });
             }
         }
@@ -91,7 +91,7 @@ impl ForecastBundle {
                 features.push(Feature {
                     source: format!("forecast.prediction.{}", o.target),
                     subtract: Some(format!("forecast.prior.{}", o.target)),
-                    kind: o.kind,
+                    kind: o.kind.clone(),
                     center: 0.,
                     scale: o.scale,
                     clip: f64::MAX,

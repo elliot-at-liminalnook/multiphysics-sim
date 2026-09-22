@@ -18,7 +18,7 @@ pub struct Channel {
 }
 
 impl Channel {
-    pub fn unit(&self) -> &'static str {
+    pub fn unit(&self) -> &str {
         self.kind.unit()
     }
 }

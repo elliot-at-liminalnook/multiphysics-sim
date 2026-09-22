@@ -56,6 +56,7 @@ pub static FRESH: Bucket = Bucket::new("fresh jacobians");
 pub static STALE_FULL_REFRESH: Bucket = Bucket::new("stale full-step refreshes");
 pub static BROYDEN_UPDATE: Bucket = Bucket::new("Broyden update attempts");
 pub static BROYDEN_REFRESH: Bucket = Bucket::new("Broyden rejected/capped updates");
+pub static BROYDEN_CAP: Bucket = Bucket::new("Broyden update cap reached");
 pub static RESIDUAL: Bucket = Bucket::new("residual evaluations");
 pub static JACOBIAN: Bucket = Bucket::new("jacobian assembly");
 pub static ANALYTIC_SLOTS: Bucket = Bucket::new("  slots supplied");
@@ -75,11 +76,16 @@ pub static SOLVE: Bucket = Bucket::new("back-substitution");
 pub static GUARDS: Bucket = Bucket::new("guards");
 pub static LOCATE: Bucket = Bucket::new("event location");
 pub static JUMP: Bucket = Bucket::new("jumps (incl. coupler)");
+pub static EMBEDDED_VELOCITY_PREDICTOR: Bucket = Bucket::new("embedded velocity predictor");
+pub static EMBEDDED_PREDICTOR_USED: Bucket = Bucket::new("embedded predictor guesses used");
+pub static EMBEDDED_PREDICTOR_FALLBACK: Bucket = Bucket::new("embedded predictor fallbacks");
 pub static EMBEDDED_MAPPING: Bucket = Bucket::new("embedded closure mapping");
 pub static EMBEDDED_HISTORY: Bucket = Bucket::new("embedded contact history");
 pub static EMBEDDED_DYNAMICS_PREPARE: Bucket = Bucket::new("embedded dynamics preparation");
 pub static EMBEDDED_DYNAMICS_APPLY: Bucket = Bucket::new("embedded applied force solve");
 pub static EMBEDDED_COMPONENTS: Bucket = Bucket::new("embedded component equations");
+pub static EMBEDDED_COMPONENT_DERIVATIVES: Bucket = Bucket::new("embedded component derivative proposals");
+pub static EMBEDDED_SUPPLIED_AUXILIARY: Bucket = Bucket::new("embedded supplied auxiliary matrices");
 pub static EMBEDDED_CLOSURE_JACOBIAN: Bucket = Bucket::new("  closure Jacobian");
 pub static EMBEDDED_CLOSURE_FACTOR: Bucket = Bucket::new("  closure factorization");
 pub static EMBEDDED_CLOSURE_SVD: Bucket = Bucket::new("    closure SVD");
@@ -97,14 +103,14 @@ pub static POLICY_BODY_FEEDBACK: Bucket = Bucket::new("policy body feedback");
 pub static POLICY_POINT_FEEDBACK: Bucket = Bucket::new("policy point feedback");
 pub static POLICY_SCRIPT: Bucket = Bucket::new("policy script");
 
-pub fn all() -> [&'static Bucket; 45] {
+pub fn all() -> [&'static Bucket; 51] {
     [&STEP, &IMPLICIT, &NEWTON, &ITERATIONS, &FRESH, &STALE_FULL_REFRESH, &RESIDUAL, &JACOBIAN, &ANALYTIC_SLOTS, &RATE_SLOTS, &FD_SLOTS, &FD_RESIDUALS, &FACTORISE, &FACTOR_SUM, &FACTOR_MATRIX, &FACTOR_SYMBOLIC, &FACTOR_SYMBOLIC_BUILD, &FACTOR_NUMERIC, &SOLVE, &GUARDS, &LOCATE, &JUMP,
-        &EMBEDDED_MAPPING, &EMBEDDED_HISTORY, &EMBEDDED_DYNAMICS_PREPARE, &EMBEDDED_DYNAMICS_APPLY, &EMBEDDED_COMPONENTS,
+        &EMBEDDED_VELOCITY_PREDICTOR, &EMBEDDED_PREDICTOR_USED, &EMBEDDED_PREDICTOR_FALLBACK, &EMBEDDED_MAPPING, &EMBEDDED_HISTORY, &EMBEDDED_DYNAMICS_PREPARE, &EMBEDDED_DYNAMICS_APPLY, &EMBEDDED_COMPONENTS, &EMBEDDED_COMPONENT_DERIVATIVES, &EMBEDDED_SUPPLIED_AUXILIARY,
         &EMBEDDED_CLOSURE_JACOBIAN, &EMBEDDED_CLOSURE_FACTOR, &EMBEDDED_CLOSURE_SVD,
         &EMBEDDED_INERTIA, &EMBEDDED_PROJECT_INERTIA, &EMBEDDED_FORCE_EVALUATION,
         &CONTACT_GEOMETRY, &CONTACT_FORCES, &CONTACT_TOPOLOGY, &CONTACT_SAMPLES, &CONTACT_PAIRS,
         &POLICY_REFERENCE, &POLICY_OBSERVATIONS, &POLICY_BODY_FEEDBACK, &POLICY_POINT_FEEDBACK, &POLICY_SCRIPT,
-        &BROYDEN_UPDATE, &BROYDEN_REFRESH]
+        &BROYDEN_UPDATE, &BROYDEN_REFRESH, &BROYDEN_CAP]
 }
 
 pub fn enable() {

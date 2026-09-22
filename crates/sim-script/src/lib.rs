@@ -197,6 +197,20 @@ fn engine(sources: Sources, parameters: Map, seed: u64) -> Engine {
         sim_domain_control::angle_integral::AngleIntegral::new(config).map_err(error)?
             .update(bias, correction, enabled).map_err(error)
     });
+    engine.register_fn("reference_governor_update", |angle: rhai::FLOAT, velocity: rhai::FLOAT,
+        desired: rhai::FLOAT, mut parameters: Map| -> ScriptResult<Dynamic> {
+        for value in parameters.values_mut() {
+            if value.is::<rhai::INT>() {
+                *value = Dynamic::from_float(value.clone_cast::<rhai::INT>() as rhai::FLOAT);
+            }
+        }
+        let config: sim_domain_control::reference_governor::Config =
+            rhai::serde::from_dynamic(&Dynamic::from(parameters))?;
+        let next = config.update(sim_domain_control::reference_governor::State {
+            angle_rad: angle, velocity_rad_s: velocity,
+        }, desired).map_err(error)?;
+        rhai::serde::to_dynamic(next).map_err(Into::into)
+    });
     engine.register_fn("load_damping_displacement", |velocity: rhai::FLOAT, normal_force: rhai::FLOAT,
         mut parameters: Map| -> ScriptResult<rhai::FLOAT> {
         for value in parameters.values_mut() {
@@ -418,6 +432,7 @@ pub fn evaluate_seeded(
     }
     let plan = Arc::new(Mutex::new(System::default()));
     let mut engine = engine(sources.clone(), parameters, seed);
+    install_primitive_functions(&mut engine, registry);
     engine.register_type_with_name::<Part>("Component");
     engine.register_type_with_name::<Port>("Port");
     // A typed reference to another declaration, graph component or imported
@@ -544,10 +559,24 @@ impl RhaiController {
     }
 
     pub fn with_seed(sources: Sources, parameters: Map, seed: u64) -> ScriptResult<Self> {
+        let mut registry = BehaviorRegistry::default();
+        sim_domain_control::motion_primitives::register(&mut registry).map_err(error)?;
+        Self::with_seed_and_registry(sources, parameters, seed, &registry)
+    }
+
+    /// Share the host's exact primitive catalog without importing host/domain
+    /// dependencies into the script crate. Captured script state is unchanged.
+    pub fn with_seed_and_registry(
+        sources: Sources,
+        parameters: Map,
+        seed: u64,
+        registry: &BehaviorRegistry,
+    ) -> ScriptResult<Self> {
         if seed > (1_u64 << 53) - 1 {
             return Err(error("seed exceeds the exact numeric range"));
         }
         let mut engine = engine(sources.clone(), parameters, seed);
+        install_primitive_functions(&mut engine, registry);
         let program = sources.compile(&engine, &sources.entry)?;
         // Modules encapsulate imported namespaces and constants into their
         // functions. A bare call_fn(eval_ast=false) loses top-level imports;
@@ -669,25 +698,65 @@ pub fn instances(world: &ModelWorld) -> BTreeMap<String, Instance> {
         .collect()
 }
 
-pub fn describe_port(name: &str, schema: sim_core::PortSchema) -> serde_json::Value {
-            let mut port = serde_json::json!({"name":name,"schema":schema});
-            match schema {
-                sim_core::PortSchema::Acausal(kind) => {
-                    port["direction"] = serde_json::json!("acausal");
-                    port["lanes"] = serde_json::json!(kind.lanes().iter().map(|lane|
-                        serde_json::json!({"across":lane.across,"across_unit":lane.across_kind.unit(),
-                            "through":lane.through,"through_unit":lane.through_kind.unit()})).collect::<Vec<_>>());
-                },
-                sim_core::PortSchema::SignalIn(kind) => { port["direction"] = serde_json::json!("input"); port["unit"] = serde_json::json!(kind.unit()); },
-                sim_core::PortSchema::SignalOut(kind) => { port["direction"] = serde_json::json!("output"); port["unit"] = serde_json::json!(kind.unit()); },
+pub fn describe_port(name: &str, schema: sim_core::PortSchema, definitions: &sim_core::definitions::FrozenDefinitions) -> serde_json::Value {
+    let mut port = serde_json::json!({"name":name,"schema":schema});
+    match schema {
+        sim_core::PortSchema::Acausal(kind) => {
+            port["direction"] = serde_json::json!("acausal");
+            match kind.resolve(definitions) {
+                Ok(layout) => {
+                    let unit = |id: &sim_core::definitions::DefinitionId| {
+                        &definitions.quantity(definitions.quantity_handle(id).expect("validated layout quantity")).unwrap().canonical_unit
+                    };
+                    port["lanes"] = serde_json::json!(layout.lanes.iter().map(|lane|
+                        serde_json::json!({"across":lane.across.name,"across_unit":unit(&lane.across.quantity),
+                            "through":lane.through.as_ref().map_or("-", |v| v.name.as_str()),
+                            "through_unit":lane.through.as_ref().map_or("1", |v| unit(&v.quantity))})).collect::<Vec<_>>());
+                }
+                Err(e) => port["metadata_error"] = serde_json::json!(e.to_string()),
             }
-            port
+        },
+        sim_core::PortSchema::SignalIn(kind) => { port["direction"] = serde_json::json!("input"); port["unit"] = serde_json::json!(kind.unit()); },
+        sim_core::PortSchema::SignalOut(kind) => { port["direction"] = serde_json::json!("output"); port["unit"] = serde_json::json!(kind.unit()); },
+    }
+    port
 }
 
 pub fn catalogue(registry: &BehaviorRegistry) -> serde_json::Value {
+    let definitions = match registry.frozen_definitions() {
+        Ok(d) => d,
+        Err(e) => return serde_json::json!({"metadata_error": e.to_string()}),
+    };
     serde_json::Value::Array(registry.descriptors().map(|d|serde_json::json!({
         "type":d.type_id.0,"name":d.display_name,
         "parameters":d.parameters,"parameters_complete":d.parameters.is_some(),
-        "ports":d.ports.iter().map(|p| describe_port(p.name, p.schema)).collect::<Vec<_>>()
+        "ports":d.ports.iter().map(|p| describe_port(p.name, p.schema.clone(), definitions)).collect::<Vec<_>>()
     })).collect())
+}
+
+/// Pure algorithm descriptions remain distinct from equation-element ports,
+/// while using the same registry and stable versioned identities.
+pub fn primitive_catalogue(registry: &BehaviorRegistry) -> serde_json::Value {
+    serde_json::to_value(registry.primitive_descriptors().collect::<Vec<_>>())
+        .expect("serializable primitive descriptors")
+}
+pub fn install_primitive_functions(engine: &mut Engine, registry: &BehaviorRegistry) {
+    let descriptions = primitive_catalogue(registry);
+    engine.register_fn("primitive_catalogue", move || -> ScriptResult<Dynamic> {
+        rhai::serde::to_dynamic(&descriptions).map_err(|e| error(e.to_string()))
+    });
+    let registry = registry.clone();
+    engine.register_fn(
+        "primitive_call",
+        move |name: rhai::ImmutableString, version: rhai::INT, input: Dynamic| -> ScriptResult<Dynamic> {
+            let version = u32::try_from(version)
+                .map_err(|_| error("invalid primitive schema version"))?;
+            let input: serde_json::Value = rhai::serde::from_dynamic(&input)
+                .map_err(|e| error(e.to_string()))?;
+            let output = registry.call_primitive(
+                &sim_core::definitions::DefinitionId::new(name.as_str(), version), input,
+            ).map_err(error)?;
+            rhai::serde::to_dynamic(output).map_err(|e| error(e.to_string()))
+        },
+    );
 }

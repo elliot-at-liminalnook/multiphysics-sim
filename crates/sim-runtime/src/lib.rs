@@ -5,8 +5,20 @@ use sim_core::BehaviorRegistry;
 pub mod acquisition;
 pub mod contact_audit;
 pub mod contact_planning;
+pub mod contact_reference;
+pub mod contact_exploration;
+pub mod motion_evaluation;
+pub mod experiment_variants;
+pub mod geometry_evaluation;
+pub mod numerical_validation;
+#[cfg(all(feature = "evolution", not(target_arch = "wasm32")))]
+pub mod search_comparison;
 pub mod contact_implicit;
 pub mod configuration_inspection;
+pub mod system_inspection;
+pub mod system_session;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod system_worker;
 pub mod robot_contract;
 pub mod robot_input;
 pub mod body_feedback;
@@ -38,6 +50,7 @@ pub fn registry() -> BehaviorRegistry {
     sim_domain_fluid::register(&mut registry).unwrap();
     sim_domain_fluid::twophase::register(&mut registry).unwrap();
     sim_domain_control::elements::register(&mut registry).unwrap();
+    sim_domain_control::pulse::register(&mut registry).unwrap();
     sim_domain_bridges::elements::register(&mut registry).unwrap();
     sim_domain_multibody::elements::register(&mut registry).unwrap();
     sim_domain_multibody::planar::register(&mut registry).unwrap();
@@ -51,6 +64,12 @@ pub fn registry() -> BehaviorRegistry {
     sim_domain_granular::register(&mut registry).unwrap();
     sim_domain_sensing::register(&mut registry).unwrap();
     sim_domain_robot::register(&mut registry).unwrap();
+    evaluation_primitives::register(&mut registry).unwrap();
+    exploration::register(&mut registry).unwrap();
+    contact_exploration::register(&mut registry).unwrap();
+    experiment_variants::register(&mut registry).unwrap();
+    geometry_evaluation::register(&mut registry).unwrap();
+    numerical_validation::register(&mut registry).unwrap();
     registry
 }
 
@@ -74,9 +93,17 @@ pub mod motion_forecast;
 pub mod motion_parameters;
 pub mod motion_response;
 pub mod experiment;
+pub mod exploration;
+pub mod evaluation_primitives;
+pub mod experiment_comparison;
+pub mod experiment_study;
+pub mod actuator_bench;
+pub mod controller_refinement;
 #[cfg(all(feature = "bayesian", not(target_arch = "wasm32")))]
 pub mod experiment_search;
 pub mod forecast_actions;
 pub mod fidelity;
 pub mod physics_context;
 pub mod predictive_policy;
+
+pub mod electrical;

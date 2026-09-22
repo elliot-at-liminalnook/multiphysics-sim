@@ -214,7 +214,12 @@ fn close_time(a: f64, b: f64) -> bool {
 }
 
 impl EnvironmentCapture {
-    fn validate(&self) -> Result<(Vec<MotionSnapshot>, Vec<Vec<f64>>, Outcome), String> {
+    /// Validate a capture and summarize completion/cost without comparing it to
+    /// another trajectory. Search scoring must still apply its task gates.
+    pub fn outcome(&self) -> Result<Outcome, String> {
+        self.validate().map(|(_, _, outcome)| outcome)
+    }
+    pub(crate) fn validate(&self) -> Result<(Vec<MotionSnapshot>, Vec<Vec<f64>>, Outcome), String> {
         let r = &self.recording;
         if self.version != 1
             || self.kind != "sampled_environment_capture"

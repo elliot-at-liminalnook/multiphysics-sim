@@ -3,6 +3,33 @@
 Launch: `cad/run.sh` (macOS/Linux) or `cad\run.ps1` (Windows). Open a
 `.rcad` by passing its path; other files on the command line are imported.
 
+## Opening large models
+
+File → Open shows a nonmodal loading window. **Reading CAD** counts document
+items; **Preparing display** counts parts whose display geometry is ready.
+Each stage has its own progress bar, current item name, and elapsed time.
+The percentages describe completed items, not an estimated fraction of time:
+a complex part can take longer than a simple one. A separate process prepares
+each new model, so existing documents stay available while loading. **Cancel**,
+Escape, or closing the loading window stops preparation. Once preparation is
+complete, cancellation is disabled briefly while the new editor window opens.
+That window then runs independently and keeps its own unsaved edits even if
+the original editor is closed.
+
+Unchanged models reuse cached display meshes, edges and picking data on later
+opens. Exact CAD geometry still comes from the source archive. Cache entries
+are keyed by the full archive contents and renderer/kernel version; editing
+and saving a model invalidates them. A missing or unreadable cache is rebuilt.
+On macOS the disposable cache is in `~/Library/Caches/robocad/display`.
+On other platforms it is under `$XDG_CACHE_HOME/robocad/display`, or
+`~/.cache/robocad/display` when that variable is unset.
+
+The REST `POST /open` uses this same loader and immediately returns a `load_id`.
+Poll `GET /loads/{load_id}` for `loading`, `ready`, `failed`, or `cancelled`;
+`DELETE /loads/{load_id}` requests cancellation (`cancelling` until it finishes).
+A ready job's `stats.api_url` identifies the newly opened window's API.
+Opening or cancelling never saves or replaces an existing document.
+
 ## Finding and organizing components
 
 Right-click a part in the outliner and choose **Fit in view** to center
@@ -494,3 +521,118 @@ existing destination file. The camera is held fixed during recording.
 Poll `GET /motion/export` for frame progress or use `DELETE /motion/export` to
 cancel. `POST /motion/focus` frames the selected mechanism. Video encoding uses
 the FFmpeg executable supplied by the `imageio-ffmpeg` CAD dependency.
+
+## Component library and nested parametric assemblies
+
+Open **Window → Components library** (also available in the command palette).
+
+- **Make from selection** turns an assembly into a linked component. Existing
+  body and joint IDs remain stable. Select a group, several parts, or a linked
+  component to wrap it in a new parent component.
+- **New parametric…** creates a box or cylinder with named dimensions. **Place…**
+  inserts an occurrence with its own origin, rotation and required connections.
+- **Edit defaults…** changes shared values. The Parameters tab includes units,
+  bounds and measured/derived/estimated provenance. The geometry recipe explicitly
+  binds those parameters to box/cylinder construction, rigid part placement, or
+  joint frames. Imported geometry has no inferred design dimensions.
+- Select an occurrence or one of its parts, then use the **Occurrence** tab. Check
+  **Override** for the values that should differ. Unchecked values inherit shared
+  defaults. **Reset to inherited** removes that occurrence's local overrides.
+- To nest components, place the children, group them, and **Make from selection**.
+  In the parent's **Nested parameters** tab, map child parameter names to parent
+  expressions, for example `{"length": "leg_length / 2"}`. Child defaults are
+  shared globally; parent mappings specialize the child; an explicit override on
+  a particular nested occurrence takes precedence. Resetting it restores the
+  parent mapping. Circular component dependencies are rejected.
+- **Save to library…** writes a `.rcomp` file containing the selected definition
+  and its nested dependencies. **Import…** embeds them into another document.
+  Documents are self-contained; later edits to a library file do not silently
+  change an already-open assembly. Conflicting definitions with the same ID are
+  rejected. The saved library browser initially uses `~/Documents/RoboCAD/Components`.
+- **Detach outer occurrence** makes its full assembly ordinary editable parts.
+  Undo restores the link. Individual linked members cannot be reshaped, deleted,
+  or rearranged independently; change the recipe/parameters or detach first.
+
+The desktop runs component geometry and display preparation in a separate process.
+The panel shows stage counts and offers cancellation. Viewing can continue during
+preparation. A complete result applies as one undo step only if the captured CAD
+revision is still current; intervening edits cause the prepared result to be
+rejected, preserving your work.
+
+Definitions store source geometry once, including across nested parents. Every
+occurrence materializes ordinary CAD bodies/joints with independent stable IDs.
+The existing physics exporter consumes those bodies; shared CAD definitions do
+not share actuator state or couple the legs' motion. Rigid placements transform
+joint frames, motor/sensor coordinates, declared centers of mass and inertia.
+Nonrigid scale is rejected. Changing geometry with a declared mass override
+requires an explicit updated mass/material definition rather than retaining a
+stale measurement.
+
+### Automation
+
+`GET /components` returns the shared definition/parameter/feature catalogue.
+The following methods are also available through `POST /ops/{method}` and Python
+`Ops(doc)`:
+
+- `make_component(ids, name, origin)` — capture and link the selected assembly.
+- `create_component(ids, name, origin)` — capture a library definition only.
+- `new_parametric_component(name, shape)` — box or cylinder recipe.
+- `place_component(definition_id, placement, overrides, bindings, name)`.
+- `set_component_parameters(definition_id, parameters, features, nested)`.
+- `set_component_overrides(instance_id, overrides, placement)` — an empty override
+  object resets inheritance; nested occurrence placement belongs to its parent.
+- `import_component(path)`, `export_component(definition_id, path)` and
+  `detach_component(instance_id)`.
+
+Desktop component operations return `{"job": {"id": ...}}`. Poll
+`GET /component-jobs/{id}` until `applied`, `failed`, or `cancelled`; use
+`DELETE /component-jobs/{id}` to cancel. Headless `Ops` and REST execute the same
+validated commands synchronously. Persist the resulting `.rcad` alongside
+controller configurations and measurements.
+
+Examples are in `examples/components/parametric-quadruped` (a four-occurrence,
+three-definition nested assembly) and `examples/components/quadruped-linked-leg`
+(the existing quadruped with its +X leg linked, preserving the original geometry).
+The former is an estimated CAD acceptance example, not a calibrated walking robot.
+
+Current scope: ordinary CAD bodies, sheets, curves, groups, joints, sensors and
+cables can be captured. Legacy single-body instances, mesh/image/sketch nodes and
+native system-graph bindings must be resolved explicitly before capture. Recipes
+support existing topology with box/cylinder generation, placement and joint-frame
+features; arbitrary feature-history recovery from imported B-reps is not provided.
+
+### Component families and complete quadruped conversion
+
+A **component family** shares parameter defaults across named assembly variants.
+Variants can have different part counts and topology. They expose the same typed
+external connections. **Place** lets you choose a variant; the Occurrence panel
+identifies the placed variant. **Edit defaults → Family variants** shows how the
+shared parameters drive each variant's parameters. Use the library search field
+to find a family or nested component quickly.
+
+Python/REST operations `create_component_family(name, variants, parameters,
+default_variant)` and `link_component_family(instance_id, definition_id, variant,
+overrides)` use the same validation and undo path. `place_component` accepts an
+optional `variant`. `set_component_parameters` accepts `family_variants` to edit
+validated parameter bindings. Linking an existing occurrence to its corresponding
+family variant preserves its node IDs. Switching to a different topology requires
+a new occurrence and explicit reconnection.
+
+Additional shared recipe operations are `assembly_placement` (target `*`, rigid
+translation/rotation of the complete nested assembly), `joint_ratio` (positive
+actuator-to-joint ratio), and `joint_home` (angle in degrees, converted to radians
+in the joint record). They run in the existing cancellable component worker.
+
+The complete converted quadruped is in
+`examples/components/quadruped-parametric/model/robot.rcad`. Its README documents
+the verified backups, retained variants, exposed parameters, and geometry scope.
+
+
+## Crash logs
+
+Use **Help → Open diagnostics folder**. On macOS, logs are in
+`~/Library/Logs/RoboCAD/`; `latest-editor.json` identifies the most recent editor
+session. You can simply report that the editor crashed; the session log records
+recent actions, errors and fatal-signal tracebacks. Full macOS crash reports are
+collected on the next launch or with `python -m robocad.diagnostics`. See
+[Crash diagnostics](README.md#crash-diagnostics) for commands and platform paths.

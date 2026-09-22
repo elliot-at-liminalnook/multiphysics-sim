@@ -1230,6 +1230,14 @@ class OcctKernel(GeometryKernel):
         occ, _ = _find_occ_edge(body.shape, edge)
         return self._sample_occ_edge(occ, count)
 
+    def sample_edges(self, body: Body, count: int = 24, line_count: int = 2) -> list[tuple[EdgeRef, list[Vec3]]]:
+        out = []
+        for index, occ in enumerate(occ_edges(body.shape)):
+            edge = _edge_ref(occ, index)
+            points = self._sample_occ_edge(occ, line_count if edge.kind == CurveKind.LINE else count)
+            out.append((edge, points))
+        return out
+
     def curvature_comb(self, wire: Body, samples: int = 64) -> list[tuple[Vec3, Vec3, float]]:
         from OCP.BRepLProp import BRepLProp_CLProps
 

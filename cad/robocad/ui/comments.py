@@ -2,7 +2,7 @@
 import numpy as np
 import html
 from copy import deepcopy
-from PySide6.QtCore import QPointF, QRectF, Qt, QSize
+from PySide6.QtCore import QModelIndex, QPointF, QRectF, Qt, QSize
 from PySide6.QtGui import QColor, QFont, QPen
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QLineEdit,
     QListWidget, QListWidgetItem, QPlainTextEdit, QPushButton, QVBoxLayout, QWidget, QInputDialog)
@@ -10,6 +10,48 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QLineE
 from .tools import Tool, SelectTool
 from ..annotations import thread_parts, PART_LINK
 from ..saved_views import capture_view, restore_view
+from ..diagnostics import event as diagnostic_event
+
+
+def sync_items(widget, entries):
+    """Reconcile keyed rows without resetting the live Qt item model.
+
+    Selection changes can run from an item's mouse/link handler. Clearing the
+    list there destroys the event's sender and invalidates Cocoa accessibility
+    cells that macOS still holds. Keep surviving rows (and message widgets)
+    alive; emit individual row changes only when the document actually changes.
+    """
+    selected = widget.currentItem()
+    selected_id = selected.data(Qt.UserRole) if selected else None
+    wanted = {key for key, _ in entries}
+    blocked = widget.blockSignals(True)
+    try:
+        for row in range(widget.count() - 1, -1, -1):
+            if widget.item(row).data(Qt.UserRole) not in wanted:
+                widget.takeItem(row)
+        items = {widget.item(row).data(Qt.UserRole): widget.item(row)
+                 for row in range(widget.count())}
+        for row, (key, text) in enumerate(entries):
+            item = items.get(key)
+            if item is None:
+                item = QListWidgetItem(text)
+                item.setData(Qt.UserRole, key)
+                widget.insertItem(row, item)
+                items[key] = item
+            elif widget.row(item) != row:
+                # A model move keeps embedded message widgets alive too.
+                source = widget.row(item)
+                widget.model().moveRow(QModelIndex(), source, QModelIndex(),
+                                       row if source > row else row + 1)
+            if item.text() != text:
+                item.setText(text)
+        if selected_id in items:
+            widget.setCurrentItem(items[selected_id])
+        elif selected_id is not None:
+            widget.setCurrentRow(-1)
+        return items
+    finally:
+        widget.blockSignals(blocked)
 
 
 def comment_html(body, doc):
@@ -205,44 +247,39 @@ class CommentsPanel(QWidget):
         return [i for i in ids if i in self.app.doc.nodes]
 
     def refresh(self, *_):
-        tid = self.current_id()
         self.cached = self.app.ops.threads()
-        self.threads.blockSignals(True)
-        self.threads.clear()
         selected = set(self.app.viewport.selection.nodes())
         status = {"Open": "open", "Resolved": "resolved"}.get(self.filter.currentText())
+        entries = []
         for number, t in enumerate(self.cached, 1):
             if status and t["status"] != status: continue
             if self.selected_only.isChecked() and t["anchor"]["node_id"] not in selected and not selected.intersection(r['node_id'] for r in thread_parts(t)): continue
             prefix = "✓" if t["status"] == "resolved" else str(number)
             preview = PART_LINK.sub(lambda match: match.group(1), t['comments'][0]['body'])
-            item = QListWidgetItem(f"{prefix} · {t['node_name']}\n{preview[:90]}")
-            item.setData(Qt.UserRole, t["id"])
-            self.threads.addItem(item)
-            if t["id"] == tid: self.threads.setCurrentItem(item)
-        self.threads.blockSignals(False)
+            entries.append((t['id'], f"{prefix} · {t['node_name']}\n{preview[:90]}"))
+        sync_items(self.threads, entries)
         if not self.pending and not self.editing:
             self.show_thread()
         self.app.viewport.update()
 
     def show_thread(self, *_):
-        selected_message = self.messages.currentItem().data(Qt.UserRole) if self.messages.currentItem() else None
-        self.messages.clear()
-        selected_part = self.parts.currentItem().data(Qt.UserRole) if self.parts.currentItem() else None
-        self.parts.clear()
         tid = self.current_id()
         t = next((t for t in self.cached if t["id"] == tid), None)
+        refs = thread_parts(t) if t else []
+        entries = []
+        for ref in refs:
+            node = self.app.doc.nodes.get(ref['node_id'])
+            label = ref.get('label') or (node.name if node else 'Deleted part')
+            description = ref.get('description') or (node.name if node and node.name != label else '')
+            entries.append((ref['node_id'], label + ('\n' + description if description else '') + (' · deleted' if node is None else '')))
+        part_items = sync_items(self.parts, entries)
+        message_items = sync_items(self.messages, [(c['id'], f"{c['author']} · {c['created_at'][:16].replace('T', ' ')}\n{c['body']}") for c in t['comments']] if t else [])
         if t:
-            for ref in thread_parts(t):
+            for ref in refs:
                 node = self.app.doc.nodes.get(ref['node_id'])
-                label = ref.get('label') or (node.name if node else 'Deleted part')
-                description = ref.get('description') or (node.name if node and node.name != label else '')
-                item = QListWidgetItem(label + ('\n' + description if description else '') + (' · deleted' if node is None else ''))
-                item.setData(Qt.UserRole, ref['node_id'])
+                item = part_items[ref['node_id']]
                 item.setToolTip((node.name + '\n' if node else '') + 'Click to highlight · double-click to view alone')
-                if node is None: item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
-                self.parts.addItem(item)
-                if ref['node_id'] == selected_part: self.parts.setCurrentItem(item)
+                item.setFlags(item.flags() | Qt.ItemIsEnabled if node else item.flags() & ~Qt.ItemIsEnabled)
             state = {"evidence": "Captured experiment", "attached": "Attached to surface", "missing": "Part deleted — reattach this annotation", "needs_review": "Geometry changed — check and reattach this pin"}[t["anchor_status"]]
             self.location.setText(f"{t['node_name']} · {state}")
             if t.get('evidence'):
@@ -250,19 +287,20 @@ class CommentsPanel(QWidget):
                 self.location.setText(self.location.text() + f"\nRun {ev['run_id'][:8]} · {ev.get('signal', '')} · {ev.get('time_range', [])} s")
             self.resolve_button.setText("Reopen" if t["status"] == "resolved" else "Resolve")
             for c in t["comments"]:
-                item = QListWidgetItem(f"{c['author']} · {c['created_at'][:16].replace('T', ' ')}\n{c['body']}")
-                item.setData(Qt.UserRole, c["id"])
-                self.messages.addItem(item)
-                if c['id'] == selected_message: self.messages.setCurrentItem(item)
-                label = MessageLabel()
-                label.message_list, label.message_item = self.messages, item
-                label.setWordWrap(True)
-                label.setTextFormat(Qt.RichText)
-                label.setOpenExternalLinks(False)
-                label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-                label.setText('<b>' + html.escape(c['author']) + '</b> · ' + html.escape(c['created_at'][:16].replace('T', ' ')) + '<br>' + comment_html(c['body'], self.app.doc))
-                label.linkActivated.connect(lambda link: self.app._safe(lambda: self.open_part_link(link)))
-                self.messages.setItemWidget(item, label)
+                item = message_items[c['id']]
+                label = self.messages.itemWidget(item)
+                if label is None:
+                    label = MessageLabel()
+                    label.message_list, label.message_item = self.messages, item
+                    label.setWordWrap(True)
+                    label.setTextFormat(Qt.RichText)
+                    label.setOpenExternalLinks(False)
+                    label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+                    label.linkActivated.connect(lambda link: self.app._safe(lambda: self.open_part_link(link)))
+                    self.messages.setItemWidget(item, label)
+                text = '<b>' + html.escape(c['author']) + '</b> · ' + html.escape(c['created_at'][:16].replace('T', ' ')) + '<br>' + comment_html(c['body'], self.app.doc)
+                if label.text() != text:
+                    label.setText(text)
             self.messages.size_messages()
         elif not self.pending:
             self.location.setText("Click Annotate model to start a discussion on a surface.")
@@ -270,6 +308,7 @@ class CommentsPanel(QWidget):
         self.app.viewport.update()
 
     def select(self, tid):
+        diagnostic_event('annotation_selected', thread_id=tid)
         if (self.pending or self.editor.toPlainText() or self.editing) and tid != self.current_id():
             self.app.status("Post or cancel your current draft before opening another thread")
             return
@@ -355,11 +394,13 @@ class CommentsPanel(QWidget):
                                  for n in [self.app.doc.nodes[nid], *self.app.doc.walk(nid)]))
 
     def highlight_parts(self, ids=None):
+        diagnostic_event('annotation_highlight_parts', thread_id=self.current_id(), node_ids=ids)
         ids = self._expand_parts(self._fit_nodes() if ids is None else ids)
         self.app.viewport.selection.set_nodes(ids)
         self.app.selection_changed(None)
 
     def view_parts(self, ids=None):
+        diagnostic_event('annotation_view_parts', thread_id=self.current_id(), node_ids=ids)
         ids = self._fit_nodes() if ids is None else [i for i in ids if i in self.app.doc.nodes]
         if not ids:
             self.app.status('No available linked parts to show')

@@ -1,0 +1,19 @@
+{
+  "model": "/Users/elliot/physics-simulator/examples/components/quadruped-linked-leg/robot.rcad",
+  "initial_response_ms": 51.357313000000005,
+  "p95_poll_ms": 22.252211000000077,
+  "max_poll_ms": 73.74291100000002,
+  "polls": 236,
+  "state": "applied",
+  "document_unchanged": true,
+  "stages": [
+    "",
+    "Transferring geometry",
+    "Starting rebuild",
+    "Receiving geometry",
+    "Rebuilding components",
+    "Ready to apply"
+  ],
+  "nodes": 261,
+  "notes": "HTTP round trips while background export processes the 114-part quadruped; this measures request responsiveness, not GPU frame time."
+}

@@ -26,7 +26,7 @@ import zipfile
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Optional
 
-from .kernel import Body, GeometryKernel, Plane, Sketch, Vec3, default_kernel
+from .kernel import Body, GeometryKernel, KernelError, Plane, Sketch, Vec3, default_kernel
 from .kernel.base import Mesh, v_add
 
 FORMAT_VERSION = 1
@@ -215,6 +215,8 @@ class Node:
     robot: Optional[dict] = None
     # Simulation results for this node (link/joint/motor block of the results file).
     results: Optional[dict] = None
+    component_instance: Optional[dict] = None
+    component_member: Optional[dict] = None
 
     def to_json(self) -> dict:
         d = {"id": self.id, "kind": self.kind, "name": self.name, "parent": self.parent, "children": self.children, "visible": self.visible, "locked": self.locked, "disabled": self.disabled, "material": self.material, "color": list(self.color) if self.color else None, "pivot": list(self.pivot) if self.pivot else None, "transform": self.transform.to_json(), "source": self.source, "tessellation_tolerance": self.tessellation_tolerance}
@@ -234,6 +236,10 @@ class Node:
             d["robot"] = self.robot
         if self.results is not None:
             d["results"] = self.results
+        if self.component_instance is not None:
+            d['component_instance'] = self.component_instance
+        if self.component_member is not None:
+            d['component_member'] = self.component_member
         if self.image is not None:
             d["image"] = {k: v for k, v in self.image.items() if k != "data" and not k.startswith('_')}
             d["image"]["plane"] = self.image["plane"].to_json() if isinstance(self.image.get("plane"), Plane) else self.image.get("plane")
@@ -244,6 +250,7 @@ class Document:
     def __init__(self, kernel: Optional[GeometryKernel] = None):
         self.kernel = kernel or default_kernel()
         self.nodes: dict[str, Node] = {}
+        self.component_definitions: dict = {}
         self.roots: list[str] = []
         self.materials: dict[str, Material] = {m.id: m for m in DEFAULT_MATERIALS}
         self.active_group: Optional[str] = None
@@ -306,6 +313,8 @@ class Document:
     def add(self, node: Node, parent: Optional[str] = None, index: Optional[int] = None) -> Node:
         with self._lock:
             parent = parent if parent is not None else self.active_group
+            if parent in self.nodes and (self.nodes[parent].component_instance or self.nodes[parent].component_member):
+                raise KernelError('Edit the component definition or detach it before adding children')
             if parent is not None and parent not in self.nodes:
                 parent = None
             node.parent = parent
@@ -490,6 +499,7 @@ class Document:
             "annotations": self.annotations,
             "robot_settings": self.robot_settings,
             "component_graph": self.component_graph,
+            'component_definitions': {key: definition.manifest() for key, definition in self.component_definitions.items()},
             "results": self.results,
         }
 
@@ -514,7 +524,7 @@ class Document:
         with self._lock:
             entries = [('manifest.json', json.dumps(self.to_manifest(), indent=1).encode())]
             for n in self.nodes.values():
-                if n.body is not None:
+                if n.body is not None and n.component_member is None:
                     cached = self._snapshot_body_cache.get(n.id)
                     if cached is None or cached[0] is not n.body:
                         cached = (n.body, self.kernel.serialize(n.body))
@@ -530,13 +540,16 @@ class Document:
                     entries.append((f'image/{n.id}', bytes(n.image['data'])))
             if thumbnail:
                 entries.append(('thumbnail.png', bytes(thumbnail)))
+            for key, definition in self.component_definitions.items():
+                entries.extend(definition.archive_entries(self.kernel, f'components/{key}'))
             return self.revision, tuple(entries)
 
     @classmethod
-    def load(cls, path: str, kernel: Optional[GeometryKernel] = None) -> "Document":
+    def load(cls, path: str, kernel: Optional[GeometryKernel] = None, *, progress=None) -> "Document":
         doc = cls(kernel)
         with zipfile.ZipFile(path) as z:
             manifest = json.loads(z.read("manifest.json"))
+            read_total = len(manifest["nodes"]) + sum(len(d["nodes"]) for d in manifest.get("component_definitions", {}).values())
             doc.document_id = manifest.get('document_id', doc.document_id)
             doc.revision = int(manifest.get('revision', 0))
             doc.materials = {m["id"]: Material.from_json(m) for m in manifest.get("materials", [])} or doc.materials
@@ -547,10 +560,14 @@ class Document:
             doc.results = manifest.get("results")
             doc.annotations = manifest.get("annotations", {})
             names = set(z.namelist())
-            for d in manifest["nodes"]:
+            for index, d in enumerate(manifest["nodes"]):
+                if progress:
+                    progress(index, read_total, d['name'])
                 node = Node(d["id"], d["kind"], d["name"], d.get("parent"), list(d.get("children", [])), d.get("visible", True), d.get("locked", False), d.get("disabled", False), d.get("material"), tuple(d["color"]) if d.get("color") else None, tuple(d["pivot"]) if d.get("pivot") else None)
                 node.transform = Transform.from_json(d.get("transform", {}))
                 node.source = d.get("source")
+                node.component_instance = d.get('component_instance')
+                node.component_member = d.get('component_member')
                 node.tessellation_tolerance = d.get("tessellation_tolerance", 0.05)
                 if f"brep/{node.id}.brep" in names:
                     captured_brep = z.read(f"brep/{node.id}.brep")
@@ -586,8 +603,19 @@ class Document:
                     img["data"] = z.read(f"image/{node.id}") if f"image/{node.id}" in names else None
                     node.image = img
                 doc.nodes[node.id] = node
+            if progress:
+                progress(len(manifest['nodes']), read_total, '')
             doc.roots = [i for i in manifest.get("roots", []) if i in doc.nodes]
             doc.active_group = manifest.get("active_group")
+            if manifest.get('component_definitions') or any(n.component_instance or n.component_member for n in doc.nodes.values()):
+                from .components import ComponentDefinition, restore_occurrences
+                offset = len(manifest['nodes'])
+                for key, value in manifest.get('component_definitions', {}).items():
+                    callback = (lambda done, total, name, base=offset: progress(base+done, read_total, 'Component: '+name)) if progress else None
+                    doc.component_definitions[key] = ComponentDefinition.from_archive(value, z, doc.kernel, f'components/{key}', callback)
+                    offset += len(value['nodes'])
+                if progress: progress(read_total, read_total, 'Resolving linked assemblies')
+                restore_occurrences(doc)
         doc.path = path
         doc.dirty = False
         return doc

@@ -9,11 +9,12 @@ const root = resolve(import.meta.dirname, '..');
 const output = resolve(root, process.argv[2] || 'runs/interactive/viewer');
 const fixtureOnly = process.argv.includes('--fixture-only');
 const environmentOnly = process.argv.includes('--environment-only');
+const onlyPreset = process.argv.find(a=>a.startsWith('--preset='))?.slice(9);
 const wasmArtifact = process.env.WASM_ARTIFACT || 'target/wasm32-unknown-unknown/release/sim_web.wasm';
 const read = async p => JSON.parse(await readFile(resolve(root,p)));
 const hash = async p => createHash('sha256').update(await readFile(resolve(root,p))).digest('hex');
 await mkdir(output, { recursive:true }); await mkdir(join(output,'data'), { recursive:true });
-for (const file of ['index.html','viewer.css','viewer.js','leaderboard.js','leaderboard-model.mjs','leaderboard.css','video-export.js','motion-commands.mjs']) await cp(join(root,'web/viewer',file),join(output,file));
+for (const file of ['index.html','viewer.css','viewer.js','leaderboard.js','leaderboard-model.mjs','leaderboard.css','video-export.js','motion-commands.mjs','hardware-sync.mjs']) await cp(join(root,'web/viewer',file),join(output,file));
 await cp(join(root,'web/worker.js'),join(output,'worker.js'));
 await cp(join(root,'web/worker-message.mjs'),join(output,'worker-message.mjs'));
 await cp(join(root,'web/serve-viewer.mjs'),join(output,'serve-viewer.mjs'));
@@ -25,6 +26,7 @@ await cp(join(root,'web/node_modules/three/examples/jsm/controls/OrbitControls.j
 const bindgen = process.env.WASM_BINDGEN || 'wasm-bindgen';
 execFileSync(bindgen,[resolve(root,wasmArtifact),'--target','web','--out-name','sim_web','--out-dir',output],{stdio:'inherit'});
 const configured = await read('web/viewer/presets.json'); const catalog = {presets:[]}; const manifest = {inputs:{},presets:[]};
+if(onlyPreset && !configured.presets.some(p=>p.id===onlyPreset))throw Error(`Unknown preset: ${onlyPreset}`);
 manifest.wasm = {path: wasmArtifact, sha256: await hash(wasmArtifact), browser_module_sha256: await hash(join(output, 'sim_web_bg.wasm')),
   bindgen_version: execFileSync(bindgen, ['--version'], {encoding: 'utf8'}).trim()};
 if (process.env.WASM_BUILD_MANIFEST) {
@@ -33,6 +35,7 @@ if (process.env.WASM_BUILD_MANIFEST) {
   manifest.wasm.build = build; manifest.inputs[process.env.WASM_BUILD_MANIFEST] = await hash(process.env.WASM_BUILD_MANIFEST);
 }
 for (const preset of configured.presets) {
+  if (onlyPreset && preset.id!==onlyPreset) continue;
   if (environmentOnly && !preset.task && preset.mode !== 'live') continue;
   if (fixtureOnly && preset.mode !== 'live' && !preset.fixture) continue;
   const scene = await read(preset.scene); const sceneHash = await hash(preset.scene); manifest.inputs[preset.scene] = sceneHash;
@@ -64,9 +67,13 @@ for (const preset of configured.presets) {
   const path=`data/${preset.id}.json`; await writeFile(join(output,path),JSON.stringify(data));
   catalog.presets.push({...preset,path}); manifest.presets.push({id:preset.id,mode:preset.mode,path});
 }
-await packageLeaderboard(root, output, catalog, manifest, fixtureOnly);
+if(!onlyPreset)await packageLeaderboard(root, output, catalog, manifest, fixtureOnly);
+if(onlyPreset){
+  const preset=catalog.presets[0];
+  await writeFile(join(output,'OPEN.txt'),`${preset.label}\n\nRequires Node.js 22 or newer. In this directory run:\n  node serve-viewer.mjs . 4173\nThen open http://127.0.0.1:4173/?preset=${preset.id}\n\n${preset.description||''}\n\n${preset.readiness||''}\n\n${preset.evidence||''}\n\nKeep build-manifest.json with this bundle. File URLs do not support the Rust worker.\n`);
+}
 await writeFile(join(output,'catalog.json'),JSON.stringify(catalog,null,2));
 for (const path of ['web/leaderboard/package.mjs','web/viewer/leaderboard.js','web/viewer/leaderboard-model.mjs','web/viewer/leaderboard.css','web/viewer/video-export.js']) manifest.inputs[path]=await hash(path);
-for (const path of ['web/build-viewer.mjs','web/serve-viewer.mjs','web/viewer/presets.json','web/viewer/viewer.js','web/viewer/motion-commands.mjs','web/viewer/viewer.css','web/viewer/index.html','web/worker.js','web/worker-message.mjs','web/package-lock.json',wasmArtifact]) manifest.inputs[path]=await hash(path);
+for (const path of ['web/build-viewer.mjs','web/serve-viewer.mjs','web/viewer/presets.json','web/viewer/viewer.js','web/viewer/motion-commands.mjs','web/viewer/hardware-sync.mjs','web/viewer/viewer.css','web/viewer/index.html','web/worker.js','web/worker-message.mjs','web/package-lock.json',wasmArtifact]) manifest.inputs[path]=await hash(path);
 await writeFile(join(output,'build-manifest.json'),JSON.stringify(manifest,null,2));
 console.log(`Packaged ${catalog.presets.length} presets in ${output}`);

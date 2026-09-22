@@ -1,0 +1,30 @@
+{
+  "name": "coupled-sdirk2/step-8/concurrent-functional",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": false,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.360442595,
+  "baseline_wall_s": 30.586520104,
+  "candidate_wall_s": 28.769732761,
+  "speedup": 1.0631492603039685,
+  "simulation_per_wall": 0.10427625535913125,
+  "max_error": {
+    "motor_angle_rad": 0.007798828947111411,
+    "link_position_m": 0.004437332681108453,
+    "current_a": 0.1812011036790389,
+    "contact_force_n": 27.915162744069637
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": false,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

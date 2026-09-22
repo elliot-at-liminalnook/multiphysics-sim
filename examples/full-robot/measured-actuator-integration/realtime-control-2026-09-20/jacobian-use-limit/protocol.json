@@ -1,0 +1,85 @@
+{
+  "scope": "Opt-in lifetime limit for numerical correction-matrix proposals. Default remains 64 Newton iteration visits. Original residual/correction acceptance, stale-matrix refresh, event/contact/layout/step invalidation and transactional rollback remain unchanged.",
+  "sources_before": {
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "c1481075e81659dc5053efe2713709f2d492b16f74ceff31e24799a06cbd5bdf",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "23fbad8aa40c10a1f124d0fd2d85e93f576a5bdd6590299c3e445c93a2772fc8"
+  },
+  "binary_before_sha256": "4d42e91cb905a573cd67f9b8e544e63d3c623f07cff35ec85864a85e6a1f6fe1",
+  "inputs": {
+    "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+    "config.json": "7e649c37845711afbf32a23d162163829f504d88df4c9219c71d7fb6a8108abb",
+    "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+    "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "variants": {
+    "uses-256": {
+      "step_jacobian_max_uses": 256,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "bc6cf8ee57edae5dd30d80147e1b8b3f9cb841afffc2ba7c69e0f4ec4d200ed0",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    },
+    "uses-1024": {
+      "step_jacobian_max_uses": 1024,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "505014c052dba41090f5c99975683e6f76110c38dfe6f1a36450beb1f17e3ad1",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    },
+    "uses-4096": {
+      "step_jacobian_max_uses": 4096,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "204487b2f0528d640a57ce446f3cf8d146c9a8ce260ad812fc4caf659b38e63e",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    },
+    "uses-16": {
+      "step_jacobian_max_uses": 16,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "c8b76c31265c98b09bc472e1c75e6252ccf9175484bf537fb5bf3ec3f4c1af21",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    },
+    "uses-32": {
+      "step_jacobian_max_uses": 32,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "1834f36d3e3ce37c643308e1072fc032dcaefbd6988e25038a7c7b8c43398293",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    },
+    "uses-128": {
+      "step_jacobian_max_uses": 128,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "decda8f9122548c25dc722aa3613c5bb399f9557b86df55dec31a50f6f91e19d",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    }
+  },
+  "sources_candidate": {
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "8034caa741c0543928f6260b12b7781247b0109fd48546ef08ef243dd468a58e",
+    "crates/sim-domain-robot/tests/embedded_step.rs": "b3ad8731953b05674c32335e5040be754c785b9637824a81071c5a8d8957f4c9"
+  },
+  "binary_candidate_sha256": "dbcadb5ebe789dcf74f2ac28301cb89f03f7b2365515ee1a1cb3c92bbd0f3e00"
+}

@@ -1,0 +1,592 @@
+[
+  {
+    "request": {
+      "action": "inspect"
+    },
+    "result": {
+      "busy": false,
+      "calibration": {
+        "axes": {
+          "1": {
+            "lower": null,
+            "reference": null,
+            "role": "knee",
+            "upper": null
+          },
+          "2": {
+            "lower": null,
+            "reference": null,
+            "role": "worm",
+            "upper": null
+          },
+          "3": {
+            "lower": null,
+            "reference": null,
+            "role": "belt/hip",
+            "upper": null
+          }
+        },
+        "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+        "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+        "schema_version": 1,
+        "units": "HX motor encoder counts; 4096 counts/revolution; not joint degrees"
+      },
+      "connected": true,
+      "enabled_id": null,
+      "error": null,
+      "message": "Readback received. Select an axis and enable supervised teaching.",
+      "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+      "samples": {
+        "1": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.261398628746311,
+          "position_raw": 2778,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 37,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "2": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 0.7946020481247621,
+          "position_raw": 518,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 35,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "3": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 3.9592044135328397,
+          "position_raw": 2581,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 36,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "enable",
+      "id": 1,
+      "supported": true
+    },
+    "result": {
+      "busy": false,
+      "calibration": {
+        "axes": {
+          "1": {
+            "lower": null,
+            "reference": null,
+            "role": "knee",
+            "upper": null
+          },
+          "2": {
+            "lower": null,
+            "reference": null,
+            "role": "worm",
+            "upper": null
+          },
+          "3": {
+            "lower": null,
+            "reference": null,
+            "role": "belt/hip",
+            "upper": null
+          }
+        },
+        "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+        "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+        "schema_version": 1,
+        "units": "HX motor encoder counts; 4096 counts/revolution; not joint degrees"
+      },
+      "connected": true,
+      "enabled_id": 1,
+      "error": null,
+      "message": "Ready for deliberate jogs. Zero-drive watchdogs verified; mechanical stopping distance remains unqualified.",
+      "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+      "samples": {
+        "1": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.261398628746311,
+          "position_raw": 2778,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 37,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "2": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 0.7946020481247621,
+          "position_raw": 518,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 35,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "3": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 3.9592044135328397,
+          "position_raw": 2581,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 36,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "stop",
+      "id": 1
+    },
+    "result": {
+      "busy": false,
+      "calibration": {
+        "axes": {
+          "1": {
+            "lower": null,
+            "reference": null,
+            "role": "knee",
+            "upper": null
+          },
+          "2": {
+            "lower": null,
+            "reference": null,
+            "role": "worm",
+            "upper": null
+          },
+          "3": {
+            "lower": null,
+            "reference": null,
+            "role": "belt/hip",
+            "upper": null
+          }
+        },
+        "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+        "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+        "schema_version": 1,
+        "units": "HX motor encoder counts; 4096 counts/revolution; not joint degrees"
+      },
+      "connected": true,
+      "enabled_id": null,
+      "error": null,
+      "message": "Torque off and stationary encoder verified.",
+      "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+      "samples": {
+        "1": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.261398628746311,
+          "position_raw": 2778,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 37,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "2": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 0.7946020481247621,
+          "position_raw": 518,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 35,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "3": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 3.9592044135328397,
+          "position_raw": 2581,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 36,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "enable",
+      "id": 2,
+      "supported": true
+    },
+    "result": {
+      "busy": false,
+      "calibration": {
+        "axes": {
+          "1": {
+            "lower": null,
+            "reference": null,
+            "role": "knee",
+            "upper": null
+          },
+          "2": {
+            "lower": null,
+            "reference": null,
+            "role": "worm",
+            "upper": null
+          },
+          "3": {
+            "lower": null,
+            "reference": null,
+            "role": "belt/hip",
+            "upper": null
+          }
+        },
+        "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+        "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+        "schema_version": 1,
+        "units": "HX motor encoder counts; 4096 counts/revolution; not joint degrees"
+      },
+      "connected": true,
+      "enabled_id": 2,
+      "error": null,
+      "message": "Ready for deliberate jogs. Zero-drive watchdogs verified; mechanical stopping distance remains unqualified.",
+      "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+      "samples": {
+        "1": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.261398628746311,
+          "position_raw": 2778,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 37,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "2": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 0.7946020481247621,
+          "position_raw": 518,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 35,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "3": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 3.9592044135328397,
+          "position_raw": 2581,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 36,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "stop",
+      "id": 2
+    },
+    "result": {
+      "busy": false,
+      "calibration": {
+        "axes": {
+          "1": {
+            "lower": null,
+            "reference": null,
+            "role": "knee",
+            "upper": null
+          },
+          "2": {
+            "lower": null,
+            "reference": null,
+            "role": "worm",
+            "upper": null
+          },
+          "3": {
+            "lower": null,
+            "reference": null,
+            "role": "belt/hip",
+            "upper": null
+          }
+        },
+        "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+        "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+        "schema_version": 1,
+        "units": "HX motor encoder counts; 4096 counts/revolution; not joint degrees"
+      },
+      "connected": true,
+      "enabled_id": null,
+      "error": null,
+      "message": "Torque off and stationary encoder verified.",
+      "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+      "samples": {
+        "1": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.261398628746311,
+          "position_raw": 2778,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 37,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "2": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 0.7946020481247621,
+          "position_raw": 518,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 35,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "3": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 3.9592044135328397,
+          "position_raw": 2581,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 36,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "enable",
+      "id": 3,
+      "supported": true
+    },
+    "result": {
+      "busy": false,
+      "calibration": {
+        "axes": {
+          "1": {
+            "lower": null,
+            "reference": null,
+            "role": "knee",
+            "upper": null
+          },
+          "2": {
+            "lower": null,
+            "reference": null,
+            "role": "worm",
+            "upper": null
+          },
+          "3": {
+            "lower": null,
+            "reference": null,
+            "role": "belt/hip",
+            "upper": null
+          }
+        },
+        "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+        "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+        "schema_version": 1,
+        "units": "HX motor encoder counts; 4096 counts/revolution; not joint degrees"
+      },
+      "connected": true,
+      "enabled_id": 3,
+      "error": null,
+      "message": "Ready for deliberate jogs. Zero-drive watchdogs verified; mechanical stopping distance remains unqualified.",
+      "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+      "samples": {
+        "1": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.261398628746311,
+          "position_raw": 2778,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 37,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "2": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 0.7946020481247621,
+          "position_raw": 518,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 35,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "3": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 3.9592044135328397,
+          "position_raw": 2581,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 36,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "action": "stop",
+      "id": 3
+    },
+    "result": {
+      "busy": false,
+      "calibration": {
+        "axes": {
+          "1": {
+            "lower": null,
+            "reference": null,
+            "role": "knee",
+            "upper": null
+          },
+          "2": {
+            "lower": null,
+            "reference": null,
+            "role": "worm",
+            "upper": null
+          },
+          "3": {
+            "lower": null,
+            "reference": null,
+            "role": "belt/hip",
+            "upper": null
+          }
+        },
+        "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+        "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+        "schema_version": 1,
+        "units": "HX motor encoder counts; 4096 counts/revolution; not joint degrees"
+      },
+      "connected": true,
+      "enabled_id": null,
+      "error": null,
+      "message": "Torque off and stationary encoder verified.",
+      "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+      "samples": {
+        "1": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.261398628746311,
+          "position_raw": 2778,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 37,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "2": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 0.7946020481247621,
+          "position_raw": 518,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 35,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "3": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 3.9592044135328397,
+          "position_raw": 2581,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 36,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        }
+      }
+    }
+  }
+]

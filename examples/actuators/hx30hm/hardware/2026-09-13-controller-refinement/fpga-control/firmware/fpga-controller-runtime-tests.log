@@ -1,0 +1,23 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 30.45s
+     Running tests/fpga_controller.rs (target/debug/deps/fpga_controller-c470588294885f67)
+
+running 3 tests
+test packet_contains_targets_and_gains_not_host_drive ... ok
+test validates_actual_pwm_instead_of_trusting_audit_flag ... ok
+test captured_schedule_runs_same_controller_against_shared_plant ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+

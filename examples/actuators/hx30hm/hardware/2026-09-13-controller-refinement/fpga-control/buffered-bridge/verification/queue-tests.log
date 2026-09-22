@@ -1,0 +1,10 @@
+PASS 1: complete packets only, stable under stalls, ordered consumption
+PASS 2: full queue cannot block STOP; older commands discarded
+PASS 3: bad checksum stops/discards rather than forwarding
+PASS 4: normal overflow faults and discards queue
+PASS 5: length and inter-byte bounds enforced
+PASS 6: pending STOP survives malformed later traffic
+PASS 7: 64-byte packets and simultaneous full dequeue/enqueue
+PASS 8: addressed DISARM takes priority and clears old work
+PASS host packet queue
+tb/host_packet_queue_tb.v:70: $finish called at 5020000 (1ps)

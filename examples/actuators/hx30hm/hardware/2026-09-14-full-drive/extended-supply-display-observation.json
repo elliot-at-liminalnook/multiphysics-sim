@@ -1,0 +1,12 @@
+{
+  "time_recorded_utc": "2026-09-14T15:22:36.272426+00:00",
+  "user_text": "only uses .86 amps",
+  "supply_display_current_a": 0.86,
+  "when": "After first completed 10-second 25% all-nine reversal block; second block started afterward",
+  "source": "User observation of supply display, not synchronized logged current",
+  "cv_cc_state": "CV",
+  "requested_current_limit_a": 3.5,
+  "interpretation": "User-observed CV and approximately 0.86 A do not indicate sustained current limiting during the 25% extended test. Brief transients and voltage telemetry calibration/age remain unresolved; this does not establish behavior during 50% or higher drive.",
+  "cv_cc_user_text": "stays on CV",
+  "cv_cc_when": "Reported after second completed 10-second block; third block started afterward"
+}

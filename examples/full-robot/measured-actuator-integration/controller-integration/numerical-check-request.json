@@ -1,0 +1,13 @@
+{
+  "scope": "50 ms integration diagnostic, not a gait-speed or calibration acceptance result",
+  "seed": 2301,
+  "window_s": [
+    0,
+    0.05
+  ],
+  "sample_period_s": 0.005,
+  "nominal_step_s": 0.00015625,
+  "refined_step_s": 7.8125e-05,
+  "rms_motor_angle_difference_budget_deg": 0.0264,
+  "budget_basis": "10 percent of existing 0.264 degree bench RMS acceptance criterion; does not replace that criterion."
+}

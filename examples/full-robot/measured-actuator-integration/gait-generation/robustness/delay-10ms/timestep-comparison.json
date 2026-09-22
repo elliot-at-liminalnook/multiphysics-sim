@@ -1,0 +1,89 @@
+{
+  "scope": "Two-second numerical check for delay-10ms, declared before the half-step run; not hardware calibration.",
+  "nominal": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/robustness/delay-10ms/pilot-journal/state-00000000000000000002.json",
+    "sha256": "63fb62f3e42bf315aa678dd3f93ec7fc27495af3bd092ca4d004aee735dac95b"
+  },
+  "refined": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/robustness/delay-10ms-half/pilot-journal/state-00000000000000000002.json",
+    "sha256": "d9c47f79b38f1cf990f9e350d22ce4db8dd159dd1682b747df7371399b15d600"
+  },
+  "checks": [
+    {
+      "name": "absolute_net_distance_difference_m",
+      "value": 0.0004583281885903734,
+      "limit": 0.005,
+      "passed": true
+    },
+    {
+      "name": "endpoint_body_position_difference_m",
+      "value": 0.0047432300272499135,
+      "limit": 0.01,
+      "passed": true
+    },
+    {
+      "name": "endpoint_body_up_z_difference",
+      "value": 0.000012130873918270169,
+      "limit": 0.01,
+      "passed": true
+    },
+    {
+      "name": "endpoint_actuated_joint_difference_rad",
+      "value": 0.002512179115598534,
+      "limit": 0.017453292519943295,
+      "passed": true
+    }
+  ],
+  "joint_differences": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "absolute_difference_rad": 0.00035027556302095943
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "absolute_difference_rad": 0.0004216573477331398
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "absolute_difference_rad": 0.001829952034250626
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "absolute_difference_rad": 0.002512179115598534
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "absolute_difference_rad": 0.0006478412960693458
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "absolute_difference_rad": 0.0015213918174350471
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "absolute_difference_rad": 0.0006314016791614252
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "absolute_difference_rad": 0.0006281540977949862
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "absolute_difference_rad": 0.0006985651910298429
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "absolute_difference_rad": 0.00047975270882924526
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "absolute_difference_rad": 0.0011205064440816953
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "absolute_difference_rad": 0.001918895586506153
+    }
+  ],
+  "passed": true,
+  "limitations": "All bounds must pass for this short endpoint check. These authored numerical tolerances do not establish trajectory-wide convergence, sustained gait stability or agreement with hardware. Failed bounds remain failed; investigate rather than widening them. Repeat numerical qualification on longer finalist trials."
+}

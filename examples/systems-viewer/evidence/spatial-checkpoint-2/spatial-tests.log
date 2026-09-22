@@ -1,0 +1,26 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+   Compiling sim-spatial v0.1.0 (/Users/elliot/physics-simulator/crates/sim-spatial)
+    Finished `test` profile [optimized] target(s) in 2m 56s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/sim_spatial-23274d649b8ef877)
+
+running 2 tests
+test tests::linked_net_and_port_selection_reveal_geometry_without_editing_sources ... ok
+test tests::mesh_click_and_list_button_resolve_the_same_source_identity ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/sim_spatial-d197c3d82f7c3cf3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests sim_spatial
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

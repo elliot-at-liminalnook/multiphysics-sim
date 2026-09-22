@@ -1,0 +1,170 @@
+{
+  "scope": "Gait experiment with provisional motors and imposed supply; not hardware validation. Only committed checkpoints below; progress may be newer. Interpret speed over the stated horizon.",
+  "journal": "state-00000000000000000002.json",
+  "journal_sha256": "92edf982d775be642bb0b66afee18f7b245a58c34af427a65e89009e0d1e2ace",
+  "context_id": "b32a653b84d72ccc9e235e3b44b544c6e585ac941fb3282b481593954dad014d",
+  "horizon_s": 30,
+  "latest_progress": {
+    "best": {
+      "score": 0.4217704276629645,
+      "trial": "8e4ae15925e4aad6987c49cdc08235d54db1784ff5285dfea15e8d78bdc7bde0",
+      "values": {
+        "pace_scale": 1,
+        "tracking_gain": -0.45661383205104644
+      }
+    },
+    "cancelled": false,
+    "new_actions": 1500,
+    "pending": null,
+    "replayed_actions": 0,
+    "revision": 2,
+    "trials": 1
+  },
+  "trials": [
+    {
+      "id": "8e4ae15925e4aad6987c49cdc08235d54db1784ff5285dfea15e8d78bdc7bde0",
+      "method": "baseline",
+      "values": {
+        "pace_scale": 1,
+        "tracking_gain": -0.45661383205104644
+      },
+      "preparation_failure": null,
+      "checkpoint": {
+        "time_s": 30,
+        "terminated": false,
+        "truncated": true,
+        "termination_reasons": [],
+        "error": null,
+        "speed": {
+          "displacement_xy_m": [
+            12.132496832466616,
+            3.592183861676279
+          ],
+          "net_distance_m": 12.653112829888936,
+          "net_speed_m_s": 0.4217704276629645,
+          "progress_reward_m": 0.0031197710757329133,
+          "body_up_z": 0.9995473995560673,
+          "hull_floor_clearance_m": 0.28709534483567606,
+          "body_floor_contact": false,
+          "fallen": false
+        },
+        "endpoint_diagnostics": {
+          "scope": "Endpoint-only diagnostics, not peak or time-averaged values. Electrical values are uncalibrated predictions under imposed supplies.",
+          "motors": [
+            {
+              "coordinate": "joint.-Y | Hip servo output",
+              "angle_rad": -0.09525468209359325,
+              "target_rad": -0.30880812800052293,
+              "tracking_error_deg": -12.235711150942395,
+              "duty": -1,
+              "motor_current_a": -1.2623049190467885,
+              "driver_supply_current_a": 1.2623049190467885
+            },
+            {
+              "coordinate": "joint.-Y | Worm servo output",
+              "angle_rad": -0.32941024623190257,
+              "target_rad": -0.3318187318517568,
+              "tracking_error_deg": -0.1379960610355979,
+              "duty": -0.016,
+              "motor_current_a": -0.010535362649765118,
+              "driver_supply_current_a": 0.0001685658023962419
+            },
+            {
+              "coordinate": "joint.-Y | Foot servo output",
+              "angle_rad": -0.9853204104439888,
+              "target_rad": -0.7904844463863208,
+              "tracking_error_deg": 11.163278437866978,
+              "duty": 1,
+              "motor_current_a": 1.86435943934453,
+              "driver_supply_current_a": 1.86435943934453
+            },
+            {
+              "coordinate": "joint.+X | Hip servo output",
+              "angle_rad": -0.07674593886511585,
+              "target_rad": 0.30081571664682627,
+              "tracking_error_deg": 21.632689366806577,
+              "duty": 1,
+              "motor_current_a": 0.26298954471255814,
+              "driver_supply_current_a": 0.26298954471255814
+            },
+            {
+              "coordinate": "joint.+X | Worm servo output",
+              "angle_rad": -0.2703425066289764,
+              "target_rad": -0.9462237575328165,
+              "tracking_error_deg": -38.7251431288127,
+              "duty": -1,
+              "motor_current_a": -0.14893492353604273,
+              "driver_supply_current_a": 0.14893492353604273
+            },
+            {
+              "coordinate": "joint.+X | Foot servo output",
+              "angle_rad": -1.0755347047151316,
+              "target_rad": -0.4706499833793704,
+              "tracking_error_deg": 34.65734162448601,
+              "duty": 1,
+              "motor_current_a": 0.2137045911035793,
+              "driver_supply_current_a": 0.2137045911035793
+            },
+            {
+              "coordinate": "joint.+Y | Hip servo output",
+              "angle_rad": 0.2552481048822993,
+              "target_rad": 0.40397493897930775,
+              "tracking_error_deg": 8.52141989410097,
+              "duty": 1,
+              "motor_current_a": 0.749280200625704,
+              "driver_supply_current_a": 0.749280200625704
+            },
+            {
+              "coordinate": "joint.+Y | Worm servo output",
+              "angle_rad": 0.16163295157769325,
+              "target_rad": 0.1609854547753766,
+              "tracking_error_deg": -0.03709883402096092,
+              "duty": 0,
+              "motor_current_a": -0.07795014518600675,
+              "driver_supply_current_a": 0
+            },
+            {
+              "coordinate": "joint.+Y | Foot servo output",
+              "angle_rad": -1.2109002057827885,
+              "target_rad": -1.1727608724613252,
+              "tracking_error_deg": 2.185222832762512,
+              "duty": 0.384,
+              "motor_current_a": 1.3528880379119204,
+              "driver_supply_current_a": 0.5195090065581774
+            },
+            {
+              "coordinate": "joint.-X | Hip servo output",
+              "angle_rad": -0.07363416895573391,
+              "target_rad": -0.33445258545829015,
+              "tracking_error_deg": -14.943794484881733,
+              "duty": -1,
+              "motor_current_a": -0.030720903313579264,
+              "driver_supply_current_a": 0.030720903313579264
+            },
+            {
+              "coordinate": "joint.-X | Worm servo output",
+              "angle_rad": 0.24270070814943268,
+              "target_rad": 0.8063191143971711,
+              "tracking_error_deg": 32.29295593388528,
+              "duty": 1,
+              "motor_current_a": 0.32839876303576615,
+              "driver_supply_current_a": 0.32839876303576615
+            },
+            {
+              "coordinate": "joint.-X | Foot servo output",
+              "angle_rad": -1.3440373821368876,
+              "target_rad": -1.408927707752177,
+              "tracking_error_deg": -3.7179417889857334,
+              "duty": -0.672,
+              "motor_current_a": 0.646812744833849,
+              "driver_supply_current_a": -0.43465816452834655
+            }
+          ],
+          "maximum_absolute_tracking_error_deg": 38.7251431288127,
+          "predicted_driver_supply_current_a_sum": 4.945712692550775,
+          "predicted_driver_supply_power_w_sum": 54.897410887313605
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "initial_mismatch_count": 11,
+  "reason": "The first verifier compared capture.recording (EmbeddedRecording) against checkpoint.recording (EnvironmentRecording wrapper). The correct comparison is capture.recording against checkpoint.recording.runtime, with task checked separately. Endpoint state and transition were already exact.",
+  "actual_path": "replay-capture.json#/recording",
+  "expected_path": "pilot-journal/state-00000000000000000002.json#/journal/trials/0/checkpoint/recording/runtime",
+  "data_retained": "Both full original evidence artifacts remain unchanged; redundant full objects from the first diff were replaced with this schema diagnosis."
+}

@@ -1,0 +1,12 @@
+iverilog -g2005 -s experiment_event_packet_tb -o impl/experiment_event_packet_tb.vvp tb/experiment_event_packet_tb.v src/experiment_event_packet.v
+vvp impl/experiment_event_packet_tb.vvp
+PASS event serializer: 3 groups; 59 complete-run packets, 64-bit clocks, signed audits, error widths, stable backpressure and invalid-record rejection
+tb/experiment_event_packet_tb.v:85: $finish called at 36650000 (1ps)
+iverilog -g2005 -s experiment_event_stream_tb -o impl/experiment_event_stream_tb.vvp tb/experiment_event_stream_tb.v src/experiment_event_stream.v src/experiment_event_packet.v
+vvp impl/experiment_event_stream_tb.vvp
+PASS event stream: 3 groups; start/event/terminal retention, host backpressure, immutable run identity, terminal drain and ownership rejection
+tb/experiment_event_stream_tb.v:56: $finish called at 3850000 (1ps)
+iverilog -g2005 -s experiment_transactions_tb -P experiment_transactions_tb.LOGGED=1 -o impl/experiment_recording_tb.vvp tb/experiment_transactions_tb.v src/experiment_transactions.v src/experiment_scheduler.v src/experiment_packet.v src/experiment_reply.v src/experiment_event_stream.v src/experiment_event_packet.v
+vvp impl/experiment_recording_tb.vvp
+PASS experiment transactions: 9 groups, complete/sparse nine-axis runs, raw/supervisor association, final-wire PWM audits, frozen gains, backpressure/cancel
+tb/experiment_transactions_tb.v:199: $finish called at 197580000 (1ps)

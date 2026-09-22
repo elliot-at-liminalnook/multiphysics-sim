@@ -1,0 +1,43 @@
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `dev` profile [optimized] target(s) in 0.66s
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `dev` profile [optimized] target(s) in 0.69s
+    Finished `dev` profile [optimized] target(s) in 0.62s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+Selection session: /var/folders/l3/vrp7c54x2k51b5nqcqfhfhjw0000gn/T/sim-selection-87157-1789921042975986000-0
+2026-09-20T16:17:23.061112Z  INFO bevy_render::renderer: AdapterInfo { name: "AMD Radeon Pro 5300M", vendor: 0, device: 0, device_type: DiscreteGpu, driver: "", driver_info: "", backend: Metal }
+2026-09-20T16:17:23.151847Z  INFO bevy_render::batching::gpu_preprocessing: GPU preprocessing is fully supported on this device.
+2026-09-20T16:17:23.213080Z  INFO bevy_winit::system: Creating new window Systems — Physical assembly (0v1)
+schematic selection: None
+schematic selection: Components { ids: {"example/motor-thermal/cooling"} }
+schematic selection: Nets { ids: {"net/a2fd85618a7bce80e2b23bdd124003ce7b487a207e702ca8fe59e4f8e2fdf03d"} }
+schematic selection: Nets { ids: {"net/c00425ff0cffc7fe83c4e5659a29793c5031c462c30c433847275bd9164a3bb6"} }
+schematic selection: Nets { ids: {"net/6773161bd4b33856ccd078df8b02bafc0f8541ee1ab908da0a34dbb63fe605ee"} }
+schematic selection: Nets { ids: {"net/44813d3ef71bf8ad2804b3b242712f62e58bc3ee6172572179eb99b87a57571b"} }
+2026-09-20T17:57:54.980869Z  INFO bevy_winit::system: Monitor removed 4v1
+2026-09-20T21:43:20.723844Z  INFO bevy_window::system: No windows are open, exiting
+2026-09-20T21:43:20.725187Z  INFO bevy_winit::system: Closing window 0v1
+2026-09-20T21:43:20.738605Z  WARN bevy_winit::state: Skipped event Destroyed for unknown winit Window Id WindowId(140382145900544)

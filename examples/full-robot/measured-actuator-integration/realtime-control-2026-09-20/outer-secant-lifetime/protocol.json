@@ -1,0 +1,76 @@
+{
+  "scope": "Opt-in bounded secant update count in the shared Newton solver, default eight unchanged. Physical residual/correction gates, finite/update-size checks, fresh fallback and timestep remain unchanged. Inner motor updates stay disabled in experimental configurations.",
+  "sources_before": {
+    "crates/sim-solve/src/lib.rs": "42fb209f7df912fea5a0bde2c76c659447f3f3415384816e50e386f90174a400",
+    "crates/sim-solve/src/profile.rs": "ae070ac351d14cae4d70f983115aa32c8b167eb15899dd4badd6ced94332cd99"
+  },
+  "inputs": {
+    "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+    "config.json": "7e649c37845711afbf32a23d162163829f504d88df4c9219c71d7fb6a8108abb",
+    "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+    "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+  },
+  "variants": {
+    "cap-8": {
+      "broyden_max_updates": 8,
+      "step_jacobian_max_uses": 64,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "00882ba5e40ee0bcbc46fbc20e4c0092e5a3a52caa7b6d7b2bf0e593c4f4d929",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    },
+    "cap-16": {
+      "broyden_max_updates": 16,
+      "step_jacobian_max_uses": 64,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "4f482aacbcb7dad98d027348365ca19009275d2e68fbff8db1b180813324c144",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    },
+    "cap-32": {
+      "broyden_max_updates": 32,
+      "step_jacobian_max_uses": 64,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "49b9cf05bd6282d78b4601b8ff7348d67f40d1dbe1a2e9deaeeb2b50fef79f73",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    },
+    "cap-32-age-256": {
+      "broyden_max_updates": 32,
+      "step_jacobian_max_uses": 256,
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "ee2d749c8a447f7cb3e0605a611709de60d8b0fc0ffd3e83a2758e9bbaf08c3f",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      }
+    }
+  },
+  "binary_before_sha256": "dbcadb5ebe789dcf74f2ac28301cb89f03f7b2365515ee1a1cb3c92bbd0f3e00",
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "sources_candidate": {
+    "crates/sim-solve/src/lib.rs": "d55c5c8a4ae1a45217d34911a235caa5bad8ef29ca57e09d37757972a2d877dd",
+    "crates/sim-solve/src/profile.rs": "43a9b0ce6a6ed7d89c8225162aee24da7a0ee3aab1d28506bb4b1558658bb097"
+  },
+  "binary_candidate_sha256": "f5611f6c378619ec2a7654f026121db48b1b1376c1284add8cd00412238759db",
+  "wasm_build": "runs/wasm-builds/realtime-20260921-secant-simd/build.json",
+  "wasm_artifact": {
+    "path": "runs/wasm-builds/realtime-20260921-secant-simd/sim_web.wasm",
+    "sha256": "85199990e35e34b5ee16ca8c823ddc1cad2a55ef688db60bfab876154d771705"
+  }
+}

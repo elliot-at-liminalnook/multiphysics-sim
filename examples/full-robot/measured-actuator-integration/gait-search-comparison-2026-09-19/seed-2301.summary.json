@@ -1,0 +1,43 @@
+{
+  "seed": 2301,
+  "complete": true,
+  "groups": [
+    {
+      "algorithm": "bayesian",
+      "attempts": 33,
+      "failed": 21,
+      "best_attempt": 29,
+      "best_speed_m_s": 0.10182556170316497,
+      "baseline_speed_m_s": 0.10010800496383758,
+      "relative_speed_improvement": 0.01715703694172932,
+      "wall_minutes": 24.219434034216665,
+      "improvement_m_s_per_wall_hour": 0.004254988131186371,
+      "charged_simulation_s": 118.79999999999993,
+      "actual_simulation_s": 43.20000000000001,
+      "proposal_methods": {
+        "baseline": 1,
+        "latin_hypercube": 9,
+        "local_feasibility_bootstrap": 16,
+        "bayesian_log_ei": 7
+      }
+    },
+    {
+      "algorithm": "cma_es",
+      "attempts": 33,
+      "failed": 16,
+      "best_attempt": 23,
+      "best_speed_m_s": 0.1058649119471455,
+      "baseline_speed_m_s": 0.10010800496383758,
+      "relative_speed_improvement": 0.05750695946230788,
+      "wall_minutes": 33.1836614725,
+      "improvement_m_s_per_wall_hour": 0.010409171371421078,
+      "charged_simulation_s": 118.79999999999993,
+      "actual_simulation_s": 61.20000000000002,
+      "proposal_methods": {
+        "baseline": 1,
+        "cma_es_deterministic_restarts": 32
+      }
+    }
+  ],
+  "scope": "First optimizer seed only, from sealed trial receipts. Full capture-score recomputation and second seed still pending; no robustness or general algorithm ranking established."
+}

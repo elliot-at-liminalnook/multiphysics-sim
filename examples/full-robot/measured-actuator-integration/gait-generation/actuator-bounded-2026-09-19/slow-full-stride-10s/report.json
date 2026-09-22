@@ -1,0 +1,157 @@
+{
+  "simulation_only": true,
+  "capture": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/slow-full-stride-10s/capture.json",
+    "sha256": "c05d7aa3c3c8f9b6c2f0143f2ddac886f3ea1f7eb7a7d55fef942ab919092726"
+  },
+  "protocol": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/validation-protocol.json",
+    "sha256": "145229c751987a91be80bf8a02775db09833eddb4b2b82be4d019a467259f64e"
+  },
+  "horizon_s": 10,
+  "wall_s": 213.855055905,
+  "seed": 2301,
+  "controller_values": {
+    "motion_amplitude": 1.1,
+    "pace_scale": 0.15,
+    "tracking_gain": 0,
+    "velocity_lead_scale": 0
+  },
+  "net_distance_m": 0.3272833337620617,
+  "net_speed_m_s": 0.03272833337620617,
+  "minimum_body_up_z": 0.9971461050018412,
+  "motors": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "rms_tracking_degrees": 0.4894915650882812,
+      "peak_tracking_degrees": 1.122271983251892,
+      "maximum_command_speed_degrees_s": 24.901596987998996,
+      "maximum_command_acceleration_degrees_s2": 115.52303014674858,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "rms_tracking_degrees": 0.2774803662100411,
+      "peak_tracking_degrees": 0.8391515676079432,
+      "maximum_command_speed_degrees_s": 45.1457142786848,
+      "maximum_command_acceleration_degrees_s2": 328.1295005761477,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "rms_tracking_degrees": 2.4232125569380747,
+      "peak_tracking_degrees": 3.8514883918989424,
+      "maximum_command_speed_degrees_s": 34.75845080970092,
+      "maximum_command_acceleration_degrees_s2": 205.02288275644239,
+      "saturated_fraction": 0,
+      "tracking_pass": false,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "rms_tracking_degrees": 0.42530560910079124,
+      "peak_tracking_degrees": 1.309453694085576,
+      "maximum_command_speed_degrees_s": 25.978841070211008,
+      "maximum_command_acceleration_degrees_s2": 116.83703779271947,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "rms_tracking_degrees": 0.6502319270533524,
+      "peak_tracking_degrees": 1.407340615816856,
+      "maximum_command_speed_degrees_s": 42.46525352381745,
+      "maximum_command_acceleration_degrees_s2": 242.615689690884,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "rms_tracking_degrees": 0.6640641838679255,
+      "peak_tracking_degrees": 1.5424539037233715,
+      "maximum_command_speed_degrees_s": 39.497389312201115,
+      "maximum_command_acceleration_degrees_s2": 180.15504211246878,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "rms_tracking_degrees": 0.5152695567561568,
+      "peak_tracking_degrees": 1.1845067934443354,
+      "maximum_command_speed_degrees_s": 24.817634210023748,
+      "maximum_command_acceleration_degrees_s2": 115.90305325371459,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "rms_tracking_degrees": 0.7279320981570431,
+      "peak_tracking_degrees": 1.434944278925574,
+      "maximum_command_speed_degrees_s": 46.76273821956717,
+      "maximum_command_acceleration_degrees_s2": 293.71229828097694,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "rms_tracking_degrees": 0.8366814905850469,
+      "peak_tracking_degrees": 2.040281976467231,
+      "maximum_command_speed_degrees_s": 38.63343691297658,
+      "maximum_command_acceleration_degrees_s2": 195.98727022330098,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "rms_tracking_degrees": 0.3838185960274752,
+      "peak_tracking_degrees": 1.0642451819167806,
+      "maximum_command_speed_degrees_s": 26.61722520768704,
+      "maximum_command_acceleration_degrees_s2": 118.48630433407689,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "rms_tracking_degrees": 0.11604942499347871,
+      "peak_tracking_degrees": 0.30196343689741384,
+      "maximum_command_speed_degrees_s": 52.22732177112757,
+      "maximum_command_acceleration_degrees_s2": 270.52725274238935,
+      "saturated_fraction": 0,
+      "tracking_pass": true,
+      "command_bounds_pass": true
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "rms_tracking_degrees": 2.081680315241135,
+      "peak_tracking_degrees": 3.8474510408697964,
+      "maximum_command_speed_degrees_s": 25.32304807466242,
+      "maximum_command_acceleration_degrees_s2": 202.4716754189663,
+      "saturated_fraction": 0,
+      "tracking_pass": false,
+      "command_bounds_pass": true
+    }
+  ],
+  "geometry": null,
+  "checks": {
+    "completed": true,
+    "not_fallen": true,
+    "upright": true,
+    "command_bounds": true,
+    "tracking": false,
+    "finalist_horizon": true,
+    "travel": true
+  },
+  "passes_all_finalist_checks": false,
+  "limitations": "Provisional CAD actuator scenario. Tracking uses same-time physical joint and held motor target, after 1 s startup. Sampled geometry cannot certify continuous clearance. Numerical and stop checks are separate."
+}

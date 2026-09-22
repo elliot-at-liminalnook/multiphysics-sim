@@ -1,0 +1,80 @@
+{
+  "scope": "Sources for incremental shared power adapter and focused tests; these are not motor calibration results. Workspace dependencies beyond listed snapshots remain referenced by Cargo.lock.",
+  "files": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "b05f59a4625a8822b89cf71c7eb9821e97a24d8871fae44711702fe1ab366f7d",
+      "bytes": 1641
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "ac5132df3fc26915fd91706b41846e381cfb8ac2ddfee2182f115e1508361d92",
+      "bytes": 219654
+    },
+    {
+      "path": "crates/sim-domain-robot/Cargo.toml",
+      "sha256": "a2a0cb58082365e7f9e119d76bbd32976f25899e7c89f5c0c28810da9c10493d",
+      "bytes": 921
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding.rs",
+      "sha256": "53414d4cfa10e8745750688bdf574170065ef886016ed55843a17aef6084fecd",
+      "bytes": 26318
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/control.rs",
+      "sha256": "dbba4d6f7534b0e7d4b0869c4ad79f16c99fa06cb748690fd3a68827c5278691",
+      "bytes": 3962
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs",
+      "sha256": "85e802aca50bb9e0d027fd7fd84f7c4aa7e0ab2b8da522b57decaa4aaab52a17",
+      "bytes": 21035
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/motors.rs",
+      "sha256": "5ee59f4425c3c77ed9ae365a8400fae188d8d89692c1d4e33a3f78ede3fc93b9",
+      "bytes": 15861
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/drivers.rs",
+      "sha256": "8b7e2129adaa0be9aa695d4f1da289504bc9c83a00db27aa4b66ceb5980c10cd",
+      "bytes": 5958
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/servos.rs",
+      "sha256": "0190a56c86972c0d2c94054bf08dae7fc3c35499b188716e1b86aa46cea44ee0",
+      "bytes": 16668
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/power.rs",
+      "sha256": "e3e612da68bd06777b04a42a3e078b0df1dc65c39c1d00a76a9b66d1c70765c7",
+      "bytes": 14332
+    },
+    {
+      "path": "crates/sim-domain-robot/src/motor.rs",
+      "sha256": "431ff205d2256078fa557f54dd21298994e6c04336d8e421d03d75a8126056be",
+      "bytes": 33065
+    },
+    {
+      "path": "crates/sim-domain-electrical/src/elements.rs",
+      "sha256": "43f51fb353dc3daa07e02e8eb6f4e9f3e28897cc50d32a3f01cacd2277eb5f73",
+      "bytes": 8624
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedded_power.rs",
+      "sha256": "69c6a8f49ca958383db13075e943347c6d6306b31cadf82258ae13989f8064d6",
+      "bytes": 20040
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/embedded_motor.rs",
+      "sha256": "f53375a47de9c5021b8e143593c4c1ed32071c5a2a8ed9543a99e75bc5d06a0c",
+      "bytes": 62534
+    },
+    {
+      "path": "crates/sim-domain-robot/tests/common/mod.rs",
+      "sha256": "cdd147c4a2d0de5f1c707486a6e185a3267362140a53939b6bf5ac19fa956764",
+      "bytes": 9854
+    }
+  ]
+}

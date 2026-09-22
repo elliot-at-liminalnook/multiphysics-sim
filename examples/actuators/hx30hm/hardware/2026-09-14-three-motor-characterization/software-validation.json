@@ -1,0 +1,8 @@
+{
+  "command": "cargo test -p sim-runtime --test fpga_controller --test fpga_upload --example characterize_hx_bridge",
+  "passed": 30,
+  "failed": 0,
+  "offline_plans_compiled": 7,
+  "physical_motion_this_turn": false,
+  "limitation": "Three-motor live capture still pending voltage adjustment; all-nine mocked UART regression passes."
+}

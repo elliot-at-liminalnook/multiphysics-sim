@@ -1,0 +1,36 @@
+{
+  "software_only": true,
+  "conditions": "50 MHz, 1 Mbaud host/motor, synthetic motor replies delayed by 1 ms; interleaved host heartbeat",
+  "frames": [
+    {
+      "frame": 0,
+      "command_ms_after_frame_start": 12.16182,
+      "final_audit_ms_after_frame_start": 23.14758,
+      "margin_to_40ms_deadline_ms": 16.85242
+    },
+    {
+      "frame": 1,
+      "command_ms_after_frame_start": 12.15992,
+      "final_audit_ms_after_frame_start": 23.14768,
+      "margin_to_40ms_deadline_ms": 16.85232
+    },
+    {
+      "frame": 2,
+      "command_ms_after_frame_start": 12.15948,
+      "final_audit_ms_after_frame_start": 23.14768,
+      "margin_to_40ms_deadline_ms": 16.85232
+    },
+    {
+      "frame": 3,
+      "command_ms_after_frame_start": 12.15948,
+      "final_audit_ms_after_frame_start": 23.14724,
+      "margin_to_40ms_deadline_ms": 16.85276
+    },
+    {
+      "frame": 4,
+      "command_ms_after_frame_start": 12.15948,
+      "final_audit_ms_after_frame_start": 23.14624,
+      "margin_to_40ms_deadline_ms": 16.85376
+    }
+  ]
+}

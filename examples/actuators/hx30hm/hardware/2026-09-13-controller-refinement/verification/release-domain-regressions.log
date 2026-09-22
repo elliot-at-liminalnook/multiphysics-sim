@@ -1,0 +1,21 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 30s
+     Running tests/motor.rs (target/debug/deps/motor-d118a4c0f0278d28)
+
+running 5 tests
+test actuator_discovery_declares_units_defaults_and_rejects_invalid_values ... ok
+test backlash_opens_a_dead_zone ... ok
+test stall_torque_and_no_load_speed_match_the_spec ... ok
+test winding_heats_with_the_thermal_time_constant ... ok
+test battery_bridge_and_firmware_drive_a_motor ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests/switchable_bridge.rs (target/debug/deps/switchable_bridge-d726f11b8b40a1e5)
+
+running 1 test
+test disabled_bridge_has_passive_leakage_and_bidirectional_supply_clamps ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+

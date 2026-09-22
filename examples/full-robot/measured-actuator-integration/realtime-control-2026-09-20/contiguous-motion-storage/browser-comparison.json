@@ -1,0 +1,82 @@
+{
+  "scope": "Sequential worker measurements in headless Chrome, identical three-second inputs. The old bundle predates several exact solver/storage changes, so this is a cumulative browser-build comparison, not an isolated storage benchmark. No rendering cost is included here. Neither build is realtime or a converged/hardware reference.",
+  "old_browser": {
+    "wall_s": 28.767835000097755,
+    "simulation_per_wall": 0.10428313427095942,
+    "policy_step_p95_s": 0.23054000002145766
+  },
+  "current_browser": {
+    "wall_s": 26.958385000020257,
+    "simulation_per_wall": 0.11128263061744038,
+    "policy_step_p95_s": 0.21626000002026557
+  },
+  "analytic_browser": {
+    "wall_s": 24.971779999971385,
+    "simulation_per_wall": 0.1201356090756621,
+    "policy_step_p95_s": 0.20194999998807908
+  },
+  "current_speedup": 1.0671201186597838,
+  "analytic_speedup": 1.1520137931749646,
+  "old_current_max_abs": {
+    "completed_steps": 0,
+    "contact_history": 0,
+    "contacts": 0,
+    "driver_readings": 0,
+    "joint_positions": 0,
+    "joint_velocities": 0,
+    "learning": 0,
+    "motor_readings": 0,
+    "motor_states": 0,
+    "original_rows": 0,
+    "policy_inputs": 0,
+    "poses": 0,
+    "requested_steps": 0,
+    "servo_commands": 0,
+    "servo_states": 0,
+    "servo_targets_rad": 0,
+    "time_s": 0,
+    "policy": 0
+  },
+  "native_current_max_abs": {
+    "completed_steps": 0,
+    "contact_history": 0,
+    "contacts": 1.7438450683471274e-10,
+    "driver_readings": 1.7219559111936178e-13,
+    "joint_positions": 2.842170943040401e-14,
+    "joint_velocities": 2.530953224777477e-11,
+    "motor_readings": 8.888889624358853e-12,
+    "motor_states": 6.562572707480285e-11,
+    "original_rows": 4.0424330549626575e-12,
+    "policy_inputs": 0,
+    "poses": 1.7070789226636407e-11,
+    "requested_steps": 0,
+    "servo_commands": 0,
+    "servo_states": 0,
+    "servo_targets_rad": 8.881784197001252e-15,
+    "time_s": 0,
+    "learning": 1.7438450683471274e-10,
+    "policy": 1.7438450683471274e-10
+  },
+  "native_analytic_max_abs": {
+    "completed_steps": 0,
+    "contact_history": 0,
+    "contacts": 6.975070521164639e-11,
+    "driver_readings": 1.6897594434794883e-13,
+    "joint_positions": 3.6415315207705135e-14,
+    "joint_velocities": 2.27036167643746e-11,
+    "motor_readings": 8.252953875853564e-12,
+    "motor_states": 6.440359356929548e-11,
+    "original_rows": 4.4469983251360645e-12,
+    "policy_inputs": 0,
+    "poses": 1.532374227508626e-11,
+    "requested_steps": 0,
+    "servo_commands": 0,
+    "servo_states": 0,
+    "servo_targets_rad": 9.880984919163893e-15,
+    "time_s": 0,
+    "learning": 1.1122125442852848e-10,
+    "policy": 1.1122125442852848e-10
+  },
+  "native_worker_transition_comparisons": 151,
+  "initial_worker_learning_scope": "Native transitions include reset at index zero. All 151 complete transition records are compared against worker frame.learning."
+}

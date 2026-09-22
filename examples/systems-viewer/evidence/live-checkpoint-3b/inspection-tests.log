@@ -1,0 +1,76 @@
+   Compiling sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+    Finished `test` profile [optimized] target(s) in 31.28s
+     Running unittests src/lib.rs (target/debug/deps/sim_inspect-7f1a4d213301ee02)
+
+running 2 tests
+test plot::tests::thermal_net_offers_all_terminals_but_no_unrelated_state ... ok
+test plot::tests::history_preserves_sample_time_gaps_bounds_and_rejects_stale_frames ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/animation.rs (target/debug/deps/animation-a75cfa7f03572167)
+
+running 5 tests
+test sample_times_and_missing_values_are_not_fabricated ... ok
+test bindings_require_real_parts_typed_observables_and_valid_axes_scales ... ok
+test runtime_extension_accepts_added_states_but_rejects_physical_and_observation_changes ... ok
+test live_gate_holds_paused_frames_and_rejects_reset_races_and_foreign_data ... ok
+test native_transport_delivers_latest_reset_and_reports_closed_publisher ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+
+     Running tests/contracts.rs (target/debug/deps/contracts-d8462cf72fe14f04)
+
+running 7 tests
+test stale_worker_frames_do_not_change_the_live_cursor ... ok
+test missing_and_nonfinite_values_are_never_silently_zero ... ok
+test stage_frames_are_versioned_and_reject_invalid_sampling_intervals ... ok
+test presentation_changes_do_not_modify_physical_identity ... ok
+test invalid_authoring_graph_can_be_inspected_but_broken_identity_cannot ... ok
+test wrong_observation_units_and_group_cycles_are_rejected ... ok
+test roundtrip_preserves_branched_nets_and_detects_changed_sources ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/model.rs (target/debug/deps/model-2a366d2ad1aef086)
+
+running 7 tests
+test process_local_factory_handles_are_not_physical_parameters_or_identity ... ok
+test unavailable_component_and_duplicate_identity_are_explicit ... ok
+test external_quantity_reaches_generic_inspection_without_domain_cases ... ok
+test general_model_exports_branched_topology_and_distinct_duplicate_labels ... ok
+test compiled_model_inspection_does_not_change_committed_state ... ok
+test authoring_ids_survive_rename_and_rebuild_while_layout_binding_changes ... ok
+test compiled_state_identity_survives_in_place_rename_and_independent_rebuild ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/runtime.rs (target/debug/deps/runtime-98c4f0c44a4b8ec5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/selection.rs (target/debug/deps/selection-64b6f657aad00115)
+
+running 2 tests
+test nets_retain_all_terminals_and_components_do_not_select_neighbors ... ok
+test native::bidirectional_link_has_no_echo_reconnects_and_rejects_foreign_state ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+
+     Running tests/spatial.rs (target/debug/deps/spatial-b1740b783a061a50)
+
+running 3 tests
+test presentation_commands_preserve_source_and_validate_selection ... ok
+test fixture_covers_real_components_and_roundtrips ... ok
+test reject_foreign_sources_invalid_geometry_and_ambiguous_ids ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests sim_inspect
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

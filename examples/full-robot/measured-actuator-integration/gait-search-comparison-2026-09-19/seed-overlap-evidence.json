@@ -1,0 +1,22 @@
+{
+  "master_seeds": [
+    2301,
+    2302
+  ],
+  "first_acquisition_attempts": [
+    26,
+    25
+  ],
+  "derived_seeds": [
+    2327,
+    2327
+  ],
+  "complete_training_rows": [
+    9,
+    9
+  ],
+  "identical_training_values_and_objectives": true,
+  "identical_first_acquisition": true,
+  "cause": "Additive per-attempt seed derivation overlaps neighboring experiment streams. Failed initial designs do not train the GP.",
+  "scope": "Retain both runs and all costs; the second original Bayesian run is not independent evidence."
+}

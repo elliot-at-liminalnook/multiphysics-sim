@@ -1,0 +1,44 @@
+{
+  "scope": "Shared power adapter and regression validation; not full quadruped power integration or hardware calibration",
+  "checks": [
+    {
+      "command": "cargo test --locked -p sim-domain-robot --test embedded_power --test embedded_motor",
+      "status": "passed",
+      "existing_motor_tests": 16,
+      "log": "motor-power-tests.log",
+      "note": "This run included the first four power checks; the following run adds the FPGA/controller combination."
+    },
+    {
+      "command": "cargo test --locked -p sim-domain-robot --test embedded_power",
+      "status": "passed",
+      "power_tests": 5,
+      "log": "power-controller-tests.log"
+    },
+    {
+      "command": "cargo test --locked -p sim-runtime --test actuator_profiles --test embedded_session --test environment --test robot_power",
+      "status": "passed",
+      "tests": 32,
+      "log": "runtime-tests.log"
+    },
+    {
+      "command": "cargo check --locked -p sim-runtime --lib --target wasm32-unknown-unknown",
+      "status": "passed",
+      "log": "wasm-check.log",
+      "note": "Compilation only; no browser performance claim"
+    },
+    {
+      "check": "Source snapshots match current listed source files and SHA-256 hashes",
+      "status": "passed"
+    }
+  ],
+  "distinct_tests_passed": 53,
+  "full_quadruped_power_selected": false,
+  "hardware_calibrated": false,
+  "hardware_operated": false,
+  "remaining": [
+    "CAD power-tree authoring with provenance/uncertainty and native registry validation",
+    "Shared session/environment selection, state replay and electrical observations",
+    "Explicit battery operating limits and calibrated electrical parameters",
+    "Full gait and browser fidelity/performance qualification"
+  ]
+}

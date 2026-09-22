@@ -1,0 +1,14 @@
+{
+  "port": "/dev/cu.usbserial-20250303171",
+  "ids": [
+    10,
+    11,
+    12
+  ],
+  "trace": "examples/full-robot/measured-actuator-integration/browser-hardware/reference-trace.json",
+  "template": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap250-01/plan.json",
+  "acquisition": "target/debug/examples/characterize_hx_bridge",
+  "output": "examples/full-robot/measured-actuator-integration/browser-hardware/sessions",
+  "inspection": "examples/full-robot/measured-actuator-integration/browser-hardware/inspection-02/run.json",
+  "walking_root": "examples/full-robot/measured-actuator-integration/browser-hardware/walking-ui"
+}

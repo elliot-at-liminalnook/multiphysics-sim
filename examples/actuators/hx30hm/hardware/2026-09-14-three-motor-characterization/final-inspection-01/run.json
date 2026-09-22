@@ -1,0 +1,237 @@
+{
+  "baud": 1000000,
+  "completed": true,
+  "current": "0.001 A/count uncalibrated internal current; not measured total supply current",
+  "ids": [
+    10,
+    11,
+    12
+  ],
+  "mode": "read_only_supervised_bench_inspection",
+  "port": "/dev/cu.usbserial-20250303171",
+  "result": {
+    "devices": {
+      "10": {
+        "configuration": [
+          3,
+          15,
+          0,
+          9,
+          3,
+          10,
+          0,
+          0,
+          1,
+          0,
+          0,
+          255,
+          15,
+          70,
+          140,
+          45,
+          232,
+          3,
+          12,
+          44,
+          47,
+          32,
+          32,
+          0,
+          16,
+          0,
+          1,
+          1,
+          184,
+          11,
+          0,
+          0,
+          0,
+          2,
+          20,
+          200,
+          80,
+          10,
+          200,
+          200
+        ],
+        "mode": [
+          2
+        ],
+        "pwm": [
+          0,
+          0
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.947088040931193,
+          "position_raw": 3225,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 49,
+          "voltage_raw": 119,
+          "voltage_v": 11.9
+        },
+        "torque_enable": [
+          0
+        ]
+      },
+      "11": {
+        "configuration": [
+          3,
+          15,
+          0,
+          9,
+          3,
+          11,
+          0,
+          0,
+          1,
+          0,
+          0,
+          255,
+          15,
+          70,
+          140,
+          45,
+          232,
+          3,
+          12,
+          44,
+          47,
+          32,
+          32,
+          0,
+          16,
+          0,
+          1,
+          1,
+          184,
+          11,
+          0,
+          0,
+          0,
+          2,
+          20,
+          200,
+          80,
+          10,
+          200,
+          200
+        ],
+        "mode": [
+          2
+        ],
+        "pwm": [
+          0,
+          0
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.022,
+          "current_raw": 22,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 5.2339424482658075,
+          "position_raw": 3412,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 47,
+          "voltage_raw": 120,
+          "voltage_v": 12.0
+        },
+        "torque_enable": [
+          0
+        ]
+      },
+      "12": {
+        "configuration": [
+          3,
+          15,
+          0,
+          9,
+          3,
+          12,
+          0,
+          0,
+          1,
+          0,
+          0,
+          255,
+          15,
+          70,
+          140,
+          45,
+          232,
+          3,
+          12,
+          44,
+          47,
+          32,
+          32,
+          0,
+          16,
+          0,
+          1,
+          1,
+          184,
+          11,
+          0,
+          0,
+          0,
+          2,
+          20,
+          200,
+          80,
+          10,
+          200,
+          200
+        ],
+        "mode": [
+          2
+        ],
+        "pwm": [
+          0,
+          0
+        ],
+        "telemetry": {
+          "current_a_uncalibrated": 0.0,
+          "current_raw": 0,
+          "load_raw": 0,
+          "moving": 0,
+          "position_rad": 4.348835533655793,
+          "position_raw": 2835,
+          "speed_rad_s": 0.0,
+          "speed_raw": 0,
+          "status": 0,
+          "temperature_c": 46,
+          "voltage_raw": 118,
+          "voltage_v": 11.8
+        },
+        "torque_enable": [
+          0
+        ]
+      }
+    },
+    "supervisor": {
+      "armed_mask": 0,
+      "current_max_raw_uncalibrated": 2000,
+      "fault_id": 254,
+      "fresh_mask": 0,
+      "latched": true,
+      "reason": 10,
+      "temperature_max_c": 60,
+      "version": 1,
+      "voltage_max_raw": 126,
+      "voltage_min_raw": 90
+    }
+  },
+  "seconds": 1.0,
+  "source_blake3": "7a1949f8f189c0516c9b616eb3065c87ffa11e0c1507fce2ac08db0faee0db14",
+  "started_unix_s": 1789403191.535466,
+  "timing": "Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.",
+  "voltage": "0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f"
+}

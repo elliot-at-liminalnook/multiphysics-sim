@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "backup": "/Users/elliot/physics-simulator/examples/components/quadruped-parametric/backups/20260915T163535Z",
+  "backup_sha256": "ec3f06fa542cac78572bb456145a89dc052ef2d6ef72a5d314477febd7a8762a",
+  "source_document_id": "24d16d30990844ad9f9aafcad17741a0",
+  "result": "/Users/elliot/physics-simulator/examples/components/quadruped-parametric/model/robot.rcad",
+  "result_sha256": "817b5ea94d422866eba4f881258cf64197f0391cf9daf6504623504707f8d060",
+  "robot_definition": "28149a7bca7b44b98b621ff282aae6bf",
+  "leg_family": "b63d9ffa84314aa592b8238958a5a7c8",
+  "leg_variants": {
+    "minus_y": "4976cd2e1b6147098f47ec12626aa251",
+    "plus_x": "9d44dce35b2a4be3859632bbfbbc5b89",
+    "plus_y": "015f8fcb9998446c8a761966eb8c220b",
+    "minus_x": "0f431838f2f04f7fad1ab1aedf29f9ca"
+  },
+  "definitions": 23,
+  "component_occurrences": 22,
+  "physical_bodies": 114,
+  "joint_records": 105,
+  "actuators": 12,
+  "runtime_links": 29,
+  "identical_brep_payloads": 114,
+  "all_physical_nodes_linked": true,
+  "original_ids_names_materials_metadata_preserved": true,
+  "robot_settings_annotations_preserved": true,
+  "reload_verified": true,
+  "shared_and_local_override_probe": {
+    "minus_y": 1.25,
+    "plus_x": 1.5,
+    "plus_y": 1.25,
+    "minus_x": 1.25
+  },
+  "whole_assembly_translation_probe_mm": 1,
+  "probe_changes_undone": true,
+  "geometry_scope": "Exact imported B-reps retained as variant source assets; original solid construction histories were not recovered.",
+  "physics_scope": "Original joint records and rigid-link grouping preserved. No new calibration or walking claim.",
+  "variants_scope": "Four distinct source topologies remain explicit variants under one shared six-parameter leg family.",
+  "reload_parameter_propagation_verified": true
+}

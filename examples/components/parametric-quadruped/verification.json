@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "definitions": 3,
+  "occurrences": [
+    "53705e13347c",
+    "d3ec0b0101e7",
+    "5f2f82d0c946",
+    "ba81d35e8613"
+  ],
+  "leg_definition": "7e4ef256ab1540ed9d26b3f84d6a41aa",
+  "nested_link_template": "93e2252af0b4",
+  "parameters": {
+    "leg_length": {
+      "value": 90,
+      "unit": "mm",
+      "min": 20,
+      "max": 200,
+      "provenance": "estimated",
+      "description": "Link length from hinge"
+    }
+  },
+  "expected_link_lengths_mm": [
+    100,
+    90,
+    90,
+    90
+  ],
+  "physical_links": 8,
+  "independent_joints": 4,
+  "status": "CAD acceptance example; estimated dimensions; no walking controller or calibration"
+}

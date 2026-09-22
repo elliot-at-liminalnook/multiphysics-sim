@@ -1,0 +1,148 @@
+{
+  "simulation_only": true,
+  "url": "http://127.0.0.1:4183/?preset=robot-measured-400hz-reuse",
+  "tests": {
+    "robot_library": 30,
+    "embedded_motor": 16,
+    "solver": 42,
+    "total": 88,
+    "rendered_wasd": true
+  },
+  "baseline": {
+    "native": {
+      "wall_s": 54.659522937,
+      "simulation_per_wall": 0.05488522107040285,
+      "step_p50_s": 0.353756774,
+      "step_p95_s": 0.484929388,
+      "maximum_step_s": 0.735097799,
+      "complete": true
+    },
+    "wasm": {
+      "wall_s": 51.73483000010252,
+      "simulation_per_wall": 0.05798801310440288,
+      "step_p50_s": 0.34456999999284743,
+      "step_p95_s": 0.4221349999904633,
+      "maximum_step_s": 0.4636200000047684,
+      "complete": true
+    }
+  },
+  "selected": {
+    "native": {
+      "wall_s": 36.875590187,
+      "simulation_per_wall": 0.08135463011674346,
+      "step_p50_s": 0.242541478,
+      "step_p95_s": 0.298807888,
+      "maximum_step_s": 0.340581685,
+      "complete": true
+    },
+    "wasm": {
+      "wall_s": 38.521165000021426,
+      "simulation_per_wall": 0.07787926455490979,
+      "step_p50_s": 0.2540150000154972,
+      "step_p95_s": 0.3223650000095367,
+      "maximum_step_s": 0.36286500000953675,
+      "complete": true
+    },
+    "native_speedup": 1.4822684236324302,
+    "wasm_speedup": 1.343023504093756,
+    "forward": {
+      "name": "warm-probes/candidate",
+      "no_detected_fall": true,
+      "accepted_as_solver_optimization": true,
+      "realtime_accepted": false,
+      "policy_step_p95_s": 0.298807888,
+      "baseline_wall_s": 54.659522937,
+      "candidate_wall_s": 36.875590187,
+      "speedup": 1.4822684236324302,
+      "simulation_per_wall": 0.08135463011674346,
+      "max_error": {
+        "motor_angle_rad": 1.9701518194636947e-11,
+        "link_position_m": 7.399843486797281e-12,
+        "current_a": 2.1149103648920864e-10,
+        "contact_force_n": 8.3667000674434e-8
+      },
+      "gates": {
+        "candidate_minimum_speedup": 1.2,
+        "realtime_sim_per_wall": 1,
+        "policy_step_p95_s": 0.02,
+        "motor_angle_rad": 0.0017453292519943296,
+        "link_position_m": 0.001,
+        "current_a": 0.1,
+        "contact_force_n": 1,
+        "require_equal_contact_identities": true
+      },
+      "contactIdentities": true,
+      "cadence": true,
+      "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+    },
+    "sequence": {
+      "name": "sequence-warm-probes/candidate",
+      "no_detected_fall": true,
+      "accepted_as_solver_optimization": true,
+      "realtime_accepted": false,
+      "policy_step_p95_s": 0.29187922,
+      "baseline_wall_s": 48.720121386,
+      "candidate_wall_s": 35.293069329,
+      "speedup": 1.3804444417070612,
+      "simulation_per_wall": 0.08500252477431672,
+      "max_error": {
+        "motor_angle_rad": 1.4763412714557944e-11,
+        "link_position_m": 2.8001047590369826e-12,
+        "current_a": 2.0446933035600523e-10,
+        "contact_force_n": 7.635148622298415e-8
+      },
+      "gates": {
+        "candidate_minimum_speedup": 1.2,
+        "realtime_sim_per_wall": 1,
+        "policy_step_p95_s": 0.02,
+        "motor_angle_rad": 0.0017453292519943296,
+        "link_position_m": 0.001,
+        "current_a": 0.1,
+        "contact_force_n": 1,
+        "require_equal_contact_identities": true
+      },
+      "contactIdentities": true,
+      "cadence": true,
+      "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+    }
+  },
+  "realtime_qualified": false,
+  "additional_throughput_factor_needed": 12.840388333340474,
+  "physical_model_changed": false,
+  "control_hz": 400,
+  "physics_hz": 6400,
+  "normal_native_measurement_hz": 200,
+  "outer_policy_hz": 50,
+  "limitations": [
+    "Short fixed-input trials; no sustained or hardware gait qualification.",
+    "Motor calibration remains provisional.",
+    "Both real-time throughput and 20 ms p95 gates remain missed."
+  ],
+  "sha256": {
+    "crates/sim-solve/src/coloring.rs": "15125c9f4b06bfcdf9c0ec683f063150edd631729fe0ac4ecf5509026b9c845f",
+    "crates/sim-solve/src/lib.rs": "42fb209f7df912fea5a0bde2c76c659447f3f3415384816e50e386f90174a400",
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "c4f3afb6f5d041b55c18267e152272652399ccf2c1bfdc890d767068c99c3121",
+    "crates/sim-domain-robot/tests/embedded_motor.rs": "fc93627d92d73fcb8b8d46b607520e2acaaed7cce7830443ef608b079d782dc6",
+    "web/tests/compare-native-wasm.mjs": "fb4bac3f5cd5105ec8137c0d7ab7973b2e3d5617ceb8d9caf4deaaae7b74b479",
+    "web/tests/measured-400hz.mjs": "44d60d5dc3b973e302d8f9f17ac533e8b193ac820c223b3f70ca129980d2608f",
+    "web/viewer/presets.json": "55fc51a1d13bfcdb45b49b2fca9621f4abefe09329eedf9d2a71826066f1769c",
+    "Cargo.lock": "89fc3c0fbe4d0020aa754f4020daafe25f673d24394284281ab1e77f7c7400c9",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/README.md": "c72ae48be6a908818e02ae49bc7d455b705764035b697acab07e81f13ad55c78",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/protocol.json": "61d6424f814821317f38c02bcd57913a40c3d63ad2e3b4292cc6d9ae995dd096",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/prepare.mjs": "92c23b31e1766b92ecee28b1a13d796c078ff41c76bd520ae97617c2df056aaf",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/check.mjs": "6128918c4c5ef928796fc11a48170f13478320f71f895d985fa27f46a6143823",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/qualify.mjs": "2b2ea8f9af39abb11e05043a4ccef8df34cf16304b2b443528e93c2865abbb8d",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/stage-browser.mjs": "6dd8b8f73043bb5874168714518fa0f375f956fea2b8f6aa75a9eb8f6d570b14",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/summarize.mjs": "d0a29ab31140e02060db44c8ee8cf0964c5791b40a45e333945bf2d371e515ee",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/browser.config.json": "03ee3703308cad4999ce782a12a1d395c82c40f31c70e9727c6a2560a25d57e5",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/baseline.comparison.json": "81e9fec7c403be6a8339cc76504dcc61ed813e9145ba04f0c9d542625d4c16f0",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/warm-probes/candidate.comparison.json": "29b048a9d40df2d8befaf077200be18d434adcca4c65ef16521a6bd6cf49632a",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/warm-probes/candidate.qualification.json": "085628e1efb1c5d36b92cf9a9687073e60d37167153da1306648b7cea96d4bd9",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/sequence-warm-probes/candidate.qualification.json": "770b8ddbf42738d99167e85747a3c24883b24293f496061db889469ed7db2fbd",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/verification/browser.json": "da527057a37b97ca167593e2049fe649017606f74f553028c9f2b213e746ee58",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/bundle/build-manifest.json": "2bec826b4a4ffa7828522e63b473112895e75b38395054cd661616367c634520",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/bundle/sim_web_bg.wasm": "dbde7bb77a3268ea2a7998ccace9d5f673e7d6d520dfd516bca51cc9bbe95470",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/solver-tests.log": "3563ed45490d86bd5b8367792819a209c861bd9a08a7b24df2429dd1a09288df",
+    "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/robot-tests-and-initial-stress.log": "03684d237c727d1fc802e6a98e368fa5e13dd5771516383dc19521d3a8817179"
+  }
+}

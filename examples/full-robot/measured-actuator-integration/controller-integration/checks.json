@@ -1,0 +1,26 @@
+{
+  "full_goal_complete": false,
+  "rust_runtime_tests": {
+    "passed": 28,
+    "log": "runtime-tests.log"
+  },
+  "cad_collision_regressions": {
+    "passed": 21,
+    "log": "collision-regression-tests.log"
+  },
+  "cad_feedback_round_trip_followup": {
+    "passed": 3,
+    "log": "cad-feedback-tests.log"
+  },
+  "wasm": "compilation passed; no browser runtime/performance qualification",
+  "cad_export": "29 links, 105 joints, 12 profiled motors; all twelve feedback mappings resolved",
+  "short_window": {
+    "seconds": 0.05,
+    "seed": 2301,
+    "nominal_steps": 320,
+    "refined_steps": 640,
+    "completed": true,
+    "numerical_comparison": "numerical-comparison.json"
+  },
+  "hardware_calibration": "No accepted motor fit. Voltage and temperature imposed; shared power still pending."
+}

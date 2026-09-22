@@ -1,0 +1,2219 @@
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Finished `dev` profile [optimized + debuginfo] target(s) in 2.63s
+     Running `target/debug/examples/systems_baseline --check examples/systems-viewer/evidence/pre-migration-baseline.json`
+All five baseline trajectories match (absolute + relative tolerance 1e-10)
+{
+  "cases": [
+    {
+      "advance_s": 0.00582333,
+      "channels": [
+        {
+          "name": "capacitor.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "ground.current",
+          "unit": "A"
+        },
+        {
+          "name": "ground.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "node.voltage",
+          "unit": "V"
+        },
+        {
+          "name": "node.voltage",
+          "unit": "V"
+        },
+        {
+          "name": "node.voltage",
+          "unit": "V"
+        },
+        {
+          "name": "resistor.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "supply.current",
+          "unit": "A"
+        },
+        {
+          "name": "supply.entropy_production",
+          "unit": "J/K"
+        }
+      ],
+      "compile_s": 0.000676725,
+      "model": {
+        "behaviors": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "kind": "electrical.voltage_source",
+              "object": {
+                "idx": 1,
+                "version": 1
+              },
+              "parameters": {
+                "voltage": {
+                  "kind": "Dimensionless",
+                  "value_si": 1.0
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "electrical.ground",
+              "object": {
+                "idx": 2,
+                "version": 1
+              },
+              "parameters": {},
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "electrical.resistor",
+              "object": {
+                "idx": 3,
+                "version": 1
+              },
+              "parameters": {
+                "resistance": {
+                  "kind": "Dimensionless",
+                  "value_si": 2.0
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "electrical.capacitor",
+              "object": {
+                "idx": 4,
+                "version": 1
+              },
+              "parameters": {
+                "capacitance": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.5
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          }
+        ],
+        "connections": [
+          {
+            "ports": [
+              {
+                "idx": 1,
+                "version": 1
+              },
+              {
+                "idx": 4,
+                "version": 1
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "idx": 5,
+                "version": 1
+              },
+              {
+                "idx": 6,
+                "version": 1
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "idx": 2,
+                "version": 1
+              },
+              {
+                "idx": 7,
+                "version": 1
+              },
+              {
+                "idx": 3,
+                "version": 1
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "name": "supply"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "ground"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "resistor"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "capacitor"
+            },
+            "version": 1
+          }
+        ],
+        "ports": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "p",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "n",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "pin",
+              "owner": {
+                "idx": 2,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "p",
+              "owner": {
+                "idx": 3,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "n",
+              "owner": {
+                "idx": 3,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "p",
+              "owner": {
+                "idx": 4,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "n",
+              "owner": {
+                "idx": 4,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          }
+        ],
+        "state": {
+          "entries": [
+            {
+              "value": null,
+              "version": 0
+            }
+          ]
+        }
+      },
+      "name": "rc",
+      "samples": [
+        {
+          "time": 0.0,
+          "values": [
+            0.0,
+            5.541375583230975e-17,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.5,
+            0.0
+          ]
+        },
+        {
+          "time": 0.1,
+          "values": [
+            0.0,
+            8.964586587268789e-18,
+            0.0,
+            1.0,
+            0.0951625895043533,
+            0.0,
+            0.0,
+            -0.4526450277617042,
+            0.0
+          ]
+        },
+        {
+          "time": 0.2,
+          "values": [
+            0.0,
+            2.7578135603218354e-17,
+            0.0,
+            1.0,
+            0.18126926056753265,
+            0.0,
+            0.0,
+            -0.40957015479363046,
+            0.0
+          ]
+        },
+        {
+          "time": 0.30000000000000004,
+          "values": [
+            0.0,
+            -2.5806115897450916e-17,
+            0.0,
+            1.0,
+            0.2591817978387403,
+            0.0,
+            0.0,
+            -0.3705943982797697,
+            0.0
+          ]
+        },
+        {
+          "time": 0.4,
+          "values": [
+            0.0,
+            1.7741965502989136e-17,
+            0.0,
+            1.0,
+            0.32967997630836504,
+            0.0,
+            0.0,
+            -0.3353276756836593,
+            0.0
+          ]
+        },
+        {
+          "time": 0.5,
+          "values": [
+            0.0,
+            -1.4995857908675534e-17,
+            0.0,
+            1.0,
+            0.3934693655594802,
+            0.0,
+            0.0,
+            -0.30341702573312646,
+            0.0
+          ]
+        },
+        {
+          "time": 0.6,
+          "values": [
+            0.0,
+            -1.581112712130814e-17,
+            0.0,
+            1.0,
+            0.45118839134655825,
+            0.0,
+            0.0,
+            -0.2745430758646532,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7,
+          "values": [
+            0.0,
+            -4.8208746322128285e-18,
+            0.0,
+            1.0,
+            0.5034147251760698,
+            0.0,
+            0.0,
+            -0.24841684583488255,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7999999999999999,
+          "values": [
+            0.0,
+            5.3752844688252925e-18,
+            0.0,
+            1.0,
+            0.5506710658380465,
+            0.0,
+            0.0,
+            -0.2247768555087311,
+            0.0
+          ]
+        },
+        {
+          "time": 0.8999999999999999,
+          "values": [
+            0.0,
+            6.70439961770281e-19,
+            0.0,
+            1.0,
+            0.5934303707521297,
+            0.0,
+            0.0,
+            -0.2033865078778741,
+            0.0
+          ]
+        },
+        {
+          "time": 0.9999999999999999,
+          "values": [
+            0.0,
+            -9.742771335065193e-18,
+            0.0,
+            1.0,
+            0.6321205894851819,
+            0.0,
+            0.0,
+            -0.18403172111796806,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "advance_s": 0.004768394,
+      "channels": [
+        {
+          "name": "ambient.absorbed",
+          "unit": "W"
+        },
+        {
+          "name": "ambient.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "conduction.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "node.temperature",
+          "unit": "K"
+        },
+        {
+          "name": "node.temperature",
+          "unit": "K"
+        },
+        {
+          "name": "storage.entropy_production",
+          "unit": "J/K"
+        }
+      ],
+      "compile_s": 0.000404556,
+      "model": {
+        "behaviors": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "kind": "thermal.capacitance",
+              "object": {
+                "idx": 1,
+                "version": 1
+              },
+              "parameters": {
+                "heat_capacity": {
+                  "kind": "Dimensionless",
+                  "value_si": 2.0
+                },
+                "initial.temperature": {
+                  "kind": "Dimensionless",
+                  "value_si": 313.15
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "thermal.conductance",
+              "object": {
+                "idx": 2,
+                "version": 1
+              },
+              "parameters": {
+                "conductance": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.5
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "thermal.ambient",
+              "object": {
+                "idx": 3,
+                "version": 1
+              },
+              "parameters": {
+                "temperature": {
+                  "kind": "Dimensionless",
+                  "value_si": 293.15
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          }
+        ],
+        "connections": [
+          {
+            "ports": [
+              {
+                "idx": 1,
+                "version": 1
+              },
+              {
+                "idx": 2,
+                "version": 1
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "idx": 4,
+                "version": 1
+              },
+              {
+                "idx": 3,
+                "version": 1
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "name": "storage"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "conduction"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "ambient"
+            },
+            "version": 1
+          }
+        ],
+        "ports": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "node",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "a",
+              "owner": {
+                "idx": 2,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "b",
+              "owner": {
+                "idx": 2,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "node",
+              "owner": {
+                "idx": 3,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          }
+        ],
+        "state": {
+          "entries": [
+            {
+              "value": null,
+              "version": 0
+            }
+          ]
+        }
+      },
+      "name": "thermal",
+      "samples": [
+        {
+          "time": 0.0,
+          "values": [
+            10.0,
+            0.0,
+            0.0021786510767479103,
+            313.15,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.1,
+          "values": [
+            9.754318408814498,
+            0.0,
+            0.002075670103921144,
+            312.6561982380268,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.2,
+          "values": [
+            9.513483427958448,
+            0.0,
+            0.001977484558074949,
+            312.17458848505987,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.30000000000000004,
+          "values": [
+            9.278594683997085,
+            0.0,
+            0.001883876103636075,
+            311.70486971932314,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.4,
+          "values": [
+            9.049505363817218,
+            0.0,
+            0.001794636008177912,
+            311.2467483512935,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.5,
+          "values": [
+            8.826072279135161,
+            0.0,
+            0.0017095647426970326,
+            310.7999380402005,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.6,
+          "values": [
+            8.608155776998046,
+            0.0,
+            0.0016284715970265769,
+            310.3641595150518,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7,
+          "values": [
+            8.395619652497004,
+            0.0,
+            0.001551174309913212,
+            309.9391404000809,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7999999999999999,
+          "values": [
+            8.188331063633939,
+            0.0,
+            0.0014774987132901637,
+            309.52461504450196,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.8999999999999999,
+          "values": [
+            7.986160448291855,
+            0.0,
+            0.0014072783902895694,
+            309.12032435647166,
+            293.15,
+            0.0
+          ]
+        },
+        {
+          "time": 0.9999999999999999,
+          "values": [
+            7.788981443253334,
+            0.0,
+            0.0013403543465441287,
+            308.72601564114586,
+            293.15,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "advance_s": 0.008271171,
+      "channels": [
+        {
+          "name": "ambient.absorbed",
+          "unit": "W"
+        },
+        {
+          "name": "ambient.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "case.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "cooling.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "ground.current",
+          "unit": "A"
+        },
+        {
+          "name": "ground.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "motor.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "node.angle",
+          "unit": "rad"
+        },
+        {
+          "name": "node.temperature",
+          "unit": "K"
+        },
+        {
+          "name": "node.temperature",
+          "unit": "K"
+        },
+        {
+          "name": "node.voltage",
+          "unit": "V"
+        },
+        {
+          "name": "node.voltage",
+          "unit": "V"
+        },
+        {
+          "name": "rotor.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "rotor.speed",
+          "unit": "rad/s"
+        },
+        {
+          "name": "supply.current",
+          "unit": "A"
+        },
+        {
+          "name": "supply.entropy_production",
+          "unit": "J/K"
+        }
+      ],
+      "compile_s": 0.000541876,
+      "model": {
+        "behaviors": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "kind": "bridge.motor",
+              "object": {
+                "idx": 1,
+                "version": 1
+              },
+              "parameters": {
+                "resistance": {
+                  "kind": "Dimensionless",
+                  "value_si": 2.0
+                },
+                "torque_constant": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.1
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "electrical.voltage_source",
+              "object": {
+                "idx": 2,
+                "version": 1
+              },
+              "parameters": {
+                "voltage": {
+                  "kind": "Dimensionless",
+                  "value_si": 2.0
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "electrical.ground",
+              "object": {
+                "idx": 3,
+                "version": 1
+              },
+              "parameters": {},
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "rotational.inertia",
+              "object": {
+                "idx": 4,
+                "version": 1
+              },
+              "parameters": {
+                "damping": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.02
+                },
+                "inertia": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.1
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "thermal.capacitance",
+              "object": {
+                "idx": 5,
+                "version": 1
+              },
+              "parameters": {
+                "heat_capacity": {
+                  "kind": "Dimensionless",
+                  "value_si": 2.0
+                },
+                "initial.temperature": {
+                  "kind": "Dimensionless",
+                  "value_si": 293.15
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "thermal.conductance",
+              "object": {
+                "idx": 6,
+                "version": 1
+              },
+              "parameters": {
+                "conductance": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.5
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "kind": "thermal.ambient",
+              "object": {
+                "idx": 7,
+                "version": 1
+              },
+              "parameters": {
+                "temperature": {
+                  "kind": "Dimensionless",
+                  "value_si": 293.15
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          }
+        ],
+        "connections": [
+          {
+            "ports": [
+              {
+                "idx": 2,
+                "version": 1
+              },
+              {
+                "idx": 5,
+                "version": 1
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "idx": 3,
+                "version": 1
+              },
+              {
+                "idx": 8,
+                "version": 1
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "idx": 4,
+                "version": 1
+              },
+              {
+                "idx": 9,
+                "version": 1
+              },
+              {
+                "idx": 10,
+                "version": 1
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "idx": 6,
+                "version": 1
+              },
+              {
+                "idx": 7,
+                "version": 1
+              }
+            ]
+          },
+          {
+            "ports": [
+              {
+                "idx": 11,
+                "version": 1
+              },
+              {
+                "idx": 12,
+                "version": 1
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "name": "motor"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "supply"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "ground"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "rotor"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "case"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "cooling"
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "name": "ambient"
+            },
+            "version": 1
+          }
+        ],
+        "ports": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [
+                {
+                  "idx": 2,
+                  "version": 1
+                },
+                {
+                  "idx": 3,
+                  "version": 1
+                },
+                {
+                  "idx": 4,
+                  "version": 1
+                }
+              ],
+              "name": "plug",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": {
+                  "Composite": [
+                    "Electrical",
+                    "Rotational",
+                    "Thermal"
+                  ]
+                }
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": [
+                {
+                  "idx": 1,
+                  "version": 1
+                },
+                0
+              ],
+              "members": [],
+              "name": "plug.electrical",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": [
+                {
+                  "idx": 1,
+                  "version": 1
+                },
+                1
+              ],
+              "members": [],
+              "name": "plug.rotational",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Rotational"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": [
+                {
+                  "idx": 1,
+                  "version": 1
+                },
+                2
+              ],
+              "members": [],
+              "name": "plug.thermal",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "p",
+              "owner": {
+                "idx": 2,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "n",
+              "owner": {
+                "idx": 2,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "pin",
+              "owner": {
+                "idx": 3,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Electrical"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "shaft",
+              "owner": {
+                "idx": 4,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Rotational"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "node",
+              "owner": {
+                "idx": 5,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "a",
+              "owner": {
+                "idx": 6,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "b",
+              "owner": {
+                "idx": 6,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "node",
+              "owner": {
+                "idx": 7,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Thermal"
+              }
+            },
+            "version": 1
+          }
+        ],
+        "state": {
+          "entries": [
+            {
+              "value": null,
+              "version": 0
+            }
+          ]
+        }
+      },
+      "name": "motor_composite",
+      "samples": [
+        {
+          "time": 0.0,
+          "values": [
+            4.688681071842592e-26,
+            0.0,
+            0.0,
+            0.0,
+            -1.0,
+            0.0,
+            0.006822445846836092,
+            0.0,
+            293.15,
+            293.15,
+            2.0,
+            -6.329819903493399e-27,
+            0.0,
+            0.0,
+            -1.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.1,
+          "values": [
+            0.04889327308141768,
+            0.0,
+            0.0,
+            5.616702806635976e-8,
+            -0.9950863681762898,
+            0.0,
+            0.006752969766761606,
+            0.004958590421427029,
+            293.24826942128465,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.09876035239464329,
+            -0.9950863681762898,
+            0.0
+          ]
+        },
+        {
+          "time": 0.2,
+          "values": [
+            0.09634392408713616,
+            0.0,
+            0.0,
+            2.1692615442201997e-7,
+            -0.9902696685591695,
+            0.0,
+            0.0066855960251848414,
+            0.01967078804796817,
+            293.3431540792015,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.19508230298800788,
+            -0.9902696685591695,
+            0.0
+          ]
+        },
+        {
+          "time": 0.30000000000000004,
+          "values": [
+            0.14215779862156888,
+            0.0,
+            0.0,
+            4.7135052642292667e-7,
+            -0.9855718936799406,
+            0.0,
+            0.006620253275786154,
+            0.04389577545844944,
+            293.4347657337722,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.28902605613538773,
+            -0.9855718936799406,
+            0.0
+          ]
+        },
+        {
+          "time": 0.4,
+          "values": [
+            0.1863889477015763,
+            0.0,
+            0.0,
+            8.093752947791388e-7,
+            -0.9809901072763475,
+            0.0,
+            0.006556872934275781,
+            0.07739868103504134,
+            293.52321246896145,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.38065032974123997,
+            -0.9809901072763475,
+            0.0
+          ]
+        },
+        {
+          "time": 0.5,
+          "values": [
+            0.2290896460889292,
+            0.0,
+            0.0,
+            1.2217355051954114e-6,
+            -0.9765214455827085,
+            0.0,
+            0.006495389057187528,
+            0.11995043216085034,
+            293.60859881683314,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.47001239195978767,
+            -0.9765214455827085,
+            0.0
+          ]
+        },
+        {
+          "time": 0.6,
+          "values": [
+            0.27031045217354305,
+            0.0,
+            0.0,
+            1.699908343094506e-6,
+            -0.9721631155399685,
+            0.0,
+            0.006435738226585485,
+            0.17132761204207506,
+            293.6910258772956,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.5571680969894811,
+            -0.9721631155399685,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7,
+          "values": [
+            0.3101002657310811,
+            0.0,
+            0.0,
+            2.2360594252427996e-6,
+            -0.9679123930499467,
+            0.0,
+            0.0063778594403683,
+            0.231312320065236,
+            293.77059143359605,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.642171919983691,
+            -0.9679123930499467,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7999999999999999,
+          "values": [
+            0.3485063836391117,
+            0.0,
+            0.0,
+            2.822992854177326e-6,
+            -0.9637666212726865,
+            0.0,
+            0.006321694007873686,
+            0.29969203560219715,
+            293.8473900637324,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.7250769910994511,
+            -0.9637666212726865,
+            0.0
+          ]
+        },
+        {
+          "time": 0.8999999999999999,
+          "values": [
+            0.38557455362528864,
+            0.0,
+            0.0,
+            3.4541047716630906e-6,
+            -0.9597232089658438,
+            0.0,
+            0.006267185450503143,
+            0.3762594851778538,
+            293.9215132479311,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.8059351287055371,
+            -0.9597232089658438,
+            0.0
+          ]
+        },
+        {
+          "time": 0.9999999999999999,
+          "values": [
+            0.4213490261252904,
+            0.0,
+            0.0,
+            4.1233401663317085e-6,
+            -0.9557796288650764,
+            0.0,
+            0.006214279407102833,
+            0.4608125129174616,
+            293.9930494723435,
+            293.15,
+            2.0,
+            0.0,
+            0.0,
+            0.8847968717706349,
+            -0.9557796288650764,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "advance_s": 0.002500111,
+      "channels": [
+        {
+          "name": "body.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "body.omega",
+          "unit": "rad/s"
+        },
+        {
+          "name": "body.theta",
+          "unit": "rad"
+        },
+        {
+          "name": "body.vx",
+          "unit": "m/s"
+        },
+        {
+          "name": "body.vy",
+          "unit": "m/s"
+        },
+        {
+          "name": "body.x",
+          "unit": "m"
+        },
+        {
+          "name": "body.y",
+          "unit": "m"
+        }
+      ],
+      "compile_s": 0.000372813,
+      "model": {
+        "behaviors": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "kind": "planar.rigid_body",
+              "object": {
+                "idx": 1,
+                "version": 1
+              },
+              "parameters": {
+                "gravity": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.0
+                },
+                "inertia": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.1
+                },
+                "initial.vx": {
+                  "kind": "Dimensionless",
+                  "value_si": 2.0
+                },
+                "mass": {
+                  "kind": "Dimensionless",
+                  "value_si": 1.0
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          }
+        ],
+        "connections": [
+          {
+            "ports": [
+              {
+                "idx": 1,
+                "version": 1
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "name": "body"
+            },
+            "version": 1
+          }
+        ],
+        "ports": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "frame",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "PlanarFrame"
+              }
+            },
+            "version": 1
+          }
+        ],
+        "state": {
+          "entries": [
+            {
+              "value": null,
+              "version": 0
+            }
+          ]
+        }
+      },
+      "name": "planar_frame",
+      "samples": [
+        {
+          "time": 0.0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.1,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            0.2,
+            0.0
+          ]
+        },
+        {
+          "time": 0.2,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            0.4,
+            0.0
+          ]
+        },
+        {
+          "time": 0.30000000000000004,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            0.6000000000000001,
+            0.0
+          ]
+        },
+        {
+          "time": 0.4,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            0.8,
+            0.0
+          ]
+        },
+        {
+          "time": 0.5,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            1.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.6,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            1.2,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            1.4,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7999999999999999,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            1.5999999999999999,
+            0.0
+          ]
+        },
+        {
+          "time": 0.8999999999999999,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            1.7999999999999998,
+            0.0
+          ]
+        },
+        {
+          "time": 0.9999999999999999,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            2.0,
+            0.0,
+            1.9999999999999998,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "advance_s": 0.002844808,
+      "channels": [
+        {
+          "name": "body.entropy_production",
+          "unit": "J/K"
+        },
+        {
+          "name": "body.qw",
+          "unit": "1"
+        },
+        {
+          "name": "body.qx",
+          "unit": "1"
+        },
+        {
+          "name": "body.qy",
+          "unit": "1"
+        },
+        {
+          "name": "body.qz",
+          "unit": "1"
+        },
+        {
+          "name": "body.vx",
+          "unit": "m/s"
+        },
+        {
+          "name": "body.vy",
+          "unit": "m/s"
+        },
+        {
+          "name": "body.vz",
+          "unit": "m/s"
+        },
+        {
+          "name": "body.wx",
+          "unit": "rad/s"
+        },
+        {
+          "name": "body.wy",
+          "unit": "rad/s"
+        },
+        {
+          "name": "body.wz",
+          "unit": "rad/s"
+        },
+        {
+          "name": "body.x",
+          "unit": "m"
+        },
+        {
+          "name": "body.y",
+          "unit": "m"
+        },
+        {
+          "name": "body.z",
+          "unit": "m"
+        }
+      ],
+      "compile_s": 0.000369132,
+      "model": {
+        "behaviors": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "kind": "multibody.rigid_body",
+              "object": {
+                "idx": 1,
+                "version": 1
+              },
+              "parameters": {
+                "gravity": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.0
+                },
+                "ixx": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.1
+                },
+                "iyy": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.2
+                },
+                "izz": {
+                  "kind": "Dimensionless",
+                  "value_si": 0.3
+                },
+                "mass": {
+                  "kind": "Dimensionless",
+                  "value_si": 1.0
+                }
+              },
+              "state": []
+            },
+            "version": 1
+          }
+        ],
+        "connections": [
+          {
+            "ports": [
+              {
+                "idx": 1,
+                "version": 1
+              }
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "name": "body"
+            },
+            "version": 1
+          }
+        ],
+        "ports": [
+          {
+            "value": null,
+            "version": 0
+          },
+          {
+            "value": {
+              "member_of": null,
+              "members": [],
+              "name": "frame",
+              "owner": {
+                "idx": 1,
+                "version": 1
+              },
+              "schema": {
+                "Acausal": "Frame"
+              }
+            },
+            "version": 1
+          }
+        ],
+        "state": {
+          "entries": [
+            {
+              "value": null,
+              "version": 0
+            }
+          ]
+        }
+      },
+      "name": "spatial_frame",
+      "samples": [
+        {
+          "time": 0.0,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.1,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.2,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.30000000000000004,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.4,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.5,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.6,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.7999999999999999,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.8999999999999999,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "time": 0.9999999999999999,
+          "values": [
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ]
+    }
+  ],
+  "sample_s": 0.1,
+  "step_s": 0.001,
+  "version": 1
+}

@@ -1,0 +1,27 @@
+{
+  "input_hashes_verified": 27,
+  "uart_packets": [
+    366,
+    366
+  ],
+  "transaction_records_each": 175,
+  "transaction_identity_and_payload_parity": true,
+  "excluded_from_parity": "Request/completion timestamp bytes and their packet checksum; other transaction-event bytes match.",
+  "files_sha256": {
+    "README.md": "58be928110d5fbd3334064110f40989dc20ca7130693b34ddc80dba3fdecae70",
+    "gap_monitor.vh": "b81410eb18a09fb70ea27e0356cb6e6598583f7e0b9a5dc90f9e6f1e753a614f",
+    "host-1mbaud-build.log": "eaf8261bdcb3b1c4cd64078f707d027e2a1e9879244baa72342c100e6be443e3",
+    "host-1mbaud-gaps.csv": "1f78098c82c8ae5a4f5d3cceb2f7ea796558a4a9a888d194c442dc12dd53f977",
+    "host-1mbaud-run.log": "b36447e9c8d8cfcec5b04c2c7bb5e7d1efb6a2e18d5101284151227d878888e5",
+    "host-1mbaud-uart.hex": "179c375c13c81f48199b528a29a4cbd08b1283544d2274b4e7c8067d70bbc451",
+    "host-2mbaud-build.log": "816778ea84a936240d1e64048a5153e6ad54dbdd27cda118e8d7e8dea91605c3",
+    "host-2mbaud-gaps.csv": "2e82507d3a110b4cdbdeee65526396d4e02753065859889abed43ce069d35bd7",
+    "host-2mbaud-run.log": "0958c33222cab95e1a70ccfbca260cb5d1a74c4e425305fa751b452396ed0feb",
+    "host-2mbaud-uart.hex": "2c937e0ba4e5fcd84dfe3084bd9dcbaf299a796df3cd427ed154215a65236abe",
+    "investigate.mjs": "f55c0544ec1aafc7a6eec4d2a15452ae06b99ee52c4521387a8159997040be04",
+    "physical-summary.json": "87d361edc7e7e007374d65de29fdc0ec5d99389897d0464263487c56032eaa21",
+    "provenance.json": "a03f9bbcb44e6dbabc8c314dc2645114f0dbeb5b68ed90c1e23ace49d9a1bda8",
+    "simulation-summary.json": "6fecba69a1d48386c44f6a00ac2349564c2900f43128c9006ddaf60829e86be4",
+    "verify.mjs": "0544baea65fca79ea15baad1a5cdc1facb3274f568c5cfc8201cefc320e8823f"
+  }
+}

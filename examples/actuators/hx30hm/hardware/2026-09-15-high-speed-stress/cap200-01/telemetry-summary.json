@@ -1,0 +1,42 @@
+{
+  "capture": "cap200-01",
+  "completed": true,
+  "stop_verified": true,
+  "failure": null,
+  "frames": 200,
+  "axes": [
+    {
+      "id": 10,
+      "baseline_v": 11.8,
+      "minimum_v": 11.600000000000001,
+      "drop_percent": 1.694915254237282,
+      "maximum_temperature_c": 45,
+      "maximum_current_raw_uncalibrated": 43,
+      "maximum_travel_counts": 39,
+      "minimum_pwm": -200,
+      "maximum_pwm": 200
+    },
+    {
+      "id": 11,
+      "baseline_v": 12.0,
+      "minimum_v": 11.8,
+      "drop_percent": 1.6666666666666607,
+      "maximum_temperature_c": 43,
+      "maximum_current_raw_uncalibrated": 102,
+      "maximum_travel_counts": 40,
+      "minimum_pwm": -200,
+      "maximum_pwm": 200
+    },
+    {
+      "id": 12,
+      "baseline_v": 11.8,
+      "minimum_v": 11.600000000000001,
+      "drop_percent": 1.694915254237282,
+      "maximum_temperature_c": 42,
+      "maximum_current_raw_uncalibrated": 49,
+      "maximum_travel_counts": 39,
+      "minimum_pwm": -200,
+      "maximum_pwm": 200
+    }
+  ]
+}

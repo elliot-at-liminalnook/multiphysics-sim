@@ -1,0 +1,233 @@
+{
+  "components": 195,
+  "definition_fingerprint": "e51c1b0147896c3d9b2361c0d26b121da09b5de32562dd1d5168298ac10b6681",
+  "description_id": "188d8f403ff3917577b5b435ced77bbc01e3ac8b91f0e938a4f832463d704460",
+  "initial_endpoint_samples": 577,
+  "initial_stage_samples": 0,
+  "initial_unavailable_samples": 831,
+  "nets": 242,
+  "observables": 1408,
+  "ports": 597,
+  "snapshot_unchanged": true,
+  "source": "examples/full-robot/whole-swing/browser.scene.json",
+  "source_blake3": "936ba8878b32a1b597f0cfe53ae4adfddffd2c1095072a6e8839f68e21864534",
+  "stepped": false,
+  "unavailable_bindings": [
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/01defa41932a/firmware/port/746172676574/signal",
+      "label": "+X · Worm drive · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/01defa41932a/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/0702845b41d3/firmware/port/746172676574/signal",
+      "label": "-Y · Hip swing (belt) · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/0702845b41d3/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/074a9c071bf6/firmware/port/746172676574/signal",
+      "label": "-Y · Foot slide · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/074a9c071bf6/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/1bfb702ee9c9/firmware/port/746172676574/signal",
+      "label": "-X · Foot slide · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/1bfb702ee9c9/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/2a3dcb848184/firmware/port/746172676574/signal",
+      "label": "-Y · Worm drive · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/2a3dcb848184/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/4368f0b5b421/firmware/port/746172676574/signal",
+      "label": "+X · Foot slide · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/4368f0b5b421/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/4a1ae2c3e25f/firmware/port/746172676574/signal",
+      "label": "+Y · Foot slide · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/4a1ae2c3e25f/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/4f13ca1d8689/firmware/port/746172676574/signal",
+      "label": "+Y · Hip swing (belt) · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/4f13ca1d8689/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/bc7a7393c49f/firmware/port/746172676574/signal",
+      "label": "+X · Hip swing (belt) · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/bc7a7393c49f/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/cef9d0e3d459/firmware/port/746172676574/signal",
+      "label": "+Y · Worm drive · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/cef9d0e3d459/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/e26858c1afc7/firmware/port/746172676574/signal",
+      "label": "-X · Worm drive · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/e26858c1afc7/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    },
+    {
+      "availability": {
+        "kind": "unavailable",
+        "reason": "Runtime quantity differs from inspection metadata"
+      },
+      "coordinate_frame": null,
+      "id": "cad/motor/f5009ce295f6/firmware/port/746172676574/signal",
+      "label": "-X · Hip swing (belt) · HX-30HM.firmware.target",
+      "location": {
+        "kind": "signal",
+        "port": "cad/motor/f5009ce295f6/firmware/port/746172676574"
+      },
+      "quantity": {
+        "name": "sim.quantity.Angle",
+        "version": 1
+      },
+      "sign_convention": null
+    }
+  ]
+}

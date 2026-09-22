@@ -1,0 +1,32 @@
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator/crates/sim-script)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+   Compiling sim-viewer v0.1.0 (/Users/elliot/physics-simulator/crates/sim-viewer)
+    Finished `test` profile [optimized + debuginfo] target(s) in 58.58s
+     Running unittests src/main.rs (target/debug/deps/sim_viewer-1c1da62f2fe3b4ca)
+
+running 9 tests
+test analysis_ui::tests::invalid_group_keeps_its_draft_and_prevents_closing ... ok
+test experiments_ui::refinement::tests::all_refinement_views_render_without_mutating_the_review ... ok
+test workspace_file::tests::sidecar_roundtrip_preserves_notes_and_rejects_lost_updates ... ok
+test analysis_ui::tests::new_group_never_reuses_an_existing_identity_from_a_sidecar ... ok
+test experiments_ui::tests::filters_keep_failures_no_motion_and_whole_trial_roles ... ok
+test tests::focus_and_back_restore_the_engineers_overview_and_selection ... ok
+test analysis_ui::tests::annotate_group_undo_save_and_reopen_preserves_engineering_work ... ok
+test analysis_ui::tests::switching_models_retains_file_bindings_and_close_saves_each_analysis ... ok
+test experiments_ui::tests::worker_host_renders_retains_candidate_and_cancels_without_losing_history ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+

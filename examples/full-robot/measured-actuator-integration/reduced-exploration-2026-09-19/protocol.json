@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "purpose": "Qualify reduced-runtime agreement and stepping cost without gait search",
+  "source": "../gait-generation/contact-shape-2026-09-19/upright-fast/10s/spec.json",
+  "profile": "../../../primitives/reduced-exploration.profile.json",
+  "profile_selected_before_measurement": true,
+  "cases": [
+    {"name": "forward", "duration_s": 3.6, "forward_speed_request_m_s": 0.16666666666666663},
+    {"name": "stop", "duration_s": 3.6, "command_change_s": 2.0, "changed_forward_speed_request_m_s": 0.0},
+    {"name": "reverse", "duration_s": 3.6, "command_change_s": 2.0, "changed_forward_speed_request_m_s": -0.16666666666666663}
+  ],
+  "requirements": [
+    "Use the same current executable/source identity for both models",
+    "Run detailed and reduced sequentially with RAYON_NUM_THREADS=1",
+    "Every declared mechanical and electrical endpoint budget must pass including startup",
+    "Both complete without failure or task termination",
+    "Each case achieves the declared minimum speedup",
+    "Retain failed profiles and original budgets; do not promote failed receipts"
+  ],
+  "limits": "This is simulator fidelity validation on an existing flat-ground policy, not hardware calibration, gait optimization, or long-horizon/terrain qualification. Original modeled voltage/temperature assumptions remain unchanged."
+}

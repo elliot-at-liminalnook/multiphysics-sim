@@ -1,0 +1,107 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator/crates/sim-dynamics)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `release` profile [optimized] target(s) in 49.63s
+     Running unittests src/lib.rs (target/release/deps/sim_domain_robot-4a38f93de8492464)
+
+running 31 tests
+test articulated::embedding::factor_blocks::tests::repartitions_every_matrix_and_never_discards_tiny_couplings ... ok
+test effective_servo::optimization_tests::extended_penalty_keeps_physical_feasibility_and_free_backdrive ... ok
+test math::rotation_motion_tests::angular_rates_match_matrix_derivatives_at_zero_and_finite_rotations ... ok
+test effective_servo::optimization_tests::moving_reference_realizes_feedforward_and_feedback_without_bypassing_limits ... ok
+test effective_servo::command::tests::feedforward_can_exceed_command_bounds_while_pose_and_torque_remain_admissible ... ok
+test articulated::broad_phase_tests::moving_sample_bounds_preserve_every_point_box_hit_and_order ... ok
+test articulated::prepared::exclusion_tests::exclusion_cache_preserves_pair_priority_and_refreshes_after_model_edits ... ok
+test motion_capability::tests::affine_force_load_map_matches_moments_joint_work_and_force_derivatives ... ok
+test articulated::prepared::exclusion_tests::joint_exclusion_follows_translation_rotation_and_preserves_outer_contacts ... ok
+test motion_capability::tests::constrained_pair_transfers_load_for_moment_and_rejects_tensile_support ... ok
+test motion_capability::tests::constrained_support_matches_analytic_friction_cone_projection ... ok
+test articulated::embedding::implicit::supplied_derivative_tests::invalid_or_singular_supplied_matrix_retries_original_numeric_equations ... ok
+test motion_capability::tests::constrained_support_retains_balance_regularization_and_disabled_points ... ok
+test motion_capability::tests::coupled_transmission_bound_satisfies_velocity_and_active_rate_constraint ... ok
+test contract::tests::separates_authored_properties_defaults_and_unmodeled_evidence ... ok
+test motion_capability::tests::force_jacobian_and_cone_residuals_are_physical ... ok
+test contract::tests::merged_members_resolve_but_ambiguous_joint_references_do_not ... ok
+test motion_capability::tests::point_support_matches_static_balance_and_identifies_unsupported_moment ... ok
+test contract::tests::keeps_loop_and_transmission_relations_and_rejects_dangling_references ... ok
+test motion_capability::tests::rejects_unreachable_singular_and_redundant_cases ... ok
+test motion_capability::tests::weighted_support_uses_availability_and_disables_zero_weight_points ... ok
+test contract::tests::stable_ids_preserve_topology_across_renaming_and_reordering ... ok
+test sdf::refinement_tests::local_detail_preserves_parent_and_blends_value_and_gradient ... ok
+test sdf::refinement_tests::invalid_or_overlapping_detail_cannot_disable_geometry_silently ... ok
+test sdf::tests::contact_budget_retains_thin_foot_and_all_support_extrema ... ok
+test sdf::tests::box_distance_and_gradient ... ok
+test sdf::band_tests::rotating_boundary_samples_remain_eligible_for_collision ... ok
+test actuator_audit::tests::stall_matches_independent_electrical_and_torque_balance ... ok
+test motion_capability::tests::joint_load_and_speed_search_reaches_analytic_limit_missed_by_equal_allocation ... ok
+test actuator_audit::tests::stall_includes_temperature_and_driver_foldback ... ok
+test articulated::embedding::factor_blocks::factor_tests::block_least_squares_matches_whole_matrix_and_keeps_global_rank_threshold ... ok
+
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/embedded_motor.rs (target/release/deps/embedded_motor-7120ee7259268ce4)
+
+running 20 tests
+test newton_failure_audit_is_time_scoped_and_does_not_change_the_failure ... ok
+test explicit_auxiliary_rates_resolve_small_changes_at_nonzero_angle ... ok
+test controller_sample_reuse_requires_cross_step_reuse_and_preserves_legacy_serialization ... ok
+test registered_event_modes_initialize_and_release_without_velocity_impulses ... ok
+test accepted_contact_trace_uses_original_endpoint_forces_without_changing_motion ... ok
+test cross_step_workspace_rolls_back_and_refreshes_for_timestep_changes ... ok
+test unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation ... ok
+test driver_binding_and_boundary_validation_are_explicit ... ok
+test registered_servo_preserves_quantization_deadband_delay_and_saturation ... ok
+test sdirk_stage_proposals_preserve_changed_steps_and_rollback_failed_intervals ... ok
+test motor_bindings_boundaries_and_combined_failure_fail_closed ... ok
+test scheduled_servo_drives_motor_and_failed_interval_does_not_advance_controller ... ok
+test registered_motor_derivative_chains_match_nonlinear_residual_differences ... ok
+test fpga_integer_controller_drives_shared_motor_with_exact_subperiod_latency ... ok
+test coupled_sdirk_matches_independent_differential_and_algebraic_circuit_stages ... ok
+test coupled_sdirk_current_has_second_order_accuracy_against_exact_rl_transient ... ok
+test eventful_motor_locates_engagement_and_matches_piecewise_linear_motion ... ok
+test servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run ... ok
+test driver_feedback_matches_independent_loaded_motor_with_series_drop_and_foldback ... ok
+test registered_motor_and_mechanics_match_independent_linear_circuit ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/embedded_step.rs (target/release/deps/embedded_step-6db7e7944220e306)
+
+running 20 tests
+test derivative_probe_radius_rejects_invalid_configuration_without_changing_state ... ok
+test prepared_dynamics_owns_contact_state_and_applies_fresh_forces ... ok
+test failed_cached_mechanics_restarts_fresh_before_subdivision ... ok
+test implicit_contact_memory_and_atomic_failure ... ok
+test implicit_stiff_viscous_load_matches_backward_euler_without_reversal ... ok
+test free_body_constant_force_and_world_rotation_match_exact_motion ... ok
+test private_predictor_falls_back_on_stiff_load_and_preserves_failed_workspace ... FAILED
+test world_load_pulse_matches_linear_and_angular_impulse ... ok
+test temporal_velocity_guess_rejects_bad_geometry_and_retries_a_failed_newton_seed ... ok
+test sdirk_mechanics_uses_two_stages_and_exact_force_clock ... ok
+test temporal_velocity_history_clears_after_contact_release ... ok
+test implicit_sliding_contact_matches_independent_scalar_force_balance ... ok
+test temporal_velocity_guess_preserves_constant_force_and_invalidates_history ... ok
+test contact_memory_decays_and_failure_leaves_input_unchanged ... ok
+test condensed_cross_coupled_states_match_independent_linear_system ... ok
+test oscillator_error_decreases_quadratically_with_step_refinement ... ok
+test cached_mechanical_intervals_match_linear_solution_and_rollback_failed_trials ... ok
+test sdirk_mechanical_oscillator_converges_and_dissipates ... ok
+test implicit_oscillator_refines_to_the_continuous_solution ... ok
+test mechanical_subdivision_preserves_direct_steps_and_recovers_nonlinear_drag ... ok
+
+failures:
+
+---- private_predictor_falls_back_on_stiff_load_and_preserves_failed_workspace stdout ----
+
+thread 'private_predictor_falls_back_on_stiff_load_and_preserves_failed_workspace' (3226260) panicked at crates/sim-domain-robot/tests/embedded_step.rs:821:68:
+called `Result::unwrap()` on an `Err` value: "implicit mechanical solve: Newton did not converge after 40 iterations; residual=1.8662077394537846e-6; largest final residual: Some(\"mechanical velocity row 0: residual=1.8662077394537846e-6, candidate=3.665935536665208e-1\"); last rejected endpoint: None"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    private_predictor_falls_back_on_stiff_load_and_preserves_failed_workspace
+
+test result: FAILED. 19 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p sim-domain-robot --test embedded_step`

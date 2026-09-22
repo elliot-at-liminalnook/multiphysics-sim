@@ -1,0 +1,5097 @@
+{
+  "version": 1,
+  "plan": {
+    "control": "fpga_device_pd",
+    "name": "validation-hold-small-group-350",
+    "role": "validation",
+    "ids": [
+      10,
+      11,
+      12
+    ],
+    "period_s": 0.04,
+    "gains": {
+      "kp_q8": 4096,
+      "kd_q8": 0,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "targets": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        24,
+        24,
+        24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        24,
+        24,
+        24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -24,
+        -24,
+        -24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -24,
+        -24,
+        -24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        24,
+        24,
+        24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        24,
+        24,
+        24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -24,
+        -24,
+        -24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -24,
+        -24,
+        -24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        24,
+        24,
+        24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        48,
+        48,
+        48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        24,
+        24,
+        24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -24,
+        -24,
+        -24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -48
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -24,
+        -24,
+        -24
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "rms_limit_counts": 3.0,
+    "peak_limit_counts": 10.0,
+    "bitstream_path": "examples/actuators/hx30hm/hardware/2026-09-14-full-drive/build/bridge_experiment_100pct.fs",
+    "bitstream_blake3": "6d1652028e9331b08e71d98dcac425aeb80c10ca2ffebcedbe186555e608933f"
+  },
+  "home": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3165,
+    3354,
+    2775
+  ],
+  "frames": [
+    {
+      "tick": 0,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 2.14e-6,
+          "completion_s": 0.00032068,
+          "telemetry": {
+            "position_raw": 3165,
+            "position_rad": 4.855049193658054,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 0,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 0,
+            "current_raw": 0,
+            "current_a_uncalibrated": 0.0
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.00034172,
+          "completion_s": 0.0006713,
+          "telemetry": {
+            "position_raw": 3354,
+            "position_rad": 5.144971562568441,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 0,
+            "voltage_raw": 120,
+            "voltage_v": 12.0,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 0,
+            "current_raw": 33,
+            "current_a_uncalibrated": 0.033
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.00102416,
+          "completion_s": 0.001347,
+          "telemetry": {
+            "position_raw": 2775,
+            "position_rad": 4.256796686382654,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 0,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 0,
+            "current_raw": 0,
+            "current_a_uncalibrated": 0.0
+          }
+        }
+      ],
+      "command_request_s": 0.00175708,
+      "command_receipt_s": 0.0019321,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 1,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.04000036,
+          "completion_s": 0.04032316,
+          "telemetry": {
+            "position_raw": 3165,
+            "position_rad": 4.855049193658054,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 0,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 0,
+            "current_raw": 0,
+            "current_a_uncalibrated": 0.0
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.0403442,
+          "completion_s": 0.0406731,
+          "telemetry": {
+            "position_raw": 3354,
+            "position_rad": 5.144971562568441,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 0,
+            "voltage_raw": 120,
+            "voltage_v": 12.0,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 0,
+            "current_raw": 34,
+            "current_a_uncalibrated": 0.034
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.04069414,
+          "completion_s": 0.0410233,
+          "telemetry": {
+            "position_raw": 2775,
+            "position_rad": 4.256796686382654,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 0,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 0,
+            "current_raw": 0,
+            "current_a_uncalibrated": 0.0
+          }
+        }
+      ],
+      "command_request_s": 0.041046,
+      "command_receipt_s": 0.04122102,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 2,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.08000036,
+          "completion_s": 0.08032558,
+          "telemetry": {
+            "position_raw": 3183,
+            "position_rad": 4.882660847839996,
+            "speed_raw": 650,
+            "speed_rad_s": 0.9970875121256667,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 75,
+            "current_a_uncalibrated": 0.075
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.08034662,
+          "completion_s": 0.08067134,
+          "telemetry": {
+            "position_raw": 3374,
+            "position_rad": 5.175651178326153,
+            "speed_raw": 700,
+            "speed_rad_s": 1.0737865515199487,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 134,
+            "current_a_uncalibrated": 0.134
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.08069238,
+          "completion_s": 0.0810281,
+          "telemetry": {
+            "position_raw": 2795,
+            "position_rad": 4.287476302140367,
+            "speed_raw": 650,
+            "speed_rad_s": 0.9970875121256667,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 71,
+            "current_a_uncalibrated": 0.07100000000000001
+          }
+        }
+      ],
+      "command_request_s": 0.08104914,
+      "command_receipt_s": 0.08122416,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 3,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.12000036,
+          "completion_s": 0.12032982,
+          "telemetry": {
+            "position_raw": 3220,
+            "position_rad": 4.9394181369917645,
+            "speed_raw": 950,
+            "speed_rad_s": 1.4572817484913592,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 29,
+            "current_a_uncalibrated": 0.029
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.12035086,
+          "completion_s": 0.12067498,
+          "telemetry": {
+            "position_raw": 3411,
+            "position_rad": 5.232408467477922,
+            "speed_raw": 950,
+            "speed_rad_s": 1.4572817484913592,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 89,
+            "current_a_uncalibrated": 0.089
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.12069602,
+          "completion_s": 0.12102708,
+          "telemetry": {
+            "position_raw": 2833,
+            "position_rad": 4.345767572080021,
+            "speed_raw": 1100,
+            "speed_rad_s": 1.6873788666742053,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 29,
+            "current_a_uncalibrated": 0.029
+          }
+        }
+      ],
+      "command_request_s": 0.12105266,
+      "command_receipt_s": 0.12122768,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -112,
+        -144,
+        -160
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 4,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.16000036,
+          "completion_s": 0.16032964,
+          "telemetry": {
+            "position_raw": 3236,
+            "position_rad": 4.963961829597935,
+            "speed_raw": 50,
+            "speed_rad_s": 0.07669903939428206,
+            "load_raw": 1136,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 21,
+            "current_a_uncalibrated": 0.021
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.16035068,
+          "completion_s": 0.16067718,
+          "telemetry": {
+            "position_raw": 3423,
+            "position_rad": 5.2508162369325495,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 1168,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 94,
+            "current_a_uncalibrated": 0.094
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.16069822,
+          "completion_s": 0.16102216,
+          "telemetry": {
+            "position_raw": 2845,
+            "position_rad": 4.364175341534649,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 1184,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 42,
+            "current_a_uncalibrated": 0.042
+          }
+        }
+      ],
+      "command_request_s": 0.16105248,
+      "command_receipt_s": 0.1612275,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -336,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 5,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.20000036,
+          "completion_s": 0.2003299,
+          "telemetry": {
+            "position_raw": 3215,
+            "position_rad": 4.931748233052336,
+            "speed_raw": 33468,
+            "speed_rad_s": -1.0737865515199487,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 66,
+            "current_a_uncalibrated": 0.066
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.20035094,
+          "completion_s": 0.20067862,
+          "telemetry": {
+            "position_raw": 3401,
+            "position_rad": 5.217068659599065,
+            "speed_raw": 33518,
+            "speed_rad_s": -1.1504855909142309,
+            "load_raw": 1360,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 117,
+            "current_a_uncalibrated": 0.117
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.20069966,
+          "completion_s": 0.20102444,
+          "telemetry": {
+            "position_raw": 2820,
+            "position_rad": 4.325825821837508,
+            "speed_raw": 33468,
+            "speed_rad_s": -1.0737865515199487,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 67,
+            "current_a_uncalibrated": 0.067
+          }
+        }
+      ],
+      "command_request_s": 0.20105274,
+      "command_receipt_s": 0.20122776,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 6,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.24000036,
+          "completion_s": 0.24032262,
+          "telemetry": {
+            "position_raw": 3177,
+            "position_rad": 4.873456963112682,
+            "speed_raw": 33768,
+            "speed_rad_s": -1.533980787885641,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 30,
+            "current_a_uncalibrated": 0.03
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.24034366,
+          "completion_s": 0.24067486,
+          "telemetry": {
+            "position_raw": 3362,
+            "position_rad": 5.157243408871525,
+            "speed_raw": 33718,
+            "speed_rad_s": -1.4572817484913592,
+            "load_raw": 1374,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 87,
+            "current_a_uncalibrated": 0.08700000000000001
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.2406959,
+          "completion_s": 0.24102346,
+          "telemetry": {
+            "position_raw": 2782,
+            "position_rad": 4.267534551897854,
+            "speed_raw": 33768,
+            "speed_rad_s": -1.533980787885641,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 30,
+            "current_a_uncalibrated": 0.03
+          }
+        }
+      ],
+      "command_request_s": 0.24104546,
+      "command_receipt_s": 0.24122048,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 7,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.28000036,
+          "completion_s": 0.28032482,
+          "telemetry": {
+            "position_raw": 3136,
+            "position_rad": 4.81056375080937,
+            "speed_raw": 33868,
+            "speed_rad_s": -1.6873788666742053,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 15,
+            "current_a_uncalibrated": 0.015
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.28034586,
+          "completion_s": 0.28066682,
+          "telemetry": {
+            "position_raw": 3321,
+            "position_rad": 5.0943501965682145,
+            "speed_raw": 33768,
+            "speed_rad_s": -1.533980787885641,
+            "load_raw": 1374,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 73,
+            "current_a_uncalibrated": 0.073
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.28068786,
+          "completion_s": 0.28101674,
+          "telemetry": {
+            "position_raw": 2741,
+            "position_rad": 4.204641339594542,
+            "speed_raw": 33818,
+            "speed_rad_s": -1.6106798272799232,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 19,
+            "current_a_uncalibrated": 0.019
+          }
+        }
+      ],
+      "command_request_s": 0.28104766,
+      "command_receipt_s": 0.28122268,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -304,
+        -240,
+        -224
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 8,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.32000036,
+          "completion_s": 0.32032936,
+          "telemetry": {
+            "position_raw": 3096,
+            "position_rad": 4.749204519293945,
+            "speed_raw": 33868,
+            "speed_rad_s": -1.6873788666742053,
+            "load_raw": 1328,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 4,
+            "current_a_uncalibrated": 0.004
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.3203504,
+          "completion_s": 0.32067304,
+          "telemetry": {
+            "position_raw": 3285,
+            "position_rad": 5.039126888204331,
+            "speed_raw": 33618,
+            "speed_rad_s": -1.303883669702795,
+            "load_raw": 1264,
+            "voltage_raw": 119,
+            "voltage_v": 11.9,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 44,
+            "current_a_uncalibrated": 0.044
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.32069408,
+          "completion_s": 0.32102522,
+          "telemetry": {
+            "position_raw": 2704,
+            "position_rad": 4.147884050442774,
+            "speed_raw": 33568,
+            "speed_rad_s": -1.227184630308513,
+            "load_raw": 1248,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 2,
+            "current_a_uncalibrated": 0.002
+          }
+        }
+      ],
+      "command_request_s": 0.3210522,
+      "command_receipt_s": 0.32122722,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -48,
+        -48,
+        -16
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 9,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.36000036,
+          "completion_s": 0.36032992,
+          "telemetry": {
+            "position_raw": 3073,
+            "position_rad": 4.7139229611725755,
+            "speed_raw": 33218,
+            "speed_rad_s": -0.6902913545485385,
+            "load_raw": 1072,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 0,
+            "current_a_uncalibrated": 0.0
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.36035096,
+          "completion_s": 0.36067654,
+          "telemetry": {
+            "position_raw": 3268,
+            "position_rad": 5.013049214810275,
+            "speed_raw": 33118,
+            "speed_rad_s": -0.5368932757599744,
+            "load_raw": 1072,
+            "voltage_raw": 119,
+            "voltage_v": 11.9,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 35,
+            "current_a_uncalibrated": 0.035
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.36069758,
+          "completion_s": 0.36101388,
+          "telemetry": {
+            "position_raw": 2689,
+            "position_rad": 4.1248743386244895,
+            "speed_raw": 32968,
+            "speed_rad_s": -0.30679615757712825,
+            "load_raw": 1040,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 0,
+            "current_a_uncalibrated": 0.0
+          }
+        }
+      ],
+      "command_request_s": 0.36105276,
+      "command_receipt_s": 0.36122778,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 10,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.40000036,
+          "completion_s": 0.40032988,
+          "telemetry": {
+            "position_raw": 3082,
+            "position_rad": 4.727728788263546,
+            "speed_raw": 650,
+            "speed_rad_s": 0.9970875121256667,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 103,
+            "current_a_uncalibrated": 0.10300000000000001
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.40035092,
+          "completion_s": 0.40067806,
+          "telemetry": {
+            "position_raw": 3281,
+            "position_rad": 5.032990965052789,
+            "speed_raw": 750,
+            "speed_rad_s": 1.1504855909142309,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 155,
+            "current_a_uncalibrated": 0.155
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.4006991,
+          "completion_s": 0.40102128,
+          "telemetry": {
+            "position_raw": 2706,
+            "position_rad": 4.150952012018545,
+            "speed_raw": 650,
+            "speed_rad_s": 0.9970875121256667,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 84,
+            "current_a_uncalibrated": 0.084
+          }
+        }
+      ],
+      "command_request_s": 0.40105272,
+      "command_receipt_s": 0.40122774,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        336
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 11,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.44000036,
+          "completion_s": 0.44032178,
+          "telemetry": {
+            "position_raw": 3118,
+            "position_rad": 4.7829520966274295,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 31,
+            "current_a_uncalibrated": 0.031
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.44034282,
+          "completion_s": 0.4406701,
+          "telemetry": {
+            "position_raw": 3318,
+            "position_rad": 5.089748254204557,
+            "speed_raw": 950,
+            "speed_rad_s": 1.4572817484913592,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 89,
+            "current_a_uncalibrated": 0.089
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.44069114,
+          "completion_s": 0.44101978,
+          "telemetry": {
+            "position_raw": 2742,
+            "position_rad": 4.206175320382428,
+            "speed_raw": 950,
+            "speed_rad_s": 1.4572817484913592,
+            "load_raw": 336,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 35,
+            "current_a_uncalibrated": 0.035
+          }
+        }
+      ],
+      "command_request_s": 0.44104462,
+      "command_receipt_s": 0.44121964,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 12,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.48000036,
+          "completion_s": 0.480324,
+          "telemetry": {
+            "position_raw": 3159,
+            "position_rad": 4.84584530893074,
+            "speed_raw": 1050,
+            "speed_rad_s": 1.6106798272799232,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 17,
+            "current_a_uncalibrated": 0.017
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.48034504,
+          "completion_s": 0.48067232,
+          "telemetry": {
+            "position_raw": 3360,
+            "position_rad": 5.154175447295755,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 68,
+            "current_a_uncalibrated": 0.068
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.48069336,
+          "completion_s": 0.48101974,
+          "telemetry": {
+            "position_raw": 2782,
+            "position_rad": 4.267534551897854,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 31,
+            "current_a_uncalibrated": 0.031
+          }
+        }
+      ],
+      "command_request_s": 0.48104684,
+      "command_receipt_s": 0.48122186,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        288,
+        272
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 13,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.52000036,
+          "completion_s": 0.5203276,
+          "telemetry": {
+            "position_raw": 3201,
+            "position_rad": 4.910272502021938,
+            "speed_raw": 1050,
+            "speed_rad_s": 1.6106798272799232,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 15,
+            "current_a_uncalibrated": 0.015
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.52034864,
+          "completion_s": 0.52067048,
+          "telemetry": {
+            "position_raw": 3398,
+            "position_rad": 5.212466717235409,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 288,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 50,
+            "current_a_uncalibrated": 0.05
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.52069152,
+          "completion_s": 0.52101858,
+          "telemetry": {
+            "position_raw": 2819,
+            "position_rad": 4.3242918410496225,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 272,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 4,
+            "current_a_uncalibrated": 0.004
+          }
+        }
+      ],
+      "command_request_s": 0.52105044,
+      "command_receipt_s": 0.52122546,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 14,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.56000036,
+          "completion_s": 0.56032952,
+          "telemetry": {
+            "position_raw": 3210,
+            "position_rad": 4.924078329112908,
+            "speed_raw": 32818,
+            "speed_rad_s": -0.07669903939428206,
+            "load_raw": 1374,
+            "voltage_raw": 113,
+            "voltage_v": 11.3,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 132,
+            "current_a_uncalibrated": 0.132
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.56035056,
+          "completion_s": 0.5606751,
+          "telemetry": {
+            "position_raw": 3400,
+            "position_rad": 5.21553467881118,
+            "speed_raw": 32918,
+            "speed_rad_s": -0.23009711818284617,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 179,
+            "current_a_uncalibrated": 0.179
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.56069614,
+          "completion_s": 0.56102724,
+          "telemetry": {
+            "position_raw": 2818,
+            "position_rad": 4.322757860261737,
+            "speed_raw": 33018,
+            "speed_rad_s": -0.38349519697141027,
+            "load_raw": 1374,
+            "voltage_raw": 113,
+            "voltage_v": 11.3,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 113,
+            "current_a_uncalibrated": 0.113
+          }
+        }
+      ],
+      "command_request_s": 0.56105236,
+      "command_receipt_s": 0.56122738,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 15,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.60000036,
+          "completion_s": 0.60033002,
+          "telemetry": {
+            "position_raw": 3176,
+            "position_rad": 4.871922982324796,
+            "speed_raw": 33668,
+            "speed_rad_s": -1.380582709097077,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 50,
+            "current_a_uncalibrated": 0.05
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.60035106,
+          "completion_s": 0.60067856,
+          "telemetry": {
+            "position_raw": 3364,
+            "position_rad": 5.160311370447297,
+            "speed_raw": 33668,
+            "speed_rad_s": -1.380582709097077,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 98,
+            "current_a_uncalibrated": 0.098
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.6006996,
+          "completion_s": 0.60102516,
+          "telemetry": {
+            "position_raw": 2784,
+            "position_rad": 4.270602513473625,
+            "speed_raw": 33668,
+            "speed_rad_s": -1.380582709097077,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 48,
+            "current_a_uncalibrated": 0.048
+          }
+        }
+      ],
+      "command_request_s": 0.60105286,
+      "command_receipt_s": 0.60122788,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -176,
+        -160,
+        -144
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 16,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.64000036,
+          "completion_s": 0.64032022,
+          "telemetry": {
+            "position_raw": 3146,
+            "position_rad": 4.8259035586882275,
+            "speed_raw": 33418,
+            "speed_rad_s": -0.9970875121256667,
+            "load_raw": 1200,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 6,
+            "current_a_uncalibrated": 0.006
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.64034126,
+          "completion_s": 0.64066858,
+          "telemetry": {
+            "position_raw": 3334,
+            "position_rad": 5.114291946810727,
+            "speed_raw": 33418,
+            "speed_rad_s": -0.9970875121256667,
+            "load_raw": 1184,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 38,
+            "current_a_uncalibrated": 0.038
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.64068962,
+          "completion_s": 0.64101312,
+          "telemetry": {
+            "position_raw": 2756,
+            "position_rad": 4.227651051412827,
+            "speed_raw": 33418,
+            "speed_rad_s": -0.9970875121256667,
+            "load_raw": 1168,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 3,
+            "current_a_uncalibrated": 0.003
+          }
+        }
+      ],
+      "command_request_s": 0.64104306,
+      "command_receipt_s": 0.64121808,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        304,
+        320,
+        304
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 17,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.68000036,
+          "completion_s": 0.68032294,
+          "telemetry": {
+            "position_raw": 3146,
+            "position_rad": 4.8259035586882275,
+            "speed_raw": 200,
+            "speed_rad_s": 0.30679615757712825,
+            "load_raw": 304,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 83,
+            "current_a_uncalibrated": 0.083
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.68034398,
+          "completion_s": 0.68067164,
+          "telemetry": {
+            "position_raw": 3340,
+            "position_rad": 5.123495831538041,
+            "speed_raw": 400,
+            "speed_rad_s": 0.6135923151542565,
+            "load_raw": 320,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 147,
+            "current_a_uncalibrated": 0.147
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.68069268,
+          "completion_s": 0.68102354,
+          "telemetry": {
+            "position_raw": 2762,
+            "position_rad": 4.236854936140141,
+            "speed_raw": 350,
+            "speed_rad_s": 0.5368932757599744,
+            "load_raw": 304,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 88,
+            "current_a_uncalibrated": 0.088
+          }
+        }
+      ],
+      "command_request_s": 0.68104578,
+      "command_receipt_s": 0.6812208,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 18,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.72000036,
+          "completion_s": 0.72032602,
+          "telemetry": {
+            "position_raw": 3179,
+            "position_rad": 4.876524924688454,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 46,
+            "current_a_uncalibrated": 0.046
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.72034706,
+          "completion_s": 0.72066844,
+          "telemetry": {
+            "position_raw": 3376,
+            "position_rad": 5.178719139901925,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 93,
+            "current_a_uncalibrated": 0.093
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.72068948,
+          "completion_s": 0.72101618,
+          "telemetry": {
+            "position_raw": 2795,
+            "position_rad": 4.287476302140367,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 45,
+            "current_a_uncalibrated": 0.045
+          }
+        }
+      ],
+      "command_request_s": 0.72104886,
+      "command_receipt_s": 0.72122388,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 19,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.76000036,
+          "completion_s": 0.76033006,
+          "telemetry": {
+            "position_raw": 3220,
+            "position_rad": 4.9394181369917645,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 25,
+            "current_a_uncalibrated": 0.025
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.7603511,
+          "completion_s": 0.7606741,
+          "telemetry": {
+            "position_raw": 3415,
+            "position_rad": 5.238544390629465,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 74,
+            "current_a_uncalibrated": 0.074
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.76069514,
+          "completion_s": 0.76102586,
+          "telemetry": {
+            "position_raw": 2835,
+            "position_rad": 4.348835533655793,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 28,
+            "current_a_uncalibrated": 0.028
+          }
+        }
+      ],
+      "command_request_s": 0.7610529,
+      "command_receipt_s": 0.76122792,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -112,
+        -208,
+        -192
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 20,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.80000036,
+          "completion_s": 0.80032952,
+          "telemetry": {
+            "position_raw": 3235,
+            "position_rad": 4.962427848810049,
+            "speed_raw": 50,
+            "speed_rad_s": 0.07669903939428206,
+            "load_raw": 1136,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 12,
+            "current_a_uncalibrated": 0.012
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.80035056,
+          "completion_s": 0.8006768,
+          "telemetry": {
+            "position_raw": 3427,
+            "position_rad": 5.256952160084093,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 1232,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 116,
+            "current_a_uncalibrated": 0.116
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.80069784,
+          "completion_s": 0.80102292,
+          "telemetry": {
+            "position_raw": 2844,
+            "position_rad": 4.362641360746763,
+            "speed_raw": 50,
+            "speed_rad_s": 0.07669903939428206,
+            "load_raw": 1216,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 55,
+            "current_a_uncalibrated": 0.055
+          }
+        }
+      ],
+      "command_request_s": 0.80105236,
+      "command_receipt_s": 0.80122738,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -336
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 21,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.84000036,
+          "completion_s": 0.84032974,
+          "telemetry": {
+            "position_raw": 3216,
+            "position_rad": 4.933282213840222,
+            "speed_raw": 33418,
+            "speed_rad_s": -0.9970875121256667,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 76,
+            "current_a_uncalibrated": 0.076
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.84035078,
+          "completion_s": 0.84067806,
+          "telemetry": {
+            "position_raw": 3400,
+            "position_rad": 5.21553467881118,
+            "speed_raw": 33568,
+            "speed_rad_s": -1.227184630308513,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 111,
+            "current_a_uncalibrated": 0.111
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.8406991,
+          "completion_s": 0.84102652,
+          "telemetry": {
+            "position_raw": 2818,
+            "position_rad": 4.322757860261737,
+            "speed_raw": 33568,
+            "speed_rad_s": -1.227184630308513,
+            "load_raw": 1360,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 59,
+            "current_a_uncalibrated": 0.059000000000000004
+          }
+        }
+      ],
+      "command_request_s": 0.84105258,
+      "command_receipt_s": 0.8412276,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 22,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.88000036,
+          "completion_s": 0.88032236,
+          "telemetry": {
+            "position_raw": 3179,
+            "position_rad": 4.876524924688454,
+            "speed_raw": 33668,
+            "speed_rad_s": -1.380582709097077,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 32,
+            "current_a_uncalibrated": 0.032
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.8803434,
+          "completion_s": 0.8806704,
+          "telemetry": {
+            "position_raw": 3360,
+            "position_rad": 5.154175447295755,
+            "speed_raw": 33818,
+            "speed_rad_s": -1.6106798272799232,
+            "load_raw": 1374,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 80,
+            "current_a_uncalibrated": 0.08
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.88069144,
+          "completion_s": 0.88102178,
+          "telemetry": {
+            "position_raw": 2782,
+            "position_rad": 4.267534551897854,
+            "speed_raw": 33668,
+            "speed_rad_s": -1.380582709097077,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 34,
+            "current_a_uncalibrated": 0.034
+          }
+        }
+      ],
+      "command_request_s": 0.8810452,
+      "command_receipt_s": 0.88122022,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 23,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.92000036,
+          "completion_s": 0.92032522,
+          "telemetry": {
+            "position_raw": 3139,
+            "position_rad": 4.815165693173028,
+            "speed_raw": 33768,
+            "speed_rad_s": -1.533980787885641,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 16,
+            "current_a_uncalibrated": 0.016
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.92034626,
+          "completion_s": 0.92066404,
+          "telemetry": {
+            "position_raw": 3318,
+            "position_rad": 5.089748254204557,
+            "speed_raw": 33768,
+            "speed_rad_s": -1.533980787885641,
+            "load_raw": 1374,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 76,
+            "current_a_uncalibrated": 0.076
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.92068508,
+          "completion_s": 0.92101644,
+          "telemetry": {
+            "position_raw": 2740,
+            "position_rad": 4.2031073588066565,
+            "speed_raw": 33818,
+            "speed_rad_s": -1.6106798272799232,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 23,
+            "current_a_uncalibrated": 0.023
+          }
+        }
+      ],
+      "command_request_s": 0.92104806,
+      "command_receipt_s": 0.92122308,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -192,
+        -208
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 24,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 0.96000036,
+          "completion_s": 0.96032992,
+          "telemetry": {
+            "position_raw": 3097,
+            "position_rad": 4.75073850008183,
+            "speed_raw": 33868,
+            "speed_rad_s": -1.6873788666742053,
+            "load_raw": 1374,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 14,
+            "current_a_uncalibrated": 0.014
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 0.96035096,
+          "completion_s": 0.96067352,
+          "telemetry": {
+            "position_raw": 3287,
+            "position_rad": 5.042194849780103,
+            "speed_raw": 33518,
+            "speed_rad_s": -1.1504855909142309,
+            "load_raw": 1216,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 39,
+            "current_a_uncalibrated": 0.039
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 0.96069456,
+          "completion_s": 0.96102478,
+          "telemetry": {
+            "position_raw": 2708,
+            "position_rad": 4.154019973594316,
+            "speed_raw": 33468,
+            "speed_rad_s": -1.0737865515199487,
+            "load_raw": 1232,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 3,
+            "current_a_uncalibrated": 0.003
+          }
+        }
+      ],
+      "command_request_s": 0.96105276,
+      "command_receipt_s": 0.96122778,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -64,
+        -80,
+        -80
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 25,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.00000036,
+          "completion_s": 1.00032974,
+          "telemetry": {
+            "position_raw": 3070,
+            "position_rad": 4.709321018808918,
+            "speed_raw": 33218,
+            "speed_rad_s": -0.6902913545485385,
+            "load_raw": 1088,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 2,
+            "current_a_uncalibrated": 0.002
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.00035078,
+          "completion_s": 1.00067456,
+          "telemetry": {
+            "position_raw": 3270,
+            "position_rad": 5.016117176386047,
+            "speed_raw": 33118,
+            "speed_rad_s": -0.5368932757599744,
+            "load_raw": 1104,
+            "voltage_raw": 119,
+            "voltage_v": 11.9,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 36,
+            "current_a_uncalibrated": 0.036000000000000004
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.0006956,
+          "completion_s": 1.00101734,
+          "telemetry": {
+            "position_raw": 2690,
+            "position_rad": 4.126408319412374,
+            "speed_raw": 33118,
+            "speed_rad_s": -0.5368932757599744,
+            "load_raw": 1104,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 0,
+            "current_a_uncalibrated": 0.0
+          }
+        }
+      ],
+      "command_request_s": 1.00105258,
+      "command_receipt_s": 1.0012276,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 26,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.04000036,
+          "completion_s": 1.0403298,
+          "telemetry": {
+            "position_raw": 3079,
+            "position_rad": 4.723126845899889,
+            "speed_raw": 550,
+            "speed_rad_s": 0.8436894333371027,
+            "load_raw": 350,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 89,
+            "current_a_uncalibrated": 0.089
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.04035084,
+          "completion_s": 1.04067802,
+          "telemetry": {
+            "position_raw": 3281,
+            "position_rad": 5.032990965052789,
+            "speed_raw": 600,
+            "speed_rad_s": 0.9203884727313847,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 150,
+            "current_a_uncalibrated": 0.15
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.04069906,
+          "completion_s": 1.04102514,
+          "telemetry": {
+            "position_raw": 2705,
+            "position_rad": 4.14941803123066,
+            "speed_raw": 550,
+            "speed_rad_s": 0.8436894333371027,
+            "load_raw": 350,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 77,
+            "current_a_uncalibrated": 0.077
+          }
+        }
+      ],
+      "command_request_s": 1.04105264,
+      "command_receipt_s": 1.04122766,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 27,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.08000036,
+          "completion_s": 1.08032204,
+          "telemetry": {
+            "position_raw": 3116,
+            "position_rad": 4.779884135051658,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 40,
+            "current_a_uncalibrated": 0.04
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.08034308,
+          "completion_s": 1.08067038,
+          "telemetry": {
+            "position_raw": 3318,
+            "position_rad": 5.089748254204557,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 95,
+            "current_a_uncalibrated": 0.095
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.08069142,
+          "completion_s": 1.08101942,
+          "telemetry": {
+            "position_raw": 2740,
+            "position_rad": 4.2031073588066565,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 41,
+            "current_a_uncalibrated": 0.041
+          }
+        }
+      ],
+      "command_request_s": 1.08104488,
+      "command_receipt_s": 1.0812199,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 28,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.12000036,
+          "completion_s": 1.12032358,
+          "telemetry": {
+            "position_raw": 3156,
+            "position_rad": 4.841243366567084,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 20,
+            "current_a_uncalibrated": 0.02
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.12034462,
+          "completion_s": 1.12067134,
+          "telemetry": {
+            "position_raw": 3359,
+            "position_rad": 5.152641466507869,
+            "speed_raw": 1050,
+            "speed_rad_s": 1.6106798272799232,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 77,
+            "current_a_uncalibrated": 0.077
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.12069238,
+          "completion_s": 1.12102284,
+          "telemetry": {
+            "position_raw": 2780,
+            "position_rad": 4.264466590322082,
+            "speed_raw": 1100,
+            "speed_rad_s": 1.6873788666742053,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 26,
+            "current_a_uncalibrated": 0.026000000000000002
+          }
+        }
+      ],
+      "command_request_s": 1.12104642,
+      "command_receipt_s": 1.12122144,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        304,
+        304
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 29,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.16000036,
+          "completion_s": 1.16032744,
+          "telemetry": {
+            "position_raw": 3198,
+            "position_rad": 4.90567055965828,
+            "speed_raw": 1100,
+            "speed_rad_s": 1.6873788666742053,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 13,
+            "current_a_uncalibrated": 0.013000000000000001
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.16034848,
+          "completion_s": 1.16067,
+          "telemetry": {
+            "position_raw": 3398,
+            "position_rad": 5.212466717235409,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 304,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 55,
+            "current_a_uncalibrated": 0.055
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.16069104,
+          "completion_s": 1.16102156,
+          "telemetry": {
+            "position_raw": 2819,
+            "position_rad": 4.3242918410496225,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 304,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 12,
+            "current_a_uncalibrated": 0.012
+          }
+        }
+      ],
+      "command_request_s": 1.16105028,
+      "command_receipt_s": 1.1612253,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 30,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.20000036,
+          "completion_s": 1.20033024,
+          "telemetry": {
+            "position_raw": 3208,
+            "position_rad": 4.921010367537137,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 1374,
+            "voltage_raw": 113,
+            "voltage_v": 11.3,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 153,
+            "current_a_uncalibrated": 0.153
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.20035128,
+          "completion_s": 1.20067582,
+          "telemetry": {
+            "position_raw": 3401,
+            "position_rad": 5.217068659599065,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 185,
+            "current_a_uncalibrated": 0.185
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.20069686,
+          "completion_s": 1.20102794,
+          "telemetry": {
+            "position_raw": 2819,
+            "position_rad": 4.3242918410496225,
+            "speed_raw": 33268,
+            "speed_rad_s": -0.7669903939428205,
+            "load_raw": 1374,
+            "voltage_raw": 113,
+            "voltage_v": 11.3,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 153,
+            "current_a_uncalibrated": 0.153
+          }
+        }
+      ],
+      "command_request_s": 1.20105308,
+      "command_receipt_s": 1.2012281,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 31,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.24000036,
+          "completion_s": 1.24032978,
+          "telemetry": {
+            "position_raw": 3175,
+            "position_rad": 4.8703890015369105,
+            "speed_raw": 33668,
+            "speed_rad_s": -1.380582709097077,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 54,
+            "current_a_uncalibrated": 0.054
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.24035082,
+          "completion_s": 1.24067766,
+          "telemetry": {
+            "position_raw": 3366,
+            "position_rad": 5.1633793320230685,
+            "speed_raw": 33668,
+            "speed_rad_s": -1.380582709097077,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 108,
+            "current_a_uncalibrated": 0.108
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.2406987,
+          "completion_s": 1.24102496,
+          "telemetry": {
+            "position_raw": 2784,
+            "position_rad": 4.270602513473625,
+            "speed_raw": 33668,
+            "speed_rad_s": -1.380582709097077,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 36,
+            "current_a_uncalibrated": 0.036000000000000004
+          }
+        }
+      ],
+      "command_request_s": 1.24105262,
+      "command_receipt_s": 1.24122764,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -160,
+        -192,
+        -144
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 32,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.28000036,
+          "completion_s": 1.2803205,
+          "telemetry": {
+            "position_raw": 3145,
+            "position_rad": 4.824369577900342,
+            "speed_raw": 33418,
+            "speed_rad_s": -0.9970875121256667,
+            "load_raw": 1184,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 3,
+            "current_a_uncalibrated": 0.003
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.28034154,
+          "completion_s": 1.28066844,
+          "telemetry": {
+            "position_raw": 3334,
+            "position_rad": 5.114291946810727,
+            "speed_raw": 33518,
+            "speed_rad_s": -1.1504855909142309,
+            "load_raw": 1216,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 41,
+            "current_a_uncalibrated": 0.041
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.28068948,
+          "completion_s": 1.28101712,
+          "telemetry": {
+            "position_raw": 2756,
+            "position_rad": 4.227651051412827,
+            "speed_raw": 33368,
+            "speed_rad_s": -0.9203884727313847,
+            "load_raw": 1168,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 5,
+            "current_a_uncalibrated": 0.005
+          }
+        }
+      ],
+      "command_request_s": 1.28104334,
+      "command_receipt_s": 1.28121836,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        320,
+        320,
+        304
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 33,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.32000036,
+          "completion_s": 1.32032308,
+          "telemetry": {
+            "position_raw": 3147,
+            "position_rad": 4.827437539476112,
+            "speed_raw": 0,
+            "speed_rad_s": 0.0,
+            "load_raw": 320,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 81,
+            "current_a_uncalibrated": 0.081
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.32034412,
+          "completion_s": 1.32067136,
+          "telemetry": {
+            "position_raw": 3337,
+            "position_rad": 5.118893889174385,
+            "speed_raw": 150,
+            "speed_rad_s": 0.23009711818284617,
+            "load_raw": 320,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 152,
+            "current_a_uncalibrated": 0.152
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.3206924,
+          "completion_s": 1.3210229,
+          "telemetry": {
+            "position_raw": 2762,
+            "position_rad": 4.236854936140141,
+            "speed_raw": 450,
+            "speed_rad_s": 0.6902913545485385,
+            "load_raw": 304,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 99,
+            "current_a_uncalibrated": 0.099
+          }
+        }
+      ],
+      "command_request_s": 1.32104592,
+      "command_receipt_s": 1.32122094,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 34,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.36000036,
+          "completion_s": 1.36032526,
+          "telemetry": {
+            "position_raw": 3181,
+            "position_rad": 4.879592886264224,
+            "speed_raw": 950,
+            "speed_rad_s": 1.4572817484913592,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 46,
+            "current_a_uncalibrated": 0.046
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.3603463,
+          "completion_s": 1.3606667,
+          "telemetry": {
+            "position_raw": 3372,
+            "position_rad": 5.1725832167503825,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 100,
+            "current_a_uncalibrated": 0.1
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.36068774,
+          "completion_s": 1.36101826,
+          "telemetry": {
+            "position_raw": 2795,
+            "position_rad": 4.287476302140367,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 45,
+            "current_a_uncalibrated": 0.045
+          }
+        }
+      ],
+      "command_request_s": 1.3610481,
+      "command_receipt_s": 1.36122312,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 35,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.40000036,
+          "completion_s": 1.40032966,
+          "telemetry": {
+            "position_raw": 3221,
+            "position_rad": 4.94095211777965,
+            "speed_raw": 1100,
+            "speed_rad_s": 1.6873788666742053,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 22,
+            "current_a_uncalibrated": 0.022
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.4003507,
+          "completion_s": 1.40067346,
+          "telemetry": {
+            "position_raw": 3412,
+            "position_rad": 5.2339424482658075,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 72,
+            "current_a_uncalibrated": 0.07200000000000001
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.4006945,
+          "completion_s": 1.40102588,
+          "telemetry": {
+            "position_raw": 2836,
+            "position_rad": 4.3503695144436785,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 20,
+            "current_a_uncalibrated": 0.02
+          }
+        }
+      ],
+      "command_request_s": 1.4010525,
+      "command_receipt_s": 1.40122752,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -128,
+        -160,
+        -208
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 36,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.44000036,
+          "completion_s": 1.44032944,
+          "telemetry": {
+            "position_raw": 3236,
+            "position_rad": 4.963961829597935,
+            "speed_raw": 100,
+            "speed_rad_s": 0.15339807878856412,
+            "load_raw": 1152,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 22,
+            "current_a_uncalibrated": 0.022
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.44035048,
+          "completion_s": 1.44067688,
+          "telemetry": {
+            "position_raw": 3425,
+            "position_rad": 5.253884198508321,
+            "speed_raw": 150,
+            "speed_rad_s": 0.23009711818284617,
+            "load_raw": 1184,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 95,
+            "current_a_uncalibrated": 0.095
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.44069792,
+          "completion_s": 1.441023,
+          "telemetry": {
+            "position_raw": 2846,
+            "position_rad": 4.365709322322535,
+            "speed_raw": 32918,
+            "speed_rad_s": -0.23009711818284617,
+            "load_raw": 1232,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 71,
+            "current_a_uncalibrated": 0.07100000000000001
+          }
+        }
+      ],
+      "command_request_s": 1.44105228,
+      "command_receipt_s": 1.4412273,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 37,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.48000036,
+          "completion_s": 1.48032966,
+          "telemetry": {
+            "position_raw": 3216,
+            "position_rad": 4.933282213840222,
+            "speed_raw": 33518,
+            "speed_rad_s": -1.1504855909142309,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 89,
+            "current_a_uncalibrated": 0.089
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.4803507,
+          "completion_s": 1.48067734,
+          "telemetry": {
+            "position_raw": 3402,
+            "position_rad": 5.218602640386951,
+            "speed_raw": 33618,
+            "speed_rad_s": -1.303883669702795,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 128,
+            "current_a_uncalibrated": 0.128
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.48069838,
+          "completion_s": 1.48102466,
+          "telemetry": {
+            "position_raw": 2818,
+            "position_rad": 4.322757860261737,
+            "speed_raw": 33568,
+            "speed_rad_s": -1.227184630308513,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 55,
+            "current_a_uncalibrated": 0.055
+          }
+        }
+      ],
+      "command_request_s": 1.4810525,
+      "command_receipt_s": 1.48122752,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 38,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.52000036,
+          "completion_s": 1.52032272,
+          "telemetry": {
+            "position_raw": 3178,
+            "position_rad": 4.874990943900568,
+            "speed_raw": 33768,
+            "speed_rad_s": -1.533980787885641,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 31,
+            "current_a_uncalibrated": 0.031
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.52034376,
+          "completion_s": 1.52067096,
+          "telemetry": {
+            "position_raw": 3362,
+            "position_rad": 5.157243408871525,
+            "speed_raw": 33768,
+            "speed_rad_s": -1.533980787885641,
+            "load_raw": 1374,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 77,
+            "current_a_uncalibrated": 0.077
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.520692,
+          "completion_s": 1.52102254,
+          "telemetry": {
+            "position_raw": 2779,
+            "position_rad": 4.262932609534197,
+            "speed_raw": 33768,
+            "speed_rad_s": -1.533980787885641,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 26,
+            "current_a_uncalibrated": 0.026000000000000002
+          }
+        }
+      ],
+      "command_request_s": 1.52104556,
+      "command_receipt_s": 1.52122058,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 39,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.56000036,
+          "completion_s": 1.5603245,
+          "telemetry": {
+            "position_raw": 3138,
+            "position_rad": 4.813631712385142,
+            "speed_raw": 33868,
+            "speed_rad_s": -1.6873788666742053,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 22,
+            "current_a_uncalibrated": 0.022
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.56034554,
+          "completion_s": 1.56066324,
+          "telemetry": {
+            "position_raw": 3321,
+            "position_rad": 5.0943501965682145,
+            "speed_raw": 33818,
+            "speed_rad_s": -1.6106798272799232,
+            "load_raw": 1374,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 75,
+            "current_a_uncalibrated": 0.075
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.56068428,
+          "completion_s": 1.56101494,
+          "telemetry": {
+            "position_raw": 2737,
+            "position_rad": 4.198505416443,
+            "speed_raw": 33818,
+            "speed_rad_s": -1.6106798272799232,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 15,
+            "current_a_uncalibrated": 0.015
+          }
+        }
+      ],
+      "command_request_s": 1.56104734,
+      "command_receipt_s": 1.56122236,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -336,
+        -240,
+        -160
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 40,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.60000036,
+          "completion_s": 1.60033008,
+          "telemetry": {
+            "position_raw": 3098,
+            "position_rad": 4.752272480869716,
+            "speed_raw": 33868,
+            "speed_rad_s": -1.6873788666742053,
+            "load_raw": 1360,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 19,
+            "current_a_uncalibrated": 0.019
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.60035112,
+          "completion_s": 1.60067336,
+          "telemetry": {
+            "position_raw": 3285,
+            "position_rad": 5.039126888204331,
+            "speed_raw": 33568,
+            "speed_rad_s": -1.227184630308513,
+            "load_raw": 1264,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 43,
+            "current_a_uncalibrated": 0.043000000000000003
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.6006944,
+          "completion_s": 1.601026,
+          "telemetry": {
+            "position_raw": 2706,
+            "position_rad": 4.150952012018545,
+            "speed_raw": 33418,
+            "speed_rad_s": -0.9970875121256667,
+            "load_raw": 1184,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 1,
+            "current_a_uncalibrated": 0.001
+          }
+        }
+      ],
+      "command_request_s": 1.60105292,
+      "command_receipt_s": 1.60122794,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -80,
+        -48,
+        -48
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 41,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.64000036,
+          "completion_s": 1.64032942,
+          "telemetry": {
+            "position_raw": 3072,
+            "position_rad": 4.71238898038469,
+            "speed_raw": 33218,
+            "speed_rad_s": -0.6902913545485385,
+            "load_raw": 1104,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 1,
+            "current_a_uncalibrated": 0.001
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.64035046,
+          "completion_s": 1.64067512,
+          "telemetry": {
+            "position_raw": 3269,
+            "position_rad": 5.014583195598161,
+            "speed_raw": 33118,
+            "speed_rad_s": -0.5368932757599744,
+            "load_raw": 1072,
+            "voltage_raw": 119,
+            "voltage_v": 11.9,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 35,
+            "current_a_uncalibrated": 0.035
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.64069616,
+          "completion_s": 1.6410184,
+          "telemetry": {
+            "position_raw": 2692,
+            "position_rad": 4.129476280988146,
+            "speed_raw": 33068,
+            "speed_rad_s": -0.46019423636569234,
+            "load_raw": 1072,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 0,
+            "current_a_uncalibrated": 0.0
+          }
+        }
+      ],
+      "command_request_s": 1.64105226,
+      "command_receipt_s": 1.64122728,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 42,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.68000036,
+          "completion_s": 1.68032964,
+          "telemetry": {
+            "position_raw": 3081,
+            "position_rad": 4.72619480747566,
+            "speed_raw": 300,
+            "speed_rad_s": 0.46019423636569234,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 92,
+            "current_a_uncalibrated": 0.092
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.68035068,
+          "completion_s": 1.6806778,
+          "telemetry": {
+            "position_raw": 3282,
+            "position_rad": 5.0345249458406744,
+            "speed_raw": 500,
+            "speed_rad_s": 0.7669903939428205,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 134,
+            "current_a_uncalibrated": 0.134
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.68069884,
+          "completion_s": 1.6810213,
+          "telemetry": {
+            "position_raw": 2708,
+            "position_rad": 4.154019973594316,
+            "speed_raw": 700,
+            "speed_rad_s": 1.0737865515199487,
+            "load_raw": 350,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 90,
+            "current_a_uncalibrated": 0.09
+          }
+        }
+      ],
+      "command_request_s": 1.68105248,
+      "command_receipt_s": 1.6812275,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        304
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 43,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.72000036,
+          "completion_s": 1.72032112,
+          "telemetry": {
+            "position_raw": 3117,
+            "position_rad": 4.781418115839544,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 47,
+            "current_a_uncalibrated": 0.047
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.72034216,
+          "completion_s": 1.72066836,
+          "telemetry": {
+            "position_raw": 3319,
+            "position_rad": 5.091282234992443,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 84,
+            "current_a_uncalibrated": 0.084
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.7206894,
+          "completion_s": 1.72101806,
+          "telemetry": {
+            "position_raw": 2742,
+            "position_rad": 4.206175320382428,
+            "speed_raw": 850,
+            "speed_rad_s": 1.303883669702795,
+            "load_raw": 304,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 21,
+            "current_a_uncalibrated": 0.021
+          }
+        }
+      ],
+      "command_request_s": 1.72104396,
+      "command_receipt_s": 1.72121898,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        350,
+        350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 44,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.76000036,
+          "completion_s": 1.76032342,
+          "telemetry": {
+            "position_raw": 3157,
+            "position_rad": 4.84277734735497,
+            "speed_raw": 1000,
+            "speed_rad_s": 1.533980787885641,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 21,
+            "current_a_uncalibrated": 0.021
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.76034446,
+          "completion_s": 1.76067172,
+          "telemetry": {
+            "position_raw": 3361,
+            "position_rad": 5.15570942808364,
+            "speed_raw": 1100,
+            "speed_rad_s": 1.6873788666742053,
+            "load_raw": 350,
+            "voltage_raw": 117,
+            "voltage_v": 11.700000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 69,
+            "current_a_uncalibrated": 0.069
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.76069276,
+          "completion_s": 1.7610228,
+          "telemetry": {
+            "position_raw": 2779,
+            "position_rad": 4.262932609534197,
+            "speed_raw": 950,
+            "speed_rad_s": 1.4572817484913592,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 23,
+            "current_a_uncalibrated": 0.023
+          }
+        }
+      ],
+      "command_request_s": 1.76104626,
+      "command_receipt_s": 1.76122128,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        350,
+        272,
+        320
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 45,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.80000036,
+          "completion_s": 1.80032772,
+          "telemetry": {
+            "position_raw": 3198,
+            "position_rad": 4.90567055965828,
+            "speed_raw": 1100,
+            "speed_rad_s": 1.6873788666742053,
+            "load_raw": 350,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 26,
+            "current_a_uncalibrated": 0.026000000000000002
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.80034876,
+          "completion_s": 1.80067022,
+          "telemetry": {
+            "position_raw": 3398,
+            "position_rad": 5.212466717235409,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 272,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 48,
+            "current_a_uncalibrated": 0.048
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.80069126,
+          "completion_s": 1.8010209,
+          "telemetry": {
+            "position_raw": 2819,
+            "position_rad": 4.3242918410496225,
+            "speed_raw": 900,
+            "speed_rad_s": 1.380582709097077,
+            "load_raw": 320,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 12,
+            "current_a_uncalibrated": 0.012
+          }
+        }
+      ],
+      "command_request_s": 1.80105056,
+      "command_receipt_s": 1.80122558,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 46,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.84000036,
+          "completion_s": 1.84033002,
+          "telemetry": {
+            "position_raw": 3206,
+            "position_rad": 4.917942405961366,
+            "speed_raw": 32968,
+            "speed_rad_s": -0.30679615757712825,
+            "load_raw": 1374,
+            "voltage_raw": 113,
+            "voltage_v": 11.3,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 168,
+            "current_a_uncalibrated": 0.168
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.84035106,
+          "completion_s": 1.84067448,
+          "telemetry": {
+            "position_raw": 3400,
+            "position_rad": 5.21553467881118,
+            "speed_raw": 33118,
+            "speed_rad_s": -0.5368932757599744,
+            "load_raw": 1374,
+            "voltage_raw": 115,
+            "voltage_v": 11.5,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 209,
+            "current_a_uncalibrated": 0.209
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.84069552,
+          "completion_s": 1.8410229,
+          "telemetry": {
+            "position_raw": 2820,
+            "position_rad": 4.325825821837508,
+            "speed_raw": 33068,
+            "speed_rad_s": -0.46019423636569234,
+            "load_raw": 1374,
+            "voltage_raw": 113,
+            "voltage_v": 11.3,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 134,
+            "current_a_uncalibrated": 0.134
+          }
+        }
+      ],
+      "command_request_s": 1.84105286,
+      "command_receipt_s": 1.84122788,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -350,
+        -350,
+        -350
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 47,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.88000036,
+          "completion_s": 1.8803304,
+          "telemetry": {
+            "position_raw": 3173,
+            "position_rad": 4.86732103996114,
+            "speed_raw": 33618,
+            "speed_rad_s": -1.303883669702795,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 45,
+            "current_a_uncalibrated": 0.045
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.88035144,
+          "completion_s": 1.8806781,
+          "telemetry": {
+            "position_raw": 3364,
+            "position_rad": 5.160311370447297,
+            "speed_raw": 33718,
+            "speed_rad_s": -1.4572817484913592,
+            "load_raw": 1374,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 91,
+            "current_a_uncalibrated": 0.091
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.88069914,
+          "completion_s": 1.88102108,
+          "telemetry": {
+            "position_raw": 2786,
+            "position_rad": 4.273670475049396,
+            "speed_raw": 33718,
+            "speed_rad_s": -1.4572817484913592,
+            "load_raw": 1374,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 42,
+            "current_a_uncalibrated": 0.042
+          }
+        }
+      ],
+      "command_request_s": 1.88105324,
+      "command_receipt_s": 1.88122826,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -128,
+        -160,
+        -176
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 48,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.92000036,
+          "completion_s": 1.9203201,
+          "telemetry": {
+            "position_raw": 3145,
+            "position_rad": 4.824369577900342,
+            "speed_raw": 33368,
+            "speed_rad_s": -0.9203884727313847,
+            "load_raw": 1152,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 6,
+            "current_a_uncalibrated": 0.006
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.92034114,
+          "completion_s": 1.92066874,
+          "telemetry": {
+            "position_raw": 3334,
+            "position_rad": 5.114291946810727,
+            "speed_raw": 33518,
+            "speed_rad_s": -1.1504855909142309,
+            "load_raw": 1184,
+            "voltage_raw": 118,
+            "voltage_v": 11.8,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 40,
+            "current_a_uncalibrated": 0.04
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.92068978,
+          "completion_s": 1.92101628,
+          "telemetry": {
+            "position_raw": 2755,
+            "position_rad": 4.226117070624942,
+            "speed_raw": 33418,
+            "speed_rad_s": -0.9970875121256667,
+            "load_raw": 1200,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 5,
+            "current_a_uncalibrated": 0.005
+          }
+        }
+      ],
+      "command_request_s": 1.92104294,
+      "command_receipt_s": 1.92121796,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        320,
+        320,
+        320
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    },
+    {
+      "tick": 49,
+      "observations": [
+        {
+          "id": 10,
+          "request_s": 1.96000036,
+          "completion_s": 1.9603234,
+          "telemetry": {
+            "position_raw": 3148,
+            "position_rad": 4.828971520263998,
+            "speed_raw": 450,
+            "speed_rad_s": 0.6902913545485385,
+            "load_raw": 320,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 50,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 104,
+            "current_a_uncalibrated": 0.10400000000000001
+          }
+        },
+        {
+          "id": 11,
+          "request_s": 1.96034444,
+          "completion_s": 1.9606713,
+          "telemetry": {
+            "position_raw": 3339,
+            "position_rad": 5.121961850750156,
+            "speed_raw": 500,
+            "speed_rad_s": 0.7669903939428205,
+            "load_raw": 320,
+            "voltage_raw": 116,
+            "voltage_v": 11.600000000000001,
+            "temperature_c": 48,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 159,
+            "current_a_uncalibrated": 0.159
+          }
+        },
+        {
+          "id": 12,
+          "request_s": 1.96069234,
+          "completion_s": 1.96101934,
+          "telemetry": {
+            "position_raw": 2760,
+            "position_rad": 4.23378697456437,
+            "speed_raw": 450,
+            "speed_rad_s": 0.6902913545485385,
+            "load_raw": 320,
+            "voltage_raw": 114,
+            "voltage_v": 11.4,
+            "temperature_c": 47,
+            "status": 0,
+            "moving": 1,
+            "current_raw": 99,
+            "current_a_uncalibrated": 0.099
+          }
+        }
+      ],
+      "command_request_s": 1.96104624,
+      "command_receipt_s": 1.96122126,
+      "pwm_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        272,
+        240,
+        240
+      ],
+      "torque_readback": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "arithmetic_matches": true
+    }
+  ],
+  "completed": true,
+  "failure": null,
+  "stop_verified": true,
+  "stop_request_s": 2.0,
+  "stop_receipt_s": 2.00216074,
+  "transactions_origin_host_s": 0.516967508,
+  "sources": {
+    "bitstream": "6d1652028e9331b08e71d98dcac425aeb80c10ca2ffebcedbe186555e608933f",
+    "controller_ir": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+    "device_capture": "6935420fd63f966e645c7ac1569798fac59eac838a97dac84d01d0fb801eb0a4",
+    "host": "dd8db0666220b0a5737bee02297d415124f863eb0a845548062225e6a94b1255"
+  },
+  "initial": {
+    "clock_hz": 50000000,
+    "physical_preflight": {
+      "10": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 4.855049193658054,
+        "position_raw": 3165,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 50,
+        "voltage_raw": 119,
+        "voltage_v": 11.9
+      },
+      "11": {
+        "current_a_uncalibrated": 0.022,
+        "current_raw": 22,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 5.144971562568441,
+        "position_raw": 3354,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 48,
+        "voltage_raw": 120,
+        "voltage_v": 12.0
+      },
+      "12": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 4.256796686382654,
+        "position_raw": 2775,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 47,
+        "voltage_raw": 118,
+        "voltage_v": 11.8
+      }
+    },
+    "physical_scope_ids": [
+      10,
+      11,
+      12
+    ],
+    "run_id": 3158719999,
+    "timing": "Device-clock UART transaction windows; not internal sensor timestamps"
+  },
+  "recovery": {
+    "10": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 4.947088040931193,
+            "position_raw": 3225,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 50,
+            "voltage_raw": 119,
+            "voltage_v": 11.9
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "11": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.021,
+            "current_raw": 21,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 5.2339424482658075,
+            "position_raw": 3412,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 48,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "12": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 4.348835533655793,
+            "position_raw": 2835,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 47,
+            "voltage_raw": 119,
+            "voltage_v": 11.9
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    }
+  }
+}

@@ -1,0 +1,139 @@
+Info: Using uarch 'gowin' for device 'GW5A-LV25MG121NC1/I0'
+
+Info: Reading constraints...
+Info: Create constant nets...
+Info: Modify LUTs...
+Info: Pack IOBs...
+Info: Pack I3C IOs...
+Info: Pack MIPI IOs...
+Info: Pack diff IOBs...
+Info: Pack FFs into IO cells...
+Info: Pack IODELAY...
+Info: Pack Input Edge Monitors...
+Info: Pack IO logic...
+Info: Pack DESER16 logic...
+Info: Pack GSR...
+Info: Pack PINCFG...
+Info: Pack HCLK cells...
+Info: Pack DLLDLYs...
+Info: Pack wide LUTs...
+Info: Packed MUX2_LUT8:0, MUX2_LU7:0, MUX2_LUT6:0, MUX2_LUT5:0
+Info: Pack ALUs...
+Info: Pack SSRAMs...
+Info: Constrained 5954 LUTFF pairs.
+Info: Pack PLL...
+Info: Pack ADC...
+Info: Pack BSRAMs...
+Info: Pack DSP...
+Info: Pack INV...
+Info: Pack buffered nets...
+Info: Pack EMCU and UserFlash cells...
+Info: Pack UserFlash cells...
+Info: Pack DQCE cells...
+Info: Pack DCS cells...
+Info: Checksum: 0x27b20641
+
+Info: Device utilisation:
+Info: 	                 VCC:       1/      1   100%
+Info: 	                 IOB:       7/    240     2%
+Info: 	                LUT4:   19058/  23040    82%
+Info: 	            IOLOGICI:       0/    230     0%
+Info: 	            IOLOGICO:       0/    230     0%
+Info: 	           MUX2_LUT5:       0/  11520     0%
+Info: 	           MUX2_LUT6:       0/   5760     0%
+Info: 	           MUX2_LUT7:       0/   2880     0%
+Info: 	           MUX2_LUT8:       0/   2880     0%
+Info: 	                 ALU:       0/  17280     0%
+Info: 	                 GND:       1/      1   100%
+Info: 	                 DFF:    9734/  23040    42%
+Info: 	               BSRAM:       5/     56     8%
+Info: 	           MULT12X12:       0/     56     0%
+Info: 	        MULTALU27X18:       0/     28     0%
+Info: 	     MULTADDALU12X12:       0/     28     0%
+Info: 	                 GSR:       1/      1   100%
+Info: 	              PINCFG:       1/      1   100%
+Info: 	                OSCA:       0/      1     0%
+Info: 	                PLLA:       0/      6     0%
+Info: 	                 ADC:       0/      1     0%
+Info: 	                BUFG:       0/     18     0%
+Info: 	                 DCS:       0/      8     0%
+Info: 	              CLKDIV:       0/     16     0%
+Info: 	             CLKDIV2:       0/     16     0%
+
+Reserved global-reset-shared DFF sites; constrained 9734 ordinary registers
+Info: Running custom HCLK placer...
+Info: Placed 0 cells based on constraints.
+Info: Creating initial analytic placement for 22843 cells, random placement wirelen = 1304686.
+Info:     at initial placer iter 0, wirelen = 2478
+Info:     at initial placer iter 1, wirelen = 785
+Info:     at initial placer iter 2, wirelen = 714
+Info:     at initial placer iter 3, wirelen = 721
+Info: Running main analytical placer, max placement attempts per cell = 103744810.
+Info:     at iteration #1, type ALL: wirelen solved = 709, spread = 329568, legal = 803061; time = 57.88s
+Info:     at iteration #2, type ALL: wirelen solved = 26157, spread = 235067, legal = 782983; time = 60.17s
+Info:     at iteration #3, type ALL: wirelen solved = 47329, spread = 181711, legal = 769399; time = 74.85s
+Info:     at iteration #4, type ALL: wirelen solved = 60842, spread = 159640, legal = 650228; time = 64.84s
+Info:     at iteration #5, type ALL: wirelen solved = 73062, spread = 142793, legal = 429273; time = 111.92s
+Info:     at iteration #6, type ALL: wirelen solved = 83928, spread = 124163, legal = 419755; time = 252.07s
+Info:     at iteration #7, type ALL: wirelen solved = 89332, spread = 141791, legal = 399767; time = 50.24s
+Info:     at iteration #8, type ALL: wirelen solved = 97754, spread = 126630, legal = 448162; time = 50.99s
+Info:     at iteration #9, type ALL: wirelen solved = 105512, spread = 131954, legal = 440748; time = 34.10s
+Info:     at iteration #10, type ALL: wirelen solved = 114348, spread = 160827, legal = 424368; time = 32.83s
+Info:     at iteration #11, type ALL: wirelen solved = 127766, spread = 149680, legal = 417863; time = 34.86s
+Info:     at iteration #12, type ALL: wirelen solved = 137659, spread = 156693, legal = 396558; time = 24.65s
+Info:     at iteration #13, type ALL: wirelen solved = 146220, spread = 162863, legal = 400537; time = 22.96s
+Info:     at iteration #14, type ALL: wirelen solved = 156213, spread = 167847, legal = 479624; time = 45.33s
+Info:     at iteration #15, type ALL: wirelen solved = 174316, spread = 190885, legal = 422498; time = 20.49s
+Info:     at iteration #16, type ALL: wirelen solved = 182946, spread = 195986, legal = 435212; time = 27.56s
+Info:     at iteration #17, type ALL: wirelen solved = 199266, spread = 211729, legal = 435797; time = 37.77s
+Info: HeAP Placer Time: 1009.41s
+Info:   of which solving equations: 18.74s
+Info:   of which spreading cells: 2.42s
+Info:   of which strict legalisation: 986.13s
+
+Info: Running simulated annealing placer for refinement.
+Info:   at iteration #1: temp = 0.000000, timing cost = 193, wirelen = 396558
+Info:   at iteration #5: temp = 0.000000, timing cost = 104, wirelen = 193753
+Info:   at iteration #10: temp = 0.000000, timing cost = 66, wirelen = 171119
+Info:   at iteration #15: temp = 0.000000, timing cost = 85, wirelen = 162087
+Info:   at iteration #20: temp = 0.000000, timing cost = 56, wirelen = 157782
+Info:   at iteration #25: temp = 0.000000, timing cost = 71, wirelen = 153284
+Info:   at iteration #30: temp = 0.000000, timing cost = 88, wirelen = 149949
+Info:   at iteration #35: temp = 0.000000, timing cost = 83, wirelen = 148874
+Info:   at iteration #39: temp = 0.000000, timing cost = 79, wirelen = 148440 
+Info: SA placement time 67.83s
+
+Info: Max frequency for clock 'u_hrx.clk': 46.28 MHz (FAIL at 50.00 MHz)
+
+Info: Slack histogram:
+Info:  legend: * represents 27 endpoint(s)
+Info:          + represents [1,27) endpoint(s)
+Info: [ -1606,   -538) |*+
+Info: [  -538,    530) |****+
+Info: [   530,   1598) |*********+
+Info: [  1598,   2666) |***********+
+Info: [  2666,   3734) |**********+
+Info: [  3734,   4802) |*******+
+Info: [  4802,   5870) |*****+
+Info: [  5870,   6938) |********+
+Info: [  6938,   8006) |***+
+Info: [  8006,   9074) |******+
+Info: [  9074,  10142) |********+
+Info: [ 10142,  11210) |******+
+Info: [ 11210,  12278) |******+
+Info: [ 12278,  13346) |*******+
+Info: [ 13346,  14414) |*********+
+Info: [ 14414,  15482) |******************+
+Info: [ 15482,  16550) |****************+
+Info: [ 16550,  17618) |********************+
+Info: [ 17618,  18686) |**************************+
+Info: [ 18686,  19754) |************************************************************ 
+Info: Checksum: 0xbcd4287b
+Info: Routing globals...
+Info:     'u_hrx.clk' net was routed using global resources only.
+
+Info: Routing..
+Info: Setting up routing queue.
+ERROR: Found two arcs with same sink wire X89Y28/LSR0: $PACKER_VCC (1080) vs experiment.session.transactions.builder.fault_DFFRE_Q_RESET_LUT2_I1_F[1] (44)
+ERROR: Routing design failed.
+0 warnings, 2 errors

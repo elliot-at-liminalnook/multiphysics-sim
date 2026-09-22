@@ -1,0 +1,67 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 17.29s
+     Running tests/fpga_controller.rs (target/debug/deps/fpga_controller-c470588294885f67)
+
+running 7 tests
+test validates_actual_pwm_instead_of_trusting_audit_flag ... ok
+test packet_contains_targets_and_gains_not_host_drive ... ok
+test profile_compiler_rejects_aliasing_and_produces_bounded_rest_to_rest_targets ... ok
+test captured_schedule_runs_same_controller_against_shared_plant ... ok
+test controller_design_is_separate_from_measurement_and_preserves_execution_parity ... ok
+test fpga_review_cancellation_and_saved_evidence_validation ... ok
+test actual_nine_motor_reviews_roundtrip_and_export_without_promoting_accuracy ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.06s
+
+     Running tests/fpga_events.rs (target/debug/deps/fpga_events-cf52ebdcd8c252cc)
+
+running 6 tests
+test sparse_selection_keeps_canonical_unselected_pwm ... ok
+test source_identity_sequence_timing_and_arithmetic_are_enforced ... ok
+test malformed_frames_and_terminal_metadata_fail_without_panics ... ok
+test failed_audit_retains_raw_readback_and_cannot_be_promoted ... ok
+test rtl_bytes_cover_all_nine_axes_and_full_width_clocks ... ok
+test interrupted_prefixes_remain_unscored_and_missing_middle_is_rejected ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fpga_upload.rs (target/debug/deps/fpga_upload-cd8654e1f212acce)
+
+running 7 tests
+test sparse_plan_zeroes_unused_axes_but_preserves_original_evidence ... ok
+test uploads_are_bounded_nonexecuting_and_agree_with_existing_controller_packets ... ok
+test source_or_packet_changes_invalidate_saved_upload ... ok
+test actual_rtl_uart_receipts_decode_and_confirm_each_upload_stage ... ok
+test rejects_unrepresentable_timing_invalid_homes_and_firmware_identity ... ok
+test upload_transfer_checks_capability_and_stops_on_rejection_or_cancellation ... ok
+test rtl_fixture_is_reproducible_from_its_frozen_rust_source ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/motor_response.rs (target/debug/deps/motor_response-8ff31a40310b8f6a)
+
+running 9 tests
+test missing_data_wrap_and_overlapping_timestamps_are_not_smoothed_away ... ok
+test quantization_noise_does_not_prove_settling ... ok
+test constant_speed_and_acceleration_have_correct_units_and_signs ... ok
+test unknown_age_is_visible_and_larger_windows_widen_crossing_uncertainty ... ok
+test slower_dynamics_produce_longer_rise_and_reversal ... ok
+test unfinished_reversal_and_missing_initial_plateau_remain_unscored ... ok
+test analytic_speedup_and_both_reversals_are_bracketed ... ok
+test real_nine_motor_capture_keeps_conditions_identity_and_unresolved_timings ... ok
+test shared_motor_inertia_predicts_speedup_and_reversal_without_a_delay_parameter ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.49s
+

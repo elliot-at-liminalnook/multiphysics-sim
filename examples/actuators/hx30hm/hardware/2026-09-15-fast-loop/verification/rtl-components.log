@@ -1,0 +1,41 @@
+iverilog -g2005 -s experiment_scheduler_tb -o impl/experiment_scheduler_tb.vvp tb/experiment_scheduler_tb.v src/experiment_scheduler.v
+vvp impl/experiment_scheduler_tb.vvp
+PASS 1: three exact-period frames, nine fresh reads and nine torque/PWM audits each
+PASS 2: sparse IDs 4 and 12 only
+PASS 3: arbitration stall reaches fixed deadline without catch-up
+PASS 4: unchanged sample sequence cannot drive controller
+PASS 5: evidence overflow aborts
+PASS 6: torque/PWM mismatch stops before another frame
+PASS 7: unrelated audit reply cannot acknowledge a motor
+PASS 8: independent supervisor trip preempts sequencer
+PASS 9: lost host lease/arm cannot be renewed by sequencer
+PASS 10: cancellation withdraws pending packets
+PASS 11: missing trajectory row cannot extend deadline
+PASS 12: invalid cadence/count/duration/freshness rejected
+PASS 13: start collision stops; held start cannot restart
+PASS 14: revoked trajectory validity stops
+PASS 15: event held through backpressure; next request withheld until consumption
+PASS 16: transaction adapter failure stops without another request
+PASS: experiment scheduler contract
+tb/experiment_scheduler_tb.v:164: $finish called at 52500000 (1ps)
+iverilog -g2005 -s trajectory_store_tb -o impl/trajectory_store_tb.vvp tb/trajectory_store_tb.v src/trajectory_store.v
+vvp impl/trajectory_store_tb.vvp
+PASS trajectory store: 20 groups, Rust vectors and 256-row capacity
+tb/trajectory_store_tb.v:151: $finish called at 149360000 (1ps)
+iverilog -g2005 -s experiment_transactions_tb -o impl/experiment_transactions_tb.vvp tb/experiment_transactions_tb.v src/experiment_transactions.v src/experiment_scheduler.v src/experiment_packet.v src/experiment_reply.v
+vvp impl/experiment_transactions_tb.vvp
+PASS experiment transactions: 9 groups, complete/sparse nine-axis runs, raw/supervisor association, final-wire PWM audits, frozen gains, backpressure/cancel
+tb/experiment_transactions_tb.v:199: $finish called at 187930000 (1ps)
+iverilog -g2005 -s hx_safety_tb -o impl/hx_safety_tb.vvp tb/hx_safety_tb.v src/hx_safety.v
+vvp impl/hx_safety_tb.vvp
+PASS all 128 SYNC word/byte length predicates match previous arithmetic
+PASS: 21 safety cases, thresholds, malformed/foreign telemetry, independent leases, latching, rearm, stop retries, command gating
+tb/hx_safety_tb.v:192: $finish called at 106563000 (1ps)
+iverilog -g2005 -s bridge_safety_tb -o impl/bridge_safety_tb.vvp tb/bridge_safety_tb.v src/uart_tx.v src/uart_rx.v src/bridge.v src/hx_safety.v src/button.v
+vvp impl/bridge_safety_tb.vvp
+PASS: UART safety: 7 zero/off pairs, 9 local responses, telemetry forwarding, motion gating, thermal/stale/physical stop and held-stop rearm rejection
+tb/bridge_safety_tb.v:152: $finish called at 9503670000 (1ps)
+iverilog -g2005 -s bridge_release_tb -o impl/bridge_release_tb.vvp tb/bridge_release_tb.v src/uart_tx.v src/uart_rx.v src/bridge.v
+vvp impl/bridge_release_tb.vvp
+PASS: full command, released TX during reply, no host echo, correct response
+tb/bridge_release_tb.v:84: $finish called at 150320000 (1ps)

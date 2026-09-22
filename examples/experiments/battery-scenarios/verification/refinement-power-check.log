@@ -1,0 +1,19 @@
+    Checking sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+error[E0277]: the trait bound `BehaviorTypeId: From<std::string::String>` is not satisfied
+  --> crates/sim-runtime/src/controller_refinement/power.rs:37:49
+   |
+37 |             .get(&self.source_component.clone().into())
+   |                                                 ^^^^ the trait `From<std::string::String>` is not implemented for `BehaviorTypeId`
+   |
+help: the trait `From<std::string::String>` is not implemented for `BehaviorTypeId`
+      but trait `From<&str>` is implemented for it
+  --> crates/sim-core/src/lib.rs:51:1
+   |
+51 | impl From<&str> for BehaviorTypeId {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for that trait implementation, expected `&str`, found `std::string::String`
+   = note: required for `std::string::String` to implement `Into<BehaviorTypeId>`
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `sim-runtime` (lib) due to 1 previous error

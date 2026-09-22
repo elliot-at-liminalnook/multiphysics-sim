@@ -1,0 +1,54 @@
+{
+  "electrical": "Servo voltage in 0.1 V counts; current remains uncalibrated raw counts. Measured amps, watts and battery validation unavailable.",
+  "motors": {
+    "10": {
+      "encoder_span_counts": 50,
+      "max_current_raw_uncalibrated": 2,
+      "max_temperature_c": 49,
+      "negative_observed_travel_counts": 606,
+      "peak_counts": 27.0,
+      "peak_degrees": 2.373046875,
+      "positive_observed_travel_counts": 600,
+      "rms_counts": 9.731820658711984,
+      "rms_degrees": 0.855335800082108,
+      "saturated_fraction": 0.6083333333333333,
+      "torque_enable_audited_every_frame": true,
+      "tracking_pass": false,
+      "voltage_max_v": 11.8,
+      "voltage_min_v": 11.700000000000001
+    },
+    "11": {
+      "encoder_span_counts": 42,
+      "max_current_raw_uncalibrated": 51,
+      "max_temperature_c": 47,
+      "negative_observed_travel_counts": 197,
+      "peak_counts": 23.0,
+      "peak_degrees": 2.021484375,
+      "positive_observed_travel_counts": 202,
+      "rms_counts": 5.889963214372962,
+      "rms_degrees": 0.5176725481382486,
+      "saturated_fraction": 0.20833333333333334,
+      "torque_enable_audited_every_frame": true,
+      "tracking_pass": false,
+      "voltage_max_v": 12.0,
+      "voltage_min_v": 11.9
+    },
+    "12": {
+      "encoder_span_counts": 44,
+      "max_current_raw_uncalibrated": 1,
+      "max_temperature_c": 46,
+      "negative_observed_travel_counts": 235,
+      "peak_counts": 26.0,
+      "peak_degrees": 2.28515625,
+      "positive_observed_travel_counts": 235,
+      "rms_counts": 4.9023803741991845,
+      "rms_degrees": 0.4308732750761002,
+      "saturated_fraction": 0.125,
+      "torque_enable_audited_every_frame": true,
+      "tracking_pass": false,
+      "voltage_max_v": 11.8,
+      "voltage_min_v": 11.700000000000001
+    }
+  },
+  "target_comparison": "Encoder observation versus previous applied discrete setpoint; target changes are held between FPGA batches. Position is internal encoder feedback, not an independent output shaft measurement."
+}

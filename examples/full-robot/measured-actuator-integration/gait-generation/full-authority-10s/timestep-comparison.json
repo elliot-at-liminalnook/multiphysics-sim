@@ -1,0 +1,89 @@
+{
+  "scope": "Ten-second timestep check of the unchanged gait with 100% controller authority, declared before the refined run. Numerical agreement, not motor calibration.",
+  "nominal": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority-10s/pilot-journal/state-00000000000000000002.json",
+    "sha256": "137046d64b09768248428266eefe6a5d53082e30d951cf8ba4a1c6421e77f8e9"
+  },
+  "refined": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority-half-10s/pilot-journal/state-00000000000000000002.json",
+    "sha256": "fa5403599634fc2bc79632bc40f607c73c12eb9344344120e5eab7ebda3454f5"
+  },
+  "checks": [
+    {
+      "name": "absolute_net_distance_difference_m",
+      "value": 0.002981361982206998,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "name": "endpoint_body_position_difference_m",
+      "value": 0.007959208854136509,
+      "limit": 0.03,
+      "passed": true
+    },
+    {
+      "name": "endpoint_body_up_z_difference",
+      "value": 0.0000326616604888752,
+      "limit": 0.01,
+      "passed": true
+    },
+    {
+      "name": "endpoint_actuated_joint_difference_rad",
+      "value": 0.004157407854804059,
+      "limit": 0.03490658503988659,
+      "passed": true
+    }
+  ],
+  "joint_differences": [
+    {
+      "coordinate": "joint.-Y | Hip servo output",
+      "absolute_difference_rad": 0.00028348335026470717
+    },
+    {
+      "coordinate": "joint.-Y | Worm servo output",
+      "absolute_difference_rad": 0.0004178622866604642
+    },
+    {
+      "coordinate": "joint.-Y | Foot servo output",
+      "absolute_difference_rad": 0.00084143189188568
+    },
+    {
+      "coordinate": "joint.+X | Hip servo output",
+      "absolute_difference_rad": 0.004157407854804059
+    },
+    {
+      "coordinate": "joint.+X | Worm servo output",
+      "absolute_difference_rad": 0.0006992667548333387
+    },
+    {
+      "coordinate": "joint.+X | Foot servo output",
+      "absolute_difference_rad": 0.00040260357124011215
+    },
+    {
+      "coordinate": "joint.+Y | Hip servo output",
+      "absolute_difference_rad": 0.0014254280216839527
+    },
+    {
+      "coordinate": "joint.+Y | Worm servo output",
+      "absolute_difference_rad": 0.0018160914833915687
+    },
+    {
+      "coordinate": "joint.+Y | Foot servo output",
+      "absolute_difference_rad": 0.0007969500026916432
+    },
+    {
+      "coordinate": "joint.-X | Hip servo output",
+      "absolute_difference_rad": 0.0010691238240925771
+    },
+    {
+      "coordinate": "joint.-X | Worm servo output",
+      "absolute_difference_rad": 0.0004484387680415147
+    },
+    {
+      "coordinate": "joint.-X | Foot servo output",
+      "absolute_difference_rad": 0.00021035986907214088
+    }
+  ],
+  "passed": true,
+  "limitations": "Same absolute numerical budgets as the selected 35% ten-second check: 2 cm travel, 3 cm endpoint position, 0.01 body-up projection and 2 degrees per actuated joint. All bounds must pass. This does not establish hardware accuracy or 300-second performance."
+}

@@ -1,0 +1,24 @@
+{
+  "scope": "Full ten-second environment replay, exact endpoint frame/transition and recording comparison. Host wall-time field is excluded; signed zeros normalize to zero. No floating-point tolerance.",
+  "journal": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/selected-10s/pilot-journal/state-00000000000000000002.json",
+    "sha256": "45c955b1eaa7099b13523f05e2e2ada03e08448d2b87a3803c2adf95f8f04226"
+  },
+  "capture": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/selected-10s/replay-capture.json",
+    "sha256": "b69de61363d5623b912b7c6685abbc9751b2f5356464bd4da1d148b8e90d41a3"
+  },
+  "checks": {
+    "completed": true,
+    "source_complete": true,
+    "final_frame_exact": true,
+    "final_transition_exact": true,
+    "runtime_recording_exact": true,
+    "task_exact": true
+  },
+  "passed": true,
+  "simulated_s": 10,
+  "reported_step_and_capture_wall_s": 354.702110067,
+  "transition_count": 501,
+  "limitations": "Exact replay proves reproducibility for this run, not model calibration, convergence at another timestep or sustained 300-second walking."
+}

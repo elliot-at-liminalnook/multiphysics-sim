@@ -1,0 +1,67 @@
+{
+  "time_utc": "2026-09-14T13:44:01.030405+00:00",
+  "baud": 1000000,
+  "read_only": true,
+  "transactions": [
+    {
+      "name": "supervisor_status",
+      "sent_hex": "fffffe03a0025c",
+      "reply": {
+        "id": 254,
+        "error": 0,
+        "params": [
+          1,
+          1,
+          9,
+          254,
+          0,
+          0,
+          0,
+          0,
+          60,
+          90,
+          126,
+          208,
+          7
+        ],
+        "bad_checksum": false
+      }
+    },
+    {
+      "name": "experiment_capability",
+      "sent_hex": "fffffe03a20458",
+      "reply": {
+        "id": 254,
+        "error": 0,
+        "params": [
+          1,
+          162,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          128,
+          240,
+          250,
+          2,
+          7
+        ],
+        "bad_checksum": false
+      }
+    }
+  ]
+}

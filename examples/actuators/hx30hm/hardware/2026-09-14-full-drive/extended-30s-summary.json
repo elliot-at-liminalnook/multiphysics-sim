@@ -1,0 +1,123 @@
+{
+  "scope": "30 seconds of commanded all-nine 25% reversals in three 10-second blocks, preceded by a separate 2-second pilot",
+  "contiguous_30_second_run": false,
+  "between_blocks": "Automatic stop and stationary/PWM/torque verification; model inspection and new upload/rearm before the next block. Gaps are not counted as active test time.",
+  "pilot": {
+    "capture": "extended-250-pilot-01",
+    "commanded_duration_s": 2.0,
+    "complete_frames": 50,
+    "audited_motor_updates": 450,
+    "pwm_limit": 250,
+    "minimum_voltage_v": 10.8,
+    "maximum_temperature_c": 48,
+    "maximum_current_raw_uncalibrated": 145,
+    "maximum_observed_travel_from_home_counts": 60,
+    "peak_interval_average_speed_deg_s_per_id": {
+      "10": 61.536037003576475,
+      "11": 63.72535507592026,
+      "12": 65.90683049564649,
+      "4": 63.725944583941974,
+      "5": 61.530882736811385,
+      "6": 61.53303665371802,
+      "7": 61.533405911757974,
+      "8": 61.531190429994254,
+      "9": 59.622315918165356
+    },
+    "all_nine_stop_verified": true,
+    "recording_sha256": "3c335e57d1255b54de4955e0bbfe3682ad0f0229fbeb190c9017ac49e0f53c98"
+  },
+  "blocks": [
+    {
+      "capture": "extended-250-30s-block-01",
+      "commanded_duration_s": 10.0,
+      "complete_frames": 250,
+      "audited_motor_updates": 2250,
+      "pwm_limit": 250,
+      "minimum_voltage_v": 10.8,
+      "maximum_temperature_c": 48,
+      "maximum_current_raw_uncalibrated": 148,
+      "maximum_observed_travel_from_home_counts": 62,
+      "peak_interval_average_speed_deg_s_per_id": {
+        "10": 61.82983524857389,
+        "11": 63.72937031936375,
+        "12": 65.92113296438198,
+        "4": 63.725116089289216,
+        "5": 61.53537536282031,
+        "6": 61.54302356725092,
+        "7": 61.512196146154366,
+        "8": 63.726231375572475,
+        "9": 63.412802263608654
+      },
+      "all_nine_stop_verified": true,
+      "recording_sha256": "0c4932dc3034d13af5464efff8cf10222c834db09bd0acf4cf754c3a5b8141d9"
+    },
+    {
+      "capture": "extended-250-30s-block-02",
+      "commanded_duration_s": 10.0,
+      "complete_frames": 250,
+      "audited_motor_updates": 2250,
+      "pwm_limit": 250,
+      "minimum_voltage_v": 10.8,
+      "maximum_temperature_c": 48,
+      "maximum_current_raw_uncalibrated": 150,
+      "maximum_observed_travel_from_home_counts": 63,
+      "peak_interval_average_speed_deg_s_per_id": {
+        "10": 61.82985078301743,
+        "11": 63.737992055345394,
+        "12": 65.92939101699369,
+        "4": 63.72215280397593,
+        "5": 63.7401916886078,
+        "6": 63.727203299734924,
+        "7": 61.82627806654131,
+        "8": 63.72411236501027,
+        "9": 63.71262754945592
+      },
+      "all_nine_stop_verified": true,
+      "recording_sha256": "1cfef3cf4c96ea1caae39dacf04e6c395a596cc1e8ca5f516afc896e5b3e9908"
+    },
+    {
+      "capture": "extended-250-30s-block-03",
+      "commanded_duration_s": 10.0,
+      "complete_frames": 250,
+      "audited_motor_updates": 2250,
+      "pwm_limit": 250,
+      "minimum_voltage_v": 10.8,
+      "maximum_temperature_c": 49,
+      "maximum_current_raw_uncalibrated": 147,
+      "maximum_observed_travel_from_home_counts": 63,
+      "peak_interval_average_speed_deg_s_per_id": {
+        "10": 63.402044449596,
+        "11": 65.59204189383014,
+        "12": 66.24089310387936,
+        "4": 63.72699616586989,
+        "5": 65.90617154529389,
+        "6": 61.54322364640374,
+        "7": 63.71786767988743,
+        "8": 64.02935663867717,
+        "9": 61.82742750418095
+      },
+      "all_nine_stop_verified": true,
+      "recording_sha256": "11be409d5f22216e264b8f6f30743be8723380c9b4bba82212f030cfa1646cad"
+    }
+  ],
+  "total_commanded_test_s": 30.0,
+  "total_test_motor_updates": 6750,
+  "supply_display": {
+    "time_recorded_utc": "2026-09-14T15:22:36.272426+00:00",
+    "user_text": "only uses .86 amps",
+    "supply_display_current_a": 0.86,
+    "when": "After first completed 10-second 25% all-nine reversal block; second block started afterward",
+    "source": "User observation of supply display, not synchronized logged current",
+    "cv_cc_state": "CV",
+    "requested_current_limit_a": 3.5,
+    "interpretation": "User-observed CV and approximately 0.86 A do not indicate sustained current limiting during the 25% extended test. Brief transients and voltage telemetry calibration/age remain unresolved; this does not establish behavior during 50% or higher drive.",
+    "cv_cc_user_text": "stays on CV",
+    "cv_cc_when": "Reported after second completed 10-second block; third block started afterward"
+  },
+  "result": "All blocks completed and all nine motors verified stopped after each.",
+  "model_fit_performed": false,
+  "role": "timing",
+  "interpretation": "At 25% PWM, user-observed CV and about 0.86 A argue against sustained 3.5 A current limiting. Voltage loss in distribution, brief transients and voltage telemetry uncertainty remain candidates. The observation does not identify the cause of the earlier 50% dip.",
+  "limits": "Retained 9 V voltage trip, thermal/current watchdogs, 180-count hardware travel and 100-count tracking guards. No longer-than-maximum FPGA run or relaxed protection was used.",
+  "superseded_unexecuted_plan": "plans/extended-250-display-8s.json"
+}

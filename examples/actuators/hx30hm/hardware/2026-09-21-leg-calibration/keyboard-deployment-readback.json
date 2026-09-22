@@ -1,0 +1,62 @@
+{
+  "time": "2026-09-22T00:47:22.246744+00:00",
+  "checks": [
+    {
+      "id": 1,
+      "message": "Ready. Hold Q toward upper or A toward lower; release to hold position.",
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 4.608078286808466,
+        "position_raw": 3004,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 37,
+        "voltage_raw": 125,
+        "voltage_v": 12.5
+      }
+    },
+    {
+      "id": 2,
+      "message": "Ready. Hold Q toward upper or A toward lower; release to hold position.",
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 1.3069516312785663,
+        "position_raw": 852,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 34,
+        "voltage_raw": 125,
+        "voltage_v": 12.5
+      }
+    },
+    {
+      "id": 3,
+      "message": "Ready. Hold Q toward upper or A toward lower; release to hold position.",
+      "telemetry": {
+        "current_a_uncalibrated": 0.0,
+        "current_raw": 0,
+        "load_raw": 0,
+        "moving": 0,
+        "position_rad": 3.3486800599543547,
+        "position_raw": 2183,
+        "speed_rad_s": 0.0,
+        "speed_raw": 0,
+        "status": 0,
+        "temperature_c": 35,
+        "voltage_raw": 125,
+        "voltage_v": 12.5
+      }
+    }
+  ],
+  "final_message": "Torque off and stationary encoder verified.",
+  "saved_calibration_sha256_unchanged": "160e27788a3d21adf3e03cb11e5876d701d93c93a61bc7a0ae7a819a4abad100",
+  "nonzero_motion_sent": false
+}

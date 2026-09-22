@@ -1,0 +1,25 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib test) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 5.82s
+     Running unittests src/lib.rs (target/debug/deps/sim_runtime-b33fbd6712fe008e)
+
+running 5 tests
+test acquisition::calibration::tests::boundaries_and_recovery ... ok
+test acquisition::calibration::tests::never_wrap_or_guess_mapping ... ok
+test acquisition::calibration_serial::tests::faulted_parser_still_transmits_stop ... ok
+test acquisition::calibration_serial::tests::wrong_profile_never_arms ... ok
+test acquisition::calibration_serial::tests::fresh_jog_is_bounded_and_finishes_with_verified_torque_off ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out; finished in 0.19s
+

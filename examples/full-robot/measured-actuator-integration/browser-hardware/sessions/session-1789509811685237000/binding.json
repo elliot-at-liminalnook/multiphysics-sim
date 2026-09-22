@@ -1,0 +1,45 @@
+{
+  "maximum_session_s": 12.0,
+  "note": "Current live Rust/WASM references; relative bench scaling and measured homes. Host schedules the FPGA controller. No predetermined gait playback or forced return trajectory.",
+  "period_s": 0.1,
+  "request": {
+    "amplitude": 0.03,
+    "bindings": [
+      {
+        "coordinate": "joint.-Y | Hip servo output",
+        "motor_id": 10,
+        "polarity": 1
+      },
+      {
+        "coordinate": "joint.-Y | Worm servo output",
+        "motor_id": 11,
+        "polarity": 1
+      },
+      {
+        "coordinate": "joint.-Y | Foot servo output",
+        "motor_id": 12,
+        "polarity": 1
+      }
+    ],
+    "initial": {
+      "sequence": 0,
+      "targets_rad": {
+        "joint.+X | Foot servo output": -0.35,
+        "joint.+X | Hip servo output": 0.0,
+        "joint.+X | Worm servo output": -0.27612813350949833,
+        "joint.+Y | Foot servo output": -0.35,
+        "joint.+Y | Hip servo output": 0.0,
+        "joint.+Y | Worm servo output": -0.00008346425388696227,
+        "joint.-X | Foot servo output": -0.35,
+        "joint.-X | Hip servo output": 0.0,
+        "joint.-X | Worm servo output": -0.00007650604473797781,
+        "joint.-Y | Foot servo output": -0.35,
+        "joint.-Y | Hip servo output": 0.0,
+        "joint.-Y | Worm servo output": -0.00008346418847292681
+      },
+      "time_s": 0.0
+    },
+    "source": "Headless check of robot-prelift-control frozen WASM; browser rendering not verified"
+  },
+  "source": "Headless check of robot-prelift-control frozen WASM; browser rendering not verified"
+}

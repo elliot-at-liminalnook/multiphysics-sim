@@ -1,0 +1,16 @@
+{
+  "experiment": "nine-motor-onset",
+  "frozen_before_acquisition": true,
+  "training_repetitions": [
+    0,
+    1
+  ],
+  "validation_repetitions": [
+    2
+  ],
+  "limits_rad": {
+    "rmse": 0.0046019423636569235,
+    "final_abs_error": 0.007669903939428206
+  },
+  "limits_basis": "Provisional comparison thresholds inherited from existing studies: 3 and 5 encoder counts, not task-derived accuracy requirements. Must not imply loaded-joint accuracy."
+}

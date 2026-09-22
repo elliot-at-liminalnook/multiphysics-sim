@@ -1,0 +1,33 @@
+{
+  "declared_before_qualification_runs": true,
+  "parent_protocol_sha256": "534cd4168b53b92687d47b4cbd130e0e6e858a9dd429e792689f8a49fb56e450",
+  "direction_world_xy": [
+    0.7071067811865475,
+    0.7071067811865475
+  ],
+  "minimum_forward_speed_m_s": 0.1,
+  "minimum_forward_alignment": 0.95,
+  "minimum_speed_ratio_to_matched_baseline": 2,
+  "forward_horizons_s": [
+    10,
+    30
+  ],
+  "required_checks": [
+    "all ten-second gates",
+    "all thirty-second gates",
+    "same-candidate exact replay",
+    "ten-second half-step comparison",
+    "7 s forward then 3 s stop",
+    "4 s forward then 6 s reverse"
+  ],
+  "reverse": {
+    "horizon_s": 10,
+    "reverse_request_s": 4,
+    "settled_window_start_s": 6,
+    "minimum_signed_reverse_travel_m": 0.15,
+    "minimum_body_up_z": 0.85,
+    "maximum_each_motor_rms_degrees": 2,
+    "maximum_each_motor_peak_degrees": 8
+  },
+  "scope": "Software-only modeled performance; no calibrated motor, battery, loaded hardware, or browser deployment claim."
+}

@@ -1,0 +1,154 @@
+{
+  "samples": 800,
+  "transaction_s": {
+    "median": 0.005836188999999936,
+    "max": 0.012484350999999894
+  },
+  "devices": {
+    "4": {
+      "samples": 89,
+      "position_counts": [
+        1204
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.1,
+        12.2
+      ],
+      "temperature_c": [
+        47.0,
+        47.0
+      ],
+      "max_revisit_s": 0.06054106100000034
+    },
+    "5": {
+      "samples": 89,
+      "position_counts": [
+        2816
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.2,
+        12.3
+      ],
+      "temperature_c": [
+        47.0,
+        47.0
+      ],
+      "max_revisit_s": 0.06064507099999972
+    },
+    "6": {
+      "samples": 89,
+      "position_counts": [
+        1724
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.1,
+        12.1
+      ],
+      "temperature_c": [
+        47.0,
+        47.0
+      ],
+      "max_revisit_s": 0.060528051999999555
+    },
+    "7": {
+      "samples": 89,
+      "position_counts": [
+        1885
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.2,
+        12.2
+      ],
+      "temperature_c": [
+        47.0,
+        47.0
+      ],
+      "max_revisit_s": 0.06052440900000011
+    },
+    "8": {
+      "samples": 89,
+      "position_counts": [
+        2095
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.3,
+        12.3
+      ],
+      "temperature_c": [
+        46.0,
+        47.0
+      ],
+      "max_revisit_s": 0.061034956000000085
+    },
+    "9": {
+      "samples": 89,
+      "position_counts": [
+        2144
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.2,
+        12.3
+      ],
+      "temperature_c": [
+        47.0,
+        47.0
+      ],
+      "max_revisit_s": 0.060600689
+    },
+    "10": {
+      "samples": 89,
+      "position_counts": [
+        2342
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.2,
+        12.2
+      ],
+      "temperature_c": [
+        47.0,
+        48.0
+      ],
+      "max_revisit_s": 0.06596803999999999
+    },
+    "11": {
+      "samples": 89,
+      "position_counts": [
+        2524
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.4,
+        12.4
+      ],
+      "temperature_c": [
+        47.0,
+        47.0
+      ],
+      "max_revisit_s": 0.06562287099999999
+    },
+    "12": {
+      "samples": 88,
+      "position_counts": [
+        1038
+      ],
+      "max_speed_raw": 0,
+      "voltage_v": [
+        12.2,
+        12.2
+      ],
+      "temperature_c": [
+        46.0,
+        47.0
+      ],
+      "max_revisit_s": 0.06044021199999999
+    }
+  },
+  "interpretation": "Observed read-only host transaction timing; not a hard latency guarantee, physical sensor timestamp, or measured feedback+command loop cadence."
+}

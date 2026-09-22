@@ -1,0 +1,62 @@
+{
+  "scope": "Paired short all-nine 25% reversal trials; no higher PWM comparison",
+  "supply_voltage_setting_v_user_report": 12.6,
+  "current_limits_a_user_report": [
+    3.0,
+    3.5
+  ],
+  "current_was_not_measured": true,
+  "cv_cc_indicator_observation": null,
+  "same_source_plan": true,
+  "same_audited_pwm": true,
+  "three_amp": {
+    "completed": true,
+    "stop_verified": true,
+    "frames": 5,
+    "audited_motor_updates": 45,
+    "minimum_voltage_v": 10.9,
+    "maximum_temperature_c": 47,
+    "maximum_current_raw_uncalibrated": 142,
+    "minimum_voltage_per_id_v": {
+      "4": 10.9,
+      "5": 11.1,
+      "6": 10.9,
+      "7": 11.0,
+      "8": 11.1,
+      "9": 11.1,
+      "10": 11.1,
+      "11": 11.3,
+      "12": 11.2
+    },
+    "final_all_nine_pwm_zero_torque_off_speed_zero": true
+  },
+  "three_point_five_amp": {
+    "completed": true,
+    "stop_verified": true,
+    "frames": 5,
+    "audited_motor_updates": 45,
+    "minimum_voltage_v": 11.0,
+    "maximum_temperature_c": 49,
+    "maximum_current_raw_uncalibrated": 131,
+    "minimum_voltage_per_id_v": {
+      "4": 11.0,
+      "5": 11.1,
+      "6": 11.0,
+      "7": 11.1,
+      "8": 11.2,
+      "9": 11.2,
+      "10": 11.1,
+      "11": 11.4,
+      "12": 11.2
+    },
+    "final_all_nine_pwm_zero_torque_off_speed_zero": true
+  },
+  "limitations": [
+    "Only one matched motion trial at each setting.",
+    "Servo voltage resolves 0.1 V and its calibration/internal sample age remain unknown.",
+    "Motor temperatures, home positions and test time differ.",
+    "No synchronized supply voltage/current/CV-CC capture; cannot isolate supply current limit versus wiring/transients.",
+    "This does not establish higher-current wiring ratings or full-drive performance."
+  ],
+  "interpretation": "Minimum voltage increased by 0.1 V, one reported voltage increment. This comparison alone does not establish a clear reduction in sag or identify its cause."
+}

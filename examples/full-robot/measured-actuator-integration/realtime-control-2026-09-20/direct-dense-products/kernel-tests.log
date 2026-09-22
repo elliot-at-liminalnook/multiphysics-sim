@@ -1,0 +1,11 @@
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+    Finished `release` profile [optimized] target(s) in 12.40s
+     Running unittests src/lib.rs (target/release/deps/sim_solve-5ded9eba0a736322)
+
+running 3 tests
+test dense_products::tests::invalid_shapes_nonfinite_inputs_and_overflow_are_rejected ... ok
+test dense_products::tests::exact_zeros_do_not_drop_small_finite_coefficients ... ok
+test dense_products::tests::rectangular_and_sparse_products_match_independent_gemm ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 42 filtered out; finished in 0.00s
+

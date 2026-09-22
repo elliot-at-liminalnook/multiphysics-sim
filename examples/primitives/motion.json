@@ -1,0 +1,9 @@
+{
+  "channels": [{
+    "name": "axis",
+    "bounds_rad": [-1.0, 1.0],
+    "governor": {"period_s": 0.02, "maximum_speed_rad_s": 1.0, "maximum_acceleration_rad_s2": 5.0, "response_rate_per_s": 10.0}
+  }],
+  "states": {"axis": {"angle_rad": 0.0, "velocity_rad_s": 0.0}},
+  "requested_rad": {"axis": 2.0}
+}

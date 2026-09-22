@@ -1,0 +1,4 @@
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Finished `dev` profile [optimized + debuginfo] target(s) in 5.18s
+     Running `target/debug/examples/systems_baseline --check examples/systems-viewer/evidence/pre-migration-baseline.json`
+All five baseline trajectories match (absolute + relative tolerance 1e-10)

@@ -1,0 +1,24 @@
+{
+  "coordinates": [
+    {
+      "path": "motor.no_load_current",
+      "device": 12,
+      "lower": -0.07,
+      "upper": 0.2
+    },
+    {
+      "path": "motor.loss_speed_scale",
+      "device": 12,
+      "lower": -4.98,
+      "upper": 3.0
+    },
+    {
+      "path": "motor.rotor_inertia",
+      "device": 12,
+      "lower": -1.7324546035565205e-08,
+      "upper": 2.776754539644348e-07
+    }
+  ],
+  "maximum_evaluations": 80,
+  "validation_influenced": true
+}

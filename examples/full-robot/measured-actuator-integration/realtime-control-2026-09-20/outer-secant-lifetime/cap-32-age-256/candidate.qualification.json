@@ -1,0 +1,30 @@
+{
+  "name": "outer-secant-lifetime/cap-32-age-256/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": true,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.13157901,
+  "baseline_wall_s": 22.569303491,
+  "candidate_wall_s": 17.03775684,
+  "speedup": 1.3246640213818193,
+  "simulation_per_wall": 0.17607951728462395,
+  "max_error": {
+    "motor_angle_rad": 6.998638668598289e-9,
+    "link_position_m": 3.6007438946813314e-9,
+    "current_a": 5.394291024973796e-8,
+    "contact_force_n": 0.00003127462355999373
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": true,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

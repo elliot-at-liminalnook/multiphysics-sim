@@ -1,0 +1,15 @@
+{
+  "scope": "Simulation controller-authority comparison only; not hardware qualification or calibration.",
+  "parent": "examples/full-robot/measured-actuator-integration/controller-integration/robot-controller-provisional.rcad",
+  "parent_sha256": "b44568c7e9224063423a28129d33cc3498576b045b78d49157c602b637dbfa2d",
+  "limit_permille": 1000,
+  "previous_limits": {
+    "hx30hm-provisional": 350
+  },
+  "limitations": [
+    "All motor and driver physical parameters remain provisional.",
+    "Changing the command limit does not establish available loaded torque or safe electrical ratings.",
+    "No motor or FPGA hardware is accessed by this operation.",
+    "Feedback, cadence, latency estimates and other controller gains remain unchanged."
+  ]
+}

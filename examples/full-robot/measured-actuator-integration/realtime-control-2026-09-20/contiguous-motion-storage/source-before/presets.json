@@ -1,0 +1,527 @@
+{
+  "presets": [
+    {
+      "id": "robot-measured-400hz-reuse",
+      "label": "Quadruped · Detailed motors · Faster simulation",
+      "mode": "embedded",
+      "scene": "examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json",
+      "config": "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/browser.config.json",
+      "task": "examples/full-robot/measured-actuator-integration/browser-control-400hz/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "motion_key_vectors": {
+        "w": [
+          0.1,
+          0,
+          0
+        ],
+        "s": [
+          -0.05,
+          0,
+          0
+        ],
+        "a": [
+          0.05,
+          0,
+          0.15
+        ],
+        "d": [
+          0.05,
+          0,
+          -0.15
+        ]
+      },
+      "description": "Live WASD with the same bench-fit motor candidates and 400 Hz integer controller. W/S request forward/reverse; A/D request arcing turns. Release keys or Stop motion to request a controlled stop.",
+      "readiness": "Experimental fitted motors · 400 Hz motor loop · 200 Hz native measurement profile · 50 Hz motion policy. Faster detailed solver measured 0.08× real time on this Mac; still below real time. Calibration remains provisional.",
+      "evidence": "Uses the exact ID 10/11/12 candidate parameters from the measured-voltage motor study, repeated by actuator role across four legs as an explicit assumption. Internal motor/gearbox dynamics, encoder quantization and the FPGA integer law execute in Rust. The 1.25 ms feedback delay is an estimate. Supply is imposed at 11.1 V; loaded accuracy, battery behavior, twelve-motor physical bus timing and whole-robot hardware transfer remain unqualified. Model and cadence overrides are saved with input replay. Solver reuse is qualified against the retained detailed trajectory for short forward and forward/turn/reverse/stop cases. Model parameters and physics timestep are unchanged; sustained gait and realtime operation remain unqualified."
+    },
+    {
+      "id": "robot-measured-400hz",
+      "label": "Quadruped · Bench-fit motors · 400 Hz",
+      "mode": "embedded",
+      "scene": "examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json",
+      "config": "examples/full-robot/measured-actuator-integration/browser-control-400hz/config.json",
+      "task": "examples/full-robot/measured-actuator-integration/browser-control-400hz/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "motion_key_vectors": {
+        "w": [
+          0.1,
+          0,
+          0
+        ],
+        "s": [
+          -0.05,
+          0,
+          0
+        ],
+        "a": [
+          0.05,
+          0,
+          0.15
+        ],
+        "d": [
+          0.05,
+          0,
+          -0.15
+        ]
+      },
+      "description": "Live WASD trial with the per-motor bench-fit candidates and the shared FPGA integer controller at 400 Hz. W/S request forward/reverse; A/D request gentle arcing turns. Release keys or use Stop to request a controlled stop.",
+      "readiness": "Experimental fitted motors · 400 Hz motor loop · 200 Hz native measurement profile · 50 Hz motion policy and live observations. Detailed solver measured about 0.05× real time on this Mac. Calibration remains provisional.",
+      "evidence": "Uses the exact ID 10/11/12 candidate parameters from the measured-voltage motor study, repeated by actuator role across four legs as an explicit assumption. Internal motor/gearbox dynamics, encoder quantization and the FPGA integer law execute in Rust. The 1.25 ms feedback delay is an estimate. Supply is imposed at 11.1 V; loaded accuracy, battery behavior, twelve-motor physical bus timing and whole-robot hardware transfer remain unqualified. Model and cadence overrides are saved with input replay."
+    },
+    {
+      "id": "robot-lift-5mm",
+      "label": "Quadruped · 5 mm lift trial",
+      "mode": "recorded",
+      "scene": "runs/full-robot/learning/corrected-thigh-hip-grids.scene.json",
+      "capture": "runs/full-robot/learning/hip-grid-lift-5mm-execution.json",
+      "description": "A 16 mm body shift followed by a requested 5 mm foot lift. Recorded motor-driven execution, not an animation of the target.",
+      "readiness": "Experiment · sampled lift check passes; no internal contacts reported after collision-grid correction.",
+      "evidence": "The foot clears 1 mm while the three support feet carry at least 1 N for 120 ms. Peak clearance is about 1.68 mm. Both tested timesteps agree on that outcome. Landing, slip and hardware accuracy are not accepted yet."
+    },
+    {
+      "id": "robot-lift-3mm",
+      "label": "Quadruped · 3 mm lift attempt",
+      "mode": "recorded",
+      "scene": "runs/full-robot/learning/corrected-thigh-grids.scene.json",
+      "capture": "runs/full-robot/learning/load-16mm-execution.json",
+      "description": "The earlier 3 mm request transferred weight but left the selected foot touching the floor.",
+      "readiness": "Failed lift · retained for comparison.",
+      "evidence": "The robot completes the requested motor program, but the foot never clears the sampled floor. This shows why a completed simulation is not automatically a successful task."
+    },
+    {
+      "id": "robot-lift-live",
+      "label": "Quadruped · live lift experiment",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/corrected-thigh-hip-grids.scene.json",
+      "config": "examples/full-robot/mechanical-servo-load-16mm-lift-5mm.json",
+      "description": "Execute the motor-driven lift through the same incremental Rust session as the headless experiment. Physics runs in a background worker.",
+      "readiness": "Live experiment · native/browser trajectory check passes; about 60× slower than realtime on the tested CPU.",
+      "evidence": "All 161 sampled frames pass the native/browser comparison and browser replay is exact. The recipe passes a sampled lift check. Landing, walking, sensor realism and hardware accuracy remain unaccepted."
+    },
+    {
+      "id": "robot-forward-10mm",
+      "label": "Quadruped · 10 mm placement attempt",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/forward-10mm/scene.json",
+      "config": "runs/full-robot/learning/forward-10mm/config.json",
+      "description": "Move the -Y foot 10 mm in world +X, lower it, qualify support, then return the body shift. The foot remains at its new requested location.",
+      "readiness": "Fails supported-lift check · 0.25 ms run sustains the required conditions for 40 ms; 50 ms required.",
+      "evidence": "The foot reaches a new location, but its supported swing is too short under the existing lift requirement. This failed stepping candidate is preserved for inspection; it is not an accepted walking controller.",
+      "readiness_state": "failed"
+    },
+    {
+      "id": "robot-forward-slow",
+      "label": "Quadruped · slower 10 mm placement",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/forward-slow/scene.json",
+      "config": "runs/full-robot/learning/forward-slow/config.json",
+      "description": "The same 10 mm foot placement stretched to 1.5 times its original duration. Motor gains, controller clocks, physics parameters and support thresholds stay unchanged.",
+      "readiness": "Experimental · supported lift passes; internal hip contact and timestep sensitivity remain unresolved.",
+      "evidence": "The 0.25 and 0.125 ms runs sustain qualifying lift for 270 and 180 ms, above the unchanged 50 ms requirement. Their foot paths differ by up to 1.73 mm and both report a brief internal hip contact. This is not an accepted landing or walking controller."
+    },
+    {
+      "id": "robot-forward-solid-sign",
+      "label": "Quadruped · placement with corrected collision signs",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/forward-slow/chassis-solid-sign.scene.json",
+      "config": "runs/full-robot/learning/forward-slow/config.json",
+      "description": "The slower 10 mm placement with chassis collision signs derived from separate CAD solids. The motor program and physical parameters are unchanged.",
+      "readiness": "Experimental · sampled lift passes and false hip contact is removed; placement and walking remain unvalidated.",
+      "evidence": "Both tested timesteps finish without reported internal contacts. Supported lift lasts 270 / 180 ms, but foot trajectories still differ by up to 1.73 mm. The corrected signs change foot motion by at most 0.00612 mm, so tracking and balance remain separate problems."
+    },
+    {
+      "id": "robot-body-feedback",
+      "label": "Quadruped · body position feedback",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/body-feedback/scene.json",
+      "config": "runs/full-robot/learning/body-feedback/config.json",
+      "description": "Use ideal body position and floor loads to suggest small joint corrections through the shared mechanism Jacobian. The original joint feedback and servo physics remain active.",
+      "readiness": "Experimental · both timesteps pass sampled lift; body and final foot errors improve, but trajectory sensitivity remains.",
+      "evidence": "With body gain 0.25, final foot XY error is 0.78 / 0.67 mm and supported lift lasts 170 ms at both tested timesteps. Peak body shift undershoot is about 1.55 mm. The foot paths still differ by up to 2.06 mm, so this is not accepted walking or hardware accuracy. Inspect body targets, support weights and bounded corrections below."
+    },
+    {
+      "id": "robot-point-feedback",
+      "label": "Quadruped · swing foot position feedback",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/point-feedback/scene.json",
+      "config": "runs/full-robot/learning/point-feedback/config.json",
+      "description": "Correct ideal world foot-position error during the planned swing through bounded motor-target suggestions. Shared Rust linkage geometry, body/joint feedback and servo physics remain active.",
+      "readiness": "Experimental tradeoff · higher clearance and smaller peak swing error, but worse landing placement; not accepted walking.",
+      "evidence": "Both timesteps pass sampled supported lift for 200 / 210 ms. Peak foot-path error falls to 3.76 / 3.75 mm, but final horizontal error grows to 1.03 / 1.25 mm and timestep foot-path differences reach 2.18 mm. The correction is active only during planned swing; inspect its activation and target/actual readouts below."
+    },
+    {
+      "id": "robot-point-final-refresh",
+      "label": "Quadruped · swing feedback with final correction",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/point-feedback/scene.json",
+      "config": "runs/full-robot/learning/sample-reuse/final-refresh.viewer.config.json",
+      "description": "The same swing-foot controller, with a solver experiment that uses fresh final corrections before requesting a smaller physics step.",
+      "readiness": "Numerical checks pass · both native timesteps, browser parity and replay verified. Experimental controller; not realtime or accepted walking.",
+      "evidence": "Fresh final corrections remove the refined 0.041 A current discrepancy without changing tolerances. Maximum refined current difference is below 1e-9 A. Both timesteps pass strict numerical comparisons and sampled supported lift; all 281 browser frames, replay/reset and 20 UI checks pass. Existing landing and calibration limits remain."
+    },
+    {
+      "id": "robot-point-sample-reuse",
+      "label": "Quadruped · swing feedback with sample reuse",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/point-feedback/scene.json",
+      "config": "runs/full-robot/learning/sample-reuse/viewer.config.json",
+      "description": "The same swing-foot controller with guarded Jacobian reuse across registered servo sampling events. Motor-mode changes still discard the matrix; physical equations and command limits stay active.",
+      "readiness": "Unpromoted optimization · browser checks pass; refined motor-state comparison exceeds strict limits.",
+      "evidence": "A native pair took 160 s with ordinary reuse versus 116 s with reuse across servo samples (2.8 simulated seconds). At 0.25 ms, motion and current agree at roundoff scale; at 0.125 ms, current differs by 0.041 A after a subdivision difference despite only 44 nm of foot motion difference. All 281 native/WASM samples and replay/reset pass. Not realtime or accepted walking."
+    },
+    {
+      "id": "robot-point-block-factor",
+      "label": "Quadruped · swing feedback with block solver",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/point-feedback/scene.json",
+      "config": "runs/full-robot/learning/block-factor/viewer.config.json",
+      "description": "The same swing-foot controller with exact independent-block linkage factorization. Robot properties, controller gains, reference motion and rank thresholds are unchanged.",
+      "readiness": "Unpromoted numerical experiment · refined-state and strict native/WASM comparisons fail; original solver remains default.",
+      "evidence": "A native pair took 159 s with the original factorization versus 152 s with blocks. Refined motor current differs by up to 0.041 A despite only 44 nm of foot-position difference. One browser force reading also exceeds the strict 1e-7 N parity limit. Execution/replay and sampled lift work, but this is not an accepted optimization or realtime result."
+    },
+    {
+      "mode": "embedded",
+      "description": "After the planned foot descent, body-return motion waits for sustained support on all four feet. Physics and joint feedback keep running during the wait.",
+      "readiness": "Experimental support checkpoint · ideal force observations; landing placement and balance are not accepted.",
+      "evidence": "A shared Rust motion clock requires at least 1 N on each foot for 100 ms during the guarded return. It stops the experiment if support does not qualify within the 300 ms pause budget.",
+      "id": "robot-landing-checkpoint",
+      "label": "Quadruped · support-qualified return",
+      "scene": "runs/full-robot/learning/landing-checkpoint/scene.json",
+      "config": "runs/full-robot/learning/landing-checkpoint/config.json"
+    },
+    {
+      "mode": "embedded",
+      "description": "Joint feedback with named body and foot observations. Inspect relative foot motion, body orientation and floor forces before developing landing and balance control.",
+      "readiness": "Ideal state diagnostics · controller still uses joint feedback; hardware sensor mapping remains open.",
+      "evidence": "This preset exposes signals needed for task-space control. It does not yet use them to control landing or balance.",
+      "id": "robot-task-observations",
+      "label": "Quadruped · body and foot observations",
+      "scene": "runs/full-robot/learning/task-observations/scene.json",
+      "config": "runs/full-robot/learning/task-observations/config.json"
+    },
+    {
+      "mode": "embedded",
+      "description": "A Rhai controller compares planned and actual joint angles, then adjusts the motor targets. Gain 0 follows the sampled plan; higher gain adds tracking correction.",
+      "readiness": "Feedback experiment · ideal joint observations; hardware sensing, landing and walking remain unvalidated.",
+      "evidence": "Gain 0.5 reduces worst sampled body-relative foot error from 4.77 mm to 3.14 mm and increases peak clearance to 2.69 mm. The lift check passes at both tested timesteps; all 161 browser frames pass native comparison. Landing, balance, backlash convergence and hardware accuracy remain unaccepted.",
+      "id": "robot-feedback-0.5",
+      "label": "Quadruped · joint feedback 0.5",
+      "scene": "runs/full-robot/learning/joint-feedback/gain-0.5.scene.json",
+      "config": "runs/full-robot/learning/joint-feedback/gain-0.5.config.json"
+    },
+    {
+      "mode": "embedded",
+      "description": "A Rhai controller compares planned and actual joint angles, then adjusts the motor targets. Gain 0 follows the sampled plan; higher gain adds tracking correction.",
+      "readiness": "Feedback experiment · ideal joint observations; hardware sensing, landing and walking remain unvalidated.",
+      "evidence": "Native 1.6 s comparison: gain 0.5 reduces the worst sampled body-relative foot tracking error from 4.77 mm to 3.14 mm. This does not certify world foothold accuracy or balance.",
+      "id": "robot-feedback-0",
+      "label": "Quadruped · joint feedback 0",
+      "scene": "runs/full-robot/learning/joint-feedback/gain-0.scene.json",
+      "config": "runs/full-robot/learning/joint-feedback/gain-0.config.json"
+    },
+    {
+      "id": "pendulum-embedded",
+      "label": "Motorized pendulum · embedded servo",
+      "mode": "embedded",
+      "fixture": true,
+      "scene": "examples/interactive/pendulum.scene.json",
+      "config": "examples/interactive/pendulum.embedded.json",
+      "description": "A short registered-servo experiment using the incremental mechanism and motor runtime.",
+      "readiness": "Live runtime fixture · fixed target, 20 ms diagnostic.",
+      "evidence": "Used to check host chunking, firmware state and replay before full-robot browser delivery. No walking command is declared."
+    },
+    {
+      "id": "pendulum-condensed",
+      "label": "Motorized pendulum · local motor solve",
+      "mode": "embedded",
+      "fixture": true,
+      "scene": "examples/interactive/pendulum.scene.json",
+      "config": "examples/interactive/pendulum.condensed.json",
+      "description": "The detailed motor equations are solved inside each mechanical trial. Independent motor derivatives share probes, and convergence checks measure corrections in physical state units. Inspect the shared Rust and WASM runtime.",
+      "readiness": "Solver experiment · short validation fixture; full-robot performance is not established.",
+      "evidence": "Independent circuit and coupled-state tests verify the unchanged equations; structural audits check when derivative probes may be combined. This preset checks browser execution and replay; it is not an accepted training model or walking controller."
+    },
+    {
+      "id": "pendulum-policy",
+      "label": "Motorized pendulum · sampled Rhai",
+      "mode": "embedded",
+      "fixture": true,
+      "scene": "examples/interactive/pendulum.scene.json",
+      "config": "examples/interactive/pendulum.policy.json",
+      "description": "Adjust the command while Rhai controls the shared incremental motor simulation. Input changes are recorded in simulation time.",
+      "readiness": "Controller experiment · ideal simulator observations, not calibrated hardware sensors.",
+      "evidence": "Named angular observations and bounded targets use the shared Rust controller contract. This fixture checks scheduling and input replay; it is not a walking policy."
+    },
+    {
+      "id": "pendulum-live",
+      "label": "Motorized pendulum · live control",
+      "mode": "live",
+      "scene": "examples/interactive/pendulum.scene.json",
+      "description": "A live CAD-derived mechanism driven by the shared Rust runtime and Rhai controller. Change its position target while it runs.",
+      "readiness": "Live WASM fixture · quadruped motor-runtime integration remains in progress.",
+      "evidence": "This fixture exercises live worker execution, controller inputs, reset and deterministic input replay. Its performance does not establish full-robot performance."
+    },
+    {
+      "id": "robot-point-analytic-positions",
+      "label": "Quadruped · direct linkage positions",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/point-feedback/scene.json",
+      "config": "runs/full-robot/learning/analytic-positions/viewer.config.json",
+      "description": "The swing-foot controller with direct knee and transmission position calculations. All moving parts, actuator physics and original linkage checks are retained.",
+      "readiness": "Solver experiment · initial stepping, not accepted walking or realtime.",
+      "evidence": "Both native timestep runs preserve the previous motion to numerical precision and pass the sampled supported-lift check. Hardware calibration, landing accuracy and training-model acceptance remain open."
+    },
+    {
+      "id": "robot-drive-definition",
+      "label": "Quadruped · explicit drive definition",
+      "mode": "embedded",
+      "scene": "runs/full-robot/learning/drive-backlash-definition/scene.json",
+      "config": "runs/full-robot/learning/drive-backlash-definition/viewer.config.json",
+      "description": "Live Rust controller with explicitly idealized drive connections and a 1 ms nominal timestep. Motor electrical and firmware dynamics remain active.",
+      "readiness": "Experiment · drive-connection backlash estimated as zero; hardware calibration pending.",
+      "evidence": "All 12 drive connections have explicit provenance, separate from bearing clearance. Full native runs at 1 and 0.125 ms differ by at most 0.120 mm in sampled foot positions and pass 360 ms of supported lift. Electrical transients remain timestep sensitive. This is not accepted walking or hardware accuracy."
+    },
+    {
+      "id": "pendulum-drive-backlash",
+      "label": "Motor fixture · explicit drive backlash",
+      "mode": "embedded",
+      "fixture": true,
+      "scene": "examples/interactive/pendulum.drive-backlash.scene.json",
+      "config": "examples/interactive/pendulum.embedded.json",
+      "description": "Synthetic v4 drive-backlash definition through the shared Rust runtime.",
+      "readiness": "Fixture · explicit provenance; no hardware calibration.",
+      "evidence": "Drive connection and motor gearbox gaps are combined explicitly. Unknown drive values are rejected."
+    },
+    {
+      "id": "robot-crawl-startup",
+      "label": "Quadruped · two-cycle crawl",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-crawl-startup/scene.json",
+      "config": "examples/full-robot/browser-crawl-startup/config.json",
+      "task": "examples/full-robot/browser-crawl-startup/task.json",
+      "description": "Live 16.6-second crawl: shift weight, lift and place all four feet twice, and advance the body by 20 mm. Rhai feedback commands bounded effective servos through the shared Rust physics runtime.",
+      "readiness": "Experimental crawl sequence · ideal observations · speed/turn commands and sustained walking are not yet available.",
+      "evidence": "CAD mechanism, inertia and contact remain active. The reference checks 1,621 poses for closure, collision and static tripod support. All eight simulated swings pass sampled clearance and support checks. The side feet move farther forward first to accommodate the asymmetric mass distribution. Browser actuators and 20 ms integration remain uncalibrated approximations."
+    },
+    {
+      "id": "robot-effective-servo",
+      "label": "Quadruped · effective servo experiment",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-effective-servo/scene.json",
+      "config": "examples/full-robot/browser-effective-servo/config.json",
+      "task": "examples/full-robot/browser-effective-servo/task.json",
+      "description": "Live Rust physics with bounded effective servos, a 20 ms mechanical step, and 50 Hz controller updates. Explore the same short single-foot reference using simpler actuator physics.",
+      "readiness": "Experimental browser fidelity · uncalibrated · single-foot motion, not walking.",
+      "evidence": "Retains CAD mechanism bodies, inertia, gravity and contact. Omits motor electrical/thermal states, internal rotor dynamics, firmware delay and quantization, and gearbox compliance/backlash. Effective gains are estimated from CAD voltage gains. Current telemetry is unavailable. Realtime walking and hardware transfer are unverified."
+    },
+    {
+      "id": "robot-teacher-environment",
+      "label": "Quadruped · teacher environment",
+      "mode": "embedded",
+      "scene": "examples/full-robot/teacher-baseline/scene.json",
+      "config": "examples/full-robot/teacher-baseline/config.json",
+      "description": "Live 50 Hz task transitions over the same Rust motor and mechanism simulation. Adjust controller gains, inspect the score, and replay the held commands.",
+      "readiness": "Teacher interface · ideal observations and provisional tracking reward; no trained walking policy.",
+      "evidence": "The task exposes 54 named quantities with SI units. Commands go through the existing Rhai controller and servo physics. Drive-connection backlash remains explicitly estimated as zero. Endpoint joint tracking alone does not establish stepping success or hardware readiness.",
+      "task": "examples/full-robot/teacher-environment.json"
+    },
+    {
+      "id": "pendulum-environment",
+      "label": "Pendulum · teacher environment",
+      "mode": "embedded",
+      "fixture": true,
+      "scene": "examples/interactive/pendulum.scene.json",
+      "config": "examples/interactive/pendulum.policy.json",
+      "task": "examples/interactive/pendulum.environment.json",
+      "description": "A small held-action training-interface fixture with the same Rust environment as the quadruped.",
+      "readiness": "Synthetic interface fixture, not a trained policy.",
+      "evidence": "Exercises endpoint observations, task scores, bounded actions, reset and replay."
+    },
+    {
+      "id": "robot-online-steps",
+      "label": "Quadruped · WASD crawl prototype",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-online-steps/scene.json",
+      "config": "examples/full-robot/browser-online-steps/scheduled-posture-screen.config.json",
+      "task": "examples/full-robot/browser-online-steps/task.json",
+      "description": "Live Rust controller generates upcoming foot placements from speed and turn commands. Press Play, then hold W/S to move and A/D to turn. The motors and ground contact produce the motion.",
+      "readiness": "Experimental 24-second flat-floor sandbox · forward-stop checked · reverse/turn transitions can fail · ideal observations · realtime targets remain under validation.",
+      "evidence": "Shared support phases qualify lift and landing from simulated foot loads. CAD inverse kinematics checks every requested motor pose and rejects internal collision. Releasing a key completes the current foot transfer before standing. Effective actuators retain their documented approximations."
+    },
+    {
+      "id": "robot-reversal-crawl",
+      "label": "Quadruped · Crawl and reverse",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-reversal/scene.json",
+      "config": "examples/full-robot/browser-reversal/config.json",
+      "task": "examples/full-robot/browser-reversal/task.json",
+      "description": "Press Play, then hold W/S to move and A/D to turn. Reversing restarts the foot order after the current transfer finishes. Rust simulates the motors, linkages and ground contact.",
+      "readiness": "Provisional flat-floor crawl · 60 seconds at realtime average; p95 update 29 ms exceeds 20 ms target · uncalibrated physics · about 70 mm traveled.",
+      "evidence": "Restarting the foot order avoids mixed forward/reverse stances. A smaller reverse body shift preserves gear clearance. Stronger stopping correction requires four loaded feet; moving feedback stays unchanged. Original physical checks remain in force."
+    },
+    {
+      "id": "robot-terrain-contact",
+      "label": "Quadruped · Terrain-contact experiment",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-terrain-contact/scene.json",
+      "config": "examples/full-robot/browser-reversal/config.json",
+      "task": "examples/full-robot/browser-reversal/task.json",
+      "description": "W/S requests forward/back motion; A/D turns. Rust simulates motors, mechanisms and floor contact. Geometry checks stop the controller when sampled links overlap.",
+      "readiness": "Experimental reduced collision physics · link-to-link contact forces omitted · sampled geometry checks retained · uncalibrated model; performance under test.",
+      "evidence": "Same CAD properties, controller and numerical tolerances as Crawl and reverse. Floor/height-field contact retained. No inter-link impact response or between-sample collision guarantee. Full recorded-pose geometry audit required."
+    },
+    {
+      "id": "robot-residual-policy",
+      "label": "Quadruped · Teacher motor corrections",
+      "mode": "embedded",
+      "scene": "examples/full-robot/browser-residual-policy/scene.json",
+      "config": "examples/full-robot/browser-residual-policy/config.json",
+      "task": "examples/full-robot/browser-residual-policy/task.json",
+      "description": "WASD controls the baseline crawl. Expand Motor corrections to adjust any of the twelve motor targets; clear corrections to request the baseline again.",
+      "readiness": "Teacher-action experiment · no trained neural policy yet · ideal simulation observations · corrections remain subject to motor and geometry limits.",
+      "evidence": "The same Rust mechanism, effective motors and terrain-contact profile remain active. Zero corrections reproduce the baseline. Added teacher observations and provisional rewards prepare individual motor actions for learning; they do not establish hardware transfer or arbitrary correction safety."
+    },
+    {
+      "id": "robot-neural-teacher",
+      "label": "Quadruped · First neural teacher",
+      "mode": "embedded",
+      "scene": "examples/full-robot/neural-teacher/scene.json",
+      "config": "examples/full-robot/neural-teacher/config.json",
+      "task": "examples/full-robot/neural-teacher/task.json",
+      "description": "WASD requests the slow baseline crawl. A small trained Rust network adds motor-angle corrections. Expand Learned motor corrections to inspect its live outputs.",
+      "readiness": "Initial policy-search experiment · ideal teacher observations · small training-score change · robustness and hardware transfer unverified.",
+      "evidence": "The policy was selected from paired parameter perturbations using one 24-second command sequence. Rust executes the same bounded network in native simulation and WASM, before motor-limit validation. This is an experimental learned correction to a hand-authored gait, not an independently learned or deployable walking controller."
+    },
+    {
+      "id": "robot-distilled-student",
+      "label": "Quadruped · Distilled student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/student-distillation/config.json",
+      "task": "examples/full-robot/student-distillation/task.json",
+      "description": "WASD requests the crawl. The distilled network replaces the teacher's body/foot motor feedback. Expand Learned motor corrections to inspect its outputs.",
+      "readiness": "Experimental student · proposed encoder/IMU observations are ideal simulation values · upstream planner remains privileged · sensor hardware and calibration unconfirmed.",
+      "evidence": "Supervised imitation uses a separate reverse-first validation sequence. The student excludes body translation, foot geometry and contact force from its network; it retains joint tracking and the existing planner. Unused teacher motor-feedback calculations are omitted with an exact physical-trajectory check. Closed-loop task and performance results are separate from imitation accuracy."
+    },
+    {
+      "id": "robot-student-push",
+      "label": "Quadruped · Student push test",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/student-disturbances/lateral.config.json",
+      "task": "examples/full-robot/student-distillation/task.json",
+      "description": "WASD controls the student crawl. At 7 seconds a 0.1 N sideways force acts on the chassis for 0.2 seconds. The push is a live physical load and repeats on reset or input replay.",
+      "readiness": "Experimental disturbance probe · ideal observations · one small push is not a robustness guarantee.",
+      "evidence": "The environment applies a declared world force at the chassis center of mass through shared Rust dynamics. Timing and force bounds are recorded in the experiment. Hypothetical engineering challenge, not a measured hardware disturbance distribution."
+    },
+    {
+      "id": "robot-walking-objective",
+      "label": "Quadruped · Walking task score",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/student-disturbances/lateral.config.json",
+      "task": "examples/full-robot/walking-objective/task.json",
+      "description": "The same student and physical push, with body-reference tracking and measured step outcomes added to the learning score. WASD commands motion; the sidebar reports qualified/failed steps and body error.",
+      "readiness": "Task-scoring experiment · controller weights unchanged · supported-step margin and disturbance recovery remain provisional.",
+      "evidence": "The task reuses the independent sampled lift checker with unchanged clearance, unloading, support and 200 ms duration thresholds. Body tracking is scored against the held walking reference. Numerical/physical accuracy and learning success remain separate checks."
+    },
+    {
+      "id": "robot-improved-student",
+      "label": "Quadruped · Improved student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/student-robustness/config.json",
+      "task": "examples/full-robot/walking-objective/task.json",
+      "description": "WASD requests the crawl using student weights improved across short pushed walks and a minute-long walk. The viewport shows qualified steps and body tracking; inspect Learned motor corrections for live outputs.",
+      "readiness": "Experimental student improvement · development walks pass · held-out push and 5 ms refinement each miss one swing · ideal observations and privileged planner.",
+      "evidence": "Paired parameter search changes only network weights. It ranks the weakest reward per second across three fixed episodes, rejects numerical failures, and retains independent stepping and stopping gates. Physical calibration, wider terrain, faster walking and hardware transfer remain unverified. The reserved reverse-first, opposite-direction push fails one swing for both the original and improved student; this is not a robust-controller promotion. At 5 ms physics, the first swing qualifies for 180 rather than 200 ms, before the push. Stepping margin remains timestep-sensitive."
+    },
+    {
+      "id": "robot-paced-student",
+      "label": "Quadruped · Paced student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/step-margin/retry-sustained.config.json",
+      "task": "examples/full-robot/walking-objective/task.json",
+      "description": "WASD requests live walking with the improved student network, adjusted weight shifts and longer foot raise/lower phases. Bounded solver retries keep controller sampling at 50 Hz. Inspect qualified swings and learned motor corrections.",
+      "readiness": "Experimental paced student · rendered minute keeps up at 1× · active p95 28.5 ms exceeds 20 ms target · pushed minute misses heading gate · ideal observations.",
+      "evidence": "Network weights and physical force laws are unchanged. The 5 ms short walk and diagonal-push case each pass eight supported swings; reversal passes with one recovered implicit step. A 60-second three-push case completes 26 supported swings but ends with 0.00531 rad heading error against 0.005 rad. Smaller solver steps recover convergence failures, not integration accuracy. Hardware calibration, useful walking speed, wider commands and terrain remain unverified. On the documented Intel Mac/Chrome host, the rendered minute has active speed ratio 1.00035× and active transition p95 28.5 ms; rendering schedule p95 is 16.67 ms. This is not latency headroom or general interactive/terrain acceptance."
+    },
+    {
+      "id": "robot-reused-student",
+      "label": "Quadruped · Efficient student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/mechanical-reuse/restart-sustained.config.json",
+      "task": "examples/full-robot/walking-objective/task.json",
+      "description": "The same paced walking controller with lower simulation overhead. WASD requests live motion. Robot properties, motor force laws and learned policy weights are unchanged.",
+      "readiness": "Experimental numerical optimization · rendered minute keeps up at 1× · active p95 22.5 ms exceeds 20 ms target · heading and timestep limits remain.",
+      "evidence": "The native minute reduces Jacobian builds from 7232 to 4353. It uses 25 fresh restarts across 3000 updates, with zero subdivisions. Maximum sampled foot difference from the baseline is below 5e-13 m and pair-force difference below 1.6e-8 N. This is numerical agreement, not hardware accuracy. The unforced minute heading is close to its gate, and the 5 ms unforced reference fails heading. General commands, useful walking speed and terrain remain unverified. The rendered minute has active speed ratio 1.00060× and active transition p95 22.5 ms on the documented Intel Mac/Chrome host. Largest measured WASM call is 141 ms; rendering schedule p95 is 16.67 ms. Command-to-visible latency, broader commands, terrain and hardware transfer remain unvalidated."
+    },
+    {
+      "id": "robot-heading-student",
+      "label": "Quadruped · Heading student",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/heading-task/sustained.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "A student trained with a heading-aware walking task across ordinary and refined physics timesteps. WASD requests live walking. Inspect heading error, supported steps and learned motor corrections.",
+      "readiness": "Experimental heading-aware student · five walking checks pass · rendered minute keeps up at 1× · active p95 23.6 ms exceeds 20 ms target · ideal observations.",
+      "evidence": "A nine-evaluation paired weight search improves the weakest reward per simulated second from 0.8020 to 0.8674. The ordinary minute completes 26 supported steps and ends with 0.00354 rad heading error; the 5 ms minute ends with 0.00411 rad, both below the 0.005 rad heading budget. Independent trajectory and reserved-disturbance results are versioned separately. The task score does not provide heading observations to the student. Actual sensors, heading estimation, useful walking speed, broad terrain and hardware transfer remain unresolved. This is live shared Rust physics; measured browser performance is reported separately for this build. On the documented Intel Mac/Chrome host, active speed is 1.00033× and transition p95 is 23.6 ms. The largest WASM call is 153 ms; rendering schedule p95 is 16.67 ms. This is a single flat-floor minute, not general command/terrain or command-to-visible-response acceptance."
+    },
+    {
+      "id": "robot-browser-solver",
+      "label": "Quadruped · Browser solver",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/browser-precision/guarded.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "The heading controller with less solver work and drawing only when the view changes. WASD drives live Rust physics; earlier controller presets remain available.",
+      "readiness": "Experimental browser improvement · tested walks pass · realtime average speed · minute p95 20.98 ms misses 20 ms · turning/reversing p95 18.97 ms passes.",
+      "evidence": "The selected profile uses independent constraint-block factorization, 1e-5 Newton precision, a 12-correction cached-attempt cap and guarded backtracking. Fresh restarts retain 80 corrections; all original closure and rank checks remain. The native minute needs 26196 Newton iterations versus 39405; sampled foot difference is below 1.34 nm, not a hardware accuracy claim. Short, refined-minute, two reserved twists and forward/turn/reverse/stop cases pass unchanged walking gates. All 50 Hz physics updates execute; unchanged views avoid redundant drawing. The rendered minute keeps up with realtime but still misses the 20 ms p95 target; maximum measured WASM call is 74.2 ms. The rendered turning/reversing case passes both timing targets. These are limited flat-floor tests at 1.25 mm/s, with ideal observations and a privileged planner. Broader terrain, useful walking speed and command-to-visible-motion latency remain unvalidated."
+    },
+    {
+      "id": "robot-fast-student",
+      "label": "Quadruped · Faster student trial",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-speed/scene.json",
+      "config": "examples/full-robot/student-speed/2x-support-18-9.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "The 2.5 mm/s learned gait, available for live inspection with WASD. The short forward test passes; sustained heading, timestep agreement and broader steering remain experimental.",
+      "readiness": "Experimental faster gait · measured sustained speed 2.48 mm/s · minute fails heading/stop gates · not a validated controller.",
+      "evidence": "The selected learned weights advance the body about 141 mm in a minute with 41 supported swings and no sampled internal overlap. A regression over the steady forward interval measures 2.477 mm/s; body path length is not counted as forward travel. The 20 ms minute ends with 1.178 mm position error and 0.00689 rad heading error, exceeding the unchanged gates. The 20/5 ms comparison also exceeds the 1 mm foot screen. This preset loads the exact selected 24-second configuration; no faster controller is promoted. Reverse, turning, disturbances, rendered timing and hardware transfer at this speed remain unvalidated. Ideal encoder/IMU-style observations and a privileged planner are used."
+    },
+    {
+      "id": "robot-swing-advance",
+      "label": "Quadruped · Move during swing",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-speed/scene.json",
+      "config": "examples/full-robot/swing-advance/half.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "A 2.5 mm/s trial that advances half the body motion while raising and lowering a foot. Load it to inspect the shared Rust planner and steer with WASD.",
+      "readiness": "Experimental overlapping motion · short forward audit passes at 20/5 ms · timestep foot difference 1.167 mm exceeds 1 mm · not validated.",
+      "evidence": "Both short trials complete 13 supported swings without sampled internal overlap; final body errors are 0.926/0.696 mm. The sampled foot difference exceeds the unchanged numerical screen. Increasing the command to 3.75 or 5 mm/s with this posture reaches first-leg geometry interference despite overlap. The CAD mechanisms, motor limits, contact physics, neural weights and acceptance thresholds are unchanged. Sustained walking, steering, held-out disturbances, browser timing and hardware calibration remain separate gates."
+    },
+    {
+      "id": "robot-prelift-control",
+      "label": "Quadruped · Cancel before lift",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/prelift-control/browser.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "A live WASD crawl that can cancel a foot lift before it starts. Release during the weight shift to request a return to standing; airborne steps and reversals finish the current transfer.",
+      "readiness": "Experimental command response · same 1.25 mm/s crawl · native stop/resume checks pass · browser and timestep validation in progress.",
+      "evidence": "An optional shared Rust planner change preserves motor limits, physical components and student weights. It rechecks a stop or non-reversing command once support is qualified before lift-off. Canceled lifts earn no walking credit. An early reversal prototype exceeded a later motor command bound, so reversals retain the committed transfer. This does not establish physical stopping latency, useful walking speed, general terrain behavior or hardware accuracy."
+    }
+  ]
+}

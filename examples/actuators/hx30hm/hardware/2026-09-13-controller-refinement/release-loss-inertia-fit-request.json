@@ -1,0 +1,71 @@
+{
+  "model": {
+    "shared": {
+      "motor": {
+        "back_emf_constant": 0.009734075474443412,
+        "backlash": 0.0,
+        "backlash.events": 0.0,
+        "derating": 0.0,
+        "efficiency": 0.5037278591966505,
+        "gear_damping": 0.1,
+        "gear_friction": 0.0,
+        "gear_inertia": 2e-05,
+        "gear_stiffness": 50.0,
+        "inductance": 0.00148,
+        "jacobian.analytic": 1.0,
+        "no_load_current": 0.1,
+        "ratio": 200.0,
+        "reference": 298.15,
+        "resistance": 3.6999999999999997,
+        "rotor_inertia": 2.2324546035565207e-08,
+        "temp_coeff": 0.0039,
+        "torque_constant": 0.009734075474443412
+      },
+      "bridge": {
+        "current_limit": 3.0,
+        "on_resistance": 0.05
+      },
+      "conditions": {
+        "voltage_v": null,
+        "temperature_c": null,
+        "load_inertia": 2e-05,
+        "load_torque": 0.0,
+        "command_delay_s": 0.0
+      },
+      "step_s": 0.00025
+    },
+    "device_deltas": {}
+  },
+  "training_ids": [
+    "release-id4/4/0",
+    "release-id4/4/1",
+    "release-id4/4/2",
+    "release-id4/4/3",
+    "release-id4/4/4",
+    "release-id4/4/5",
+    "release-id4/4/6",
+    "release-id4/4/7"
+  ],
+  "validation_ids": [
+    "release-id4/4/8",
+    "release-id4/4/9",
+    "release-id4/4/10",
+    "release-id4/4/11"
+  ],
+  "coordinates": [
+    {
+      "path": "motor.no_load_current",
+      "device": 4,
+      "lower": -0.1,
+      "upper": 0.1
+    },
+    {
+      "path": "motor.rotor_inertia",
+      "device": 4,
+      "lower": -2e-08,
+      "upper": 2e-07
+    }
+  ],
+  "maximum_evaluations": 24,
+  "validation_influenced": true
+}

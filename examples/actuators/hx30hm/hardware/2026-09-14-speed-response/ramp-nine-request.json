@@ -1,0 +1,282 @@
+{
+  "estimator": {
+    "encoder_quantum_rad": 0.0015339807878856412,
+    "lag_samples": 2,
+    "maximum_sample_gap_s": 0.2625,
+    "maximum_sample_step_rad": 3.141592653589793,
+    "maximum_sample_age_s": null
+  },
+  "setup_evidence": "User-confirmed unloaded bench, September 14; internal servo encoder only; attached inertia/load torque and sensor sample age unmeasured. Desired ramp speed 3.515625 degrees/s, capped at 7.5 percent PWM. This is not maximum-speed or loaded validation. Tolerance 0.02 rad/s and dwell 0.25 s preregistered for timing commissioning; not a relaxed tracking/model gate.",
+  "trials": [
+    {
+      "motor_id": 4,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 4,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 4,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 5,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 5,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 5,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 6,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 6,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 6,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 7,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 7,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 7,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 8,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 8,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 8,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 9,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 9,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 9,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 10,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 10,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 10,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 11,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 11,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 11,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 12,
+      "command_tick": 7,
+      "last_observation_tick": 16,
+      "from_rad_s": 0.0,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 12,
+      "command_tick": 17,
+      "last_observation_tick": 36,
+      "from_rad_s": 0.06135923151542565,
+      "target_rad_s": -0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    },
+    {
+      "motor_id": 12,
+      "command_tick": 37,
+      "last_observation_tick": 46,
+      "from_rad_s": -0.06135923151542565,
+      "target_rad_s": 0.06135923151542565,
+      "tolerance_rad_s": 0.02,
+      "dwell_s": 0.25,
+      "travel_limited": false
+    }
+  ]
+}

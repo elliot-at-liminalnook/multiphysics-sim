@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "description_id": "9bee4165ea081b9edf4ea7d0eed7f2c2b78fad38c94360ead9075ede8082e812",
+  "provenance": "Display-only bindings to retained motor-thermal observations. Right-handed world +X shaft axis; zero angle is authored pose. Accepted samples are held without interpolation or extrapolation. Temperature is uniform lumped component color, not a surface field. Color range is illustrative, not a safety limit.",
+  "rotations": [
+    {
+      "part": "rotor",
+      "observable": "example/motor-thermal/rotor/port/7368616674/across/616e676c65",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "pivot": [
+        0.136,
+        0.06,
+        0.0
+      ],
+      "marker_radius": null
+    },
+    {
+      "part": "rotor-wheel",
+      "observable": "example/motor-thermal/rotor/port/7368616674/across/616e676c65",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "pivot": [
+        0.136,
+        0.06,
+        0.0
+      ],
+      "marker_radius": 0.034
+    }
+  ],
+  "colors": [
+    {
+      "part": "motor",
+      "observable": "example/motor-thermal/motor/port/706c75672e746865726d616c/across/74656d7065726174757265",
+      "range_kelvin": [
+        293.15,
+        297.15
+      ],
+      "cold_srgb": [
+        0.16,
+        0.6,
+        0.6
+      ],
+      "hot_srgb": [
+        0.95,
+        0.22,
+        0.08
+      ]
+    },
+    {
+      "part": "thermal-case",
+      "observable": "example/motor-thermal/case/port/6e6f6465/across/74656d7065726174757265",
+      "range_kelvin": [
+        293.15,
+        297.15
+      ],
+      "cold_srgb": [
+        0.16,
+        0.6,
+        0.6
+      ],
+      "hot_srgb": [
+        0.95,
+        0.22,
+        0.08
+      ]
+    }
+  ],
+  "readouts": [
+    {
+      "label": "Shaft angle",
+      "observable": "example/motor-thermal/rotor/port/7368616674/across/616e676c65"
+    },
+    {
+      "label": "Shaft speed",
+      "observable": "example/motor-thermal/rotor/port/7368616674/across/7370656564"
+    },
+    {
+      "label": "Motor current",
+      "observable": "example/motor-thermal/motor/port/706c75672e656c656374726963616c/through/63757272656e74"
+    },
+    {
+      "label": "Motor temperature",
+      "observable": "example/motor-thermal/motor/port/706c75672e746865726d616c/across/74656d7065726174757265"
+    },
+    {
+      "label": "Motor heat flow",
+      "observable": "example/motor-thermal/motor/port/706c75672e746865726d616c/through/686561745f666c6f77"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+iverilog -g2005 -s bridge_trajectory_tb -o impl/bridge_trajectory_tb.vvp tb/bridge_trajectory_tb.v src/uart_tx.v src/uart_rx.v src/host_packet_queue.v src/trajectory_store.v src/trajectory_upload.v src/bridge_control.v src/hx_safety.v src/button.v impl/fixed-pd/fixed_pd.v
+vvp impl/bridge_trajectory_tb.vvp
+FATAL: tb/bridge_trajectory_tb.v:56: wrong trajectory outcome op=0 failed=0 ready=0 written=40960
+       Time: 167750000  Scope: bridge_trajectory_tb.check_reply
+make: *** [sim-bridge-trajectory] Error 1

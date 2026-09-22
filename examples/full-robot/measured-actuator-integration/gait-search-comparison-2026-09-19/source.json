@@ -1,0 +1,13 @@
+{
+  "source_experiment": "examples/full-robot/measured-actuator-integration/reduced-exploration-2026-09-19/exploration-forward.spec.json",
+  "source_compiler": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/upright-fast/fine/recipe.json",
+  "scope": "Explicit new policy search domain only; physical robot and runtime limits retained. No simulation/search result yet.",
+  "retained_rejection": "baseline-preparation: original 1024-sample mesh failed unchanged interpolation acceleration gate; using existing 2048-sample fine recipe",
+  "baseline_change": {
+    "cadence_scale": [
+      1,
+      0.8
+    ],
+    "reason": "Original ungoverned reference peak 6.351 rad/s exceeds unchanged 5.511 rad/s provisional screen. Changed before any search or dynamic scoring."
+  }
+}

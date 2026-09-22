@@ -1,0 +1,56 @@
+{
+  "scope": "Configuration-only separation of outer mechanical secant updates from inner auxiliary matrix policy. Previous solver-secant enabled both through inheritance; this experiment explicitly disables inner updates. Equations, timestep, acceptance tolerances and gates are unchanged.",
+  "inputs": {
+    "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+    "config.json": "7e649c37845711afbf32a23d162163829f504d88df4c9219c71d7fb6a8108abb",
+    "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+    "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+  },
+  "variants": {
+    "outer": {
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "a13a778e6a276016c3f9da88c658daac6d444d8de367c04e7e494822e17631df",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      },
+      "outer_broyden_negligible_updates": false,
+      "analytic_mechanism_motion": false
+    },
+    "outer-tail": {
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "05604274d5e911ae7da91c74a0bd6c181b47a9ab35d40cc75221870a761f1287",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      },
+      "outer_broyden_negligible_updates": true,
+      "analytic_mechanism_motion": false
+    },
+    "outer-analytic": {
+      "inputs": {
+        "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+        "config.json": "28337befb23dff860cb0253080d1f95f6117774179260c5e71e00d849765b8cb",
+        "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+        "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+      },
+      "outer_broyden_negligible_updates": false,
+      "analytic_mechanism_motion": true
+    }
+  },
+  "binary_candidate_sha256": "dbcadb5ebe789dcf74f2ac28301cb89f03f7b2365515ee1a1cb3c92bbd0f3e00",
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "source_hashes": {
+    "crates/sim-domain-robot/src/articulated/embedding/implicit.rs": "8034caa741c0543928f6260b12b7781247b0109fd48546ef08ef243dd468a58e",
+    "crates/sim-solve/src/lib.rs": "42fb209f7df912fea5a0bde2c76c659447f3f3415384816e50e386f90174a400"
+  }
+}

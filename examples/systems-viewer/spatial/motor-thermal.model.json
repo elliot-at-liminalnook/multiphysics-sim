@@ -1,0 +1,479 @@
+{
+  "objects": [
+    {
+      "value": null,
+      "version": 0
+    },
+    {
+      "value": {
+        "name": "motor"
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "name": "supply"
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "name": "ground"
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "name": "rotor"
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "name": "case"
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "name": "cooling"
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "name": "ambient"
+      },
+      "version": 1
+    }
+  ],
+  "behaviors": [
+    {
+      "value": null,
+      "version": 0
+    },
+    {
+      "value": {
+        "object": {
+          "idx": 1,
+          "version": 1
+        },
+        "kind": "bridge.motor",
+        "parameters": {
+          "resistance": {
+            "value_si": 2.0,
+            "kind": "Dimensionless"
+          },
+          "torque_constant": {
+            "value_si": 0.1,
+            "kind": "Dimensionless"
+          }
+        },
+        "state": []
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "object": {
+          "idx": 2,
+          "version": 1
+        },
+        "kind": "electrical.voltage_source",
+        "parameters": {
+          "voltage": {
+            "value_si": 2.0,
+            "kind": "Dimensionless"
+          }
+        },
+        "state": []
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "object": {
+          "idx": 3,
+          "version": 1
+        },
+        "kind": "electrical.ground",
+        "parameters": {},
+        "state": []
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "object": {
+          "idx": 4,
+          "version": 1
+        },
+        "kind": "rotational.inertia",
+        "parameters": {
+          "damping": {
+            "value_si": 0.02,
+            "kind": "Dimensionless"
+          },
+          "inertia": {
+            "value_si": 0.1,
+            "kind": "Dimensionless"
+          }
+        },
+        "state": []
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "object": {
+          "idx": 5,
+          "version": 1
+        },
+        "kind": "thermal.capacitance",
+        "parameters": {
+          "heat_capacity": {
+            "value_si": 2.0,
+            "kind": "Dimensionless"
+          },
+          "initial.temperature": {
+            "value_si": 293.15,
+            "kind": "Dimensionless"
+          }
+        },
+        "state": []
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "object": {
+          "idx": 6,
+          "version": 1
+        },
+        "kind": "thermal.conductance",
+        "parameters": {
+          "conductance": {
+            "value_si": 0.5,
+            "kind": "Dimensionless"
+          }
+        },
+        "state": []
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "object": {
+          "idx": 7,
+          "version": 1
+        },
+        "kind": "thermal.ambient",
+        "parameters": {
+          "temperature": {
+            "value_si": 293.15,
+            "kind": "Dimensionless"
+          }
+        },
+        "state": []
+      },
+      "version": 1
+    }
+  ],
+  "ports": [
+    {
+      "value": null,
+      "version": 0
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 1,
+          "version": 1
+        },
+        "name": "plug",
+        "schema": {
+          "Acausal": {
+            "Composite": [
+              "Electrical",
+              "Rotational",
+              "Thermal"
+            ]
+          }
+        },
+        "members": [
+          {
+            "idx": 2,
+            "version": 1
+          },
+          {
+            "idx": 3,
+            "version": 1
+          },
+          {
+            "idx": 4,
+            "version": 1
+          }
+        ],
+        "member_of": null
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 1,
+          "version": 1
+        },
+        "name": "plug.electrical",
+        "schema": {
+          "Acausal": "Electrical"
+        },
+        "members": [],
+        "member_of": [
+          {
+            "idx": 1,
+            "version": 1
+          },
+          0
+        ]
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 1,
+          "version": 1
+        },
+        "name": "plug.rotational",
+        "schema": {
+          "Acausal": "Rotational"
+        },
+        "members": [],
+        "member_of": [
+          {
+            "idx": 1,
+            "version": 1
+          },
+          1
+        ]
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 1,
+          "version": 1
+        },
+        "name": "plug.thermal",
+        "schema": {
+          "Acausal": "Thermal"
+        },
+        "members": [],
+        "member_of": [
+          {
+            "idx": 1,
+            "version": 1
+          },
+          2
+        ]
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 2,
+          "version": 1
+        },
+        "name": "p",
+        "schema": {
+          "Acausal": "Electrical"
+        },
+        "members": [],
+        "member_of": null
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 2,
+          "version": 1
+        },
+        "name": "n",
+        "schema": {
+          "Acausal": "Electrical"
+        },
+        "members": [],
+        "member_of": null
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 3,
+          "version": 1
+        },
+        "name": "pin",
+        "schema": {
+          "Acausal": "Electrical"
+        },
+        "members": [],
+        "member_of": null
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 4,
+          "version": 1
+        },
+        "name": "shaft",
+        "schema": {
+          "Acausal": "Rotational"
+        },
+        "members": [],
+        "member_of": null
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 5,
+          "version": 1
+        },
+        "name": "node",
+        "schema": {
+          "Acausal": "Thermal"
+        },
+        "members": [],
+        "member_of": null
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 6,
+          "version": 1
+        },
+        "name": "a",
+        "schema": {
+          "Acausal": "Thermal"
+        },
+        "members": [],
+        "member_of": null
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 6,
+          "version": 1
+        },
+        "name": "b",
+        "schema": {
+          "Acausal": "Thermal"
+        },
+        "members": [],
+        "member_of": null
+      },
+      "version": 1
+    },
+    {
+      "value": {
+        "owner": {
+          "idx": 7,
+          "version": 1
+        },
+        "name": "node",
+        "schema": {
+          "Acausal": "Thermal"
+        },
+        "members": [],
+        "member_of": null
+      },
+      "version": 1
+    }
+  ],
+  "connections": [
+    {
+      "ports": [
+        {
+          "idx": 2,
+          "version": 1
+        },
+        {
+          "idx": 5,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "ports": [
+        {
+          "idx": 3,
+          "version": 1
+        },
+        {
+          "idx": 8,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "ports": [
+        {
+          "idx": 4,
+          "version": 1
+        },
+        {
+          "idx": 9,
+          "version": 1
+        },
+        {
+          "idx": 10,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "ports": [
+        {
+          "idx": 6,
+          "version": 1
+        },
+        {
+          "idx": 7,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "ports": [
+        {
+          "idx": 11,
+          "version": 1
+        },
+        {
+          "idx": 12,
+          "version": 1
+        }
+      ]
+    }
+  ],
+  "state": {
+    "entries": [
+      {
+        "value": null,
+        "version": 0
+      }
+    ]
+  }
+}

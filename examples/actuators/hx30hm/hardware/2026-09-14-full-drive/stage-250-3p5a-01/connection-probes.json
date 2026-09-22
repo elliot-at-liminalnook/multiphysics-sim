@@ -1,0 +1,16 @@
+{
+  "time_utc": "2026-09-14T15:03:30.958978+00:00",
+  "operation": "Supervisor STATUS only; no ARM or motion commands",
+  "transactions": [
+    {
+      "baud": 1000000,
+      "request_hex": "fffffe03a0025c",
+      "reply": null
+    },
+    {
+      "baud": 115200,
+      "request_hex": "fffffe03a0025c",
+      "reply": null
+    }
+  ]
+}

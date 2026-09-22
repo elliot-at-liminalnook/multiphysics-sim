@@ -1,0 +1,40 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling sim-domain-translational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-translational)
+   Compiling sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+   Compiling sim-domain-electrical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-electrical)
+   Compiling sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+   Compiling sim-domain-rotational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-rotational)
+   Compiling sim-domain-radiative v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-radiative)
+   Compiling sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+   Compiling sim-domain-hydraulic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-hydraulic)
+   Compiling sim-domain-sensing v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-sensing)
+   Compiling sim-domain-magnetic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-magnetic)
+   Compiling sim-domain-fluid v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-fluid)
+   Compiling sim-domain-line v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-line)
+   Compiling sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+   Compiling sim-domain-chemical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-chemical)
+   Compiling sim-domain-granular v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-granular)
+   Compiling sim-domain-acoustic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-acoustic)
+   Compiling sim-domain-bridges v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-bridges)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator/crates/sim-script)
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `dev` profile [optimized + debuginfo] target(s) in 2m 06s
+     Running `target/debug/sim-inspect-scene examples/full-robot/whole-swing/browser.scene.json /tmp/open-connector-full-robot.description.json`
+Building captured CAD system without advancing simulation…
+195 components, 597 ports, 242 connections, 56 groups → /tmp/open-connector-full-robot.description.json

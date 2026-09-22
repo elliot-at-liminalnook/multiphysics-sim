@@ -1,0 +1,44 @@
+{
+  "presets": [
+    {
+      "id": "robot-measured-400hz-reuse",
+      "label": "Quadruped · Detailed motors · Faster simulation",
+      "mode": "embedded",
+      "scene": "examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json",
+      "config": "examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/browser.config.json",
+      "task": "examples/full-robot/measured-actuator-integration/browser-control-400hz/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "motion_key_vectors": {
+        "w": [
+          0.1,
+          0,
+          0
+        ],
+        "s": [
+          -0.05,
+          0,
+          0
+        ],
+        "a": [
+          0.05,
+          0,
+          0.15
+        ],
+        "d": [
+          0.05,
+          0,
+          -0.15
+        ]
+      },
+      "description": "Live WASD with the same bench-fit motor candidates and 400 Hz integer controller. W/S request forward/reverse; A/D request arcing turns. Release keys or Stop motion to request a controlled stop.",
+      "readiness": "Experimental fitted motors · 400 Hz motor loop · 200 Hz native measurement profile · 50 Hz motion policy. Faster detailed solver measured 0.08× real time on this Mac; still below real time. Calibration remains provisional.",
+      "evidence": "Uses the exact ID 10/11/12 candidate parameters from the measured-voltage motor study, repeated by actuator role across four legs as an explicit assumption. Internal motor/gearbox dynamics, encoder quantization and the FPGA integer law execute in Rust. The 1.25 ms feedback delay is an estimate. Supply is imposed at 11.1 V; loaded accuracy, battery behavior, twelve-motor physical bus timing and whole-robot hardware transfer remain unqualified. Model and cadence overrides are saved with input replay. Solver reuse is qualified against the retained detailed trajectory for short forward and forward/turn/reverse/stop cases. Model parameters and physics timestep are unchanged; sustained gait and realtime operation remain unqualified.",
+      "path": "data/robot-measured-400hz-reuse.json"
+    }
+  ]
+}

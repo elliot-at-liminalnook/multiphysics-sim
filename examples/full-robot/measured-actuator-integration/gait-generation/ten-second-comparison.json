@@ -1,0 +1,56 @@
+{
+  "scope": "Matched ten-second provisional detailed-motor gait comparison; same physical model, initial conditions, world, task, command schedule and seed. Only pace/tracking settings differ. No hardware or 300-second qualification.",
+  "baseline": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/baseline-10s/pilot-journal/state-00000000000000000002.json",
+    "sha256": "0e1dd4124fa6d4759d73960b9018eab4f678be8b9839be9440996028e4e54ddc",
+    "values": {
+      "pace_scale": 1,
+      "tracking_gain": -0.45661383205104644
+    },
+    "speed": {
+      "displacement_xy_m": [
+        0.6593993159337731,
+        0.48085575074118425
+      ],
+      "net_distance_m": 0.8161064335457697,
+      "net_speed_m_s": 0.08161064335457698,
+      "progress_reward_m": 0.0007425919182121321,
+      "body_up_z": 0.9962802257390432,
+      "hull_floor_clearance_m": 0.2532816724585035,
+      "body_floor_contact": false,
+      "fallen": false
+    }
+  },
+  "selected": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/selected-10s/pilot-journal/state-00000000000000000002.json",
+    "sha256": "45c955b1eaa7099b13523f05e2e2ada03e08448d2b87a3803c2adf95f8f04226",
+    "values": {
+      "pace_scale": 0.338652455153911,
+      "tracking_gain": -0.6939302676715838
+    },
+    "speed": {
+      "displacement_xy_m": [
+        1.0571856788482246,
+        0.833714741324067
+      ],
+      "net_distance_m": 1.346373584657259,
+      "net_speed_m_s": 0.13463735846572591,
+      "progress_reward_m": 0.004503890305271652,
+      "body_up_z": 0.9957324352573846,
+      "hull_floor_clearance_m": 0.2761437515424483,
+      "body_floor_contact": false,
+      "fallen": false
+    }
+  },
+  "relative_net_travel_improvement": 0.6497524456554236,
+  "recording": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/selected-10s/recording.json",
+    "sha256": "d55e111a1dd227feaf1a07e58ff16880d3e255b2626823f3cf70a4f2a31eddd0"
+  },
+  "limitations": [
+    "35% PWM authority and imposed 11.1 V supplies",
+    "Motor and loaded-leg parameters remain provisional",
+    "Half-step comparison so far covers the two-second baseline, not the ten-second winner",
+    "Ten seconds does not establish sustained 300-second performance"
+  ]
+}

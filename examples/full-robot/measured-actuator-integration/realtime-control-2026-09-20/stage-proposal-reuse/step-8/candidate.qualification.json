@@ -1,0 +1,30 @@
+{
+  "name": "stage-proposal-reuse/step-8/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": true,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.110442177,
+  "baseline_wall_s": 17.907632907,
+  "candidate_wall_s": 11.244452014,
+  "speedup": 1.5925749769489834,
+  "simulation_per_wall": 0.26679823936860814,
+  "max_error": {
+    "motor_angle_rad": 3.9293993614464284e-9,
+    "link_position_m": 1.6023100369340189e-9,
+    "current_a": 4.30889357527775e-8,
+    "contact_force_n": 0.000023832716817862156
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": true,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "status": "declared_before_extension_trials",
+  "reason": "Original neighboring Bayesian master seeds share training samples and acquisition seeds; add an independent paired check without erasing either original run.",
+  "evidence": "seed-overlap-evidence.json",
+  "optimizer_seeds": [
+    1002301
+  ],
+  "attempts_per_algorithm_seed": 33,
+  "total_additional_attempts": 66,
+  "charged_simulation_s_per_algorithm": 118.8,
+  "archived_executable": "comparison-host.bin",
+  "original_source_archive": "library-source.tar.gz",
+  "seed_schedule": "archived additive schedule; master seed range 1002301..1002333 is disjoint from original 2301..2334",
+  "same_parameters_gates_horizon_baseline_profile_and_physics": true,
+  "analysis": "Report original 2301 and new 1002301 as the independent paired checks. Preserve 2302 as the overlap diagnostic; include its costs in overall study accounting and show per-run costs separately. No results are dropped.",
+  "library_fix": "Current library uses domain-separated hashed per-attempt seeds; not used to change any timed run in these archived studies."
+}

@@ -1,0 +1,56 @@
+{
+  "scope": "Opt-in certified analytic tangent and curvature, using existing slider-crank derivatives. Original dependent matrix singular-value thresholds, tangent residual and all original closure equations remain checked. No approximate state or robot-specific dynamics.",
+  "sources_before": {
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "23a47fe59e7478b30e6febf9f0850b4c20a611143e59a60505f16564398af406",
+    "crates/sim-domain-robot/src/articulated/embedding/slider_crank.rs": "448234be8fc711c6b57d926d9954066e42827c8f23e44e51f80bdf15cdf2068e",
+    "crates/sim-domain-robot/tests/embedding.rs": "d6b91800f7b98da31f33fe32e4c2146cccc442177cb2b7db3bf8c815f4cc192b"
+  },
+  "binary_before_sha256": "bbf0360740c5f2f2ec4c668fd6afaab773d51588e1b8fca2b2beec5f2e53e39b",
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "sources_candidate": {
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "34b267a744bf575305275488bcbba1d9ffa2b1a33f7acbf78da083313d8127b0",
+    "crates/sim-domain-robot/src/articulated/embedding/slider_crank.rs": "985a96377379dbc24d52535472d7e6182bc3c98b2cc196e76390248cfa5a57b4",
+    "crates/sim-domain-robot/tests/embedding.rs": "5c7926aa21ddc15359f48216c0542eca5a7a7bb3bc119af3ac49ecd373f588c7"
+  },
+  "binary_candidate_sha256": "a4a6e173e770c47b0d18ffcd96da962034928c0097cba94f482f005e50ab64a2",
+  "snapshot_paths_before": {
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "embedding.rs",
+    "crates/sim-domain-robot/src/articulated/embedding/slider_crank.rs": "slider_crank.rs",
+    "crates/sim-domain-robot/tests/embedding.rs": "test-embedding.rs"
+  },
+  "snapshot_paths_candidate": {
+    "crates/sim-domain-robot/src/articulated/embedding.rs": "embedding.rs",
+    "crates/sim-domain-robot/src/articulated/embedding/slider_crank.rs": "slider_crank.rs",
+    "crates/sim-domain-robot/tests/embedding.rs": "test-embedding.rs"
+  },
+  "snapshot_note": "The source and test both have basename embedding.rs. The initially overwritten source snapshot was restored from a prior exact-hash-matching snapshot; test-embedding.rs now preserves the distinct test file. Every snapshot verified against the originally captured hash.",
+  "input_hashes": {
+    "./": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "config.json": "ca4894c50a0d10bb4f4a17c81fa041acde1465905bab4b5096c3c1c10fbb9695",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+    },
+    "numeric/": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "config.json": "d23b449cf64258b1d741d49c03725c0771a85c16879a68e2bc2766a71561b35c",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+    },
+    "projected-inertia/": {
+      "scene.json": "473c98736eaa2607f6fa4f5f3877f7a6295018c937ac7ad1aa2e5477f0dfee6e",
+      "config.json": "700b6f706b095483c773bceab5d946cb7df68e10be17c22f553ae57fc4771451",
+      "task.json": "bb8987a69647d2309da21283966f2bf495e09d38f713f4244c8f960b1a1d4024",
+      "actions.json": "92869ac4aaa7b9db162babbe2dd092886ad7c8f8f2ec833b4a3906242fa38adb"
+    }
+  }
+}

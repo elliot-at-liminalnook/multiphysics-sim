@@ -1,0 +1,24 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.07s
+     Running tests/robot_power.rs (target/debug/deps/robot_power-ef9c4577499e532f)
+
+running 4 tests
+test signed_supply_accounting_separates_consumption_return_and_true_minimum ... ok
+test depleted_and_rewound_robot_runs_cannot_claim_valid_battery_history ... ok
+test cad_robot_reports_shared_battery_terminals_instead_of_summed_winding_energy ... ok
+test source_accounting_converges_with_step_and_is_independent_of_host_chunking ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+

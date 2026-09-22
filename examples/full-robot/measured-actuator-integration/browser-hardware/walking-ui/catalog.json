@@ -1,0 +1,46 @@
+{
+  "presets": [
+    {
+      "id": "robot-prelift-control",
+      "label": "Quadruped · Cancel before lift",
+      "mode": "embedded",
+      "scene": "examples/full-robot/student-distillation/scene.json",
+      "config": "examples/full-robot/prelift-control/browser.config.json",
+      "task": "examples/full-robot/heading-task/task.json",
+      "description": "A live WASD crawl that can cancel a foot lift before it starts. Release during the weight shift to request a return to standing; airborne steps and reversals finish the current transfer.",
+      "readiness": "Experimental command response · same 1.25 mm/s crawl · native stop/resume checks pass · browser and timestep validation in progress.",
+      "evidence": "An optional shared Rust planner change preserves motor limits, physical components and student weights. It rechecks a stop or non-reversing command once support is qualified before lift-off. Canceled lifts earn no walking credit. An early reversal prototype exceeded a later motor command bound, so reversals retain the committed transfer. This does not establish physical stopping latency, useful walking speed, general terrain behavior or hardware accuracy.",
+      "path": "data/robot-prelift-control.json"
+    },
+    {
+      "id": "modeled-gait-30s",
+      "label": "New gait · 3.27 m in 30 seconds",
+      "mode": "recorded",
+      "path": "data/modeled-gait-30s.json",
+      "asset_sha256": "1aaa6edb738fa44290283053b15f18eec0d2c31b5e46a9d31e7ebd8627e6ce6f",
+      "description": "Validated gait with modeled motors. Play, scrub, orbit, or slow down this recorded experiment.",
+      "readiness": "Simulation recording · provisional motor model · hardware disconnected",
+      "evidence": "Contact-shape campaign: 3.27 m forward in 30 s, 1.61° worst motor RMS error. Forward, stop, reversal, timestep sensitivity and exact replay pass. This view replays saved physical poses; WASD does not alter the recording."
+    },
+    {
+      "id": "modeled-gait-stop",
+      "label": "New gait · Walk and stop",
+      "mode": "recorded",
+      "path": "data/modeled-gait-stop.json",
+      "asset_sha256": "17fd7c6653d426a6e5786fbbeb5592297cb4fb7ef6f4c70f0554a05de2b4c3db",
+      "description": "Validated gait with modeled motors. Play, scrub, orbit, or slow down this recorded experiment.",
+      "readiness": "Simulation recording · provisional motor model · hardware disconnected",
+      "evidence": "Contact-shape campaign: 3.27 m forward in 30 s, 1.61° worst motor RMS error. Forward, stop, reversal, timestep sensitivity and exact replay pass. This view replays saved physical poses; WASD does not alter the recording."
+    },
+    {
+      "id": "modeled-gait-reverse",
+      "label": "New gait · Walk and reverse",
+      "mode": "recorded",
+      "path": "data/modeled-gait-reverse.json",
+      "asset_sha256": "55eddf6f702d9932b541617ee1f6cfac586751ca8b3d2de54e7d318f09787823",
+      "description": "Validated gait with modeled motors. Play, scrub, orbit, or slow down this recorded experiment.",
+      "readiness": "Simulation recording · provisional motor model · hardware disconnected",
+      "evidence": "Contact-shape campaign: 3.27 m forward in 30 s, 1.61° worst motor RMS error. Forward, stop, reversal, timestep sensitivity and exact replay pass. This view replays saved physical poses; WASD does not alter the recording."
+    }
+  ]
+}

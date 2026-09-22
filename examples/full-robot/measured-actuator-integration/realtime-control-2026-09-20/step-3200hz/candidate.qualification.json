@@ -1,0 +1,30 @@
+{
+  "name": "step-3200hz/candidate",
+  "no_detected_fall": true,
+  "accepted_as_solver_optimization": false,
+  "realtime_accepted": false,
+  "policy_step_p95_s": 0.164447159,
+  "baseline_wall_s": 30.586520104,
+  "candidate_wall_s": 19.854448667,
+  "speedup": 1.5405373685766321,
+  "simulation_per_wall": 0.15109963768403642,
+  "max_error": {
+    "motor_angle_rad": 0.004291241456427564,
+    "link_position_m": 0.003109007239966724,
+    "current_a": 0.16060344105035104,
+    "contact_force_n": 20.347058210979657
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "contactIdentities": false,
+  "cadence": true,
+  "scope": "Short fixed-input schedule only; sustained gait and other commands require separate qualification."
+}

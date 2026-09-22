@@ -1,0 +1,24 @@
+{
+  "created_utc": "2026-09-14T12:21:51.405488+00:00",
+  "purpose": "Prospective confirmation of fixed per-motor fitting procedure, declared before any confirmation motion.",
+  "trials": [
+    "confirm-mixed",
+    "confirm-sync",
+    "confirm-mixed-10pct"
+  ],
+  "files_sha256": {
+    "confirm-mixed-plan.json": "1f042ebbaf86742d91bf0511feb01f904ee637e2f29ed2bfef97de43506aa0da",
+    "confirm-sync-plan.json": "82856455c186ed931fa1d64839a3c7fc0a8c35e0d308a8828ac5eef67050d24d",
+    "confirm-mixed-10pct-plan.json": "25ba7a3ebf295d003db0af0d04cd67ea4527519807f64176b5ca028e1b691b07",
+    "baseline-family.json": "32ad00fa99dff28f844727695133e2f40740074984c2fd7f3bce536013353d10",
+    "supply-ideal.json": "ca9d6ace8cc067b3c1673911b09b55ab62e2dc2a7ad32381d9c31f857666352c",
+    "supply-resistive-hypothesis.json": "9bc36130d845a7b814985ef91f28ad264921d4ed6c555233ee9b8bbb137f9012"
+  },
+  "candidate_selection": "Combine the final bounded fit for every ID 4-12 without selecting by confirmation outcome. Preserve bound hits and failed fit outcomes. Baseline remains unchanged.",
+  "primary_comparison": "Equal-sample pooled RMS encoder prediction error across all three complete fresh trials, with per-motor pooled comparisons and every trial retained. Same controller with simulated feedback.",
+  "secondary_comparison": "Recorded PWM replay on the same fresh captures. Not used to tune this candidate.",
+  "acceptance": "Original per-motor per-trial 3 encoder-count RMS prediction gate remains; comparative improvement is not accuracy acceptance. Report any per-motor regression even if the pooled average improves. Incomplete captures retained as failures and never scored as complete.",
+  "controller": "Same frozen FPGA image and fixed gains, 75 or 100 per-mille drive cap according to frozen plans. No candidate changes to hardware gains.",
+  "electrical_scope": "Voltage telemetry only; raw current cannot establish amps, watts, common resistance, electronics draw, or battery accuracy. Supply scenarios are explicit sensitivity hypotheses, not calibrated bench parameters.",
+  "timing_scope": "150 ms all-nine scheduled cadence; sensor sample age unknown. No maximum-speed, complete reversal-time, loaded torque or endurance rating."
+}

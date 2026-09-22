@@ -1,0 +1,46 @@
+{
+  "status": "built_and_timing_passed_not_loaded",
+  "hardware_motion_this_session": false,
+  "selected_build": "make bridge-experiment-lut",
+  "working_directory": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo",
+  "device": "GW5A-LV25MG121NC1/I0",
+  "clock_hz": 50000000,
+  "post_route_max_frequency_mhz": 60.93,
+  "timing_waivers": false,
+  "mapped_luts": 17308,
+  "mapped_dffs": 8406,
+  "mapped_alu": 0,
+  "host_baud": 1000000,
+  "servo_baud": 1000000,
+  "controller_period_s": 0.04,
+  "pwm_cap": 1000,
+  "pwm_scale": 1000,
+  "gains_q8": {
+    "kp": 4096,
+    "kd": 0,
+    "kv": 4096
+  },
+  "source_archive": "sources.tar.gz",
+  "tools": {
+    "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+    "cargo": "1.97.1 (c980f4866 2026-06-30)",
+    "yosys": "0.68+40 git0f2bcb94b-dirty",
+    "verilator": "5.051 develv5.050-155-g86fa00416(mod)",
+    "nextpnr": "0.11-1-g62e659ed"
+  },
+  "alternative_placement": {
+    "flags": "--placer-heap-alpha 0.5 --placer-heap-beta 0.8",
+    "post_route_max_frequency_mhz": 63.52,
+    "selected": false
+  },
+  "caveats": [
+    "Static timing and testbench replies do not prove real motor or host acquisition timing.",
+    "Raw servo current has no validated amperes calibration.",
+    "Power supply rating and current limit are unknown.",
+    "Required physical commissioning is pending."
+  ],
+  "bitstream_path": "build/bridge_experiment_100pct.fs",
+  "bitstream_blake3": "6d1652028e9331b08e71d98dcac425aeb80c10ca2ffebcedbe186555e608933f",
+  "bitstream_sha256": "37d60ae1899569fbe349124addf741e3ae8182eb51e16fef6e14c24b1aee9a55",
+  "build_exit_code": 0
+}

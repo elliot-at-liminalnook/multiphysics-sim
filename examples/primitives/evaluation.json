@@ -1,0 +1,10 @@
+{
+  "policy": {
+    "objective": "speed", "objective_quantity": "LinearVelocity", "maximize": true,
+    "required": {"tracking": {"quantity": "Angle", "minimum": null, "maximum": 0.03}}
+  },
+  "outcome": {
+    "context_id": "synthetic-example-only", "candidate_id": "example", "completed": true, "failures": [],
+    "metrics": {"speed": {"quantity": "LinearVelocity", "value": 0.1}, "tracking": {"quantity": "Angle", "value": 0.01}}
+  }
+}

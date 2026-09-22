@@ -1,0 +1,1780 @@
+[
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "baseline-hold-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.005059123472242522,
+    "rms_difference_degrees": 0.00008819542602300778,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "baseline-reversal-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.1018158287755795,
+    "rms_difference_degrees": 0.0018178834515665265,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "baseline-full-gait-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.1353553868901726,
+    "rms_difference_degrees": 0.001983743810916039,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id10-hold-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.00014467605920408645,
+    "rms_difference_degrees": 0.0,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id10-reversal-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.002939967286783003,
+    "rms_difference_degrees": 0.0004449697698305499,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "kind": "exact-replay",
+    "name": "id10-full-gait-nominal-selected-100",
+    "samples_identical": true
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id10-full-gait-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.00047907641916014474,
+    "rms_difference_degrees": 0.0,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id11-hold-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.0027282395768586064,
+    "rms_difference_degrees": 0.00009405186675803812,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id11-reversal-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.0007259077090851095,
+    "rms_difference_degrees": 0.00029511682303029474,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id11-full-gait-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.040081543228652594,
+    "rms_difference_degrees": 0.0005871311773439913,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id12-hold-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.002398551641473713,
+    "rms_difference_degrees": 0.0007122384124147452,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id12-reversal-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.0005090523536018283,
+    "rms_difference_degrees": 0.00033274796264048945,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id12-full-gait-nominal-selected-100",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.042426844652816265,
+    "rms_difference_degrees": 0.0056698310701897014,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 1024,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -0.263671875,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.3262267598708504,
+      "rms_degrees": 2.3429528979012915,
+      "saturated_fraction": 0.3075,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "pattern": "hold",
+    "shared_metrics": {
+      "final_error_degrees": -0.263671875,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 2.3262267598708504,
+      "rms_degrees": 2.3429528979012915,
+      "saturated_fraction": 0.3075,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 1024,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 5.625,
+      "previous_target_rms_degrees": 3.4135523923477042,
+      "rms_degrees": 3.4288609927378992,
+      "saturated_fraction": 0.665,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "pattern": "reversal",
+    "shared_metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 5.625,
+      "previous_target_rms_degrees": 3.4135523923477042,
+      "rms_degrees": 3.4288609927378992,
+      "saturated_fraction": 0.665,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 1024,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 4.833984375,
+      "previous_target_rms_degrees": 2.626040388745294,
+      "rms_degrees": 2.64170183425102,
+      "saturated_fraction": 0.605,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id10",
+    "pattern": "chirp",
+    "shared_metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 4.833984375,
+      "previous_target_rms_degrees": 2.626040388745294,
+      "rms_degrees": 2.64170183425102,
+      "saturated_fraction": 0.605,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 1024,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -2.4609375,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 1.250649637619747,
+      "rms_degrees": 1.2622315462656264,
+      "saturated_fraction": 0.35333333333333333,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "model": "id10",
+    "pattern": "gait",
+    "shared_metrics": {
+      "final_error_degrees": -2.4609375,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 1.250649637619747,
+      "rms_degrees": 1.2622315462656264,
+      "saturated_fraction": 0.35333333333333333,
+      "tail_encoder_span_degrees": 0.263671875
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 1024,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -27.509765625,
+      "peak_degrees": 32.431640625,
+      "previous_target_rms_degrees": 14.13225393269196,
+      "rms_degrees": 14.168142442744013,
+      "saturated_fraction": 0.8533333333333334,
+      "tail_encoder_span_degrees": 0.3515625
+    },
+    "model": "id10",
+    "pattern": "full-gait",
+    "shared_metrics": {
+      "final_error_degrees": -27.509765625,
+      "peak_degrees": 32.431640625,
+      "previous_target_rms_degrees": 14.13225393269196,
+      "rms_degrees": 14.168142442744013,
+      "saturated_fraction": 0.8533333333333334,
+      "tail_encoder_span_degrees": 0.3515625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.3144130388923807,
+      "rms_degrees": 1.3434334315513239,
+      "saturated_fraction": 0.16,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "pattern": "hold",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.4102885429905316,
+      "rms_degrees": 1.4373745241550022,
+      "saturated_fraction": 0.105,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.9765625,
+      "previous_target_rms_degrees": 3.415724151372807,
+      "rms_degrees": 3.4756602970410166,
+      "saturated_fraction": 0.735,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "pattern": "reversal",
+    "shared_metrics": {
+      "final_error_degrees": 0.263671875,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 3.2589412353030687,
+      "rms_degrees": 3.3047751557108187,
+      "saturated_fraction": 0.6725,
+      "tail_encoder_span_degrees": 0.263671875
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.361328125,
+      "previous_target_rms_degrees": 2.572756918041865,
+      "rms_degrees": 2.6313152640396993,
+      "saturated_fraction": 0.725,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id11",
+    "pattern": "chirp",
+    "shared_metrics": {
+      "final_error_degrees": 0.087890625,
+      "peak_degrees": 4.658203125,
+      "previous_target_rms_degrees": 2.4203456849297593,
+      "rms_degrees": 2.4662836043731278,
+      "saturated_fraction": 0.6,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -4.74609375,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.7763103169521843,
+      "rms_degrees": 1.822837477021451,
+      "saturated_fraction": 0.6266666666666667,
+      "tail_encoder_span_degrees": 0.87890625
+    },
+    "model": "id11",
+    "pattern": "gait",
+    "shared_metrics": {
+      "final_error_degrees": -3.955078125,
+      "peak_degrees": 4.921875,
+      "previous_target_rms_degrees": 1.7878797099246626,
+      "rms_degrees": 1.816155791704338,
+      "saturated_fraction": 0.43333333333333335,
+      "tail_encoder_span_degrees": 0.3515625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -57.568359375,
+      "peak_degrees": 66.26953125,
+      "previous_target_rms_degrees": 21.015433926354394,
+      "rms_degrees": 21.133804047407793,
+      "saturated_fraction": 0.9180952380952381,
+      "tail_encoder_span_degrees": 1.318359375
+    },
+    "model": "id11",
+    "pattern": "full-gait",
+    "shared_metrics": {
+      "final_error_degrees": -48.69140625,
+      "peak_degrees": 60.29296875,
+      "previous_target_rms_degrees": 20.1853599645672,
+      "rms_degrees": 20.26742911730087,
+      "saturated_fraction": 0.8980952380952381,
+      "tail_encoder_span_degrees": 0.791015625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 2048,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.4762747347937415,
+      "rms_degrees": 1.5021713753063581,
+      "saturated_fraction": 0.175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "pattern": "hold",
+    "shared_metrics": {
+      "final_error_degrees": -0.087890625,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.5620503350767396,
+      "rms_degrees": 1.5865475087474745,
+      "saturated_fraction": 0.13,
+      "tail_encoder_span_degrees": 0.0
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 2048,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.087890625,
+      "peak_degrees": 5.712890625,
+      "previous_target_rms_degrees": 3.3637431289449573,
+      "rms_degrees": 3.4087401920592963,
+      "saturated_fraction": 0.6975,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id12",
+    "pattern": "reversal",
+    "shared_metrics": {
+      "final_error_degrees": 0.263671875,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 3.300954130261389,
+      "rms_degrees": 3.3373304045373873,
+      "saturated_fraction": 0.67,
+      "tail_encoder_span_degrees": 0.17578125
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 2048,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.087890625,
+      "peak_degrees": 5.185546875,
+      "previous_target_rms_degrees": 2.553188619206215,
+      "rms_degrees": 2.597759044018758,
+      "saturated_fraction": 0.67,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "pattern": "chirp",
+    "shared_metrics": {
+      "final_error_degrees": 0.087890625,
+      "peak_degrees": 4.74609375,
+      "previous_target_rms_degrees": 2.484002715233687,
+      "rms_degrees": 2.5208986342197957,
+      "saturated_fraction": 0.6,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 2048,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 2.28515625,
+      "peak_degrees": 3.251953125,
+      "previous_target_rms_degrees": 1.3091081661474073,
+      "rms_degrees": 1.34514092224219,
+      "saturated_fraction": 0.48857142857142855,
+      "tail_encoder_span_degrees": 0.615234375
+    },
+    "model": "id12",
+    "pattern": "gait",
+    "shared_metrics": {
+      "final_error_degrees": 2.28515625,
+      "peak_degrees": 3.251953125,
+      "previous_target_rms_degrees": 1.327947832359934,
+      "rms_degrees": 1.348339367336069,
+      "saturated_fraction": 0.22666666666666666,
+      "tail_encoder_span_degrees": 0.439453125
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 4096,
+      "kp_q8": 2048,
+      "kv_q8": 4096,
+      "limit": 100
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 23.73046875,
+      "peak_degrees": 33.310546875,
+      "previous_target_rms_degrees": 14.693208951968412,
+      "rms_degrees": 14.755560484942066,
+      "saturated_fraction": 0.9038095238095238,
+      "tail_encoder_span_degrees": 0.966796875
+    },
+    "model": "id12",
+    "pattern": "full-gait",
+    "shared_metrics": {
+      "final_error_degrees": 31.640625,
+      "peak_degrees": 41.044921875,
+      "previous_target_rms_degrees": 17.378781651053075,
+      "rms_degrees": 17.431759289249463,
+      "saturated_fraction": 0.8761904761904762,
+      "tail_encoder_span_degrees": 0.791015625
+    }
+  },
+  {
+    "config": {
+      "maximum_acceleration_rad_s2": 10.471975511965978,
+      "maximum_speed_rad_s": 1.0471975511965976,
+      "period_s": 0.01,
+      "response_rate_per_s": 20.0
+    },
+    "kind": "governed-reference",
+    "limit": 100,
+    "model": "id10",
+    "motor_error_to_original_rms_degrees": 13.899801350474728,
+    "motor_tracking_governed": {
+      "final_error_degrees": 1.7578125,
+      "peak_degrees": 12.392578125,
+      "previous_target_rms_degrees": 2.5355594825695644,
+      "rms_degrees": 2.550109360858231,
+      "saturated_fraction": 0.5914285714285714,
+      "tail_encoder_span_degrees": 0.439453125
+    },
+    "reference_change_rms_degrees": 15.169933514210896
+  },
+  {
+    "config": {
+      "maximum_acceleration_rad_s2": 10.471975511965978,
+      "maximum_speed_rad_s": 1.0471975511965976,
+      "period_s": 0.01,
+      "response_rate_per_s": 20.0
+    },
+    "kind": "governed-reference",
+    "limit": 100,
+    "model": "id11",
+    "motor_error_to_original_rms_degrees": 20.897601727019055,
+    "motor_tracking_governed": {
+      "final_error_degrees": 0.087890625,
+      "peak_degrees": 6.50390625,
+      "previous_target_rms_degrees": 1.8828805166100686,
+      "rms_degrees": 1.925911840644289,
+      "saturated_fraction": 0.5685714285714286,
+      "tail_encoder_span_degrees": 0.966796875
+    },
+    "reference_change_rms_degrees": 21.699746184029298
+  },
+  {
+    "config": {
+      "maximum_acceleration_rad_s2": 10.471975511965978,
+      "maximum_speed_rad_s": 1.0471975511965976,
+      "period_s": 0.01,
+      "response_rate_per_s": 20.0
+    },
+    "kind": "governed-reference",
+    "limit": 100,
+    "model": "id12",
+    "motor_error_to_original_rms_degrees": 14.460546864071128,
+    "motor_tracking_governed": {
+      "final_error_degrees": -1.40625,
+      "peak_degrees": 7.91015625,
+      "previous_target_rms_degrees": 1.938964360685783,
+      "rms_degrees": 1.974231795449507,
+      "saturated_fraction": 0.5971428571428572,
+      "tail_encoder_span_degrees": 0.87890625
+    },
+    "reference_change_rms_degrees": 15.60617845716282
+  },
+  {
+    "controller": "original",
+    "kind": "cadence",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.28515625,
+      "peak_degrees": 2.8125,
+      "previous_target_rms_degrees": 1.2253430789722233,
+      "rms_degrees": 1.249051524400081,
+      "saturated_fraction": 0.6647619047619048,
+      "tail_encoder_span_degrees": 0.439453125
+    },
+    "period_s": 0.01
+  },
+  {
+    "controller": "selected",
+    "kind": "cadence",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.4609375,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 1.250649637619747,
+      "rms_degrees": 1.2622315462656264,
+      "saturated_fraction": 0.35333333333333333,
+      "tail_encoder_span_degrees": 0.263671875
+    },
+    "period_s": 0.01
+  },
+  {
+    "controller": "original",
+    "kind": "cadence",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -0.087890625,
+      "peak_degrees": 3.779296875,
+      "previous_target_rms_degrees": 1.3868110979059518,
+      "rms_degrees": 1.5213676056649443,
+      "saturated_fraction": 0.7238095238095238,
+      "tail_encoder_span_degrees": 0.439453125
+    },
+    "period_s": 0.1
+  },
+  {
+    "controller": "selected",
+    "kind": "cadence",
+    "limit": 100,
+    "metrics": {
+      "final_error_degrees": -2.4609375,
+      "peak_degrees": 5.185546875,
+      "previous_target_rms_degrees": 2.049621004699302,
+      "rms_degrees": 2.121876320095121,
+      "saturated_fraction": 0.8666666666666667,
+      "tail_encoder_span_degrees": 0.52734375
+    },
+    "period_s": 0.1
+  },
+  {
+    "axes": [
+      {
+        "final_error_degrees": 5.625,
+        "peak_degrees": 5.625,
+        "previous_target_rms_degrees": 3.5889157661731343,
+        "rms_degrees": 3.6321472050994044,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.52734375
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.44921875,
+        "previous_target_rms_degrees": 3.4207975180482197,
+        "rms_degrees": 3.495365514510943,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 1.23046875
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.537109375,
+        "previous_target_rms_degrees": 3.4703235150282206,
+        "rms_degrees": 3.5355977156855602,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.966796875
+      }
+    ],
+    "branch_resistance_ohm": 0.1,
+    "kind": "shared-supply",
+    "limit": 100,
+    "min_bus_voltage_v": 11.8,
+    "motors": 3,
+    "peak_bus_power_w_estimated": 3.3450767833247617,
+    "peak_source_current_a_estimated": 0.2834810833326069,
+    "shared_resistance_ohm": 0.0
+  },
+  {
+    "axes": [
+      {
+        "final_error_degrees": 5.625,
+        "peak_degrees": 5.625,
+        "previous_target_rms_degrees": 3.5884785344402816,
+        "rms_degrees": 3.6314492898116124,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.52734375
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.44921875,
+        "previous_target_rms_degrees": 3.4311482961621835,
+        "rms_degrees": 3.5036914466159694,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 1.142578125
+      },
+      {
+        "final_error_degrees": 5.537109375,
+        "peak_degrees": 5.537109375,
+        "previous_target_rms_degrees": 3.4778973877660646,
+        "rms_degrees": 3.542118950556181,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 0.966796875
+      }
+    ],
+    "branch_resistance_ohm": 0.1,
+    "kind": "shared-supply",
+    "limit": 100,
+    "min_bus_voltage_v": 11.701025178532399,
+    "motors": 3,
+    "peak_bus_power_w_estimated": 3.308876794380426,
+    "peak_source_current_a_estimated": 0.2827852041931459,
+    "shared_resistance_ohm": 0.35
+  },
+  {
+    "axes": [
+      {
+        "final_error_degrees": 5.625,
+        "peak_degrees": 5.625,
+        "previous_target_rms_degrees": 3.5889157661731343,
+        "rms_degrees": 3.6321472050994044,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.52734375
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.44921875,
+        "previous_target_rms_degrees": 3.4207975180482197,
+        "rms_degrees": 3.495365514510943,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 1.23046875
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.537109375,
+        "previous_target_rms_degrees": 3.4703235150282206,
+        "rms_degrees": 3.5355977156855602,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.966796875
+      },
+      {
+        "final_error_degrees": 5.625,
+        "peak_degrees": 5.625,
+        "previous_target_rms_degrees": 3.5889157661731343,
+        "rms_degrees": 3.6321472050994044,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.52734375
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.44921875,
+        "previous_target_rms_degrees": 3.4207975180482197,
+        "rms_degrees": 3.495365514510943,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 1.23046875
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.537109375,
+        "previous_target_rms_degrees": 3.4703235150282206,
+        "rms_degrees": 3.5355977156855602,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.966796875
+      },
+      {
+        "final_error_degrees": 5.625,
+        "peak_degrees": 5.625,
+        "previous_target_rms_degrees": 3.5889157661731343,
+        "rms_degrees": 3.6321472050994044,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.52734375
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.44921875,
+        "previous_target_rms_degrees": 3.4207975180482197,
+        "rms_degrees": 3.495365514510943,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 1.23046875
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.537109375,
+        "previous_target_rms_degrees": 3.4703235150282206,
+        "rms_degrees": 3.5355977156855602,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.966796875
+      }
+    ],
+    "branch_resistance_ohm": 0.1,
+    "kind": "shared-supply",
+    "limit": 100,
+    "min_bus_voltage_v": 11.8,
+    "motors": 9,
+    "peak_bus_power_w_estimated": 5.315230349974286,
+    "peak_source_current_a_estimated": 0.4504432499978208,
+    "shared_resistance_ohm": 0.0
+  },
+  {
+    "axes": [
+      {
+        "final_error_degrees": 5.625,
+        "peak_degrees": 5.625,
+        "previous_target_rms_degrees": 3.590341444248294,
+        "rms_degrees": 3.6330775502635424,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.52734375
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.44921875,
+        "previous_target_rms_degrees": 3.434509623894041,
+        "rms_degrees": 3.5073549273799647,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 1.142578125
+      },
+      {
+        "final_error_degrees": 5.537109375,
+        "peak_degrees": 5.537109375,
+        "previous_target_rms_degrees": 3.478494257489161,
+        "rms_degrees": 3.542377914742498,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 0.966796875
+      },
+      {
+        "final_error_degrees": 5.625,
+        "peak_degrees": 5.625,
+        "previous_target_rms_degrees": 3.590341444248294,
+        "rms_degrees": 3.6330775502635424,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.52734375
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.44921875,
+        "previous_target_rms_degrees": 3.434509623894041,
+        "rms_degrees": 3.5073549273799647,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 1.142578125
+      },
+      {
+        "final_error_degrees": 5.537109375,
+        "peak_degrees": 5.537109375,
+        "previous_target_rms_degrees": 3.478494257489161,
+        "rms_degrees": 3.542377914742498,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 0.966796875
+      },
+      {
+        "final_error_degrees": 5.625,
+        "peak_degrees": 5.625,
+        "previous_target_rms_degrees": 3.590341444248294,
+        "rms_degrees": 3.6330775502635424,
+        "saturated_fraction": 0.75625,
+        "tail_encoder_span_degrees": 0.52734375
+      },
+      {
+        "final_error_degrees": 5.44921875,
+        "peak_degrees": 5.44921875,
+        "previous_target_rms_degrees": 3.434509623894041,
+        "rms_degrees": 3.5073549273799647,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 1.142578125
+      },
+      {
+        "final_error_degrees": 5.537109375,
+        "peak_degrees": 5.537109375,
+        "previous_target_rms_degrees": 3.478494257489161,
+        "rms_degrees": 3.542377914742498,
+        "saturated_fraction": 0.7625,
+        "tail_encoder_span_degrees": 0.966796875
+      }
+    ],
+    "branch_resistance_ohm": 0.1,
+    "kind": "shared-supply",
+    "limit": 100,
+    "min_bus_voltage_v": 11.643496319227154,
+    "motors": 9,
+    "peak_bus_power_w_estimated": 5.20642866006897,
+    "peak_source_current_a_estimated": 0.44715337363670427,
+    "shared_resistance_ohm": 0.35
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "baseline-hold-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.01301618893013075,
+    "rms_difference_degrees": 0.00005175412005775648,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "baseline-reversal-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.06647244771710935,
+    "rms_difference_degrees": 0.0003360080730404613,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "baseline-full-gait-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.06712198743761133,
+    "rms_difference_degrees": 0.003850650469788164,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id10-hold-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.0026349021965696422,
+    "rms_difference_degrees": 0.00006869250775098923,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id10-reversal-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.0626745313905185,
+    "rms_difference_degrees": 0.0003567562083568454,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "kind": "exact-replay",
+    "name": "id10-full-gait-nominal-selected-350",
+    "samples_identical": true
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id10-full-gait-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.12912014259176519,
+    "rms_difference_degrees": 0.0003677272589328595,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id11-hold-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.048163826700341944,
+    "rms_difference_degrees": 0.00012544135438907755,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id11-reversal-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.059345253404534046,
+    "rms_difference_degrees": 0.006677568426957103,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id11-full-gait-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.14687775213462148,
+    "rms_difference_degrees": 0.003386922670991055,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id12-hold-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.0024525269016957263,
+    "rms_difference_degrees": 0.0,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id12-reversal-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.04423590457940241,
+    "rms_difference_degrees": 0.007182294937176703,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "coarse_step": 0.00025,
+    "fine_step": 0.000125,
+    "kind": "timestep",
+    "name": "id12-full-gait-nominal-selected-350",
+    "passes": true,
+    "peak_trace_difference_degrees": 0.044649834231493775,
+    "rms_difference_degrees": 0.0008203412679552713,
+    "tolerance_rms_degrees": 0.1
+  },
+  {
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.130859375,
+      "previous_target_rms_degrees": 0.33931928482903057,
+      "rms_degrees": 0.4217376485394168,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id10",
+    "pattern": "hold",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 4.130859375,
+      "previous_target_rms_degrees": 0.33931928482903057,
+      "rms_degrees": 0.4217376485394168,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 1.5956324511487399,
+      "rms_degrees": 2.138389924158576,
+      "saturated_fraction": 0.555,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "pattern": "reversal",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.2734375,
+      "previous_target_rms_degrees": 1.5956324511487399,
+      "rms_degrees": 2.138389924158576,
+      "saturated_fraction": 0.555,
+      "tail_encoder_span_degrees": 0.17578125
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.955078125,
+      "previous_target_rms_degrees": 1.0472639130091377,
+      "rms_degrees": 1.4264299145157433,
+      "saturated_fraction": 0.2575,
+      "tail_encoder_span_degrees": 0.17578125
+    },
+    "model": "id10",
+    "pattern": "chirp",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.955078125,
+      "previous_target_rms_degrees": 1.0472639130091377,
+      "rms_degrees": 1.4264299145157433,
+      "saturated_fraction": 0.2575,
+      "tail_encoder_span_degrees": 0.17578125
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -0.17578125,
+      "peak_degrees": 2.373046875,
+      "previous_target_rms_degrees": 0.6838868552109546,
+      "rms_degrees": 0.9189550232189594,
+      "saturated_fraction": 0.12,
+      "tail_encoder_span_degrees": 3.427734375
+    },
+    "model": "id10",
+    "pattern": "gait",
+    "shared_metrics": {
+      "final_error_degrees": -0.17578125,
+      "peak_degrees": 2.373046875,
+      "previous_target_rms_degrees": 0.6838868552109546,
+      "rms_degrees": 0.9189550232189594,
+      "saturated_fraction": 0.12,
+      "tail_encoder_span_degrees": 3.427734375
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 1024,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -27.158203125,
+      "peak_degrees": 33.92578125,
+      "previous_target_rms_degrees": 13.817431496090453,
+      "rms_degrees": 14.394822947531466,
+      "saturated_fraction": 0.82,
+      "tail_encoder_span_degrees": 12.568359375
+    },
+    "model": "id10",
+    "pattern": "full-gait",
+    "shared_metrics": {
+      "final_error_degrees": -27.158203125,
+      "peak_degrees": 33.92578125,
+      "previous_target_rms_degrees": 13.817431496090453,
+      "rms_degrees": 14.394822947531466,
+      "saturated_fraction": 0.82,
+      "tail_encoder_span_degrees": 12.568359375
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.8671875,
+      "previous_target_rms_degrees": 0.2952196247648748,
+      "rms_degrees": 0.38388689264814174,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "pattern": "hold",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.8671875,
+      "previous_target_rms_degrees": 0.29642733903586027,
+      "rms_degrees": 0.38481643263848975,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.0905965850538764,
+      "rms_degrees": 1.6613711231586266,
+      "saturated_fraction": 0.495,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "pattern": "reversal",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.068350225266464,
+      "rms_degrees": 1.6373506841941363,
+      "saturated_fraction": 0.4925,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.69140625,
+      "previous_target_rms_degrees": 0.8117283311118708,
+      "rms_degrees": 1.2138217171755645,
+      "saturated_fraction": 0.2175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id11",
+    "pattern": "chirp",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.603515625,
+      "previous_target_rms_degrees": 0.7852819541397591,
+      "rms_degrees": 1.1859373552525851,
+      "saturated_fraction": 0.215,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -2.548828125,
+      "peak_degrees": 5.80078125,
+      "previous_target_rms_degrees": 1.5167133541696391,
+      "rms_degrees": 1.8323616987047133,
+      "saturated_fraction": 0.25333333333333335,
+      "tail_encoder_span_degrees": 4.658203125
+    },
+    "model": "id11",
+    "pattern": "gait",
+    "shared_metrics": {
+      "final_error_degrees": -2.548828125,
+      "peak_degrees": 5.888671875,
+      "previous_target_rms_degrees": 1.4983593278641811,
+      "rms_degrees": 1.8154285242998465,
+      "saturated_fraction": 0.25047619047619046,
+      "tail_encoder_span_degrees": 4.658203125
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": -53.876953125,
+      "peak_degrees": 63.80859375,
+      "previous_target_rms_degrees": 20.394695127575442,
+      "rms_degrees": 20.96838373388568,
+      "saturated_fraction": 0.8628571428571429,
+      "tail_encoder_span_degrees": 13.88671875
+    },
+    "model": "id11",
+    "pattern": "full-gait",
+    "shared_metrics": {
+      "final_error_degrees": -54.31640625,
+      "peak_degrees": 63.720703125,
+      "previous_target_rms_degrees": 20.38165663254502,
+      "rms_degrees": 20.94655552227336,
+      "saturated_fraction": 0.8447619047619047,
+      "tail_encoder_span_degrees": 13.53515625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.955078125,
+      "previous_target_rms_degrees": 0.30082484338110055,
+      "rms_degrees": 0.38886014892707116,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    },
+    "model": "id12",
+    "pattern": "hold",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.955078125,
+      "previous_target_rms_degrees": 0.3026170072386355,
+      "rms_degrees": 0.3902482313840624,
+      "saturated_fraction": 0.0175,
+      "tail_encoder_span_degrees": 0.0
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.537109375,
+      "previous_target_rms_degrees": 1.159931507883792,
+      "rms_degrees": 1.7302012355168144,
+      "saturated_fraction": 0.5125,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "pattern": "reversal",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 5.44921875,
+      "previous_target_rms_degrees": 1.1381326907053597,
+      "rms_degrees": 1.7064989600012153,
+      "saturated_fraction": 0.4975,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.779296875,
+      "previous_target_rms_degrees": 0.851360332043975,
+      "rms_degrees": 1.2512458314930992,
+      "saturated_fraction": 0.2225,
+      "tail_encoder_span_degrees": 0.087890625
+    },
+    "model": "id12",
+    "pattern": "chirp",
+    "shared_metrics": {
+      "final_error_degrees": 0.0,
+      "peak_degrees": 3.603515625,
+      "previous_target_rms_degrees": 0.8176308532421351,
+      "rms_degrees": 1.217205829996519,
+      "saturated_fraction": 0.2175,
+      "tail_encoder_span_degrees": 0.087890625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 0.7048962762006836,
+      "rms_degrees": 0.9356632222892927,
+      "saturated_fraction": 0.10952380952380952,
+      "tail_encoder_span_degrees": 3.515625
+    },
+    "model": "id12",
+    "pattern": "gait",
+    "shared_metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 2.98828125,
+      "previous_target_rms_degrees": 0.692720876785712,
+      "rms_degrees": 0.923765889533866,
+      "saturated_fraction": 0.10666666666666667,
+      "tail_encoder_span_degrees": 3.515625
+    }
+  },
+  {
+    "gains": {
+      "kd_q8": 512,
+      "kp_q8": 4096,
+      "kv_q8": 4096,
+      "limit": 350
+    },
+    "kind": "per-unit",
+    "metrics": {
+      "final_error_degrees": 26.806640625,
+      "peak_degrees": 38.3203125,
+      "previous_target_rms_degrees": 14.744075324179926,
+      "rms_degrees": 15.401802546332028,
+      "saturated_fraction": 0.8809523809523809,
+      "tail_encoder_span_degrees": 14.326171875
+    },
+    "model": "id12",
+    "pattern": "full-gait",
+    "shared_metrics": {
+      "final_error_degrees": 27.158203125,
+      "peak_degrees": 38.408203125,
+      "previous_target_rms_degrees": 14.787037298589482,
+      "rms_degrees": 15.442686640424693,
+      "saturated_fraction": 0.878095238095238,
+      "tail_encoder_span_degrees": 14.23828125
+    }
+  },
+  {
+    "config": {
+      "maximum_acceleration_rad_s2": 27.925268031909273,
+      "maximum_speed_rad_s": 2.792526803190927,
+      "period_s": 0.01,
+      "response_rate_per_s": 20.0
+    },
+    "kind": "governed-reference",
+    "limit": 350,
+    "model": "id10",
+    "motor_error_to_original_rms_degrees": 16.906404537343793,
+    "motor_tracking_governed": {
+      "final_error_degrees": -1.58203125,
+      "peak_degrees": 11.865234375,
+      "previous_target_rms_degrees": 2.862848035342673,
+      "rms_degrees": 3.45616535860651,
+      "saturated_fraction": 0.699047619047619,
+      "tail_encoder_span_degrees": 11.162109375
+    },
+    "reference_change_rms_degrees": 15.669180458708063
+  },
+  {
+    "config": {
+      "maximum_acceleration_rad_s2": 27.925268031909273,
+      "maximum_speed_rad_s": 2.792526803190927,
+      "period_s": 0.01,
+      "response_rate_per_s": 20.0
+    },
+    "kind": "governed-reference",
+    "limit": 350,
+    "model": "id11",
+    "motor_error_to_original_rms_degrees": 23.038014669030957,
+    "motor_tracking_governed": {
+      "final_error_degrees": -3.1640625,
+      "peak_degrees": 7.470703125,
+      "previous_target_rms_degrees": 2.11620684944023,
+      "rms_degrees": 2.784309577999005,
+      "saturated_fraction": 0.6533333333333333,
+      "tail_encoder_span_degrees": 12.48046875
+    },
+    "reference_change_rms_degrees": 22.781853884811927
+  },
+  {
+    "config": {
+      "maximum_acceleration_rad_s2": 27.925268031909273,
+      "maximum_speed_rad_s": 2.792526803190927,
+      "period_s": 0.01,
+      "response_rate_per_s": 20.0
+    },
+    "kind": "governed-reference",
+    "limit": 350,
+    "model": "id12",
+    "motor_error_to_original_rms_degrees": 18.754903838710224,
+    "motor_tracking_governed": {
+      "final_error_degrees": -1.669921875,
+      "peak_degrees": 10.01953125,
+      "previous_target_rms_degrees": 2.495134196064827,
+      "rms_degrees": 3.1613979200655584,
+      "saturated_fraction": 0.6876190476190476,
+      "tail_encoder_span_degrees": 11.953125
+    },
+    "reference_change_rms_degrees": 18.599122024944883
+  },
+  {
+    "controller": "original",
+    "kind": "cadence",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -0.17578125,
+      "peak_degrees": 2.373046875,
+      "previous_target_rms_degrees": 0.7125106007640671,
+      "rms_degrees": 0.951997111944647,
+      "saturated_fraction": 0.12571428571428572,
+      "tail_encoder_span_degrees": 3.515625
+    },
+    "period_s": 0.01
+  },
+  {
+    "controller": "selected",
+    "kind": "cadence",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -0.17578125,
+      "peak_degrees": 2.373046875,
+      "previous_target_rms_degrees": 0.6838868552109546,
+      "rms_degrees": 0.9189550232189594,
+      "saturated_fraction": 0.12,
+      "tail_encoder_span_degrees": 3.427734375
+    },
+    "period_s": 0.01
+  },
+  {
+    "controller": "original",
+    "kind": "cadence",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": 0.17578125,
+      "peak_degrees": 10.8984375,
+      "previous_target_rms_degrees": 3.7162449563475985,
+      "rms_degrees": 4.729291936240769,
+      "saturated_fraction": 0.7333333333333333,
+      "tail_encoder_span_degrees": 13.798828125
+    },
+    "period_s": 0.1
+  },
+  {
+    "controller": "selected",
+    "kind": "cadence",
+    "limit": 350,
+    "metrics": {
+      "final_error_degrees": -2.98828125,
+      "peak_degrees": 10.1953125,
+      "previous_target_rms_degrees": 3.422525661292292,
+      "rms_degrees": 4.154337015597932,
+      "saturated_fraction": 0.638095238095238,
+      "tail_encoder_span_degrees": 13.798828125
+    },
+    "period_s": 0.1
+  },
+  {
+    "axes": [
+      {
+        "final_error_degrees": 0.966796875,
+        "peak_degrees": 3.515625,
+        "previous_target_rms_degrees": 1.6281575190541981,
+        "rms_degrees": 2.206004351159419,
+        "saturated_fraction": 0.61875,
+        "tail_encoder_span_degrees": 10.634765625
+      },
+      {
+        "final_error_degrees": 0.0,
+        "peak_degrees": 2.63671875,
+        "previous_target_rms_degrees": 1.0530382613053284,
+        "rms_degrees": 1.6680994630290304,
+        "saturated_fraction": 0.55,
+        "tail_encoder_span_degrees": 11.25
+      },
+      {
+        "final_error_degrees": 0.087890625,
+        "peak_degrees": 2.724609375,
+        "previous_target_rms_degrees": 1.1284836238708948,
+        "rms_degrees": 1.7408252059883154,
+        "saturated_fraction": 0.55625,
+        "tail_encoder_span_degrees": 11.162109375
+      }
+    ],
+    "branch_resistance_ohm": 0.1,
+    "kind": "shared-supply",
+    "limit": 350,
+    "min_bus_voltage_v": 11.8,
+    "motors": 3,
+    "peak_bus_power_w_estimated": 14.311176157072328,
+    "peak_source_current_a_estimated": 1.212811538734943,
+    "shared_resistance_ohm": 0.0
+  },
+  {
+    "axes": [
+      {
+        "final_error_degrees": 1.23046875,
+        "peak_degrees": 3.603515625,
+        "previous_target_rms_degrees": 1.7386606209638618,
+        "rms_degrees": 2.3078298321423705,
+        "saturated_fraction": 0.64375,
+        "tail_encoder_span_degrees": 10.546875
+      },
+      {
+        "final_error_degrees": 0.087890625,
+        "peak_degrees": 2.724609375,
+        "previous_target_rms_degrees": 1.1479740375414162,
+        "rms_degrees": 1.7597889279464316,
+        "saturated_fraction": 0.55625,
+        "tail_encoder_span_degrees": 11.25
+      },
+      {
+        "final_error_degrees": 0.17578125,
+        "peak_degrees": 2.900390625,
+        "previous_target_rms_degrees": 1.2255346279878336,
+        "rms_degrees": 1.833749481856384,
+        "saturated_fraction": 0.575,
+        "tail_encoder_span_degrees": 11.25
+      }
+    ],
+    "branch_resistance_ohm": 0.1,
+    "kind": "shared-supply",
+    "limit": 350,
+    "min_bus_voltage_v": 11.387616231203447,
+    "motors": 3,
+    "peak_bus_power_w_estimated": 13.417337425807135,
+    "peak_source_current_a_estimated": 1.178239339418728,
+    "shared_resistance_ohm": 0.35
+  },
+  {
+    "axes": [
+      {
+        "final_error_degrees": 0.966796875,
+        "peak_degrees": 3.515625,
+        "previous_target_rms_degrees": 1.6281575190541981,
+        "rms_degrees": 2.206004351159419,
+        "saturated_fraction": 0.61875,
+        "tail_encoder_span_degrees": 10.634765625
+      },
+      {
+        "final_error_degrees": 0.0,
+        "peak_degrees": 2.63671875,
+        "previous_target_rms_degrees": 1.0530382613053284,
+        "rms_degrees": 1.6680994630290304,
+        "saturated_fraction": 0.55,
+        "tail_encoder_span_degrees": 11.25
+      },
+      {
+        "final_error_degrees": 0.087890625,
+        "peak_degrees": 2.724609375,
+        "previous_target_rms_degrees": 1.1284836238708948,
+        "rms_degrees": 1.7408252059883154,
+        "saturated_fraction": 0.55625,
+        "tail_encoder_span_degrees": 11.162109375
+      },
+      {
+        "final_error_degrees": 0.966796875,
+        "peak_degrees": 3.515625,
+        "previous_target_rms_degrees": 1.6281575190541981,
+        "rms_degrees": 2.206004351159419,
+        "saturated_fraction": 0.61875,
+        "tail_encoder_span_degrees": 10.634765625
+      },
+      {
+        "final_error_degrees": 0.0,
+        "peak_degrees": 2.63671875,
+        "previous_target_rms_degrees": 1.0530382613053284,
+        "rms_degrees": 1.6680994630290304,
+        "saturated_fraction": 0.55,
+        "tail_encoder_span_degrees": 11.25
+      },
+      {
+        "final_error_degrees": 0.087890625,
+        "peak_degrees": 2.724609375,
+        "previous_target_rms_degrees": 1.1284836238708948,
+        "rms_degrees": 1.7408252059883154,
+        "saturated_fraction": 0.55625,
+        "tail_encoder_span_degrees": 11.162109375
+      },
+      {
+        "final_error_degrees": 0.966796875,
+        "peak_degrees": 3.515625,
+        "previous_target_rms_degrees": 1.6281575190541981,
+        "rms_degrees": 2.206004351159419,
+        "saturated_fraction": 0.61875,
+        "tail_encoder_span_degrees": 10.634765625
+      },
+      {
+        "final_error_degrees": 0.0,
+        "peak_degrees": 2.63671875,
+        "previous_target_rms_degrees": 1.0530382613053284,
+        "rms_degrees": 1.6680994630290304,
+        "saturated_fraction": 0.55,
+        "tail_encoder_span_degrees": 11.25
+      },
+      {
+        "final_error_degrees": 0.087890625,
+        "peak_degrees": 2.724609375,
+        "previous_target_rms_degrees": 1.1284836238708948,
+        "rms_degrees": 1.7408252059883154,
+        "saturated_fraction": 0.55625,
+        "tail_encoder_span_degrees": 11.162109375
+      }
+    ],
+    "branch_resistance_ohm": 0.1,
+    "kind": "shared-supply",
+    "limit": 350,
+    "min_bus_voltage_v": 11.8,
+    "motors": 9,
+    "peak_bus_power_w_estimated": 38.21352847121699,
+    "peak_source_current_a_estimated": 3.238434616204829,
+    "shared_resistance_ohm": 0.0
+  },
+  {
+    "axes": [
+      {
+        "final_error_degrees": 1.58203125,
+        "peak_degrees": 3.8671875,
+        "previous_target_rms_degrees": 1.8843906800485974,
+        "rms_degrees": 2.440419356197182,
+        "saturated_fraction": 0.64375,
+        "tail_encoder_span_degrees": 10.37109375
+      },
+      {
+        "final_error_degrees": 0.263671875,
+        "peak_degrees": 2.98828125,
+        "previous_target_rms_degrees": 1.2703160134580103,
+        "rms_degrees": 1.8754662887606672,
+        "saturated_fraction": 0.575,
+        "tail_encoder_span_degrees": 11.25
+      },
+      {
+        "final_error_degrees": 0.439453125,
+        "peak_degrees": 3.076171875,
+        "previous_target_rms_degrees": 1.3522380397477165,
+        "rms_degrees": 1.952824073497157,
+        "saturated_fraction": 0.60625,
+        "tail_encoder_span_degrees": 11.07421875
+      },
+      {
+        "final_error_degrees": 1.58203125,
+        "peak_degrees": 3.8671875,
+        "previous_target_rms_degrees": 1.8843906800485974,
+        "rms_degrees": 2.440419356197182,
+        "saturated_fraction": 0.64375,
+        "tail_encoder_span_degrees": 10.37109375
+      },
+      {
+        "final_error_degrees": 0.263671875,
+        "peak_degrees": 2.98828125,
+        "previous_target_rms_degrees": 1.2703160134580103,
+        "rms_degrees": 1.8754662887606672,
+        "saturated_fraction": 0.575,
+        "tail_encoder_span_degrees": 11.25
+      },
+      {
+        "final_error_degrees": 0.439453125,
+        "peak_degrees": 3.076171875,
+        "previous_target_rms_degrees": 1.3522380397477165,
+        "rms_degrees": 1.952824073497157,
+        "saturated_fraction": 0.60625,
+        "tail_encoder_span_degrees": 11.07421875
+      },
+      {
+        "final_error_degrees": 1.58203125,
+        "peak_degrees": 3.8671875,
+        "previous_target_rms_degrees": 1.8843906800485974,
+        "rms_degrees": 2.440419356197182,
+        "saturated_fraction": 0.64375,
+        "tail_encoder_span_degrees": 10.37109375
+      },
+      {
+        "final_error_degrees": 0.263671875,
+        "peak_degrees": 2.98828125,
+        "previous_target_rms_degrees": 1.2703160134580103,
+        "rms_degrees": 1.8754662887606672,
+        "saturated_fraction": 0.575,
+        "tail_encoder_span_degrees": 11.25
+      },
+      {
+        "final_error_degrees": 0.439453125,
+        "peak_degrees": 3.076171875,
+        "previous_target_rms_degrees": 1.3522380397477165,
+        "rms_degrees": 1.952824073497157,
+        "saturated_fraction": 0.60625,
+        "tail_encoder_span_degrees": 11.07421875
+      }
+    ],
+    "branch_resistance_ohm": 0.1,
+    "kind": "shared-supply",
+    "limit": 350,
+    "min_bus_voltage_v": 10.75823844616796,
+    "motors": 9,
+    "peak_bus_power_w_estimated": 32.02148342907294,
+    "peak_source_current_a_estimated": 2.976461582377258,
+    "shared_resistance_ohm": 0.35
+  }
+]

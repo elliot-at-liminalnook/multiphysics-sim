@@ -1,0 +1,74 @@
+{
+  "interpretation": "Illustrative battery/source/controller sensor scenarios only. No battery, calibrated current, power or energy measurement claimed. Original raw servo voltage comparison is unscored and limited by 0.1 V resolution and unknown absolute error/sample age.",
+  "simulations": [
+    {
+      "name": "Illustrative battery charged; not physically validated",
+      "failure": null,
+      "tracking": {
+        "rms_rad": 0.035047539498017574,
+        "peak_rad": 0.07227184630308509,
+        "settled_error_rad": 0.019941750242513656,
+        "saturation_fraction": 0.037037037037037035,
+        "error_sign_changes": 2,
+        "passes": false
+      },
+      "electrical": {
+        "minimum_voltage_v": 11.949410487891223,
+        "maximum_voltage_v": 11.95049998335,
+        "peak_discharge_current_a": 0.25540019560336774,
+        "peak_charge_current_a": 0.0,
+        "peak_winding_current_a": 0.1108811546723154,
+        "peak_draw_power_w": 3.0518817759523524,
+        "peak_return_power_w": 0.0,
+        "drawn_energy_j": 12.034152076836477,
+        "returned_energy_j": 0.0,
+        "violations": [],
+        "passes": true
+      },
+      "initial_soc": 0.9,
+      "final_soc": 0.8997202642456199,
+      "controller_protection_ticks": 0,
+      "ticks": 81
+    },
+    {
+      "name": "Illustrative battery low-charge; not physically validated",
+      "failure": null,
+      "tracking": {
+        "rms_rad": 0.04078701076217277,
+        "peak_rad": 0.06,
+        "settled_error_rad": 0.0,
+        "saturation_fraction": 1.0,
+        "error_sign_changes": 1,
+        "passes": false
+      },
+      "electrical": {
+        "minimum_voltage_v": 8.536779597519306,
+        "maximum_voltage_v": 8.546404981903711,
+        "peak_discharge_current_a": 0.75,
+        "peak_charge_current_a": 0.0,
+        "peak_winding_current_a": 4.071539901508156e-25,
+        "peak_draw_power_w": 6.409803736427783,
+        "peak_return_power_w": 0.0,
+        "drawn_energy_j": 25.62478879978968,
+        "returned_energy_j": 0.0,
+        "violations": [
+          "minimum bus voltage: observed 8.536779597519306, limit 9.8",
+          "discharge current: observed 0.75, limit 0.5"
+        ],
+        "passes": false
+      },
+      "initial_soc": 0.05,
+      "final_soc": 0.04916666666666107,
+      "controller_protection_ticks": 81,
+      "ticks": 81
+    }
+  ],
+  "servo_voltage_comparison": [
+    {
+      "name": "supply_voltage",
+      "rmse": 0.0,
+      "maximum_abs_error": 0.0,
+      "passes": null
+    }
+  ]
+}

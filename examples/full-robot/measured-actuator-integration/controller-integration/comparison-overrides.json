@@ -1,0 +1,186 @@
+{
+  "scope": "Provisional unchanged-gait comparison only",
+  "overrides": [
+    {
+      "joint": "-Y | Hip servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "-Y | Worm servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "-Y | Foot servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "+X | Hip servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "+X | Worm servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "+X | Foot servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "+Y | Hip servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "+Y | Worm servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "+Y | Foot servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "-X | Hip servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "-X | Worm servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    },
+    {
+      "joint": "-X | Foot servo output",
+      "parameter": "physics.drive_backlash",
+      "cad_value": {
+        "provenance": "unmeasured",
+        "reference": "Radial bearing clearance does not determine drive-connection rotational lost motion",
+        "width_rad": null
+      },
+      "experimental_value": {
+        "provenance": "estimated",
+        "reference": "Experimental ideal rigid drive connection: no additional torsional lost motion. Bearing clearance is retained separately; hardware reversal measurements and loaded attachment validation are pending.",
+        "width_rad": 0
+      },
+      "basis": "Preserved historical gait assumption, still unmeasured; isolate motor/controller effects."
+    }
+  ],
+  "promotion": "Re-measure drive connections and author accepted values using CAD joint physics; no measured values promoted here."
+}

@@ -1,0 +1,372 @@
+{
+  "purpose": "Compare current CAD derivation against the preserved walking input before claiming a matched gait benchmark",
+  "counts": {
+    "links": {
+      "old": 29,
+      "new": 29,
+      "missing": [],
+      "added": []
+    },
+    "joints": {
+      "old": 98,
+      "new": 98,
+      "missing": [],
+      "added": []
+    },
+    "motors": {
+      "old": 12,
+      "new": 12,
+      "missing": [],
+      "added": []
+    }
+  },
+  "changed": {
+    "links": {},
+    "joints": {
+      "-X | Hip swing": [
+        "physics"
+      ],
+      "+Y | lower_tube fixed to yoke": [
+        "physics"
+      ],
+      "-Y | Crank to curved link": [
+        "physics"
+      ],
+      "-Y | Crosshead carries foot rod": [
+        "physics"
+      ],
+      "+X | hip_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "+X | Thigh carries fixed knee frame": [
+        "physics"
+      ],
+      "-Y | Thigh elevation": [
+        "physics"
+      ],
+      "+Y | Guide tube carries lower block": [
+        "physics"
+      ],
+      "+Y | Worm servo output": [
+        "physics"
+      ],
+      "+Y | Hip swing": [
+        "physics"
+      ],
+      "-X | Crank to curved link": [
+        "physics"
+      ],
+      "+X | Sector fixed to cross-shaft": [
+        "physics"
+      ],
+      "+X | shaft secondary fixed": [
+        "physics"
+      ],
+      "-X | hip_input secondary fixed": [
+        "physics"
+      ],
+      "-Y | Worm servo output": [
+        "physics"
+      ],
+      "+Y | hip_input secondary fixed": [
+        "physics"
+      ],
+      "+Y | Hip servo output": [
+        "physics"
+      ],
+      "+X | hip_input secondary fixed": [
+        "physics"
+      ],
+      "-X | Thigh elevation": [
+        "physics"
+      ],
+      "+X | Hip servo output": [
+        "physics"
+      ],
+      "-X | upper_tube fixed to yoke": [
+        "physics"
+      ],
+      "+Y | hip_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "+Y | Crank to curved link": [
+        "physics"
+      ],
+      "-Y | Guide tube carries lower block": [
+        "physics"
+      ],
+      "-Y | foot_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "+X | hip_output secondary fixed": [
+        "physics"
+      ],
+      "-X | worm_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "-X | worm secondary fixed": [
+        "physics"
+      ],
+      "-X | foot_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "+Y | Cross-shaft fixed to root yoke": [
+        "physics"
+      ],
+      "+X | Knee frame carries guide tube": [
+        "physics"
+      ],
+      "+X | Crosshead carries foot rod": [
+        "physics"
+      ],
+      "+X | Worm servo output": [
+        "physics"
+      ],
+      "+X | Thigh elevation": [
+        "physics"
+      ],
+      "-Y | Belt path mass carried by chassis": [
+        "physics"
+      ],
+      "+X | foot_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "+X | housing secondary fixed": [
+        "physics"
+      ],
+      "+X | Belt path mass carried by chassis": [
+        "physics"
+      ],
+      "+Y | foot_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "+X | Foot translation": [
+        "physics"
+      ],
+      "-Y | Curved link closes foot loop": [
+        "physics"
+      ],
+      "-X | Belt path mass carried by chassis": [
+        "physics"
+      ],
+      "+X | Hip output carries worm enclosure": [
+        "physics"
+      ],
+      "-X | Thigh carries fixed knee frame": [
+        "physics"
+      ],
+      "-Y | Foot servo output": [
+        "physics"
+      ],
+      "+Y | Knee frame carries guide tube": [
+        "physics"
+      ],
+      "+Y | Foot servo output": [
+        "physics"
+      ],
+      "+Y | Hip output carries worm enclosure": [
+        "physics"
+      ],
+      "-X | Guide tube carries lower block": [
+        "physics"
+      ],
+      "-X | Worm servo output": [
+        "physics"
+      ],
+      "-X | Crosshead carries foot rod": [
+        "physics"
+      ],
+      "+X | Guide tube carries lower block": [
+        "physics"
+      ],
+      "-Y | Hip output carries worm enclosure": [
+        "physics"
+      ],
+      "+Y | Thigh carries fixed knee frame": [
+        "physics"
+      ],
+      "+X | knee_frame secondary fixed": [
+        "physics"
+      ],
+      "-X | Hip servo output": [
+        "physics"
+      ],
+      "+X | upper_tube fixed to yoke": [
+        "physics"
+      ],
+      "+Y | Foot translation": [
+        "physics"
+      ],
+      "+Y | worm secondary fixed": [
+        "physics"
+      ],
+      "-X | Foot servo output": [
+        "physics"
+      ],
+      "-X | lower_tube fixed to yoke": [
+        "physics"
+      ],
+      "+X | Hip swing": [
+        "physics"
+      ],
+      "+Y | Curved link closes foot loop": [
+        "physics"
+      ],
+      "+Y | worm_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "-Y | Thigh carries fixed knee frame": [
+        "physics"
+      ],
+      "+X | Curved link closes foot loop": [
+        "physics"
+      ],
+      "+Y | crank secondary fixed": [
+        "physics"
+      ],
+      "-X | Hip output carries worm enclosure": [
+        "physics"
+      ],
+      "-Y | worm secondary fixed": [
+        "physics"
+      ],
+      "+X | worm_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "-Y | worm_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "+X | Foot servo output": [
+        "physics"
+      ],
+      "+Y | upper_tube fixed to yoke": [
+        "physics"
+      ],
+      "-X | Foot translation": [
+        "physics"
+      ],
+      "+X | crank secondary fixed": [
+        "physics"
+      ],
+      "+Y | Hip support surface fixed": [
+        "physics"
+      ],
+      "-X | hip_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "-Y | hip_motor_internal follows motor housing": [
+        "physics"
+      ],
+      "-Y | Sector fixed to cross-shaft": [
+        "physics"
+      ],
+      "-X | Knee frame carries guide tube": [
+        "physics"
+      ],
+      "+Y | Sector fixed to cross-shaft": [
+        "physics"
+      ],
+      "-X | Curved link closes foot loop": [
+        "physics"
+      ],
+      "-X | Sector fixed to cross-shaft": [
+        "physics"
+      ],
+      "+X | lower_tube fixed to yoke": [
+        "physics"
+      ],
+      "+X | Crank to curved link": [
+        "physics"
+      ],
+      "-Y | Cross-shaft fixed to root yoke": [
+        "physics"
+      ],
+      "+Y | Belt path mass carried by chassis": [
+        "physics"
+      ],
+      "-Y | Hip swing": [
+        "physics"
+      ],
+      "-Y | Foot translation": [
+        "physics"
+      ],
+      "-X | crank secondary fixed": [
+        "physics"
+      ],
+      "+X | worm secondary fixed": [
+        "physics"
+      ],
+      "-Y | hip_input secondary fixed": [
+        "physics"
+      ],
+      "+Y | Crosshead carries foot rod": [
+        "physics"
+      ],
+      "-Y | Hip servo output": [
+        "physics"
+      ],
+      "-X | Cross-shaft fixed to root yoke": [
+        "physics"
+      ],
+      "+Y | Thigh elevation": [
+        "physics"
+      ],
+      "-Y | Knee frame carries guide tube": [
+        "physics"
+      ],
+      "+X | Cross-shaft fixed to root yoke": [
+        "physics"
+      ]
+    },
+    "motors": {
+      "+X \u00b7 Worm drive \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "+Y \u00b7 Hip swing (belt) \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "+Y \u00b7 Foot slide \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "+X \u00b7 Hip swing (belt) \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "-Y \u00b7 Worm drive \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "+Y \u00b7 Worm drive \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "-X \u00b7 Hip swing (belt) \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "-Y \u00b7 Foot slide \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "+X \u00b7 Foot slide \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "-Y \u00b7 Hip swing (belt) \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "-X \u00b7 Foot slide \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ],
+      "-X \u00b7 Worm drive \u00b7 HX-30HM": [
+        "electrical",
+        "thermal"
+      ]
+    }
+  }
+}

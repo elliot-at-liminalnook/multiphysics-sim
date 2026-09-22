@@ -1,0 +1,42 @@
+   Compiling sim-example-diffusion v0.1.0 (/Users/elliot/physics-simulator/crates/sim-example-diffusion)
+    Finished `test` profile [optimized + debuginfo] target(s) in 3.05s
+     Running unittests src/lib.rs (target/debug/deps/sim_example_diffusion-214b94e27a0c59ba)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/sim_example_diffusion-8f1aac0db5cc0b3c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/acceptance.rs (target/debug/deps/acceptance-c3d76d2fea58945a)
+
+running 4 tests
+test semantic_connector_identity_is_required_even_for_identical_lane_shapes ... ok
+diffusion relaxation errors h=0.2: 1.5332462946182623e-4; h=0.1: 3.832336998921271e-5
+test unknown_domain_roundtrips_and_is_fully_inspectable_by_generic_consumers ... ok
+test analytic_relaxation_and_second_order_refinement ... ok
+test closed_system_conserves_amount_throughout_relaxation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/composite.rs (target/debug/deps/composite-9b96a137f41a1603)
+
+running 1 test
+
+thread 'nested_registered_composites_expand_connect_pin_integrate_and_inspect' (456470) panicked at crates/sim-example-diffusion/tests/composite.rs:57:113:
+called `Result::unwrap()` on an `Err` value: InspectionError("invalid composite parent")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test nested_registered_composites_expand_connect_pin_integrate_and_inspect ... FAILED
+
+failures:
+
+failures:
+    nested_registered_composites_expand_connect_pin_integrate_and_inspect
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p sim-example-diffusion --test composite`

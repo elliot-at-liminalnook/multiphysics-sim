@@ -1,0 +1,6 @@
+{
+  "time_recorded_utc": "2026-09-14T15:08:23.393840+00:00",
+  "user_instruction": "we no longer have the restriction of turning off the motor power before loading images onto fpga -- please flash images as you please or need",
+  "effect": "Motor-power-off is no longer a prerequisite for needed FPGA image loads on this bench. Exact supervised image reloaded into volatile SRAM; no persistent flash changed.",
+  "local_policy_file": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/safety.md"
+}

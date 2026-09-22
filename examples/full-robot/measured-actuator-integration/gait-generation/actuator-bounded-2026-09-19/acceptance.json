@@ -1,0 +1,94 @@
+{
+  "simulation_only": true,
+  "promoted": false,
+  "reason": "Worst loaded motor tracking RMS 2.4232125569 degrees exceeds unchanged 2 degree gate.",
+  "experimental_candidate": "slow-full-stride-10s/spec.json",
+  "completed_short_trials": 8,
+  "full_stride_checks": {
+    "ten_second_walking": {
+      "completed": true,
+      "not_fallen": true,
+      "upright": true,
+      "command_bounds": true,
+      "tracking": false,
+      "finalist_horizon": true,
+      "travel": true,
+      "foot_lift": true,
+      "sampled_collision": true
+    },
+    "stop": true,
+    "half_step": true,
+    "ten_second_candidate_replay": "not_run",
+    "three_second_baseline_replay": true
+  },
+  "evidence": [
+    {
+      "path": "validation-protocol.json",
+      "sha256": "145229c751987a91be80bf8a02775db09833eddb4b2b82be4d019a467259f64e"
+    },
+    {
+      "path": "results.json",
+      "sha256": "3b2315cdd23a3a8c3ec61aa6696136dd718759fceef431d9a6cf26c0d7d62860"
+    },
+    {
+      "path": "current-controller/robot.rcad",
+      "sha256": "f873aa7dc89be5c92291403c12d46d060c03e3ee183a626b32115ba0ae712ac9"
+    },
+    {
+      "path": "current-controller/robot.simrobot.json",
+      "sha256": "d457d9a1977816d7a30f936ad6ce685389cbf2c91aa1a709229e1d6e60260156"
+    },
+    {
+      "path": "current-controller/profiles.json",
+      "sha256": "147b403fdf80563da408ff586a6296293d6d89f6496eff480da40a33329c15c6"
+    },
+    {
+      "path": "search/pilot.spec.json",
+      "sha256": "b99754c96da5963237e18c7314e056d94186a1a9818854fa1dd5c36c784a8a3f"
+    },
+    {
+      "path": "search/pilot.settings.json",
+      "sha256": "0999916b3d144242302fd5a89e9c13ae90765dc424179f1421d529398ba7e9e8"
+    },
+    {
+      "path": "search/capture-search-parity.json",
+      "sha256": "6028ecb9b260e747aa49134e5874ec6807e6cc83ceb78d380ba7a441bcf6cc57"
+    },
+    {
+      "path": "search/replay-check.json",
+      "sha256": "98cbdf97b49b3f1aa8aa565840ce4ddefed1b2c74226dc9d4596e3c28683d7ca"
+    },
+    {
+      "path": "baseline-10s/geometry-report.json",
+      "sha256": "7d7d37ecbf794a7395041ae2b09b8ea8fcb06500ade856cc3b8d12b400ea2701"
+    },
+    {
+      "path": "trial2-10s/geometry-report.json",
+      "sha256": "c34a0a264abe149be95aa422356f4e76022dc220cba67d7c904803788568b675"
+    },
+    {
+      "path": "slow-full-stride-10s/geometry-report.json",
+      "sha256": "e3c149bb8f7470322a0572327328ad3ed75f3ed34465bd8c28bcc2b154d8306f"
+    },
+    {
+      "path": "slow-full-stride-stop/check-detailed.json",
+      "sha256": "0b0939ef212fa0b8ac28c925bd93710b211ea2be6b94e49184381a9cbeb7de3e"
+    },
+    {
+      "path": "slow-full-stride-half-step/check.json",
+      "sha256": "c2f0d914f0061ee71b6f823b5e2a4fb0f43b4b5cdf64386ef1d17d186284101f"
+    },
+    {
+      "path": "verification/buffered-journal-parity.json",
+      "sha256": "7d0019b4eca65845b410ab754c380489978b8c741edf594152680705b394312c"
+    },
+    {
+      "path": "verification/search_motion-buffered.rs",
+      "sha256": "30519feece66eb2db8f04e1d28e465c1a2e3ff4202293dfb4288e19874f37ea4"
+    },
+    {
+      "path": "rust-source.tar.gz",
+      "sha256": "1d100b0881a5e416fe70ad83e3caeb9cb7d3ccd4f4e085a71855056546cbbb4c"
+    }
+  ]
+}

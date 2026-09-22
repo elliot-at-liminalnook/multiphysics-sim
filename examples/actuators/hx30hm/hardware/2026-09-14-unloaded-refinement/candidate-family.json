@@ -1,0 +1,83 @@
+{
+  "shared": {
+    "motor": {
+      "back_emf_constant": 0.009734075474443412,
+      "backlash": 0.0,
+      "backlash.events": 0.0,
+      "derating": 0.0,
+      "efficiency": 0.5037278591966505,
+      "gear_damping": 0.1,
+      "gear_friction": 0.025,
+      "gear_inertia": 2e-05,
+      "gear_stiffness": 50.0,
+      "inductance": 0.00148,
+      "jacobian.analytic": 1.0,
+      "no_load_current": 0.1,
+      "ratio": 200.0,
+      "reference": 298.15,
+      "resistance": 3.6999999999999997,
+      "rotor_inertia": 2.2324546035565207e-08,
+      "temp_coeff": 0.0039,
+      "torque_constant": 0.009734075474443412
+    },
+    "bridge": {
+      "current_limit": 3.0,
+      "on_resistance": 0.05
+    },
+    "conditions": {
+      "voltage_v": null,
+      "temperature_c": null,
+      "load_inertia": 2e-05,
+      "load_torque": 0.0,
+      "command_delay_s": 0.0
+    },
+    "step_s": 0.00025
+  },
+  "device_deltas": {
+    "4": {
+      "motor.loss_speed_scale": -1.004023848803239,
+      "motor.no_load_current": -0.028440708947934254,
+      "motor.rotor_inertia": 6.883602494174047e-08
+    },
+    "5": {
+      "motor.loss_speed_scale": 3.0,
+      "motor.no_load_current": -0.036109708382631,
+      "motor.rotor_inertia": 2.776754539644348e-07
+    },
+    "6": {
+      "motor.loss_speed_scale": -4.98,
+      "motor.no_load_current": 0.005246574535792761,
+      "motor.rotor_inertia": -1.7324546035565205e-08
+    },
+    "7": {
+      "motor.loss_speed_scale": -4.98,
+      "motor.no_load_current": -0.035773297223127686,
+      "motor.rotor_inertia": 2.776754539644348e-07
+    },
+    "8": {
+      "motor.loss_speed_scale": -3.4860880071147866,
+      "motor.no_load_current": -0.013638913338904705,
+      "motor.rotor_inertia": 2.643208382245231e-07
+    },
+    "9": {
+      "motor.loss_speed_scale": -4.98,
+      "motor.no_load_current": -0.00923319437786499,
+      "motor.rotor_inertia": 4.583676808129615e-08
+    },
+    "10": {
+      "motor.loss_speed_scale": 2.529302282413976,
+      "motor.no_load_current": -0.02677177573996798,
+      "motor.rotor_inertia": 2.776754539644348e-07
+    },
+    "11": {
+      "motor.loss_speed_scale": -4.98,
+      "motor.no_load_current": -0.007199708190866336,
+      "motor.rotor_inertia": 2.776754539644348e-07
+    },
+    "12": {
+      "motor.loss_speed_scale": -1.0296713305898182,
+      "motor.no_load_current": -0.021314981504807734,
+      "motor.rotor_inertia": -1.1625863793719708e-09
+    }
+  }
+}

@@ -1,0 +1,5490 @@
+{
+  "date": "2026-09-13",
+  "purpose": "End-to-end comparison acceptance; accuracy failures are retained, not promoted as calibration.",
+  "collections": [
+    {
+      "archive": "pwm-identification",
+      "observations_blake3": "3a44ddbb3fcb24679bac14151ad241959d83bc7e354decd057f195c741d681c6",
+      "raw_input_blake3": {
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-id12-v1/preflight.json": "2fc1e761939b7e0afa30b0fe8187d88ebf0795e05ec78225750b6f7569e2e3e7",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-id12-v1/pwm.csv": "c1402e18600bf244b3ee2d2f3f2700342efacde67d356c5aa0d569b4000da622",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-id12-v1/run.json": "81668fb40a3e15732cf40797933cd560d4bab88c77537cceb7a1b1f0a3881b01",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-id12-v1/transactions.jsonl": "6fe0cfb8d357a35a878f8aaa372b1daddf2abae0149feeed2253e986505f9f89",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-ids4-11-v1/preflight.json": "02a5256ab724c50e1b9378d3402b7900bfec44b5b2b5013c50882548a2a5c682",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-ids4-11-v1/pwm.csv": "5ad7fdc8033768178807158045519d27c367055b81d8fd38b245c94791b7ba19",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-ids4-11-v1/run.json": "0cfa606d19169b15e232582fe149ee14acf26bde29e9fab759bd1ccfae312a8b",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-direction-bit10-ids4-11-v1/transactions.jsonl": "89c5f74db9897dfdc43201b3bc7e1e586c19d26670a9590ddc2bf500b15c9a90",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-ids4-11-v1/preflight.json": "582ada6da8370932ddd42bf92debe0907989e5d075fdca062cc4f09b74010db7",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-ids4-11-v1/pwm.csv": "90bf86f8695d7c3dbc7b1897172c278f60f434a57adf68025448c41f6399613b",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-ids4-11-v1/run.json": "f5eed8de2087dff0ee2ac57bb232e2a262e615de1c64c5369452f5a645224444",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-ids4-11-v1/transactions.jsonl": "d49da7e34904dbebf5684a39cd826fbbf6e69c0db075f91a481159038b8a79f9",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-pilot-id12-v1/preflight.json": "73b0d76b98ac0be34fd229ce845948c1d3b6dbb9ae51c0ccdcd04316e46d42cc",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-pilot-id12-v1/pwm.csv": "4ace70b0f59a69b64f3d97497b672df866c35d8a5e874e56001842dfe5bfa39e",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-pilot-id12-v1/run.json": "8cb402699e1a758fdfa5c0290a43df62c17ae96752458f0de9549f6fc7ac8456",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-pilot-id12-v1/transactions.jsonl": "c50ee10ebdd3ee4164e704c81d5121b31b7e7dd80267f0bac41d28e64c5ea8cd"
+      },
+      "runtime": {
+        "version": 1,
+        "library_source_blake3": "95e5fcd68c44f1954a0fead8af6f9e726dd2e551ce2bc00ce166bc6b2f213b4a",
+        "features": []
+      },
+      "baseline": {
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "backlash.events": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.0,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "jacobian.analytic": 1.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "bridge": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "conditions": {
+          "voltage_v": null,
+          "temperature_c": null,
+          "load_inertia": 2e-05,
+          "load_torque": 0.0,
+          "command_delay_s": 0.0
+        },
+        "step_s": 0.00025
+      },
+      "candidate": {
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "backlash.events": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "jacobian.analytic": 1.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "bridge": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "conditions": {
+          "voltage_v": null,
+          "temperature_c": null,
+          "load_inertia": 2e-05,
+          "load_torque": 0.0,
+          "command_delay_s": 0.0
+        },
+        "step_s": 0.00025
+      },
+      "rows": [
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/4/0",
+          "device": 4,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.00573204071649892,
+            "maximum_abs_error": 0.00983625088405862,
+            "final_error": 0.004676812753272568,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.003684984620886076,
+            "maximum_abs_error": 0.007703259377057415,
+            "final_error": 0.0018817875826763683,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/4/1",
+          "device": 4,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.006986069673224556,
+            "maximum_abs_error": 0.0114108701683873,
+            "final_error": -0.006208358685384626,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.004718763428219318,
+            "maximum_abs_error": 0.008930175699045702,
+            "final_error": -0.0034086537138794167,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/4/0",
+          "device": 4,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.002188324839474473,
+            "maximum_abs_error": 0.002752202073369907,
+            "final_error": 0.002752191960324928,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.001884680191791228,
+            "maximum_abs_error": 0.0023701365026963465,
+            "final_error": 0.00237012785717904,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/4/1",
+          "device": 4,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.004661027065786636,
+            "maximum_abs_error": 0.006420104410943612,
+            "final_error": -0.006420104410943612,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.008676136090648746,
+            "maximum_abs_error": 0.011960952554786037,
+            "final_error": -0.011960952554786037,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/4/2",
+          "device": 4,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0054581867843354085,
+            "maximum_abs_error": 0.00906979293779836,
+            "final_error": -0.0010596836046160088,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.006694951062926099,
+            "maximum_abs_error": 0.00918399203969824,
+            "final_error": -0.00918399203969824,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/4/3",
+          "device": 4,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.015225703328487892,
+            "maximum_abs_error": 0.023202564295691827,
+            "final_error": 0.010611047106652421,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0102086425790782,
+            "maximum_abs_error": 0.015890692365514256,
+            "final_error": 0.002471124733022953,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/4/4",
+          "device": 4,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.027320744635196563,
+            "maximum_abs_error": 0.03908948564547915,
+            "final_error": 0.023760447744033936,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.021490352620318988,
+            "maximum_abs_error": 0.031279125098224,
+            "final_error": 0.01561619286501581,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/5/0",
+          "device": 5,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.002816568765795465,
+            "maximum_abs_error": 0.006719594804880106,
+            "final_error": 0.0006051509822209283,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002575690643420529,
+            "maximum_abs_error": 0.0048912449916432565,
+            "final_error": -0.002199066480412057,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/5/1",
+          "device": 5,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.006409057364904328,
+            "maximum_abs_error": 0.010929378006033726,
+            "final_error": -0.005250586490123683,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0042863322095274,
+            "maximum_abs_error": 0.008774961878102006,
+            "final_error": -0.002460397140185675,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/5/0",
+          "device": 5,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.002382190243805446,
+            "maximum_abs_error": 0.0033998542051260237,
+            "final_error": -0.0032834606269744808,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0026695719761754646,
+            "maximum_abs_error": 0.0037859723146290237,
+            "final_error": -0.0036862425086508673,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/5/1",
+          "device": 5,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.008031002004506821,
+            "maximum_abs_error": 0.011465422501525081,
+            "final_error": -0.011465422501525081,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.012566276473090983,
+            "maximum_abs_error": 0.01743497227957516,
+            "final_error": -0.01743497227957516,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/5/2",
+          "device": 5,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0063169516170247615,
+            "maximum_abs_error": 0.009832997918332795,
+            "final_error": 0.0022836732695998146,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.005125349597617339,
+            "maximum_abs_error": 0.007048972980175578,
+            "final_error": -0.005749388893850987,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/5/3",
+          "device": 5,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.015837809863727476,
+            "maximum_abs_error": 0.02413830593523389,
+            "final_error": 0.011591561694966224,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.010676847032163752,
+            "maximum_abs_error": 0.016750112755082952,
+            "final_error": 0.003542451875287511,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/5/4",
+          "device": 5,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0259521946163653,
+            "maximum_abs_error": 0.03721131330188088,
+            "final_error": 0.02201079654113211,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.02018923724227807,
+            "maximum_abs_error": 0.030487095400605485,
+            "final_error": 0.013937702335006463,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/6/0",
+          "device": 6,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.005409602762105678,
+            "maximum_abs_error": 0.008977622862241052,
+            "final_error": 0.004748926511176903,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0032448249998479175,
+            "maximum_abs_error": 0.00682409189704389,
+            "final_error": 0.0019544396393606812,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/6/1",
+          "device": 6,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.010809831828611062,
+            "maximum_abs_error": 0.014521602296545436,
+            "final_error": -0.010853525366375499,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.008379786425686054,
+            "maximum_abs_error": 0.012048444667062907,
+            "final_error": -0.008062951068115769,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/6/0",
+          "device": 6,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0022212591439414444,
+            "maximum_abs_error": 0.0027934413293211956,
+            "final_error": 0.0027934303353143787,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0019111010468688598,
+            "maximum_abs_error": 0.002403206179623422,
+            "final_error": 0.0024031967883777626,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/6/1",
+          "device": 6,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0031518588135426144,
+            "maximum_abs_error": 0.00660365500822772,
+            "final_error": -0.0008598960049398825,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.004758883390943416,
+            "maximum_abs_error": 0.006786392577658257,
+            "final_error": -0.006786392577658257,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/6/2",
+          "device": 6,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.01101574993569161,
+            "maximum_abs_error": 0.015220697806266066,
+            "final_error": 0.009920822661873108,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.005644913931073332,
+            "maximum_abs_error": 0.008822604681917458,
+            "final_error": 0.0018507734557502986,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/6/3",
+          "device": 6,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.02047704098238387,
+            "maximum_abs_error": 0.028319549469148178,
+            "final_error": 0.01839705386161132,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.014606833654212007,
+            "maximum_abs_error": 0.020899047239169563,
+            "final_error": 0.01032089845533131,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/6/4",
+          "device": 6,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.03046393482641051,
+            "maximum_abs_error": 0.04315267823551,
+            "final_error": 0.02926912236739998,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.024458122145469604,
+            "maximum_abs_error": 0.03539312716493087,
+            "final_error": 0.02118539544398998,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/7/0",
+          "device": 7,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.005383399616701769,
+            "maximum_abs_error": 0.010108524199715998,
+            "final_error": 0.003490560275217904,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0035821061368267377,
+            "maximum_abs_error": 0.007897458857827081,
+            "final_error": 0.0007089905465874798,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/7/1",
+          "device": 7,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.008621215115014288,
+            "maximum_abs_error": 0.01323393448325149,
+            "final_error": -0.008079586438651797,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0063060866921656605,
+            "maximum_abs_error": 0.010772481848249162,
+            "final_error": -0.0053005737471772,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/7/0",
+          "device": 7,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0011915338988075835,
+            "maximum_abs_error": 0.0019305119696554067,
+            "final_error": 0.0013057228845046436,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0008978675701015115,
+            "maximum_abs_error": 0.0016588184524227586,
+            "final_error": 0.0009054572493100471,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/7/1",
+          "device": 7,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.00592627316333074,
+            "maximum_abs_error": 0.008510252942100057,
+            "final_error": -0.008510252942100057,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.010379579499962717,
+            "maximum_abs_error": 0.014446688135170485,
+            "final_error": -0.014446688135170485,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/7/2",
+          "device": 7,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0066841759826400055,
+            "maximum_abs_error": 0.009925377745442894,
+            "final_error": 0.003742171263391693,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.004339132567161375,
+            "maximum_abs_error": 0.006566620640096509,
+            "final_error": -0.004324112565266075,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/7/3",
+          "device": 7,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.015554803084400355,
+            "maximum_abs_error": 0.022975979159838872,
+            "final_error": 0.011704333559536942,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.01031000725680534,
+            "maximum_abs_error": 0.015915348698971404,
+            "final_error": 0.0036106312279604036,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/7/4",
+          "device": 7,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.029153443307221256,
+            "maximum_abs_error": 0.04275857839543912,
+            "final_error": 0.02613210347518541,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.022983181361729922,
+            "maximum_abs_error": 0.034690294874469535,
+            "final_error": 0.017725774117849258,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/8/0",
+          "device": 8,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.006411033723170124,
+            "maximum_abs_error": 0.010543410155472499,
+            "final_error": 0.005455285384521381,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.004222046528718595,
+            "maximum_abs_error": 0.008141972396072275,
+            "final_error": 0.0026515410195807054,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/8/1",
+          "device": 8,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.00788625594424301,
+            "maximum_abs_error": 0.012471526853031028,
+            "final_error": -0.006867047254697353,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.005634726090155429,
+            "maximum_abs_error": 0.010327337366220336,
+            "final_error": -0.00407699797460854,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/8/0",
+          "device": 8,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.00236276207572605,
+            "maximum_abs_error": 0.0029879329899380447,
+            "final_error": 0.002987922434960748,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020275292036292906,
+            "maximum_abs_error": 0.002563803487106522,
+            "final_error": 0.0025637944915668574,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/8/1",
+          "device": 8,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.011852305319321918,
+            "maximum_abs_error": 0.014922478573479014,
+            "final_error": 0.014922425365512726,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.007014105621989729,
+            "maximum_abs_error": 0.008826723993356529,
+            "final_error": 0.008826690576649398,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/8/2",
+          "device": 8,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.013895119035167767,
+            "maximum_abs_error": 0.018034043891471806,
+            "final_error": 0.012193562653140172,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.008123076800060658,
+            "maximum_abs_error": 0.01116972729754813,
+            "final_error": 0.004143703914200957,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/8/3",
+          "device": 8,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.02764219708041301,
+            "maximum_abs_error": 0.03780158534651275,
+            "final_error": 0.028161497407731523,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.021530240565379676,
+            "maximum_abs_error": 0.030382553842572713,
+            "final_error": 0.02008594656628128,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/8/4",
+          "device": 8,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.03355908071185181,
+            "maximum_abs_error": 0.04825192224910263,
+            "final_error": 0.0316536468632127,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.02736550826952878,
+            "maximum_abs_error": 0.04019281520937018,
+            "final_error": 0.023259903507302948,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/9/0",
+          "device": 9,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.0070683626485581,
+            "maximum_abs_error": 0.010268994183818238,
+            "final_error": 0.006696637566943855,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.004739218684339962,
+            "maximum_abs_error": 0.007979998206653082,
+            "final_error": 0.0038981235698537717,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/9/1",
+          "device": 9,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.011596437453324369,
+            "maximum_abs_error": 0.016455774528948242,
+            "final_error": -0.011314976533677907,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.009171429273761666,
+            "maximum_abs_error": 0.01397680073859273,
+            "final_error": -0.008517987868975911,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/9/0",
+          "device": 9,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.002280827728384673,
+            "maximum_abs_error": 0.0028689774371767848,
+            "final_error": 0.0028689665332417616,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.001957541159057832,
+            "maximum_abs_error": 0.0024621368044714202,
+            "final_error": 0.002462127508910529,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/9/1",
+          "device": 9,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0030741707625892745,
+            "maximum_abs_error": 0.006456312815344765,
+            "final_error": -0.00045838455665214023,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.004740717999916203,
+            "maximum_abs_error": 0.006544677788737683,
+            "final_error": -0.006544677788737683,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/9/2",
+          "device": 9,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.01007989475246462,
+            "maximum_abs_error": 0.014335420137467955,
+            "final_error": 0.00759900762871716,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.005393351061016866,
+            "maximum_abs_error": 0.008989192689735387,
+            "final_error": -0.0004708428998422484,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/9/3",
+          "device": 9,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0226932886023655,
+            "maximum_abs_error": 0.03130963799936154,
+            "final_error": 0.021823881404597123,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.01673626440209058,
+            "maximum_abs_error": 0.023556107959377376,
+            "final_error": 0.01374623183772726,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/9/4",
+          "device": 9,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.03342284194658854,
+            "maximum_abs_error": 0.04759003732875794,
+            "final_error": 0.0323491352010816,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.027363616936957044,
+            "maximum_abs_error": 0.03983144734523755,
+            "final_error": 0.02426421727801989,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/10/0",
+          "device": 10,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.0070891411966696165,
+            "maximum_abs_error": 0.01160751352102443,
+            "final_error": 0.006470324783252376,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.004820770809822717,
+            "maximum_abs_error": 0.00914485213489284,
+            "final_error": 0.003684358105153624,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/10/1",
+          "device": 10,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.009793145820403424,
+            "maximum_abs_error": 0.013854556158022575,
+            "final_error": -0.009522494438417805,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.007414730150364806,
+            "maximum_abs_error": 0.011692148515018132,
+            "final_error": -0.0067398628084107855,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/10/0",
+          "device": 10,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0022556258486520287,
+            "maximum_abs_error": 0.002836650334191031,
+            "final_error": 0.0028366397869116003,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0019377293978697866,
+            "maximum_abs_error": 0.0024366796508279464,
+            "final_error": 0.0024366706538900057,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/10/1",
+          "device": 10,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0027531535836108566,
+            "maximum_abs_error": 0.0063045186211695145,
+            "final_error": -0.0008288228016344445,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.004943306551262523,
+            "maximum_abs_error": 0.006787867662097373,
+            "final_error": -0.006787867662097373,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/10/2",
+          "device": 10,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.007088782260394606,
+            "maximum_abs_error": 0.010731767531366752,
+            "final_error": 0.003299423458929404,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.004625058753701412,
+            "maximum_abs_error": 0.006598529103388021,
+            "final_error": -0.0051303147225628745,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/10/3",
+          "device": 10,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.018589037229383206,
+            "maximum_abs_error": 0.026263695520994973,
+            "final_error": 0.01657436596945787,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.012800203287481878,
+            "maximum_abs_error": 0.018798767651721685,
+            "final_error": 0.0084489051620594,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/10/4",
+          "device": 10,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.030806476505969002,
+            "maximum_abs_error": 0.04419356926434956,
+            "final_error": 0.029023796577135497,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.024794243652323928,
+            "maximum_abs_error": 0.036403690139781036,
+            "final_error": 0.020900550053004507,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/11/0",
+          "device": 11,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.005343335661588686,
+            "maximum_abs_error": 0.009756326335544128,
+            "final_error": 0.004042654686473541,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.003439390526489733,
+            "maximum_abs_error": 0.007582564116845377,
+            "final_error": 0.001243719166332865,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-ids4-11-v1/11/1",
+          "device": 11,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.006884835795496335,
+            "maximum_abs_error": 0.01236145328110408,
+            "final_error": -0.005644040439886585,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0046817848404240745,
+            "maximum_abs_error": 0.00986350537343379,
+            "final_error": -0.002836304785135184,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/11/0",
+          "device": 11,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.002333553451018463,
+            "maximum_abs_error": 0.0029362532568706265,
+            "final_error": 0.0029362415813117735,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.001998677850147411,
+            "maximum_abs_error": 0.0025146900703718424,
+            "final_error": 0.0025146801363961314,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/11/1",
+          "device": 11,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.004286080907769633,
+            "maximum_abs_error": 0.00584139345289178,
+            "final_error": -0.00584139345289178,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.008851478743705735,
+            "maximum_abs_error": 0.01220257548304677,
+            "final_error": -0.01220257548304677,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/11/2",
+          "device": 11,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.00736276776658101,
+            "maximum_abs_error": 0.010439152486824983,
+            "final_error": 0.0030691691444396096,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0043783421089096716,
+            "maximum_abs_error": 0.00726238790390347,
+            "final_error": -0.0050123038103032855,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/11/3",
+          "device": 11,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.01774544251994241,
+            "maximum_abs_error": 0.025824192333884513,
+            "final_error": 0.013359168288567744,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.012212524169620747,
+            "maximum_abs_error": 0.018247085116168717,
+            "final_error": 0.0052821215636538466,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-ids4-11-v1/11/4",
+          "device": 11,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.027737031256340746,
+            "maximum_abs_error": 0.04103333924667338,
+            "final_error": 0.02318967906687283,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.02198565792219931,
+            "maximum_abs_error": 0.03358966807092126,
+            "final_error": 0.015084587819002876,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-id12-v1/12/0",
+          "device": 12,
+          "drive": 0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.004051027175673924,
+            "maximum_abs_error": 0.008731699454227313,
+            "final_error": 0.0020552903031743792,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002811533010392744,
+            "maximum_abs_error": 0.006408386924791076,
+            "final_error": -0.0007380507976554908,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-direction-bit10-id12-v1/12/1",
+          "device": 12,
+          "drive": -0.1,
+          "split": "held_out_duration_direction",
+          "baseline": {
+            "rmse": 0.005990429833762789,
+            "maximum_abs_error": 0.010152722466471928,
+            "final_error": -0.00500550165323169,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.003902973111657269,
+            "maximum_abs_error": 0.007880746385333173,
+            "final_error": -0.0022272015477062604,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-pilot-id12-v1/12/0",
+          "device": 12,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.002241245580176326,
+            "maximum_abs_error": 0.0028193468408157195,
+            "final_error": 0.00281933566973141,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0019268206414381802,
+            "maximum_abs_error": 0.0024236344627931133,
+            "final_error": 0.0024236249270627006,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-pilot-id12-v1/12/1",
+          "device": 12,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0051338257194928245,
+            "maximum_abs_error": 0.007241833290134949,
+            "final_error": -0.007241833290134949,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.009275403926845414,
+            "maximum_abs_error": 0.013058007521793844,
+            "final_error": -0.013058007521793844,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-pilot-id12-v1/12/2",
+          "device": 12,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.00617190783610678,
+            "maximum_abs_error": 0.009460277985780915,
+            "final_error": 0.0015670980565583234,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.005387011896645455,
+            "maximum_abs_error": 0.00732886597625889,
+            "final_error": -0.006473980844237774,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-pilot-id12-v1/12/3",
+          "device": 12,
+          "drive": 0.15,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.015333827422426704,
+            "maximum_abs_error": 0.035995451480893795,
+            "final_error": 0.012230929635697746,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.010604306466072853,
+            "maximum_abs_error": 0.02927160873755799,
+            "final_error": 0.003812592244134938,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-pilot-id12-v1/12/4",
+          "device": 12,
+          "drive": 0.2,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0229629185119387,
+            "maximum_abs_error": 0.034715874034631666,
+            "final_error": 0.01791125242242833,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.017420939928776084,
+            "maximum_abs_error": 0.026986848343170222,
+            "final_error": 0.009853628549700066,
+            "passes": false
+          },
+          "errors": []
+        }
+      ]
+    },
+    {
+      "archive": "pwm-full-range-identification",
+      "observations_blake3": "0c60030e686dae98af662b11f49d07c1ffe90db1774a3ff51f8743539920d081",
+      "raw_input_blake3": {
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-full-range/checkpoint.json": "ba7611acc1eaa1f7054a396ee59ab40dc66c070843e002148a90d0e28a596f0f",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-full-range/preflight.json": "4e60be4b58a441733334248db7bc4b2686ae12debc8dcecb8dec1f7e72076925",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-full-range/run.json": "bf811a7fc17e2dd292307b434d3e27415ff1319b600c14b53fbce06bf7adc2fe",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-full-range/sweep.csv": "81fd115a4bb54b7b2e1158cdaeafb0c5381a7b61baafefc22f238d2bb66a7b6c",
+        "examples/actuators/hx30hm/hardware/2026-09-11-nine-servos/pwm-individual-full-range/transactions.jsonl": "75c3c268c99ba218044c189ff8a8ee73df1df51b514c09d5e80c3ca0a76bbb36"
+      },
+      "runtime": {
+        "version": 1,
+        "library_source_blake3": "95e5fcd68c44f1954a0fead8af6f9e726dd2e551ce2bc00ce166bc6b2f213b4a",
+        "features": []
+      },
+      "baseline": {
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "backlash.events": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.0,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "jacobian.analytic": 1.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "bridge": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "conditions": {
+          "voltage_v": null,
+          "temperature_c": null,
+          "load_inertia": 2e-05,
+          "load_torque": 0.0,
+          "command_delay_s": 0.0
+        },
+        "step_s": 0.00025
+      },
+      "candidate": {
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "backlash.events": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "jacobian.analytic": 1.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "bridge": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "conditions": {
+          "voltage_v": null,
+          "temperature_c": null,
+          "load_inertia": 2e-05,
+          "load_torque": 0.0,
+          "command_delay_s": 0.0
+        },
+        "step_s": 0.00025
+      },
+      "rows": [
+        {
+          "trial_id": "pwm-individual-full-range/4/0",
+          "device": 4,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.002336632474781157,
+            "maximum_abs_error": 0.002881816543115284,
+            "final_error": 0.002881804594045075,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002005028249179508,
+            "maximum_abs_error": 0.0024726631822111146,
+            "final_error": 0.0024726529980242007,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/1",
+          "device": 4,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.002343007730418371,
+            "maximum_abs_error": 0.002889996118857794,
+            "final_error": -0.0028899826448806425,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002010495829093918,
+            "maximum_abs_error": 0.002479678015441851,
+            "final_error": -0.0024796665321604582,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/2",
+          "device": 4,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0066718860217962915,
+            "maximum_abs_error": 0.009563793420949238,
+            "final_error": -0.009563793420949238,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.011263144095424837,
+            "maximum_abs_error": 0.015637548452846622,
+            "final_error": -0.015637548452846622,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/3",
+          "device": 4,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.006485688821827593,
+            "maximum_abs_error": 0.009013283296125118,
+            "final_error": 0.009013283296125118,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.01122596770581867,
+            "maximum_abs_error": 0.015311620487648593,
+            "final_error": 0.015311620487648593,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/4",
+          "device": 4,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.007486481121154043,
+            "maximum_abs_error": 0.010920977794589278,
+            "final_error": 0.0037513960654392345,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.005099222640966857,
+            "maximum_abs_error": 0.007495443033292247,
+            "final_error": -0.00454855896886841,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/5",
+          "device": 4,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.007853133695462974,
+            "maximum_abs_error": 0.01226229678168864,
+            "final_error": -0.002702748380697985,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0057478557501396904,
+            "maximum_abs_error": 0.008608192888918306,
+            "final_error": 0.005260753824152996,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/6",
+          "device": 4,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.030910728663518232,
+            "maximum_abs_error": 0.043555659097372454,
+            "final_error": 0.028817229497042435,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.024892333225552777,
+            "maximum_abs_error": 0.03593870858847627,
+            "final_error": 0.02085196642813622,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/7",
+          "device": 4,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.03165484048816153,
+            "maximum_abs_error": 0.04294337002216844,
+            "final_error": -0.02908005346783757,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.02564548426324932,
+            "maximum_abs_error": 0.03591599500653861,
+            "final_error": -0.021097393859266927,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/8",
+          "device": 4,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.05565089351903575,
+            "maximum_abs_error": 0.07773094066775549,
+            "final_error": 0.0529779279454603,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.04951113204087592,
+            "maximum_abs_error": 0.07011722853786134,
+            "final_error": 0.044973900148474966,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/9",
+          "device": 4,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.054129953180844834,
+            "maximum_abs_error": 0.07580243675537193,
+            "final_error": -0.049781960367250994,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.04804417893281815,
+            "maximum_abs_error": 0.06816606405070622,
+            "final_error": -0.04179488978509849,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/10",
+          "device": 4,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0809559451715744,
+            "maximum_abs_error": 0.11243240478559435,
+            "final_error": 0.07799210338203805,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07461640199743642,
+            "maximum_abs_error": 0.104810173114665,
+            "final_error": 0.06969834031963235,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/11",
+          "device": 4,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0766792913994229,
+            "maximum_abs_error": 0.10866407395885269,
+            "final_error": -0.07131293330235383,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07054038994424519,
+            "maximum_abs_error": 0.10102210433553244,
+            "final_error": -0.06332229361802227,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/12",
+          "device": 4,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.1104419516927262,
+            "maximum_abs_error": 0.15394775749914213,
+            "final_error": 0.10983887959470323,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10401931662241565,
+            "maximum_abs_error": 0.14628038910479946,
+            "final_error": 0.10182278222731572,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/13",
+          "device": 4,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.10355035347263561,
+            "maximum_abs_error": 0.1464212215699346,
+            "final_error": -0.09912280253683375,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.09734879395497988,
+            "maximum_abs_error": 0.13876549269222943,
+            "final_error": -0.09111933495713281,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/14",
+          "device": 4,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.1310733970902155,
+            "maximum_abs_error": 0.185613759122645,
+            "final_error": 0.12533948664744132,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12482665227698188,
+            "maximum_abs_error": 0.17793482942612887,
+            "final_error": 0.11728917721595322,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/15",
+          "device": 4,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.13332452915050585,
+            "maximum_abs_error": 0.18565816847069355,
+            "final_error": -0.1307883876120266,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12705226556759885,
+            "maximum_abs_error": 0.17797855022150422,
+            "final_error": -0.12274922911352792,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/16",
+          "device": 4,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.15648802965388103,
+            "maximum_abs_error": 0.2201466734805017,
+            "final_error": 0.14906339774427763,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1502580833847731,
+            "maximum_abs_error": 0.21248312321444812,
+            "final_error": 0.14104361301544005,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/17",
+          "device": 4,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.15479064136425316,
+            "maximum_abs_error": 0.21762165112576798,
+            "final_error": -0.14779699421486292,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.14855164933847131,
+            "maximum_abs_error": 0.2099509158826814,
+            "final_error": -0.13977545309981987,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/18",
+          "device": 4,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.18418579359938475,
+            "maximum_abs_error": 0.2589402758455733,
+            "final_error": 0.17944675377785746,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.17792426106832537,
+            "maximum_abs_error": 0.2512837231107809,
+            "final_error": 0.1714351874196396,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/19",
+          "device": 4,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.18440123625948981,
+            "maximum_abs_error": 0.2580474329406967,
+            "final_error": -0.1769751527247757,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.17816506289348388,
+            "maximum_abs_error": 0.25040119735341576,
+            "final_error": -0.16897365861180325,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/20",
+          "device": 4,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.22381430557140766,
+            "maximum_abs_error": 0.30745799864716583,
+            "final_error": 0.22286041765319398,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.21736196519935763,
+            "maximum_abs_error": 0.29980766228185973,
+            "final_error": 0.21455348056093138,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/21",
+          "device": 4,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.21713620580814377,
+            "maximum_abs_error": 0.297226823057177,
+            "final_error": -0.21502083257511828,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2107061458523755,
+            "maximum_abs_error": 0.28958707855528637,
+            "final_error": -0.2067150466952271,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/22",
+          "device": 4,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.2612164561982696,
+            "maximum_abs_error": 0.3577323343563092,
+            "final_error": 0.2623034121566634,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.254732284447633,
+            "maximum_abs_error": 0.3500767265574735,
+            "final_error": 0.25397135088632017,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/4/23",
+          "device": 4,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.24611451720857094,
+            "maximum_abs_error": 0.3440990208619905,
+            "final_error": -0.2371261743393831,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.239684200910587,
+            "maximum_abs_error": 0.3364275716954609,
+            "final_error": -0.2290999564220223,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/24",
+          "device": 5,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0024026612535294266,
+            "maximum_abs_error": 0.0029648337809813916,
+            "final_error": 0.00296482126252811,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020566974832017756,
+            "maximum_abs_error": 0.0025377338168052297,
+            "final_error": 0.002537723171230838,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/25",
+          "device": 5,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0024012461683784714,
+            "maximum_abs_error": 0.0029631999362931395,
+            "final_error": -0.0029631850059898025,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.00205548774407951,
+            "maximum_abs_error": 0.002536337292654787,
+            "final_error": -0.002536324595537726,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/26",
+          "device": 5,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.00732488266319034,
+            "maximum_abs_error": 0.010244272940023384,
+            "final_error": -0.010244272940023384,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.012241763365382791,
+            "maximum_abs_error": 0.016601697258438256,
+            "final_error": -0.016601697258438256,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/27",
+          "device": 5,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.006195112708219096,
+            "maximum_abs_error": 0.008686729614376793,
+            "final_error": 0.008686729614376793,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.011081784110761187,
+            "maximum_abs_error": 0.015054189830472681,
+            "final_error": 0.015054189830472681,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/28",
+          "device": 5,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.009232184202148329,
+            "maximum_abs_error": 0.01319596665835204,
+            "final_error": 0.005495317786330445,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0055576691078544575,
+            "maximum_abs_error": 0.009341090076270602,
+            "final_error": -0.0024390823740134335,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/29",
+          "device": 5,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.00876132917104341,
+            "maximum_abs_error": 0.013502245359446802,
+            "final_error": -0.00462832219497894,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0055103690955641375,
+            "maximum_abs_error": 0.009239267800329262,
+            "final_error": 0.003342656592312261,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/30",
+          "device": 5,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.03191570799502901,
+            "maximum_abs_error": 0.04481239983760288,
+            "final_error": 0.02862473905243096,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.025940247256542877,
+            "maximum_abs_error": 0.0371964790011724,
+            "final_error": 0.020662699640962734,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/31",
+          "device": 5,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.03333763008503525,
+            "maximum_abs_error": 0.04522817788802845,
+            "final_error": -0.030626900470449553,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.027355911099090566,
+            "maximum_abs_error": 0.0376692453437807,
+            "final_error": -0.022408793736581306,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/32",
+          "device": 5,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.05625301786387525,
+            "maximum_abs_error": 0.07966528821855479,
+            "final_error": 0.051114581306481305,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.050350779970719045,
+            "maximum_abs_error": 0.07207535188329342,
+            "final_error": 0.043165252425576256,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/33",
+          "device": 5,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.05596897888286543,
+            "maximum_abs_error": 0.07696515466100579,
+            "final_error": -0.0524578024898458,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.04989102607664663,
+            "maximum_abs_error": 0.06936350173049449,
+            "final_error": -0.044515284461438626,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/34",
+          "device": 5,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.07913450651172464,
+            "maximum_abs_error": 0.11302247684506317,
+            "final_error": 0.07197830753385709,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07305400606150549,
+            "maximum_abs_error": 0.10541026674232679,
+            "final_error": 0.06400313580139466,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/35",
+          "device": 5,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.07862159337358078,
+            "maximum_abs_error": 0.1096249865784932,
+            "final_error": -0.07283051507740973,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0724952821117229,
+            "maximum_abs_error": 0.10198474882337724,
+            "final_error": -0.06483519846019953,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/36",
+          "device": 5,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.10370985256068603,
+            "maximum_abs_error": 0.1449440073878107,
+            "final_error": 0.09556261698074991,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.09746698615288733,
+            "maximum_abs_error": 0.13734621081490644,
+            "final_error": 0.08729594541742064,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/37",
+          "device": 5,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.10020815680767917,
+            "maximum_abs_error": 0.14332119302793267,
+            "final_error": -0.0932229694996432,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0940720884283055,
+            "maximum_abs_error": 0.13569680903137044,
+            "final_error": -0.085252717592669,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/38",
+          "device": 5,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.12548858752914466,
+            "maximum_abs_error": 0.1782063096334468,
+            "final_error": 0.11342006345397382,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.11937156768477634,
+            "maximum_abs_error": 0.17056858768986605,
+            "final_error": 0.10541945850136525,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/39",
+          "device": 5,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.12446654447796195,
+            "maximum_abs_error": 0.17639965379077993,
+            "final_error": -0.11571522319101746,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.11830224063994003,
+            "maximum_abs_error": 0.16876607038523428,
+            "final_error": -0.10772466018768245,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/40",
+          "device": 5,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.14827176446337714,
+            "maximum_abs_error": 0.21251211435772355,
+            "final_error": 0.13131432312282415,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.14217384548749135,
+            "maximum_abs_error": 0.2048761648388706,
+            "final_error": 0.1233212657493497,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/41",
+          "device": 5,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1514626126751513,
+            "maximum_abs_error": 0.21219031627622265,
+            "final_error": -0.1413840009552637,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.14528712103058275,
+            "maximum_abs_error": 0.20455186082838384,
+            "final_error": -0.13339493086608256,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/42",
+          "device": 5,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.17312797388819112,
+            "maximum_abs_error": 0.24854769665119686,
+            "final_error": 0.15352080470229212,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.16701494290931548,
+            "maximum_abs_error": 0.24091001248709837,
+            "final_error": 0.14553865347535022,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/43",
+          "device": 5,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.17360167083394298,
+            "maximum_abs_error": 0.24589788460772527,
+            "final_error": -0.15866453283730342,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.16744703649704823,
+            "maximum_abs_error": 0.23825544914941182,
+            "final_error": -0.1506765740088608,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/44",
+          "device": 5,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.20104386353171327,
+            "maximum_abs_error": 0.2881189250768459,
+            "final_error": 0.1788938961194395,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1949250544649496,
+            "maximum_abs_error": 0.28048113086770177,
+            "final_error": 0.17090458383018103,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/45",
+          "device": 5,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.19641880147014018,
+            "maximum_abs_error": 0.28417123909334,
+            "final_error": -0.17588026893479713,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1902744892195246,
+            "maximum_abs_error": 0.2765112601178958,
+            "final_error": -0.1678774806277462,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/46",
+          "device": 5,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.23907341313965716,
+            "maximum_abs_error": 0.33562512973842895,
+            "final_error": 0.22063880541853542,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.23275302254106864,
+            "maximum_abs_error": 0.3279960589375981,
+            "final_error": 0.21234657576384908,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/5/47",
+          "device": 5,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.237527958043998,
+            "maximum_abs_error": 0.3387605953705849,
+            "final_error": -0.22044685073333536,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2313082918743087,
+            "maximum_abs_error": 0.3311030287394465,
+            "final_error": -0.21242120012919286,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/48",
+          "device": 6,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0023498605932602157,
+            "maximum_abs_error": 0.002899293550697091,
+            "final_error": 0.0028992781388352223,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020157560029098473,
+            "maximum_abs_error": 0.0024868899649763392,
+            "final_error": 0.0024868768330975582,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/49",
+          "device": 6,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0024054151354717017,
+            "maximum_abs_error": 0.0029981464306175856,
+            "final_error": -0.0029981345654735755,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002063393644965538,
+            "maximum_abs_error": 0.002571663598007735,
+            "final_error": -0.002571653485951499,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/50",
+          "device": 6,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0031406510111046874,
+            "maximum_abs_error": 0.005882970474525715,
+            "final_error": -0.002782317060589661,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.006505343707171144,
+            "maximum_abs_error": 0.009101252086295515,
+            "final_error": -0.009101252086295515,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/51",
+          "device": 6,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0032356783126158447,
+            "maximum_abs_error": 0.005816088756513489,
+            "final_error": 0.002871862379646614,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.006551050280761155,
+            "maximum_abs_error": 0.009154824204303844,
+            "final_error": 0.009154824204303844,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/52",
+          "device": 6,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.013611736327836991,
+            "maximum_abs_error": 0.016658085148327763,
+            "final_error": 0.013183035276336394,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.007933601043972642,
+            "maximum_abs_error": 0.011487272915204088,
+            "final_error": 0.005297102703456964,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/53",
+          "device": 6,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.011241023235444455,
+            "maximum_abs_error": 0.01515750079524128,
+            "final_error": -0.008905493697958226,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.006349650884624503,
+            "maximum_abs_error": 0.010521589262136278,
+            "final_error": -0.0009758083126745545,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/54",
+          "device": 6,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.03784479717687342,
+            "maximum_abs_error": 0.0501290424562406,
+            "final_error": 0.038550159917785834,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.03152791771124575,
+            "maximum_abs_error": 0.04256350111206643,
+            "final_error": 0.03030663929554224,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/55",
+          "device": 6,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.03669687879861923,
+            "maximum_abs_error": 0.04931018120134581,
+            "final_error": -0.034610361367658424,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.030653777355096078,
+            "maximum_abs_error": 0.04170746612217682,
+            "final_error": -0.026656545678313395,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/56",
+          "device": 6,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.062346385090499654,
+            "maximum_abs_error": 0.08393408782027756,
+            "final_error": 0.06306409935978738,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.056001578672276675,
+            "maximum_abs_error": 0.07636274474732296,
+            "final_error": 0.0548279739744576,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/57",
+          "device": 6,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.058656632176355576,
+            "maximum_abs_error": 0.08048169954965789,
+            "final_error": -0.056173865483737206,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.052518603140970406,
+            "maximum_abs_error": 0.07287305408504041,
+            "final_error": -0.04821132054896274,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/58",
+          "device": 6,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.08604569152710649,
+            "maximum_abs_error": 0.1189296428894209,
+            "final_error": 0.08617197132703242,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0798151571590849,
+            "maximum_abs_error": 0.11131532994341672,
+            "final_error": 0.07820860086119508,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/59",
+          "device": 6,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.08198605836220096,
+            "maximum_abs_error": 0.11469298387595753,
+            "final_error": -0.07913226073862917,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07580527209261914,
+            "maximum_abs_error": 0.10706999921120733,
+            "final_error": -0.07115423354002737,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/60",
+          "device": 6,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.11303736893171677,
+            "maximum_abs_error": 0.15801671135421191,
+            "final_error": 0.11181989677302778,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10677873779067736,
+            "maximum_abs_error": 0.15034507600260888,
+            "final_error": 0.1038112945353134,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/61",
+          "device": 6,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.10661013079541048,
+            "maximum_abs_error": 0.14801254083236542,
+            "final_error": -0.10217406913422034,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10041520654701491,
+            "maximum_abs_error": 0.14041316366608936,
+            "final_error": -0.09420117405302686,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/62",
+          "device": 6,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.13739719537927125,
+            "maximum_abs_error": 0.1921206067812597,
+            "final_error": 0.13490386832776408,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.13115666463494152,
+            "maximum_abs_error": 0.1844881586518583,
+            "final_error": 0.12692605286330755,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/63",
+          "device": 6,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1305046788004853,
+            "maximum_abs_error": 0.1830381007630944,
+            "final_error": -0.12487421925024039,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12429676442401076,
+            "maximum_abs_error": 0.17540377770227727,
+            "final_error": -0.11688453576336882,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/64",
+          "device": 6,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.16321644816775502,
+            "maximum_abs_error": 0.22935375528183916,
+            "final_error": 0.15832509517559845,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.15697483309647506,
+            "maximum_abs_error": 0.2216981588368428,
+            "final_error": 0.15033636240665815,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/65",
+          "device": 6,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.15550756108652256,
+            "maximum_abs_error": 0.21960528347783653,
+            "final_error": -0.1473890518593941,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1493135177061427,
+            "maximum_abs_error": 0.21197709217486954,
+            "final_error": -0.13940234568862342,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/66",
+          "device": 6,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.19120016682060625,
+            "maximum_abs_error": 0.26595177119887525,
+            "final_error": 0.1860971631835434,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.18494373539553757,
+            "maximum_abs_error": 0.2583131574767831,
+            "final_error": 0.17811122294545734,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/67",
+          "device": 6,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1819577904142925,
+            "maximum_abs_error": 0.2540359480632475,
+            "final_error": -0.17524755097096079,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.17573484493500802,
+            "maximum_abs_error": 0.2464108961608984,
+            "final_error": -0.16726334305398405,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/68",
+          "device": 6,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.21755027506722627,
+            "maximum_abs_error": 0.30359544858492854,
+            "final_error": 0.21178263529793262,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.21129854656232847,
+            "maximum_abs_error": 0.29594962465209135,
+            "final_error": 0.20379349409385827,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/69",
+          "device": 6,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.2171277262660784,
+            "maximum_abs_error": 0.2999838004735773,
+            "final_error": -0.21281253848756165,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.21073613866708554,
+            "maximum_abs_error": 0.29236146007210273,
+            "final_error": -0.20453330046409712,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/70",
+          "device": 6,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.25124115897332283,
+            "maximum_abs_error": 0.3482385465858286,
+            "final_error": 0.24711952875357568,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.24497481571781368,
+            "maximum_abs_error": 0.34059921008580635,
+            "final_error": 0.23912833022433722,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/6/71",
+          "device": 6,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.2506818016410604,
+            "maximum_abs_error": 0.34404956884126264,
+            "final_error": -0.24659537517805252,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.24427517191972256,
+            "maximum_abs_error": 0.3364206008664438,
+            "final_error": -0.23831334216151268,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/72",
+          "device": 7,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0014062081469426407,
+            "maximum_abs_error": 0.002339030374248117,
+            "final_error": 0.001407563950233491,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0010895459560515274,
+            "maximum_abs_error": 0.0020039272505865515,
+            "final_error": 0.0009857045534985248,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/73",
+          "device": 7,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0023844857424850483,
+            "maximum_abs_error": 0.002942258366814848,
+            "final_error": -0.002942245224769739,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020426662567403584,
+            "maximum_abs_error": 0.002520298648365589,
+            "final_error": -0.0025202874615193253,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/74",
+          "device": 7,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.005309024780371153,
+            "maximum_abs_error": 0.007480234082689399,
+            "final_error": -0.007480234082689399,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.009908707801940754,
+            "maximum_abs_error": 0.013719877828771479,
+            "final_error": -0.013719877828771479,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/75",
+          "device": 7,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.003697591735226739,
+            "maximum_abs_error": 0.004815176711042164,
+            "final_error": 0.0044179376196238004,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.007806794859798851,
+            "maximum_abs_error": 0.010655483322999272,
+            "final_error": 0.010655483322999272,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/76",
+          "device": 7,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.011687873956542196,
+            "maximum_abs_error": 0.01549000743847525,
+            "final_error": 0.00912137653943184,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0068076139739520515,
+            "maximum_abs_error": 0.012085929100412963,
+            "final_error": 0.0008920563114285587,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/77",
+          "device": 7,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.012552221920674109,
+            "maximum_abs_error": 0.016913875086914755,
+            "final_error": -0.009664773660760406,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.007579468478238873,
+            "maximum_abs_error": 0.012256040479274212,
+            "final_error": -0.0017346835617620265,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/78",
+          "device": 7,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.03549288575778069,
+            "maximum_abs_error": 0.04828679422564633,
+            "final_error": 0.03373850166174455,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.029438216692915943,
+            "maximum_abs_error": 0.04069125864681153,
+            "final_error": 0.02578832825655944,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/79",
+          "device": 7,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.03669905911677138,
+            "maximum_abs_error": 0.04888650250870569,
+            "final_error": -0.03584506716772187,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.03047860957497151,
+            "maximum_abs_error": 0.041301606105862226,
+            "final_error": -0.027591136858452603,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/80",
+          "device": 7,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.059540727152498904,
+            "maximum_abs_error": 0.0807530508821861,
+            "final_error": 0.058416131701296614,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0532414818519884,
+            "maximum_abs_error": 0.07315665721174311,
+            "final_error": 0.0501591105689731,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/81",
+          "device": 7,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0590761503006775,
+            "maximum_abs_error": 0.08041126554395042,
+            "final_error": -0.05831168773181011,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.05276950206612566,
+            "maximum_abs_error": 0.07282585982459833,
+            "final_error": -0.05005686023189934,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/82",
+          "device": 7,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.08389271719688099,
+            "maximum_abs_error": 0.11581373037587345,
+            "final_error": 0.08173982471110353,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07772588073875827,
+            "maximum_abs_error": 0.10820974420936613,
+            "final_error": 0.07378725463900115,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/83",
+          "device": 7,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.08270497549182174,
+            "maximum_abs_error": 0.11419666523373917,
+            "final_error": -0.08011762571860676,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07653367585044059,
+            "maximum_abs_error": 0.10659462112954099,
+            "final_error": -0.07216708915404674,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/84",
+          "device": 7,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.10885015977427903,
+            "maximum_abs_error": 0.14745785631486058,
+            "final_error": 0.10854156142125304,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10250016354028715,
+            "maximum_abs_error": 0.139879393589471,
+            "final_error": 0.1002970098907856,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/85",
+          "device": 7,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.10778972668196929,
+            "maximum_abs_error": 0.14938169518157618,
+            "final_error": -0.10393863462118885,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10160126576199241,
+            "maximum_abs_error": 0.14176774860156294,
+            "final_error": -0.09597763019537908,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/86",
+          "device": 7,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.13343332382856887,
+            "maximum_abs_error": 0.1840535630887199,
+            "final_error": 0.13061066143115407,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12722680002737297,
+            "maximum_abs_error": 0.1764521177522565,
+            "final_error": 0.12265795342498542,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/87",
+          "device": 7,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.13446753499438874,
+            "maximum_abs_error": 0.18658370068657038,
+            "final_error": -0.13056789077618375,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12824517144726044,
+            "maximum_abs_error": 0.1789528267318461,
+            "final_error": -0.12257761515965043,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/88",
+          "device": 7,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.15956082368195112,
+            "maximum_abs_error": 0.22223379988593173,
+            "final_error": 0.1531774892476333,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.153339282047041,
+            "maximum_abs_error": 0.21459190778571002,
+            "final_error": 0.14520006973639787,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/89",
+          "device": 7,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.16075593329129034,
+            "maximum_abs_error": 0.22340294707833297,
+            "final_error": -0.15673109304278904,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.15452657027445482,
+            "maximum_abs_error": 0.21577173193147237,
+            "final_error": -0.14875301453373674,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/90",
+          "device": 7,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.18698175526358427,
+            "maximum_abs_error": 0.2624191587709165,
+            "final_error": 0.1811840871496092,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.18073898680080133,
+            "maximum_abs_error": 0.25476492936508777,
+            "final_error": 0.17318434436976304,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/91",
+          "device": 7,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.18872436114547164,
+            "maximum_abs_error": 0.2629616468207975,
+            "final_error": -0.1836522543300554,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1824912807640845,
+            "maximum_abs_error": 0.2553362389739564,
+            "final_error": -0.1756741544524143,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/92",
+          "device": 7,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.21435537692990816,
+            "maximum_abs_error": 0.2972767449581616,
+            "final_error": 0.2093422092825301,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.20810372863851848,
+            "maximum_abs_error": 0.28963723076746595,
+            "final_error": 0.20135205835431547,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/93",
+          "device": 7,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.22302129814909896,
+            "maximum_abs_error": 0.3094965306177915,
+            "final_error": -0.21791354305816002,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.21676500549858843,
+            "maximum_abs_error": 0.301844179433432,
+            "final_error": -0.20991943330143759,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/94",
+          "device": 7,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.2521484906034547,
+            "maximum_abs_error": 0.3558399356657469,
+            "final_error": 0.24783954483481452,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.24588707262332024,
+            "maximum_abs_error": 0.34821187124031305,
+            "final_error": 0.23985737572917865,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/7/95",
+          "device": 7,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.2573890214581058,
+            "maximum_abs_error": 0.3540734174474216,
+            "final_error": -0.2536198658083685,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.25111530853870523,
+            "maximum_abs_error": 0.3464387229557362,
+            "final_error": -0.24563259785858926,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/96",
+          "device": 8,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0024130097236084395,
+            "maximum_abs_error": 0.002975805338086444,
+            "final_error": 0.002975792260279911,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020648697330895227,
+            "maximum_abs_error": 0.0025462787586738866,
+            "final_error": 0.0025462676401080235,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/97",
+          "device": 8,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.002414793953894998,
+            "maximum_abs_error": 0.0029798579519822403,
+            "final_error": -0.0029798453569951796,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020663966001550063,
+            "maximum_abs_error": 0.002549746956793261,
+            "final_error": -0.002549736248203064,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/98",
+          "device": 8,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.003101007561871952,
+            "maximum_abs_error": 0.004053585521006153,
+            "final_error": -0.004053585521006153,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.007624778808209481,
+            "maximum_abs_error": 0.010409814156635439,
+            "final_error": -0.010409814156635439,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/99",
+          "device": 8,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.003587486945901606,
+            "maximum_abs_error": 0.006005092624691697,
+            "final_error": -0.0020790620559773976,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.003296182199282404,
+            "maximum_abs_error": 0.004276305988226852,
+            "final_error": 0.004276305988226852,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/100",
+          "device": 8,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.014804556636054376,
+            "maximum_abs_error": 0.019116344738481304,
+            "final_error": 0.013686536718865855,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.009083635702125404,
+            "maximum_abs_error": 0.012839404553778834,
+            "final_error": 0.0057721929008249795,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/101",
+          "device": 8,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.01704600285452954,
+            "maximum_abs_error": 0.02170458627566204,
+            "final_error": -0.016816213954074136,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.011105621576603162,
+            "maximum_abs_error": 0.014745111984867137,
+            "final_error": -0.008895612686591878,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/102",
+          "device": 8,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.04262295070694909,
+            "maximum_abs_error": 0.05668963279301156,
+            "final_error": 0.04366933414174855,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.03641000599468425,
+            "maximum_abs_error": 0.049109877631805354,
+            "final_error": 0.03573845845391098,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/103",
+          "device": 8,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.03769499736169715,
+            "maximum_abs_error": 0.05058847586018231,
+            "final_error": -0.03758843207279074,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.03156258316469203,
+            "maximum_abs_error": 0.04300695262356341,
+            "final_error": -0.02965429504648244,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/104",
+          "device": 8,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.06668120724761671,
+            "maximum_abs_error": 0.08920627458622196,
+            "final_error": 0.06697586242683304,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.06031175176445133,
+            "maximum_abs_error": 0.08160560039717457,
+            "final_error": 0.05871677012546658,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/105",
+          "device": 8,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.06286012606922185,
+            "maximum_abs_error": 0.08406829192640342,
+            "final_error": -0.06108389878681053,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.05652179034074415,
+            "maximum_abs_error": 0.0764846924757677,
+            "final_error": -0.05281670193135224,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/106",
+          "device": 8,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0895916774157144,
+            "maximum_abs_error": 0.12388872422144512,
+            "final_error": 0.08725753499305722,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0833869012321301,
+            "maximum_abs_error": 0.11627179976270588,
+            "final_error": 0.0792821416519135,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/107",
+          "device": 8,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.08126380856486236,
+            "maximum_abs_error": 0.11327048034737125,
+            "final_error": -0.07773038069182447,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07509357840583485,
+            "maximum_abs_error": 0.1056524991924086,
+            "final_error": -0.06976382659911867,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/108",
+          "device": 8,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.11475222322191952,
+            "maximum_abs_error": 0.15921247863413107,
+            "final_error": 0.11236473353135817,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10854550999750164,
+            "maximum_abs_error": 0.15159768786846223,
+            "final_error": 0.1044034489880536,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/109",
+          "device": 8,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.110988663150537,
+            "maximum_abs_error": 0.15503926653392186,
+            "final_error": -0.10798632370725503,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1047813368785994,
+            "maximum_abs_error": 0.14741663760507517,
+            "final_error": -0.10002003873046705,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/110",
+          "device": 8,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.14342623161653056,
+            "maximum_abs_error": 0.19445014842600422,
+            "final_error": 0.14305952963687518,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.13718781590623003,
+            "maximum_abs_error": 0.18685038003400323,
+            "final_error": 0.13510315646790372,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/111",
+          "device": 8,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.13701655772582347,
+            "maximum_abs_error": 0.1911290320215635,
+            "final_error": -0.13242757764709934,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.13080869004250922,
+            "maximum_abs_error": 0.18350989637726844,
+            "final_error": -0.1244699771627169,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/112",
+          "device": 8,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.1707495446806557,
+            "maximum_abs_error": 0.23229382109760266,
+            "final_error": 0.17038284927419167,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.16448408645194054,
+            "maximum_abs_error": 0.2246814760266832,
+            "final_error": 0.16240343953612046,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/113",
+          "device": 8,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.16108624226501178,
+            "maximum_abs_error": 0.22558655237239367,
+            "final_error": -0.1560660008758042,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.15488127454137152,
+            "maximum_abs_error": 0.21798158204438078,
+            "final_error": -0.14811577580200602,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/114",
+          "device": 8,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.2001996952679076,
+            "maximum_abs_error": 0.2732620753995236,
+            "final_error": 0.20042018712948073,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.19394104832519243,
+            "maximum_abs_error": 0.26564880157125154,
+            "final_error": 0.19245435811274925,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/115",
+          "device": 8,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.18972710786712677,
+            "maximum_abs_error": 0.26484724642743174,
+            "final_error": -0.18223082522292366,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1835188159130433,
+            "maximum_abs_error": 0.2572250785112602,
+            "final_error": -0.17426556393149306,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/116",
+          "device": 8,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.2250395569709388,
+            "maximum_abs_error": 0.31274101387830616,
+            "final_error": 0.2206329968339299,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.21880880500913058,
+            "maximum_abs_error": 0.3051346313627847,
+            "final_error": 0.21267839710402836,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/117",
+          "device": 8,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.21558821030070605,
+            "maximum_abs_error": 0.2976894725811437,
+            "final_error": -0.20870662094089543,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.20921680862026543,
+            "maximum_abs_error": 0.2900795547714971,
+            "final_error": -0.20043618994383383,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/118",
+          "device": 8,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.25687449518184163,
+            "maximum_abs_error": 0.3539122705181804,
+            "final_error": 0.2504547162731362,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2506179991980848,
+            "maximum_abs_error": 0.34627035484940905,
+            "final_error": 0.24246082223397425,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/8/119",
+          "device": 8,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.24972968652899502,
+            "maximum_abs_error": 0.3484516196315589,
+            "final_error": -0.24018191064607208,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2434764112358466,
+            "maximum_abs_error": 0.34080356693367153,
+            "final_error": -0.23218200339925765,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/120",
+          "device": 9,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.002390082013389713,
+            "maximum_abs_error": 0.0029500596353089314,
+            "final_error": 0.0029500440847987633,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002047028865309954,
+            "maximum_abs_error": 0.002526446780823074,
+            "final_error": 0.002526433549019209,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/121",
+          "device": 9,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0024046836979213586,
+            "maximum_abs_error": 0.002973039328328088,
+            "final_error": -0.002973015744440088,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020584297455152043,
+            "maximum_abs_error": 0.0025447607679404773,
+            "final_error": -0.002544740709666603,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/122",
+          "device": 9,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.003140073948325988,
+            "maximum_abs_error": 0.006148466617167613,
+            "final_error": 0.000276122573397649,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.004483599785691059,
+            "maximum_abs_error": 0.006007001079304988,
+            "final_error": -0.006007001079304988,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/123",
+          "device": 9,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0028612083867606175,
+            "maximum_abs_error": 0.006087445951991698,
+            "final_error": 0.0012692021568568718,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0055548301807129465,
+            "maximum_abs_error": 0.00754919459315459,
+            "final_error": 0.00754919459315459,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/124",
+          "device": 9,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.01233659252710781,
+            "maximum_abs_error": 0.016482289556483752,
+            "final_error": 0.010069952664485515,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.007139071279863161,
+            "maximum_abs_error": 0.011770675361326739,
+            "final_error": 0.002139230481511094,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/125",
+          "device": 9,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.013636866040725526,
+            "maximum_abs_error": 0.017534407197249878,
+            "final_error": -0.011692091837704699,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.008298177736169792,
+            "maximum_abs_error": 0.0133512319938287,
+            "final_error": -0.0037499445115013325,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/126",
+          "device": 9,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.03880882780752541,
+            "maximum_abs_error": 0.051297826762728066,
+            "final_error": 0.03784250615679137,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.032705525960768124,
+            "maximum_abs_error": 0.0436640937514671,
+            "final_error": 0.029878926875080244,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/127",
+          "device": 9,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.03791061755090739,
+            "maximum_abs_error": 0.050314964018673344,
+            "final_error": -0.03611106736837162,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.031860445816404064,
+            "maximum_abs_error": 0.04335674646291117,
+            "final_error": -0.028157551948786205,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/128",
+          "device": 9,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.06242156829810413,
+            "maximum_abs_error": 0.09852738390580709,
+            "final_error": 0.06445941856514517,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.055771730513169554,
+            "maximum_abs_error": 0.09219340321715092,
+            "final_error": 0.05588969982757544,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/129",
+          "device": 9,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.06359390620426723,
+            "maximum_abs_error": 0.08587525616733649,
+            "final_error": -0.06279631409744085,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.05725494625412114,
+            "maximum_abs_error": 0.07826790525675467,
+            "final_error": -0.05450718616834882,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/130",
+          "device": 9,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.08961635328052232,
+            "maximum_abs_error": 0.12127856412571655,
+            "final_error": 0.08991598170947962,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.08323850007830877,
+            "maximum_abs_error": 0.11365919779291725,
+            "final_error": 0.08163486503858391,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/131",
+          "device": 9,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.08511241162184081,
+            "maximum_abs_error": 0.11492393659589034,
+            "final_error": -0.08203443163204566,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07892267673884495,
+            "maximum_abs_error": 0.10727384561167941,
+            "final_error": -0.07404488277864563,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/132",
+          "device": 9,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.11405879443893693,
+            "maximum_abs_error": 0.1516633606802379,
+            "final_error": 0.11389407657629463,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1076923749908266,
+            "maximum_abs_error": 0.1440404723399995,
+            "final_error": 0.10564140836847175,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/133",
+          "device": 9,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.11021748774566122,
+            "maximum_abs_error": 0.1503104196966888,
+            "final_error": -0.10610427049155058,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10401623662452597,
+            "maximum_abs_error": 0.14265591917815068,
+            "final_error": -0.09810774641482761,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/134",
+          "device": 9,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.13925200767777396,
+            "maximum_abs_error": 0.19036884135510607,
+            "final_error": 0.13722048363153921,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.13285954225011978,
+            "maximum_abs_error": 0.18275606060166033,
+            "final_error": 0.12892727905752105,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/135",
+          "device": 9,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.13510464204591155,
+            "maximum_abs_error": 0.18636189741097064,
+            "final_error": -0.13001630148147414,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1288873093755089,
+            "maximum_abs_error": 0.17869352191576265,
+            "final_error": -0.12201811771685755,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/136",
+          "device": 9,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.16418769344854656,
+            "maximum_abs_error": 0.23073663413498174,
+            "final_error": 0.1570856350358532,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1579649518361394,
+            "maximum_abs_error": 0.22309638370609824,
+            "final_error": 0.14909051596109185,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/137",
+          "device": 9,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1612978427485593,
+            "maximum_abs_error": 0.22603698360622193,
+            "final_error": -0.15508379500584613,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.15508505798010042,
+            "maximum_abs_error": 0.21840468994616047,
+            "final_error": -0.14710140310836206,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/138",
+          "device": 9,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.1933129957837081,
+            "maximum_abs_error": 0.27212751024202025,
+            "final_error": 0.18587757829040708,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.18708216195991412,
+            "maximum_abs_error": 0.2644816809866007,
+            "final_error": 0.17787554454372312,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/139",
+          "device": 9,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1896021535722649,
+            "maximum_abs_error": 0.2648798795289385,
+            "final_error": -0.18234256917529557,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.18337179543708207,
+            "maximum_abs_error": 0.2572483494514471,
+            "final_error": -0.17434371272355587,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/140",
+          "device": 9,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.22253279913542232,
+            "maximum_abs_error": 0.30996343611325333,
+            "final_error": 0.2141463543797334,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.21630448588034185,
+            "maximum_abs_error": 0.30232625674262364,
+            "final_error": 0.20616706464139756,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/141",
+          "device": 9,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.21386387434016657,
+            "maximum_abs_error": 0.3025769451433058,
+            "final_error": -0.2021007285040457,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2076872581720058,
+            "maximum_abs_error": 0.2949657059296048,
+            "final_error": -0.19414675534855297,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/142",
+          "device": 9,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.26066686301669223,
+            "maximum_abs_error": 0.3564563185953627,
+            "final_error": 0.2579006946347777,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2542485166285876,
+            "maximum_abs_error": 0.3488382884798595,
+            "final_error": 0.24960932102940003,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/9/143",
+          "device": 9,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.253832631479824,
+            "maximum_abs_error": 0.35720297095048553,
+            "final_error": -0.24334075666197075,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2475876242953772,
+            "maximum_abs_error": 0.34955042295283106,
+            "final_error": -0.23533543019883707,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/144",
+          "device": 10,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0023762207571828946,
+            "maximum_abs_error": 0.002930999818268326,
+            "final_error": 0.002930987803980659,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.00203623970276568,
+            "maximum_abs_error": 0.00251145970698721,
+            "final_error": 0.0025114494788199384,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/145",
+          "device": 10,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0023759255044955643,
+            "maximum_abs_error": 0.002930751845048853,
+            "final_error": -0.002930739142749867,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002035985271215298,
+            "maximum_abs_error": 0.002511245325087436,
+            "final_error": -0.002511234511765843,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/146",
+          "device": 10,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.004445302419637385,
+            "maximum_abs_error": 0.006068782581164179,
+            "final_error": -0.006068782581164179,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.008981238639165608,
+            "maximum_abs_error": 0.01227960973896759,
+            "final_error": -0.01227960973896759,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/147",
+          "device": 10,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0032346890446211334,
+            "maximum_abs_error": 0.006045906667702196,
+            "final_error": 0.0023829609288757506,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0063028813186623844,
+            "maximum_abs_error": 0.008845107205229267,
+            "final_error": 0.008845107205229267,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/148",
+          "device": 10,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.013081262779111492,
+            "maximum_abs_error": 0.017376745502224157,
+            "final_error": 0.011224063186200624,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.007746982871973216,
+            "maximum_abs_error": 0.012028884865274996,
+            "final_error": 0.0032907381014646575,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/149",
+          "device": 10,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.011582064131861521,
+            "maximum_abs_error": 0.015716300110831777,
+            "final_error": -0.008946496081192377,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.006604868617115751,
+            "maximum_abs_error": 0.010685560838136356,
+            "final_error": -0.0007154770540158811,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/150",
+          "device": 10,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.03676796165466743,
+            "maximum_abs_error": 0.050138436860882624,
+            "final_error": 0.03528081687692024,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.030661909081012843,
+            "maximum_abs_error": 0.042510519219261994,
+            "final_error": 0.02731412558596795,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/151",
+          "device": 10,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.03474223112201194,
+            "maximum_abs_error": 0.047663118069377314,
+            "final_error": -0.03309696264967768,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.02868412181215139,
+            "maximum_abs_error": 0.040046132646559485,
+            "final_error": -0.0251230401958073,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/152",
+          "device": 10,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.061215315751150724,
+            "maximum_abs_error": 0.0830516507416314,
+            "final_error": 0.05998178862974779,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.055021479299508964,
+            "maximum_abs_error": 0.07540041179757592,
+            "final_error": 0.05198816710722068,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/153",
+          "device": 10,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.05940695367252639,
+            "maximum_abs_error": 0.08157558721193739,
+            "final_error": -0.05763231807830782,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.053213782546956634,
+            "maximum_abs_error": 0.07392247888819475,
+            "final_error": -0.04961453715805145,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/154",
+          "device": 10,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.0863058734137097,
+            "maximum_abs_error": 0.11961814885611069,
+            "final_error": 0.085084208866688,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.08008471444705055,
+            "maximum_abs_error": 0.11196760599597586,
+            "final_error": 0.07709506257348242,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/155",
+          "device": 10,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.08258982758729484,
+            "maximum_abs_error": 0.11446766207367581,
+            "final_error": -0.07979920717205935,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07641071655412815,
+            "maximum_abs_error": 0.10683176789384802,
+            "final_error": -0.07182596575500888,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/156",
+          "device": 10,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.10966144087317507,
+            "maximum_abs_error": 0.15285111027675252,
+            "final_error": 0.10706399666878541,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10344218972625431,
+            "maximum_abs_error": 0.14520093527213107,
+            "final_error": 0.0990705061222838,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/157",
+          "device": 10,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.10942007267608155,
+            "maximum_abs_error": 0.1518694148512892,
+            "final_error": -0.10642141145622952,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10321314851233085,
+            "maximum_abs_error": 0.14423741518635136,
+            "final_error": -0.09844104028555267,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/158",
+          "device": 10,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.1338506242299115,
+            "maximum_abs_error": 0.18890920316016174,
+            "final_error": 0.1291251055998064,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12762648620834688,
+            "maximum_abs_error": 0.18125197381627367,
+            "final_error": 0.12111913988456524,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/159",
+          "device": 10,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.13444996206707446,
+            "maximum_abs_error": 0.18685576385888386,
+            "final_error": -0.1303341548365432,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12823695770557395,
+            "maximum_abs_error": 0.17922997485766184,
+            "final_error": -0.12235581041646759,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/160",
+          "device": 10,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.16001161614648204,
+            "maximum_abs_error": 0.22330676420029816,
+            "final_error": 0.15346496758059908,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.15379824195036787,
+            "maximum_abs_error": 0.21567680607924022,
+            "final_error": 0.14548913304797534,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/161",
+          "device": 10,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.16083347542126147,
+            "maximum_abs_error": 0.2201169008824807,
+            "final_error": -0.16098214377910597,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1544446283756778,
+            "maximum_abs_error": 0.21252863147578094,
+            "final_error": -0.15272719208844793,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/162",
+          "device": 10,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.1851692326965248,
+            "maximum_abs_error": 0.2607115923649257,
+            "final_error": 0.17557288085752232,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.17893949810039725,
+            "maximum_abs_error": 0.2530628355365586,
+            "final_error": 0.16756829310147414,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/163",
+          "device": 10,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.17204702616008286,
+            "maximum_abs_error": 0.22002563342079284,
+            "final_error": -0.183708164801629,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.16623985727659835,
+            "maximum_abs_error": 0.2143048335576468,
+            "final_error": -0.1756828155596829,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/164",
+          "device": 10,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.21363562987027288,
+            "maximum_abs_error": 0.301180611448121,
+            "final_error": 0.20375630219385477,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.20740455444074465,
+            "maximum_abs_error": 0.2935224807669069,
+            "final_error": 0.19575300777892868,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/165",
+          "device": 10,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.2144176846993256,
+            "maximum_abs_error": 0.3013279683062392,
+            "final_error": -0.20636923502494853,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.20816932357007947,
+            "maximum_abs_error": 0.2936683382203644,
+            "final_error": -0.19836845150988003,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/166",
+          "device": 10,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.2454122257719484,
+            "maximum_abs_error": 0.3440903865541306,
+            "final_error": 0.23708911241460073,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.23914459732362467,
+            "maximum_abs_error": 0.3364209865242408,
+            "final_error": 0.22906826983258888,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/10/167",
+          "device": 10,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.2536554553807193,
+            "maximum_abs_error": 0.3509832863261058,
+            "final_error": -0.25088403917187374,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2473543681499583,
+            "maximum_abs_error": 0.3433210046330341,
+            "final_error": -0.2428659923092238,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/168",
+          "device": 11,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.002434944222260144,
+            "maximum_abs_error": 0.003007322367221315,
+            "final_error": 0.0030073059242004038,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020820596792071526,
+            "maximum_abs_error": 0.00257129371025134,
+            "final_error": 0.002571279741606758,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/169",
+          "device": 11,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0024337947722748972,
+            "maximum_abs_error": 0.0030033772703805797,
+            "final_error": -0.003003367471968246,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002081079039341118,
+            "maximum_abs_error": 0.0025679239232734652,
+            "final_error": -0.0025679155986617947,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/170",
+          "device": 11,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.005001660201639746,
+            "maximum_abs_error": 0.006854999585137491,
+            "final_error": -0.006854999585137491,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.009751501192697994,
+            "maximum_abs_error": 0.013310546520502883,
+            "final_error": -0.013310546520502883,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/171",
+          "device": 11,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.004079219759105921,
+            "maximum_abs_error": 0.005302041253386968,
+            "final_error": 0.005302041253386968,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.008658611634328317,
+            "maximum_abs_error": 0.01176519995123659,
+            "final_error": 0.01176519995123659,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/172",
+          "device": 11,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.011141339920653281,
+            "maximum_abs_error": 0.015561530029703965,
+            "final_error": 0.008114451018465245,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.006530179100651362,
+            "maximum_abs_error": 0.011054427102632828,
+            "final_error": 0.00018852534895013456,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/173",
+          "device": 11,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.010604510798872114,
+            "maximum_abs_error": 0.014919011142923315,
+            "final_error": -0.008045717351078667,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.005880677202790687,
+            "maximum_abs_error": 0.009422676260926152,
+            "final_error": -0.00012681798147963497,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/174",
+          "device": 11,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.03634936258335681,
+            "maximum_abs_error": 0.04858651256324811,
+            "final_error": 0.03494335314373814,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.030168573526756455,
+            "maximum_abs_error": 0.041661414273079955,
+            "final_error": 0.026700499140753037,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/175",
+          "device": 11,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0354275378241473,
+            "maximum_abs_error": 0.04863691015838768,
+            "final_error": -0.03413011793492199,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.029202400508465086,
+            "maximum_abs_error": 0.04105644295321691,
+            "final_error": -0.025888445851477343,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/176",
+          "device": 11,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0587990128420853,
+            "maximum_abs_error": 0.0806307182815802,
+            "final_error": 0.05598902586184823,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.05267266726386681,
+            "maximum_abs_error": 0.07303073424141387,
+            "final_error": 0.04800722836762797,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/177",
+          "device": 11,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.05894438881713252,
+            "maximum_abs_error": 0.08205325237882918,
+            "final_error": -0.056466981908661784,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.05281820189204884,
+            "maximum_abs_error": 0.07444173686713915,
+            "final_error": -0.048502295693108294,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/178",
+          "device": 11,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.07723435484684911,
+            "maximum_abs_error": 0.10941339883350162,
+            "final_error": 0.07153371920316898,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07113354595243511,
+            "maximum_abs_error": 0.10179558630422544,
+            "final_error": 0.0635530312420789,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/179",
+          "device": 11,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.08313362213282309,
+            "maximum_abs_error": 0.11391325547961273,
+            "final_error": -0.08201341145607793,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07679370617257328,
+            "maximum_abs_error": 0.10631869984162423,
+            "final_error": -0.07373787392561842,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/180",
+          "device": 11,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.10282316759458628,
+            "maximum_abs_error": 0.14571524013625337,
+            "final_error": 0.09460426916179027,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.09669862030601002,
+            "maximum_abs_error": 0.1380766424936512,
+            "final_error": 0.08661546507835632,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/181",
+          "device": 11,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.10867198817403684,
+            "maximum_abs_error": 0.1530149716430817,
+            "final_error": -0.10337177182937696,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.10249284212094144,
+            "maximum_abs_error": 0.14538310806925125,
+            "final_error": -0.0953906478363164,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/182",
+          "device": 11,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.12675216835267947,
+            "maximum_abs_error": 0.18334673165592547,
+            "final_error": 0.11473716669291223,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12062192108500461,
+            "maximum_abs_error": 0.1756975232530823,
+            "final_error": 0.10673963697291977,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/183",
+          "device": 11,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.13273852138403316,
+            "maximum_abs_error": 0.18395538653454524,
+            "final_error": -0.1289341183923654,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12635848491880564,
+            "maximum_abs_error": 0.176320100894778,
+            "final_error": -0.12063015952586825,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/184",
+          "device": 11,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.15136043319500372,
+            "maximum_abs_error": 0.21779427079636676,
+            "final_error": 0.1376297781185707,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.14522809211086438,
+            "maximum_abs_error": 0.21016250158863564,
+            "final_error": 0.12965381137602894,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/185",
+          "device": 11,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.15850899272675617,
+            "maximum_abs_error": 0.22092253709614934,
+            "final_error": -0.14630114602412464,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.15239990513474183,
+            "maximum_abs_error": 0.21325076041156882,
+            "final_error": -0.13829315362492106,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/186",
+          "device": 11,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.17629631720425704,
+            "maximum_abs_error": 0.2515882666211888,
+            "final_error": 0.1591573477464857,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1701651992361066,
+            "maximum_abs_error": 0.24396305301033072,
+            "final_error": 0.1511783913328465,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/187",
+          "device": 11,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1856008107030855,
+            "maximum_abs_error": 0.26224588555625883,
+            "final_error": -0.1759356342200783,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1793901974978018,
+            "maximum_abs_error": 0.25460436654861207,
+            "final_error": -0.16794047404887602,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/188",
+          "device": 11,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.2064417026928638,
+            "maximum_abs_error": 0.2962594127854817,
+            "final_error": 0.18496218837956446,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.20029494747115284,
+            "maximum_abs_error": 0.28861021318612107,
+            "final_error": 0.1769590693362929,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/189",
+          "device": 11,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.21135201997848005,
+            "maximum_abs_error": 0.29981982416673675,
+            "final_error": -0.19654989681373436,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.20516097066705624,
+            "maximum_abs_error": 0.29218100245276796,
+            "final_error": -0.18855497828607948,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/190",
+          "device": 11,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.23823886466057664,
+            "maximum_abs_error": 0.33998726377139477,
+            "final_error": 0.21840564511315164,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2320687029536514,
+            "maximum_abs_error": 0.33236207352450986,
+            "final_error": 0.21042883073630247,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/11/191",
+          "device": 11,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.24036388181337276,
+            "maximum_abs_error": 0.341507493146047,
+            "final_error": -0.2239382554760706,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.23416416792327227,
+            "maximum_abs_error": 0.33385477119801743,
+            "final_error": -0.21594300173686287,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/192",
+          "device": 12,
+          "drive": 0.025,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0023864223437800353,
+            "maximum_abs_error": 0.0029443905425846537,
+            "final_error": 0.0029443770428070727,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.0020443221976621947,
+            "maximum_abs_error": 0.002522119926724244,
+            "final_error": 0.002522108436981289,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/193",
+          "device": 12,
+          "drive": -0.025,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.002384724556265433,
+            "maximum_abs_error": 0.0029435924711740265,
+            "final_error": -0.0029435777245238174,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.002042866257306299,
+            "maximum_abs_error": 0.0025214336024631965,
+            "final_error": -0.002521421052609375,
+            "passes": true
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/194",
+          "device": 12,
+          "drive": 0.05,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.004289298071398092,
+            "maximum_abs_error": 0.005864272511514945,
+            "final_error": -0.005864272511514945,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.009079307970402116,
+            "maximum_abs_error": 0.012136677976465341,
+            "final_error": -0.012136677976465341,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/195",
+          "device": 12,
+          "drive": -0.05,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.004002660133505157,
+            "maximum_abs_error": 0.005348499160569502,
+            "final_error": 0.005348499160569502,
+            "passes": true
+          },
+          "candidate": {
+            "rmse": 0.008839745908430249,
+            "maximum_abs_error": 0.011829761837578459,
+            "final_error": 0.011829761837578459,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/196",
+          "device": 12,
+          "drive": 0.1,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.009991609870400141,
+            "maximum_abs_error": 0.014312837860582107,
+            "final_error": 0.0071949373511765585,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.0051571063841755185,
+            "maximum_abs_error": 0.00826774642537799,
+            "final_error": -0.0009613360136589977,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/197",
+          "device": 12,
+          "drive": -0.1,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.013025537563156634,
+            "maximum_abs_error": 0.01616774487009283,
+            "final_error": -0.013705450222714154,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.006906289227409746,
+            "maximum_abs_error": 0.009072434508969668,
+            "final_error": -0.005499916454161778,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/198",
+          "device": 12,
+          "drive": 0.2,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.03442336502572311,
+            "maximum_abs_error": 0.04746746326500477,
+            "final_error": 0.03291173202510264,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.028333230310005172,
+            "maximum_abs_error": 0.03986760492463849,
+            "final_error": 0.024959222984763385,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/199",
+          "device": 12,
+          "drive": -0.2,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.0312626402239932,
+            "maximum_abs_error": 0.04394868949277947,
+            "final_error": -0.02923225577079533,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.025279848021719648,
+            "maximum_abs_error": 0.036371821558510514,
+            "final_error": -0.021311905990947122,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/200",
+          "device": 12,
+          "drive": 0.3,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.0625574404701814,
+            "maximum_abs_error": 0.07571624700555013,
+            "final_error": 0.06980031833607575,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.055997019133492545,
+            "maximum_abs_error": 0.06811479777547644,
+            "final_error": 0.06121092322541494,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/201",
+          "device": 12,
+          "drive": -0.3,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.05433461135934557,
+            "maximum_abs_error": 0.07660187895688955,
+            "final_error": -0.05096427145521265,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.04825270480315967,
+            "maximum_abs_error": 0.06900609533291932,
+            "final_error": -0.04301188799618186,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/202",
+          "device": 12,
+          "drive": 0.4,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.08100971244342055,
+            "maximum_abs_error": 0.11129609660932038,
+            "final_error": 0.07912317514400402,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07483203095461452,
+            "maximum_abs_error": 0.1037047744003266,
+            "final_error": 0.07117414391786775,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/203",
+          "device": 12,
+          "drive": -0.4,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.08131879251376284,
+            "maximum_abs_error": 0.11285586154348315,
+            "final_error": -0.07917008478149956,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.07512959136314658,
+            "maximum_abs_error": 0.10524930200476496,
+            "final_error": -0.07120480739759266,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/204",
+          "device": 12,
+          "drive": 0.5,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.11168135757476658,
+            "maximum_abs_error": 0.15032342226521495,
+            "final_error": 0.11544741835210726,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1054185492039634,
+            "maximum_abs_error": 0.1427203993881706,
+            "final_error": 0.10749965922807492,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/205",
+          "device": 12,
+          "drive": -0.5,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.10122941232143945,
+            "maximum_abs_error": 0.1437122103832309,
+            "final_error": -0.09691166984404814,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.09505691442383818,
+            "maximum_abs_error": 0.13608966067589112,
+            "final_error": -0.08893951124247113,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/206",
+          "device": 12,
+          "drive": 0.6,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.1275316863343961,
+            "maximum_abs_error": 0.17713802792859717,
+            "final_error": 0.12368238209274512,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.121327050191054,
+            "maximum_abs_error": 0.16952507552482776,
+            "final_error": 0.11571845381132878,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/207",
+          "device": 12,
+          "drive": -0.6,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1288526815563186,
+            "maximum_abs_error": 0.1812877747712876,
+            "final_error": -0.1230401172210604,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.12267792412172057,
+            "maximum_abs_error": 0.1736817201136036,
+            "final_error": -0.11508669990440562,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/208",
+          "device": 12,
+          "drive": 0.7,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.15533126387351676,
+            "maximum_abs_error": 0.21263107022085725,
+            "final_error": 0.15400618332581567,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1491069129224537,
+            "maximum_abs_error": 0.2050217734579467,
+            "final_error": 0.14604726172438615,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/209",
+          "device": 12,
+          "drive": -0.7,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1519509851007151,
+            "maximum_abs_error": 0.2120868688918996,
+            "final_error": -0.14432979620401687,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1457785560476456,
+            "maximum_abs_error": 0.20447139227747285,
+            "final_error": -0.136360679865403,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/210",
+          "device": 12,
+          "drive": 0.8,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.1810804601246364,
+            "maximum_abs_error": 0.2501597875749888,
+            "final_error": 0.1788962026021106,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.17484746655644415,
+            "maximum_abs_error": 0.24254924762588415,
+            "final_error": 0.17093246569567944,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/211",
+          "device": 12,
+          "drive": -0.8,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.1770432103591285,
+            "maximum_abs_error": 0.25289199844306254,
+            "final_error": -0.1696558520829149,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.1707071806656552,
+            "maximum_abs_error": 0.24530262546852377,
+            "final_error": -0.16139863666832333,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/212",
+          "device": 12,
+          "drive": 0.9,
+          "split": "train",
+          "baseline": {
+            "rmse": 0.21804482865337543,
+            "maximum_abs_error": 0.29891318653884635,
+            "final_error": 0.21667543215673812,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.21164937417457114,
+            "maximum_abs_error": 0.29132031056107,
+            "final_error": 0.20841945549102814,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/213",
+          "device": 12,
+          "drive": -0.9,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.20646080465626657,
+            "maximum_abs_error": 0.2810205673947578,
+            "final_error": -0.2031488800854374,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.20010937173207732,
+            "maximum_abs_error": 0.2734513849996957,
+            "final_error": -0.19491604863277,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/214",
+          "device": 12,
+          "drive": 1.0,
+          "split": "held_out_drive",
+          "baseline": {
+            "rmse": 0.24913300665918314,
+            "maximum_abs_error": 0.34945579904557045,
+            "final_error": 0.23827999162029845,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.24290008737356458,
+            "maximum_abs_error": 0.3418264812830677,
+            "final_error": 0.2302866672953876,
+            "passes": false
+          },
+          "errors": []
+        },
+        {
+          "trial_id": "pwm-individual-full-range/12/215",
+          "device": 12,
+          "drive": -1.0,
+          "split": "held_out_direction",
+          "baseline": {
+            "rmse": 0.23745404174629264,
+            "maximum_abs_error": 0.33825199579896115,
+            "final_error": -0.22293971420713232,
+            "passes": false
+          },
+          "candidate": {
+            "rmse": 0.2312653600012452,
+            "maximum_abs_error": 0.3306460155211194,
+            "final_error": -0.21496832934921428,
+            "passes": false
+          },
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

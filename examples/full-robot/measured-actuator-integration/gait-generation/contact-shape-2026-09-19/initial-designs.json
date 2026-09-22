@@ -1,0 +1,65 @@
+{
+  "scope": "Jointly varied timing, stance, and foot paths. Deterministic authored first designs; performance is determined only by detailed motor simulations.",
+  "designs": [
+    {
+      "name": "trot-low",
+      "period": 1,
+      "stride": 0.12,
+      "z": -0.085,
+      "stance": 0.65,
+      "lift": 0.014,
+      "phases": [
+        0,
+        0.5,
+        0,
+        0.5
+      ],
+      "width": 1
+    },
+    {
+      "name": "crawl-high",
+      "period": 1.6,
+      "stride": 0.12,
+      "z": -0.05,
+      "stance": 0.82,
+      "lift": 0.018,
+      "phases": [
+        0,
+        0.5,
+        0.25,
+        0.75
+      ],
+      "width": 1
+    },
+    {
+      "name": "crawl-compact",
+      "period": 1.4,
+      "stride": 0.16,
+      "z": -0.04,
+      "stance": 0.82,
+      "lift": 0.014,
+      "phases": [
+        0,
+        0.5,
+        0.25,
+        0.75
+      ],
+      "width": 0.96
+    },
+    {
+      "name": "staggered",
+      "period": 1,
+      "stride": 0.14,
+      "z": -0.05,
+      "stance": 0.72,
+      "lift": 0.014,
+      "phases": [
+        0,
+        0.5,
+        0.1,
+        0.6
+      ],
+      "width": 1
+    }
+  ]
+}

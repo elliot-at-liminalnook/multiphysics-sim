@@ -1,0 +1,77 @@
+{
+  "control": "pwm_sweep",
+  "schedule": {
+    "levels": [],
+    "repetitions": 3,
+    "include_concurrent": false,
+    "include_individual": true
+  },
+  "pulse_ms": 100,
+  "rest_ms": 600,
+  "travel_limit_counts": 200,
+  "temperature_cutoff_c": 60,
+  "direction_bit": 10,
+  "bench_condition": "User-authorized unloaded bench, ID4 only. Four paired signed 5% release waveforms, three repetitions; repetition 0/1 training, repetition 2 held out, declared before acquisition. Zero PWM and torque-off are separate conditions; brake/coast electrical semantics remain hypotheses. Model limits RMS <=3 encoder counts and final <=5 counts, unchanged; host windows retained. Attached output hardware and actual inertia unknown. Live starting temperature about 51 C; no cold-start claim.",
+  "waveforms": [
+    {
+      "name": "zero_pwm_release_positive",
+      "segments": [
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 300,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "torque_off_release_positive",
+      "segments": [
+        {
+          "drive": 50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 300,
+          "torque_enabled": false
+        }
+      ]
+    },
+    {
+      "name": "zero_pwm_release_negative",
+      "segments": [
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 300,
+          "torque_enabled": true
+        }
+      ]
+    },
+    {
+      "name": "torque_off_release_negative",
+      "segments": [
+        {
+          "drive": -50,
+          "duration_ms": 200,
+          "torque_enabled": true
+        },
+        {
+          "drive": 0,
+          "duration_ms": 300,
+          "torque_enabled": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "scope": "Matched original gait over two seconds. Only declared CAD actuator/power profiles and power selection differ. Hypothetical scenarios; no sustained robustness or hardware calibration claim.",
+  "invariants_checked": [
+    "runtime source identity",
+    "mechanical definition",
+    "world/scene",
+    "gait/actions",
+    "controller policy",
+    "seed",
+    "task",
+    "horizon/numerical settings"
+  ],
+  "caveat": "Battery case also changes source voltage according to its initial SOC; its speed difference cannot be attributed solely to resistance.",
+  "cases": [
+    {
+      "name": "baseline",
+      "journal": {
+        "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority/pilot-journal/state-00000000000000000012.json",
+        "sha256": "e2794c553bbe069d85604408dbe9d6294b2afdecd62b66ad9e8698858880511d"
+      },
+      "cad_sha256": "7600b5476c5ddefd354c9f00909b923907abe148b67a829a8ffec5d9d429fdcb",
+      "completed_successfully": true,
+      "preparation_failure": null,
+      "error": null,
+      "physics_failure": null,
+      "time_s": 2,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.38714371781962903,
+      "net_distance_m": 0.7742874356392581,
+      "relative_net_speed_change": 0,
+      "endpoint_power_network": null
+    },
+    {
+      "name": "delay-10ms",
+      "journal": {
+        "path": "examples/full-robot/measured-actuator-integration/gait-generation/robustness/delay-10ms/pilot-journal/state-00000000000000000002.json",
+        "sha256": "63fb62f3e42bf315aa678dd3f93ec7fc27495af3bd092ca4d004aee735dac95b"
+      },
+      "cad_sha256": "0d6617be640af1b161274e4a37a9aea6face90ca0a152dc45e373e68cb6c6bb1",
+      "completed_successfully": true,
+      "preparation_failure": null,
+      "error": null,
+      "physics_failure": null,
+      "time_s": 2,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.39801362593628165,
+      "net_distance_m": 0.7960272518725633,
+      "relative_net_speed_change": 0.028077191018031522,
+      "endpoint_power_network": null
+    },
+    {
+      "name": "backlash-05deg",
+      "journal": {
+        "path": "examples/full-robot/measured-actuator-integration/gait-generation/robustness/backlash-05deg/pilot-journal/state-00000000000000000002.json",
+        "sha256": "2eaa837fa147ee10b2a96e9c9a2635df22fd7469a33bb4e558be11ad112685fc"
+      },
+      "cad_sha256": "84ff34bc26a99768523885b0eb8a962dc41f24ed8a9561795d8053e6417ba67c",
+      "completed_successfully": true,
+      "preparation_failure": null,
+      "error": null,
+      "physics_failure": null,
+      "time_s": 2,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.38590127801271745,
+      "net_distance_m": 0.7718025560254349,
+      "relative_net_speed_change": -0.003209246979155256,
+      "endpoint_power_network": null
+    },
+    {
+      "name": "motor-spread",
+      "journal": {
+        "path": "examples/full-robot/measured-actuator-integration/gait-generation/robustness/motor-spread/pilot-journal/state-00000000000000000002.json",
+        "sha256": "275a49c2f13d24f9eb23417bb1f1a21e3aef498aa1393d551c25623c96e5a0e4"
+      },
+      "cad_sha256": "6b4d36ba15d21aa1cb8ad21465cc1c1c42b22e91480a226b1deefd2374ae5632",
+      "completed_successfully": true,
+      "preparation_failure": null,
+      "error": null,
+      "physics_failure": null,
+      "time_s": 2,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.3869248593576749,
+      "net_distance_m": 0.7738497187153498,
+      "relative_net_speed_change": -0.0005653158036160733,
+      "endpoint_power_network": null
+    },
+    {
+      "name": "battery-chain",
+      "journal": {
+        "path": "examples/full-robot/measured-actuator-integration/gait-generation/robustness/battery-chain/pilot-journal/state-00000000000000000002.json",
+        "sha256": "c5f25a1b2da1a9516bcbcdfd91228fcf38d0ae5a9d0deca5c795eb2736c0ef90"
+      },
+      "cad_sha256": "84b009c10c4a4a18aabd7a27e98393104a2bd08409859c70765a24728dd4ea25",
+      "completed_successfully": true,
+      "preparation_failure": null,
+      "error": null,
+      "physics_failure": null,
+      "time_s": 2,
+      "termination_reasons": [],
+      "net_speed_m_s": 0.37198039825209317,
+      "net_distance_m": 0.7439607965041863,
+      "relative_net_speed_change": -0.039167159040923605,
+      "endpoint_power_network": {
+        "branches": [
+          {
+            "current_a": 6.773644092960147,
+            "id": "common-feed",
+            "voltage_v": 10.746546669581381,
+            "wiring_loss_w": 2.2941127149046947
+          },
+          {
+            "current_a": 3.469764586778954,
+            "id": "-Y-hip",
+            "voltage_v": 10.573058440242432,
+            "wiring_loss_w": 0.6019633143832693
+          },
+          {
+            "current_a": 2.1262027066676463,
+            "id": "-Y-worm",
+            "voltage_v": 10.466748304909052,
+            "wiring_loss_w": 0.22603689749203768
+          },
+          {
+            "current_a": 2.127419965596132,
+            "id": "-Y-foot",
+            "voltage_v": 10.360377306629244,
+            "wiring_loss_w": 0.22629578550085397
+          },
+          {
+            "current_a": 1.1033238696921623,
+            "id": "+X-hip",
+            "voltage_v": 10.691380476096773,
+            "wiring_loss_w": 0.06086617807162394
+          },
+          {
+            "current_a": 0.4131421623926174,
+            "id": "+X-worm",
+            "voltage_v": 10.670723367977143,
+            "wiring_loss_w": 0.008534322317322244
+          },
+          {
+            "current_a": 0.08796707804245375,
+            "id": "+X-foot",
+            "voltage_v": 10.666325014075019,
+            "wiring_loss_w": 0.0003869103409664492
+          },
+          {
+            "current_a": 1.5213192601512742,
+            "id": "+Y-hip",
+            "voltage_v": 10.670480706573818,
+            "wiring_loss_w": 0.11572061456536038
+          },
+          {
+            "current_a": 0.733013248108605,
+            "id": "+Y-worm",
+            "voltage_v": 10.633830044168388,
+            "wiring_loss_w": 0.026865421095136118
+          },
+          {
+            "current_a": 0.405993679113881,
+            "id": "+Y-foot",
+            "voltage_v": 10.613530360212692,
+            "wiring_loss_w": 0.00824154337402174
+          },
+          {
+            "current_a": 0.6792363763377556,
+            "id": "-X-hip",
+            "voltage_v": 10.712584850764493,
+            "wiring_loss_w": 0.023068102747022243
+          },
+          {
+            "current_a": 0.5670072183966146,
+            "id": "-X-worm",
+            "voltage_v": 10.684234489844663,
+            "wiring_loss_w": 0.016074859285693216
+          },
+          {
+            "current_a": 0.4166644139565812,
+            "id": "-X-foot",
+            "voltage_v": 10.663401269146833,
+            "wiring_loss_w": 0.008680461692889224
+          }
+        ],
+        "current_a": 6.773644092960147,
+        "power_w": 75.08739508303516,
+        "state_of_charge": 0.7984674839320614,
+        "terminal_energy_j": 122.29086533270898,
+        "voltage_v": 11.085228874229388
+      }
+    }
+  ]
+}

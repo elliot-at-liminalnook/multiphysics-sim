@@ -1,0 +1,76 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+   Compiling sim-viewer v0.1.0 (/Users/elliot/physics-simulator/crates/sim-viewer)
+    Finished `test` profile [optimized + debuginfo] target(s) in 34.20s
+     Running tests/controller_refinement.rs (target/debug/deps/controller_refinement-450cbd8eece62186)
+
+running 9 tests
+test encoder_unwrap_and_held_observations_do_not_invent_velocity ... ok
+test controller_rejects_stale_feedback_and_records_command_delay ... ok
+test saturated_pid_does_not_wind_up_and_can_reverse ... ok
+test rust_and_rhai_share_observations_and_bounded_commands ... ok
+test cad_proposal_preserves_source_requires_review_and_feeds_shared_motor_mapping ... ok
+test recorded_commands_and_closed_loop_prediction_are_distinct_on_captured_timing ... ok
+test captured_controller_runs_in_shared_physics_and_reproduces ... ok
+test bounded_fit_recovers_synthetic_parameter_without_using_held_out_trials ... ok
+test fresh_sweep_import_preserves_samples_device_identity_and_reserved_repetitions ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.91s
+
+     Running tests/experiment_comparison.rs (target/debug/deps/experiment_comparison-5c61cfb0a513270b)
+
+running 2 tests
+test metrics_and_explicit_comparison_contract ... ok
+test retained_archives_reproduce_declared_held_out_results ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/experiment_study.rs (target/debug/deps/experiment_study-cc3831980cc831e8)
+
+running 4 tests
+test pulse_edges_are_scheduled_and_signed ... ok
+test cancellation_and_invalid_candidates_do_not_produce_passes ... ok
+test reject_tampered_evidence_and_export_readable_report ... ok
+test physical_replay_refinement_validation_and_portable_evidence ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.84s
+
+     Running unittests src/main.rs (target/debug/deps/sim_viewer-1c1da62f2fe3b4ca)
+
+running 9 tests
+test experiments_ui::refinement::tests::all_refinement_views_render_without_mutating_the_review ... FAILED
+test workspace_file::tests::sidecar_roundtrip_preserves_notes_and_rejects_lost_updates ... ok
+test analysis_ui::tests::invalid_group_keeps_its_draft_and_prevents_closing ... ok
+test analysis_ui::tests::new_group_never_reuses_an_existing_identity_from_a_sidecar ... ok
+test experiments_ui::tests::filters_keep_failures_no_motion_and_whole_trial_roles ... ok
+test tests::focus_and_back_restore_the_engineers_overview_and_selection ... ok
+test analysis_ui::tests::annotate_group_undo_save_and_reopen_preserves_engineering_work ... ok
+test analysis_ui::tests::switching_models_retains_file_bindings_and_close_saves_each_analysis ... ok
+test experiments_ui::tests::worker_host_renders_retains_candidate_and_cancels_without_losing_history ... ok
+
+failures:
+
+---- experiments_ui::refinement::tests::all_refinement_views_render_without_mutating_the_review stdout ----
+
+thread 'experiments_ui::refinement::tests::all_refinement_views_render_without_mutating_the_review' (623833) panicked at /Users/elliot/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/epaint-0.36.2/src/textures.rs:337:9:
+Dropped TexturesDelta with 1 unapplied deltas. Deltas need to be handled. If you want to drop this intentionally call `clear` before dropping.
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    experiments_ui::refinement::tests::all_refinement_views_render_without_mutating_the_review
+
+test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.45s
+
+error: test failed, to rerun pass `-p sim-viewer --bin sim-viewer`

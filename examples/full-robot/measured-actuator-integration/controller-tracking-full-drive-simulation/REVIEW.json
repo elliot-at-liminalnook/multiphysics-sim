@@ -1,0 +1,22 @@
+{
+  "simulation_only": true,
+  "hardware_changed": false,
+  "promoted_to_cad_or_live_viewer": false,
+  "reason_not_promoted": "Original full gait remains poorly tracked; provisional models and disconnected hardware. Reference conditioning changes the gait and requires whole-robot validation.",
+  "gain_configurations": 43,
+  "validation_cases": 80,
+  "validation_simulation_failures": 0,
+  "numerical_checks_pass": true,
+  "exact_replays_pass": true,
+  "validation_regressions": [
+    {
+      "name": "id10-full-gait-nominal-selected-1000",
+      "rms_increase_degrees": 0.36151975382470525
+    }
+  ],
+  "runtime_source_identities": [
+    "7ec85fbc878322faa09b8f4503440f4c4b356450d52e8d580f92614b80a16047"
+  ],
+  "source_snapshot": "../controller-tracking-simulation/source/",
+  "note": "Historical inputs use the first campaign format. Current tuner also binds resume to runtime and tuner source identity. Plotting script is analysis-only; all controller/plant execution is Rust."
+}

@@ -1,0 +1,58 @@
+{
+  "cradle": {
+    "valid_solid": true,
+    "mesh_open_edges": 0,
+    "size_mm": [
+      100.0251151925945,
+      86.0251151925945,
+      28.02511519259449
+    ],
+    "volume_cm3": 81.51148918022483,
+    "solid_PLA_mass_g": 101.07424658347878,
+    "messages": []
+  },
+  "cap": {
+    "valid_solid": true,
+    "mesh_open_edges": 0,
+    "size_mm": [
+      74.01712405858716,
+      31.017124058587157,
+      7.0171240585871555
+    ],
+    "volume_cm3": 13.12067924135365,
+    "solid_PLA_mass_g": 16.269642259278527,
+    "messages": []
+  },
+  "row-link": {
+    "valid_solid": true,
+    "mesh_open_edges": 0,
+    "size_mm": [
+      40.01712405858715,
+      16.017124058587147,
+      6.017124058587147
+    ],
+    "volume_cm3": 3.6491482462944203,
+    "solid_PLA_mass_g": 4.524943825405081,
+    "messages": []
+  },
+  "fit-coupon": {
+    "valid_solid": true,
+    "mesh_open_edges": 0,
+    "size_mm": [
+      54.00000020000001,
+      8.000000200000008,
+      10.000000200000006
+    ],
+    "volume_cm3": 2.112,
+    "solid_PLA_mass_g": 2.6188800000000003,
+    "messages": []
+  },
+  "status": "CAD solids / mesh checks only; no physical fit, slicing, or strength validation",
+  "source_sha256": "c25d78b3af46393ae62a1e55b2e3458b78b6afa27dbdb594ceb9e4d645d82c48",
+  "plate_bounds_mm": [
+    162.0,
+    159.0,
+    28.0
+  ],
+  "print_layout_nonoverlapping": true
+}

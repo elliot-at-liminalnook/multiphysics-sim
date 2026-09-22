@@ -1,0 +1,161 @@
+{
+  "native": {
+    "wall_s": 23.533808014,
+    "simulation_per_wall": 0.12747618227425553,
+    "step_p50_s": 0.155369688,
+    "step_p95_s": 0.191819226,
+    "maximum_step_s": 0.220908147,
+    "complete": true
+  },
+  "wasm": {
+    "wall_s": 24.971779999971385,
+    "simulation_per_wall": 0.1201356090756621,
+    "step_p50_s": 0.16449500000476838,
+    "step_p95_s": 0.20194999998807908,
+    "maximum_step_s": 0.4920399999916554,
+    "complete": true
+  },
+  "wasm_to_native_speedup": 1.0611023929963204,
+  "profile_unchanged": {
+    "joint_positions": 0,
+    "joint_velocities": 0,
+    "motor_states": 0,
+    "servo_states": 0,
+    "servo_commands": 0,
+    "servo_targets_rad": 0,
+    "motor_readings": 0,
+    "driver_readings": 0,
+    "poses": 0,
+    "contacts": 0
+  },
+  "native_wasm_max_abs": {
+    "joint_positions": 3.6415315207705135e-14,
+    "joint_velocities": 2.27036167643746e-11,
+    "motor_states": 6.440359356929548e-11,
+    "servo_states": 0,
+    "servo_commands": 0,
+    "servo_targets_rad": 9.880984919163893e-15,
+    "motor_readings": 8.252953875853564e-12,
+    "driver_readings": 1.6897594434794883e-13,
+    "poses": 1.532374227508626e-11,
+    "contacts": 6.975070521164639e-11
+  },
+  "profile_buckets": [
+    {
+      "calls": 705264,
+      "name": "residual evaluations",
+      "seconds": 18.57902486
+    },
+    {
+      "calls": 179489,
+      "name": "embedded dynamics preparation",
+      "seconds": 8.137800034
+    },
+    {
+      "calls": 129594,
+      "name": "embedded closure mapping",
+      "seconds": 5.711238654000001
+    },
+    {
+      "calls": 23154,
+      "name": "jacobian assembly",
+      "seconds": 4.768052299000001
+    },
+    {
+      "calls": 835521,
+      "name": "embedded component equations",
+      "seconds": 3.9262729700000003
+    },
+    {
+      "calls": 179489,
+      "name": "  embedded force evaluation",
+      "seconds": 3.391926261
+    },
+    {
+      "calls": 179939,
+      "name": "contact force evaluation",
+      "seconds": 1.965957661
+    },
+    {
+      "calls": 179489,
+      "name": "  embedded rigid inertia",
+      "seconds": 1.767876854
+    },
+    {
+      "calls": 129594,
+      "name": "  closure Jacobian",
+      "seconds": 1.381904516
+    },
+    {
+      "calls": 129594,
+      "name": "  closure factorization",
+      "seconds": 1.3265028060000001
+    },
+    {
+      "calls": 179939,
+      "name": "contact geometry queries",
+      "seconds": 1.261742669
+    },
+    {
+      "calls": 179939,
+      "name": "  contact sample transforms",
+      "seconds": 0.80423285
+    },
+    {
+      "calls": 179489,
+      "name": "  embedded inertia projection",
+      "seconds": 0.7870480320000001
+    },
+    {
+      "calls": 198689,
+      "name": "embedded applied force solve",
+      "seconds": 0.626053563
+    },
+    {
+      "calls": 519501,
+      "name": "    closure SVD",
+      "seconds": 0.608077172
+    },
+    {
+      "calls": 505807,
+      "name": "back-substitution",
+      "seconds": 0.5145042350000001
+    },
+    {
+      "calls": 160308,
+      "name": "embedded contact history",
+      "seconds": 0.41320973200000005
+    },
+    {
+      "calls": 23154,
+      "name": "factorisation",
+      "seconds": 0.273745832
+    },
+    {
+      "calls": 150,
+      "name": "policy script",
+      "seconds": 0.097699029
+    },
+    {
+      "calls": 23154,
+      "name": "  factor entries sum/sort",
+      "seconds": 0.076871668
+    },
+    {
+      "calls": 179939,
+      "name": "  contact exclusion metadata",
+      "seconds": 0.043295894
+    },
+    {
+      "calls": 179939,
+      "name": "  contact pair queries",
+      "seconds": 0.035537401
+    },
+    {
+      "calls": 150,
+      "name": "policy observations",
+      "seconds": 0.004097888
+    }
+  ],
+  "scope": "Three seconds, identical seed/inputs/physical recipe. Profile buckets nest and must not be summed. Timing excludes initialization/final file serialization."
+}

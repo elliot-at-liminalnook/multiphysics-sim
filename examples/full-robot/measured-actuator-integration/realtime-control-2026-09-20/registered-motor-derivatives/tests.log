@@ -1,0 +1,10 @@
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+error[E0689]: can't call method `tanh` on ambiguous numeric type `{float}`
+    --> crates/sim-domain-robot/tests/embedded_motor.rs:1811:57
+     |
+1811 |             let partials=[(0,0,-0.4-0.4*(1.0-(4.0*x[0]).tanh().powi(2)),1.4*x[0])];
+     |                                                         ^^^^
+
+For more information about this error, try `rustc --explain E0689`.
+error: could not compile `sim-domain-robot` (test "embedded_motor") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

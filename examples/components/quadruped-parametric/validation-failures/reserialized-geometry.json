@@ -1,0 +1,23 @@
+{
+  "status": "rejected",
+  "reason": "Original linked source bytes were not propagated into the document snapshot cache; reserialization changed archive bytes. Geometry-handle and physics-record checks passed, but the byte-equality gate failed.",
+  "changed_brep_assets": [
+    "01defa41932a.brep",
+    "790022cb15f4.brep",
+    "88819d438438.brep",
+    "bc7a7393c49f.brep",
+    "d2abfb8756c9.brep",
+    "1a0e1863ef67.brep",
+    "046cd0e0e14a.brep",
+    "5400063e1abf.brep",
+    "1234787c1204.brep",
+    "2acd4ef3fda6.brep",
+    "3c6bc90dd58a.brep",
+    "2bedd420bf35.brep",
+    "4368f0b5b421.brep",
+    "8cf3e6bcf5ec.brep",
+    "68734aa962f4.brep",
+    "5bea2da1427c.brep"
+  ],
+  "fix": "Reuse original source bytes by immutable body identity during occurrence restoration; rerun without weakening byte equality."
+}

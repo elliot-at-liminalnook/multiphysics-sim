@@ -1,0 +1,42 @@
+{
+  "capture": "motion-10ms-cap100-03",
+  "completed": true,
+  "stop_verified": true,
+  "failure": null,
+  "frames": 200,
+  "axes": [
+    {
+      "id": 10,
+      "baseline_v": 11.9,
+      "minimum_v": 11.700000000000001,
+      "drop_percent": 1.680672268907557,
+      "maximum_temperature_c": 44,
+      "maximum_current_raw_uncalibrated": 2,
+      "maximum_travel_counts": 33,
+      "minimum_pwm": -100,
+      "maximum_pwm": 100
+    },
+    {
+      "id": 11,
+      "baseline_v": 12.0,
+      "minimum_v": 11.9,
+      "drop_percent": 0.8333333333333304,
+      "maximum_temperature_c": 41,
+      "maximum_current_raw_uncalibrated": 58,
+      "maximum_travel_counts": 33,
+      "minimum_pwm": -100,
+      "maximum_pwm": 100
+    },
+    {
+      "id": 12,
+      "baseline_v": 11.8,
+      "minimum_v": 11.700000000000001,
+      "drop_percent": 0.847457627118641,
+      "maximum_temperature_c": 40,
+      "maximum_current_raw_uncalibrated": 7,
+      "maximum_travel_counts": 33,
+      "minimum_pwm": -100,
+      "maximum_pwm": 100
+    }
+  ]
+}

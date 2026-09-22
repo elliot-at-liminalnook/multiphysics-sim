@@ -1,0 +1,22 @@
+{
+  "recorded_utc": "2026-09-13T18:17:01.596779+00:00",
+  "tests_passed": 114,
+  "native_workspace_all_targets": "passed",
+  "wasm_selected_packages": "passed",
+  "numerical_baselines": {
+    "cases": 5,
+    "abs_relative_threshold": 1e-10,
+    "result": "passed"
+  },
+  "performance_gate": "not established; single captures only",
+  "goal_status": "incomplete",
+  "artifacts": {
+    "open-connector-final-tests.log": "1bbbf6b788b0ce3c57689da1880e3d831fbcecce6d913cb01a800a315a44e264",
+    "open-connector-final-workspace-check.log": "60895fd7ee04dc8c0c734e6775f43fcf43732e6c13b9e11635701a5267975c06",
+    "open-connector-final-wasm-check.log": "7273de417589b087171763c92f28096d4ea686ded6135add21187e54624a152c",
+    "open-connector-final-baseline-check.log": "d0601dec09631db08882c8e780ff33ecea22415f218986acad23ad03e55e9cbe",
+    "open-connector-final-viewer-build.log": "ff0fdbd63bd1d9d3f26f4002b932f52204026346a30602aea0ec5d3e64e5a801",
+    "diffusion-native-viewer.png": "bdc742352299ca69565fec66c95b84c7cd8dbd699d790b39d7e23b8ee789923d",
+    "open-connector-full-capture-comparison.json": "0f74f322a3ae97671ba65b67047c3a5aded276b6cd80e353e2eb7636988cfb8d"
+  }
+}

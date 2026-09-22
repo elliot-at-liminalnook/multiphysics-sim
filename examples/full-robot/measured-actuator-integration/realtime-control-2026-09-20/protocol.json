@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "simulation_only": true,
+  "seed": 0,
+  "simulated_seconds": 3,
+  "motor_hz": 400,
+  "policy_hz": 50,
+  "physics_hz": 6400,
+  "command": "forward 0.1 m/s with incrementing heartbeat each policy tick",
+  "source": {
+    "scene": {
+      "path": "examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json",
+      "sha256": "225ad4f0d0bbe065f8d19e150530d031e5f1514153211c9cfee288b522efc3da"
+    },
+    "config": {
+      "path": "examples/full-robot/measured-actuator-integration/browser-control-400hz/config.json",
+      "sha256": "a9a38cb64d489fffae1552ecbd2b38daa649337b8b9b0fb5c8e5e16844983829"
+    },
+    "task": {
+      "path": "examples/full-robot/measured-actuator-integration/browser-control-400hz/task.json",
+      "sha256": "2f39cf7deae53be5a0c6f86255fd22719d6ec2b8a26fe83ca6aca2ea9c275cd4"
+    }
+  },
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "scope": "Identical native and WASM inputs, seed, model and clocks. Profile timers are diagnostic, excluded from performance acceptance. No promotion solely from short forward case. Structural optimizations must preserve physical laws and original solver acceptance checks."
+}

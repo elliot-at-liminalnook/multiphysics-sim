@@ -1,0 +1,4 @@
+# Fast synthesis-front-end guard: implicit/hierarchical capture nets must fail.
+read_verilog -noautowire src/uart_tx.v src/uart_rx.v src/host_packet_queue.v src/trajectory_store.v src/trajectory_upload.v src/bridge_control.v src/hx_safety.v src/button.v src/experiment_session.v src/experiment_transactions.v src/experiment_scheduler.v src/experiment_packet.v src/experiment_reply.v src/experiment_event_stream.v src/experiment_event_packet.v src/experiment_frame_log.v impl/fixed-pd/fixed_pd.v
+chparam -set HOST_CLKS 50 -set RELEASE_TX 1 -set SAFETY_ENABLE 1 -set BUFFER_HOST 1 -set TRAJECTORY_ENABLE 1 -set EXPERIMENT_ENABLE 1 -set FIXED_GAINS 1 top
+hierarchy -check -top top

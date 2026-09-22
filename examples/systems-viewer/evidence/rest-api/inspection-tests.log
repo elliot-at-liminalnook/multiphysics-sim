@@ -1,0 +1,34 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+   Compiling sim-api v0.1.0 (/Users/elliot/physics-simulator/crates/sim-api)
+   Compiling sim-render v0.1.0 (/Users/elliot/physics-simulator/crates/sim-render)
+    Finished `test` profile [optimized] target(s) in 9m 30s
+     Running unittests src/lib.rs (target/debug/deps/sim_api-267b839f5fb5c3ed)
+
+running 5 tests
+test tests::batches_wait_for_completion_and_retain_order_and_partial_errors ... ok
+test tests::stop_on_error_and_queued_cancellation_never_apply_later_commands ... ok
+test tests::empty_oversized_batches_and_reserved_command_injection_are_rejected ... ok
+test tests::actual_http_reads_published_state_and_rejects_browser_and_rebinding ... ok
+test client::tests::one_client_plan_executes_ordered_batches_and_returns_failures ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running unittests src/lib.rs (target/debug/deps/sim_inspect-deb7e5cc88ec696f)
+
+running 4 tests
+test plot::tests::thermal_net_offers_all_terminals_but_no_unrelated_state ... ok
+test annotations::tests::notes_allow_overlapping_multi_part_groups_but_reject_dangling_links ... ok
+test plot::tests::history_preserves_sample_time_gaps_bounds_and_rejects_stale_frames ... ok
+test annotations::tests::two_stores_merge_independent_edits_reject_stale_revision_and_reopen ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+     Running unittests src/lib.rs (target/debug/deps/sim_render-c6765cbff0c17165)
+
+running 2 tests
+test physical::tests::section_clips_geometry_and_keeps_vertices_on_requested_halfspace ... ok
+test physical::tests::box_section_produces_a_real_png_and_cap_metadata ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+

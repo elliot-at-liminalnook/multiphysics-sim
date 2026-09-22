@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "source": "examples/full-robot/baseline/robot.rcad",
+  "source_sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+  "result_sha256": "ec3f06fa542cac78572bb456145a89dc052ef2d6ef72a5d314477febd7a8762a",
+  "definition_id": "57c951e93c534f31ad0f3486fdd6d200",
+  "instance_id": "8f483dd5bfb8",
+  "body_count": 114,
+  "validation": "Every source body handle, joint, physical metadata record, node ID and name preserved at conversion; joints and metadata preserved after reload.",
+  "remaining_legs": "Original legs retained because their part counts and structures differ. No assertion that replacing them with +X preserves the original design.",
+  "identical_source_brep_payloads": 114
+}

@@ -1,0 +1,664 @@
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+    Finished `test` profile [optimized + debuginfo] target(s) in 3.67s
+     Running tests/fpga_upload.rs (target/debug/deps/fpga_upload-35e505ae7fd214f4)
+
+running 10 tests
+test full_drive_requires_device_clock_and_40ms_period ... ok
+test sparse_plan_zeroes_unused_axes_but_preserves_original_evidence ... ok
+test fast_device_period_is_limited_to_three_motors ... ok
+test uploads_are_bounded_nonexecuting_and_agree_with_existing_controller_packets ... ok
+test source_or_packet_changes_invalidate_saved_upload ... ok
+test start_binds_sealed_plan_identity_cadence_and_compiled_gains ... ok
+test actual_rtl_uart_receipts_decode_and_confirm_each_upload_stage ... ok
+test rejects_unrepresentable_timing_invalid_homes_and_firmware_identity ... ok
+test upload_transfer_checks_capability_and_stops_on_rejection_or_cancellation ... ok
+test rtl_fixture_is_reproducible_from_its_frozen_rust_source ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/characterize_hx_bridge.rs (target/debug/examples/characterize_hx_bridge-5073ea4fbfe20f64)
+
+running 15 tests
+test motion_tests::command_changes_only_position_time_and_speed ... ok
+test motion_tests::bounded_plan_rejects_unsafe_progression ... ok
+test motion_tests::pwm_pilot_is_bounded_and_progressive ... ok
+test motion_tests::feedback_gates_faults_temperature_voltage_and_travel ... ok
+test motion_tests::nine_servo_sync_packet_is_bounded_and_targeted ... ok
+test paired_read_tests::paired_reads_preserve_order_fragmented_replies_and_queue_bound ... ok
+test sweep_tests::sensor_fault_aborts_escalation_and_cleans_up_every_servo ... ok
+test sweep_tests::captured_controller_commands_and_fault_cleanup_use_the_supervised_protocol ... ok
+test device_capture_tests::fast_three_motor_uart_capture_and_corruption_verify_scope_stopped ... FAILED
+test device_capture_tests::full_uart_capture_and_corruption_both_verify_all_nine_stopped ... FAILED
+test sweep_tests::concurrent_only_keeps_all_nine_leases_and_verifies_cleanup ... ok
+test sweep_tests::free_rotation_all_nine_accepts_encoder_boundary_and_verifies_stop ... ok
+test sweep_tests::late_settling_extends_zero_drive_observation_without_restarting_motion ... ok
+test sweep_tests::complete_individual_and_concurrent_protocol_and_checkpoint ... ok
+test sweep_tests::all_nine_waveforms_keep_segment_order_and_distinguish_zero_from_torque_off ... ok
+
+failures:
+
+---- device_capture_tests::fast_three_motor_uart_capture_and_corruption_verify_scope_stopped stdout ----
+
+thread 'device_capture_tests::fast_three_motor_uart_capture_and_corruption_verify_scope_stopped' (787253) panicked at crates/sim-runtime/examples/hx_device.rs.inc:585:13:
+assertion `left == right` failed: {
+  "completed": false,
+  "failure": "Heartbeat acknowledgement timeout",
+  "frames": 13,
+  "initial": {
+    "10": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.077165460498596,
+      "position_raw": 2006,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "11": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.078699441286482,
+      "position_raw": 2007,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "12": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.0802334220743677,
+      "position_raw": 2008,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    }
+  },
+  "physical_scope_ids": [
+    10,
+    11,
+    12
+  ],
+  "recovery": {
+    "10": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.077165460498596,
+            "position_raw": 2006,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "11": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.078699441286482,
+            "position_raw": 2007,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "12": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.0802334220743677,
+            "position_raw": 2008,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    }
+  },
+  "stop": {
+    "Ok": {
+      "armed_mask": 0,
+      "current_max_raw_uncalibrated": 2000,
+      "fault_id": 254,
+      "fresh_mask": 511,
+      "latched": true,
+      "reason": 10,
+      "temperature_max_c": 60,
+      "version": 1,
+      "voltage_max_raw": 126,
+      "voltage_min_raw": 90
+    }
+  },
+  "stop_verified": true
+}
+  left: Bool(false)
+ right: true
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- device_capture_tests::full_uart_capture_and_corruption_both_verify_all_nine_stopped stdout ----
+
+thread 'device_capture_tests::full_uart_capture_and_corruption_both_verify_all_nine_stopped' (787254) panicked at crates/sim-runtime/examples/hx_device.rs.inc:585:13:
+assertion `left == right` failed: {
+  "completed": false,
+  "failure": "Heartbeat acknowledgement timeout",
+  "frames": 5,
+  "initial": {
+    "10": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.077165460498596,
+      "position_raw": 2006,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "11": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.078699441286482,
+      "position_raw": 2007,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "12": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.0802334220743677,
+      "position_raw": 2008,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "4": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.067961575771282,
+      "position_raw": 2000,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "5": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.069495556559168,
+      "position_raw": 2001,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "6": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.0710295373470538,
+      "position_raw": 2002,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "7": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.072563518134939,
+      "position_raw": 2003,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "8": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.074097498922825,
+      "position_raw": 2004,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    },
+    "9": {
+      "current_a_uncalibrated": 0.0,
+      "current_raw": 0,
+      "load_raw": 0,
+      "moving": 0,
+      "position_rad": 3.0756314797107107,
+      "position_raw": 2005,
+      "speed_rad_s": 0.0,
+      "speed_raw": 0,
+      "status": 0,
+      "temperature_c": 40,
+      "voltage_raw": 120,
+      "voltage_v": 12.0
+    }
+  },
+  "physical_scope_ids": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "recovery": {
+    "10": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.077165460498596,
+            "position_raw": 2006,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "11": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.078699441286482,
+            "position_raw": 2007,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "12": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.0802334220743677,
+            "position_raw": 2008,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "4": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.067961575771282,
+            "position_raw": 2000,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "5": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.069495556559168,
+            "position_raw": 2001,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "6": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.0710295373470538,
+            "position_raw": 2002,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "7": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.072563518134939,
+            "position_raw": 2003,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "8": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.074097498922825,
+            "position_raw": 2004,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    },
+    "9": {
+      "final_state": {
+        "Ok": {
+          "pwm": [
+            0,
+            0
+          ],
+          "telemetry": {
+            "current_a_uncalibrated": 0.0,
+            "current_raw": 0,
+            "load_raw": 0,
+            "moving": 0,
+            "position_rad": 3.0756314797107107,
+            "position_raw": 2005,
+            "speed_rad_s": 0.0,
+            "speed_raw": 0,
+            "status": 0,
+            "temperature_c": 40,
+            "voltage_raw": 120,
+            "voltage_v": 12.0
+          },
+          "torque": [
+            0
+          ]
+        }
+      },
+      "stop_writes": {
+        "Ok": null
+      }
+    }
+  },
+  "stop": {
+    "Ok": {
+      "armed_mask": 0,
+      "current_max_raw_uncalibrated": 2000,
+      "fault_id": 254,
+      "fresh_mask": 511,
+      "latched": true,
+      "reason": 10,
+      "temperature_max_c": 60,
+      "version": 1,
+      "voltage_max_raw": 126,
+      "voltage_min_raw": 90
+    }
+  },
+  "stop_verified": true
+}
+  left: Bool(false)
+ right: true
+
+
+failures:
+    device_capture_tests::fast_three_motor_uart_capture_and_corruption_verify_scope_stopped
+    device_capture_tests::full_uart_capture_and_corruption_both_verify_all_nine_stopped
+
+test result: FAILED. 13 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.95s
+
+error: test failed, to rerun pass `-p sim-runtime --example characterize_hx_bridge`

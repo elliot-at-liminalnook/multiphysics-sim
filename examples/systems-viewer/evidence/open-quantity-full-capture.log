@@ -1,0 +1,17 @@
+    Blocking waiting for file lock on build directory
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `dev` profile [optimized + debuginfo] target(s) in 4m 29s
+     Running `target/debug/sim-inspect-scene examples/full-robot/whole-swing/browser.scene.json /tmp/systems-open-quantity-full-robot.description.json`
+Building captured CAD system without advancing simulation…
+195 components, 597 ports, 242 connections, 56 groups → /tmp/systems-open-quantity-full-robot.description.json

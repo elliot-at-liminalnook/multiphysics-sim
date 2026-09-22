@@ -1,0 +1,42 @@
+{
+  "accepted": false,
+  "reason": "All four training replays and the reserved faster replay fail original accuracy limits; rotor inertia reached its lower bound. Do not promote this aggregate-cost improvement as identified motor physics.",
+  "evaluations": 60,
+  "results": [
+    {
+      "id": "58529dd3e0e70268990a6ce61b6d27747ce3d6e6a165935f73e90a6063eb0eff/4",
+      "split": "train",
+      "baseline_rmse_rad": 0.02552575234225089,
+      "candidate_rmse_rad": 0.019522064377866726,
+      "candidate_pass": false
+    },
+    {
+      "id": "5edf2ffd7b6d62f1a004fb74c01b4b6ce0c42fe48b5281646a1a4cdba38e31cc/4",
+      "split": "train",
+      "baseline_rmse_rad": 0.03379852354146336,
+      "candidate_rmse_rad": 0.020903030094006052,
+      "candidate_pass": false
+    },
+    {
+      "id": "fe0395976f07535dd4ea857d53628a8e293d44483292c8652e0e7658c62dde7a/4",
+      "split": "train",
+      "baseline_rmse_rad": 0.02604279038811693,
+      "candidate_rmse_rad": 0.03175092034536853,
+      "candidate_pass": false
+    },
+    {
+      "id": "6d6c0bac84b5a086bf854664fb426e9c29397a25d02f8774fc1004328666b5d9/4",
+      "split": "train",
+      "baseline_rmse_rad": 0.3762551119166156,
+      "candidate_rmse_rad": 0.028361371465220317,
+      "candidate_pass": false
+    },
+    {
+      "id": "e8aaa318ad6bd76b0a1c629966818cd47eec7c72ca04b7a9e924ed0364a65eb4/4",
+      "split": "held_out_fpga",
+      "baseline_rmse_rad": 0.13168687541690144,
+      "candidate_rmse_rad": 0.028039684771434058,
+      "candidate_pass": false
+    }
+  ]
+}

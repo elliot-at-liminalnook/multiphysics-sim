@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "results": [
+    {
+      "candidate": "stage-proposal-reuse/step-1/candidate",
+      "reference": "sdirk-refinement-12800hz/reference",
+      "max_error": {
+        "motor_angle_rad": 0.010858950783212307,
+        "link_position_m": 0.00497717631842767,
+        "current_a": 0.15276750698560315,
+        "contact_force_n": 8.520518663395524
+      },
+      "contactIdentities": false,
+      "cadence": true,
+      "passes_existing_physical_gates": false,
+      "candidate_wall_s": 43.831630636,
+      "reference_wall_s": 74.128093808
+    }
+  ],
+  "scope": "Three-second fixed-input timestep sensitivity, same model, seed, motor/controller clocks and tolerances. Neither the halved BE step nor the fine SDIRK result is assumed to be exact. These comparisons do not establish convergence or hardware accuracy. Performance gates are separate."
+}

@@ -1,0 +1,251 @@
+Loading examples/full-robot/measured-actuator-integration/controller-integration/robot-controller-provisional.rcad
+Mass: -Y | Timing belt
+Mass: -Y | Hip servo internal geometry
+Mass: -Y | Hip motor pulley and shaft
+Mass: -Y | Hip output shaft and pulley
+Mass: -Y | Hip motor pulley and shaft 25a3
+Mass: -Y | Hip motor pulley and shaft a77a
+Mass: -Y · Hip swing (belt) · HX-30HM
+Mass: -Y | Thigh sector gear
+Mass: -Y | Worm and input spindle
+Mass: -Y | Worm enclosure and motor mount
+Mass: -Y | Worm and input spindle b4c1
+Mass: -Y | Worm and input spindle d867
+Mass: -Y | Thigh cross-shaft
+Mass: -Y | Worm servo internal geometry
+Mass: -Y · Worm drive · HX-30HM
+Mass: -Y | Fixed knee frame
+Mass: -Y | Thigh root yoke
+Mass: -Y | Carbon-fiber knee guide tube
+Mass: -Y | Fixed lower foot guide
+Mass: -Y | Foot servo crank
+Mass: -Y | Rigid curved connecting link
+Mass: -Y | Sliding foot crosshead
+Mass: -Y | Sliding foot rod
+Mass: -Y | Foot servo internal geometry
+Mass: -Y · Foot slide · HX-30HM
+Mass: +X | Hip servo internal geometry
+Mass: +X | Hip output shaft and pulley
+Mass: +X | Hip motor pulley and shaft
+Mass: +X | Timing belt
+Mass: +X | Hip output shaft and pulley b6c0
+Mass: +X | Hip motor pulley and shaft 5bea
+Mass: +X | Hip motor pulley and shaft 2acd
+Mass: +X · Hip swing (belt) · HX-30HM
+Mass: +X | Worm enclosure and motor mount
+Mass: +X | Worm servo internal geometry
+Mass: +X | Worm and input spindle
+Mass: +X | Thigh cross-shaft
+Mass: +X | Worm and input spindle 3a48
+Mass: +X | Thigh sector gear
+Mass: +X | Thigh cross-shaft 3b16
+Mass: +X | Worm enclosure and motor mount 2bed
+Mass: +X | Worm and input spindle 3c6b
+Mass: +X | Worm and input spindle 6873
+Mass: +X · Worm drive · HX-30HM
+Mass: +X | Fixed knee frame
+Mass: +X | Thigh root yoke
+Mass: +X | Upper carbon-fiber thigh tube
+Mass: +X | Lower carbon-fiber thigh tube
+Mass: +X | Fixed knee frame 69dd
+Mass: +X | Sliding foot crosshead
+Mass: +X | Fixed lower foot guide
+Mass: +X | Rigid curved connecting link
+Mass: +X | Foot servo crank
+Mass: +X | Sliding foot rod
+Mass: +X | Foot servo internal geometry
+Mass: +X | Carbon-fiber knee guide tube
+Mass: +X | Foot servo crank 7900
+Mass: +X · Foot slide · HX-30HM
+Mass: +Y | Timing belt
+Mass: +Y | Hip servo internal geometry
+Mass: +Y | Hip motor pulley and shaft
+Mass: +Y | Hip output shaft and pulley
+Mass: +Y | Hip motor pulley and shaft 125c
+Mass: +Y | Hip support surface
+Mass: +Y · Hip swing (belt) · HX-30HM
+Mass: +Y | Thigh sector gear
+Mass: +Y | Worm and input spindle
+Mass: +Y | Worm enclosure and motor mount
+Mass: +Y | Worm and input spindle b816
+Mass: +Y | Worm and input spindle 8e55
+Mass: +Y | Thigh cross-shaft
+Mass: +Y | Worm servo internal geometry
+Mass: +Y · Worm drive · HX-30HM
+Mass: +Y | Fixed knee frame
+Mass: +Y | Lower carbon-fiber thigh tube
+Mass: +Y | Upper carbon-fiber thigh tube
+Mass: +Y | Thigh root yoke
+Mass: +Y | Sliding foot crosshead
+Mass: +Y | Fixed lower foot guide
+Mass: +Y | Rigid curved connecting link
+Mass: +Y | Foot servo crank
+Mass: +Y | Foot servo internal geometry
+Mass: +Y | Carbon-fiber knee guide tube
+Mass: +Y | Sliding foot rod
+Mass: +Y | Foot servo crank 3689
+Mass: +Y · Foot slide · HX-30HM
+Mass: -X | Timing belt
+Mass: -X | Hip motor pulley and shaft
+Mass: -X | Hip output shaft and pulley
+Mass: -X | Hip motor pulley and shaft 3090
+Mass: -X | Hip servo internal geometry
+Mass: -X · Hip swing (belt) · HX-30HM
+Mass: -X | Thigh sector gear
+Mass: -X | Worm and input spindle
+Mass: -X | Worm enclosure and motor mount
+Mass: -X | Worm and input spindle 5276
+Mass: -X | Worm and input spindle 305c
+Mass: -X | Thigh cross-shaft
+Mass: -X | Worm servo internal geometry
+Mass: -X · Worm drive · HX-30HM
+Mass: -X | Fixed knee frame
+Mass: -X | Lower carbon-fiber thigh tube
+Mass: -X | Upper carbon-fiber thigh tube
+Mass: -X | Thigh root yoke
+Mass: -X | Sliding foot crosshead
+Mass: -X | Fixed lower foot guide
+Mass: -X | Rigid curved connecting link
+Mass: -X | Foot servo crank
+Mass: -X | Foot servo internal geometry
+Mass: -X | Carbon-fiber knee guide tube
+Mass: -X | Sliding foot rod
+Mass: -X | Foot servo crank 9a9b
+Mass: -X · Foot slide · HX-30HM
+Mass: Robot | Chassis and hip mounts
+Joint: -Y | worm secondary fixed
+Joint: -Y | worm secondary fixed
+Joint: -Y | hip_input secondary fixed
+Joint: -Y | hip_input secondary fixed
+Joint: -Y | Belt path mass carried by chassis
+Joint: -Y | Hip servo output
+Joint: -Y | Hip swing
+Joint: -Y | Hip output carries worm enclosure
+Joint: -Y | Worm servo output
+Joint: -Y | Thigh elevation
+Joint: -Y | Sector fixed to cross-shaft
+Joint: -Y | Cross-shaft fixed to root yoke
+Joint: -Y | Thigh carries fixed knee frame
+Joint: -Y | hip_motor_internal follows motor housing
+Joint: -Y | worm_motor_internal follows motor housing
+Joint: -Y | foot_motor_internal follows motor housing
+Joint: -Y | Knee frame carries guide tube
+Joint: -Y | Guide tube carries lower block
+Joint: -Y | Foot servo output
+Joint: -Y | Crank to curved link
+Joint: -Y | Foot translation
+Joint: -Y | Crosshead carries foot rod
+Joint: -Y | Curved link closes foot loop
+Joint: +X | knee_frame secondary fixed
+Joint: +X | crank secondary fixed
+Joint: +X | housing secondary fixed
+Joint: +X | worm secondary fixed
+Joint: +X | worm secondary fixed
+Joint: +X | worm secondary fixed
+Joint: +X | shaft secondary fixed
+Joint: +X | hip_output secondary fixed
+Joint: +X | hip_input secondary fixed
+Joint: +X | hip_input secondary fixed
+Joint: +X | Belt path mass carried by chassis
+Joint: +X | Hip servo output
+Joint: +X | Hip swing
+Joint: +X | Hip output carries worm enclosure
+Joint: +X | Worm servo output
+Joint: +X | Knee frame carries guide tube
+Joint: +X | Guide tube carries lower block
+Joint: +X | Foot servo output
+Joint: +X | Crank to curved link
+Joint: +X | Foot translation
+Joint: +X | Crosshead carries foot rod
+Joint: +X | Curved link closes foot loop
+Joint: +X | hip_motor_internal follows motor housing
+Joint: +X | worm_motor_internal follows motor housing
+Joint: +X | foot_motor_internal follows motor housing
+Joint: +X | Thigh elevation
+Joint: +X | Sector fixed to cross-shaft
+Joint: +X | Cross-shaft fixed to root yoke
+Joint: +X | upper_tube fixed to yoke
+Joint: +X | lower_tube fixed to yoke
+Joint: +X | Thigh carries fixed knee frame
+Joint: +Y | worm secondary fixed
+Joint: +Y | worm secondary fixed
+Joint: +Y | crank secondary fixed
+Joint: +Y | hip_input secondary fixed
+Joint: +Y | Belt path mass carried by chassis
+Joint: +Y | Hip servo output
+Joint: +Y | Hip swing
+Joint: +Y | Hip output carries worm enclosure
+Joint: +Y | Worm servo output
+Joint: +Y | Thigh elevation
+Joint: +Y | Sector fixed to cross-shaft
+Joint: +Y | Cross-shaft fixed to root yoke
+Joint: +Y | upper_tube fixed to yoke
+Joint: +Y | lower_tube fixed to yoke
+Joint: +Y | Thigh carries fixed knee frame
+Joint: +Y | Knee frame carries guide tube
+Joint: +Y | Guide tube carries lower block
+Joint: +Y | Foot servo output
+Joint: +Y | Crank to curved link
+Joint: +Y | Foot translation
+Joint: +Y | Crosshead carries foot rod
+Joint: +Y | Curved link closes foot loop
+Joint: +Y | hip_motor_internal follows motor housing
+Joint: +Y | worm_motor_internal follows motor housing
+Joint: +Y | foot_motor_internal follows motor housing
+Joint: +Y | Hip support surface fixed
+Joint: -X | worm secondary fixed
+Joint: -X | worm secondary fixed
+Joint: -X | crank secondary fixed
+Joint: -X | hip_input secondary fixed
+Joint: -X | Belt path mass carried by chassis
+Joint: -X | Hip servo output
+Joint: -X | Hip swing
+Joint: -X | Hip output carries worm enclosure
+Joint: -X | Worm servo output
+Joint: -X | Thigh elevation
+Joint: -X | Sector fixed to cross-shaft
+Joint: -X | Cross-shaft fixed to root yoke
+Joint: -X | upper_tube fixed to yoke
+Joint: -X | lower_tube fixed to yoke
+Joint: -X | Thigh carries fixed knee frame
+Joint: -X | Knee frame carries guide tube
+Joint: -X | Guide tube carries lower block
+Joint: -X | Foot servo output
+Joint: -X | Crank to curved link
+Joint: -X | Foot translation
+Joint: -X | Crosshead carries foot rod
+Joint: -X | Curved link closes foot loop
+Joint: -X | hip_motor_internal follows motor housing
+Joint: -X | worm_motor_internal follows motor housing
+Joint: -X | foot_motor_internal follows motor housing
+  link -Y | Hip output shaft and pulley: 1450 vertices, sdf [18, 37, 48], flex no in 0.6 s
+  link -Y | Hip motor pulley and shaft 25a3: 994 vertices, sdf [22, 21, 44], flex no in 0.3 s
+  link -Y | Thigh sector gear: 363 vertices, sdf [15, 36, 48], flex no in 0.5 s
+  link -Y | Worm and input spindle b4c1: 1716 vertices, sdf [16, 16, 48], flex no in 0.2 s
+  link -Y | Foot servo crank: 819 vertices, sdf [9, 13, 48], flex no in 0.0 s
+  link -Y | Rigid curved connecting link: 1038 vertices, sdf [13, 14, 48], flex no in 0.1 s
+  link -Y | Sliding foot crosshead: 1258 vertices, sdf [8, 10, 49], flex no in 0.0 s
+  link +X | Hip motor pulley and shaft: 989 vertices, sdf [22, 22, 44], flex no in 0.2 s
+  link +X | Hip output shaft and pulley b6c0: 1440 vertices, sdf [37, 17, 48], flex no in 0.7 s
+  link +X | Worm and input spindle 3a48: 1711 vertices, sdf [16, 16, 48], flex no in 0.2 s
+  link +X | Thigh sector gear: 371 vertices, sdf [36, 16, 48], flex no in 0.6 s
+  link +X | Sliding foot crosshead: 1295 vertices, sdf [10, 9, 48], flex no in 0.0 s
+  link +X | Rigid curved connecting link: 1044 vertices, sdf [14, 13, 48], flex no in 0.1 s
+  link +X | Foot servo crank 7900: 419 vertices, sdf [13, 24, 48], flex no in 0.2 s
+  link +Y | Hip output shaft and pulley: 1416 vertices, sdf [18, 37, 48], flex no in 0.6 s
+  link +Y | Hip motor pulley and shaft 125c: 989 vertices, sdf [22, 21, 44], flex no in 0.2 s
+  link +Y | Thigh sector gear: 402 vertices, sdf [15, 36, 48], flex no in 0.6 s
+  link +Y | Worm and input spindle b816: 1721 vertices, sdf [16, 16, 48], flex no in 0.2 s
+  link +Y | Sliding foot crosshead: 1258 vertices, sdf [8, 10, 49], flex no in 0.0 s
+  link +Y | Rigid curved connecting link: 1044 vertices, sdf [13, 14, 48], flex no in 0.1 s
+  link +Y | Foot servo crank 3689: 393 vertices, sdf [24, 13, 49], flex no in 0.1 s
+  link -X | Hip output shaft and pulley: 1428 vertices, sdf [37, 18, 48], flex no in 0.7 s
+  link -X | Hip motor pulley and shaft 3090: 992 vertices, sdf [21, 22, 44], flex no in 0.2 s
+  link -X | Thigh sector gear: 401 vertices, sdf [36, 15, 48], flex no in 0.5 s
+  link -X | Worm and input spindle 5276: 1718 vertices, sdf [16, 16, 48], flex no in 0.2 s
+  link -X | Sliding foot crosshead: 1258 vertices, sdf [10, 8, 49], flex no in 0.0 s
+  link -X | Rigid curved connecting link: 1038 vertices, sdf [14, 13, 48], flex no in 0.1 s
+  link -X | Foot servo crank 9a9b: 387 vertices, sdf [13, 24, 48], flex no in 0.2 s
+  link Robot | Chassis and hip mounts: 1497 vertices, sdf [48, 48, 35], flex no in 672.2 s
+physical model: 29 links, 105 joints, 12 motors, 0 sensors, 0 cables in 932.9 s
+Exported examples/full-robot/measured-actuator-integration/controller-integration/robot-controller.simrobot.json: 12 motors, 29 links

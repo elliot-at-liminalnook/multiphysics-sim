@@ -1,0 +1,59 @@
+{
+  "time": "2026-09-22T14:05:46.453946+00:00",
+  "motor_supply_off_confirmed_by_operator": true,
+  "programming": "SRAM only; openFPGALoader exit 0",
+  "fpga_version_readback": 5,
+  "armed_mask": 0,
+  "initial_stop_reason": 9,
+  "after_explicit_stop_reason": 10,
+  "s2_not_continuously_asserted": true,
+  "host_binary_sha256": "5e5fcb0ce6c5b68b3c65ce3cce239a84c6373d97a514f304d22bac3113e429b1",
+  "served_ui_sha256": "59b5b000b6fbeecd07259fb33332f8194abe11772104804e0d0959825f6b709a",
+  "calibration_sha256": "fc96455da8c3c3ee6ac50880dd7bdfecd7f3a8c21fcf92bec5d3bd22788eb121",
+  "website": "http://127.0.0.1:4194",
+  "browser": "Chrome Incognito; new learning button observed",
+  "powered_motor_verification": false,
+  "nonzero_hardware_tested": false,
+  "status": {
+    "busy": false,
+    "calibration": {
+      "axes": {
+        "1": {
+          "coordinate_session": null,
+          "lower": 2842,
+          "reference": null,
+          "reverse": false,
+          "role": "knee",
+          "upper": 3411
+        },
+        "2": {
+          "coordinate_session": null,
+          "lower": null,
+          "reference": null,
+          "reverse": false,
+          "role": "worm",
+          "upper": null
+        },
+        "3": {
+          "coordinate_session": null,
+          "lower": 888,
+          "reference": null,
+          "reverse": false,
+          "role": "belt/hip",
+          "upper": 2116
+        }
+      },
+      "fixture": "Printed leg clamped to desk; supported with torque disabled; confirmed by operator 2026-09-21. CAD assembly binding pending.",
+      "provenance": "Operator-taught, provisional. Four-count inward working margin. Requires repeatability and physical clearance validation; no automatic homing or coupled-joint envelope.",
+      "schema_version": 1,
+      "units": "Continuous motor encoder counts in the powered tracking session; 4096 counts/revolution; not joint degrees"
+    },
+    "connected": false,
+    "coordinate_session": "1790085849684",
+    "enabled_id": null,
+    "error": null,
+    "message": "Connect and inspect to read motors. No motion on page load.",
+    "output": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements",
+    "samples": {}
+  }
+}

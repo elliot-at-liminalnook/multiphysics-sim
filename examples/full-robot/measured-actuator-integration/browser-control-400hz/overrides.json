@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "simulation_only": true,
+  "parent": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority-10s/recording.json",
+    "sha256": "47bc4b5d7b9ecbba5e6dbba95b3a963bec5ad8af6de4395cc84c946433f2d19e"
+  },
+  "previous_overrides": {
+    "path": "examples/full-robot/measured-actuator-integration/controller-integration/comparison-overrides.json",
+    "sha256": "14ec76f9929f79d0bafc5ffdb94ebe417609328e66b5ddaec326f3d1d1b09bc8"
+  },
+  "control_hz": 400,
+  "measurement_hz": 200,
+  "outer_policy_hz": 50,
+  "latency_assumption_s": 0.00125,
+  "controller_identity": {
+    "path": "crates/sim-domain-control/src/fixed_pd.rs",
+    "sha256": "5c21b5168eb953bf6754d63a7e9ba0f6fc1cf75cca378f241cd0610c431e294f",
+    "blake3": "bc7964115b34900144cc48eb26eddc8ae1c237bd500444d05c9cef69b0ea633e",
+    "replaces": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+    "verification": "Current shared controller passes full-rate RTL capture arithmetic checks; new code adds bounded power-of-two generation. This explicit source identity update does not promote model calibration."
+  },
+  "mapping": "Hip, worm and foot roles reuse fitted candidates 10, 11 and 12 on every leg. This is an experimental template assignment, not identification of twelve physical motors.",
+  "limitations": [
+    "All candidate fits remain provisional and failed the historical closed-loop calibration threshold.",
+    "Motor feedback latency is assumed, not measured internal sensor age.",
+    "Three-motor UART timing does not qualify a twelve-motor physical bus.",
+    "Full-scale PWM and imposed 11.1 V are simulation settings, not a commissioned hardware mode."
+  ],
+  "models": [
+    {
+      "id": 10,
+      "family": "hx30hm-fit-10-400hz",
+      "path": "examples/full-robot/measured-actuator-integration/controller-tracking-full-drive-simulation/id10-gait-nominal-selected-1000.json",
+      "sha256": "2196267772d12a11e200e6318a0ebc92cf07de9f9222eb315e7dc916ef2f219a"
+    },
+    {
+      "id": 11,
+      "family": "hx30hm-fit-11-400hz",
+      "path": "examples/full-robot/measured-actuator-integration/controller-tracking-full-drive-simulation/id11-gait-nominal-selected-1000.json",
+      "sha256": "00f5231daa88970ce79477cd573ec7f18b07f8ad16c2855ef8af14c7d0ac1a70"
+    },
+    {
+      "id": 12,
+      "family": "hx30hm-fit-12-400hz",
+      "path": "examples/full-robot/measured-actuator-integration/controller-tracking-full-drive-simulation/id12-gait-nominal-selected-1000.json",
+      "sha256": "965b14bf1db2e4aabb1deb418bf1a8d84d4568940c90f524c51b94d3c25d6dc9"
+    }
+  ]
+}

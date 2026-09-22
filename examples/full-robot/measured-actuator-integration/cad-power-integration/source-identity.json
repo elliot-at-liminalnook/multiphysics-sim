@@ -1,0 +1,61 @@
+{
+  "scope": "CAD power integration source snapshot; previous core-only snapshot remains separate.",
+  "files": [
+    {
+      "path": "crates/sim-domain-robot/src/actuator_profile.rs",
+      "sha256": "6b47178be95908b9cbfff397e920fde0a1449878b009c550825f8a350aafe5a3"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/power_profile.rs",
+      "sha256": "26e6066cc26244b454c84f1e119d956cb8ea5f2b09d3b7063017aafb5130949f"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/lib.rs",
+      "sha256": "eac51da7d3d23db8fb2c05ceafeaa453eac821a5454b7e1d2862419a68afbfc0"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/power.rs",
+      "sha256": "f0447a7067231d4576426da49b3b46a19dea8b947469886fa56e2a6cf719c6bf"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/control.rs",
+      "sha256": "fcc4df548b8fe8dfbdebd597c69bc1fe606950c41bfb3d1eeb14f0badc9f97ea"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs",
+      "sha256": "5640b4c3fc140547be7bd5c475b38dd8e3bc0cc7db0bc19dea470ac3506da232"
+    },
+    {
+      "path": "crates/sim-domain-robot/src/articulated/embedding/servos.rs",
+      "sha256": "c03fda85d9867ab692a860318ce9c48064c8e5f14154844b510e0d2cfd00aa4a"
+    },
+    {
+      "path": "crates/sim-runtime/src/physical.rs",
+      "sha256": "ed639ec276a99dfcd9ff2fb5d874268d0d3f4c7df6618915ab191b69d3dc53d5"
+    },
+    {
+      "path": "crates/sim-runtime/src/embedded.rs",
+      "sha256": "794af3ca3eebf5e9924333299df18765a4eebe1c1eb6a714186b8184b572ec92"
+    },
+    {
+      "path": "crates/sim-runtime/src/environment.rs",
+      "sha256": "35d30b95817b9d97c01111ec0e536b317d0162747bd71e676c512659ea8cb130"
+    },
+    {
+      "path": "crates/sim-runtime/src/bin/sim-actuator-profiles.rs",
+      "sha256": "55d19a1c19b598bc8af48120bb0b2456811a04cc6a1bade964abec996f967131"
+    },
+    {
+      "path": "crates/sim-runtime/tests/actuator_profiles.rs",
+      "sha256": "8ec5d078f441aae813187512b62bf25cc32c71c168e24440d8e333457c36990b"
+    },
+    {
+      "path": "cad/robocad/actuator_profiles.py",
+      "sha256": "4d2bce9743db02a81cabc86d984c7b19c14dbc8ab3c15d45b746d803b405725c"
+    },
+    {
+      "path": "cad/tests/test_actuator_profiles.py",
+      "sha256": "94ca59b0732a716e29c19cffd7a982f8476e370663ee88ba88d2d48fb1eb93d8"
+    }
+  ]
+}

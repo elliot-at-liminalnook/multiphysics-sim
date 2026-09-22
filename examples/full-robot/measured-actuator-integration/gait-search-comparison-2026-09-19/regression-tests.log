@@ -1,0 +1,75 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 3m 20s
+     Running tests/contact_exploration.rs (target/release/deps/contact_exploration-0eb76c4e49d96d22)
+
+running 1 test
+test six_physical_motion_controls_are_independently_materialized ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/experiment.rs (target/release/deps/experiment-dec5664c478418f3)
+
+running 6 tests
+test task_termination_and_controller_failure_never_produce_eligible_speed ... ok
+test changed_context_commands_and_saved_state_are_rejected_without_new_motion ... ok
+test json_integer_and_float_spelling_preserves_context_and_checkpoint_replay ... ok
+test journal_rejects_duplicates_terminal_replacement_and_progress_regression ... ok
+test interruption_json_checkpoint_and_bounded_replay_match_uninterrupted_state ... ok
+test bayesian_proposals_reconstruct_from_the_same_completed_journal ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.46s
+
+     Running tests/exploration.rs (target/release/deps/exploration-162feccd9f1f96c3)
+
+running 5 tests
+test refuses_implicit_reductions_misaligned_clocks_and_bad_references ... ok
+test profile_preserves_every_physical_and_controller_field ... ok
+test recipe_runtime_actions_and_observation_tampering_are_rejected ... ok
+test production_capture_qualification_and_journal_use_one_runtime ... ok
+test failed_incomplete_slow_or_inaccurate_captures_never_unlock_search ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.61s
+
+     Running tests/fidelity.rs (target/release/deps/fidelity-84a6898ac11975ba)
+
+running 8 tests
+test directional_search_gates_use_signed_progress_and_all_motor_errors ... ok
+test solver_failure_can_commit_physics_beyond_the_last_observed_task_endpoint ... ok
+test failed_and_incomplete_prefixes_never_gain_an_eligible_score ... ok
+test known_position_and_contact_errors_are_measured_by_name_in_si_units ... ok
+test identical_capture_is_exact_and_preserves_outcome_cost_and_resolved_context ... ok
+test rejects_unmatched_actions_frames_metadata_and_unexplained_terminal_events ... ok
+test context_covers_world_actuators_initial_conditions_seed_policy_and_missing_values ... ok
+test timestep_comparison_requires_exact_declared_edits_and_matches_actions_in_seconds ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.22s
+
+     Running tests/search_comparison.rs (target/release/deps/search_comparison-2ee9018128d06ab8)
+
+running 1 test
+test same_baseline_reproducible_proposals_and_failures_count_against_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/evolution.rs (target/release/deps/evolution-9f2167f3a4d4d4d1)
+
+running 3 tests
+test failures_count_and_tampering_is_rejected ... ok
+test all_failed_generations_do_not_fabricate_success_or_exhaust_proposals ... ok
+test converges_with_replayed_covariance_and_roundtrip_history ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+

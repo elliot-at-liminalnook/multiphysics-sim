@@ -1,0 +1,22 @@
+{
+  "scope": "Exact motor equation storage optimization: write component residuals directly into the already allocated output slice, and omit diagnostic reading vector construction when the caller only requests forces/residuals. Continue evaluating and validating all original registered outputs. No model, controller, timestep, tolerances, or arithmetic order changes.",
+  "source_before": {
+    "crates/sim-domain-robot/src/articulated/embedding/motors.rs": "3e658855d21f9b36b8ed46af6ad5f97e1106ee276ffc1073adce385aff207e9f",
+    "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs": "827d33afc52134d162d7d8de14d82a2773f6c5c1c439ef0f5e31d2c49c4c9aac"
+  },
+  "before_binary_sha256": "f5a42f4ac0be2326db2fd2d6ac077921be46898982ee870fd8a551f03b2cf2d2",
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "source_candidate": {
+    "crates/sim-domain-robot/src/articulated/embedding/motors.rs": "47737be737ae9849339f6ac93c153ddd441e3a8f006cd212df5c47d8ada14dc2",
+    "crates/sim-domain-robot/src/articulated/embedding/motor_step.rs": "78e640e0817a4e9c39dd37f116e08b5f93e430cb81322aac8c844d6984e27b47"
+  }
+}

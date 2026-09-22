@@ -1,0 +1,159 @@
+{
+  "scope": "1000 us requested Chrome CPU sampling after model load, including worker idle, message handling and serialization. Sample weights approximate time and inclusive rows overlap. This is not an allocation count or a throughput acceptance measurement.",
+  "samples": 19631,
+  "sampled_seconds": 28.525032,
+  "profile_duration_seconds": 28.525266,
+  "self": [
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::kinematics",
+      "seconds": 2.306686,
+      "percent_all_samples": 8.086532558491083
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::malloc",
+      "seconds": 2.282329,
+      "percent_all_samples": 8.001144398365618
+    },
+    {
+      "name": "(idle)",
+      "seconds": 2.088417,
+      "percent_all_samples": 7.321348491388195
+    },
+    {
+      "name": "sim_solve::dense_products::product",
+      "seconds": 1.626776,
+      "percent_all_samples": 5.702976950209907
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::rigid_mass_with_kinematics",
+      "seconds": 1.507529,
+      "percent_all_samples": 5.284933597971073
+    },
+    {
+      "name": "sim_solve::dense_products::transpose_product",
+      "seconds": 1.468571,
+      "percent_all_samples": 5.148358816915613
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::free",
+      "seconds": 0.707604,
+      "percent_all_samples": 2.480642265361876
+    },
+    {
+      "name": "<sim_domain_robot::articulated::prepared::ContactGeometry>::new_reusing_impl::{closure#4}",
+      "seconds": 0.697796,
+      "percent_all_samples": 2.446258430139535
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::DependentFactor>::solve",
+      "seconds": 0.670824,
+      "percent_all_samples": 2.3517028832780977
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::insert_large_chunk",
+      "seconds": 0.583067,
+      "percent_all_samples": 2.0440537980816287
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::factor_dependent_mode::{closure#0}",
+      "seconds": 0.520938,
+      "percent_all_samples": 1.826248608590518
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::rigid_motion_columns_with_kinematics",
+      "seconds": 0.50837,
+      "percent_all_samples": 1.782189061172657
+    }
+  ],
+  "inclusive": [
+    {
+      "name": "(root)",
+      "seconds": 28.525032,
+      "percent_all_samples": 100
+    },
+    {
+      "name": "",
+      "seconds": 26.407063,
+      "percent_all_samples": 92.57505127426325
+    },
+    {
+      "name": "stepResult",
+      "seconds": 26.401591,
+      "percent_all_samples": 92.55586812312778
+    },
+    {
+      "name": "step",
+      "seconds": 26.385673,
+      "percent_all_samples": 92.50006450474797
+    },
+    {
+      "name": "js-to-wasm::",
+      "seconds": 26.376045,
+      "percent_all_samples": 92.46631169423404
+    },
+    {
+      "name": "<sim_web::EnvironmentSimulation>::step",
+      "seconds": 26.372498,
+      "percent_all_samples": 92.45387700178566
+    },
+    {
+      "name": "environmentsimulation_step",
+      "seconds": 26.372498,
+      "percent_all_samples": 92.45387700178566
+    },
+    {
+      "name": "environmentsimulation_step multivalue shim",
+      "seconds": 26.372498,
+      "percent_all_samples": 92.45387700178566
+    },
+    {
+      "name": "<sim_runtime::environment::EmbeddedEnvironment>::step",
+      "seconds": 26.330356,
+      "percent_all_samples": 92.3061400947771
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::advance",
+      "seconds": 26.270022,
+      "percent_all_samples": 92.09462762390591
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::advance_one",
+      "seconds": 26.260108,
+      "percent_all_samples": 92.05987218524417
+    },
+    {
+      "name": "sim_dynamics::hybrid::advance_interval::<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl>>",
+      "seconds": 23.402979,
+      "percent_all_samples": 82.04365555137677
+    }
+  ],
+  "masked_gemm_stacks": [],
+  "parity": {
+    "frames": 151,
+    "all_fields_except_wall_exact": true,
+    "fields": [
+      "completed_steps",
+      "contact_history",
+      "contacts",
+      "done",
+      "driver_readings",
+      "error",
+      "joint_positions",
+      "joint_velocities",
+      "learning",
+      "motor_readings",
+      "motor_states",
+      "original_rows",
+      "policy",
+      "policy_inputs",
+      "poses",
+      "requested_steps",
+      "servo_commands",
+      "servo_states",
+      "servo_targets_rad",
+      "time_s"
+    ],
+    "full_task_transitions_exact": true
+  },
+  "input_hashes_verified": true
+}

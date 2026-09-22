@@ -1,0 +1,31 @@
+// Configuration only: every episode still runs in the shared Rust environment.
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+const [input, mode, output] = process.argv.slice(2);
+assert(output, 'Usage: prepare_contact_qualification.mjs SPEC long|half-step|stop|reverse NEW_DIRECTORY');
+assert(['long', 'half-step', 'stop', 'reverse'].includes(mode));
+const hash = path => crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex');
+const s = JSON.parse(fs.readFileSync(input));
+const horizon = mode === 'long' ? 30 : 10;
+const dt = s.scene.period_s;
+const names = s.scene.controller.inputs.map(x => x.name);
+const forward = names.indexOf('command.forward_speed');
+const sequence = names.indexOf('command.packet_sequence');
+const motion = ['command.forward_speed', 'command.lateral_speed', 'command.yaw_rate'].map(n => names.indexOf(n));
+assert(forward >= 0 && sequence >= 0 && motion.every(i => i >= 0));
+const first = s.source_actions[0];
+assert(first[forward] > 0);
+assert(s.source_actions.every(a => a.every((v, i) => i === sequence || v === first[i])), 'Expected a constant forward source episode');
+s.source_actions = Array.from({length: Math.round(horizon / dt)}, (_, i) => {
+  const a = [...first]; a[sequence] = i + 1;
+  if (mode === 'stop' && i * dt >= 7) for (const k of motion) a[k] = 0;
+  if (mode === 'reverse' && i * dt >= 4) a[forward] *= -1;
+  return a;
+});
+if (mode === 'half-step') s.config.step_s /= 2;
+s.config.steps = Math.round(horizon / s.config.step_s);
+s.scene.duration_s = horizon;
+fs.mkdirSync(output);
+fs.writeFileSync(`${output}/spec.json`, JSON.stringify(s) + '\n', {flag: 'wx'});
+fs.writeFileSync(`${output}/preparation.json`, JSON.stringify({mode, horizon_s: horizon, source: {path: input, sha256: hash(input)}, script_sha256: hash(new URL(import.meta.url)), seed: s.seed}, null, 2) + '\n', {flag: 'wx'});

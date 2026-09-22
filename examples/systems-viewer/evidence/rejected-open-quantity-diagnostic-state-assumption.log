@@ -1,0 +1,65 @@
+    Blocking waiting for file lock on build directory
+   Compiling bytemuck v1.25.2
+   Compiling either v1.18.0
+   Compiling serde_json v1.0.151
+   Compiling once_cell v1.21.4
+   Compiling hashbrown v0.17.1
+   Compiling num-complex v0.4.6
+   Compiling dyn-stack v0.13.2
+   Compiling safe_arch v0.7.4
+   Compiling rayon v1.12.0
+   Compiling wide v0.7.33
+   Compiling pulp v0.21.5
+   Compiling py_literal v0.4.0
+   Compiling nano-gemm-c32 v0.1.0
+   Compiling nano-gemm-c64 v0.1.0
+   Compiling indexmap v2.14.1
+   Compiling sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling npyz v0.8.4
+   Compiling petgraph v0.8.3
+   Compiling simba v0.9.1
+   Compiling spindle v0.2.6
+   Compiling sim-domain-electrical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-electrical)
+   Compiling sim-domain-rotational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-rotational)
+   Compiling sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+   Compiling sim-domain-translational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-translational)
+   Compiling sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+   Compiling sim-domain-sensing v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-sensing)
+   Compiling private-gemm-x86 v0.1.20
+   Compiling sim-domain-bridges v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-bridges)
+   Compiling gemm-common v0.18.2
+   Compiling qd v0.7.7
+   Compiling faer-traits v0.22.1
+   Compiling gemm-c32 v0.18.2
+   Compiling gemm-c64 v0.18.2
+   Compiling gemm-f64 v0.18.2
+   Compiling gemm-f32 v0.18.2
+   Compiling gemm v0.18.2
+   Compiling nalgebra v0.34.2
+   Compiling nano-gemm v0.1.3
+   Compiling faer v0.22.6
+   Compiling sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator/crates/sim-dynamics)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 08s
+     Running tests/open_quantity.rs (target/debug/deps/open_quantity-86251efe5d8ab6b4)
+
+running 2 tests
+test unregistered_external_signal_quantity_fails_compilation ... ok
+
+thread 'registered_external_quantity_integrates_and_preserves_channel_metadata' (392374) panicked at crates/sim-compile/tests/open_quantity.rs:59:9:
+assertion `left == right` failed
+  left: DefinitionId { name: "sim.quantity.Entropy", version: 1 }
+ right: DefinitionId { name: "test.diffusion.concentration", version: 1 }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test registered_external_quantity_integrates_and_preserves_channel_metadata ... FAILED
+
+failures:
+
+failures:
+    registered_external_quantity_integrates_and_preserves_channel_metadata
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p sim-compile --test open_quantity`

@@ -1,0 +1,72 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 9m 00s
+     Running tests/actuator_profiles.rs (target/debug/deps/actuator_profiles-3f96d66d5ebda8af)
+
+running 7 tests
+test cad_collision_derivation_survives_runtime_model_round_trip ... ok
+test profiles_cannot_silently_run_catalog_position_firmware ... ok
+test profile_resolution_is_idempotent_and_uses_registry_units_bounds_and_identity ... ok
+test cad_fixed_pd_rejects_missing_mapping_wrong_controller_and_silent_fallback ... ok
+test resolved_profile_changes_the_shared_physical_motor_not_only_metadata ... ok
+test controller_environment_and_headless_session_share_profiled_motor_dynamics ... ok
+test cad_fixed_pd_runs_in_shared_session_and_replays_across_host_chunks ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s
+
+     Running tests/embedded_session.rs (target/debug/deps/embedded_session-f5212f11fdcc96d0)
+
+running 10 tests
+test invalid_advance_does_not_mutate_and_partial_report_is_not_complete ... ok
+test rhai_observes_actual_joint_state_and_rejects_out_of_bounds_outputs ... ok
+test chunking_preserves_motor_firmware_and_full_diagnostics ... ok
+test task_observations_reach_rhai_and_replay_with_input_changes ... ok
+test sampled_rhai_inputs_are_bounded_scheduled_and_replayed ... ok
+test mechanical_subdivision_is_explicit_preserves_direct_accuracy_and_replays ... ok
+test recorded_prefix_replays_and_rejects_invalid_horizons ... ok
+test motor_reductions_are_explicit_shared_parameters_and_replay_without_cad_mutation ... ok
+test feedback_timeout_is_identical_across_chunks_and_latches ... ok
+test condensed_motor_session_records_configuration_and_replays_across_chunks ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.51s
+
+     Running tests/environment.rs (target/debug/deps/environment-e68112ef5ac43925)
+
+running 11 tests
+test invalid_action_preserves_state_and_task_failure_differs_from_timeout ... ok
+test reward_overflow_latches_failure_instead_of_delivering_a_training_transition ... ok
+test teacher_motion_and_action_observations_use_current_frames_and_declared_units ... ok
+test rejects_clock_ambiguity_missing_sources_and_incompatible_reward_units ... ok
+test survival_and_failure_rewards_distinguish_task_failure_from_timeout ... ok
+test environment_replay_preserves_task_scores_and_rejects_changed_recipes ... ok
+test generic_xy_progress_preserves_the_legacy_speed_reward_on_matched_motion ... ok
+test unchanged_actions_replay_from_initial_values_and_sparse_change_events ... ok
+test held_actions_match_the_production_runtime_and_reset_replays_exactly ... ok
+test speed_return_matches_endpoint_displacement_and_replays ... ok
+test generic_progress_uses_the_same_physics_with_explicit_failure_bounds ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.03s
+
+     Running tests/robot_power.rs (target/debug/deps/robot_power-8ab3977671393c18)
+
+running 4 tests
+test signed_supply_accounting_separates_consumption_return_and_true_minimum ... ok
+test cad_robot_reports_shared_battery_terminals_instead_of_summed_winding_energy ... ok
+test depleted_and_rewound_robot_runs_cannot_claim_valid_battery_history ... ok
+test source_accounting_converges_with_step_and_is_independent_of_host_chunking ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.72s
+

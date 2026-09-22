@@ -1,0 +1,114 @@
+{
+  "scope": "Three-second fixed-input numerical sensitivity only. Physical inputs, controller clocks and binary identity verified equal. Only solver tolerances and integration timestep vary. No continuous-time or hardware reference is established. Saved FPGA comparisons cover 50 Hz snapshots, not every 400 Hz sample.",
+  "binary_sha256": "bbf0360740c5f2f2ec4c668fd6afaab773d51588e1b8fca2b2beec5f2e53e39b",
+  "comparisons": [
+    {
+      "name": "default-vs-tight",
+      "candidate": "mechanical-predictor/numeric/candidate",
+      "reference": "solver-tolerance-refinement/tight-6400/candidate",
+      "max_error": {
+        "motor_angle_rad": 6.249357364929153e-9,
+        "link_position_m": 3.4745594021907906e-9,
+        "current_a": 4.204617887193507e-8,
+        "contact_force_n": 0.00003420590396865111
+      },
+      "contactIdentities": true,
+      "cadence": true,
+      "passes_existing_physical_gates": true,
+      "candidate_wall_s": 27.96813179,
+      "reference_wall_s": 31.897566286,
+      "saved_servo_states_exact": true,
+      "saved_servo_commands_exact": true
+    },
+    {
+      "name": "tight-vs-tighter",
+      "candidate": "solver-tolerance-refinement/tight-6400/candidate",
+      "reference": "solver-tolerance-refinement/tighter-6400/candidate",
+      "max_error": {
+        "motor_angle_rad": 1.2355538814290412e-9,
+        "link_position_m": 3.54018492237474e-10,
+        "current_a": 8.838654919074429e-9,
+        "contact_force_n": 0.0000044227150389940895
+      },
+      "contactIdentities": true,
+      "cadence": true,
+      "passes_existing_physical_gates": true,
+      "candidate_wall_s": 31.897566286,
+      "reference_wall_s": 33.54236411,
+      "saved_servo_states_exact": true,
+      "saved_servo_commands_exact": true
+    },
+    {
+      "name": "default-vs-tighter-6400",
+      "candidate": "mechanical-predictor/numeric/candidate",
+      "reference": "solver-tolerance-refinement/tighter-6400/candidate",
+      "max_error": {
+        "motor_angle_rad": 6.9379272882308385e-9,
+        "link_position_m": 3.784087893256766e-9,
+        "current_a": 5.08848337910095e-8,
+        "contact_force_n": 0.00003653235501570216
+      },
+      "contactIdentities": true,
+      "cadence": true,
+      "passes_existing_physical_gates": true,
+      "candidate_wall_s": 27.96813179,
+      "reference_wall_s": 33.54236411,
+      "saved_servo_states_exact": true,
+      "saved_servo_commands_exact": true
+    },
+    {
+      "name": "default-vs-tighter-12800",
+      "candidate": "solver-tolerance-refinement/default-12800/candidate",
+      "reference": "solver-tolerance-refinement/tighter-12800/candidate",
+      "max_error": {
+        "motor_angle_rad": 1.3570923551586844e-8,
+        "link_position_m": 3.3286956590964743e-9,
+        "current_a": 1.0001573025331112e-7,
+        "contact_force_n": 0.00019194227893576152
+      },
+      "contactIdentities": true,
+      "cadence": true,
+      "passes_existing_physical_gates": true,
+      "candidate_wall_s": 46.206576994,
+      "reference_wall_s": 55.391169559,
+      "saved_servo_states_exact": true,
+      "saved_servo_commands_exact": true
+    },
+    {
+      "name": "default-timestep",
+      "candidate": "mechanical-predictor/numeric/candidate",
+      "reference": "solver-tolerance-refinement/default-12800/candidate",
+      "max_error": {
+        "motor_angle_rad": 0.003297062855736055,
+        "link_position_m": 0.0015507900421390666,
+        "current_a": 0.12285538818841518,
+        "contact_force_n": 27.181189423946282
+      },
+      "contactIdentities": false,
+      "cadence": true,
+      "passes_existing_physical_gates": false,
+      "candidate_wall_s": 27.96813179,
+      "reference_wall_s": 46.206576994,
+      "saved_servo_states_exact": false,
+      "saved_servo_commands_exact": false
+    },
+    {
+      "name": "tighter-timestep",
+      "candidate": "solver-tolerance-refinement/tighter-6400/candidate",
+      "reference": "solver-tolerance-refinement/tighter-12800/candidate",
+      "max_error": {
+        "motor_angle_rad": 0.00329706468099622,
+        "link_position_m": 0.0015507896354449472,
+        "current_a": 0.12285540062552863,
+        "contact_force_n": 27.181149094334174
+      },
+      "contactIdentities": false,
+      "cadence": true,
+      "passes_existing_physical_gates": false,
+      "candidate_wall_s": 33.54236411,
+      "reference_wall_s": 55.391169559,
+      "saved_servo_states_exact": false,
+      "saved_servo_commands_exact": false
+    }
+  ]
+}

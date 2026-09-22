@@ -1,0 +1,198 @@
+[
+  {
+    "name": "confirm-mixed-baseline-closed-loop",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/baseline-family.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-baseline-closed-loop.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 6.809009808
+  },
+  {
+    "name": "confirm-mixed-baseline-replay",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/baseline-family.json",
+      "replay",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-baseline-replay.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 6.835933455
+  },
+  {
+    "name": "confirm-mixed-candidate-closed-loop",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/candidate-family.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-candidate-closed-loop.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 8.636305935
+  },
+  {
+    "name": "confirm-mixed-candidate-replay",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/candidate-family.json",
+      "replay",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-candidate-replay.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 7.81962254
+  },
+  {
+    "name": "confirm-sync-baseline-closed-loop",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-sync/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/baseline-family.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-sync-baseline-closed-loop.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 6.113503467
+  },
+  {
+    "name": "confirm-sync-baseline-replay",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-sync/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/baseline-family.json",
+      "replay",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-sync-baseline-replay.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 6.015821710000001
+  },
+  {
+    "name": "confirm-sync-candidate-closed-loop",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-sync/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/candidate-family.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-sync-candidate-closed-loop.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 7.788580763999999
+  },
+  {
+    "name": "confirm-sync-candidate-replay",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-sync/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/candidate-family.json",
+      "replay",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-sync-candidate-replay.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 7.654844532
+  },
+  {
+    "name": "confirm-mixed-10pct-baseline-closed-loop",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/baseline-family.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct-baseline-closed-loop.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 6.144261641999998
+  },
+  {
+    "name": "confirm-mixed-10pct-baseline-replay",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/baseline-family.json",
+      "replay",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct-baseline-replay.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 6.164890651
+  },
+  {
+    "name": "confirm-mixed-10pct-candidate-closed-loop",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/candidate-family.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct-candidate-closed-loop.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 7.877039946
+  },
+  {
+    "name": "confirm-mixed-10pct-candidate-replay",
+    "command": [
+      "target/debug/examples/review_fpga_controller",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/candidate-family.json",
+      "replay",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct-candidate-replay.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 7.905709893000001
+  },
+  {
+    "name": "confirm-mixed-10pct-baseline-shared-ideal",
+    "command": [
+      "target/debug/examples/review_fpga_group",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/baseline-family.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/supply-ideal.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct-baseline-shared-ideal.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 12.576857405000002
+  },
+  {
+    "name": "confirm-mixed-10pct-baseline-shared-resistive-hypothesis",
+    "command": [
+      "target/debug/examples/review_fpga_group",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/baseline-family.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/supply-resistive-hypothesis.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct-baseline-shared-resistive-hypothesis.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 12.300280463000004
+  },
+  {
+    "name": "confirm-mixed-10pct-candidate-shared-ideal",
+    "command": [
+      "target/debug/examples/review_fpga_group",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/candidate-family.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/supply-ideal.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct-candidate-shared-ideal.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 18.048096550999997
+  },
+  {
+    "name": "confirm-mixed-10pct-candidate-shared-resistive-hypothesis",
+    "command": [
+      "target/debug/examples/review_fpga_group",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct/fpga-recording.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/candidate-family.json",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/supply-resistive-hypothesis.json",
+      "closed-loop",
+      "examples/actuators/hx30hm/hardware/2026-09-14-unloaded-refinement/confirm-mixed-10pct-candidate-shared-resistive-hypothesis.json"
+    ],
+    "exit_code": 0,
+    "elapsed_s": 17.517689154000003
+  }
+]

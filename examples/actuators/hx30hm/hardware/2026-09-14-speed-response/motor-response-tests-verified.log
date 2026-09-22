@@ -1,0 +1,28 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.99s
+     Running tests/motor_response.rs (target/debug/deps/motor_response-8ff31a40310b8f6a)
+
+running 8 tests
+test missing_data_wrap_and_overlapping_timestamps_are_not_smoothed_away ... ok
+test quantization_noise_does_not_prove_settling ... ok
+test constant_speed_and_acceleration_have_correct_units_and_signs ... ok
+test slower_dynamics_produce_longer_rise_and_reversal ... ok
+test unfinished_reversal_and_missing_initial_plateau_remain_unscored ... ok
+test unknown_age_is_visible_and_larger_windows_widen_crossing_uncertainty ... ok
+test analytic_speedup_and_both_reversals_are_bracketed ... ok
+test shared_motor_inertia_predicts_speedup_and_reversal_without_a_delay_parameter ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.53s
+

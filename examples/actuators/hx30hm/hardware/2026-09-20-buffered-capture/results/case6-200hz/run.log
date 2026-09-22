@@ -1,0 +1,7 @@
+progress ticks 1000000 bridge 0 owner 0 frame 0 controls 0 records 0 latch 1 reason 1 scheduler 0 event 0 ready 0
+progress ticks 2000000 bridge 0 owner 0 frame 0 controls 0 records 1 latch 1 reason 10 scheduler 7 event 0 ready 1
+PASS full UART case 6: controls 0, +100% 0, -100% 0, terminal 3; all modeled motors zero/off
+- tb/bridge_experiment_tb.v:181: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.051 devel
+- Verilator: $finish at 44ms; walltime 11.110 s; speed 3.918 ms/s
+- Verilator: cpu 10.571 s on 1 threads; allocated 1 MB

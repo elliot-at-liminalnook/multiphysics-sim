@@ -1,0 +1,35 @@
+{
+  "name": "battery-chain",
+  "calibrated": false,
+  "parent": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority/pilot.spec.json",
+    "sha256": "2f1c8fe4a81b1a668e20d287784722c276373f5283d7b807c2c4880688b3eb4e"
+  },
+  "generator_sha256": "bb38aac9c8a1b33a15e742a7581949cb65e35d1a1665958dc4bd690304f2b163",
+  "scope": "Hypothetical sensitivity case, not a measured parameter set, physical rating, confidence bound or identified motor assignment.",
+  "assumptions": {
+    "battery": {
+      "cells": 3,
+      "nominal_voltage_v": 11.1,
+      "capacity_ah": 2,
+      "initial_soc": 0.8,
+      "internal_resistance_ohm": 0.1
+    },
+    "wiring": "Common feed, then four separate three-motor chains in Hip/Worm/Foot order. Each edge includes supply and return resistance.",
+    "common_feed_resistance_ohm": 0.05,
+    "each_chain_segment_resistance_ohm": 0.05,
+    "model_envelope": {
+      "minimum_pack_voltage_v": 9,
+      "maximum_pack_voltage_v": 12.6,
+      "minimum_soc": 0.1,
+      "maximum_soc": 1
+    },
+    "limitations": [
+      "Battery choice has not been supplied; 3-cell 2 Ah is an explicit trial assumption.",
+      "No calibrated current measurements identify internal or wiring resistance.",
+      "Chain order/topology is a proposed scenario, not a verified quadruped wiring harness.",
+      "Registered battery discharge curve is generic, not measured for a selected pack.",
+      "Voltage/SOC envelope stops invalid experiments; it is not a simulated physical BMS."
+    ]
+  }
+}

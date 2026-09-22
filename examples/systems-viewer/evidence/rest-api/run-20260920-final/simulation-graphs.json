@@ -1,0 +1,88 @@
+{
+  "bytes": 171741,
+  "content_type": "image/png",
+  "image_id": 2,
+  "metadata": {
+    "frame_count": 31,
+    "history": "bounded display samples; use full-rate recording for numerical analysis",
+    "kind": "graphs",
+    "observables": [
+      "example/motor-thermal/motor/port/706c75672e656c656374726963616c/through/63757272656e74",
+      "example/motor-thermal/motor/port/706c75672e746865726d616c/across/74656d7065726174757265",
+      "example/motor-thermal/motor/port/706c75672e746865726d616c/through/686561745f666c6f77",
+      "example/motor-thermal/rotor/port/7368616674/across/616e676c65",
+      "example/motor-thermal/rotor/port/7368616674/across/7370656564"
+    ],
+    "panels": [
+      {
+        "available_points": 30,
+        "title": "motor.plug.electrical · motor.plug.electrical.current [A]",
+        "unit": "A",
+        "y_range": [
+          0.9846633644871554,
+          1.0008678637856188
+        ]
+      },
+      {
+        "available_points": 31,
+        "title": "motor.plug.thermal · motor.plug.thermal.temperature [K]",
+        "unit": "K",
+        "y_range": [
+          293.12721872148416,
+          293.4575472599633
+        ]
+      },
+      {
+        "available_points": 30,
+        "title": "motor.plug.thermal · motor.plug.thermal.heat_flow [W]",
+        "unit": "W",
+        "y_range": [
+          -2.0034392406303803,
+          -1.9390901618391339
+        ]
+      },
+      {
+        "available_points": 31,
+        "title": "rotor.shaft · rotor.shaft.angle [rad]",
+        "unit": "rad",
+        "y_range": [
+          -0.0035116161133308065,
+          0.04740681752996589
+        ]
+      },
+      {
+        "available_points": 31,
+        "title": "rotor.shaft · rotor.shaft.speed [rad/s]",
+        "unit": "rad/s",
+        "y_range": [
+          -0.023122095971667308,
+          0.3121482956175087
+        ]
+      }
+    ],
+    "runtime_description_id": "c77a7a878a48a1a01bc72bcb47241ded8ab808356a4f5d4573c948755c990211",
+    "sample_timing": "Committed or accepted-stage sample_time, never substituted endpoint times",
+    "size": {
+      "height": 900,
+      "width": 1280
+    },
+    "source_description_id": "9bee4165ea081b9edf4ea7d0eed7f2c2b78fad38c94360ead9075ede8082e812",
+    "status": {
+      "events": 0,
+      "generation": 2,
+      "message": null,
+      "phase": "paused",
+      "run_id": "viewer-90016-1789927014200123000",
+      "sequence": 30,
+      "step": 30,
+      "step_wall_seconds": 0.000060433,
+      "time": 0.3000000000000001
+    },
+    "time_range": [
+      0.0,
+      0.3000000000000001
+    ]
+  },
+  "metadata_url": "/v1/images/2",
+  "url": "/v1/images/2.png"
+}

@@ -1,0 +1,50 @@
+   Compiling sim-diagram v0.1.0 (/Users/elliot/physics-simulator/crates/sim-diagram)
+    Finished `test` profile [optimized] target(s) in 30.22s
+     Running unittests src/lib.rs (target/debug/deps/sim_diagram-80d8a1e81d7000f8)
+
+running 4 tests
+test plot::tests::empty_and_unavailable_series_have_finite_axes ... ok
+test plot::tests::independent_graph_hosts_share_cursor_without_a_runtime_or_model ... ok
+test projection::selection_tests::collapsed_groups_and_bundles_keep_all_original_identities ... ok
+test worker::tests::cancellation_stops_full_assembly_computation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/analysis.rs (target/debug/deps/analysis-f8d837b0facacae0)
+
+running 2 tests
+test invalid_or_ambiguous_groups_are_rejected_atomically ... ok
+test groups_and_annotations_preserve_physics_and_roundtrip_with_undo ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/full_assembly.rs (target/debug/deps/full_assembly-5a94fca95a4999f6)
+
+running 4 tests
+test terminal_trace_does_not_include_other_nets_on_its_component ... ok
+test focus_reveals_one_motor_and_retains_every_boundary_terminal ... ok
+test overview_preserves_each_connection_without_fabricating_physics ... ok
+test focused_motor_routes_every_terminal_without_entering_cards ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/interaction.rs (target/debug/deps/interaction-138fd2f8d3cb1266)
+
+running 6 tests
+test routing_retains_one_branched_connection_and_is_deterministic ... ok
+test actual_pointer_click_selects_a_component_without_changing_model ... ok
+test actual_terminal_click_selects_the_port_and_restoration_keeps_camera ... ok
+test shift_selection_drags_and_pins_both_cards_without_moving_the_third ... ok
+test drag_updates_presentation_and_reroutes_the_same_terminals ... ok
+test arranging_preserves_pins_and_cancelled_jobs_cannot_publish ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Doc-tests sim_diagram
+
+running 1 test
+test crates/sim-diagram/src/plot.rs - plot::TimeGraph (line 8) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 1.60s; merged doctests compilation took 1.26s

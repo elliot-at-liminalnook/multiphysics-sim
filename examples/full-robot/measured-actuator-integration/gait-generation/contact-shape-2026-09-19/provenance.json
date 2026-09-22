@@ -1,0 +1,21 @@
+{
+  "parent_spec": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/slow-full-stride-10s/spec.json",
+  "parent_spec_sha256": "994df02388f58af259f3e0270ff157de51fbeacfc52ffeaada4ec1cc2075a154",
+  "planner_seed": "examples/full-robot/contact-planning/return-all25-reference.recipe.json",
+  "cad_sha256": "f873aa7dc89be5c92291403c12d46d060c03e3ee183a626b32115ba0ae712ac9",
+  "planning_actuator_approximation": "Historical effective-servo inverse-load screen is a proposal diagnostic only; full CAD fixed-PD/detailed motor physics remains the evaluation model. Failed inverse audits are retained.",
+  "pilot_changes": {
+    "period_s": 1.2,
+    "stride_m": 0.12,
+    "stance_fraction": 0.62,
+    "lift_m": 0.02,
+    "base_translation_z_m": -0.05,
+    "body_motion": "constant pose",
+    "phase_offsets": [
+      0,
+      0.5,
+      0,
+      0.5
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "time_utc": "2026-09-14T15:06:08.564179+00:00",
+  "authorization": "User explicitly removed motor-power-off restriction and authorized FPGA reloads as needed.",
+  "motor_supply": "User last reported powered, 12.6 V / proposed 3.5 A current limit.",
+  "command": [
+    "openFPGALoader",
+    "-b",
+    "tangprimer25k",
+    "examples/actuators/hx30hm/hardware/2026-09-14-full-drive/build/bridge_experiment_100pct.fs"
+  ],
+  "bitstream_sha256": "37d60ae1899569fbe349124addf741e3ae8182eb51e16fef6e14c24b1aee9a55",
+  "exit_code": 0,
+  "persistent_flash": false
+}

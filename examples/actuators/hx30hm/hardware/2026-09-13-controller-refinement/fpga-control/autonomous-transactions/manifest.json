@@ -1,0 +1,30 @@
+{
+  "stage": "scheduler, packet builder and raw reply adapter integrated; not connected to bridge UART or programmed",
+  "tests": {
+    "integrated_transactions": 9,
+    "reply_parser": 7,
+    "scheduler": 16,
+    "frozen_archive_reproduction": "passed"
+  },
+  "synthesis": "integrated Gowin mapping passed; no physical placement or timing result for this core",
+  "new_motor_motion_trials": 0,
+  "electrical_evidence": "servo telemetry only; raw current not calibrated amps or power",
+  "files": {
+    ".gitignore": "7e90adf0a07abf24c04fa5a4a74e1f6353b28d0320052aed056300c9e696a557",
+    "Makefile": "d66099d23f60b7f1a021cee6e022498fcb3553fbf9a0526a1d3a6be1f7b90ab5",
+    "README.md": "93373cf83c75f9a3dd64c7f9036a187c244aa76a99c6f117497df344eedbe4bd",
+    "experiment-scheduler.md": "a627bdc0ce9df1b2212abfe3a025986e6ad82aceb5da8f6160be191161e47e55",
+    "experiment-transactions.md": "6820bde6a3e3cc64511f0bc5c9b7a23d228661255c11cd7bd4e95a7a3f405368",
+    "src/experiment_packet.v": "b0429a5d280f517465d7bf2e30467d2c9fc0131a72ede0c8676fc879e9a9712b",
+    "src/experiment_reply.v": "9a681a9e1e9cf0cd50a30c0990beac567433850d3f424db67a957f185d7ab34c",
+    "src/experiment_scheduler.v": "8e65c2ceb71fc7941023a7ac030c9a44631dc96146f7a2bec54ac562497ee47d",
+    "src/experiment_transactions.v": "5a24f02f4162f1e1249490230f6feb9222365230546c9c84e9589007374bf673",
+    "tb/experiment_reply_tb.v": "3916c22d1a7ae939e8b81a47b81402dd0b17c28165f825bcb1cf715b6d9e1e58",
+    "tb/experiment_scheduler_tb.v": "8ba76d6a82e453fbc1ffdb3b28b3a8e5f40796af8e7c6f81fdb92d3083d0689d",
+    "tb/experiment_transactions_tb.v": "7c62b63d32985cfa55d8718a63beae15fbf05d2e001c44521c9eded5d07ba6c6",
+    "verification/archive-reproduction.log": "69e53fcd3988f5a3747b3fd4d792e80116acb816f2004402e640ebbfcce9c646",
+    "verification/component-tests.log": "149b2f0fe161c27462d458ca632d5e3d9416e58efe6b68f7986226b56956ff31",
+    "verification/final-transaction-tests.log": "672a0f4d018691651d808dd8f7b8597486868ce1a057df1edc803a77ad0e5f95",
+    "verification/gowin-synthesis.log": "769d5adfbdd42d348140421e7e5be1fc162f79fa4557ae53133ef01d4ee6a755"
+  }
+}

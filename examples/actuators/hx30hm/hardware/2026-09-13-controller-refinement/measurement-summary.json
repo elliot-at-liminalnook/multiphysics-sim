@@ -1,0 +1,371 @@
+{
+  "hardware": "Tang Primer 25K supervised bridge; nine HX-30HM motors; user-reported unloaded bench",
+  "onset": {
+    "completed": true,
+    "trials": 108,
+    "training": 72,
+    "reserved_repetitions": 36,
+    "duty_percent": [
+      2.5,
+      5.0
+    ],
+    "pulse_ms": 100
+  },
+  "controller_runs": [
+    {
+      "id": 4,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.032124157501728805,
+      "tracking_peak_rad": 0.06541738566057188,
+      "observed_position_range_rad": [
+        0.0,
+        0.052155346788111956
+      ],
+      "max_tick_interval_s": 0.05440616300000001,
+      "max_abs_pwm_counts": 50,
+      "voltage_range_v": [
+        12.100000000000001,
+        12.100000000000001
+      ],
+      "temperature_range_c": [
+        49.0,
+        49.0
+      ]
+    },
+    {
+      "id": 5,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.030178953931630708,
+      "tracking_peak_rad": 0.05829126993965428,
+      "observed_position_range_rad": [
+        0.0,
+        0.05829126993965428
+      ],
+      "max_tick_interval_s": 0.054531368999999996,
+      "max_abs_pwm_counts": 47,
+      "voltage_range_v": [
+        12.200000000000001,
+        12.200000000000001
+      ],
+      "temperature_range_c": [
+        49.0,
+        49.0
+      ]
+    },
+    {
+      "id": 6,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.04769118841009658,
+      "tracking_peak_rad": 0.08,
+      "observed_position_range_rad": [
+        0.0,
+        0.0
+      ],
+      "max_tick_interval_s": 0.054554502999999865,
+      "max_abs_pwm_counts": 50,
+      "voltage_range_v": [
+        12.0,
+        12.100000000000001
+      ],
+      "temperature_range_c": [
+        49.0,
+        49.0
+      ]
+    },
+    {
+      "id": 7,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.033808114952009,
+      "tracking_peak_rad": 0.07233009606057188,
+      "observed_position_range_rad": [
+        0.0,
+        0.053689327575997314
+      ],
+      "max_tick_interval_s": 0.054402963000000026,
+      "max_abs_pwm_counts": 50,
+      "voltage_range_v": [
+        12.100000000000001,
+        12.200000000000001
+      ],
+      "temperature_range_c": [
+        49.0,
+        49.0
+      ]
+    },
+    {
+      "id": 8,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.04342575255953887,
+      "tracking_peak_rad": 0.08,
+      "observed_position_range_rad": [
+        0.0,
+        0.049087385212340795
+      ],
+      "max_tick_interval_s": 0.054611201000000165,
+      "max_abs_pwm_counts": 50,
+      "voltage_range_v": [
+        12.200000000000001,
+        12.3
+      ],
+      "temperature_range_c": [
+        49.0,
+        49.0
+      ]
+    },
+    {
+      "id": 9,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.04766905741819338,
+      "tracking_peak_rad": 0.08,
+      "observed_position_range_rad": [
+        0.0,
+        0.0
+      ],
+      "max_tick_interval_s": 0.05459296699999994,
+      "max_abs_pwm_counts": 50,
+      "voltage_range_v": [
+        12.200000000000001,
+        12.200000000000001
+      ],
+      "temperature_range_c": [
+        50.0,
+        50.0
+      ]
+    },
+    {
+      "id": 10,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.042249713662988166,
+      "tracking_peak_rad": 0.0689262570242284,
+      "observed_position_range_rad": [
+        0.0,
+        0.05368932757599776
+      ],
+      "max_tick_interval_s": 0.05499451099999986,
+      "max_abs_pwm_counts": 50,
+      "voltage_range_v": [
+        12.100000000000001,
+        12.200000000000001
+      ],
+      "temperature_range_c": [
+        50.0,
+        50.0
+      ]
+    },
+    {
+      "id": 11,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.04181139099297109,
+      "tracking_peak_rad": 0.06904313882422886,
+      "observed_position_range_rad": [
+        0.0,
+        0.053689327575997314
+      ],
+      "max_tick_interval_s": 0.05451654699999953,
+      "max_abs_pwm_counts": 50,
+      "voltage_range_v": [
+        12.3,
+        12.4
+      ],
+      "temperature_range_c": [
+        49.0,
+        49.0
+      ]
+    },
+    {
+      "id": 12,
+      "completed": true,
+      "stop_verified": true,
+      "frames": 60,
+      "duration_s": 3.0,
+      "tracking_rms_rad": 0.040258693007974446,
+      "tracking_peak_rad": 0.07386407684845768,
+      "observed_position_range_rad": [
+        0.0,
+        0.04601942363656919
+      ],
+      "max_tick_interval_s": 0.05464863399999986,
+      "max_abs_pwm_counts": 50,
+      "voltage_range_v": [
+        12.100000000000001,
+        12.200000000000001
+      ],
+      "temperature_range_c": [
+        48.0,
+        48.0
+      ]
+    }
+  ],
+  "final_stops_verified": true,
+  "limitations": "Internal current uncalibrated; encoder resolution is not angle accuracy; host windows not sensor timestamps; warm unloaded bench only; no loaded torque or assembled-joint validation. Controller tracking error is not model prediction error.",
+  "model_predictions": [
+    {
+      "id": 4,
+      "recording_hash": "0a61b691899c745c40bc871841ecf6adffc23b4b853466c445088b70a044cde8",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.014738727105858978,
+      "peak_rad": 0.026077673394055978,
+      "passes": false
+    },
+    {
+      "id": 4,
+      "recording_hash": "0a61b691899c745c40bc871841ecf6adffc23b4b853466c445088b70a044cde8",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.0076750155054334124,
+      "peak_rad": 0.019941750242513434,
+      "passes": false
+    },
+    {
+      "id": 5,
+      "recording_hash": "fc14a3a86dd171f79b3ce37a94e4c3e19b62124528113ca83627d99ce94d8906",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.025518236467419162,
+      "peak_rad": 0.03834951969714062,
+      "passes": false
+    },
+    {
+      "id": 5,
+      "recording_hash": "fc14a3a86dd171f79b3ce37a94e4c3e19b62124528113ca83627d99ce94d8906",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.010719588284051507,
+      "peak_rad": 0.023009711818284373,
+      "passes": false
+    },
+    {
+      "id": 6,
+      "recording_hash": "f9ce2921ca2e26216b4e36a53bbac429d6d41a633d234b0e688b9a840c60b7fc",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.08570272548524743,
+      "peak_rad": 0.1150485590914232,
+      "passes": false
+    },
+    {
+      "id": 6,
+      "recording_hash": "f9ce2921ca2e26216b4e36a53bbac429d6d41a633d234b0e688b9a840c60b7fc",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.032235503108174926,
+      "peak_rad": 0.04908738521234035,
+      "passes": false
+    },
+    {
+      "id": 7,
+      "recording_hash": "f1e44617a1f29dae1fe9d56bad2edb2ac3c61bb8e6d3c142dada76d405828635",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.011900303550051252,
+      "peak_rad": 0.021475731030399015,
+      "passes": false
+    },
+    {
+      "id": 7,
+      "recording_hash": "f1e44617a1f29dae1fe9d56bad2edb2ac3c61bb8e6d3c142dada76d405828635",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.007156750609539354,
+      "peak_rad": 0.01687378866674205,
+      "passes": false
+    },
+    {
+      "id": 8,
+      "recording_hash": "73d2ee630aeb938b7825eca3b1e3c840b47fdd6f09a21e28083aaa183192a75b",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.01641192178042759,
+      "peak_rad": 0.04448544284868383,
+      "passes": false
+    },
+    {
+      "id": 8,
+      "recording_hash": "73d2ee630aeb938b7825eca3b1e3c840b47fdd6f09a21e28083aaa183192a75b",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.01162186607676976,
+      "peak_rad": 0.026077673394055978,
+      "passes": false
+    },
+    {
+      "id": 9,
+      "recording_hash": "22e5d1d3347e9d89fad3184ea4a2a97888425cdca4540fb6453d1ec776e7707f",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.08780125116978332,
+      "peak_rad": 0.1181165206671948,
+      "passes": false
+    },
+    {
+      "id": 9,
+      "recording_hash": "22e5d1d3347e9d89fad3184ea4a2a97888425cdca4540fb6453d1ec776e7707f",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.03225557105398767,
+      "peak_rad": 0.049087385212340795,
+      "passes": false
+    },
+    {
+      "id": 10,
+      "recording_hash": "519c13f8639cb1481d65179db1687604c2997cbc932ddf6a2510c7ed67947a59",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.034193208263542316,
+      "peak_rad": 0.0813009817579391,
+      "passes": false
+    },
+    {
+      "id": 10,
+      "recording_hash": "519c13f8639cb1481d65179db1687604c2997cbc932ddf6a2510c7ed67947a59",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.014681406284016815,
+      "peak_rad": 0.03067961575771294,
+      "passes": false
+    },
+    {
+      "id": 11,
+      "recording_hash": "0d10ff0ce779917e3de1e95dc5a003f18a00774bdf20a5e1abb9e6158a5fdd5f",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.03607954118701566,
+      "peak_rad": 0.08743690490948142,
+      "passes": false
+    },
+    {
+      "id": 11,
+      "recording_hash": "0d10ff0ce779917e3de1e95dc5a003f18a00774bdf20a5e1abb9e6158a5fdd5f",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.014813044947660389,
+      "peak_rad": 0.030679615757712497,
+      "passes": false
+    },
+    {
+      "id": 12,
+      "recording_hash": "a703f9e4e6ae60e1ba1aa809385ed48bfac69a1a84f49a805e080cf48a850c9f",
+      "purpose": "recorded_command_replay",
+      "rms_rad": 0.016277552908407766,
+      "peak_rad": 0.04295146206079803,
+      "passes": false
+    },
+    {
+      "id": 12,
+      "recording_hash": "a703f9e4e6ae60e1ba1aa809385ed48bfac69a1a84f49a805e080cf48a850c9f",
+      "purpose": "closed_loop_prediction",
+      "rms_rad": 0.009891896648871782,
+      "peak_rad": 0.023009711818284595,
+      "passes": false
+    }
+  ]
+}

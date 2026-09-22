@@ -1,0 +1,6 @@
+{
+  "source": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/impl/bridge_safety.fs",
+  "sha256": "a5edabaabf24b6e644b3ae683fce7243ff88b08b00a43b0f07ec90947a64a423",
+  "programming": "openFPGALoader -b tangprimer25k impl/bridge_safety.fs; SRAM load completed; user explicitly authorized powered reload",
+  "verified": "supervisor version 1; latched, armed_mask 0; all nine IDs responding with PWM0 and torque off"
+}

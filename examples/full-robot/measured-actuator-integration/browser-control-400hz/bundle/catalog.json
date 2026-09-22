@@ -1,0 +1,44 @@
+{
+  "presets": [
+    {
+      "id": "robot-measured-400hz",
+      "label": "Quadruped · Bench-fit motors · 400 Hz",
+      "mode": "embedded",
+      "scene": "examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json",
+      "config": "examples/full-robot/measured-actuator-integration/browser-control-400hz/config.json",
+      "task": "examples/full-robot/measured-actuator-integration/browser-control-400hz/task.json",
+      "motion_commands": [
+        "command.forward_speed",
+        "command.lateral_speed",
+        "command.yaw_rate"
+      ],
+      "motion_heartbeat": "command.packet_sequence",
+      "motion_key_vectors": {
+        "w": [
+          0.1,
+          0,
+          0
+        ],
+        "s": [
+          -0.05,
+          0,
+          0
+        ],
+        "a": [
+          0.05,
+          0,
+          0.15
+        ],
+        "d": [
+          0.05,
+          0,
+          -0.15
+        ]
+      },
+      "description": "Live WASD trial with the per-motor bench-fit candidates and the shared FPGA integer controller at 400 Hz. W/S request forward/reverse; A/D request gentle arcing turns. Release keys or use Stop to request a controlled stop.",
+      "readiness": "Experimental fitted motors · 400 Hz motor loop · 200 Hz native measurement profile · 50 Hz motion policy and live observations. Detailed solver measured about 0.05× real time on this Mac. Calibration remains provisional.",
+      "evidence": "Uses the exact ID 10/11/12 candidate parameters from the measured-voltage motor study, repeated by actuator role across four legs as an explicit assumption. Internal motor/gearbox dynamics, encoder quantization and the FPGA integer law execute in Rust. The 1.25 ms feedback delay is an estimate. Supply is imposed at 11.1 V; loaded accuracy, battery behavior, twelve-motor physical bus timing and whole-robot hardware transfer remain unqualified. Model and cadence overrides are saved with input replay.",
+      "path": "data/robot-measured-400hz.json"
+    }
+  ]
+}

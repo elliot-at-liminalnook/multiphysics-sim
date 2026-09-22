@@ -1,0 +1,302 @@
+
+-- Executing script file `check-hierarchy.ys' --
+
+1. Executing Verilog-2005 frontend: src/uart_tx.v
+Parsing Verilog input from `src/uart_tx.v' to AST representation.
+Generating RTLIL representation for module `\uart_tx'.
+Successfully finished Verilog frontend.
+
+2. Executing Verilog-2005 frontend: src/uart_rx.v
+Parsing Verilog input from `src/uart_rx.v' to AST representation.
+Generating RTLIL representation for module `\uart_rx'.
+Successfully finished Verilog frontend.
+
+3. Executing Verilog-2005 frontend: src/host_packet_queue.v
+Parsing Verilog input from `src/host_packet_queue.v' to AST representation.
+Generating RTLIL representation for module `\host_packet_queue'.
+Successfully finished Verilog frontend.
+
+4. Executing Verilog-2005 frontend: src/trajectory_store.v
+Parsing Verilog input from `src/trajectory_store.v' to AST representation.
+Generating RTLIL representation for module `\trajectory_store'.
+Successfully finished Verilog frontend.
+
+5. Executing Verilog-2005 frontend: src/trajectory_upload.v
+Parsing Verilog input from `src/trajectory_upload.v' to AST representation.
+Generating RTLIL representation for module `\trajectory_upload'.
+Successfully finished Verilog frontend.
+
+6. Executing Verilog-2005 frontend: src/bridge_control.v
+Parsing Verilog input from `src/bridge_control.v' to AST representation.
+src/bridge_control.v:301: Warning: Yosys has only limited support for tri-state logic at the moment.
+Generating RTLIL representation for module `\top'.
+Warning: Replacing memory \local_buf with list of registers. See src/bridge_control.v:560
+Warning: Replacing memory \deltas with list of registers. See src/bridge_control.v:419
+Warning: Replacing memory \targets with list of registers. See src/bridge_control.v:418
+Successfully finished Verilog frontend.
+
+7. Executing Verilog-2005 frontend: src/hx_safety.v
+Parsing Verilog input from `src/hx_safety.v' to AST representation.
+Generating RTLIL representation for module `\hx_safety'.
+Successfully finished Verilog frontend.
+
+8. Executing Verilog-2005 frontend: src/button.v
+Parsing Verilog input from `src/button.v' to AST representation.
+Generating RTLIL representation for module `\button'.
+Successfully finished Verilog frontend.
+
+9. Executing Verilog-2005 frontend: src/experiment_session.v
+Parsing Verilog input from `src/experiment_session.v' to AST representation.
+Generating RTLIL representation for module `\experiment_session'.
+Successfully finished Verilog frontend.
+
+10. Executing Verilog-2005 frontend: src/experiment_transactions.v
+Parsing Verilog input from `src/experiment_transactions.v' to AST representation.
+Generating RTLIL representation for module `\experiment_transactions'.
+Successfully finished Verilog frontend.
+
+11. Executing Verilog-2005 frontend: src/experiment_scheduler.v
+Parsing Verilog input from `src/experiment_scheduler.v' to AST representation.
+Generating RTLIL representation for module `\experiment_scheduler'.
+Successfully finished Verilog frontend.
+
+12. Executing Verilog-2005 frontend: src/experiment_packet.v
+Parsing Verilog input from `src/experiment_packet.v' to AST representation.
+Generating RTLIL representation for module `\experiment_packet'.
+Successfully finished Verilog frontend.
+
+13. Executing Verilog-2005 frontend: src/experiment_reply.v
+Parsing Verilog input from `src/experiment_reply.v' to AST representation.
+Generating RTLIL representation for module `\experiment_reply'.
+Successfully finished Verilog frontend.
+
+14. Executing Verilog-2005 frontend: src/experiment_event_stream.v
+Parsing Verilog input from `src/experiment_event_stream.v' to AST representation.
+Generating RTLIL representation for module `\experiment_event_stream'.
+Successfully finished Verilog frontend.
+
+15. Executing Verilog-2005 frontend: src/experiment_event_packet.v
+Parsing Verilog input from `src/experiment_event_packet.v' to AST representation.
+Generating RTLIL representation for module `\experiment_event_packet'.
+Successfully finished Verilog frontend.
+
+16. Executing Verilog-2005 frontend: src/experiment_frame_log.v
+Parsing Verilog input from `src/experiment_frame_log.v' to AST representation.
+Generating RTLIL representation for module `\experiment_frame_log'.
+Successfully finished Verilog frontend.
+
+17. Executing Verilog-2005 frontend: impl/fixed-pd/fixed_pd.v
+Parsing Verilog input from `impl/fixed-pd/fixed_pd.v' to AST representation.
+Generating RTLIL representation for module `\fixed_pd'.
+Generating RTLIL representation for module `\fixed_pd_pipeline'.
+Successfully finished Verilog frontend.
+Parameter \HOST_CLKS = 50
+Parameter \RELEASE_TX = 1
+Parameter \SAFETY_ENABLE = 1
+Parameter \BUFFER_HOST = 1
+Parameter \TRAJECTORY_ENABLE = 1
+Parameter \EXPERIMENT_ENABLE = 1
+Parameter \FIXED_GAINS = 1
+
+18. Executing AST frontend in derive mode using pre-parsed AST for module `\top'.
+Parameter \HOST_CLKS = 50
+Parameter \RELEASE_TX = 1
+Parameter \SAFETY_ENABLE = 1
+Parameter \BUFFER_HOST = 1
+Parameter \TRAJECTORY_ENABLE = 1
+Parameter \EXPERIMENT_ENABLE = 1
+Parameter \FIXED_GAINS = 1
+Generating RTLIL representation for module `$paramod$a038a791fdf8bc660c76547e45940b631fe69f7e\top'.
+Warning: Replacing memory \local_buf with list of registers. See src/bridge_control.v:560
+Warning: Replacing memory \deltas with list of registers. See src/bridge_control.v:419
+Warning: Replacing memory \targets with list of registers. See src/bridge_control.v:418
+
+19. Executing HIERARCHY pass (managing design hierarchy).
+
+19.1. Analyzing design hierarchy..
+Top module:  \top
+Used module:     \uart_rx
+Used module:     \fixed_pd_pipeline
+Used module:     \uart_tx
+Used module:     \host_packet_queue
+Used module:     \experiment_session
+Used module:         \experiment_event_stream
+Used module:             \experiment_event_packet
+Used module:         \experiment_transactions
+Used module:             \experiment_reply
+Used module:             \experiment_packet
+Used module:             \experiment_scheduler
+Used module:     \experiment_frame_log
+Used module:     \trajectory_upload
+Used module:         \trajectory_store
+Used module:     \button
+Used module:     \hx_safety
+Parameter \CLKS_PER_BIT = 50
+
+19.2. Executing AST frontend in derive mode using pre-parsed AST for module `\uart_rx'.
+Parameter \CLKS_PER_BIT = 50
+Generating RTLIL representation for module `$paramod\uart_rx\CLKS_PER_BIT=s32'00000000000000000000000000110010'.
+Parameter \CLKS_PER_BIT = 50
+
+19.3. Executing AST frontend in derive mode using pre-parsed AST for module `\uart_tx'.
+Parameter \CLKS_PER_BIT = 50
+Generating RTLIL representation for module `$paramod\uart_tx\CLKS_PER_BIT=s32'00000000000000000000000000110010'.
+Parameter \CLKS_PER_BIT = 50
+Found cached RTLIL representation for module `$paramod\uart_rx\CLKS_PER_BIT=s32'00000000000000000000000000110010'.
+Parameter \CLKS_PER_BIT = 50
+Found cached RTLIL representation for module `$paramod\uart_tx\CLKS_PER_BIT=s32'00000000000000000000000000110010'.
+Parameter \RUN_RELATIVE32 = 1
+
+19.4. Executing AST frontend in derive mode using pre-parsed AST for module `\experiment_session'.
+Parameter \RUN_RELATIVE32 = 1
+Generating RTLIL representation for module `$paramod\experiment_session\RUN_RELATIVE32=s32'00000000000000000000000000000001'.
+Parameter \DEBOUNCE_CYC = 50000
+
+19.5. Executing AST frontend in derive mode using pre-parsed AST for module `\button'.
+Parameter \DEBOUNCE_CYC = 50000
+Generating RTLIL representation for module `$paramod\button\DEBOUNCE_CYC=s32'00000000000000001100001101010000'.
+Parameter \FEEDBACK_TIMEOUT = 10000000
+Parameter \COMMAND_TIMEOUT = 15000000
+Parameter \STOP_REPEAT = 2500000
+
+19.6. Executing AST frontend in derive mode using pre-parsed AST for module `\hx_safety'.
+Parameter \FEEDBACK_TIMEOUT = 10000000
+Parameter \COMMAND_TIMEOUT = 15000000
+Parameter \STOP_REPEAT = 2500000
+Generating RTLIL representation for module `$paramod$2dafc4097ebfbc04082f29269fa4d52c72479bb7\hx_safety'.
+Parameter \RUN_RELATIVE32 = 0
+
+19.7. Executing AST frontend in derive mode using pre-parsed AST for module `\experiment_transactions'.
+Parameter \RUN_RELATIVE32 = 0
+Generating RTLIL representation for module `$paramod\experiment_transactions\RUN_RELATIVE32=s32'00000000000000000000000000000000'.
+Parameter \RX_TIMEOUT = 100000
+
+19.8. Executing AST frontend in derive mode using pre-parsed AST for module `\experiment_reply'.
+Parameter \RX_TIMEOUT = 100000
+Generating RTLIL representation for module `$paramod\experiment_reply\RX_TIMEOUT=s32'00000000000000011000011010100000'.
+Parameter \RUN_RELATIVE32 = 0
+Parameter \MIN_PERIOD = 2000000
+Parameter \MAX_PERIOD = 7500000
+Parameter \MAX_DURATION = 600000000
+Parameter \MAX_FRAMES = 256
+
+19.9. Executing AST frontend in derive mode using pre-parsed AST for module `\experiment_scheduler'.
+Parameter \RUN_RELATIVE32 = 0
+Parameter \MIN_PERIOD = 2000000
+Parameter \MAX_PERIOD = 7500000
+Parameter \MAX_DURATION = 600000000
+Parameter \MAX_FRAMES = 256
+Generating RTLIL representation for module `$paramod$4f58d02e61ad482e757b4f2b98d0f6c1d46dbd49\experiment_scheduler'.
+
+19.10. Analyzing design hierarchy..
+Top module:  \top
+Used module:     $paramod\uart_rx\CLKS_PER_BIT=s32'00000000000000000000000000110010
+Used module:     \fixed_pd_pipeline
+Used module:     $paramod\uart_tx\CLKS_PER_BIT=s32'00000000000000000000000000110010
+Used module:     \host_packet_queue
+Used module:     $paramod\experiment_session\RUN_RELATIVE32=s32'00000000000000000000000000000001
+Used module:         \experiment_event_stream
+Used module:             \experiment_event_packet
+Used module:         \experiment_transactions
+Used module:             $paramod\experiment_reply\RX_TIMEOUT=s32'00000000000000011000011010100000
+Used module:             \experiment_packet
+Used module:             $paramod$4f58d02e61ad482e757b4f2b98d0f6c1d46dbd49\experiment_scheduler
+Used module:     \experiment_frame_log
+Used module:     \trajectory_upload
+Used module:         \trajectory_store
+Used module:     $paramod\button\DEBOUNCE_CYC=s32'00000000000000001100001101010000
+Used module:     $paramod$2dafc4097ebfbc04082f29269fa4d52c72479bb7\hx_safety
+Parameter \RUN_RELATIVE32 = 1
+
+19.11. Executing AST frontend in derive mode using pre-parsed AST for module `\experiment_transactions'.
+Parameter \RUN_RELATIVE32 = 1
+Generating RTLIL representation for module `$paramod\experiment_transactions\RUN_RELATIVE32=s32'00000000000000000000000000000001'.
+
+19.12. Analyzing design hierarchy..
+Top module:  \top
+Used module:     $paramod\uart_rx\CLKS_PER_BIT=s32'00000000000000000000000000110010
+Used module:     \fixed_pd_pipeline
+Used module:     $paramod\uart_tx\CLKS_PER_BIT=s32'00000000000000000000000000110010
+Used module:     \host_packet_queue
+Used module:     $paramod\experiment_session\RUN_RELATIVE32=s32'00000000000000000000000000000001
+Used module:         \experiment_event_stream
+Used module:             \experiment_event_packet
+Used module:         $paramod\experiment_transactions\RUN_RELATIVE32=s32'00000000000000000000000000000001
+Used module:             \experiment_reply
+Used module:             \experiment_packet
+Used module:             \experiment_scheduler
+Used module:     \experiment_frame_log
+Used module:     \trajectory_upload
+Used module:         \trajectory_store
+Used module:     $paramod\button\DEBOUNCE_CYC=s32'00000000000000001100001101010000
+Used module:     $paramod$2dafc4097ebfbc04082f29269fa4d52c72479bb7\hx_safety
+Parameter \RX_TIMEOUT = 100000
+Found cached RTLIL representation for module `$paramod\experiment_reply\RX_TIMEOUT=s32'00000000000000011000011010100000'.
+Parameter \RUN_RELATIVE32 = 1
+Parameter \MIN_PERIOD = 2000000
+Parameter \MAX_PERIOD = 7500000
+Parameter \MAX_DURATION = 600000000
+Parameter \MAX_FRAMES = 256
+
+19.13. Executing AST frontend in derive mode using pre-parsed AST for module `\experiment_scheduler'.
+Parameter \RUN_RELATIVE32 = 1
+Parameter \MIN_PERIOD = 2000000
+Parameter \MAX_PERIOD = 7500000
+Parameter \MAX_DURATION = 600000000
+Parameter \MAX_FRAMES = 256
+Generating RTLIL representation for module `$paramod$9337ef449625db9f1d6e6e348ef02249b79e3567\experiment_scheduler'.
+
+19.14. Analyzing design hierarchy..
+Top module:  \top
+Used module:     $paramod\uart_rx\CLKS_PER_BIT=s32'00000000000000000000000000110010
+Used module:     \fixed_pd_pipeline
+Used module:     $paramod\uart_tx\CLKS_PER_BIT=s32'00000000000000000000000000110010
+Used module:     \host_packet_queue
+Used module:     $paramod\experiment_session\RUN_RELATIVE32=s32'00000000000000000000000000000001
+Used module:         \experiment_event_stream
+Used module:             \experiment_event_packet
+Used module:         $paramod\experiment_transactions\RUN_RELATIVE32=s32'00000000000000000000000000000001
+Used module:             $paramod\experiment_reply\RX_TIMEOUT=s32'00000000000000011000011010100000
+Used module:             \experiment_packet
+Used module:             $paramod$9337ef449625db9f1d6e6e348ef02249b79e3567\experiment_scheduler
+Used module:     \experiment_frame_log
+Used module:     \trajectory_upload
+Used module:         \trajectory_store
+Used module:     $paramod\button\DEBOUNCE_CYC=s32'00000000000000001100001101010000
+Used module:     $paramod$2dafc4097ebfbc04082f29269fa4d52c72479bb7\hx_safety
+
+19.15. Analyzing design hierarchy..
+Top module:  \top
+Used module:     $paramod\uart_rx\CLKS_PER_BIT=s32'00000000000000000000000000110010
+Used module:     \fixed_pd_pipeline
+Used module:     $paramod\uart_tx\CLKS_PER_BIT=s32'00000000000000000000000000110010
+Used module:     \host_packet_queue
+Used module:     $paramod\experiment_session\RUN_RELATIVE32=s32'00000000000000000000000000000001
+Used module:         \experiment_event_stream
+Used module:             \experiment_event_packet
+Used module:         $paramod\experiment_transactions\RUN_RELATIVE32=s32'00000000000000000000000000000001
+Used module:             $paramod\experiment_reply\RX_TIMEOUT=s32'00000000000000011000011010100000
+Used module:             \experiment_packet
+Used module:             $paramod$9337ef449625db9f1d6e6e348ef02249b79e3567\experiment_scheduler
+Used module:     \experiment_frame_log
+Used module:     \trajectory_upload
+Used module:         \trajectory_store
+Used module:     $paramod\button\DEBOUNCE_CYC=s32'00000000000000001100001101010000
+Used module:     $paramod$2dafc4097ebfbc04082f29269fa4d52c72479bb7\hx_safety
+Removing unused module `$paramod$4f58d02e61ad482e757b4f2b98d0f6c1d46dbd49\experiment_scheduler'.
+Removing unused module `$paramod\experiment_transactions\RUN_RELATIVE32=s32'00000000000000000000000000000000'.
+Removing unused module `\fixed_pd'.
+Removing unused module `\experiment_reply'.
+Removing unused module `\experiment_scheduler'.
+Removing unused module `\experiment_transactions'.
+Removing unused module `\experiment_session'.
+Removing unused module `\button'.
+Removing unused module `\hx_safety'.
+Removing unused module `\uart_rx'.
+Removing unused module `\uart_tx'.
+Removed 11 unused modules.
+
+Warnings: 4 unique messages, 7 total
+End of script. Logfile hash: cbdc487776, time: 3.94s, user: 3.35s, system: 0.20s, MEM: 67.66 MB peak
+Yosys 0.68+40 (git sha1 0f2bcb94b-dirty, Release, Clang /usr/local/osxcross/target/bin/x86_64-apple-darwin25.5-clang++ 21.1.8)
+Time spent: 59% 18x read_verilog (2 sec), 20% 1x chparam (0 sec), ...

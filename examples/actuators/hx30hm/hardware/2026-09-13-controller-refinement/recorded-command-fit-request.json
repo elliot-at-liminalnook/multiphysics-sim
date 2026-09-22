@@ -1,0 +1,107 @@
+{
+  "assignments": [
+    {
+      "recording_hash": "0a61b691899c745c40bc871841ecf6adffc23b4b853466c445088b70a044cde8",
+      "role": "train",
+      "limits": {
+        "rmse": 0.0046019423636569235,
+        "final_abs_error": 0.007669903939428206
+      },
+      "rationale": "Original return trajectory used for tuning; reserved reversal measurements retain validation role from reserved-id4-reversal-protocol.json. All these results have been inspected; next candidate requires fresh confirmation."
+    },
+    {
+      "recording_hash": "8ccc319de47d50157e5a8255f40bfff6970fac3574834c81662c6ade328b4fdb",
+      "role": "held_out",
+      "limits": {
+        "rmse": 0.0046019423636569235,
+        "final_abs_error": 0.007669903939428206
+      },
+      "rationale": "Original return trajectory used for tuning; reserved reversal measurements retain validation role from reserved-id4-reversal-protocol.json. All these results have been inspected; next candidate requires fresh confirmation."
+    },
+    {
+      "recording_hash": "a9fb280f51dd5f54228626958a1ac05f203f940c10f1d91da9be705b95428d01",
+      "role": "held_out",
+      "limits": {
+        "rmse": 0.0046019423636569235,
+        "final_abs_error": 0.007669903939428206
+      },
+      "rationale": "Original return trajectory used for tuning; reserved reversal measurements retain validation role from reserved-id4-reversal-protocol.json. All these results have been inspected; next candidate requires fresh confirmation."
+    },
+    {
+      "recording_hash": "44438a8de7e21e7804a3aebd54ca654cb3d8c853ad7dd9235334db19d56181e0",
+      "role": "held_out",
+      "limits": {
+        "rmse": 0.0046019423636569235,
+        "final_abs_error": 0.007669903939428206
+      },
+      "rationale": "Original return trajectory used for tuning; reserved reversal measurements retain validation role from reserved-id4-reversal-protocol.json. All these results have been inspected; next candidate requires fresh confirmation."
+    }
+  ],
+  "fit": {
+    "model": {
+      "shared": {
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "backlash.events": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.0,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "jacobian.analytic": 1.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "bridge": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "conditions": {
+          "voltage_v": null,
+          "temperature_c": null,
+          "load_inertia": 2e-05,
+          "load_torque": 0.0,
+          "command_delay_s": 0.0
+        },
+        "step_s": 0.00025
+      },
+      "device_deltas": {
+        "4": {
+          "motor.no_load_current": -0.022370000873930207
+        }
+      }
+    },
+    "training_ids": [
+      "0a61b691899c745c40bc871841ecf6adffc23b4b853466c445088b70a044cde8"
+    ],
+    "validation_ids": [
+      "8ccc319de47d50157e5a8255f40bfff6970fac3574834c81662c6ade328b4fdb",
+      "a9fb280f51dd5f54228626958a1ac05f203f940c10f1d91da9be705b95428d01",
+      "44438a8de7e21e7804a3aebd54ca654cb3d8c853ad7dd9235334db19d56181e0"
+    ],
+    "coordinates": [
+      {
+        "path": "motor.no_load_current",
+        "device": 4,
+        "lower": -0.095,
+        "upper": 0.1
+      },
+      {
+        "path": "condition.load_torque",
+        "device": 4,
+        "lower": -0.025,
+        "upper": 0.025
+      }
+    ],
+    "maximum_evaluations": 18,
+    "validation_influenced": true
+  }
+}

@@ -1,0 +1,201 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:87:40
+    |
+ 87 |             let motor=w.part(&registry,name("motor"),sim_domain_robot::MOTOR_UNIT,a.model.motor.iter().map(|(k,v)|(k.as_str(),*v)))?;
+    |                         ----           ^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                         |
+    |                         arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+ 87 |             let motor=w.part(&registry,&name("motor"),sim_domain_robot::MOTOR_UNIT,a.model.motor.iter().map(|(k,v)|(k.as_str(),*v)))?;
+    |                                        +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:88:41
+    |
+ 88 |             let bridge=w.part(&registry,name("bridge"),sim_domain_robot::H_BRIDGE,a.model.bridge.iter().map(|(k,v)|(k.as_str(),*v)))?;
+    |                          ----           ^^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                          |
+    |                          arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+ 88 |             let bridge=w.part(&registry,&name("bridge"),sim_domain_robot::H_BRIDGE,a.model.bridge.iter().map(|(k,v)|(k.as_str(),*v)))?;
+    |                                         +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:90:66
+    |
+ 90 | ...   if a.branch_resistance_ohm>0.{let r=w.part(&registry,name("wire"),sim_domain_electrical::elements::RESISTOR,[("resistance",a....
+    |                                             ----           ^^^^^^^^^^^^ expected `&str`, found `String`
+    |                                             |
+    |                                             arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+ 90 |             if a.branch_resistance_ohm>0.{let r=w.part(&registry,&name("wire"),sim_domain_electrical::elements::RESISTOR,[("resistance",a.branch_resistance_ohm)])?;w.connect([bus,r.port("p")]);branch=r.port("n");}
+    |                                                                  +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:91:39
+    |
+ 91 |             let amps=w.part(&registry,name("current"),sim_domain_sensing::CURRENT_SENSOR,[])?;
+    |                        ----           ^^^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                        |
+    |                        arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+ 91 |             let amps=w.part(&registry,&name("current"),sim_domain_sensing::CURRENT_SENSOR,[])?;
+    |                                       +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:92:40
+    |
+ 92 |             let volts=w.part(&registry,name("voltage"),sim_domain_sensing::VOLTAGE_SENSOR,[])?;
+    |                         ----           ^^^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                         |
+    |                         arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+ 92 |             let volts=w.part(&registry,&name("voltage"),sim_domain_sensing::VOLTAGE_SENSOR,[])?;
+    |                                        +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:96:42
+    |
+ 96 |             let ambient=w.part(&registry,name("temperature"),sim_domain_thermal::AMBIENT,[("temperature",a.temperature_c+273.15)])?;
+    |                           ----           ^^^^^^^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                           |
+    |                           arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+ 96 |             let ambient=w.part(&registry,&name("temperature"),sim_domain_thermal::AMBIENT,[("temperature",a.temperature_c+273.15)])?;
+    |                                          +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:98:39
+    |
+ 98 | ...   let load=w.part(&registry,name("load"),sim_domain_rotational::elements::INERTIA,[("inertia",a.model.conditions.load_inertia)])?;
+    |                  ----           ^^^^^^^^^^^^ expected `&str`, found `String`
+    |                  |
+    |                  arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+ 98 |             let load=w.part(&registry,&name("load"),sim_domain_rotational::elements::INERTIA,[("inertia",a.model.conditions.load_inertia)])?;
+    |                                       +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:99:41
+    |
+ 99 |             let torque=w.part(&registry,name("torque"),sim_domain_rotational::elements::TORQUE_SOURCE,[])?;
+    |                          ----           ^^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                          |
+    |                          arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+ 99 |             let torque=w.part(&registry,&name("torque"),sim_domain_rotational::elements::TORQUE_SOURCE,[])?;
+    |                                         +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:100:47
+    |
+100 | ...   let load_command=w.part(&registry,name("load_command"),sim_domain_control::elements::CONSTANT,[("value",-a.model.conditions.l...
+    |                          ----           ^^^^^^^^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                          |
+    |                          arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+100 |             let load_command=w.part(&registry,&name("load_command"),sim_domain_control::elements::CONSTANT,[("value",-a.model.conditions.load_torque)])?;
+    |                                               +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:101:40
+    |
+101 |             let angle=w.part(&registry,name("angle"),sim_domain_rotational::elements::ANGLE_SENSOR,[])?;
+    |                         ----           ^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                         |
+    |                         arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+101 |             let angle=w.part(&registry,&name("angle"),sim_domain_rotational::elements::ANGLE_SENSOR,[])?;
+    |                                        +
+
+error[E0308]: mismatched types
+   --> crates/sim-runtime/src/actuator_bench/group.rs:106:45
+    |
+106 | ...   let controller=w.part(&registry,name("controller"),sim_domain_control::pwm_feedback::SCHEDULED_FEEDBACK,p.iter().map(|(k,v)|(...
+    |                        ----           ^^^^^^^^^^^^^^^^^^ expected `&str`, found `String`
+    |                        |
+    |                        arguments to this method are incorrect
+    |
+note: method defined here
+   --> crates/sim-core/src/lib.rs:233:12
+    |
+233 |     pub fn part<'a>(
+    |            ^^^^
+help: consider borrowing here
+    |
+106 |             let controller=w.part(&registry,&name("controller"),sim_domain_control::pwm_feedback::SCHEDULED_FEEDBACK,p.iter().map(|(k,v)|(k.as_str(),*v)))?;
+    |                                             +
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `sim-runtime` (lib) due to 11 previous errors

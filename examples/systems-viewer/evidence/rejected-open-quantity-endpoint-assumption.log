@@ -1,0 +1,207 @@
+    Blocking waiting for file lock on build directory
+   Compiling cfg-if v1.0.4
+   Compiling memchr v2.8.3
+   Compiling arrayvec v0.7.8
+   Compiling serde_json v1.0.151
+   Compiling serde_core v1.0.229
+   Compiling libc v0.2.189
+   Compiling libm v0.2.16
+   Compiling zerocopy v0.8.56
+   Compiling zmij v1.0.23
+   Compiling itoa v1.0.18
+   Compiling constant_time_eq v0.4.2
+   Compiling cpufeatures v0.3.1
+   Compiling bytemuck_derive v1.12.0
+   Compiling thiserror v2.0.20
+   Compiling portable-atomic v1.15.0
+   Compiling bitflags v2.13.1
+   Compiling either v1.18.0
+   Compiling crossbeam-utils v0.8.22
+   Compiling reborrow v0.5.5
+   Compiling byteorder v1.5.0
+   Compiling blake3 v1.8.7
+   Compiling thiserror v1.0.69
+   Compiling foldhash v0.2.0
+   Compiling raw-cpuid v11.6.0
+   Compiling ucd-trie v0.1.7
+   Compiling hashbrown v0.17.1
+   Compiling nano-gemm-core v0.1.0
+   Compiling rawpointer v0.2.1
+   Compiling equator v0.4.2
+   Compiling typenum v1.20.1
+   Compiling matrixmultiply v0.3.11
+   Compiling pest v2.9.0
+   Compiling once_cell v1.21.4
+   Compiling getrandom v0.2.17
+   Compiling crossbeam-epoch v0.9.20
+   Compiling rand_core v0.6.4
+   Compiling sysctl v0.6.0
+   Compiling crossbeam-queue v0.3.13
+   Compiling crossbeam-deque v0.8.7
+   Compiling crossbeam-channel v0.5.16
+   Compiling atomic-wait v1.1.0
+   Compiling num-traits v0.2.19
+   Compiling num_cpus v1.17.0
+   Compiling equator v0.2.2
+   Compiling rayon-core v1.13.0
+   Compiling nano-gemm-f64 v0.1.0
+   Compiling nano-gemm-f32 v0.1.0
+   Compiling generativity v1.2.1
+   Compiling web-time v1.1.0
+   Compiling foldhash v0.1.5
+   Compiling equivalent v1.0.2
+   Compiling indexmap v2.14.1
+   Compiling crossbeam v0.8.4
+   Compiling hashbrown v0.15.5
+   Compiling rayon v1.12.0
+   Compiling pest_meta v2.9.0
+   Compiling num-integer v0.1.47
+   Compiling approx v0.5.1
+   Compiling libloading v0.8.9
+   Compiling num-rational v0.4.2
+   Compiling num-bigint v0.4.8
+   Compiling fixedbitset v0.5.7
+   Compiling serde v1.0.229
+   Compiling pest_generator v2.9.0
+   Compiling petgraph v0.8.3
+   Compiling slotmap v1.1.1
+   Compiling smallvec v1.15.2
+   Compiling getrandom v0.3.4
+   Compiling static_assertions v1.1.0
+   Compiling smartstring v1.0.1
+   Compiling thin-vec v0.2.19
+   Compiling sim-core v0.1.0 (/Users/elliot/physics-simulator/crates/sim-core)
+   Compiling ppv-lite86 v0.2.21
+   Compiling polycool v0.4.0
+   Compiling spindle v0.2.6
+   Compiling rand_chacha v0.3.1
+   Compiling kurbo v0.13.1
+   Compiling euclid v0.22.14
+   Compiling private-gemm-x86 v0.1.20
+   Compiling const-random-macro v0.1.16
+   Compiling rand v0.8.8
+   Compiling linebender_resource_handle v0.1.1
+   Compiling guillotiere v0.7.0
+   Compiling const-random v0.1.18
+   Compiling ahash v0.8.12
+   Compiling fearless_simd v0.4.1
+   Compiling rhai v1.26.0
+   Compiling sim-domain-thermal v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-thermal)
+   Compiling rand_distr v0.4.3
+   Compiling sim-couple v0.1.0 (/Users/elliot/physics-simulator/crates/sim-couple)
+   Compiling sim-domain-rotational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-rotational)
+   Compiling sim-domain-electrical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-electrical)
+   Compiling sim-domain-translational v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-translational)
+   Compiling sim-domain-bridges v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-bridges)
+   Compiling sim-domain-sensing v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-sensing)
+   Compiling sim-domain-control v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-control)
+   Compiling sim-domain-acoustic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-acoustic)
+   Compiling sim-domain-granular v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-granular)
+   Compiling sim-domain-fluid v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-fluid)
+   Compiling sim-domain-hydraulic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-hydraulic)
+   Compiling sim-domain-line v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-line)
+   Compiling sim-domain-chemical v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-chemical)
+   Compiling sim-domain-radiative v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-radiative)
+   Compiling scopeguard v1.2.0
+   Compiling log v0.4.34
+   Compiling lock_api v0.4.14
+   Compiling sim-inspect v0.1.0 (/Users/elliot/physics-simulator/crates/sim-inspect)
+   Compiling parking_lot_core v0.9.12
+   Compiling emath v0.36.2
+   Compiling unicode-general-category v1.1.0
+   Compiling self_cell v1.3.0
+   Compiling parking_lot v0.12.5
+   Compiling ecolor v0.36.2
+   Compiling bytemuck v1.25.2
+   Compiling nohash-hasher v0.2.0
+   Compiling epaint_default_fonts v0.36.2
+   Compiling profiling v1.0.18
+   Compiling unicode-segmentation v1.13.3
+   Compiling uuid v1.26.0
+   Compiling itertools v0.15.0
+   Compiling num-complex v0.4.6
+   Compiling dyn-stack v0.13.2
+   Compiling safe_arch v0.7.4
+   Compiling color v0.3.3
+   Compiling font-types v0.12.4
+   Compiling accesskit v0.24.1
+   Compiling pulp v0.21.5
+   Compiling wide v0.7.33
+   Compiling nano-gemm-c32 v0.1.0
+   Compiling nano-gemm-c64 v0.1.0
+   Compiling pest_derive v2.9.0
+   Compiling py_literal v0.4.0
+   Compiling peniko v0.6.1
+   Compiling read-fonts v0.41.0
+   Compiling vello_common v0.1.0
+   Compiling gemm-common v0.18.2
+   Compiling simba v0.9.1
+   Compiling qd v0.7.7
+   Compiling gemm-c32 v0.18.2
+   Compiling gemm-c64 v0.18.2
+   Compiling gemm-f32 v0.18.2
+   Compiling gemm-f64 v0.18.2
+   Compiling faer-traits v0.22.1
+   Compiling npyz v0.8.4
+   Compiling gemm v0.18.2
+   Compiling vello_cpu v0.1.0
+   Compiling nalgebra v0.34.2
+   Compiling nano-gemm v0.1.3
+   Compiling faer v0.22.6
+   Compiling skrifa v0.44.0
+   Compiling harfrust v0.12.0
+   Compiling sim-script v0.1.0 (/Users/elliot/physics-simulator/crates/sim-script)
+   Compiling sim-domain-multibody v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-multibody)
+   Compiling sim-domain-magnetic v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-magnetic)
+   Compiling epaint v0.36.2
+   Compiling egui v0.36.2
+   Compiling sim-diagram v0.1.0 (/Users/elliot/physics-simulator/crates/sim-diagram)
+   Compiling sim-solve v0.1.0 (/Users/elliot/physics-simulator/crates/sim-solve)
+   Compiling sim-dynamics v0.1.0 (/Users/elliot/physics-simulator/crates/sim-dynamics)
+   Compiling sim-compile v0.1.0 (/Users/elliot/physics-simulator/crates/sim-compile)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2m 29s
+     Running unittests src/lib.rs (target/debug/deps/sim_compile-344e2b0efc15b1b9)
+
+running 5 tests
+test island::local_fd_tests::sparse_flow_lanes_and_owner_rows_share_residual_and_jacobian_mapping ... ok
+test tests::incompatible_connector_is_rejected ... ok
+test tests::physical_connection_forms_an_island ... ok
+test island::local_fd_tests::local_probe_rows_match_global_bookkeeping_with_owned_and_provided_lanes ... ok
+test island::local_fd_tests::signal_balance_derivatives_preserve_rounding_and_feedback ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.49s
+
+     Running tests/island.rs (target/debug/deps/island-02924c7a8d0e5dcc)
+
+running 7 tests
+test frame_connections_reject_missing_or_multiple_owners ... ok
+test qualified_initial_rate_reaches_its_provider_and_drives_motion ... ok
+test conflicting_initial_values_and_fixed_constraints_report_both_sources ... ok
+test ideal_gear_constrains_angles_and_balances_power ... ok
+test frame_quaternions_are_validated_after_combining_owner_and_attachment_values ... ok
+test frame_owner_and_initial_conditions_are_independent_of_connection_order ... ok
+test torsional_oscillator_conserves_energy_and_hits_its_frequency ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/open_quantity.rs (target/debug/deps/open_quantity-64983be4ef30e8ee)
+
+running 2 tests
+test unregistered_external_signal_quantity_fails_compilation ... ok
+test registered_external_quantity_integrates_and_preserves_channel_metadata ... FAILED
+
+failures:
+
+---- registered_external_quantity_integrates_and_preserves_channel_metadata stdout ----
+
+thread 'registered_external_quantity_integrates_and_preserves_channel_metadata' (389069) panicked at crates/sim-compile/tests/open_quantity.rs:64:9:
+assertion failed: (runtime.get(id) - (-1.0f64).exp()).abs() < 1e-6
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    registered_external_quantity_integrates_and_preserves_channel_metadata
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p sim-compile --test open_quantity`

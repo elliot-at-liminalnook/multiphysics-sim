@@ -1,0 +1,35 @@
+    Blocking waiting for file lock on build directory
+   Compiling sim-domain-robot v0.1.0 (/Users/elliot/physics-simulator/crates/sim-domain-robot)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6m 27s
+     Running tests/embedded_motor.rs (target/debug/deps/embedded_motor-026b60e210a42cc7)
+
+running 16 tests
+test newton_failure_audit_is_time_scoped_and_does_not_change_the_failure ... ok
+test registered_event_modes_initialize_and_release_without_velocity_impulses ... ok
+test controller_sample_reuse_requires_cross_step_reuse_and_preserves_legacy_serialization ... ok
+test unknown_control_keeps_ordinary_probes_and_coloring_requires_condensation ... ok
+test accepted_contact_trace_uses_original_endpoint_forces_without_changing_motion ... ok
+test explicit_auxiliary_rates_resolve_small_changes_at_nonzero_angle ... ok
+test registered_servo_preserves_quantization_deadband_delay_and_saturation ... ok
+test cross_step_workspace_rolls_back_and_refreshes_for_timestep_changes ... ok
+test driver_binding_and_boundary_validation_are_explicit ... ok
+test motor_bindings_boundaries_and_combined_failure_fail_closed ... ok
+test fpga_integer_controller_drives_shared_motor_with_exact_subperiod_latency ... ok
+test servo_motor_independence_is_audited_and_coloring_preserves_the_complete_run ... ok
+test scheduled_servo_drives_motor_and_failed_interval_does_not_advance_controller ... ok
+test eventful_motor_locates_engagement_and_matches_piecewise_linear_motion ... ok
+test driver_feedback_matches_independent_loaded_motor_with_series_drop_and_foldback ... ok
+test registered_motor_and_mechanics_match_independent_linear_circuit ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/embedded_power.rs (target/debug/deps/embedded_power-8119139a486343e0)
+
+running 4 tests
+test power_checkpoints_replay_and_failed_intervals_do_not_commit_charge_or_energy ... ok
+test topology_requires_exact_coverage_acyclic_feeds_and_explicit_battery_parameters ... ok
+test simultaneous_motor_load_reduces_other_motor_speed_and_separate_feeds_reduce_sag ... ok
+test shared_supply_matches_kcl_voltage_drops_charge_and_terminal_energy_through_reversal ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+

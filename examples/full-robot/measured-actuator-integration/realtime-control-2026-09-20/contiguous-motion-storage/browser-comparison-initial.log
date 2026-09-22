@@ -1,0 +1,59 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  [
+    'completed_steps',
+    'contact_history',
+    'contacts',
+    'done',
+...
+    'joint_velocities',
+-   'learning',
+    'motor_readings',
+    'motor_states',
+    'original_rows',
+    'policy',
+    'policy_inputs',
+
+    at differences (file:///Users/elliot/physics-simulator/examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/contiguous-motion-storage/compare-browser.mjs:28:12)
+    at file:///Users/elliot/physics-simulator/examples/full-robot/measured-actuator-integration/realtime-control-2026-09-20/contiguous-motion-storage/compare-browser.mjs:40:26
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:643:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'completed_steps', 'contact_history',
+    'contacts',        'done',
+    'driver_readings', 'error',
+    'joint_positions', 'joint_velocities',
+    'motor_readings',  'motor_states',
+    'original_rows',   'policy',
+    'policy_inputs',   'poses',
+    'requested_steps', 'servo_commands',
+    'servo_states',    'servo_targets_rad',
+    'stepping_wall_s', 'time_s'
+  ],
+  expected: [
+    'completed_steps',   'contact_history',
+    'contacts',          'done',
+    'driver_readings',   'error',
+    'joint_positions',   'joint_velocities',
+    'learning',          'motor_readings',
+    'motor_states',      'original_rows',
+    'policy',            'policy_inputs',
+    'poses',             'requested_steps',
+    'servo_commands',    'servo_states',
+    'servo_targets_rad', 'stepping_wall_s',
+    'time_s'
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

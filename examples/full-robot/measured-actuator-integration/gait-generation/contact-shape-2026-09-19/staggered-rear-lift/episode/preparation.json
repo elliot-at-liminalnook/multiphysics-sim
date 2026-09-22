@@ -1,0 +1,20 @@
+{
+  "parent": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/slow-full-stride-10s/spec.json",
+    "sha256": "994df02388f58af259f3e0270ff157de51fbeacfc52ffeaada4ec1cc2075a154"
+  },
+  "compiled": {
+    "path": "examples/full-robot/measured-actuator-integration/gait-generation/contact-shape-2026-09-19/staggered-rear-lift/compiled.json",
+    "sha256": "a908b494dc1d4af6137ee062e13b8a405eff076eb842995aff03e55e028e5c3b"
+  },
+  "script_sha256": "92929d3d202f08af06528732f43d79101852522fe58613a14753c84ab34bd82f",
+  "duration_s": 5,
+  "seed": 2301,
+  "cad_sha256": "f873aa7dc89be5c92291403c12d46d060c03e3ee183a626b32115ba0ae712ac9",
+  "physical_definition_unchanged": true,
+  "initial_pose": "Explicit candidate-specific closed at-rest stance from shared Rust IK; source geometry, mass, mechanics, actuator profiles and world unchanged.",
+  "policy": "Compiled contact timing/path/stance, no old-gait amplitude or velocity lead; same bounded reference and integer motor controller.",
+  "commands": "Constant nominal forward request with fresh packet sequence; zero yaw. Actual travel is measured from full simulation.",
+  "comparison": "Prior historical schedule included yaw; matched straight-line baseline is required before speed promotion.",
+  "required_load_audits_passed": false
+}

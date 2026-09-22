@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "scope": "Two-second numerical check for battery-chain, declared before the refined run; hypothetical physical parameters.",
+  "nominal_step_s": 0.00015625,
+  "refined_step_s": 0.000078125,
+  "horizon_s": 2,
+  "seed": 2301,
+  "invariants": [
+    "Same CAD and physical parameters",
+    "Same initial pose and motor state",
+    "Same command packet timing and values",
+    "Same controller cadence and latency",
+    "Both complete without fall or numerical failure"
+  ],
+  "maximum_absolute_net_distance_difference_m": 0.005,
+  "maximum_endpoint_body_position_difference_m": 0.01,
+  "maximum_endpoint_body_up_z_difference": 0.01,
+  "maximum_endpoint_actuated_joint_difference_rad": 0.017453292519943295,
+  "interpretation": "All bounds must pass for this short endpoint check. These authored numerical tolerances do not establish trajectory-wide convergence, sustained gait stability or agreement with hardware. Failed bounds remain failed; investigate rather than widening them. Repeat numerical qualification on longer finalist trials."
+}

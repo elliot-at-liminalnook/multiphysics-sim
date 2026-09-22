@@ -1,0 +1,20 @@
+{
+  "stage": "sequencer core; not connected to bridge_control or loaded onto hardware",
+  "tests": 15,
+  "synthesis": "Gowin mapping passed; integrated placement/timing unverified",
+  "target_period_ms": [
+    40,
+    150
+  ],
+  "target_period_status": "provisional, not measured physical cadence",
+  "new_hardware_acquisitions": 0,
+  "files": {
+    "Makefile": "51acf891d66f02b7ff44243d887014ae253ea33c5c732e50628da1ebdf6a5dae",
+    "README.md": "0b2646caf7798690a7ed8205018332a2868337fedd8c3517a4031330f409ba61",
+    "experiment-scheduler.md": "5d7f01383376f35ce1e47a3605fb0537077ae163e84b65fb1e3cf338979f0695",
+    "src/experiment_scheduler.v": "84523caffbc11b7b715ac6255c2025c074b874b44e674a0921d0833b40899a31",
+    "tb/experiment_scheduler_tb.v": "280ebd160e3622300c2c40e34f5f0863f8cfeaf080e880d6df3daad7b39d832d",
+    "verification/component-tests.log": "0b3a742b0fea6cd385faf611fb5f932c263e15802df830e94593a6cc1628b365",
+    "verification/gowin-synthesis.log": "48ffb2c579079fff9a8ed0fad970bfb33b794525a13b7e66be9566a52636bd75"
+  }
+}

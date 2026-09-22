@@ -1,0 +1,47 @@
+[
+  {
+    "source": "crates/sim-runtime/src/acquisition/calibration.rs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/calibration.rs",
+    "sha256": "ec318999acab21986678821a5a54780941507fdd155aabb13576a551ee59641d"
+  },
+  {
+    "source": "crates/sim-runtime/src/acquisition/calibration_serial.rs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/calibration_serial.rs",
+    "sha256": "4629b65f3ae50c8623f27916fd74b93d5ba2f663a24ca739aa169ecdd6e74d84"
+  },
+  {
+    "source": "crates/sim-runtime/examples/serve_actuator_calibration.rs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/serve_actuator_calibration.rs",
+    "sha256": "70c8f7054a802776647b5b3eb87f4dae5468129d487ed0e06d0ac11f397e1316"
+  },
+  {
+    "source": "web/viewer/calibration-ui.mjs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/calibration-ui.mjs",
+    "sha256": "7ebae818bbb56c81b24d213ccc392e8c0662477e160e07986c7881d4dbdc5cea"
+  },
+  {
+    "source": "web/tests/calibration-ui.mjs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/calibration-ui.mjs",
+    "sha256": "bfe46c47d0776e91a000e182f7d1f03e0f047bb4ac543ca7e9a24ea72c5a6d80"
+  },
+  {
+    "source": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/src/hx_safety.v",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/hx_safety.v",
+    "sha256": "739d3167a029b645f8613a014239abfdacdc4df516b455d2b128b25b41f829d5"
+  },
+  {
+    "source": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/src/bridge.v",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/bridge.v",
+    "sha256": "e7b7a761c29733d7ae391f5a1217064e36a4689fc977ad5a70101964e79fc491"
+  },
+  {
+    "source": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/tb/hx_calibration_tb.v",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/hx_calibration_tb.v",
+    "sha256": "5088d5def1c36cdb7efc48e85d42c1c8c1053242365bd3eaf53266f7b1d09616"
+  },
+  {
+    "source": "/Users/elliot/Projects/sipeed-tang-primer-25k/servo/impl/bridge_calibration.fs",
+    "copy": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/source/bridge_calibration.fs",
+    "sha256": "11157258909a04048877a5c52ebcf6589d548cd382bd54b7419f0f81922cd13b"
+  }
+]

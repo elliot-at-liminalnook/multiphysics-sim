@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "gates": {
+    "candidate_minimum_speedup": 1.2,
+    "realtime_sim_per_wall": 1,
+    "policy_step_p95_s": 0.02,
+    "motor_angle_rad": 0.0017453292519943296,
+    "link_position_m": 0.001,
+    "current_a": 0.1,
+    "contact_force_n": 1,
+    "require_equal_contact_identities": true
+  },
+  "results": [
+    {
+      "candidate": "warm-probes/shared-body",
+      "reference": "reference-12800hz/reference",
+      "max_error": {
+        "motor_angle_rad": 0.003297062855736055,
+        "link_position_m": 0.0015507900421390666,
+        "current_a": 0.12285538818841518,
+        "contact_force_n": 27.181189423946282
+      },
+      "contactIdentities": false,
+      "cadence": true,
+      "passes_existing_physical_gates": false,
+      "candidate_wall_s": 29.170505958,
+      "reference_wall_s": 50.969339972
+    },
+    {
+      "candidate": "coupled-sdirk2/step-1/reference",
+      "reference": "reference-12800hz/reference",
+      "max_error": {
+        "motor_angle_rad": 0.012047279476957051,
+        "link_position_m": 0.003626160398812057,
+        "current_a": 0.2972761007079889,
+        "contact_force_n": 16.734886617217118
+      },
+      "contactIdentities": false,
+      "cadence": true,
+      "passes_existing_physical_gates": false,
+      "candidate_wall_s": 97.94362875,
+      "reference_wall_s": 50.969339972
+    },
+    {
+      "candidate": "coupled-sdirk2/step-4/candidate",
+      "reference": "coupled-sdirk2/step-1/reference",
+      "max_error": {
+        "motor_angle_rad": 0.010974638450363172,
+        "link_position_m": 0.003422698723354894,
+        "current_a": 0.17671381961011245,
+        "contact_force_n": 17.005127256881234
+      },
+      "contactIdentities": false,
+      "cadence": true,
+      "passes_existing_physical_gates": false,
+      "candidate_wall_s": 28.952486837,
+      "reference_wall_s": 97.94362875
+    },
+    {
+      "candidate": "coupled-sdirk2/step-8/candidate",
+      "reference": "coupled-sdirk2/step-1/reference",
+      "max_error": {
+        "motor_angle_rad": 0.012010221342960481,
+        "link_position_m": 0.006094109831444356,
+        "current_a": 0.23444781376436868,
+        "contact_force_n": 16.206357178822074
+      },
+      "contactIdentities": false,
+      "cadence": true,
+      "passes_existing_physical_gates": false,
+      "candidate_wall_s": 17.983090147,
+      "reference_wall_s": 97.94362875
+    }
+  ],
+  "scope": "Three-second fixed-input timestep sensitivity, same model, seed, motor/controller clocks and tolerances. Neither the halved BE step nor the fine SDIRK result is assumed to be exact. These comparisons do not establish convergence or hardware accuracy. Performance gates are separate."
+}

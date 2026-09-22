@@ -1,0 +1,18 @@
+{
+  "time": "2026-09-22T00:47:53.313202+00:00",
+  "fpga_profile": 4,
+  "hardware_nonzero_tested": false,
+  "files_sha256": {
+    "crates/sim-runtime/src/acquisition/calibration.rs": "2cfab8878dd489b187362b13ba68efeddac399ba16b1da060d5323de13fed7b0",
+    "crates/sim-runtime/src/acquisition/calibration_sweep.rs": "71740cd68d805f9706fb5b772ae5c9cf88f8b9da715e73ff534f170047bf56fe",
+    "crates/sim-runtime/src/acquisition/calibration_serial.rs": "6b3cd2e021415cceb19615282a300d93ce6345edff280baea08a5494149ce2fc",
+    "crates/sim-runtime/examples/serve_actuator_calibration.rs": "154c587e1979100d1dd9fb69e585d989d5831a96f09383320bc59218c46cfca3",
+    "crates/sim-domain-control/src/pwm_feedback.rs": "a4030a3df4c37eff9331ff1f373a61df5e37ce0dc070c7e2d1ca01b216061153",
+    "crates/sim-domain-control/src/reference_governor.rs": "1ba04918912e811ffcefa41603d3aba7fbec1a8460cf7ad8264e363cea237862",
+    "web/viewer/calibration-ui.mjs": "b7b56790844ae48a9e75fefdcdb0409855bc29b3a5eab1f9abc09bea5c26dea2",
+    "web/viewer/actuator-motion-view.mjs": "7fd4e8f604b94b9751be9dc4c7a2abe5f4b876d459dfe7bedf6b62e6d6dc4f26",
+    "web/tests/calibration-ui.mjs": "7101472910de43b2f1eda2a69592c310c7d8e8dd9df40933bf6b6406fa082c6f",
+    "web/tests/calibration-sweep-ui.mjs": "e5a414db63c38b21243ff2f56915880b86b6c03fffb7da3fa3442887c4abc989",
+    "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json": "cada03e479910662e444ca942e3250ae84d50aa0bd8a0cb56f316c57c61b2106"
+  }
+}

@@ -1,0 +1,226 @@
+// FPGA safety policy for an explicitly armed HX bench chain.
+// Times are FPGA clocks. Voltage is 0.1 V/count. Current is the uncalibrated
+// servo current register, NOT an external supply-current measurement.
+module hx_safety #(
+    parameter FIRST_ID=4, COUNT=9,
+    parameter TEMP_MAX=60, VOLT_MIN=90, VOLT_MAX=126, CURRENT_MAX=2000,
+    parameter FEEDBACK_TIMEOUT=10000000, // 200 ms at 50 MHz
+    parameter COMMAND_TIMEOUT=15000000,  // 300 ms at 50 MHz
+    parameter RX_TIMEOUT=50000,
+    parameter STOP_REPEAT=2500000
+)(
+    input wire clk, rst,
+    input wire check_host,
+    input wire [511:0] host_packet,
+    input wire [6:0] host_length,
+    input wire [7:0] host_checksum,
+    input wire emergency_stop,
+    input wire bridge_fault,
+    output reg allow_forward,
+    output wire local_command,
+    output wire [103:0] local_status,
+    output reg [COUNT*16-1:0] positions=0,
+    output reg [COUNT*8-1:0] sample_sequences=0,
+    input wire servo_valid,
+    input wire [7:0] servo_data,
+    output reg latched=1,
+    output reg [7:0] reason=1,
+    output reg [7:0] fault_id=254,
+    output wire stop_request,
+    input wire stop_accepted
+);
+    reg [COUNT-1:0] armed=0, seen=0, healthy=0, expected=0, expected_off=0;
+    reg [$clog2(FEEDBACK_TIMEOUT+1)-1:0] feedback_age[0:COUNT-1];
+    reg [$clog2(COMMAND_TIMEOUT+1)-1:0] command_age[0:COUNT-1];
+    reg [7:0] sample_reason[0:COUNT-1];
+    reg [$clog2(STOP_REPEAT+1)-1:0] stop_age=0;
+    wire [7:0] hid=host_packet[23:16];
+    wire [7:0] inst=host_packet[39:32];
+    wire [7:0] addr=host_packet[47:40];
+    function known;
+        input [7:0] id;
+        begin known=(id>=FIRST_ID && id<FIRST_ID+COUNT); end
+    endfunction
+    wire frame_ok=host_length>=6 && host_length<=64 && host_packet[8*(0) +: 8]==255 && host_packet[8*(1) +: 8]==255
+        && host_packet[8*(3) +: 8]+8'd4==host_length && host_checksum==255;
+    assign local_command=frame_ok && hid==254 && inst==8'ha0;
+
+    function write_ok;
+        input blocked;
+        input [COUNT-1:0] arm_mask;
+        input [7:0] id,address;
+        input integer width;
+        input zero,one;
+        begin
+            write_ok=0;
+            if(known(id) || id==254) begin
+                if(address==8'h28 && width==1 && zero) write_ok=1;
+                else if(address==8'h2c && (width==2 || width==4) && zero) write_ok=1;
+                else if(address==8'h37 && width==1 && one) write_ok=1;
+                else if(known(id) && !blocked && arm_mask[id-FIRST_ID]) write_ok=1;
+            end
+        end
+    endfunction
+    wire ordinary_zero=(host_length==8 && host_packet[55:48]==0)
+        || (host_length==9 && host_packet[63:48]==0)
+        || (host_length==11 && host_packet[79:48]==0);
+    integer q;
+    always @* begin
+        allow_forward=0;
+        if(frame_ok && !local_command) begin
+            if(inst==1 && host_length==6) allow_forward=1;
+            else if(inst==2 && host_length==8) allow_forward=1;
+            else if(inst==3 && host_length>=8)
+                allow_forward=write_ok(latched,armed,hid,addr,host_length-7,ordinary_zero,host_packet[55:48]==1);
+            else if(inst==8'h83 && hid==254 && host_packet[55:48]==2
+                && (addr==8'h2a || addr==8'h2c) && host_length>=11
+                && (host_length-8)%3==0) begin
+                allow_forward=1;
+                for(q=7;q<61;q=q+3)
+                    if(q<host_length-1 && !write_ok(latched,armed,host_packet[8*q +: 8],addr,2,
+                        host_packet[8*(q+1) +: 16]==0,1'b0)) allow_forward=0;
+            end
+            else if(inst==8'h83 && hid==254 && host_packet[55:48]==1 && addr==8'h28
+                && host_length>=10 && (host_length-8)%2==0) begin
+                allow_forward=1;
+                for(q=7;q<63;q=q+2)
+                    if(q<host_length-1 && !write_ok(latched,armed,host_packet[8*q +: 8],addr,1,
+                        host_packet[8*(q+1) +: 8]==0,1'b0)) allow_forward=0;
+            end
+        end
+    end
+
+    // A telemetry sample is accepted only after a forwarded 0x38/15 read
+    // for that ID, with complete framing and checksum. ACK/config packets do
+    // not refresh feedback age. Bad, foreign, or missing replies age out.
+    reg [1:0] rx_state=0;
+    reg [6:0] rx_count=0, rx_total=0;
+    reg [7:0] rx_sum=0;
+    reg [7:0] rb[0:20];
+    reg [$clog2(RX_TIMEOUT+1)-1:0] rx_age=0;
+    reg sample_valid=0, packet_valid=0, off_valid=0;
+    reg [7:0] sample_id=0, decoded_reason=0;
+    integer i;
+    always @(posedge clk) begin
+        sample_valid<=0; packet_valid<=0; off_valid<=0;
+        if(rst) begin rx_state<=0; rx_age<=0; end
+        else begin
+            if(servo_valid) rx_age<=0;
+            else if(rx_age<RX_TIMEOUT) rx_age<=rx_age+1;
+            if(rx_age>=RX_TIMEOUT) rx_state<=0;
+            if(servo_valid) case(rx_state)
+                0: if(servo_data==255) rx_state<=1;
+                1: if(servo_data==255) begin rx_state<=2; rx_count<=2; rx_sum<=0; end
+                   else rx_state<=0;
+                2: begin
+                    if(rx_count<21) rb[rx_count]<=servo_data;
+                    rx_sum<=rx_sum+servo_data;
+                    if(rx_count==3) begin
+                        if(servo_data<2 || servo_data>60) rx_state<=0;
+                        else begin rx_total<=servo_data+4; rx_count<=4; end
+                    end else if(rx_count>3 && rx_count+1==rx_total) begin
+                        rx_state<=0;
+                        if(rx_sum+servo_data==8'hff && known(rb[2])) begin
+                            packet_valid<=1; sample_id<=rb[2];
+                            if(rx_total==7 && rb[4]==0 && rb[5]==0) off_valid<=1;
+                        end
+                        if(rx_total==21 && rx_sum+servo_data==8'hff && known(rb[2])) begin
+                            sample_valid<=1;
+                            if(rb[12]>=TEMP_MAX) decoded_reason<=2;
+                            else if(rb[11]<VOLT_MIN) decoded_reason<=3;
+                            else if(rb[11]>VOLT_MAX) decoded_reason<=4;
+                            else if({rb[19],rb[18]}>=CURRENT_MAX) decoded_reason<=5;
+                            else if(rb[4]!=0 || rb[14]!=0) decoded_reason<=6;
+                            else decoded_reason<=0;
+                        end
+                    end else rx_count<=rx_count+1;
+                end
+                default: rx_state<=0;
+            endcase
+        end
+    end
+
+    reg [7:0] trip_reason, trip_id;
+    reg [COUNT-1:0] fresh;
+    integer n;
+    always @* begin
+        trip_reason=0; trip_id=254; fresh=0;
+        for(n=0;n<COUNT;n=n+1) begin
+            fresh[n]=seen[n] && healthy[n] && feedback_age[n]<FEEDBACK_TIMEOUT;
+            if(armed[n] && trip_reason==0) begin
+                if(!healthy[n]) begin trip_reason=sample_reason[n]; trip_id=FIRST_ID+n; end
+                else if(feedback_age[n]>=FEEDBACK_TIMEOUT) begin trip_reason=7; trip_id=FIRST_ID+n; end
+                else if(command_age[n]>=COMMAND_TIMEOUT) begin trip_reason=8; trip_id=FIRST_ID+n; end
+            end
+        end
+    end
+    wire [15:0] armed16=armed;
+    wire [15:0] fresh16=fresh;
+    // Little-endian byte fields: version, latch, reason, ID, armed mask,
+    // fresh mask, temperature/voltage/current thresholds.
+    assign local_status={CURRENT_MAX[15:8],CURRENT_MAX[7:0],VOLT_MAX[7:0],VOLT_MIN[7:0],
+        TEMP_MAX[7:0],fresh16[15:8],fresh16[7:0],armed16[15:8],armed16[7:0],fault_id,reason,{7'b0,latched},8'd1};
+    assign stop_request=latched && stop_age==0;
+    always @(posedge clk) begin
+        if(rst) begin
+            latched<=1; reason<=1; fault_id<=254;
+            armed<=0; seen<=0; healthy<=0; expected<=0; expected_off<=0; stop_age<=0;
+            for(i=0;i<COUNT;i=i+1) begin
+                feedback_age[i]<=FEEDBACK_TIMEOUT; command_age[i]<=COMMAND_TIMEOUT; sample_reason[i]<=7;
+            end
+        end else begin
+            if(stop_age!=0) stop_age<=stop_age-1;
+            if(stop_accepted) stop_age<=STOP_REPEAT;
+            for(i=0;i<COUNT;i=i+1) begin
+                if(feedback_age[i]<FEEDBACK_TIMEOUT) feedback_age[i]<=feedback_age[i]+1;
+                if(command_age[i]<COMMAND_TIMEOUT) command_age[i]<=command_age[i]+1;
+            end
+            // Correlate only with the most recently forwarded request for an
+            // ID. A later config read cannot satisfy an older torque read.
+            if(check_host && allow_forward) begin
+                if(known(hid)) begin
+                    expected[hid-FIRST_ID]<=(inst==2 && addr==8'h38 && host_packet[55:48]==15);
+                    expected_off[hid-FIRST_ID]<=(inst==2 && addr==8'h28 && host_packet[55:48]==1);
+                end else if(hid==254) begin expected<=0; expected_off<=0; end
+            end
+            if(packet_valid) begin
+                expected[sample_id-FIRST_ID]<=0;
+                expected_off[sample_id-FIRST_ID]<=0;
+            end
+            if(sample_valid && expected[sample_id-FIRST_ID]) begin
+                positions[16*(sample_id-FIRST_ID) +: 16]<={rb[6],rb[5]};
+                sample_sequences[8*(sample_id-FIRST_ID) +: 8]<=sample_sequences[8*(sample_id-FIRST_ID) +: 8]+1;
+                seen[sample_id-FIRST_ID]<=1;
+                healthy[sample_id-FIRST_ID]<=(decoded_reason==0);
+                sample_reason[sample_id-FIRST_ID]<=decoded_reason;
+                feedback_age[sample_id-FIRST_ID]<=0;
+            end
+            // Merely transmitting torque-off does NOT remove the watchdog.
+            // Keep it armed until a solicited, checksum-valid 0x28 read reports
+            // torque disabled. Missing/corrupt replies therefore still trip.
+            if(off_valid && expected_off[sample_id-FIRST_ID]) armed[sample_id-FIRST_ID]<=0;
+            if(emergency_stop || bridge_fault) begin
+                latched<=1; reason<=emergency_stop ? 9 : 11; fault_id<=254; armed<=0;
+                if(!latched) stop_age<=0;
+            end else if(trip_reason!=0 && !latched) begin
+                latched<=1; reason<=trip_reason; fault_id<=trip_id; armed<=0; stop_age<=0;
+            end else if(check_host && local_command) begin
+                if(addr==0 && host_length==7) begin
+                    latched<=1; reason<=10; fault_id<=254; armed<=0; stop_age<=0;
+                end else if(addr==1 && host_length==8 && known(host_packet[8*(6) +: 8])) begin
+                    if(fresh[host_packet[8*(6) +: 8]-FIRST_ID]) begin
+                        latched<=0; reason<=0; fault_id<=254;
+                        armed[host_packet[8*(6) +: 8]-FIRST_ID]<=1; command_age[host_packet[8*(6) +: 8]-FIRST_ID]<=0;
+                    end
+                end else if(addr==3 && host_length==8 && known(host_packet[8*(6) +: 8]) && !latched) begin
+                    if(armed[host_packet[8*(6) +: 8]-FIRST_ID]) command_age[host_packet[8*(6) +: 8]-FIRST_ID]<=0;
+                end else if(addr==4 && host_length==8 && known(host_packet[8*(6) +: 8])) begin
+                    armed[host_packet[8*(6) +: 8]-FIRST_ID]<=0;
+                    // Explicit disarm also requests a global stop, keeping a
+                    // lost host from leaving a remembered nonzero drive.
+                    latched<=1; reason<=10; fault_id<=host_packet[8*(6) +: 8]; armed<=0; stop_age<=0;
+                end
+            end
+        end
+    end
+endmodule

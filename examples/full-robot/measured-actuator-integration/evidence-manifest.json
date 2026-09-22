@@ -1,0 +1,584 @@
+{
+  "version": 1,
+  "purpose": "Frozen baseline and calibration evidence; roles remain as recorded. Diagnostic timing captures are not fitting/clean hold-out evidence. Failed fits and captures are preserved. No motor-to-joint assignments inferred.",
+  "files": {
+    "examples/full-robot/baseline/robot.rcad": {
+      "sha256": "2fc4523f1fefa5ff3530f1d6814ec4f1a9e5c345b4ce8a924686cd654e3c0589",
+      "bytes": 83806475
+    },
+    "examples/full-robot/trusted-baseline/fastest573.input.json": {
+      "sha256": "05dfa9c7cad2fa355fc43f78b39eb7380aeee1288dfb1faaa4a3dfa7f9fc14c6",
+      "bytes": 14857457
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-group-450-01/fpga-recording.json": {
+      "sha256": "647619caede064b89170a63410d7b9ac08aebb44ad624f70588766da3e6a9d62",
+      "bytes": 282924
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-small-group-350-01/fpga-recording.json": {
+      "sha256": "9f3ff38f1f17659ebe7ee4582ab2378f4291a4241310b5574b317f3f95a28b7a",
+      "bytes": 572054
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-small-group-350-02/fpga-recording.json": {
+      "sha256": "10abfaa7dcdb847a0c9f4b286d3d13b107eccf96de2321c6f858bee7bdfa9454",
+      "bytes": 571726
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-small-group-350-03/fpga-recording.json": {
+      "sha256": "dc4e5eb3c58f5fc215e8b5d9b9cb9bce7ea356ebd48fcafae6e57f9d888a83f0",
+      "bytes": 571479
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-small-group-450-01/fpga-recording.json": {
+      "sha256": "173e8d5820359fc8323867dad6a93de2d02c28ca69f8287233e3a31e2b7bfb89",
+      "bytes": 214563
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/stage-250-01/fpga-recording.json": {
+      "sha256": "dd27ec0443d7fa6df621f6c73b9c3389f4b87f2da1a857e45195cd572ccaf4f3",
+      "bytes": 15810
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/stage-500-01/fpga-recording.json": {
+      "sha256": "5b32889b9b804fab489b65c129e38148d228f36e19d6356ed150280bab3ff8f1",
+      "bytes": 15720
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/stage-750-01/fpga-recording.json": {
+      "sha256": "d510136ac37f36eb42a340f17b934d09eab66e4dce7c8a9624cdbe248c5f14be",
+      "bytes": 15748
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-group-450-01/fpga-recording.json": {
+      "sha256": "91476f5de3984690aa0a8ed88a713effabba61ad3701841ba582a15676e8feed",
+      "bytes": 117865
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-id10-450-01/fpga-recording.json": {
+      "sha256": "d3af836550bec9e6ab5947bf353fb12d9fd643e83e99bfd00f0d253568224d94",
+      "bytes": 115629
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-id11-450-01/fpga-recording.json": {
+      "sha256": "cf74a5b8a2f05014e83d8072dcce4ca72eddd1a3e783d30e538a336438c085f5",
+      "bytes": 115456
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-id12-450-01/fpga-recording.json": {
+      "sha256": "576a3c136fcfb7a0ae4ca3a94d480e65ec0436346b891f9276dfabf07c724079",
+      "bytes": 115580
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-small-group-350-01/fpga-recording.json": {
+      "sha256": "5c9d21734f0b4d9d296f23b6128da332da0940e7c8df1e7415c5db54a7504751",
+      "bytes": 117870
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-small-group-450-01/fpga-recording.json": {
+      "sha256": "342ee3a401fc74abe83a99e2e0cd39e9bad9da4008a19f6511b7bebd6ec09928",
+      "bytes": 117695
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-slow-group-450-01/fpga-recording.json": {
+      "sha256": "c2b485e7b681ba6260c4539c12568b46bf7dc56c8c14786d389ed48960f2e106",
+      "bytes": 117780
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-sync-500-01/fpga-recording.json": {
+      "sha256": "69086c28903783f414b01fe24d6a3018427f9688e070981e2df61172de6ead96",
+      "bytes": 61108
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/validation-hold-small-group-350-01/fpga-recording.json": {
+      "sha256": "5f778d16ec022a5fe9ee466508bee4cb6f5457786dce9b8c6da54a2cf89e6a24",
+      "bytes": 117732
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/zero-01/fpga-recording.json": {
+      "sha256": "3f37770db63d90374cb00955a16614c1cc47d8d09a24d14d20861bf90a5c699a",
+      "bytes": 30600
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/README.md": {
+      "sha256": "757a86944daed4a132e1e7abacddeb8bd7c040a2bef25f3ebf62f010c733c08d",
+      "bytes": 9189
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/baseline-family.json": {
+      "sha256": "32ad00fa99dff28f844727695133e2f40740074984c2fd7f3bce536013353d10",
+      "bytes": 914
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/candidate-family.json": {
+      "sha256": "3a961e10363f0e545910cb36b3ce076e63a033c4e5a9cee30692b7bdf036128f",
+      "bytes": 1408
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/model-validation-summary.json": {
+      "sha256": "b961daaa5ccbc1e62068abcd92c8ef333f5fdd2407a5ef6bd2b34cf255cb6643",
+      "bytes": 1744
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-10ms-cap100-01/fpga-recording.json": {
+      "sha256": "d2355670fd07c7cad93e9fff7f83ccb786639c69bddf1ea8bdc19964c29ed782",
+      "bytes": 457304
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-10ms-cap100-02/fpga-recording.json": {
+      "sha256": "0614e9b57cb995d05f9b85947c92121e6c064f5b8d22759ed16dac7eba894242",
+      "bytes": 457355
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-10ms-cap100-03/fpga-recording.json": {
+      "sha256": "f53de1dd0b518722bfe4c2a9715631d3eb5e371703e075dd6a92305176b2d090",
+      "bytes": 457400
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-10ms-cap50-01/fpga-recording.json": {
+      "sha256": "0edef963e4d976cb070fa0c0316f3f9ed437e823a7e122744e00b8e7c483f1e5",
+      "bytes": 454502
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-40ms-cap100-01/fpga-recording.json": {
+      "sha256": "c1ffeebacf8671119e8746ff0455cc0a5d6674f79bb21be83dfb9b3992740070",
+      "bytes": 117874
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-40ms-cap100-02/fpga-recording.json": {
+      "sha256": "03836535b9a42923972d48383c7470a209458b8679a55aa4321d075604c0d3da",
+      "bytes": 117901
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/zero-10ms-01/fpga-recording.json": {
+      "sha256": "c23c9ce8b4506cfe448adb74098d09704da503750a47a8f1a7e0bc5676032ec8",
+      "bytes": 439411
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/README.md": {
+      "sha256": "646115f7e5ae33e40a3f45849f1914cb8065061fbd1dc60659cd82026c6277fa",
+      "bytes": 6418
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap200-01/fpga-recording.json": {
+      "sha256": "761e299098293546d32ff4bf0b1b8f3a3ee5a0cc77e57747df2c2a281f9f3390",
+      "bytes": 458402
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap250-01/fpga-recording.json": {
+      "sha256": "474e49f1ab08254d01264caa5dbcbf4c47857b1b1fab5d19b1160e843a517582",
+      "bytes": 459420
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap350-01/fpga-recording.json": {
+      "sha256": "be135db75299d641e726d15e8d37c6a65c77eaf80b3599d4a9831229f3802ffe",
+      "bytes": 456310
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap350-02/fpga-recording.json": {
+      "sha256": "7e296ea7915092a54e377d4607ba1eddf47733c6e37a30a699c062c07189d7d4",
+      "bytes": 456197
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap350-03/fpga-recording.json": {
+      "sha256": "4554e6b5bb9eafd18ffd7a5c7017c4e462ac11f7ed78fb277d4ed4ec13e6a74a",
+      "bytes": 456283
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap450-01/fpga-recording.json": {
+      "sha256": "50c360f8ed03e94099b306487f0092da24551bbd3e4ab9b5b51f2825b50f38a1",
+      "bytes": 458227
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap450-02/fpga-recording.json": {
+      "sha256": "f54917a9fea4b01a0c9165a0c16bc5f2dde7d79832ff11c9b8422ef54a46accd",
+      "bytes": 457625
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap450-03/fpga-recording.json": {
+      "sha256": "168391abd72f511f0870277f3585506699d40a4095759fec8cf17728ff806713",
+      "bytes": 457977
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap550-01/fpga-recording.json": {
+      "sha256": "23b996d03ab67b760e7b421ebca866e25d03e715d5e692eec3ed62b7d45397a2",
+      "bytes": 458355
+    },
+    "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/README.md": {
+      "sha256": "4d32545b7aeb63ca267afeb60fe00056bae702ecd7f56305a946cdd13a88589c",
+      "bytes": 4908
+    }
+  },
+  "captures": [
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-group-450-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": false,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-small-group-350-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-small-group-350-02/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-small-group-350-03/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/extended-fast-small-group-450-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": false,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/stage-250-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/stage-500-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/stage-750-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-group-450-01/fpga-recording.json",
+      "role": "training",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-id10-450-01/fpga-recording.json",
+      "role": "training",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-id11-450-01/fpga-recording.json",
+      "role": "training",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-id12-450-01/fpga-recording.json",
+      "role": "training",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-small-group-350-01/fpga-recording.json",
+      "role": "training",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-fast-small-group-450-01/fpga-recording.json",
+      "role": "training",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-slow-group-450-01/fpga-recording.json",
+      "role": "training",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/training-sync-500-01/fpga-recording.json",
+      "role": "training",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/validation-hold-small-group-350-01/fpga-recording.json",
+      "role": "validation",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-14-three-motor-characterization/zero-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-10ms-cap100-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-10ms-cap100-02/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-10ms-cap100-03/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-10ms-cap50-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-40ms-cap100-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/motion-40ms-cap100-02/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.04
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-fast-loop/zero-10ms-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap200-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap250-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap350-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap350-02/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap350-03/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap450-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap450-02/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap450-03/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    },
+    {
+      "path": "examples/actuators/hx30hm/hardware/2026-09-15-high-speed-stress/cap550-01/fpga-recording.json",
+      "role": "timing",
+      "ids": [
+        10,
+        11,
+        12
+      ],
+      "completed": true,
+      "stop_verified": true,
+      "period_s": 0.01
+    }
+  ]
+}

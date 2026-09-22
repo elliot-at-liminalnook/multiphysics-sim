@@ -1,0 +1,166 @@
+{
+  "physical_s2_passed": true,
+  "s2_rearm_zero_capture_passed": true,
+  "stages": {
+    "stage-250-01": {
+      "completed": true,
+      "stop_verified": true,
+      "motors": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "frames": 5,
+      "pwm_readback_each_frame": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          250,
+          250,
+          250,
+          250,
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        [
+          -250,
+          -250,
+          -250,
+          -250,
+          -250,
+          -250,
+          -250,
+          -250,
+          -250
+        ],
+        [
+          -250,
+          -250,
+          -250,
+          -250,
+          -250,
+          -250,
+          -250,
+          -250,
+          -250
+        ],
+        [
+          250,
+          250,
+          250,
+          250,
+          250,
+          250,
+          250,
+          250,
+          250
+        ]
+      ],
+      "minimum_voltage_v": 10.9,
+      "maximum_temperature_c": 47,
+      "maximum_current_raw_uncalibrated": 142
+    },
+    "stage-500-01": {
+      "completed": true,
+      "stop_verified": true,
+      "motors": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "frames": 5,
+      "pwm_readback_each_frame": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          500,
+          500,
+          500,
+          500,
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        [
+          -500,
+          -500,
+          -500,
+          -500,
+          -500,
+          -500,
+          -500,
+          -500,
+          -500
+        ],
+        [
+          -500,
+          -500,
+          -500,
+          -500,
+          -500,
+          -500,
+          -500,
+          -500,
+          -500
+        ],
+        [
+          500,
+          500,
+          500,
+          500,
+          500,
+          500,
+          500,
+          500,
+          500
+        ]
+      ],
+      "minimum_voltage_v": 9.1,
+      "maximum_temperature_c": 47,
+      "maximum_current_raw_uncalibrated": 313
+    }
+  },
+  "source_rating_user_report": {
+    "voltage_v": 12.6,
+    "current_limit_a": 3.0
+  },
+  "higher_drive_stages": "Held pending power supply/distribution review",
+  "cause": "Motor telemetry shows voltage sag; actual supply current, CV/CC state and wiring drop have not been measured. Supply current limiting is not established.",
+  "historical_context": "2026-09-11 bench notes identify WANPTEK DPS3010U and one daisy chain, with user-observed CV even during sag. Current hardware identity and distribution require confirmation.",
+  "no_new_model_fit": true
+}

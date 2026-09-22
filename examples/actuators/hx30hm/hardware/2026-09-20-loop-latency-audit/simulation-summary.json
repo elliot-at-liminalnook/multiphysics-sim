@@ -1,0 +1,882 @@
+[
+  {
+    "name": "host-1mbaud",
+    "host_baud": 1000000,
+    "servo_baud": 1000000,
+    "mock_turnaround_us": 30,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 3.83246,
+        "gaps_ms": 2.00582,
+        "oldest_feedback_to_command_ms": 1.80034,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 1.78894,
+          "host": 0.09142,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 1,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 2,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 3,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 4,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 5,
+        "window_ms": 3.12074,
+        "gaps_ms": 1.2941,
+        "oldest_feedback_to_command_ms": 1.08862,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 1.14966,
+          "host": 0.01898,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 6,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 7,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 8,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 9,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 10,
+        "window_ms": 3.12074,
+        "gaps_ms": 1.2941,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 0.81156,
+          "host": 0.35708,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 11,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 12,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 13,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 14,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 15,
+        "window_ms": 3.12074,
+        "gaps_ms": 1.2941,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 0.81156,
+          "host": 0.35708,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 16,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 17,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 18,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 19,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 20,
+        "window_ms": 3.12074,
+        "gaps_ms": 1.2941,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 0.86632,
+          "host": 0.30232,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 21,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 22,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 23,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 24,
+        "window_ms": 2.92998,
+        "gaps_ms": 1.10334,
+        "oldest_feedback_to_command_ms": 0.89786,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0.9783,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      }
+    ],
+    "summary": {
+      "window_ms": {
+        "min": 2.92998,
+        "median": 2.92998,
+        "p95": 3.12074,
+        "max": 3.83246
+      },
+      "gaps_ms": {
+        "min": 1.10334,
+        "median": 1.10334,
+        "p95": 1.2941,
+        "max": 2.00582
+      },
+      "oldest_feedback_to_command_ms": {
+        "min": 0.89786,
+        "median": 0.89786,
+        "p95": 1.08862,
+        "max": 1.80034
+      }
+    },
+    "exclusive_gap_mean_ms": {
+      "guard": 0.11886799999999999,
+      "log_copy": 0.00594,
+      "local": 0.000076,
+      "encode": 0.00012,
+      "fifo": 0.9997615999999999,
+      "host": 0.0450752,
+      "other": 0,
+      "boundary": 0.00012
+    },
+    "acceptance": "25 complete frames; complete event count; positive/negative full-scale arithmetic; modeled final zero/off; UART checksums and contention guards pass",
+    "build_directory": "/var/folders/l3/vrp7c54x2k51b5nqcqfhfhjw0000gn/T/hx-latency-host50-JDLWyx"
+  },
+  {
+    "name": "host-2mbaud",
+    "host_baud": 2000000,
+    "servo_baud": 1000000,
+    "mock_turnaround_us": 30,
+    "frames": [
+      {
+        "frame": 0,
+        "window_ms": 2.03746,
+        "gaps_ms": 0.21082,
+        "oldest_feedback_to_command_ms": 0.87934,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 0.08534,
+          "host": 0.00002,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 1,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 2,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 3,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 4,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 5,
+        "window_ms": 1.95212,
+        "gaps_ms": 0.12548,
+        "oldest_feedback_to_command_ms": 0.87934,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0.00002,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 6,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 7,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 8,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 9,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 10,
+        "window_ms": 1.95212,
+        "gaps_ms": 0.12548,
+        "oldest_feedback_to_command_ms": 0.87934,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0.00002,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 11,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 12,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 13,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 14,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 15,
+        "window_ms": 1.95212,
+        "gaps_ms": 0.12548,
+        "oldest_feedback_to_command_ms": 0.87934,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0.00002,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 16,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 17,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 18,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 19,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 20,
+        "window_ms": 1.95212,
+        "gaps_ms": 0.12548,
+        "oldest_feedback_to_command_ms": 0.87934,
+        "classification_ms": {
+          "guard": 0.1189,
+          "log_copy": 0.00594,
+          "local": 0.00038,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0.00002,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 21,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 22,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 23,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      },
+      {
+        "frame": 24,
+        "window_ms": 1.95168,
+        "gaps_ms": 0.12504,
+        "oldest_feedback_to_command_ms": 0.8789,
+        "classification_ms": {
+          "guard": 0.11886,
+          "log_copy": 0.00594,
+          "local": 0,
+          "encode": 0.00012,
+          "fifo": 0,
+          "host": 0,
+          "other": 0,
+          "boundary": 0.00012
+        }
+      }
+    ],
+    "summary": {
+      "window_ms": {
+        "min": 1.95168,
+        "median": 1.95168,
+        "p95": 1.95212,
+        "max": 2.03746
+      },
+      "gaps_ms": {
+        "min": 0.12504,
+        "median": 0.12504,
+        "p95": 0.12548,
+        "max": 0.21082
+      },
+      "oldest_feedback_to_command_ms": {
+        "min": 0.8789,
+        "median": 0.8789,
+        "p95": 0.87934,
+        "max": 0.87934
+      }
+    },
+    "exclusive_gap_mean_ms": {
+      "guard": 0.11886799999999999,
+      "log_copy": 0.00594,
+      "local": 0.000076,
+      "encode": 0.00012,
+      "fifo": 0.0034136,
+      "host": 0.000004,
+      "other": 0,
+      "boundary": 0.00012
+    },
+    "acceptance": "25 complete frames; complete event count; positive/negative full-scale arithmetic; modeled final zero/off; UART checksums and contention guards pass",
+    "build_directory": "/var/folders/l3/vrp7c54x2k51b5nqcqfhfhjw0000gn/T/hx-latency-host25-4ooSew"
+  }
+]

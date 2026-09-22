@@ -1,0 +1,1247 @@
+{
+  "cad": "examples/full-robot/measured-actuator-integration/gait-generation/robustness/battery-chain/robot.rcad",
+  "cad_sha256": "84b009c10c4a4a18aabd7a27e98393104a2bd08409859c70765a24728dd4ea25",
+  "output": "examples/full-robot/measured-actuator-integration/gait-generation/robustness/battery-chain/robot.simrobot.json",
+  "output_sha256": "558a4bec118ec7f7f840e94f28db5fd548e41d8efac31459553bd87270205702",
+  "flex": false,
+  "cache": {
+    "body_properties": {
+      "hits": 89,
+      "misses": 0,
+      "seconds": 0.031841879999992884
+    },
+    "attachment": {
+      "hits": 73,
+      "misses": 0,
+      "seconds": 0.07536958799999738
+    },
+    "joint": {
+      "hits": 32,
+      "misses": 0,
+      "seconds": 0.040210660000006726
+    },
+    "collision": {
+      "hits": 29,
+      "misses": 0,
+      "seconds": 6.013141369000003
+    }
+  },
+  "derivation_source_sha256": "498e2abe5a04f243a3eef3a2e89b6783232d2805ddf759af338934a94216a23d",
+  "resolved_profiles": {
+    "calibrated": false,
+    "interpretation": "Declaration/registry validation only. Evidence references are retained, not certification of measured accuracy.",
+    "power": {
+      "config": {
+        "battery": {
+          "capacity_ah": 2.0,
+          "cells": 3.0,
+          "initial_soc": 0.8,
+          "internal_resistance": 0.1,
+          "nominal_voltage": 11.1
+        },
+        "branches": [
+          {
+            "id": "common-feed",
+            "motors": [],
+            "parent": null,
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "-Y-hip",
+            "motors": [
+              "joint.-Y | Hip servo output"
+            ],
+            "parent": "common-feed",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "-Y-worm",
+            "motors": [
+              "joint.-Y | Worm servo output"
+            ],
+            "parent": "-Y-hip",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "-Y-foot",
+            "motors": [
+              "joint.-Y | Foot servo output"
+            ],
+            "parent": "-Y-worm",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "+X-hip",
+            "motors": [
+              "joint.+X | Hip servo output"
+            ],
+            "parent": "common-feed",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "+X-worm",
+            "motors": [
+              "joint.+X | Worm servo output"
+            ],
+            "parent": "+X-hip",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "+X-foot",
+            "motors": [
+              "joint.+X | Foot servo output"
+            ],
+            "parent": "+X-worm",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "+Y-hip",
+            "motors": [
+              "joint.+Y | Hip servo output"
+            ],
+            "parent": "common-feed",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "+Y-worm",
+            "motors": [
+              "joint.+Y | Worm servo output"
+            ],
+            "parent": "+Y-hip",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "+Y-foot",
+            "motors": [
+              "joint.+Y | Foot servo output"
+            ],
+            "parent": "+Y-worm",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "-X-hip",
+            "motors": [
+              "joint.-X | Hip servo output"
+            ],
+            "parent": "common-feed",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "-X-worm",
+            "motors": [
+              "joint.-X | Worm servo output"
+            ],
+            "parent": "-X-hip",
+            "resistance_ohm": 0.05
+          },
+          {
+            "id": "-X-foot",
+            "motors": [
+              "joint.-X | Foot servo output"
+            ],
+            "parent": "-X-worm",
+            "resistance_ohm": 0.05
+          }
+        ],
+        "residual_scales": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "limits": {
+        "maximum_pack_voltage_v": 12.6,
+        "maximum_soc": 1.0,
+        "minimum_pack_voltage_v": 9.0,
+        "minimum_soc": 0.1
+      },
+      "motor_ids": [
+        "0702845b41d3",
+        "2a3dcb848184",
+        "074a9c071bf6",
+        "bc7a7393c49f",
+        "01defa41932a",
+        "4368f0b5b421",
+        "4f13ca1d8689",
+        "cef9d0e3d459",
+        "4a1ae2c3e25f",
+        "f5009ce295f6",
+        "e26858c1afc7",
+        "1bfb702ee9c9"
+      ]
+    },
+    "resolved": {
+      "01defa41932a": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": -0.18401731443341288
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "0702845b41d3": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": -0.07775224690283092
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "074a9c071bf6": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": -0.8735909910745306
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "1bfb702ee9c9": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": -1.2553759883105409
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "2a3dcb848184": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": -0.12525545580343606
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "4368f0b5b421": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": -0.8181288923097786
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "4a1ae2c3e25f": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": -1.1362585601810484
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "4f13ca1d8689": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.23790030876019985
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "bc7a7393c49f": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.1513974802050533
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "cef9d0e3d459": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0019583286620677913
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "e26858c1afc7": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.1384210840406683
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      },
+      "f5009ce295f6": {
+        "controller": {
+          "encoder_quantum": {
+            "evidence": "controller",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": 0.0015339807878856412
+          },
+          "evidence": "controller_authority_comparison",
+          "gains": {
+            "kd_q8": 0,
+            "kp_q8": 4096,
+            "kv_q8": 4096,
+            "limit": 1000
+          },
+          "implementation_blake3": "b2f2d986347b6e6a0d3afaaa5bd7c9d33c22ee1801d0a6e7e470f6e4559030fd",
+          "latency": {
+            "evidence": "controller",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          },
+          "period": {
+            "evidence": "cadence",
+            "provenance": "measured",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.01
+          }
+        },
+        "driver": {
+          "current_limit": 3.0,
+          "on_resistance": 0.05
+        },
+        "family": "hx30hm-provisional",
+        "feedback": {
+          "encoder_direction": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 1.0
+          },
+          "encoder_zero": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "1",
+            "value": 2048.0
+          },
+          "initial_target": {
+            "evidence": "historical_gait",
+            "provenance": "derived",
+            "uncertainty": null,
+            "unit": "rad",
+            "value": -0.1131458490048312
+          },
+          "sample_phase": {
+            "evidence": "feedback_assumptions",
+            "provenance": "estimated",
+            "uncertainty": null,
+            "unit": "s",
+            "value": 0.0
+          }
+        },
+        "motor": {
+          "back_emf_constant": 0.009734075474443412,
+          "backlash": 0.0,
+          "derating": 0.0,
+          "efficiency": 0.5037278591966505,
+          "gear_damping": 0.1,
+          "gear_friction": 0.025,
+          "gear_inertia": 2e-05,
+          "gear_stiffness": 50.0,
+          "inductance": 0.00148,
+          "loss_speed_scale": 5.0,
+          "no_load_current": 0.1,
+          "ratio": 200.0,
+          "reference": 298.15,
+          "resistance": 3.6999999999999997,
+          "rotor_inertia": 2.2324546035565207e-08,
+          "temp_coeff": 0.0039,
+          "torque_constant": 0.009734075474443412
+        },
+        "physical_unit": null,
+        "version": 2
+      }
+    },
+    "version": 1
+  },
+  "native_validator_sha256": "6d45600969dcd9a53f6c6b8ec7ec5a52c70cea8d4efcfd5cbbe21693b229d298"
+}

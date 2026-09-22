@@ -1,0 +1,20 @@
+    Finished `dev` profile [optimized] target(s) in 0.49s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+2026-09-20T13:53:22.411104Z  INFO bevy_render::renderer: AdapterInfo { name: "AMD Radeon Pro 5300M", vendor: 0, device: 0, device_type: DiscreteGpu, driver: "", driver_info: "", backend: Metal }
+2026-09-20T13:53:22.484033Z  INFO bevy_render::batching::gpu_preprocessing: GPU preprocessing is fully supported on this device.
+2026-09-20T13:53:22.533750Z  INFO bevy_winit::system: Creating new window Systems — Spatial assembly | checkpoint 1 (0v1)
+2026-09-20T13:53:22.671210Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=true; connections=true; hidden=0
+2026-09-20T13:53:30.149660Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:32.388925Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=true; connections=true; hidden=0
+2026-09-20T13:53:32.872973Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:33.518250Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=true; connections=true; hidden=0
+2026-09-20T13:53:33.873933Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:35.185508Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=false; connections=false; hidden=0
+2026-09-20T13:53:35.587180Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:36.986709Z  INFO sim_spatial: spatial selection: example/motor-thermal/supply; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:37.875510Z  INFO sim_spatial: spatial selection: example/motor-thermal/motor; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:38.293305Z  INFO sim_spatial: spatial selection: example/motor-thermal/rotor; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:38.653842Z  INFO sim_spatial: spatial selection: example/motor-thermal/case; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:39.136628Z  INFO sim_spatial: spatial selection: example/motor-thermal/cooling; exploded=false; connections=true; hidden=0
+2026-09-20T13:53:39.896028Z  INFO sim_spatial: spatial selection: example/motor-thermal/ambient; exploded=false; connections=true; hidden=0

@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "description_id": "bca4fe54b467d73a05b023b43665dbe1d99ab3cf2b2e0fc71718b8f8009d9b0a",
+  "annotations": {
+    "group/analysis/group/1": {
+      "target": {
+        "kind": "group",
+        "id": "analysis/group/1"
+      },
+      "label": null,
+      "text": "Review cooling paths before increasing the current limit. Analysis notes only; no calibration claim."
+    },
+    "component/cad/motor/0702845b41d3/winding": {
+      "target": {
+        "kind": "component",
+        "id": "cad/motor/0702845b41d3/winding"
+      },
+      "label": "Winding",
+      "text": "Copper losses enter here."
+    },
+    "component/cad/motor/0702845b41d3/winding_case": {
+      "target": {
+        "kind": "component",
+        "id": "cad/motor/0702845b41d3/winding_case"
+      },
+      "label": "Winding to case",
+      "text": "Check the assumed winding-to-case conductance."
+    },
+    "component/cad/motor/0702845b41d3/case_mount": {
+      "target": {
+        "kind": "component",
+        "id": "cad/motor/0702845b41d3/case_mount"
+      },
+      "label": "Case to mounting",
+      "text": "Check mounting contact and conductance."
+    },
+    "component/cad/motor/0702845b41d3/case_ambient": {
+      "target": {
+        "kind": "component",
+        "id": "cad/motor/0702845b41d3/case_ambient"
+      },
+      "label": "Case to ambient",
+      "text": "Review the convection assumption."
+    }
+  },
+  "groups": {
+    "analysis/group/1": {
+      "id": "analysis/group/1",
+      "label": "Hip motor \u00b7 thermal review",
+      "members": [
+        "cad/motor/0702845b41d3/winding",
+        "cad/motor/0702845b41d3/case",
+        "cad/motor/0702845b41d3/winding_case",
+        "cad/motor/0702845b41d3/case_ambient",
+        "cad/motor/0702845b41d3/case_mount"
+      ],
+      "color": [
+        173,
+        119,
+        37
+      ]
+    }
+  },
+  "views": {},
+  "collapsed": [
+    "actuators",
+    "assembly",
+    "cad/joint/04fa8cbf0c16",
+    "cad/joint/090e5dacb296",
+    "cad/joint/097864b293dc",
+    "cad/joint/0c1ae20ffe07",
+    "cad/joint/115a515a3663",
+    "cad/joint/245c5d28fcc7",
+    "cad/joint/24c7710074b3",
+    "cad/joint/25b6da9fec6a",
+    "cad/joint/3073d25739bf",
+    "cad/joint/37333a073f4c",
+    "cad/joint/4759ce1b8d7a",
+    "cad/joint/49f31e702c70",
+    "cad/joint/5d090ab95de5",
+    "cad/joint/6a614be41bff",
+    "cad/joint/6d28724d3c0f",
+    "cad/joint/85ea9faac6f0",
+    "cad/joint/930fbd2b62fe",
+    "cad/joint/9899f0223ef9",
+    "cad/joint/9c1e154a7729",
+    "cad/joint/b01ec284f6fb",
+    "cad/joint/b1364a451150",
+    "cad/joint/badd61c2038f",
+    "cad/joint/cb5b0c071a14",
+    "cad/joint/e3f68f16c8db",
+    "cad/joint/e49237022d10",
+    "cad/joint/e5e78f232e91",
+    "cad/joint/e64c95406ed2",
+    "cad/joint/ed1ef0cb82d7",
+    "cad/link/2bdd9cf2961a",
+    "cad/link/5cdebfc67dad",
+    "cad/link/67a5757aab77",
+    "cad/link/93c3343067fe",
+    "cad/link/aa25799a2446",
+    "cad/link/b6c048c66854",
+    "cad/link/bc15e0138b7f",
+    "cad/link/c5eef180ec65",
+    "cad/link/d30a509d2da7",
+    "cad/motor/01defa41932a",
+    "cad/motor/0702845b41d3",
+    "cad/motor/074a9c071bf6",
+    "cad/motor/1bfb702ee9c9",
+    "cad/motor/2a3dcb848184",
+    "cad/motor/4368f0b5b421",
+    "cad/motor/4a1ae2c3e25f",
+    "cad/motor/4f13ca1d8689",
+    "cad/motor/bc7a7393c49f",
+    "cad/motor/cef9d0e3d459",
+    "cad/motor/e26858c1afc7",
+    "cad/motor/f5009ce295f6",
+    "environment",
+    "measurements",
+    "mounts",
+    "policy",
+    "power",
+    "analysis/group/1"
+  ],
+  "focus": {
+    "Group": "analysis/group/1"
+  },
+  "dimmed_domains": [],
+  "next_group": 2
+}

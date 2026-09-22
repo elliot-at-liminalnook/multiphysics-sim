@@ -1,0 +1,214 @@
+{
+  "scope": "Standalone native environment diagnostic after construction; excludes final capture serialization. Buckets can nest and are not additive. Accepted implicit-step diagnostics exclude rejected solves and the separate hybrid motor/event path. Motor-trial statistics cover successful outer intervals and include successful discarded event-location trials; failed continuous-trial internal work is excluded. Profiling overhead is included; use unprofiled runs for performance acceptance.",
+  "physical_parity": {
+    "frames": 151,
+    "exact_fields": [
+      "completed_steps",
+      "contact_history",
+      "contacts",
+      "done",
+      "driver_readings",
+      "error",
+      "joint_positions",
+      "joint_velocities",
+      "motor_readings",
+      "motor_states",
+      "original_rows",
+      "policy",
+      "policy_inputs",
+      "poses",
+      "requested_steps",
+      "servo_commands",
+      "servo_states",
+      "servo_targets_rad",
+      "time_s"
+    ],
+    "all_task_transitions_exact": true
+  },
+  "outer_intervals": 19200,
+  "scheduler": {
+    "accepted_segments": 19200,
+    "continuous_attempts": 19200,
+    "rejected_trials": 0,
+    "events": 28812
+  },
+  "totals": {
+    "successful_trial_auxiliary_evaluations": 835596,
+    "successful_trial_auxiliary_newton_iterations": 414653,
+    "successful_trial_auxiliary_solves": 179489,
+    "successful_trial_colored_auxiliary_solves": 179489,
+    "successful_trial_dynamics_cache_hits": 19200,
+    "successful_trial_dynamics_preparations": 160289,
+    "successful_trial_endpoint_evaluations": 179489,
+    "successful_trial_implicit_stages": 19200,
+    "successful_trial_mechanical_cache_hits": 21954,
+    "successful_trial_mechanical_preparations": 160308,
+    "successful_trial_newton_iterations": 91123,
+    "successful_trial_stage_fresh_restarts": 0,
+    "successful_trial_stages_with_reused_jacobian": 17311,
+    "successful_trial_supplied_auxiliary_jacobians": 0,
+    "successful_trials": 19200,
+    "successful_trials_with_reused_jacobian": 17311
+  },
+  "maxima": {
+    "maximum_auxiliary_residual": 6.187670370115701e-10,
+    "maximum_scaled_velocity_residual": 0.0000010179113243274918
+  },
+  "per_successful_trial": {
+    "successful_trial_auxiliary_evaluations": 43.520625,
+    "successful_trial_auxiliary_newton_iterations": 21.596510416666668,
+    "successful_trial_auxiliary_solves": 9.348385416666666,
+    "successful_trial_colored_auxiliary_solves": 9.348385416666666,
+    "successful_trial_dynamics_cache_hits": 1,
+    "successful_trial_dynamics_preparations": 8.348385416666666,
+    "successful_trial_endpoint_evaluations": 9.348385416666666,
+    "successful_trial_implicit_stages": 1,
+    "successful_trial_mechanical_cache_hits": 1.1434375,
+    "successful_trial_mechanical_preparations": 8.349375,
+    "successful_trial_newton_iterations": 4.745989583333333,
+    "successful_trial_stage_fresh_restarts": 0,
+    "successful_trial_stages_with_reused_jacobian": 0.9016145833333333,
+    "successful_trial_supplied_auxiliary_jacobians": 0,
+    "successful_trials": 1,
+    "successful_trials_with_reused_jacobian": 0.9016145833333333
+  },
+  "profile_wall_s": 24.48544575,
+  "profile_buckets": [
+    {
+      "calls": 198689,
+      "name": "newton calls",
+      "seconds": 0
+    },
+    {
+      "calls": 505853,
+      "name": "newton iterations",
+      "seconds": 0
+    },
+    {
+      "calls": 23159,
+      "name": "fresh jacobians",
+      "seconds": 0
+    },
+    {
+      "calls": 70,
+      "name": "stale full-step refreshes",
+      "seconds": 0
+    },
+    {
+      "calls": 705324,
+      "name": "residual evaluations",
+      "seconds": 18.897620743
+    },
+    {
+      "calls": 23159,
+      "name": "jacobian assembly",
+      "seconds": 4.475862192
+    },
+    {
+      "calls": 23159,
+      "name": "factorisation",
+      "seconds": 0.252811946
+    },
+    {
+      "calls": 23159,
+      "name": "  factor entries sum/sort",
+      "seconds": 0.066288359
+    },
+    {
+      "calls": 505846,
+      "name": "back-substitution",
+      "seconds": 0.495101063
+    },
+    {
+      "calls": 129594,
+      "name": "embedded closure mapping",
+      "seconds": 6.785334343000001
+    },
+    {
+      "calls": 160308,
+      "name": "embedded contact history",
+      "seconds": 0.402131883
+    },
+    {
+      "calls": 179489,
+      "name": "embedded dynamics preparation",
+      "seconds": 7.624493824000001
+    },
+    {
+      "calls": 198689,
+      "name": "embedded applied force solve",
+      "seconds": 0.603166203
+    },
+    {
+      "calls": 835596,
+      "name": "embedded component equations",
+      "seconds": 3.795359308
+    },
+    {
+      "calls": 129594,
+      "name": "  closure Jacobian",
+      "seconds": 1.077269014
+    },
+    {
+      "calls": 129594,
+      "name": "  closure factorization",
+      "seconds": 1.621980725
+    },
+    {
+      "calls": 519521,
+      "name": "    closure SVD",
+      "seconds": 0.585657387
+    },
+    {
+      "calls": 179489,
+      "name": "  embedded rigid inertia",
+      "seconds": 1.707087897
+    },
+    {
+      "calls": 179489,
+      "name": "  embedded inertia projection",
+      "seconds": 0.76488862
+    },
+    {
+      "calls": 179489,
+      "name": "  embedded force evaluation",
+      "seconds": 3.2397126960000002
+    },
+    {
+      "calls": 179939,
+      "name": "contact geometry queries",
+      "seconds": 1.1907651000000001
+    },
+    {
+      "calls": 179939,
+      "name": "contact force evaluation",
+      "seconds": 1.855985282
+    },
+    {
+      "calls": 179939,
+      "name": "  contact exclusion metadata",
+      "seconds": 0.038910434
+    },
+    {
+      "calls": 179939,
+      "name": "  contact sample transforms",
+      "seconds": 0.7519925230000001
+    },
+    {
+      "calls": 179939,
+      "name": "  contact pair queries",
+      "seconds": 0.035465753
+    },
+    {
+      "calls": 150,
+      "name": "policy observations",
+      "seconds": 0.0039780480000000005
+    },
+    {
+      "calls": 150,
+      "name": "policy script",
+      "seconds": 0.088171502
+    }
+  ],
+  "input_and_binary_identity_verified": true
+}

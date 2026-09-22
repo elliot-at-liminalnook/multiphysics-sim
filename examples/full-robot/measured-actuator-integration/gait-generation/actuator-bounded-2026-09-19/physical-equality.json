@@ -1,0 +1,19 @@
+{
+  "pass": true,
+  "comparison": "All parsed fields except source and actuator_profiles",
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/full-authority/robot.simrobot.json",
+      "sha256": "df553251b7fa1d0f21f3474bb96f3733f84c049afad11c2e4c5ef7f6c86c1dcf"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/robot.simrobot.json",
+      "sha256": "04e373ecb5346dcde1ce07011fe45e1810db6b136d9f5bbb715a8103ea8ea954"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/current-controller/robot.simrobot.json",
+      "sha256": "d457d9a1977816d7a30f936ad6ce685389cbf2c91aa1a709229e1d6e60260156"
+    }
+  ],
+  "fresh_export_also_matches_pinned_derivation": true
+}

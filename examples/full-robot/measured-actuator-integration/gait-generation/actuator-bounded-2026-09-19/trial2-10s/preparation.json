@@ -1,0 +1,26 @@
+{
+  "mode": "forward",
+  "horizon_s": 10,
+  "seed": 2301,
+  "values": {
+    "motion_amplitude": 0.7126905835040751,
+    "pace_scale": 0.2102836695046595,
+    "tracking_gain": 0.005343411454442948,
+    "velocity_lead_scale": 0.10912101925210638
+  },
+  "inputs": [
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/search/pilot.spec.json",
+      "sha256": "b99754c96da5963237e18c7314e056d94186a1a9818854fa1dd5c36c784a8a3f"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/current-controller/pilot.spec.json",
+      "sha256": "a250342510c9a8ffbfa52d9dbd77bb9002c3ce57800844b3421df697a4192737"
+    },
+    {
+      "path": "examples/full-robot/measured-actuator-integration/gait-generation/actuator-bounded-2026-09-19/trial2-values.json",
+      "sha256": "3ce8d401b40fdc8e6003d04bcdddb60e22fbdd35789dadadd33db7655fca8c8b"
+    }
+  ],
+  "script_sha256": "98cbfe3dcf3153a92b0202d874f67e4128dd1cb96627af740b4583350b6c2846"
+}

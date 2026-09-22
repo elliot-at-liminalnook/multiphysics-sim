@@ -1,0 +1,52 @@
+{
+  "scope": "Same all-nine five-frame 50% rapid reversal plan and identical audited PWM, paired at user-reported 3 A and 3.5 A limits",
+  "supply_voltage_setting_v_user_report": 12.6,
+  "three_amp": {
+    "frames": 5,
+    "motor_audits": 45,
+    "minimum_motor_voltage_v": 9.1,
+    "maximum_temperature_c": 47,
+    "maximum_current_raw_uncalibrated": 313,
+    "minimum_voltage_per_motor_v": {
+      "4": 9.2,
+      "5": 9.2,
+      "6": 9.1,
+      "7": 9.3,
+      "8": 9.3,
+      "9": 9.4,
+      "10": 9.4,
+      "11": 9.6,
+      "12": 9.6
+    },
+    "all_nine_stopped_pwm_zero_torque_off": true,
+    "stop_verified": true
+  },
+  "three_point_five_amp": {
+    "frames": 5,
+    "motor_audits": 45,
+    "minimum_motor_voltage_v": 9.1,
+    "maximum_temperature_c": 48,
+    "maximum_current_raw_uncalibrated": 331,
+    "minimum_voltage_per_motor_v": {
+      "4": 9.1,
+      "5": 9.3,
+      "6": 9.1,
+      "7": 9.3,
+      "8": 9.4,
+      "9": 9.4,
+      "10": 9.4,
+      "11": 9.7,
+      "12": 9.6
+    },
+    "all_nine_stopped_pwm_zero_torque_off": true,
+    "stop_verified": true
+  },
+  "interpretation": "Worst observed voltage remains 9.1 V at both settings, 0.1 V above the 9.0 V trip. No demonstrated improvement in worst sag at this drive level. Further drive escalation held.",
+  "limitations": [
+    "One trial per setting, different motor temperatures and time.",
+    "Voltage telemetry resolves 0.1 V; internal sample age and calibration uncertain.",
+    "No synchronized external voltage/current or CV/CC observation; current-limit versus distribution-loss cause remains unresolved.",
+    "No maximum motor speed, full reversal-time or motor-model-accuracy acceptance inferred."
+  ],
+  "model_fit_performed": false
+}

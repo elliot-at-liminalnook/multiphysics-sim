@@ -1,0 +1,10 @@
+read_verilog verification/supervisor-before-compact.v
+rename hx_safety gold
+read_verilog source/servo/src/hx_safety.v
+proc
+memory
+opt_clean
+equiv_make gold hx_safety equiv
+hierarchy -top equiv
+equiv_simple
+equiv_status -assert

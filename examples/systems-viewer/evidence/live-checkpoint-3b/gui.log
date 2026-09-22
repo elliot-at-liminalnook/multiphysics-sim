@@ -1,0 +1,34 @@
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `dev` profile [optimized] target(s) in 0.39s
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib) generated 1 warning
+    Finished `dev` profile [optimized] target(s) in 0.47s
+    Finished `dev` profile [optimized] target(s) in 0.48s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+Selection session: /var/folders/l3/vrp7c54x2k51b5nqcqfhfhjw0000gn/T/sim-selection-86707-1789920462580282000-0
+2026-09-20T16:07:42.648855Z  INFO bevy_render::renderer: AdapterInfo { name: "AMD Radeon Pro 5300M", vendor: 0, device: 0, device_type: DiscreteGpu, driver: "", driver_info: "", backend: Metal }
+2026-09-20T16:07:43.659282Z  INFO bevy_render::batching::gpu_preprocessing: GPU preprocessing is fully supported on this device.
+2026-09-20T16:07:43.713394Z  INFO bevy_winit::system: Creating new window Systems — Physical assembly (0v1)
+schematic selection: Components { ids: {"example/motor-thermal/supply"} }

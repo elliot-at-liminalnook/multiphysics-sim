@@ -1,0 +1,18 @@
+{
+  "baseline": "../2026-09-15-fast-loop",
+  "image_sha256": "05d1554184e9186f807bd6c282ffb434665aeae555237252ead3c1edc96e99d6",
+  "hardware_ids": [
+    10,
+    11,
+    12
+  ],
+  "period_s": 0.01,
+  "controller_gains_q8": [
+    4096,
+    0,
+    4096
+  ],
+  "limits_unchanged": true,
+  "physical_s2": "Prior hardware commissioning retained; not repeated this campaign",
+  "stop_escalation_policy": "Review every burst; do not increase following incomplete capture, unverified stop, >=10% observed sag, or >=52 C. No threshold relaxation."
+}

@@ -1,0 +1,852 @@
+{
+  "step (total)": {
+    "numeric": {
+      "calls": 0,
+      "name": "step (total)",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "step (total)",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "step (total)",
+      "seconds": 0.0
+    }
+  },
+  "implicit solve": {
+    "numeric": {
+      "calls": 0,
+      "name": "implicit solve",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "implicit solve",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "implicit solve",
+      "seconds": 0.0
+    }
+  },
+  "newton calls": {
+    "numeric": {
+      "calls": 198689,
+      "name": "newton calls",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 198689,
+      "name": "newton calls",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 198689,
+      "name": "newton calls",
+      "seconds": 0.0
+    }
+  },
+  "newton iterations": {
+    "numeric": {
+      "calls": 505853,
+      "name": "newton iterations",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 505814,
+      "name": "newton iterations",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 505836,
+      "name": "newton iterations",
+      "seconds": 0.0
+    }
+  },
+  "fresh jacobians": {
+    "numeric": {
+      "calls": 23159,
+      "name": "fresh jacobians",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 23154,
+      "name": "fresh jacobians",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 23157,
+      "name": "fresh jacobians",
+      "seconds": 0.0
+    }
+  },
+  "stale full-step refreshes": {
+    "numeric": {
+      "calls": 70,
+      "name": "stale full-step refreshes",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 62,
+      "name": "stale full-step refreshes",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 68,
+      "name": "stale full-step refreshes",
+      "seconds": 0.0
+    }
+  },
+  "residual evaluations": {
+    "numeric": {
+      "calls": 705324,
+      "name": "residual evaluations",
+      "seconds": 21.689252617
+    },
+    "analytic": {
+      "calls": 705264,
+      "name": "residual evaluations",
+      "seconds": 20.056119666
+    },
+    "analytic_projected": {
+      "calls": 705305,
+      "name": "residual evaluations",
+      "seconds": 21.188397164
+    }
+  },
+  "jacobian assembly": {
+    "numeric": {
+      "calls": 23159,
+      "name": "jacobian assembly",
+      "seconds": 4.994826278000001
+    },
+    "analytic": {
+      "calls": 23154,
+      "name": "jacobian assembly",
+      "seconds": 5.045060727
+    },
+    "analytic_projected": {
+      "calls": 23157,
+      "name": "jacobian assembly",
+      "seconds": 5.334742811
+    }
+  },
+  "  slots supplied": {
+    "numeric": {
+      "calls": 0,
+      "name": "  slots supplied",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "  slots supplied",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "  slots supplied",
+      "seconds": 0.0
+    }
+  },
+  "  slots with supplied rate partials": {
+    "numeric": {
+      "calls": 0,
+      "name": "  slots with supplied rate partials",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "  slots with supplied rate partials",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "  slots with supplied rate partials",
+      "seconds": 0.0
+    }
+  },
+  "  slots finite-difference": {
+    "numeric": {
+      "calls": 0,
+      "name": "  slots finite-difference",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "  slots finite-difference",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "  slots finite-difference",
+      "seconds": 0.0
+    }
+  },
+  "  component FD residual calls": {
+    "numeric": {
+      "calls": 0,
+      "name": "  component FD residual calls",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "  component FD residual calls",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "  component FD residual calls",
+      "seconds": 0.0
+    }
+  },
+  "factorisation": {
+    "numeric": {
+      "calls": 23159,
+      "name": "factorisation",
+      "seconds": 0.266555682
+    },
+    "analytic": {
+      "calls": 23154,
+      "name": "factorisation",
+      "seconds": 0.26952137600000003
+    },
+    "analytic_projected": {
+      "calls": 23157,
+      "name": "factorisation",
+      "seconds": 0.264363666
+    }
+  },
+  "  factor entries sum/sort": {
+    "numeric": {
+      "calls": 23159,
+      "name": "  factor entries sum/sort",
+      "seconds": 0.068323985
+    },
+    "analytic": {
+      "calls": 23154,
+      "name": "  factor entries sum/sort",
+      "seconds": 0.069199093
+    },
+    "analytic_projected": {
+      "calls": 23157,
+      "name": "  factor entries sum/sort",
+      "seconds": 0.06971059
+    }
+  },
+  "  sparse matrix construction": {
+    "numeric": {
+      "calls": 0,
+      "name": "  sparse matrix construction",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "  sparse matrix construction",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "  sparse matrix construction",
+      "seconds": 0.0
+    }
+  },
+  "  symbolic cache lookup/build": {
+    "numeric": {
+      "calls": 0,
+      "name": "  symbolic cache lookup/build",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "  symbolic cache lookup/build",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "  symbolic cache lookup/build",
+      "seconds": 0.0
+    }
+  },
+  "    symbolic cache misses": {
+    "numeric": {
+      "calls": 0,
+      "name": "    symbolic cache misses",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "    symbolic cache misses",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "    symbolic cache misses",
+      "seconds": 0.0
+    }
+  },
+  "  sparse numeric factorisation": {
+    "numeric": {
+      "calls": 0,
+      "name": "  sparse numeric factorisation",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "  sparse numeric factorisation",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "  sparse numeric factorisation",
+      "seconds": 0.0
+    }
+  },
+  "back-substitution": {
+    "numeric": {
+      "calls": 505846,
+      "name": "back-substitution",
+      "seconds": 0.508801355
+    },
+    "analytic": {
+      "calls": 505807,
+      "name": "back-substitution",
+      "seconds": 0.530587282
+    },
+    "analytic_projected": {
+      "calls": 505829,
+      "name": "back-substitution",
+      "seconds": 0.5293018820000001
+    }
+  },
+  "guards": {
+    "numeric": {
+      "calls": 0,
+      "name": "guards",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "guards",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "guards",
+      "seconds": 0.0
+    }
+  },
+  "event location": {
+    "numeric": {
+      "calls": 0,
+      "name": "event location",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "event location",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "event location",
+      "seconds": 0.0
+    }
+  },
+  "jumps (incl. coupler)": {
+    "numeric": {
+      "calls": 0,
+      "name": "jumps (incl. coupler)",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "jumps (incl. coupler)",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "jumps (incl. coupler)",
+      "seconds": 0.0
+    }
+  },
+  "embedded velocity predictor": {
+    "numeric": {
+      "calls": 0,
+      "name": "embedded velocity predictor",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "embedded velocity predictor",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "embedded velocity predictor",
+      "seconds": 0.0
+    }
+  },
+  "embedded predictor guesses used": {
+    "numeric": {
+      "calls": 0,
+      "name": "embedded predictor guesses used",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "embedded predictor guesses used",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "embedded predictor guesses used",
+      "seconds": 0.0
+    }
+  },
+  "embedded predictor fallbacks": {
+    "numeric": {
+      "calls": 0,
+      "name": "embedded predictor fallbacks",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "embedded predictor fallbacks",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "embedded predictor fallbacks",
+      "seconds": 0.0
+    }
+  },
+  "embedded closure mapping": {
+    "numeric": {
+      "calls": 129594,
+      "name": "embedded closure mapping",
+      "seconds": 8.773959811000001
+    },
+    "analytic": {
+      "calls": 129594,
+      "name": "embedded closure mapping",
+      "seconds": 6.727935854
+    },
+    "analytic_projected": {
+      "calls": 129594,
+      "name": "embedded closure mapping",
+      "seconds": 6.954999776
+    }
+  },
+  "embedded contact history": {
+    "numeric": {
+      "calls": 160308,
+      "name": "embedded contact history",
+      "seconds": 0.410970871
+    },
+    "analytic": {
+      "calls": 160308,
+      "name": "embedded contact history",
+      "seconds": 0.41326819200000003
+    },
+    "analytic_projected": {
+      "calls": 160308,
+      "name": "embedded contact history",
+      "seconds": 0.43378775700000005
+    }
+  },
+  "embedded dynamics preparation": {
+    "numeric": {
+      "calls": 179489,
+      "name": "embedded dynamics preparation",
+      "seconds": 9.176022998
+    },
+    "analytic": {
+      "calls": 179489,
+      "name": "embedded dynamics preparation",
+      "seconds": 9.245662488
+    },
+    "analytic_projected": {
+      "calls": 179489,
+      "name": "embedded dynamics preparation",
+      "seconds": 10.288552871
+    }
+  },
+  "embedded applied force solve": {
+    "numeric": {
+      "calls": 198689,
+      "name": "embedded applied force solve",
+      "seconds": 0.619802802
+    },
+    "analytic": {
+      "calls": 198689,
+      "name": "embedded applied force solve",
+      "seconds": 0.6201723020000001
+    },
+    "analytic_projected": {
+      "calls": 198689,
+      "name": "embedded applied force solve",
+      "seconds": 0.6406900480000001
+    }
+  },
+  "embedded component equations": {
+    "numeric": {
+      "calls": 835596,
+      "name": "embedded component equations",
+      "seconds": 3.833235215
+    },
+    "analytic": {
+      "calls": 835521,
+      "name": "embedded component equations",
+      "seconds": 3.890580126
+    },
+    "analytic_projected": {
+      "calls": 835571,
+      "name": "embedded component equations",
+      "seconds": 3.9688691320000005
+    }
+  },
+  "embedded component derivative proposals": {
+    "numeric": {
+      "calls": 0,
+      "name": "embedded component derivative proposals",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "embedded component derivative proposals",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "embedded component derivative proposals",
+      "seconds": 0.0
+    }
+  },
+  "embedded supplied auxiliary matrices": {
+    "numeric": {
+      "calls": 0,
+      "name": "embedded supplied auxiliary matrices",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "embedded supplied auxiliary matrices",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "embedded supplied auxiliary matrices",
+      "seconds": 0.0
+    }
+  },
+  "  closure Jacobian": {
+    "numeric": {
+      "calls": 129594,
+      "name": "  closure Jacobian",
+      "seconds": 2.438825971
+    },
+    "analytic": {
+      "calls": 129594,
+      "name": "  closure Jacobian",
+      "seconds": 2.429828527
+    },
+    "analytic_projected": {
+      "calls": 129594,
+      "name": "  closure Jacobian",
+      "seconds": 2.5040832400000004
+    }
+  },
+  "  closure factorization": {
+    "numeric": {
+      "calls": 129594,
+      "name": "  closure factorization",
+      "seconds": 1.6410376740000001
+    },
+    "analytic": {
+      "calls": 129594,
+      "name": "  closure factorization",
+      "seconds": 1.2866687060000002
+    },
+    "analytic_projected": {
+      "calls": 129594,
+      "name": "  closure factorization",
+      "seconds": 1.341799436
+    }
+  },
+  "    closure SVD": {
+    "numeric": {
+      "calls": 519521,
+      "name": "    closure SVD",
+      "seconds": 0.6165417710000001
+    },
+    "analytic": {
+      "calls": 519501,
+      "name": "    closure SVD",
+      "seconds": 0.603323684
+    },
+    "analytic_projected": {
+      "calls": 519517,
+      "name": "    closure SVD",
+      "seconds": 0.627160719
+    }
+  },
+  "  embedded rigid inertia": {
+    "numeric": {
+      "calls": 179489,
+      "name": "  embedded rigid inertia",
+      "seconds": 2.8503566570000003
+    },
+    "analytic": {
+      "calls": 179489,
+      "name": "  embedded rigid inertia",
+      "seconds": 2.871861103
+    },
+    "analytic_projected": {
+      "calls": 179489,
+      "name": "  embedded rigid inertia",
+      "seconds": 4.529617495
+    }
+  },
+  "  embedded inertia projection": {
+    "numeric": {
+      "calls": 179489,
+      "name": "  embedded inertia projection",
+      "seconds": 0.7788796600000001
+    },
+    "analytic": {
+      "calls": 179489,
+      "name": "  embedded inertia projection",
+      "seconds": 0.783444031
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "  embedded inertia projection",
+      "seconds": 0.0
+    }
+  },
+  "  embedded force evaluation": {
+    "numeric": {
+      "calls": 179489,
+      "name": "  embedded force evaluation",
+      "seconds": 3.276270132
+    },
+    "analytic": {
+      "calls": 179489,
+      "name": "  embedded force evaluation",
+      "seconds": 3.310663851
+    },
+    "analytic_projected": {
+      "calls": 179489,
+      "name": "  embedded force evaluation",
+      "seconds": 3.400863354
+    }
+  },
+  "contact geometry queries": {
+    "numeric": {
+      "calls": 179939,
+      "name": "contact geometry queries",
+      "seconds": 1.1936158970000001
+    },
+    "analytic": {
+      "calls": 179939,
+      "name": "contact geometry queries",
+      "seconds": 1.206273869
+    },
+    "analytic_projected": {
+      "calls": 179939,
+      "name": "contact geometry queries",
+      "seconds": 1.245954682
+    }
+  },
+  "contact force evaluation": {
+    "numeric": {
+      "calls": 179939,
+      "name": "contact force evaluation",
+      "seconds": 1.8807523270000002
+    },
+    "analytic": {
+      "calls": 179939,
+      "name": "contact force evaluation",
+      "seconds": 1.8968397240000001
+    },
+    "analytic_projected": {
+      "calls": 179939,
+      "name": "contact force evaluation",
+      "seconds": 1.934847919
+    }
+  },
+  "  contact exclusion metadata": {
+    "numeric": {
+      "calls": 179939,
+      "name": "  contact exclusion metadata",
+      "seconds": 0.038470925
+    },
+    "analytic": {
+      "calls": 179939,
+      "name": "  contact exclusion metadata",
+      "seconds": 0.038751393
+    },
+    "analytic_projected": {
+      "calls": 179939,
+      "name": "  contact exclusion metadata",
+      "seconds": 0.050676233
+    }
+  },
+  "  contact sample transforms": {
+    "numeric": {
+      "calls": 179939,
+      "name": "  contact sample transforms",
+      "seconds": 0.742203245
+    },
+    "analytic": {
+      "calls": 179939,
+      "name": "  contact sample transforms",
+      "seconds": 0.7479321710000001
+    },
+    "analytic_projected": {
+      "calls": 179939,
+      "name": "  contact sample transforms",
+      "seconds": 0.7731577700000001
+    }
+  },
+  "  contact pair queries": {
+    "numeric": {
+      "calls": 179939,
+      "name": "  contact pair queries",
+      "seconds": 0.037489545
+    },
+    "analytic": {
+      "calls": 179939,
+      "name": "  contact pair queries",
+      "seconds": 0.037974709
+    },
+    "analytic_projected": {
+      "calls": 179939,
+      "name": "  contact pair queries",
+      "seconds": 0.036597964000000004
+    }
+  },
+  "policy online reference": {
+    "numeric": {
+      "calls": 0,
+      "name": "policy online reference",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "policy online reference",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "policy online reference",
+      "seconds": 0.0
+    }
+  },
+  "policy observations": {
+    "numeric": {
+      "calls": 150,
+      "name": "policy observations",
+      "seconds": 0.003858535
+    },
+    "analytic": {
+      "calls": 150,
+      "name": "policy observations",
+      "seconds": 0.004096962
+    },
+    "analytic_projected": {
+      "calls": 150,
+      "name": "policy observations",
+      "seconds": 0.004087309
+    }
+  },
+  "policy body feedback": {
+    "numeric": {
+      "calls": 0,
+      "name": "policy body feedback",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "policy body feedback",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "policy body feedback",
+      "seconds": 0.0
+    }
+  },
+  "policy point feedback": {
+    "numeric": {
+      "calls": 0,
+      "name": "policy point feedback",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "policy point feedback",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "policy point feedback",
+      "seconds": 0.0
+    }
+  },
+  "policy script": {
+    "numeric": {
+      "calls": 150,
+      "name": "policy script",
+      "seconds": 0.09675946
+    },
+    "analytic": {
+      "calls": 150,
+      "name": "policy script",
+      "seconds": 0.09685075300000001
+    },
+    "analytic_projected": {
+      "calls": 150,
+      "name": "policy script",
+      "seconds": 0.09536340800000001
+    }
+  },
+  "Broyden update attempts": {
+    "numeric": {
+      "calls": 0,
+      "name": "Broyden update attempts",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "Broyden update attempts",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "Broyden update attempts",
+      "seconds": 0.0
+    }
+  },
+  "Broyden rejected/capped updates": {
+    "numeric": {
+      "calls": 0,
+      "name": "Broyden rejected/capped updates",
+      "seconds": 0.0
+    },
+    "analytic": {
+      "calls": 0,
+      "name": "Broyden rejected/capped updates",
+      "seconds": 0.0
+    },
+    "analytic_projected": {
+      "calls": 0,
+      "name": "Broyden rejected/capped updates",
+      "seconds": 0.0
+    }
+  }
+}

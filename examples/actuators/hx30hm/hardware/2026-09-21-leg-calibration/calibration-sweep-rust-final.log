@@ -1,0 +1,39 @@
+   Compiling sim-runtime v0.1.0 (/Users/elliot/physics-simulator/crates/sim-runtime)
+warning: method `decision` is never used
+  --> crates/sim-runtime/src/contact_planning/joint_steps.rs:44:12
+   |
+25 | impl ForceSlot {
+   | -------------- method in this implementation
+...
+44 |     pub fn decision(&self, clock: usize, node: usize, axis: usize) -> JointContactDecision {
+   |            ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `sim-runtime` (lib test) generated 1 warning
+    Finished `test` profile [optimized + debuginfo] target(s) in 10.82s
+     Running unittests src/lib.rs (target/debug/deps/sim_runtime-b33fbd6712fe008e)
+
+running 19 tests
+test acquisition::calibration::tests::boundaries_and_recovery ... ok
+test acquisition::calibration::tests::clearing_reversed_bounds_retains_mounting_and_reference ... ok
+test acquisition::calibration::tests::never_wrap_or_guess_mapping ... ok
+test acquisition::calibration::tests::partial_reverse_bound_and_arbitrary_step ... ok
+test acquisition::calibration_serial::tests::out_of_range_pwm_rejected_before_serial_io ... ok
+test acquisition::calibration_serial::tests::faulted_parser_still_transmits_stop ... ok
+test acquisition::calibration_sweep::tests::refuses_missing_limits_lag_and_stalled_motor ... ok
+test acquisition::calibration_sweep::tests::follows_both_orientations_and_live_speed_changes ... ok
+test acquisition::calibration_sweep::tests::closed_loop_synthetic_lag_tracks_crawl_and_reversals ... ok
+test acquisition::calibration_serial::tests::wrong_profile_never_arms ... ok
+test acquisition::calibration_serial::tests::low_drive_target_and_verified_stop ... ok
+test acquisition::calibration_serial::tests::ten_percent_target_and_verified_stop ... ok
+test acquisition::calibration_serial::tests::stalled_ten_percent_times_out_without_escalation ... ok
+test acquisition::calibration_serial::tests::active_reply_timeout_cuts_drive_without_repeating_command ... ok
+test acquisition::calibration_serial::tests::truncated_reply_during_stop_recovers_without_redrive ... ok
+test acquisition::calibration_serial::tests::continuous_session_lost_reply_cuts_drive_without_retry ... ok
+test acquisition::calibration_serial::tests::continuous_session_speed_update_and_operator_stop ... ok
+test acquisition::calibration_serial::tests::persistent_silence_never_reports_stop_verified ... ok
+test acquisition::calibration_serial::tests::arbitrary_percent_and_full_scale_protocol ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out; finished in 0.91s
+

@@ -1,0 +1,3245 @@
+{
+  "scope": "1000 us requested Chrome CPU sampling after model load, including worker idle, message handling and serialization. Sample weights approximate time and inclusive rows overlap. This is not an allocation count or a throughput acceptance measurement.",
+  "samples": 19501,
+  "sampled_seconds": 28.101698,
+  "profile_duration_seconds": 28.10321,
+  "self": [
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>",
+      "seconds": 2.62733,
+      "percent_all_samples": 9.3493638711796
+    },
+    {
+      "name": "(idle)",
+      "seconds": 2.144994,
+      "percent_all_samples": 7.632969367189129
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::malloc",
+      "seconds": 2.120644,
+      "percent_all_samples": 7.546319798896138
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::kinematics",
+      "seconds": 2.074121,
+      "percent_all_samples": 7.380767525150971
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::rigid_mass_with_kinematics",
+      "seconds": 1.474157,
+      "percent_all_samples": 5.245793332488307
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::free",
+      "seconds": 0.735766,
+      "percent_all_samples": 2.618226129965527
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::DependentFactor>::solve",
+      "seconds": 0.681366,
+      "percent_all_samples": 2.4246435215409403
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::insert_large_chunk",
+      "seconds": 0.67301,
+      "percent_all_samples": 2.394908663526311
+    },
+    {
+      "name": "<sim_domain_robot::articulated::prepared::ContactGeometry>::new_reusing_impl::{closure#4}",
+      "seconds": 0.624839,
+      "percent_all_samples": 2.2234919754671054
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::factor_dependent_mode::{closure#0}",
+      "seconds": 0.552115,
+      "percent_all_samples": 1.964703342837148
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::rigid_motion_columns_with_kinematics",
+      "seconds": 0.536085,
+      "percent_all_samples": 1.907660526420859
+    },
+    {
+      "name": "<core::iter::adapters::GenericShunt<core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<sim_domain_robot::articulated::embedding::servos::BoundServo>, core::slice::iter::Iter<sim_domain_robot::articulated::embedding::servos::ServoBoundary>>, <sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::commands::{closure#0}>, core::result::Result<core::convert::Infallible, alloc::string::String>> as core::iter::traits::iterator::Iterator>::next",
+      "seconds": 0.473176,
+      "percent_all_samples": 1.6837986088954482
+    },
+    {
+      "name": "<sim_domain_robot::motor::MotorUnit as sim_core::equations::Behavior>::residual",
+      "seconds": 0.43774,
+      "percent_all_samples": 1.5576994671282853
+    },
+    {
+      "name": "matrixmultiply::gemm::gemm_loop::<matrixmultiply::dgemm_kernel::KernelFallback>",
+      "seconds": 0.410621,
+      "percent_all_samples": 1.46119640172633
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::expm1::expm1",
+      "seconds": 0.41048,
+      "percent_all_samples": 1.4606946526861118
+    },
+    {
+      "name": "sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#2}, sim_solve::coloring::solve_newton_numeric_colored_scaled_cached_audited<<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#2}>::{closure#0}>",
+      "seconds": 0.399212,
+      "percent_all_samples": 1.4205974315146366
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::evaluate_force_kernel",
+      "seconds": 0.395111,
+      "percent_all_samples": 1.4060040073023345
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::rigid_closure_velocity_jacobian",
+      "seconds": 0.350474,
+      "percent_all_samples": 1.2471630717830644
+    },
+    {
+      "name": "<sim_domain_robot::articulated::prepared::ContactGeometry>::new_reusing_impl",
+      "seconds": 0.342349,
+      "percent_all_samples": 1.218250228153473
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::drivers::EmbeddedDriverBank>::evaluate",
+      "seconds": 0.333569,
+      "percent_all_samples": 1.1870065645143577
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::contact_forces::{closure#0}",
+      "seconds": 0.319112,
+      "percent_all_samples": 1.1355612746247576
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::set_motion",
+      "seconds": 0.315648,
+      "percent_all_samples": 1.1232346173530154
+    },
+    {
+      "name": "nalgebra::linalg::householder::clear_column_unchecked::<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>[1]",
+      "seconds": 0.264405,
+      "percent_all_samples": 0.9408862055239509
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::evaluate_into_readings",
+      "seconds": 0.23328,
+      "percent_all_samples": 0.8301277737736702
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics::{closure#0}",
+      "seconds": 0.230094,
+      "percent_all_samples": 0.818790380567039
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::from_fn_generic::<<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve_impl::{closure#6}>",
+      "seconds": 0.228181,
+      "percent_all_samples": 0.8119829627376965
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve::{closure#0}",
+      "seconds": 0.213284,
+      "percent_all_samples": 0.7589719311623091
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::sin::sin",
+      "seconds": 0.206242,
+      "percent_all_samples": 0.7339129471820528
+    },
+    {
+      "name": "tanh",
+      "seconds": 0.204622,
+      "percent_all_samples": 0.7281481709752913
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::unlink_chunk",
+      "seconds": 0.204256,
+      "percent_all_samples": 0.7268457585730229
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::validate",
+      "seconds": 0.203605,
+      "percent_all_samples": 0.7245291725788242
+    },
+    {
+      "name": "<sim_solve::JacobianCache>::solve",
+      "seconds": 0.202279,
+      "percent_all_samples": 0.7198105964984749
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::original_closure_values",
+      "seconds": 0.199448,
+      "percent_all_samples": 0.7097364721519674
+    },
+    {
+      "name": "<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul",
+      "seconds": 0.199192,
+      "percent_all_samples": 0.7088254951711459
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::cholesky[1]",
+      "seconds": 0.196129,
+      "percent_all_samples": 0.6979257979357688
+    },
+    {
+      "name": "__rustc::__rdl_dealloc",
+      "seconds": 0.19337,
+      "percent_all_samples": 0.6881078858651175
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::solve_upper_triangular_mut::<nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>>>",
+      "seconds": 0.192568,
+      "percent_all_samples": 0.6852539657923874
+    },
+    {
+      "name": "sim_domain_robot::math::rot_vec",
+      "seconds": 0.188032,
+      "percent_all_samples": 0.6691125924134549
+    },
+    {
+      "name": "<sim_domain_control::sampled_fixed_pd::SampledFixedPd as sim_core::equations::Behavior>::residual",
+      "seconds": 0.187236,
+      "percent_all_samples": 0.6662800233637127
+    },
+    {
+      "name": "<sim_solve::JacobianCache>::factorise_tracked",
+      "seconds": 0.184046,
+      "percent_all_samples": 0.6549283961417562
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Generalized as core::clone::Clone>::clone[1]",
+      "seconds": 0.181846,
+      "percent_all_samples": 0.6470996877128208
+    },
+    {
+      "name": "<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>>>>>::mul",
+      "seconds": 0.175334,
+      "percent_all_samples": 0.6239267107631716
+    },
+    {
+      "name": "__rustc::__rdl_realloc",
+      "seconds": 0.175331,
+      "percent_all_samples": 0.6239160352516777
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}",
+      "seconds": 0.170335,
+      "percent_all_samples": 0.6061377501103314
+    },
+    {
+      "name": "<nalgebra::linalg::svd::SVD<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::new",
+      "seconds": 0.169247,
+      "percent_all_samples": 0.6022660979418397
+    },
+    {
+      "name": "<sim_domain_robot::motor::HBridge as sim_core::equations::Behavior>::residual",
+      "seconds": 0.163913,
+      "percent_all_samples": 0.5832850385055024
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::dynamics::PreparedEmbeddedDynamics>::solve_applied",
+      "seconds": 0.140018,
+      "percent_all_samples": 0.49825458945576884
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::cos::cos",
+      "seconds": 0.127621,
+      "percent_all_samples": 0.4541398174587173
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::fold_with::<f64, <nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::amax::{closure#0}, <nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::amax::{closure#1}>",
+      "seconds": 0.12353,
+      "percent_all_samples": 0.43958197828472856
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::fma::fma",
+      "seconds": 0.12347,
+      "percent_all_samples": 0.4393684680548485
+    },
+    {
+      "name": "<nalgebra::linalg::cholesky::Cholesky<f64, nalgebra::base::dimension::Dyn>>::solve::<nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>>>[1]",
+      "seconds": 0.12096,
+      "percent_all_samples": 0.4304366234381994
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl> as sim_dynamics::hybrid::HybridStepper>::advance::{closure#1}",
+      "seconds": 0.120448,
+      "percent_all_samples": 0.4286146694765562
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::exp::exp",
+      "seconds": 0.11536,
+      "percent_all_samples": 0.41050900198272716
+    },
+    {
+      "name": "<nalgebra::linalg::col_piv_qr::ColPivQR<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::new",
+      "seconds": 0.109402,
+      "percent_all_samples": 0.3893074361556373
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::validate_evaluation",
+      "seconds": 0.10932,
+      "percent_all_samples": 0.3890156388414679
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::validate_seed",
+      "seconds": 0.106899,
+      "percent_all_samples": 0.3804005010658075
+    },
+    {
+      "name": "<core::iter::adapters::chain::Chain<core::iter::adapters::chain::Chain<core::iter::adapters::chain::Chain<core::iter::adapters::chain::Chain<core::slice::iter::Iter<f64>, core::slice::iter::Iter<f64>>, core::slice::iter::Iter<f64>>, core::slice::iter::Iter<f64>>, core::slice::iter::Iter<f64>> as core::iter::traits::iterator::Iterator>::try_fold::<(), core::iter::traits::iterator::Iterator::any::check<&f64, <sim_domain_robot::articulated::Articulated>::validate_rigid_motion::{closure#1}>::{closure#0}, core::ops::control_flow::ControlFlow<()>>",
+      "seconds": 0.106418,
+      "percent_all_samples": 0.37868886072293567
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::hypot::hypot",
+      "seconds": 0.106277,
+      "percent_all_samples": 0.3781871116827175
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::factor_matrix",
+      "seconds": 0.103132,
+      "percent_all_samples": 0.3669956171331711
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#0}",
+      "seconds": 0.101535,
+      "percent_all_samples": 0.3613126865145302
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#2}::{closure#8}",
+      "seconds": 0.100497,
+      "percent_all_samples": 0.35761895953760514
+    },
+    {
+      "name": "__rustc::__rdl_alloc_zeroed",
+      "seconds": 0.099673,
+      "percent_all_samples": 0.35468675238058567
+    },
+    {
+      "name": "<core::iter::adapters::chain::Chain<nalgebra::base::iter::MatrixIter<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, nalgebra::base::iter::MatrixIter<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>> as core::iter::traits::iterator::Iterator>::try_fold::<(), core::iter::traits::iterator::Iterator::any::check<&f64, <sim_domain_robot::articulated::transmission_coordinates::TransmissionCoordinateMap>::solve_accelerations::{closure#0}>::{closure#0}, core::ops::control_flow::ControlFlow<()>>",
+      "seconds": 0.097359,
+      "percent_all_samples": 0.3464523745148781
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::constraint_rows_with_reactions",
+      "seconds": 0.092474,
+      "percent_all_samples": 0.3290690832988099
+    },
+    {
+      "name": "sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>",
+      "seconds": 0.090219,
+      "percent_all_samples": 0.32104465715915104
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#2}",
+      "seconds": 0.089884,
+      "percent_all_samples": 0.319852558375654
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl>::inputs_at",
+      "seconds": 0.088937,
+      "percent_all_samples": 0.31648265524738045
+    },
+    {
+      "name": "nalgebra::linalg::householder::clear_row_unchecked::<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>[1]",
+      "seconds": 0.088013,
+      "percent_all_samples": 0.3131945977072275
+    },
+    {
+      "name": "<nalgebra::geometry::reflection::Reflection<f64, nalgebra::base::dimension::Dyn, nalgebra::base::matrix_view::ViewStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>>>::reflect_with_sign::<nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::matrix_view::ViewStorageMut<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>>",
+      "seconds": 0.080287,
+      "percent_all_samples": 0.2857015971063386
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::commands",
+      "seconds": 0.073841,
+      "percent_all_samples": 0.2627634814095575
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::contact_forces",
+      "seconds": 0.073748,
+      "percent_all_samples": 0.26243254055324344
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[10]",
+      "seconds": 0.069764,
+      "percent_all_samples": 0.2482554612892075
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::jacobian::{closure#0}",
+      "seconds": 0.066159,
+      "percent_all_samples": 0.23542705497724728
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::from_fn_generic::<<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve_impl::{closure#5}>",
+      "seconds": 0.063178,
+      "percent_all_samples": 0.22481915505603967
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}",
+      "seconds": 0.061684,
+      "percent_all_samples": 0.2195027503320262
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::event_data",
+      "seconds": 0.06125,
+      "percent_all_samples": 0.2179583596692271
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#2}",
+      "seconds": 0.059583,
+      "percent_all_samples": 0.2120263337823928
+    },
+    {
+      "name": "core::slice::sort::unstable::quicksort::quicksort::<(usize, usize, f64), <[(usize, usize, f64)]>::sort_unstable_by<<sim_solve::SparseJacobian>::summed::{closure#0}>::{closure#0}>",
+      "seconds": 0.057802,
+      "percent_all_samples": 0.20568863845878638
+    },
+    {
+      "name": "<alloc::vec::Vec<f64> as core::clone::Clone>::clone[2]",
+      "seconds": 0.054016,
+      "percent_all_samples": 0.19221614295335462
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::dynamics::PreparedEmbeddedDynamics>::accelerations::{closure#0}",
+      "seconds": 0.053724,
+      "percent_all_samples": 0.191177059834605
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::rem_pio2::rem_pio2",
+      "seconds": 0.052835,
+      "percent_all_samples": 0.1880135499285488
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::position",
+      "seconds": 0.04922,
+      "percent_all_samples": 0.17514955857827524
+    },
+    {
+      "name": "<nalgebra::geometry::reflection::Reflection<f64, nalgebra::base::dimension::Dyn, nalgebra::base::matrix_view::ViewStorageMut<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>>>::reflect_rows_with_sign::<nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::matrix_view::ViewStorageMut<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>, nalgebra::base::matrix_view::ViewStorageMut<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>>[1]",
+      "seconds": 0.049023,
+      "percent_all_samples": 0.17444853332350238
+    },
+    {
+      "name": "<nalgebra::base::default_allocator::DefaultAllocator as nalgebra::base::allocator::Allocator<nalgebra::base::dimension::Dyn>>::allocate_from_iterator::<f64, core::iter::adapters::chain::Chain<core::iter::adapters::flatten::FlatMap<core::iter::adapters::filter::Filter<core::iter::adapters::enumerate::Enumerate<core::slice::iter::Iter<sim_domain_robot::articulated::BaseC>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#7}>, [f64; 6usize], <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#8}>, core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<f64>, core::slice::iter::Iter<f64>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#9}>>>",
+      "seconds": 0.048874,
+      "percent_all_samples": 0.17391831625263357
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::slider_crank::AnalyticSliderCrank>::coordinates",
+      "seconds": 0.045649,
+      "percent_all_samples": 0.16244214139658036
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::advance_one",
+      "seconds": 0.043541,
+      "percent_all_samples": 0.15494081532012763
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::new",
+      "seconds": 0.043099,
+      "percent_all_samples": 0.15336795662667785
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl>::driver_inputs",
+      "seconds": 0.042276,
+      "percent_all_samples": 0.15043930797348973
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::validate_rigid_motion",
+      "seconds": 0.040104,
+      "percent_all_samples": 0.14271023765183158
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::prepare_contact_history_rates::{closure#1}",
+      "seconds": 0.038042,
+      "percent_all_samples": 0.1353726027516202
+    },
+    {
+      "name": "<nalgebra::linalg::col_piv_qr::ColPivQR<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::r",
+      "seconds": 0.031848,
+      "percent_all_samples": 0.11333123002033543
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}",
+      "seconds": 0.03139,
+      "percent_all_samples": 0.1117014352655843
+    },
+    {
+      "name": "<sim_domain_control::sampled_fixed_pd::SampledFixedPd as sim_core::equations::Behavior>::scheduled_events",
+      "seconds": 0.029686,
+      "percent_all_samples": 0.10563774473699063
+    },
+    {
+      "name": "<nalgebra::linalg::bidiagonal::Bidiagonal<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::new[1]",
+      "seconds": 0.029372,
+      "percent_all_samples": 0.10452037453395165
+    },
+    {
+      "name": "sim_solve::infinity_norm",
+      "seconds": 0.028882,
+      "percent_all_samples": 0.10277670765659783
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::Generalized>[2]",
+      "seconds": 0.028071,
+      "percent_all_samples": 0.0998907610493857
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::slider_crank::AnalyticPositions>::apply",
+      "seconds": 0.027583,
+      "percent_all_samples": 0.09815421117969456
+    },
+    {
+      "name": "<sim_core::equations::Context>::state_rate",
+      "seconds": 0.025723,
+      "percent_all_samples": 0.09153539405341271
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::event_data",
+      "seconds": 0.025667,
+      "percent_all_samples": 0.09133611783885799
+    },
+    {
+      "name": "<sim_solve::coloring::BlockDiagonalColoring>::assemble::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#2}>",
+      "seconds": 0.025459,
+      "percent_all_samples": 0.09059594904194046
+    },
+    {
+      "name": "<sim_core::equations::Context>::across_derivative",
+      "seconds": 0.023557,
+      "percent_all_samples": 0.08382767475474258
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[17]",
+      "seconds": 0.022771,
+      "percent_all_samples": 0.0810306907433138
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#4}",
+      "seconds": 0.022528,
+      "percent_all_samples": 0.08016597431229956
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::implicit_trial_pose",
+      "seconds": 0.022146,
+      "percent_all_samples": 0.07880662584872986
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<usize, alloc::collections::btree::set_val::SetValZST>>::insert[1]",
+      "seconds": 0.022115,
+      "percent_all_samples": 0.07869631222995849
+    },
+    {
+      "name": "<sim_domain_control::sampled_fixed_pd::SampledFixedPd as sim_core::equations::Behavior>::guards",
+      "seconds": 0.022095,
+      "percent_all_samples": 0.0786251421533318
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact",
+      "seconds": 0.021819,
+      "percent_all_samples": 0.07764299509588353
+    },
+    {
+      "name": "stepResult",
+      "seconds": 0.020707,
+      "percent_all_samples": 0.07368593883543977
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>[7]",
+      "seconds": 0.019814,
+      "percent_all_samples": 0.07050819491405821
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::from_element_generic",
+      "seconds": 0.019104,
+      "percent_all_samples": 0.06798165719381086
+    },
+    {
+      "name": "<sim_solve::JacobianCache as core::clone::Clone>::clone[1]",
+      "seconds": 0.01883,
+      "percent_all_samples": 0.06700662714402525
+    },
+    {
+      "name": "<sim_domain_robot::articulated::prepared::ContactGeometry>::new_reusing_impl::{closure#5}",
+      "seconds": 0.01816,
+      "percent_all_samples": 0.06462242957703125
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl as sim_domain_robot::articulated::embedding::control::SampledMotorControl>::boundaries",
+      "seconds": 0.017925,
+      "percent_all_samples": 0.06378618117666769
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#5}",
+      "seconds": 0.017717,
+      "percent_all_samples": 0.06304601237975015
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::audit_slider_cranks",
+      "seconds": 0.01769,
+      "percent_all_samples": 0.06294993277630412
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::connect",
+      "seconds": 0.017682,
+      "percent_all_samples": 0.06292146474565345
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::from_fn_generic::<<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve_impl::{closure#7}>",
+      "seconds": 0.016674,
+      "percent_all_samples": 0.059334492883668453
+    },
+    {
+      "name": "<alloc::sync::Arc<alloc::vec::Vec<alloc::vec::Vec<(usize, (usize, nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>, f64))>>>>::drop_slow",
+      "seconds": 0.015504,
+      "percent_all_samples": 0.0551710434010073
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[11]",
+      "seconds": 0.015029,
+      "percent_all_samples": 0.053480754081123495
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::atan::atan",
+      "seconds": 0.014772,
+      "percent_all_samples": 0.05256621859647058
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::slider_crank::AnalyticPositions>::new",
+      "seconds": 0.014702,
+      "percent_all_samples": 0.052317123328277176
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::dynamics::PreparedEmbeddedDynamics>[1]",
+      "seconds": 0.01426,
+      "percent_all_samples": 0.0507442646348274
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::drivers::EmbeddedDriverBank>::validate_binding",
+      "seconds": 0.013614,
+      "percent_all_samples": 0.04844547115978543
+    },
+    {
+      "name": "",
+      "seconds": 0.012514,
+      "percent_all_samples": 0.04453111694531768
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::validate_event_point",
+      "seconds": 0.012266,
+      "percent_all_samples": 0.04364860799514677
+    },
+    {
+      "name": "sim_dynamics::hybrid::advance_interval::<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl>>",
+      "seconds": 0.012134,
+      "percent_all_samples": 0.04317888548941064
+    },
+    {
+      "name": "__wbg_now_e7c6795a7f81e10f",
+      "seconds": 0.012075,
+      "percent_all_samples": 0.042968933763361916
+    },
+    {
+      "name": "<alloc::vec::Vec<usize> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<usize, core::iter::adapters::filter::Filter<core::ops::range::Range<usize>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#5}>>>::from_iter",
+      "seconds": 0.011862,
+      "percent_all_samples": 0.042210972447287706
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::vec::Vec<alloc::vec::Vec<f64>>>[2]",
+      "seconds": 0.011352,
+      "percent_all_samples": 0.0403961354933072
+    },
+    {
+      "name": "<nalgebra::linalg::svd::SVD<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::delimit_subproblem[1]",
+      "seconds": 0.010902,
+      "percent_all_samples": 0.03879480876920676
+    },
+    {
+      "name": "core::slice::sort::shared::smallsort::insertion_sort_shift_left::<(f64, usize), <[(f64, usize)]>::sort_unstable_by<<nalgebra::linalg::svd::SVD<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::sort_by_singular_values::{closure#1}>::{closure#0}>[1]",
+      "seconds": 0.010404,
+      "percent_all_samples": 0.03702267386120227
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::advance",
+      "seconds": 0.010125,
+      "percent_all_samples": 0.03602985129225999
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Generalized as core::clone::Clone>::clone",
+      "seconds": 0.010108,
+      "percent_all_samples": 0.03596935672712731
+    },
+    {
+      "name": "<sim_domain_robot::motor::MotorUnit as sim_core::equations::Behavior>::guards",
+      "seconds": 0.010018,
+      "percent_all_samples": 0.03564909138230722
+    },
+    {
+      "name": "<alloc::vec::Vec<f64> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<f64, core::iter::adapters::map::Map<core::slice::iter::Iter<&str>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#8}>>>::from_iter",
+      "seconds": 0.009987,
+      "percent_all_samples": 0.03553877776353585
+    },
+    {
+      "name": "<alloc::vec::Vec<(usize, (usize, nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>, f64))> as alloc::vec::spec_from_elem::SpecFromElem>::from_elem::<alloc::alloc::Global>",
+      "seconds": 0.009878,
+      "percent_all_samples": 0.035150900845920416
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::dispose_chunk",
+      "seconds": 0.009793,
+      "percent_all_samples": 0.034848428020257
+    },
+    {
+      "name": "<alloc::vec::Vec<usize> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<usize, core::iter::adapters::chain::Chain<core::ops::range::Range<usize>, core::iter::adapters::map::Map<core::slice::iter::Iter<usize>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve_impl::{closure#3}>>>>::from_iter",
+      "seconds": 0.009683,
+      "percent_all_samples": 0.03445699259881022
+    },
+    {
+      "name": "<f64 as zmij[f4f8db89e680c2b]::private::Sealed>::write_to_zmij_buffer",
+      "seconds": 0.009093,
+      "percent_all_samples": 0.03235747533832297
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl> as sim_dynamics::hybrid::HybridStepper>::advance",
+      "seconds": 0.009056,
+      "percent_all_samples": 0.032225810696563606
+    },
+    {
+      "name": "<alloc::string::String as core::clone::Clone>::clone",
+      "seconds": 0.008816,
+      "percent_all_samples": 0.03137176977704337
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::factor_dependent_mode",
+      "seconds": 0.008712,
+      "percent_all_samples": 0.031001685378584595
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<[f64; 6usize]>>::grow_one",
+      "seconds": 0.008682,
+      "percent_all_samples": 0.030894930263644566
+    },
+    {
+      "name": "__rustc::__rdl_alloc",
+      "seconds": 0.007585,
+      "percent_all_samples": 0.026991251560670816
+    },
+    {
+      "name": "sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>::{closure#4}",
+      "seconds": 0.00744,
+      "percent_all_samples": 0.026475268505127342
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::frame",
+      "seconds": 0.007356,
+      "percent_all_samples": 0.02617635418329526
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#3}",
+      "seconds": 0.007256,
+      "percent_all_samples": 0.025820503800161827
+    },
+    {
+      "name": "<alloc::rc::Rc<sim_domain_robot::articulated::embedding::EmbeddedMotion>>::drop_slow",
+      "seconds": 0.007123,
+      "percent_all_samples": 0.025347222790594363
+    },
+    {
+      "name": "core::slice::sort::shared::smallsort::sort8_stable::<(usize, usize, f64), <[(usize, usize, f64)]>::sort_unstable_by<<sim_solve::SparseJacobian>::summed::{closure#0}>::{closure#0}>",
+      "seconds": 0.006848,
+      "percent_all_samples": 0.024368634236977424
+    },
+    {
+      "name": "<serde_json::value::Value as serde_core::ser::Serialize>::serialize::<&mut serde_json::ser::Serializer<&mut alloc::vec::Vec<u8>>>",
+      "seconds": 0.006823,
+      "percent_all_samples": 0.024279671641194066
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::guard_count",
+      "seconds": 0.006816,
+      "percent_all_samples": 0.024254762114374724
+    },
+    {
+      "name": "<sim_solve::profile::Bucket>::time::<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}>",
+      "seconds": 0.006743,
+      "percent_all_samples": 0.02399499133468732
+    },
+    {
+      "name": "self.onmessage",
+      "seconds": 0.006516,
+      "percent_all_samples": 0.02318721096497443
+    },
+    {
+      "name": "<sim_solve::profile::Bucket>::time::<core::result::Result<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, alloc::string::String>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#4}>",
+      "seconds": 0.006457,
+      "percent_all_samples": 0.022977259238925705
+    },
+    {
+      "name": "<sim_solve::SparseJacobian>::summed",
+      "seconds": 0.006193,
+      "percent_all_samples": 0.022037814227453444
+    },
+    {
+      "name": "<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<3usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 3usize>> as core::ops::arith::Mul>::mul",
+      "seconds": 0.006131,
+      "percent_all_samples": 0.021817186989910715
+    },
+    {
+      "name": "postMessage",
+      "seconds": 0.006077,
+      "percent_all_samples": 0.021625027783018662
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<f64>>::grow_one[4]",
+      "seconds": 0.006037,
+      "percent_all_samples": 0.02148268762976529
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::vec::Vec<(alloc::vec::Vec<usize>, alloc::vec::Vec<usize>, sim_domain_robot::articulated::embedding::DependentFactor)>>",
+      "seconds": 0.005918,
+      "percent_all_samples": 0.021059225673836505
+    },
+    {
+      "name": "sim_domain_multibody::contact::regularized_coulomb_scalar",
+      "seconds": 0.005864,
+      "percent_all_samples": 0.020867066466944452
+    },
+    {
+      "name": "<rhai::serde::de::DynamicDeserializer as serde_core::de::Deserializer>::deserialize_any::<<serde_json::value::Value as serde_core::de::Deserialize>::deserialize::ValueVisitor>",
+      "seconds": 0.005654,
+      "percent_all_samples": 0.020119780662364247
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl> as sim_dynamics::hybrid::HybridStepper>::guards",
+      "seconds": 0.005594,
+      "percent_all_samples": 0.019906270432484188
+    },
+    {
+      "name": "__rustc::__rust_realloc",
+      "seconds": 0.005563,
+      "percent_all_samples": 0.019795956813712823
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<_, _, _> as core::clone::Clone>::clone::clone_subtree::<alloc::string::String, serde_json::value::Value, alloc::alloc::Global>[1]",
+      "seconds": 0.005485,
+      "percent_all_samples": 0.019518393514868747
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<usize, (alloc::vec::Vec<usize>, alloc::vec::Vec<usize>)>>::dying_next",
+      "seconds": 0.005448,
+      "percent_all_samples": 0.019386728873109375
+    },
+    {
+      "name": "<serde_json::value::Value as serde_core::ser::Serialize>::serialize::<serde_json::value::ser::Serializer>[1]",
+      "seconds": 0.004678,
+      "percent_all_samples": 0.01664668092298195
+    },
+    {
+      "name": "<alloc::vec::Vec<f64> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<f64, core::iter::adapters::chain::Chain<core::iter::adapters::map::Map<core::ops::range::Range<usize>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#6}>, core::iter::adapters::map::Map<core::slice::iter::Iter<&sim_domain_robot::articulated::Dof>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#7}>>>>::from_iter",
+      "seconds": 0.004576,
+      "percent_all_samples": 0.01628371353218585
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::implicit::ImplicitSolverWorkspace as core::clone::Clone>::clone",
+      "seconds": 0.004556,
+      "percent_all_samples": 0.016212543455559163
+    },
+    {
+      "name": "<alloc::vec::Vec<serde_json::value::Value> as core::ops::drop::Drop>::drop[1]",
+      "seconds": 0.004545,
+      "percent_all_samples": 0.016173399913414484
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<alloc::string::String, serde_json::value::Value>>::dying_next[1]",
+      "seconds": 0.004541,
+      "percent_all_samples": 0.016159165898089148
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::validate_implicit_inputs",
+      "seconds": 0.004517,
+      "percent_all_samples": 0.016073761806137125
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>>>>::from_element_generic[1]",
+      "seconds": 0.00446,
+      "percent_all_samples": 0.015870927087751067
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::reduced_velocity",
+      "seconds": 0.004289,
+      "percent_all_samples": 0.015262422932592898
+    },
+    {
+      "name": "(program)",
+      "seconds": 0.00421,
+      "percent_all_samples": 0.014981301129917487
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::borrow::Cow<(alloc::vec::Vec<sim_domain_robot::articulated::LinkKin>, alloc::vec::Vec<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>>, sim_domain_robot::articulated::prepared::JointAxes)>>",
+      "seconds": 0.004165,
+      "percent_all_samples": 0.014821168457507443
+    },
+    {
+      "name": "<serde_json::value::Value>::pointer",
+      "seconds": 0.00415,
+      "percent_all_samples": 0.014767790900037428
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<usize, alloc::collections::btree::set_val::SetValZST>>::dying_next",
+      "seconds": 0.004144,
+      "percent_all_samples": 0.014746439877049423
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::atan2::atan2",
+      "seconds": 0.004099,
+      "percent_all_samples": 0.014586307204639378
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_dot_index_chain_raw",
+      "seconds": 0.003986,
+      "percent_all_samples": 0.014184196271698599
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[18]",
+      "seconds": 0.003863,
+      "percent_all_samples": 0.013746500300444478
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl as sim_domain_robot::articulated::embedding::control::SampledMotorControl>::guards",
+      "seconds": 0.003738,
+      "percent_all_samples": 0.013301687321527688
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::collections::btree::set::BTreeSet<usize>>",
+      "seconds": 0.003654,
+      "percent_all_samples": 0.013002772999695605
+    },
+    {
+      "name": "decode",
+      "seconds": 0.003562,
+      "percent_all_samples": 0.012675390647212847
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_dot_index_chain",
+      "seconds": 0.003152,
+      "percent_all_samples": 0.011216404076365778
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::Generalized>[1]",
+      "seconds": 0.003094,
+      "percent_all_samples": 0.011010010854148386
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_control::fixed_pd::Expr>",
+      "seconds": 0.003074,
+      "percent_all_samples": 0.0109388407775217
+    },
+    {
+      "name": "core::ptr::drop_glue::<core::option::Option<sim_solve::JacobianCache>>[1]",
+      "seconds": 0.00305,
+      "percent_all_samples": 0.010853436685569677
+    },
+    {
+      "name": "__rustc::__rust_dealloc",
+      "seconds": 0.003049,
+      "percent_all_samples": 0.010849878181738342
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::check_rank",
+      "seconds": 0.003042,
+      "percent_all_samples": 0.010824968654919002
+    },
+    {
+      "name": "memcmp",
+      "seconds": 0.003026,
+      "percent_all_samples": 0.010768032593617652
+    },
+    {
+      "name": "<rhai::engine::Engine>::resolve_fn",
+      "seconds": 0.003023,
+      "percent_all_samples": 0.01075735708212365
+    },
+    {
+      "name": "<rhai::engine::Engine>::exec_native_fn_call",
+      "seconds": 0.003021,
+      "percent_all_samples": 0.01075024007446098
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<(usize, usize, f64)>>::grow_one",
+      "seconds": 0.003014,
+      "percent_all_samples": 0.01072533054764164
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_fn_call_expr",
+      "seconds": 0.003013,
+      "percent_all_samples": 0.010721772043810307
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::jacobian",
+      "seconds": 0.003008,
+      "percent_all_samples": 0.010703979524653635
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::compile_slider_crank::{closure#2}",
+      "seconds": 0.003005,
+      "percent_all_samples": 0.010693304013159632
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[1]",
+      "seconds": 0.00299,
+      "percent_all_samples": 0.010639926455689617
+    },
+    {
+      "name": "<&mut serde_json::ser::Serializer<&mut alloc::vec::Vec<u8>> as serde_core::ser::Serializer>::serialize_str",
+      "seconds": 0.002989,
+      "percent_all_samples": 0.010636367951858282
+    },
+    {
+      "name": "<rhai::engine::Engine>::get_interned_string::<rhai::types::immutable_string::ImmutableString>",
+      "seconds": 0.002974,
+      "percent_all_samples": 0.010582990394388267
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::evaluate_reusing_contacts",
+      "seconds": 0.00295,
+      "percent_all_samples": 0.010497586302436244
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_stmt",
+      "seconds": 0.002882,
+      "percent_all_samples": 0.01025560804190551
+    },
+    {
+      "name": "<serde_json::value::Value as <[_]>::to_vec_in::ConvertVec>::to_vec::<alloc::alloc::Global>[1]",
+      "seconds": 0.002844,
+      "percent_all_samples": 0.010120384896314807
+    },
+    {
+      "name": "<sim_solve::profile::Bucket>::time::<sim_domain_robot::articulated::prepared::ForceKernelResult, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#6}>",
+      "seconds": 0.002841,
+      "percent_all_samples": 0.010109709384820803
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::DependentFactor>",
+      "seconds": 0.00284,
+      "percent_all_samples": 0.010106150880989468
+    },
+    {
+      "name": "wasm-to-js",
+      "seconds": 0.002769,
+      "percent_all_samples": 0.009853497108964732
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::jump",
+      "seconds": 0.002756,
+      "percent_all_samples": 0.009807236559157386
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_expr",
+      "seconds": 0.002745,
+      "percent_all_samples": 0.00976809301701271
+    },
+    {
+      "name": "<sim_solve::JacobianCache as core::clone::Clone>::clone",
+      "seconds": 0.002724,
+      "percent_all_samples": 0.009693364436554688
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorState<alloc::vec::Vec<f64>> as core::clone::Clone>::clone",
+      "seconds": 0.002723,
+      "percent_all_samples": 0.009689805932723354
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<serde_core::private::content::Content>>::grow_one",
+      "seconds": 0.002669,
+      "percent_all_samples": 0.0094976467258313
+    },
+    {
+      "name": "__rustc::__rust_no_alloc_shim_is_unstable_v2",
+      "seconds": 0.002636,
+      "percent_all_samples": 0.009380216099397268
+    },
+    {
+      "name": "<rhai::types::dynamic::Dynamic as core::clone::Clone>::clone",
+      "seconds": 0.002627,
+      "percent_all_samples": 0.009348189564915258
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<usize, alloc::collections::btree::set_val::SetValZST> as core::cmp::PartialEq>::eq",
+      "seconds": 0.002606,
+      "percent_all_samples": 0.009273460984457239
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::original_closure_units",
+      "seconds": 0.002575,
+      "percent_all_samples": 0.009163147365685874
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>[1]",
+      "seconds": 0.00256,
+      "percent_all_samples": 0.009109769808215859
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_cached_with_guess",
+      "seconds": 0.002547,
+      "percent_all_samples": 0.009063509258408512
+    },
+    {
+      "name": "<sim_script::RhaiController as sim_core::couple::Coupler>::sample",
+      "seconds": 0.002352,
+      "percent_all_samples": 0.00836960101129832
+    },
+    {
+      "name": "js-to-wasm:iiii:iii",
+      "seconds": 0.002265,
+      "percent_all_samples": 0.008060011177972235
+    },
+    {
+      "name": "<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<3usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 3usize>> as core::ops::arith::Mul<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>>>::mul",
+      "seconds": 0.001596,
+      "percent_all_samples": 0.005679372114809575
+    },
+    {
+      "name": "core::ptr::drop_glue::<rhai::func::function::RhaiFunc>[1]",
+      "seconds": 0.001578,
+      "percent_all_samples": 0.005615319045845557
+    },
+    {
+      "name": "<rhai::engine::Engine>::get_arg_value",
+      "seconds": 0.001574,
+      "percent_all_samples": 0.00560108503052022
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<alloc::string::String, f64> as core::iter::traits::collect::FromIterator<(alloc::string::String, f64)>>::from_iter::<core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<sim_core::couple::Channel>, core::slice::iter::Iter<f64>>, <sim_runtime::embedded_policy::SampledPolicy>::sample::{closure#15}>>",
+      "seconds": 0.001545,
+      "percent_all_samples": 0.005497888419411525
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>::dying_next[1]",
+      "seconds": 0.001543,
+      "percent_all_samples": 0.005490771411748856
+    },
+    {
+      "name": "<sim_solve::coloring::BlockDiagonalColoring>::new",
+      "seconds": 0.001534,
+      "percent_all_samples": 0.005458744877266847
+    },
+    {
+      "name": "rhai::api::formatting::map_std_type_name[1]",
+      "seconds": 0.001534,
+      "percent_all_samples": 0.005458744877266847
+    },
+    {
+      "name": "<smartstring::boxed::BoxedString as core::clone::Clone>::clone",
+      "seconds": 0.001528,
+      "percent_all_samples": 0.005437393854278841
+    },
+    {
+      "name": "core::ptr::drop_glue::<rhai::defer::Deferred<rhai::types::scope::Scope, <rhai::engine::Engine>::eval_stmt::{closure#30}>>",
+      "seconds": 0.001515,
+      "percent_all_samples": 0.005391133304471495
+    },
+    {
+      "name": "<rhai::engine::Engine>::exec_syntactic_fn_call",
+      "seconds": 0.001515,
+      "percent_all_samples": 0.005391133304471495
+    },
+    {
+      "name": "<rhai::ast::expr::Expr>::get_literal_value",
+      "seconds": 0.001515,
+      "percent_all_samples": 0.005391133304471495
+    },
+    {
+      "name": "<rhai::engine::Engine>::make_method_call",
+      "seconds": 0.001514,
+      "percent_all_samples": 0.005387574800640161
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<sim_solve::NewtonIteration>>::grow_one[1]",
+      "seconds": 0.001513,
+      "percent_all_samples": 0.005384016296808826
+    },
+    {
+      "name": "<serde_json::value::ser::SerializeMap as serde_core::ser::SerializeStruct>::serialize_field::<f64>[1]",
+      "seconds": 0.001513,
+      "percent_all_samples": 0.005384016296808826
+    },
+    {
+      "name": "<alloc::collections::btree::map::entry::VacantEntry<alloc::string::String, serde_json::value::Value>>::insert",
+      "seconds": 0.001513,
+      "percent_all_samples": 0.005384016296808826
+    },
+    {
+      "name": "<sim_domain_control::sampled_fixed_pd::SampledFixedPd as sim_core::equations::Behavior>::jump",
+      "seconds": 0.001513,
+      "percent_all_samples": 0.005384016296808826
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::Evaluation>",
+      "seconds": 0.001513,
+      "percent_all_samples": 0.005384016296808826
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::evaluate_with_rates",
+      "seconds": 0.001512,
+      "percent_all_samples": 0.005380457792977492
+    },
+    {
+      "name": "<alloc::collections::btree::node::Handle<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Dying, alloc::string::String, serde_json::value::Value, alloc::collections::btree::node::marker::LeafOrInternal>, alloc::collections::btree::node::marker::KV>>::drop_key_val",
+      "seconds": 0.001512,
+      "percent_all_samples": 0.005380457792977492
+    },
+    {
+      "name": "<sim_runtime::environment::Transition as core::clone::Clone>::clone",
+      "seconds": 0.001509,
+      "percent_all_samples": 0.005369782281483489
+    },
+    {
+      "name": "<serde_json::value::ser::Serializer as serde_core::ser::Serializer>::collect_seq::<&alloc::vec::Vec<f64>>",
+      "seconds": 0.001509,
+      "percent_all_samples": 0.005369782281483489
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>::bulk_build_from_sorted_iter::<alloc::vec::Vec<(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic)>>",
+      "seconds": 0.001509,
+      "percent_all_samples": 0.005369782281483489
+    },
+    {
+      "name": "<rhai::types::dynamic::Dynamic>::flatten[1]",
+      "seconds": 0.001508,
+      "percent_all_samples": 0.005366223777652154
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::state_layout",
+      "seconds": 0.001507,
+      "percent_all_samples": 0.00536266527382082
+    },
+    {
+      "name": "step",
+      "seconds": 0.001506,
+      "percent_all_samples": 0.005359106769989486
+    },
+    {
+      "name": "<core::str::pattern::StrSearcher>::new",
+      "seconds": 0.001506,
+      "percent_all_samples": 0.005359106769989486
+    },
+    {
+      "name": "<sim_domain_control::trajectory::TrajectorySample as serde_core::ser::Serialize>::serialize::<&mut rhai::serde::ser::DynamicSerializer>",
+      "seconds": 0.001505,
+      "percent_all_samples": 0.005355548266158152
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::implicit::ImplicitSolverWorkspace>",
+      "seconds": 0.001505,
+      "percent_all_samples": 0.005355548266158152
+    },
+    {
+      "name": "<alloc::sync::Arc<sim_solve::Factor>>::drop_slow",
+      "seconds": 0.001505,
+      "percent_all_samples": 0.005355548266158152
+    },
+    {
+      "name": "core::slice::sort::shared::pivot::median3_rec::<(usize, usize, f64), <[(usize, usize, f64)]>::sort_unstable_by<<sim_solve::SparseJacobian>::summed::{closure#0}>::{closure#0}>",
+      "seconds": 0.001503,
+      "percent_all_samples": 0.005348431258495483
+    },
+    {
+      "name": "<sim_domain_control::fixed_pd::Expr>::eval",
+      "seconds": 0.001503,
+      "percent_all_samples": 0.005348431258495483
+    },
+    {
+      "name": "core::slice::sort::unstable::ipnsort::<(usize, usize, f64), <[(usize, usize, f64)]>::sort_unstable_by<<sim_solve::SparseJacobian>::summed::{closure#0}>::{closure#0}>",
+      "seconds": 0.001499,
+      "percent_all_samples": 0.005334197243170146
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::vec::into_iter::IntoIter<(alloc::vec::Vec<usize>, alloc::vec::Vec<usize>)>>",
+      "seconds": 0.001498,
+      "percent_all_samples": 0.005330638739338812
+    },
+    {
+      "name": "<core::iter::adapters::filter::Filter<core::ops::range::Range<usize>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#5}> as core::iter::traits::iterator::Iterator>::next",
+      "seconds": 0.001493,
+      "percent_all_samples": 0.00531284622018214
+    },
+    {
+      "name": "<rhai::engine::Engine>::search_namespace",
+      "seconds": 0.001492,
+      "percent_all_samples": 0.005309287716350805
+    },
+    {
+      "name": "<sim_solve::JacobianCache>::factorise",
+      "seconds": 0.001486,
+      "percent_all_samples": 0.0052879366933627995
+    },
+    {
+      "name": "<sim_runtime::environment::EmbeddedEnvironment>::observe::{closure#4}",
+      "seconds": 0.001474,
+      "percent_all_samples": 0.005245234647386788
+    },
+    {
+      "name": "<alloc::collections::btree::set::BTreeSet<usize> as core::iter::traits::collect::FromIterator<usize>>::from_iter::<core::iter::adapters::copied::Copied<core::slice::iter::Iter<usize>>>",
+      "seconds": 0.001474,
+      "percent_all_samples": 0.005245234647386788
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::vec::into_iter::IntoIter<sim_domain_robot::articulated::embedding::slider_crank::SliderCrankAudit>>",
+      "seconds": 0.001319,
+      "percent_all_samples": 0.004693666553529968
+    },
+    {
+      "name": "<web_time::time::js::Performance>::now::__wbg_now_e7c6795a7f81e10f externref shim",
+      "seconds": 0.001309,
+      "percent_all_samples": 0.004658081515216625
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::implicit::ImplicitStepDiagnostics>",
+      "seconds": 0.001275,
+      "percent_all_samples": 0.004537092384951258
+    },
+    {
+      "name": "<smartstring::inline::InlineString as core::ops::deref::Deref>::deref",
+      "seconds": 0.001207,
+      "percent_all_samples": 0.004295114124420524
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>[13]",
+      "seconds": 0.001185,
+      "percent_all_samples": 0.0042168270401311695
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<_, _, _> as core::clone::Clone>::clone::clone_subtree::<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic, alloc::alloc::Global>[1]",
+      "seconds": 0.001181,
+      "percent_all_samples": 0.004202593024805832
+    },
+    {
+      "name": "<sim_script::engine::{closure#9} as rhai::func::register::RhaiNativeFunc<(alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>, f64), 2usize, false, rhai::types::dynamic::Dynamic, true>>::into_rhai_function::{closure#0}",
+      "seconds": 0.001159,
+      "percent_all_samples": 0.004124305940516477
+    },
+    {
+      "name": "<<alloc::collections::btree::node::Handle<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Dying, _, _, _>, alloc::collections::btree::node::marker::KV>>::drop_key_val::Dropper<serde_json::value::Value> as core::ops::drop::Drop>::drop",
+      "seconds": 0.001099,
+      "percent_all_samples": 0.003910795710636418
+    },
+    {
+      "name": "<alloc::vec::Vec<f64> as alloc::vec::spec_from_iter::SpecFromIter<f64, core::iter::adapters::map::Map<core::slice::iter::Iter<usize>, <sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::advance_with_control_cached<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#5}, sim_domain_robot::articulated::embedding::servos::PoweredServoControl>::{closure#3}>>>::from_iter",
+      "seconds": 0.001088,
+      "percent_all_samples": 0.0038716521684917403
+    },
+    {
+      "name": "core::slice::sort::stable::drift::sort::<(alloc::string::String, f64), <[(alloc::string::String, f64)]>::sort_by<<alloc::collections::btree::map::BTreeMap<alloc::string::String, f64> as core::iter::traits::collect::FromIterator<(alloc::string::String, f64)>>::from_iter<core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<sim_core::couple::Channel>, core::slice::iter::Iter<f64>>, <sim_runtime::embedded_policy::SampledPolicy>::sample::{closure#15}>>::{closure#0}>::{closure#0}>",
+      "seconds": 0.001083,
+      "percent_all_samples": 0.0038538596493350686
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::evaluate",
+      "seconds": 0.001077,
+      "percent_all_samples": 0.003832508626347063
+    },
+    {
+      "name": "<rhai::engine::Engine>::call_script_fn",
+      "seconds": 0.001076,
+      "percent_all_samples": 0.0038289501225157283
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl as sim_domain_robot::articulated::embedding::control::SampledMotorControl>::scheduled",
+      "seconds": 0.001072,
+      "percent_all_samples": 0.0038147161071903912
+    },
+    {
+      "name": "sim_dynamics::hybrid::advance_interval::<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#5}, sim_domain_robot::articulated::embedding::servos::PoweredServoControl>>::{closure#0}",
+      "seconds": 0.00106,
+      "percent_all_samples": 0.0037720140612143792
+    },
+    {
+      "name": "<rhai::types::dynamic::Dynamic as core::convert::From<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>>::from",
+      "seconds": 0.001055,
+      "percent_all_samples": 0.0037542215420577076
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::accelerations",
+      "seconds": 0.001042,
+      "percent_all_samples": 0.0037079609922503615
+    },
+    {
+      "name": "__wbindgen_malloc",
+      "seconds": 0.001029,
+      "percent_all_samples": 0.0036617004424430153
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<sim_domain_robot::articulated::ContactPoint>>::grow_one",
+      "seconds": 0.001021,
+      "percent_all_samples": 0.003633232411792341
+    }
+  ],
+  "inclusive": [
+    {
+      "name": "(root)",
+      "seconds": 28.101698,
+      "percent_all_samples": 100
+    },
+    {
+      "name": "",
+      "seconds": 25.922551,
+      "percent_all_samples": 92.24549705145931
+    },
+    {
+      "name": "stepResult",
+      "seconds": 25.906397,
+      "percent_all_samples": 92.18801298056793
+    },
+    {
+      "name": "step",
+      "seconds": 25.883253,
+      "percent_all_samples": 92.10565496789553
+    },
+    {
+      "name": "js-to-wasm:iiii:iii",
+      "seconds": 25.878185,
+      "percent_all_samples": 92.08762047047833
+    },
+    {
+      "name": "<sim_web::EnvironmentSimulation>::step",
+      "seconds": 25.874891,
+      "percent_all_samples": 92.07589875885792
+    },
+    {
+      "name": "environmentsimulation_step",
+      "seconds": 25.874891,
+      "percent_all_samples": 92.07589875885792
+    },
+    {
+      "name": "environmentsimulation_step multivalue shim",
+      "seconds": 25.874891,
+      "percent_all_samples": 92.07589875885792
+    },
+    {
+      "name": "<sim_runtime::environment::EmbeddedEnvironment>::step",
+      "seconds": 25.833136,
+      "percent_all_samples": 91.92731343138055
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::advance",
+      "seconds": 25.783465,
+      "percent_all_samples": 91.75055898757435
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::advance_one",
+      "seconds": 25.768808,
+      "percent_all_samples": 91.69840199691848
+    },
+    {
+      "name": "sim_dynamics::hybrid::advance_interval::<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl>>",
+      "seconds": 23.040375,
+      "percent_all_samples": 81.98926271287948
+    },
+    {
+      "name": "sim_dynamics::hybrid::advance_interval::<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl>>::{closure#6}",
+      "seconds": 22.308573,
+      "percent_all_samples": 79.38514249210137
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl> as sim_dynamics::hybrid::HybridStepper>::advance",
+      "seconds": 22.212665,
+      "percent_all_samples": 79.04385350664576
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_cached_with_guess",
+      "seconds": 22.189425,
+      "percent_all_samples": 78.96115387760554
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact",
+      "seconds": 22.183901,
+      "percent_all_samples": 78.94149670244126
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}",
+      "seconds": 21.778123,
+      "percent_all_samples": 77.49753413477008
+    },
+    {
+      "name": "sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>",
+      "seconds": 21.680846,
+      "percent_all_samples": 77.15137355756937
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}",
+      "seconds": 21.469742,
+      "percent_all_samples": 76.40015916475937
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics::{closure#0}",
+      "seconds": 8.821938,
+      "percent_all_samples": 31.39290017279383
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve::{closure#0}",
+      "seconds": 8.096843,
+      "percent_all_samples": 28.81264683721247
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#2}",
+      "seconds": 7.85319,
+      "percent_all_samples": 27.94560670319637
+    },
+    {
+      "name": "sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>::{closure#4}",
+      "seconds": 4.249159,
+      "percent_all_samples": 15.120648581448709
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#5}",
+      "seconds": 4.232226,
+      "percent_all_samples": 15.060392436072725
+    },
+    {
+      "name": "sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#2}, sim_solve::coloring::solve_newton_numeric_colored_scaled_cached_audited<<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#2}>::{closure#0}>",
+      "seconds": 4.205894,
+      "percent_all_samples": 14.966689913186029
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#0}",
+      "seconds": 3.619542,
+      "percent_all_samples": 12.880154074675488
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl> as sim_dynamics::hybrid::HybridStepper>::advance::{closure#1}",
+      "seconds": 3.404058,
+      "percent_all_samples": 12.113353435084242
+    },
+    {
+      "name": "<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul",
+      "seconds": 3.349416,
+      "percent_all_samples": 11.918909668732473
+    },
+    {
+      "name": "matrixmultiply::gemm::gemm_loop::<matrixmultiply::dgemm_kernel::KernelFallback>",
+      "seconds": 3.075779,
+      "percent_all_samples": 10.945171355837644
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#2}",
+      "seconds": 2.970149,
+      "percent_all_samples": 10.5692865961338
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::evaluate_force_kernel",
+      "seconds": 2.816827,
+      "percent_all_samples": 10.02368967170596
+    },
+    {
+      "name": "<sim_solve::profile::Bucket>::time::<sim_domain_robot::articulated::prepared::ForceKernelResult, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#6}>",
+      "seconds": 2.813821,
+      "percent_all_samples": 10.012992809188967
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::kinematics",
+      "seconds": 2.751386,
+      "percent_all_samples": 9.79081762247961
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>",
+      "seconds": 2.62733,
+      "percent_all_samples": 9.3493638711796
+    },
+    {
+      "name": "<sim_solve::profile::Bucket>::time::<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}>",
+      "seconds": 2.390484,
+      "percent_all_samples": 8.506546472743391
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}",
+      "seconds": 2.380978,
+      "percent_all_samples": 8.472719335322727
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::malloc",
+      "seconds": 2.250309,
+      "percent_all_samples": 8.007733198186102
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl as sim_domain_robot::articulated::embedding::control::SampledMotorControl>::boundaries",
+      "seconds": 2.221354,
+      "percent_all_samples": 7.9046967197498175
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::original_closure_values",
+      "seconds": 2.15514,
+      "percent_all_samples": 7.669073947061847
+    },
+    {
+      "name": "(idle)",
+      "seconds": 2.144994,
+      "percent_all_samples": 7.632969367189129
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::contact_forces",
+      "seconds": 2.043571,
+      "percent_all_samples": 7.272055233103708
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::contact_forces::{closure#0}",
+      "seconds": 1.919822,
+      "percent_all_samples": 6.831693942479917
+    },
+    {
+      "name": "<sim_solve::profile::Bucket>::time::<core::result::Result<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, alloc::string::String>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#4}>",
+      "seconds": 1.847537,
+      "percent_all_samples": 6.574467493031916
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::rigid_mass_with_kinematics",
+      "seconds": 1.84108,
+      "percent_all_samples": 6.55149023379299
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::factor_dependent_mode",
+      "seconds": 1.814096,
+      "percent_all_samples": 6.455467566408265
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::factor_dependent_mode::{closure#0}",
+      "seconds": 1.795293,
+      "percent_all_samples": 6.388557018867686
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl>::driver_inputs",
+      "seconds": 1.629858,
+      "percent_all_samples": 5.799855937530892
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::evaluate_into_readings",
+      "seconds": 1.466661,
+      "percent_all_samples": 5.219118787768625
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::free",
+      "seconds": 1.437125,
+      "percent_all_samples": 5.114014818606335
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::commands",
+      "seconds": 1.360503,
+      "percent_all_samples": 4.841355138041837
+    },
+    {
+      "name": "<sim_domain_robot::articulated::prepared::ContactGeometry>::new_reusing_impl",
+      "seconds": 1.277729,
+      "percent_all_samples": 4.54680354190697
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::jacobian::{closure#0}",
+      "seconds": 1.21992,
+      "percent_all_samples": 4.341089993921364
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::jacobian",
+      "seconds": 1.215388,
+      "percent_all_samples": 4.324962854557756
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve",
+      "seconds": 1.212836,
+      "percent_all_samples": 4.3158815527801915
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::factor_matrix",
+      "seconds": 1.142786,
+      "percent_all_samples": 4.0666083593952225
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::rigid_closure_velocity_jacobian",
+      "seconds": 1.130357,
+      "percent_all_samples": 4.0223797152755685
+    },
+    {
+      "name": "<sim_domain_robot::motor::MotorUnit as sim_core::equations::Behavior>::residual",
+      "seconds": 1.043799,
+      "percent_all_samples": 3.714362740642932
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::DependentFactor>::solve",
+      "seconds": 1.018111,
+      "percent_all_samples": 3.622951894223616
+    },
+    {
+      "name": "<core::iter::adapters::GenericShunt<core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<sim_domain_robot::articulated::embedding::servos::BoundServo>, core::slice::iter::Iter<sim_domain_robot::articulated::embedding::servos::ServoBoundary>>, <sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::commands::{closure#0}>, core::result::Result<core::convert::Infallible, alloc::string::String>> as core::iter::traits::iterator::Iterator>::next",
+      "seconds": 1.007367,
+      "percent_all_samples": 3.58471932905976
+    },
+    {
+      "name": "__rustc::__rdl_dealloc",
+      "seconds": 0.979765,
+      "percent_all_samples": 3.4864975063072703
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::accelerations",
+      "seconds": 0.969753,
+      "percent_all_samples": 3.450869765947951
+    },
+    {
+      "name": "<sim_domain_robot::articulated::prepared::ContactGeometry>::new_reusing_impl::{closure#4}",
+      "seconds": 0.853984,
+      "percent_all_samples": 3.038905335898208
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::position",
+      "seconds": 0.723007,
+      "percent_all_samples": 2.572823179581533
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::dynamics::PreparedEmbeddedDynamics>::accelerations::{closure#0}",
+      "seconds": 0.678505,
+      "percent_all_samples": 2.414462642079493
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::insert_large_chunk",
+      "seconds": 0.67301,
+      "percent_all_samples": 2.394908663526311
+    },
+    {
+      "name": "<nalgebra::linalg::svd::SVD<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::new",
+      "seconds": 0.63797,
+      "percent_all_samples": 2.2702186892763563
+    },
+    {
+      "name": "tanh",
+      "seconds": 0.593525,
+      "percent_all_samples": 2.1120609864927022
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[10]",
+      "seconds": 0.580553,
+      "percent_all_samples": 2.0659000747926335
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::rigid_motion_columns_with_kinematics",
+      "seconds": 0.5676,
+      "percent_all_samples": 2.0198067746653603
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::drivers::EmbeddedDriverBank>::evaluate",
+      "seconds": 0.528331,
+      "percent_all_samples": 1.8800678877126926
+    },
+    {
+      "name": "<sim_solve::JacobianCache>::solve",
+      "seconds": 0.464886,
+      "percent_all_samples": 1.6542986121336867
+    },
+    {
+      "name": "__rustc::__rdl_realloc",
+      "seconds": 0.439211,
+      "percent_all_samples": 1.562934026264178
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl> as sim_dynamics::hybrid::HybridStepper>::guards",
+      "seconds": 0.43222,
+      "percent_all_samples": 1.5380565259793197
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::dynamics::PreparedEmbeddedDynamics>::solve_applied",
+      "seconds": 0.41291,
+      "percent_all_samples": 1.4693418169962542
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::expm1::expm1",
+      "seconds": 0.41048,
+      "percent_all_samples": 1.4606946526861118
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#2}::{closure#8}",
+      "seconds": 0.410222,
+      "percent_all_samples": 1.4597765586976275
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Generalized as core::clone::Clone>::clone[1]",
+      "seconds": 0.404852,
+      "percent_all_samples": 1.4406673931233622
+    },
+    {
+      "name": "<nalgebra::linalg::bidiagonal::Bidiagonal<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::new[1]",
+      "seconds": 0.319465,
+      "percent_all_samples": 1.1368174264772186
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::set_motion",
+      "seconds": 0.315648,
+      "percent_all_samples": 1.1232346173530154
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl> as sim_dynamics::hybrid::HybridStepper>::scheduled",
+      "seconds": 0.306352,
+      "percent_all_samples": 1.0901547657369317
+    },
+    {
+      "name": "<sim_solve::coloring::BlockDiagonalColoring>::assemble::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}::{closure#2}>",
+      "seconds": 0.29476,
+      "percent_all_samples": 1.0489045893241042
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::event_data",
+      "seconds": 0.274237,
+      "percent_all_samples": 0.9758734151936299
+    },
+    {
+      "name": "nalgebra::linalg::householder::clear_column_unchecked::<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>[1]",
+      "seconds": 0.264405,
+      "percent_all_samples": 0.9408862055239509
+    },
+    {
+      "name": "<sim_solve::JacobianCache>::factorise_tracked",
+      "seconds": 0.262029,
+      "percent_all_samples": 0.9324312004207006
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl as sim_domain_robot::articulated::embedding::control::SampledMotorControl>::guards",
+      "seconds": 0.258497,
+      "percent_all_samples": 0.9198625648884278
+    },
+    {
+      "name": "<nalgebra::linalg::col_piv_qr::ColPivQR<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::new",
+      "seconds": 0.251286,
+      "percent_all_samples": 0.894202193760676
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::from_fn_generic::<<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve_impl::{closure#6}>",
+      "seconds": 0.237519,
+      "percent_all_samples": 0.8452122715146964
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<[f64; 6usize]>>::grow_one",
+      "seconds": 0.232167,
+      "percent_all_samples": 0.8261671590093951
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::sin::sin",
+      "seconds": 0.231738,
+      "percent_all_samples": 0.8246405608657527
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::hypot::hypot",
+      "seconds": 0.22265,
+      "percent_all_samples": 0.7923008780465863
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::Generalized>[2]",
+      "seconds": 0.211926,
+      "percent_all_samples": 0.7541394829593571
+    },
+    {
+      "name": "<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>>>>>::mul",
+      "seconds": 0.208753,
+      "percent_all_samples": 0.7428483503025333
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::unlink_chunk",
+      "seconds": 0.204256,
+      "percent_all_samples": 0.7268457585730229
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::validate",
+      "seconds": 0.203605,
+      "percent_all_samples": 0.7245291725788242
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::cholesky[1]",
+      "seconds": 0.196129,
+      "percent_all_samples": 0.6979257979357688
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::solve_upper_triangular_mut::<nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>>>",
+      "seconds": 0.192568,
+      "percent_all_samples": 0.6852539657923874
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::new",
+      "seconds": 0.191207,
+      "percent_all_samples": 0.6804108420779413
+    },
+    {
+      "name": "sim_domain_robot::math::rot_vec",
+      "seconds": 0.188032,
+      "percent_all_samples": 0.6691125924134549
+    },
+    {
+      "name": "<sim_domain_control::sampled_fixed_pd::SampledFixedPd as sim_core::equations::Behavior>::residual",
+      "seconds": 0.187236,
+      "percent_all_samples": 0.6662800233637127
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::validate_seed",
+      "seconds": 0.187146,
+      "percent_all_samples": 0.6659597580188926
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl>::inputs_at",
+      "seconds": 0.172498,
+      "percent_all_samples": 0.6138347938975075
+    },
+    {
+      "name": "<sim_domain_robot::motor::HBridge as sim_core::equations::Behavior>::residual",
+      "seconds": 0.163913,
+      "percent_all_samples": 0.5832850385055024
+    },
+    {
+      "name": "__rustc::__rdl_alloc",
+      "seconds": 0.159035,
+      "percent_all_samples": 0.5659266568162536
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::validate_rigid_motion",
+      "seconds": 0.145015,
+      "percent_all_samples": 0.5160364331009464
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::cos::cos",
+      "seconds": 0.14371,
+      "percent_all_samples": 0.5113925856010552
+    },
+    {
+      "name": "__rustc::__rdl_alloc_zeroed",
+      "seconds": 0.141962,
+      "percent_all_samples": 0.5051723209038828
+    },
+    {
+      "name": "nalgebra::linalg::householder::clear_row_unchecked::<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>[1]",
+      "seconds": 0.134009,
+      "percent_all_samples": 0.4768715399332809
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::constraint_rows_with_reactions",
+      "seconds": 0.130805,
+      "percent_all_samples": 0.4654700936576857
+    },
+    {
+      "name": "<nalgebra::linalg::cholesky::Cholesky<f64, nalgebra::base::dimension::Dyn>>::solve::<nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>>>[1]",
+      "seconds": 0.129886,
+      "percent_all_samples": 0.4621998286366895
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::fold_with::<f64, <nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::amax::{closure#0}, <nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::amax::{closure#1}>",
+      "seconds": 0.12353,
+      "percent_all_samples": 0.43958197828472856
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::fma::fma",
+      "seconds": 0.12347,
+      "percent_all_samples": 0.4393684680548485
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::exp::exp",
+      "seconds": 0.11536,
+      "percent_all_samples": 0.41050900198272716
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>[7]",
+      "seconds": 0.110506,
+      "percent_all_samples": 0.39323602438543037
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::validate_evaluation",
+      "seconds": 0.10932,
+      "percent_all_samples": 0.3890156388414679
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::slider_crank::AnalyticPositions>::apply",
+      "seconds": 0.106707,
+      "percent_all_samples": 0.3797172683301913
+    },
+    {
+      "name": "<core::iter::adapters::chain::Chain<core::iter::adapters::chain::Chain<core::iter::adapters::chain::Chain<core::iter::adapters::chain::Chain<core::slice::iter::Iter<f64>, core::slice::iter::Iter<f64>>, core::slice::iter::Iter<f64>>, core::slice::iter::Iter<f64>>, core::slice::iter::Iter<f64>> as core::iter::traits::iterator::Iterator>::try_fold::<(), core::iter::traits::iterator::Iterator::any::check<&f64, <sim_domain_robot::articulated::Articulated>::validate_rigid_motion::{closure#1}>::{closure#0}, core::ops::control_flow::ControlFlow<()>>",
+      "seconds": 0.106418,
+      "percent_all_samples": 0.37868886072293567
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::dynamics::PreparedEmbeddedDynamics>[1]",
+      "seconds": 0.101517,
+      "percent_all_samples": 0.3612486334455662
+    },
+    {
+      "name": "<core::iter::adapters::chain::Chain<nalgebra::base::iter::MatrixIter<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, nalgebra::base::iter::MatrixIter<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>> as core::iter::traits::iterator::Iterator>::try_fold::<(), core::iter::traits::iterator::Iterator::any::check<&f64, <sim_domain_robot::articulated::transmission_coordinates::TransmissionCoordinateMap>::solve_accelerations::{closure#0}>::{closure#0}, core::ops::control_flow::ControlFlow<()>>",
+      "seconds": 0.097359,
+      "percent_all_samples": 0.3464523745148781
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::slider_crank::AnalyticPositions>::new",
+      "seconds": 0.091161,
+      "percent_all_samples": 0.324396767768268
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::implicit_trial_pose",
+      "seconds": 0.085788,
+      "percent_all_samples": 0.30527692668250866
+    },
+    {
+      "name": "<alloc::vec::Vec<f64> as core::clone::Clone>::clone[2]",
+      "seconds": 0.083255,
+      "percent_all_samples": 0.29626323647773883
+    },
+    {
+      "name": "<nalgebra::geometry::reflection::Reflection<f64, nalgebra::base::dimension::Dyn, nalgebra::base::matrix_view::ViewStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>>>::reflect_with_sign::<nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::matrix_view::ViewStorageMut<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>>",
+      "seconds": 0.080287,
+      "percent_all_samples": 0.2857015971063386
+    },
+    {
+      "name": "<sim_script::RhaiController as sim_core::couple::Coupler>::sample",
+      "seconds": 0.080185,
+      "percent_all_samples": 0.28533862971554247
+    },
+    {
+      "name": "<sim_solve::profile::Bucket>::time::<core::result::Result<(), sim_core::couple::CouplerError>, <sim_runtime::embedded_policy::SampledPolicy>::sample::{closure#6}>",
+      "seconds": 0.080185,
+      "percent_all_samples": 0.28533862971554247
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::from_fn_generic::<<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve_impl::{closure#5}>",
+      "seconds": 0.078935,
+      "percent_all_samples": 0.28089049992637455
+    },
+    {
+      "name": "<alloc::rc::Rc<sim_domain_robot::articulated::embedding::EmbeddedMotion>>::drop_slow",
+      "seconds": 0.07531,
+      "percent_all_samples": 0.26799092353778764
+    },
+    {
+      "name": "<sim_solve::SparseJacobian>::summed",
+      "seconds": 0.07528,
+      "percent_all_samples": 0.2678841684228476
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::slider_crank::AnalyticSliderCrank>::coordinates",
+      "seconds": 0.073988,
+      "percent_all_samples": 0.2632865814727637
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[17]",
+      "seconds": 0.072616,
+      "percent_all_samples": 0.258404314216173
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_fn_call_expr",
+      "seconds": 0.072467,
+      "percent_all_samples": 0.2578740971453042
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_stmt",
+      "seconds": 0.072467,
+      "percent_all_samples": 0.2578740971453042
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_stmt_block",
+      "seconds": 0.072467,
+      "percent_all_samples": 0.2578740971453042
+    },
+    {
+      "name": "<rhai::engine::Engine>::call_script_fn",
+      "seconds": 0.072467,
+      "percent_all_samples": 0.2578740971453042
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_expr",
+      "seconds": 0.068356,
+      "percent_all_samples": 0.2432450878946888
+    },
+    {
+      "name": "core::slice::sort::unstable::ipnsort::<(usize, usize, f64), <[(usize, usize, f64)]>::sort_unstable_by<<sim_solve::SparseJacobian>::summed::{closure#0}>::{closure#0}>",
+      "seconds": 0.067652,
+      "percent_all_samples": 0.2407399011974294
+    },
+    {
+      "name": "core::slice::sort::unstable::quicksort::quicksort::<(usize, usize, f64), <[(usize, usize, f64)]>::sort_unstable_by<<sim_solve::SparseJacobian>::summed::{closure#0}>::{closure#0}>",
+      "seconds": 0.066153,
+      "percent_all_samples": 0.23540570395425928
+    },
+    {
+      "name": "<rhai::engine::Engine>::exec_fn_call",
+      "seconds": 0.062972,
+      "percent_all_samples": 0.2240861032667848
+    },
+    {
+      "name": "<rhai::engine::Engine>::make_function_call",
+      "seconds": 0.059943,
+      "percent_all_samples": 0.21330739516167316
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[11]",
+      "seconds": 0.059675,
+      "percent_all_samples": 0.21235371613487555
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::prepare_contact_history_rates::{closure#1}",
+      "seconds": 0.05963,
+      "percent_all_samples": 0.2121935834624655
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::DependentFactor>",
+      "seconds": 0.059014,
+      "percent_all_samples": 0.21000154510236357
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl as sim_domain_robot::articulated::embedding::control::SampledMotorControl>::scheduled",
+      "seconds": 0.05798,
+      "percent_all_samples": 0.20632205214076388
+    },
+    {
+      "name": "<nalgebra::base::default_allocator::DefaultAllocator as nalgebra::base::allocator::Allocator<nalgebra::base::dimension::Dyn>>::allocate_from_iterator::<f64, core::iter::adapters::chain::Chain<core::iter::adapters::flatten::FlatMap<core::iter::adapters::filter::Filter<core::iter::adapters::enumerate::Enumerate<core::slice::iter::Iter<sim_domain_robot::articulated::BaseC>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#7}>, [f64; 6usize], <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#8}>, core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<f64>, core::slice::iter::Iter<f64>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#9}>>>",
+      "seconds": 0.056781,
+      "percent_all_samples": 0.20205540604699404
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::vec::Vec<(alloc::vec::Vec<usize>, alloc::vec::Vec<usize>, sim_domain_robot::articulated::embedding::DependentFactor)>>",
+      "seconds": 0.056174,
+      "percent_all_samples": 0.1998953942213741
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#7}, sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl> as sim_dynamics::hybrid::HybridStepper>::jump",
+      "seconds": 0.055576,
+      "percent_all_samples": 0.19776740893023617
+    },
+    {
+      "name": "__rustc::__rust_realloc",
+      "seconds": 0.053337,
+      "percent_all_samples": 0.18979991885187864
+    },
+    {
+      "name": "__rustc::__rust_dealloc",
+      "seconds": 0.053208,
+      "percent_all_samples": 0.1893408718576365
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::rem_pio2::rem_pio2",
+      "seconds": 0.052835,
+      "percent_all_samples": 0.1880135499285488
+    },
+    {
+      "name": "<sim_domain_control::sampled_fixed_pd::SampledFixedPd as sim_core::equations::Behavior>::scheduled_events",
+      "seconds": 0.052529,
+      "percent_all_samples": 0.1869246477561605
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::evaluate",
+      "seconds": 0.051028,
+      "percent_all_samples": 0.18158333350532768
+    },
+    {
+      "name": "<nalgebra::geometry::reflection::Reflection<f64, nalgebra::base::dimension::Dyn, nalgebra::base::matrix_view::ViewStorageMut<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>>>::reflect_rows_with_sign::<nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::matrix_view::ViewStorageMut<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>, nalgebra::base::matrix_view::ViewStorageMut<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::dimension::Dyn>>[1]",
+      "seconds": 0.049023,
+      "percent_all_samples": 0.17444853332350238
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::evaluate_with_rates",
+      "seconds": 0.048463,
+      "percent_all_samples": 0.17245577117795516
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::event_data",
+      "seconds": 0.047951,
+      "percent_all_samples": 0.170633817216312
+    },
+    {
+      "name": "<sim_domain_control::sampled_fixed_pd::SampledFixedPd as sim_core::equations::Behavior>::guards",
+      "seconds": 0.047861,
+      "percent_all_samples": 0.1703135518714919
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::EmbeddedAcceleration>[1]",
+      "seconds": 0.047574,
+      "percent_all_samples": 0.16929226127189895
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::frame",
+      "seconds": 0.045171,
+      "percent_all_samples": 0.16074117656520256
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<f64>>::grow_one[4]",
+      "seconds": 0.042885,
+      "percent_all_samples": 0.15260643680677233
+    },
+    {
+      "name": "<sim_web::EnvironmentSimulation>::frame",
+      "seconds": 0.041755,
+      "percent_all_samples": 0.14858532747736453
+    },
+    {
+      "name": "<nalgebra::linalg::col_piv_qr::ColPivQR<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::r",
+      "seconds": 0.040127,
+      "percent_all_samples": 0.14279208323995227
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::audit_slider_cranks",
+      "seconds": 0.038517,
+      "percent_all_samples": 0.13706289207150402
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::connect",
+      "seconds": 0.035827,
+      "percent_all_samples": 0.1274905167652147
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#4}",
+      "seconds": 0.03178,
+      "percent_all_samples": 0.1130892517598047
+    },
+    {
+      "name": "<sim_solve::JacobianCache as core::clone::Clone>::clone[1]",
+      "seconds": 0.030184,
+      "percent_all_samples": 0.10740987964499511
+    },
+    {
+      "name": "sim_solve::infinity_norm",
+      "seconds": 0.028882,
+      "percent_all_samples": 0.10277670765659783
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<serde_core::private::content::Content>>::grow_one",
+      "seconds": 0.028185,
+      "percent_all_samples": 0.10029643048615781
+    },
+    {
+      "name": "<rhai::engine::Engine>::exec_native_fn_call",
+      "seconds": 0.028184,
+      "percent_all_samples": 0.10029287198232648
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::from_element_generic",
+      "seconds": 0.027977,
+      "percent_all_samples": 0.09955626168924027
+    },
+    {
+      "name": "<sim_domain_robot::articulated::prepared::ContactGeometry>::new_reusing_impl::{closure#1}",
+      "seconds": 0.0278,
+      "percent_all_samples": 0.09892640651109409
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<(usize, usize, f64)>>::grow_one",
+      "seconds": 0.026765,
+      "percent_all_samples": 0.09524335504566307
+    },
+    {
+      "name": "<sim_domain_robot::articulated::prepared::ContactGeometry>::new_reusing_impl::{closure#5}",
+      "seconds": 0.026751,
+      "percent_all_samples": 0.0951935359920244
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_dot_index_chain",
+      "seconds": 0.026673,
+      "percent_all_samples": 0.09491597269318032
+    },
+    {
+      "name": "<sim_core::equations::Context>::state_rate",
+      "seconds": 0.025723,
+      "percent_all_samples": 0.09153539405341271
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[14]",
+      "seconds": 0.023751,
+      "percent_all_samples": 0.08451802449802144
+    },
+    {
+      "name": "<sim_core::equations::Context>::across_derivative",
+      "seconds": 0.023557,
+      "percent_all_samples": 0.08382767475474258
+    },
+    {
+      "name": "<alloc::sync::Arc<alloc::vec::Vec<alloc::vec::Vec<(usize, (usize, nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>, f64))>>>>::drop_slow",
+      "seconds": 0.023232,
+      "percent_all_samples": 0.08267116100955893
+    },
+    {
+      "name": "core::ptr::drop_glue::<(alloc::vec::Vec<sim_domain_robot::articulated::LinkKin>, alloc::vec::Vec<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>>, sim_domain_robot::articulated::prepared::JointAxes)>",
+      "seconds": 0.022275,
+      "percent_all_samples": 0.07926567284297198
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<usize, alloc::collections::btree::set_val::SetValZST>>::insert[1]",
+      "seconds": 0.022115,
+      "percent_all_samples": 0.07869631222995849
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<sim_domain_robot::articulated::ContactPoint>>::grow_one",
+      "seconds": 0.021538,
+      "percent_all_samples": 0.07664305551927858
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<sim_solve::NewtonIteration>>::grow_one[1]",
+      "seconds": 0.021465,
+      "percent_all_samples": 0.07638328473959118
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>>::from_fn_generic::<<sim_domain_robot::articulated::embedding::RigidEmbedding>::solve_impl::{closure#7}>",
+      "seconds": 0.020985,
+      "percent_all_samples": 0.07467520290055071
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoControl as sim_domain_robot::articulated::embedding::control::SampledMotorControl>::jump",
+      "seconds": 0.020619,
+      "percent_all_samples": 0.07337279049828234
+    },
+    {
+      "name": "<alloc::vec::Vec<(usize, (usize, nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>, f64))> as alloc::vec::spec_from_elem::SpecFromElem>::from_elem::<alloc::alloc::Global>",
+      "seconds": 0.02051,
+      "percent_all_samples": 0.0729849135806669
+    },
+    {
+      "name": "<rhai::engine::Engine>::get_arg_value",
+      "seconds": 0.020267,
+      "percent_all_samples": 0.07212019714965266
+    },
+    {
+      "name": "sim_domain_multibody::contact::regularized_coulomb_scalar",
+      "seconds": 0.019002,
+      "percent_all_samples": 0.06761868980301475
+    },
+    {
+      "name": "<serde_json::value::Value as serde_core::ser::Serialize>::serialize::<&mut serde_json::ser::Serializer<&mut alloc::vec::Vec<u8>>>",
+      "seconds": 0.018905,
+      "percent_all_samples": 0.06727351493137532
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::vec::Vec<alloc::vec::Vec<f64>>>[2]",
+      "seconds": 0.018618,
+      "percent_all_samples": 0.06625222433178238
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_dot_index_chain_raw",
+      "seconds": 0.017711,
+      "percent_all_samples": 0.06302466135676214
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::servos::EmbeddedServoBank>::jump",
+      "seconds": 0.017471,
+      "percent_all_samples": 0.062170620437241905
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::atan2::atan2",
+      "seconds": 0.017358,
+      "percent_all_samples": 0.06176850950430113
+    },
+    {
+      "name": "<sim_runtime::environment::EmbeddedEnvironment>::step::{closure#1}",
+      "seconds": 0.017222,
+      "percent_all_samples": 0.06128455298323966
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::drivers::EmbeddedDriverBank>::validate_binding",
+      "seconds": 0.01664,
+      "percent_all_samples": 0.059213503753403084
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::validate_implicit_inputs",
+      "seconds": 0.016521,
+      "percent_all_samples": 0.0587900417974743
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Generalized as core::clone::Clone>::clone",
+      "seconds": 0.016193,
+      "percent_all_samples": 0.057622852540796646
+    },
+    {
+      "name": "<sim_runtime::embedded::EmbeddedSession>::interactive_frame",
+      "seconds": 0.015809,
+      "percent_all_samples": 0.05625638706956427
+    },
+    {
+      "name": "<sim_runtime::environment::EmbeddedEnvironment>::frame",
+      "seconds": 0.015809,
+      "percent_all_samples": 0.05625638706956427
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::motor_step::MotorState<alloc::vec::Vec<f64>>>",
+      "seconds": 0.015467,
+      "percent_all_samples": 0.05503937875924793
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[18]",
+      "seconds": 0.015379,
+      "percent_all_samples": 0.05472623042209051
+    },
+    {
+      "name": "<dlmalloc::dlmalloc::Dlmalloc<dlmalloc::sys::System>>::dispose_chunk",
+      "seconds": 0.015236,
+      "percent_all_samples": 0.0542173643742097
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#3}",
+      "seconds": 0.015153,
+      "percent_all_samples": 0.053922008556208954
+    },
+    {
+      "name": "<alloc::vec::Vec<usize> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<usize, core::iter::adapters::filter::Filter<core::ops::range::Range<usize>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#5}>>>::from_iter",
+      "seconds": 0.014868,
+      "percent_all_samples": 0.05290783496427867
+    },
+    {
+      "name": "compiler_builtins::math::libm_math::atan::atan",
+      "seconds": 0.014772,
+      "percent_all_samples": 0.05256621859647058
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::implicit::ImplicitSolverWorkspace>",
+      "seconds": 0.014376,
+      "percent_all_samples": 0.05115705107926218
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::original_closure_units",
+      "seconds": 0.014222,
+      "percent_all_samples": 0.0506090414892367
+    },
+    {
+      "name": "<sim_runtime::environment::EmbeddedEnvironment>::observe",
+      "seconds": 0.014208,
+      "percent_all_samples": 0.05055922243559802
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::Generalized>[1]",
+      "seconds": 0.013822,
+      "percent_all_samples": 0.04918563995670297
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::RigidEmbedding>",
+      "seconds": 0.012887,
+      "percent_all_samples": 0.04585843887440538
+    },
+    {
+      "name": "<sim_script::engine::{closure#4} as rhai::func::register::RhaiNativeFunc<(rhai::types::immutable_string::ImmutableString, f64), 2usize, false, rhai::types::dynamic::Dynamic, true>>::into_rhai_function::{closure#0}",
+      "seconds": 0.01248,
+      "percent_all_samples": 0.04441012781505232
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::validate_event_point",
+      "seconds": 0.012266,
+      "percent_all_samples": 0.04364860799514677
+    },
+    {
+      "name": "__wbg_now_e7c6795a7f81e10f",
+      "seconds": 0.012075,
+      "percent_all_samples": 0.042968933763361916
+    },
+    {
+      "name": "wasm-to-js",
+      "seconds": 0.011809,
+      "percent_all_samples": 0.04202237174422699
+    },
+    {
+      "name": "<web_time::time::js::Performance>::now::__wbg_now_e7c6795a7f81e10f externref shim",
+      "seconds": 0.011554,
+      "percent_all_samples": 0.041114953267236735
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::evaluate_reusing_contacts",
+      "seconds": 0.011525,
+      "percent_all_samples": 0.04101175665612804
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::evaluate",
+      "seconds": 0.011525,
+      "percent_all_samples": 0.04101175665612804
+    },
+    {
+      "name": "<web_time::time::instant::Instant>::elapsed",
+      "seconds": 0.011523,
+      "percent_all_samples": 0.04100463964846537
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motor_step::MotorState<alloc::vec::Vec<f64>> as core::clone::Clone>::clone",
+      "seconds": 0.011509,
+      "percent_all_samples": 0.04095482059482669
+    },
+    {
+      "name": "<alloc::vec::Vec<serde_json::value::Value> as core::ops::drop::Drop>::drop[1]",
+      "seconds": 0.011316,
+      "percent_all_samples": 0.04026802935537917
+    },
+    {
+      "name": "<alloc::vec::Vec<usize> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<usize, core::iter::adapters::chain::Chain<core::ops::range::Range<usize>, core::iter::adapters::map::Map<core::slice::iter::Iter<usize>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve_impl::{closure#3}>>>>::from_iter",
+      "seconds": 0.011216,
+      "percent_all_samples": 0.039912178972245735
+    },
+    {
+      "name": "<nalgebra::linalg::svd::SVD<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::delimit_subproblem[1]",
+      "seconds": 0.010902,
+      "percent_all_samples": 0.03879480876920676
+    },
+    {
+      "name": "<rhai::engine::Engine>::make_method_call",
+      "seconds": 0.010678,
+      "percent_all_samples": 0.03799770391098787
+    },
+    {
+      "name": "core::slice::sort::shared::smallsort::insertion_sort_shift_left::<(f64, usize), <[(f64, usize)]>::sort_unstable_by<<nalgebra::linalg::svd::SVD<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>::sort_by_singular_values::{closure#1}>::{closure#0}>[1]",
+      "seconds": 0.010404,
+      "percent_all_samples": 0.03702267386120227
+    },
+    {
+      "name": "<sim_domain_robot::motor::MotorUnit as sim_core::equations::Behavior>::guards",
+      "seconds": 0.010018,
+      "percent_all_samples": 0.03564909138230722
+    },
+    {
+      "name": "<alloc::vec::Vec<f64> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<f64, core::iter::adapters::map::Map<core::slice::iter::Iter<&str>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#8}>>>::from_iter",
+      "seconds": 0.009987,
+      "percent_all_samples": 0.03553877776353585
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<usize, (alloc::vec::Vec<usize>, alloc::vec::Vec<usize>)>>::dying_next",
+      "seconds": 0.009798,
+      "percent_all_samples": 0.03486622053941367
+    },
+    {
+      "name": "<f64 as zmij[f4f8db89e680c2b]::private::Sealed>::write_to_zmij_buffer",
+      "seconds": 0.009093,
+      "percent_all_samples": 0.03235747533832297
+    },
+    {
+      "name": "<alloc::string::String as core::clone::Clone>::clone",
+      "seconds": 0.008816,
+      "percent_all_samples": 0.03137176977704337
+    },
+    {
+      "name": "core::ptr::drop_glue::<core::option::Option<sim_solve::JacobianCache>>[1]",
+      "seconds": 0.008616,
+      "percent_all_samples": 0.030660069010776503
+    },
+    {
+      "name": "<alloc::collections::btree::node::Handle<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Dying, alloc::string::String, serde_json::value::Value, alloc::collections::btree::node::marker::LeafOrInternal>, alloc::collections::btree::node::marker::KV>>::drop_key_val",
+      "seconds": 0.008557,
+      "percent_all_samples": 0.03045011728472778
+    },
+    {
+      "name": "core::ptr::drop_glue::<serde_json::value::Value>",
+      "seconds": 0.008557,
+      "percent_all_samples": 0.03045011728472778
+    },
+    {
+      "name": "__rustc::__rust_alloc",
+      "seconds": 0.008372,
+      "percent_all_samples": 0.029791794075930928
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<_, _, _> as core::clone::Clone>::clone::clone_subtree::<alloc::string::String, serde_json::value::Value, alloc::alloc::Global>[1]",
+      "seconds": 0.008329,
+      "percent_all_samples": 0.029638778411183554
+    },
+    {
+      "name": "<rhai::serde::de::DynamicDeserializer as serde_core::de::Deserializer>::deserialize_any::<<serde_json::value::Value as serde_core::de::Deserialize>::deserialize::ValueVisitor>",
+      "seconds": 0.008179,
+      "percent_all_samples": 0.029105002836483405
+    },
+    {
+      "name": "<rhai::types::dynamic::Dynamic as core::clone::Clone>::clone",
+      "seconds": 0.007879,
+      "percent_all_samples": 0.028037451687083107
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<_, _, _> as core::clone::Clone>::clone::clone_subtree::<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic, alloc::alloc::Global>[1]",
+      "seconds": 0.007879,
+      "percent_all_samples": 0.028037451687083107
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::collections::btree::set::BTreeSet<usize>>",
+      "seconds": 0.007798,
+      "percent_all_samples": 0.02774921287674503
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<alloc::string::String, serde_json::value::Value>>::dying_next[1]",
+      "seconds": 0.0076,
+      "percent_all_samples": 0.02704462911814083
+    },
+    {
+      "name": "<sim_runtime::environment::EmbeddedEnvironment>::observe::{closure#4}",
+      "seconds": 0.007367,
+      "percent_all_samples": 0.026215497725439935
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::implicit::ImplicitSolverWorkspace as core::clone::Clone>::clone",
+      "seconds": 0.00728,
+      "percent_all_samples": 0.02590590789211385
+    },
+    {
+      "name": "<sim_domain_control::sampled_fixed_pd::SampledFixedPd as sim_core::equations::Behavior>::jump",
+      "seconds": 0.007255,
+      "percent_all_samples": 0.025816945296330492
+    },
+    {
+      "name": "<sim_runtime::task_observation::TaskObserver>::observe",
+      "seconds": 0.007012,
+      "percent_all_samples": 0.024952228865316253
+    },
+    {
+      "name": "core::slice::sort::shared::smallsort::sort8_stable::<(usize, usize, f64), <[(usize, usize, f64)]>::sort_unstable_by<<sim_solve::SparseJacobian>::summed::{closure#0}>::{closure#0}>",
+      "seconds": 0.006848,
+      "percent_all_samples": 0.024368634236977424
+    },
+    {
+      "name": "<serde_json::value::Value>::pointer",
+      "seconds": 0.006841,
+      "percent_all_samples": 0.024343724710158082
+    },
+    {
+      "name": "<core::iter::adapters::GenericShunt<core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<sim_runtime::environment::Binding>, core::slice::iter::Iter<sim_runtime::environment::Observation>>, <sim_runtime::environment::EmbeddedEnvironment>::observe::{closure#1}>, core::result::Result<core::convert::Infallible, alloc::string::String>> as core::iter::traits::iterator::Iterator>::next",
+      "seconds": 0.006841,
+      "percent_all_samples": 0.024343724710158082
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::guard_count",
+      "seconds": 0.006816,
+      "percent_all_samples": 0.024254762114374724
+    },
+    {
+      "name": "self.onmessage",
+      "seconds": 0.006516,
+      "percent_all_samples": 0.02318721096497443
+    },
+    {
+      "name": "<serde_json::value::Value as serde_core::ser::Serialize>::serialize::<serde_json::value::ser::Serializer>[1]",
+      "seconds": 0.006184,
+      "percent_all_samples": 0.022005787692971436
+    },
+    {
+      "name": "<serde_json::value::ser::Serializer as serde_core::ser::Serializer>::collect_seq::<&alloc::vec::Vec<serde_json::value::Value>>",
+      "seconds": 0.006184,
+      "percent_all_samples": 0.022005787692971436
+    },
+    {
+      "name": "<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<3usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 3usize>> as core::ops::arith::Mul>::mul",
+      "seconds": 0.006131,
+      "percent_all_samples": 0.021817186989910715
+    },
+    {
+      "name": "<rhai::engine::Engine>::eval_dot_index_chain_arguments",
+      "seconds": 0.00611,
+      "percent_all_samples": 0.021742458409452697
+    },
+    {
+      "name": "postMessage",
+      "seconds": 0.006077,
+      "percent_all_samples": 0.021625027783018662
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::implicit::ImplicitSolverWorkspace>[1]",
+      "seconds": 0.006022,
+      "percent_all_samples": 0.021429310072295274
+    },
+    {
+      "name": "<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Const<1usize>>>>::from_element_generic[1]",
+      "seconds": 0.005968,
+      "percent_all_samples": 0.02123715086540322
+    },
+    {
+      "name": "sim_domain_control::fixed_pd::step",
+      "seconds": 0.005742,
+      "percent_all_samples": 0.020432928999521666
+    },
+    {
+      "name": "<alloc::vec::Vec<serde_json::value::Value> as core::ops::drop::Drop>::drop",
+      "seconds": 0.00567,
+      "percent_all_samples": 0.020176716723665594
+    },
+    {
+      "name": "core::ptr::drop_glue::<serde_json::value::Value>[1]",
+      "seconds": 0.005652,
+      "percent_all_samples": 0.020112663654701577
+    },
+    {
+      "name": "core::ptr::drop_glue::<rhai::types::dynamic::Union>[1]",
+      "seconds": 0.005573,
+      "percent_all_samples": 0.019831541852026166
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>[1]",
+      "seconds": 0.00555,
+      "percent_all_samples": 0.019749696263905478
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::implicit::ImplicitSolverWorkspace as core::clone::Clone>::clone[1]",
+      "seconds": 0.005466,
+      "percent_all_samples": 0.019450781942073392
+    },
+    {
+      "name": "<serde_json::value::ser::SerializeMap as serde_core::ser::SerializeMap>::serialize_value::<serde_json::value::Value>[1]",
+      "seconds": 0.00467,
+      "percent_all_samples": 0.016618212892331275
+    },
+    {
+      "name": "<web_time::time::instant::Instant>::now",
+      "seconds": 0.00463,
+      "percent_all_samples": 0.016475872739077902
+    },
+    {
+      "name": "<alloc::vec::Vec<f64> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<f64, core::iter::adapters::chain::Chain<core::iter::adapters::map::Map<core::ops::range::Range<usize>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#6}>, core::iter::adapters::map::Map<core::slice::iter::Iter<&sim_domain_robot::articulated::Dof>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#7}>>>>::from_iter",
+      "seconds": 0.004576,
+      "percent_all_samples": 0.01628371353218585
+    },
+    {
+      "name": "<alloc::raw_vec::RawVec<usize>>::grow_one[1]",
+      "seconds": 0.004386,
+      "percent_all_samples": 0.015607597804232327
+    },
+    {
+      "name": "<core::marker::PhantomData<alloc::vec::Vec<sim_domain_control::trajectory::Keyframe>> as serde_core::de::DeserializeSeed>::deserialize::<serde_json::value::Value>[1]",
+      "seconds": 0.004301,
+      "percent_all_samples": 0.015305124978568911
+    },
+    {
+      "name": "<serde_json::value::Value as serde_core::de::Deserializer>::deserialize_struct::<<sim_domain_control::trajectory::TrajectoryConfig as serde_core::de::Deserialize>::deserialize::__Visitor>[1]",
+      "seconds": 0.004301,
+      "percent_all_samples": 0.015305124978568911
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::reduced_velocity",
+      "seconds": 0.004289,
+      "percent_all_samples": 0.015262422932592898
+    },
+    {
+      "name": "<alloc::collections::btree::map::entry::VacantEntry<alloc::string::String, serde_json::value::Value>>::insert",
+      "seconds": 0.004279,
+      "percent_all_samples": 0.015226837894279555
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<alloc::string::String, serde_json::value::Value>>::insert[1]",
+      "seconds": 0.004279,
+      "percent_all_samples": 0.015226837894279555
+    },
+    {
+      "name": "<core::iter::adapters::map::Map<core::iter::adapters::filter::Filter<alloc::collections::btree::map::Iter<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>, sim_script::engine::{closure#2}::{closure#1}>, sim_script::engine::{closure#2}::{closure#2}> as core::iter::traits::iterator::Iterator>::next",
+      "seconds": 0.004211,
+      "percent_all_samples": 0.014984859633748822
+    },
+    {
+      "name": "<sim_script::engine::{closure#2} as rhai::func::register::RhaiNativeFunc<(alloc::vec::Vec<rhai::types::dynamic::Dynamic>,), 1usize, false, alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>, true>>::into_rhai_function::{closure#0}",
+      "seconds": 0.004211,
+      "percent_all_samples": 0.014984859633748822
+    },
+    {
+      "name": "(program)",
+      "seconds": 0.00421,
+      "percent_all_samples": 0.014981301129917487
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::borrow::Cow<(alloc::vec::Vec<sim_domain_robot::articulated::LinkKin>, alloc::vec::Vec<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>>, sim_domain_robot::articulated::prepared::JointAxes)>>",
+      "seconds": 0.004165,
+      "percent_all_samples": 0.014821168457507443
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<usize, alloc::collections::btree::set_val::SetValZST>>::dying_next",
+      "seconds": 0.004144,
+      "percent_all_samples": 0.014746439877049423
+    },
+    {
+      "name": "<alloc::collections::btree::node::Handle<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Dying, alloc::string::String, serde_json::value::Value, alloc::collections::btree::node::marker::LeafOrInternal>, alloc::collections::btree::node::marker::KV>>::drop_key_val[1]",
+      "seconds": 0.004137,
+      "percent_all_samples": 0.014721530350230083
+    },
+    {
+      "name": "<<alloc::collections::btree::node::Handle<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Dying, _, _, _>, alloc::collections::btree::node::marker::KV>>::drop_key_val::Dropper<serde_json::value::Value> as core::ops::drop::Drop>::drop",
+      "seconds": 0.004116,
+      "percent_all_samples": 0.014646801769772061
+    },
+    {
+      "name": "<sim_script::engine::{closure#9} as rhai::func::register::RhaiNativeFunc<(alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>, f64), 2usize, false, rhai::types::dynamic::Dynamic, true>>::into_rhai_function::{closure#0}",
+      "seconds": 0.003871,
+      "percent_all_samples": 0.013774968331095153
+    },
+    {
+      "name": "<rhai::types::dynamic::Dynamic as core::convert::From<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>>::from",
+      "seconds": 0.003769,
+      "percent_all_samples": 0.013412000940299052
+    },
+    {
+      "name": "decode",
+      "seconds": 0.003562,
+      "percent_all_samples": 0.012675390647212847
+    },
+    {
+      "name": "decodeText",
+      "seconds": 0.003562,
+      "percent_all_samples": 0.012675390647212847
+    },
+    {
+      "name": "getStringFromWasm0",
+      "seconds": 0.003562,
+      "percent_all_samples": 0.012675390647212847
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_control::fixed_pd::Expr>",
+      "seconds": 0.003074,
+      "percent_all_samples": 0.0109388407775217
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>::dying_next[1]",
+      "seconds": 0.00305,
+      "percent_all_samples": 0.010853436685569677
+    },
+    {
+      "name": "<rhai::engine::Engine>::get_indexed_mut",
+      "seconds": 0.003047,
+      "percent_all_samples": 0.010842761174075673
+    },
+    {
+      "name": "<smartstring::boxed::BoxedString as core::clone::Clone>::clone",
+      "seconds": 0.003044,
+      "percent_all_samples": 0.01083208566258167
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::RigidEmbedding>::check_rank",
+      "seconds": 0.003042,
+      "percent_all_samples": 0.010824968654919002
+    },
+    {
+      "name": "memcmp",
+      "seconds": 0.003026,
+      "percent_all_samples": 0.010768032593617652
+    },
+    {
+      "name": "<serde_json::value::ser::SerializeMap as serde_core::ser::SerializeStruct>::serialize_field::<f64>[1]",
+      "seconds": 0.003026,
+      "percent_all_samples": 0.010768032593617652
+    },
+    {
+      "name": "<rhai::engine::Engine>::resolve_fn",
+      "seconds": 0.003023,
+      "percent_all_samples": 0.01075735708212365
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::Evaluation>",
+      "seconds": 0.00302,
+      "percent_all_samples": 0.010746681570629647
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::compile_slider_crank::{closure#2}",
+      "seconds": 0.003005,
+      "percent_all_samples": 0.010693304013159632
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::vec::into_iter::IntoIter<(alloc::vec::Vec<usize>, alloc::vec::Vec<usize>)>>",
+      "seconds": 0.003,
+      "percent_all_samples": 0.01067551149400296
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[1]",
+      "seconds": 0.00299,
+      "percent_all_samples": 0.010639926455689617
+    },
+    {
+      "name": "<&mut serde_json::ser::Serializer<&mut alloc::vec::Vec<u8>> as serde_core::ser::Serializer>::serialize_str",
+      "seconds": 0.002989,
+      "percent_all_samples": 0.010636367951858282
+    },
+    {
+      "name": "<alloc::collections::btree::set::BTreeSet<usize> as core::iter::traits::collect::FromIterator<usize>>::from_iter::<core::iter::adapters::copied::Copied<core::slice::iter::Iter<usize>>>",
+      "seconds": 0.002985,
+      "percent_all_samples": 0.010622133936532946
+    },
+    {
+      "name": "<rhai::engine::Engine>::get_interned_string::<rhai::types::immutable_string::ImmutableString>",
+      "seconds": 0.002974,
+      "percent_all_samples": 0.010582990394388267
+    },
+    {
+      "name": "<serde_json::value::Value as <[_]>::to_vec_in::ConvertVec>::to_vec::<alloc::alloc::Global>[1]",
+      "seconds": 0.002844,
+      "percent_all_samples": 0.010120384896314807
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<alloc::string::String, serde_json::value::Value>>::dying_next[2]",
+      "seconds": 0.002832,
+      "percent_all_samples": 0.010077682850338795
+    },
+    {
+      "name": "<sim_solve::JacobianCache as core::clone::Clone>::clone",
+      "seconds": 0.002724,
+      "percent_all_samples": 0.009693364436554688
+    },
+    {
+      "name": "<str>::replace::<&str>[1]",
+      "seconds": 0.002691,
+      "percent_all_samples": 0.009575933810120655
+    },
+    {
+      "name": "<<alloc::collections::btree::node::Handle<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Dying, _, _, _>, alloc::collections::btree::node::marker::KV>>::drop_key_val::Dropper<serde_json::value::Value> as core::ops::drop::Drop>::drop[1]",
+      "seconds": 0.002687,
+      "percent_all_samples": 0.009561699794795318
+    },
+    {
+      "name": "__rustc::__rust_no_alloc_shim_is_unstable_v2",
+      "seconds": 0.002636,
+      "percent_all_samples": 0.009380216099397268
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<alloc::string::String, f64> as core::iter::traits::collect::FromIterator<(alloc::string::String, f64)>>::from_iter::<core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<sim_core::couple::Channel>, core::slice::iter::Iter<f64>>, <sim_runtime::embedded_policy::SampledPolicy>::sample::{closure#15}>>",
+      "seconds": 0.002628,
+      "percent_all_samples": 0.009351748068746593
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<usize, alloc::collections::btree::set_val::SetValZST> as core::cmp::PartialEq>::eq",
+      "seconds": 0.002606,
+      "percent_all_samples": 0.009273460984457239
+    },
+    {
+      "name": "<alloc::sync::Arc<sim_solve::Factor>>::drop_slow",
+      "seconds": 0.002547,
+      "percent_all_samples": 0.009063509258408512
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::finish_grow[19]",
+      "seconds": 0.002525,
+      "percent_all_samples": 0.008985222174119158
+    },
+    {
+      "name": "<alloc::rc::Rc<sim_domain_robot::articulated::embedding::dynamics::PreparedEmbeddedDynamics>>::drop_slow",
+      "seconds": 0.002179,
+      "percent_all_samples": 0.007753979848477484
+    },
+    {
+      "name": "passArrayF64ToWasm0",
+      "seconds": 0.002039,
+      "percent_all_samples": 0.007255789312090678
+    },
+    {
+      "name": "<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<3usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 3usize>> as core::ops::arith::Mul<&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Const<3usize>, nalgebra::base::dimension::Const<1usize>, nalgebra::base::array_storage::ArrayStorage<f64, 3usize, 1usize>>>>::mul",
+      "seconds": 0.001596,
+      "percent_all_samples": 0.005679372114809575
+    },
+    {
+      "name": "core::ptr::drop_glue::<rhai::func::function::RhaiFunc>[1]",
+      "seconds": 0.001578,
+      "percent_all_samples": 0.005615319045845557
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::collections::btree::map::IntoIter<alloc::string::String, serde_json::value::Value>>",
+      "seconds": 0.001554,
+      "percent_all_samples": 0.005529914953893533
+    },
+    {
+      "name": "<core::iter::adapters::map::Map<core::iter::adapters::filter::Filter<core::slice::iter::Iter<sim_domain_robot::articulated::LinkC>, <sim_runtime::embedded::EmbeddedSession>::frame::{closure#10}>, <sim_runtime::embedded::EmbeddedSession>::frame::{closure#11}> as core::iter::traits::iterator::Iterator>::next",
+      "seconds": 0.001546,
+      "percent_all_samples": 0.005501446923242859
+    },
+    {
+      "name": "<serde_json::value::Value as serde_core::de::Deserializer>::deserialize_seq::<<alloc::vec::Vec<_> as serde_core::de::Deserialize>::deserialize::VecVisitor<sim_runtime::session::LinkPose>>",
+      "seconds": 0.001535,
+      "percent_all_samples": 0.005462303381098182
+    },
+    {
+      "name": "<sim_solve::coloring::BlockDiagonalColoring>::new",
+      "seconds": 0.001534,
+      "percent_all_samples": 0.005458744877266847
+    },
+    {
+      "name": "rhai::api::formatting::map_std_type_name[1]",
+      "seconds": 0.001534,
+      "percent_all_samples": 0.005458744877266847
+    },
+    {
+      "name": "<rhai::engine::Engine>::map_type_name[1]",
+      "seconds": 0.001534,
+      "percent_all_samples": 0.005458744877266847
+    },
+    {
+      "name": "<alloc::sync::Arc<smartstring::SmartString<smartstring::config::LazyCompact>>>::make_mut",
+      "seconds": 0.001528,
+      "percent_all_samples": 0.005437393854278841
+    },
+    {
+      "name": "fma",
+      "seconds": 0.001519,
+      "percent_all_samples": 0.005405367319796833
+    },
+    {
+      "name": "hypot",
+      "seconds": 0.001519,
+      "percent_all_samples": 0.005405367319796833
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>::get::<str>[1]",
+      "seconds": 0.001519,
+      "percent_all_samples": 0.005405367319796833
+    },
+    {
+      "name": "core::ptr::drop_glue::<rhai::defer::Deferred<rhai::types::scope::Scope, <rhai::engine::Engine>::eval_stmt::{closure#30}>>",
+      "seconds": 0.001515,
+      "percent_all_samples": 0.005391133304471495
+    },
+    {
+      "name": "<rhai::engine::Engine>::exec_syntactic_fn_call",
+      "seconds": 0.001515,
+      "percent_all_samples": 0.005391133304471495
+    },
+    {
+      "name": "<rhai::ast::expr::Expr>::get_literal_value",
+      "seconds": 0.001515,
+      "percent_all_samples": 0.005391133304471495
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner>::try_allocate_in",
+      "seconds": 0.001514,
+      "percent_all_samples": 0.005387574800640161
+    },
+    {
+      "name": "<sim_runtime::environment::Transition as core::clone::Clone>::clone",
+      "seconds": 0.001509,
+      "percent_all_samples": 0.005369782281483489
+    },
+    {
+      "name": "<serde_json::value::ser::Serializer as serde_core::ser::Serializer>::collect_seq::<&alloc::vec::Vec<f64>>",
+      "seconds": 0.001509,
+      "percent_all_samples": 0.005369782281483489
+    },
+    {
+      "name": "<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>::bulk_build_from_sorted_iter::<alloc::vec::Vec<(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic)>>",
+      "seconds": 0.001509,
+      "percent_all_samples": 0.005369782281483489
+    },
+    {
+      "name": "<rhai::types::dynamic::Dynamic>::flatten[1]",
+      "seconds": 0.001508,
+      "percent_all_samples": 0.005366223777652154
+    },
+    {
+      "name": "<rhai::packages::logic::float_functions::max_ff_64_token as rhai::func::plugin::PluginFunc>::call",
+      "seconds": 0.001508,
+      "percent_all_samples": 0.005366223777652154
+    },
+    {
+      "name": "core::slice::sort::stable::drift::sort::<(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic), <[(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic)]>::sort_by<<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic> as core::iter::traits::collect::FromIterator<(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic)>>::from_iter<core::iter::adapters::map::Map<alloc::collections::btree::map::IntoIter<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>, <rhai::types::dynamic::Dynamic as core::convert::From<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>>::from::{closure#0}>>::{closure#0}>::{closure#0}>",
+      "seconds": 0.001507,
+      "percent_all_samples": 0.00536266527382082
+    },
+    {
+      "name": "core::slice::sort::stable::driftsort_main::<(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic), <[(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic)]>::sort_by<<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic> as core::iter::traits::collect::FromIterator<(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic)>>::from_iter<core::iter::adapters::map::Map<alloc::collections::btree::map::IntoIter<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>, <rhai::types::dynamic::Dynamic as core::convert::From<alloc::collections::btree::map::BTreeMap<smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic>>>::from::{closure#0}>>::{closure#0}>::{closure#0}, alloc::vec::Vec<(smartstring::SmartString<smartstring::config::LazyCompact>, rhai::types::dynamic::Dynamic)>>",
+      "seconds": 0.001507,
+      "percent_all_samples": 0.00536266527382082
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::state_layout",
+      "seconds": 0.001507,
+      "percent_all_samples": 0.00536266527382082
+    },
+    {
+      "name": "<core::str::pattern::StrSearcher>::new",
+      "seconds": 0.001506,
+      "percent_all_samples": 0.005359106769989486
+    },
+    {
+      "name": "<sim_domain_control::trajectory::TrajectorySample as serde_core::ser::Serialize>::serialize::<&mut rhai::serde::ser::DynamicSerializer>",
+      "seconds": 0.001505,
+      "percent_all_samples": 0.005355548266158152
+    },
+    {
+      "name": "core::slice::sort::shared::pivot::median3_rec::<(usize, usize, f64), <[(usize, usize, f64)]>::sort_unstable_by<<sim_solve::SparseJacobian>::summed::{closure#0}>::{closure#0}>",
+      "seconds": 0.001503,
+      "percent_all_samples": 0.005348431258495483
+    },
+    {
+      "name": "<sim_domain_control::fixed_pd::Expr>::eval",
+      "seconds": 0.001503,
+      "percent_all_samples": 0.005348431258495483
+    },
+    {
+      "name": "<sim_domain_robot::articulated::Articulated>::original_closure",
+      "seconds": 0.001503,
+      "percent_all_samples": 0.005348431258495483
+    },
+    {
+      "name": "<sim_solve::SparseJacobian>::add",
+      "seconds": 0.001498,
+      "percent_all_samples": 0.005330638739338812
+    },
+    {
+      "name": "<core::iter::adapters::filter::Filter<core::ops::range::Range<usize>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::new::{closure#5}> as core::iter::traits::iterator::Iterator>::next",
+      "seconds": 0.001493,
+      "percent_all_samples": 0.00531284622018214
+    },
+    {
+      "name": "<rhai::engine::Engine>::search_namespace",
+      "seconds": 0.001492,
+      "percent_all_samples": 0.005309287716350805
+    },
+    {
+      "name": "<sim_solve::JacobianCache>::factorise",
+      "seconds": 0.001486,
+      "percent_all_samples": 0.0052879366933627995
+    },
+    {
+      "name": "<alloc::sync::Arc<sim_solve::Factor>>::drop_slow[1]",
+      "seconds": 0.001476,
+      "percent_all_samples": 0.005252351655049456
+    },
+    {
+      "name": "<core::marker::PhantomData<alloc::vec::Vec<f64>> as serde_core::de::DeserializeSeed>::deserialize::<serde_json::value::Value>[1]",
+      "seconds": 0.001469,
+      "percent_all_samples": 0.005227442128230116
+    },
+    {
+      "name": "<sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::evaluate_forces_with_rates",
+      "seconds": 0.001459,
+      "percent_all_samples": 0.005191857089916773
+    },
+    {
+      "name": "matrixmultiply::gemm::dgemm",
+      "seconds": 0.001431,
+      "percent_all_samples": 0.0050922189826394125
+    },
+    {
+      "name": "<smartstring::boxed::BoxedString as core::ops::drop::Drop>::drop",
+      "seconds": 0.001406,
+      "percent_all_samples": 0.005003256386856054
+    },
+    {
+      "name": "<alloc::collections::btree::map::IntoIter<alloc::string::String, serde_json::value::Value>>::dying_next",
+      "seconds": 0.001375,
+      "percent_all_samples": 0.00489294276808469
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::collections::btree::map::BTreeMap<alloc::string::String, serde_json::value::Value>>",
+      "seconds": 0.001375,
+      "percent_all_samples": 0.00489294276808469
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::vec::into_iter::IntoIter<sim_domain_robot::articulated::embedding::slider_crank::SliderCrankAudit>>",
+      "seconds": 0.001319,
+      "percent_all_samples": 0.004693666553529968
+    },
+    {
+      "name": "core::ptr::drop_glue::<sim_domain_robot::articulated::embedding::implicit::ImplicitStepDiagnostics>",
+      "seconds": 0.001275,
+      "percent_all_samples": 0.004537092384951258
+    },
+    {
+      "name": "<smartstring::inline::InlineString as core::ops::deref::Deref>::deref",
+      "seconds": 0.001207,
+      "percent_all_samples": 0.004295114124420524
+    },
+    {
+      "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>[13]",
+      "seconds": 0.001185,
+      "percent_all_samples": 0.0042168270401311695
+    },
+    {
+      "name": "sim_domain_control::fixed_pd::law",
+      "seconds": 0.001165,
+      "percent_all_samples": 0.004145656963504483
+    },
+    {
+      "name": "core::ptr::drop_glue::<alloc::collections::btree::map::BTreeMap<alloc::string::String, serde_json::value::Value>>[1]",
+      "seconds": 0.001123,
+      "percent_all_samples": 0.003996199802588442
+    },
+    {
+      "name": "<alloc::vec::Vec<f64> as alloc::vec::spec_from_iter::SpecFromIter<f64, core::iter::adapters::map::Map<core::slice::iter::Iter<usize>, <sim_domain_robot::articulated::embedding::motors::EmbeddedMotorBank>::advance_with_control_cached<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#5}, sim_domain_robot::articulated::embedding::servos::PoweredServoControl>::{closure#3}>>>::from_iter",
+      "seconds": 0.001088,
+      "percent_all_samples": 0.0038716521684917403
+    },
+    {
+      "name": "core::slice::sort::stable::drift::sort::<(alloc::string::String, f64), <[(alloc::string::String, f64)]>::sort_by<<alloc::collections::btree::map::BTreeMap<alloc::string::String, f64> as core::iter::traits::collect::FromIterator<(alloc::string::String, f64)>>::from_iter<core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<sim_core::couple::Channel>, core::slice::iter::Iter<f64>>, <sim_runtime::embedded_policy::SampledPolicy>::sample::{closure#15}>>::{closure#0}>::{closure#0}>",
+      "seconds": 0.001083,
+      "percent_all_samples": 0.0038538596493350686
+    },
+    {
+      "name": "core::slice::sort::stable::driftsort_main::<(alloc::string::String, f64), <[(alloc::string::String, f64)]>::sort_by<<alloc::collections::btree::map::BTreeMap<alloc::string::String, f64> as core::iter::traits::collect::FromIterator<(alloc::string::String, f64)>>::from_iter<core::iter::adapters::map::Map<core::iter::adapters::zip::Zip<core::slice::iter::Iter<sim_core::couple::Channel>, core::slice::iter::Iter<f64>>, <sim_runtime::embedded_policy::SampledPolicy>::sample::{closure#15}>>::{closure#0}>::{closure#0}, alloc::vec::Vec<(alloc::string::String, f64)>>",
+      "seconds": 0.001083,
+      "percent_all_samples": 0.0038538596493350686
+    },
+    {
+      "name": "sim_dynamics::hybrid::advance_interval::<sim_domain_robot::articulated::embedding::motor_step::MotorStepper<<sim_runtime::embedded::EmbeddedSession>::advance_one::{closure#5}, sim_domain_robot::articulated::embedding::servos::PoweredServoControl>>::{closure#0}",
+      "seconds": 0.00106,
+      "percent_all_samples": 0.0037720140612143792
+    },
+    {
+      "name": "__wbindgen_malloc",
+      "seconds": 0.001029,
+      "percent_all_samples": 0.0036617004424430153
+    }
+  ],
+  "masked_gemm_stacks": [
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- matrixmultiply::gemm::gemm_loop::<matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}\n <- <sim_solve::profile::Bucket>::time::<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}\n <- sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>",
+      "seconds": 1.153331,
+      "percent_all_samples": 4.1041327822966425
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- matrixmultiply::gemm::gemm_loop::<matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#2}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}\n <- sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact",
+      "seconds": 0.613975,
+      "percent_all_samples": 2.184832389843489
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- matrixmultiply::gemm::gemm_loop::<matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}\n <- <sim_solve::profile::Bucket>::time::<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}\n <- sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>::{closure#4}",
+      "seconds": 0.586233,
+      "percent_all_samples": 2.0861123765546123
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- matrixmultiply::gemm::gemm_loop::<matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}\n <- <sim_solve::profile::Bucket>::time::<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::accelerations\n <- <sim_runtime::embedded::EmbeddedSession>::advance_one\n <- <sim_runtime::embedded::EmbeddedSession>::advance",
+      "seconds": 0.176939,
+      "percent_all_samples": 0.6296381094124632
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- matrixmultiply::gemm::gemm_loop::<matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve\n <- <sim_runtime::embedded::EmbeddedSession>::advance_one\n <- <sim_runtime::embedded::EmbeddedSession>::advance\n <- <sim_runtime::environment::EmbeddedEnvironment>::step\n <- <sim_web::EnvironmentSimulation>::step",
+      "seconds": 0.085521,
+      "percent_all_samples": 0.3043268061595424
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#2}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}\n <- sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_cached_with_guess",
+      "seconds": 0.004522,
+      "percent_all_samples": 0.016091554325293796
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}\n <- <sim_solve::profile::Bucket>::time::<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}\n <- sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact",
+      "seconds": 0.001502,
+      "percent_all_samples": 0.0053448727546641485
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- matrixmultiply::gemm::gemm_loop::<matrixmultiply::dgemm_kernel::KernelFallback>\n <- matrixmultiply::gemm::dgemm\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#2}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}\n <- sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>",
+      "seconds": 0.001431,
+      "percent_all_samples": 0.0050922189826394125
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}\n <- <sim_solve::profile::Bucket>::time::<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#4}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}\n <- sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>::{closure#4}\n <- sim_solve::solve_newton_cached_audited_with_reference::<&<sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#5}, <sim_domain_robot::articulated::embedding::RigidEmbedding>::step_implicit_coupled_exact::{closure#18}>",
+      "seconds": 0.001379,
+      "percent_all_samples": 0.004907176783410027
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::solve\n <- <sim_runtime::embedded::EmbeddedSession>::advance_one\n <- <sim_runtime::embedded::EmbeddedSession>::advance\n <- <sim_runtime::environment::EmbeddedEnvironment>::step\n <- <sim_web::EnvironmentSimulation>::step\n <- environmentsimulation_step",
+      "seconds": 0.001376,
+      "percent_all_samples": 0.004896501271916025
+    },
+    {
+      "name": "matrixmultiply::gemm::masked_kernel::<f64, matrixmultiply::dgemm_kernel::KernelFallback>\n <- <&nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>> as core::ops::arith::Mul>::mul\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}\n <- <sim_solve::profile::Bucket>::time::<nalgebra::base::matrix::Matrix<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn, nalgebra::base::vec_storage::VecStorage<f64, nalgebra::base::dimension::Dyn, nalgebra::base::dimension::Dyn>>, <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics_impl::{closure#5}>\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::prepare_dynamics::{closure#0}\n <- <sim_domain_robot::articulated::embedding::RigidEmbedding>::accelerations\n <- <sim_runtime::embedded::EmbeddedSession>::advance_one\n <- <sim_runtime::embedded::EmbeddedSession>::advance\n <- <sim_runtime::environment::EmbeddedEnvironment>::step",
+      "seconds": 0.001121,
+      "percent_all_samples": 0.0039890827949257725
+    }
+  ],
+  "parity": {
+    "frames": 151,
+    "all_fields_except_wall_exact": true,
+    "fields": [
+      "completed_steps",
+      "contact_history",
+      "contacts",
+      "done",
+      "driver_readings",
+      "error",
+      "joint_positions",
+      "joint_velocities",
+      "learning",
+      "motor_readings",
+      "motor_states",
+      "original_rows",
+      "policy",
+      "policy_inputs",
+      "poses",
+      "requested_steps",
+      "servo_commands",
+      "servo_states",
+      "servo_targets_rad",
+      "time_s"
+    ],
+    "full_task_transitions_exact": true
+  },
+  "input_hashes_verified": true
+}

@@ -1,0 +1,15 @@
+{
+  "classification": "Retained failed experiment, not usable completed calibration data",
+  "fpga_status_reason": 11,
+  "terminal_result": 2,
+  "frame": 116,
+  "motor_id": 11,
+  "observed_position_counts": 3023,
+  "requested_position_counts": 2921,
+  "tracking_error_counts": -102,
+  "tracking_guard_counts": 100,
+  "interpretation": "Telemetry violates the compiled position-error guard before the interrupted control request. Consistent with control_fault; broad reason 11 does not independently identify its subcondition.",
+  "original_host_error": "Unsolicited local status",
+  "stop_verified": true,
+  "terminal_provenance": "Checksum-valid terminal packet was pending in recovery-stream.jsonl at STOP; separate diagnostic capture appends it, preserving original capture."
+}

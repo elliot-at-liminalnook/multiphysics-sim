@@ -1,0 +1,400 @@
+Info: Using uarch 'gowin' for device 'GW5A-LV25MG121NC1/I0'
+
+Info: Reading constraints...
+Info: Create constant nets...
+Info: Modify LUTs...
+Info: Pack IOBs...
+Info: Pack I3C IOs...
+Info: Pack MIPI IOs...
+Info: Pack diff IOBs...
+Info: Pack FFs into IO cells...
+Info: Pack IODELAY...
+Info: Pack Input Edge Monitors...
+Info: Pack IO logic...
+Info: Pack DESER16 logic...
+Info: Pack GSR...
+Info: Pack PINCFG...
+Info: Pack HCLK cells...
+Info: Pack DLLDLYs...
+Info: Pack wide LUTs...
+Info: Packed MUX2_LUT8:0, MUX2_LU7:0, MUX2_LUT6:0, MUX2_LUT5:0
+Info: Pack ALUs...
+Info: Pack SSRAMs...
+Info: Constrained 5374 LUTFF pairs.
+Info: Pack PLL...
+Info: Pack ADC...
+Info: Pack BSRAMs...
+Info: Pack DSP...
+Info: Pack INV...
+Info: Pack buffered nets...
+Info: Pack EMCU and UserFlash cells...
+Info: Pack UserFlash cells...
+Info: Pack DQCE cells...
+Info: Pack DCS cells...
+Info: Checksum: 0x97c6a1c9
+
+Info: Device utilisation:
+Info: 	                 VCC:       1/      1   100%
+Info: 	                 IOB:       7/    240     2%
+Info: 	                LUT4:   17308/  23040    75%
+Info: 	            IOLOGICI:       0/    230     0%
+Info: 	            IOLOGICO:       0/    230     0%
+Info: 	           MUX2_LUT5:       0/  11520     0%
+Info: 	           MUX2_LUT6:       0/   5760     0%
+Info: 	           MUX2_LUT7:       0/   2880     0%
+Info: 	           MUX2_LUT8:       0/   2880     0%
+Info: 	                 ALU:       0/  17280     0%
+Info: 	                 GND:       1/      1   100%
+Info: 	                 DFF:    8406/  23040    36%
+Info: 	               BSRAM:      17/     56    30%
+Info: 	           MULT12X12:       0/     56     0%
+Info: 	        MULTALU27X18:       0/     28     0%
+Info: 	     MULTADDALU12X12:       0/     28     0%
+Info: 	                 GSR:       1/      1   100%
+Info: 	              PINCFG:       1/      1   100%
+Info: 	                OSCA:       0/      1     0%
+Info: 	                PLLA:       0/      6     0%
+Info: 	                 ADC:       0/      1     0%
+Info: 	                BUFG:       0/     18     0%
+Info: 	                 DCS:       0/      8     0%
+Info: 	              CLKDIV:       0/     16     0%
+Info: 	             CLKDIV2:       0/     16     0%
+
+Info: Running custom HCLK placer...
+Info: Placed 0 cells based on constraints.
+Info: Creating initial analytic placement for 20357 cells, random placement wirelen = 1185273.
+Info:     at initial placer iter 0, wirelen = 888
+Info:     at initial placer iter 1, wirelen = 773
+Info:     at initial placer iter 2, wirelen = 712
+Info:     at initial placer iter 3, wirelen = 685
+Info: Running main analytical placer, max placement attempts per cell = 82837756.
+Info:     at iteration #1, type ALL: wirelen solved = 681, spread = 260140, legal = 318897; time = 10.98s
+Info:     at iteration #2, type ALL: wirelen solved = 86919, spread = 163810, legal = 203822; time = 3.60s
+Info:     at iteration #3, type ALL: wirelen solved = 116272, spread = 146418, legal = 181206; time = 2.67s
+Info:     at iteration #4, type ALL: wirelen solved = 126348, spread = 147897, legal = 171601; time = 2.04s
+Info:     at iteration #5, type ALL: wirelen solved = 132910, spread = 151480, legal = 168309; time = 1.58s
+Info:     at iteration #6, type ALL: wirelen solved = 136435, spread = 153104, legal = 164616; time = 1.40s
+Info: HeAP Placer Time: 28.02s
+Info:   of which solving equations: 9.93s
+Info:   of which spreading cells: 1.01s
+Info:   of which strict legalisation: 16.08s
+
+Info: Running simulated annealing placer for refinement.
+Info:   at iteration #1: temp = 0.000000, timing cost = 442, wirelen = 164616
+Info:   at iteration #5: temp = 0.000000, timing cost = 151, wirelen = 146165
+Info:   at iteration #10: temp = 0.000000, timing cost = 131, wirelen = 139646
+Info:   at iteration #15: temp = 0.000000, timing cost = 118, wirelen = 134503
+Info:   at iteration #20: temp = 0.000000, timing cost = 110, wirelen = 130874
+Info:   at iteration #25: temp = 0.000000, timing cost = 121, wirelen = 129814
+Info:   at iteration #30: temp = 0.000000, timing cost = 108, wirelen = 129263
+Info:   at iteration #35: temp = 0.000000, timing cost = 108, wirelen = 129121
+Info:   at iteration #37: temp = 0.000000, timing cost = 107, wirelen = 129098 
+Info: SA placement time 69.70s
+
+Info: Max frequency for clock 'law.clk': 47.79 MHz (FAIL at 50.00 MHz)
+
+Info: Slack histogram:
+Info:  legend: * represents 36 endpoint(s)
+Info:          + represents [1,36) endpoint(s)
+Info: [  -923,    110) |+
+Info: [   110,   1143) |*+
+Info: [  1143,   2176) |***+
+Info: [  2176,   3209) |+
+Info: [  3209,   4242) |**+
+Info: [  4242,   5275) |*****+
+Info: [  5275,   6308) |*********+
+Info: [  6308,   7341) |********+
+Info: [  7341,   8374) |***+
+Info: [  8374,   9407) |****+
+Info: [  9407,  10440) |*******+
+Info: [ 10440,  11473) |*******+
+Info: [ 11473,  12506) |*********+
+Info: [ 12506,  13539) |*********+
+Info: [ 13539,  14572) |***+
+Info: [ 14572,  15605) |****+
+Info: [ 15605,  16638) |********+
+Info: [ 16638,  17671) |****************+
+Info: [ 17671,  18704) |************************+
+Info: [ 18704,  19737) |************************************************************ 
+Info: Checksum: 0x266bb3ca
+Info: Routing globals...
+Info:     'law.clk' net was routed using global resources only.
+
+Info: Routing..
+Info: Setting up routing queue.
+Info: Routing 80769 arcs.
+Info:            |   (re-)routed arcs  |   delta    | remaining|       time spent     |
+Info:    IterCnt |  w/ripup   wo/ripup |  w/r  wo/r |      arcs| batch(sec) total(sec)|
+Info:       1000 |        3        996 |    3   996 |     79776|       1.81       1.81|
+Info:       2000 |        8       1991 |    5   995 |     78782|       0.96       2.77|
+Info:       3000 |       43       2956 |   35   965 |     77817|       0.81       3.58|
+Info:       4000 |       78       3921 |   35   965 |     76862|       0.80       4.38|
+Info:       5000 |      132       4867 |   54   946 |     75934|       0.84       5.23|
+Info:       6000 |      142       5857 |   10   990 |     74944|       0.65       5.87|
+Info:       7000 |      146       6853 |    4   996 |     73948|       0.69       6.56|
+Info:       8000 |      152       7847 |    6   994 |     72957|       0.59       7.15|
+Info:       9000 |      158       8841 |    6   994 |     71963|       0.43       7.59|
+Info:      10000 |      164       9835 |    6   994 |     70969|       0.46       8.05|
+Info:      11000 |      166      10833 |    2   998 |     69993|       0.90       8.95|
+Info:      12000 |      168      11831 |    2   998 |     68995|       0.87       9.81|
+Info:      13000 |      170      12829 |    2   998 |     67997|       0.94      10.76|
+Info:      14000 |      173      13826 |    3   997 |     67000|       0.83      11.59|
+Info:      15000 |      175      14824 |    2   998 |     66002|       0.87      12.46|
+Info:      16000 |      179      15820 |    4   996 |     65007|       0.80      13.25|
+Info:      17000 |      180      16819 |    1   999 |     64009|       0.75      14.00|
+Info:      18000 |      187      17812 |    7   993 |     63017|       0.80      14.80|
+Info:      19000 |      192      18807 |    5   995 |     62023|       0.76      15.55|
+Info:      20000 |      195      19804 |    3   997 |     61028|       0.78      16.34|
+Info:      21000 |      201      20798 |    6   994 |     60037|       0.79      17.13|
+Info:      22000 |      209      21790 |    8   992 |     59048|       0.79      17.91|
+Info:      23000 |      223      22776 |   14   986 |     58065|       0.80      18.72|
+Info:      24000 |      231      23768 |    8   992 |     57075|       0.84      19.56|
+Info:      25000 |      241      24758 |   10   990 |     56087|       0.84      20.39|
+Info:      26000 |      252      25747 |   11   989 |     55099|       0.83      21.22|
+Info:      27000 |      264      26735 |   12   988 |     54111|       0.84      22.06|
+Info:      28000 |      278      27721 |   14   986 |     53127|       0.91      22.97|
+Info:      29000 |      288      28711 |   10   990 |     52140|       0.92      23.89|
+Info:      30000 |      291      29708 |    3   997 |     51144|       0.93      24.82|
+Info:      31000 |      313      30686 |   22   978 |     50187|       0.95      25.77|
+Info:      32000 |      325      31674 |   12   988 |     49200|       0.97      26.74|
+Info:      33000 |      352      32647 |   27   973 |     48229|       1.05      27.79|
+Info:      34000 |      373      33626 |   21   979 |     47256|       1.03      28.82|
+Info:      35000 |      393      34606 |   20   980 |     46287|       0.90      29.72|
+Info:      36000 |      409      35590 |   16   984 |     45316|       0.92      30.64|
+Info:      37000 |      434      36565 |   25   975 |     44343|       0.78      31.41|
+Info:      38000 |      456      37543 |   22   978 |     43374|       0.96      32.37|
+Info:      39000 |      469      38530 |   13   987 |     42389|       0.82      33.20|
+Info:      40000 |      505      39494 |   36   964 |     41445|       0.88      34.08|
+Info:      41000 |      531      40468 |   26   974 |     40492|       0.89      34.97|
+Info:      42000 |      553      41446 |   22   978 |     39517|       0.95      35.92|
+Info:      43000 |      609      42390 |   56   944 |     38585|       1.02      36.94|
+Info:      44000 |      642      43357 |   33   967 |     37624|       1.09      38.03|
+Info:      45000 |      685      44314 |   43   957 |     36687|       1.25      39.28|
+Info:      46000 |      737      45262 |   52   948 |     35769|       1.14      40.41|
+Info:      47000 |      780      46219 |   43   957 |     34816|       1.12      41.53|
+Info:      48000 |      841      47158 |   61   939 |     33893|       1.15      42.68|
+Info:      49000 |      890      48109 |   49   951 |     32967|       1.07      43.75|
+Info:      50000 |      975      49024 |   85   915 |     32090|       1.23      44.99|
+Info:      51000 |     1062      49937 |   87   913 |     31204|       1.33      46.31|
+Info:      52000 |     1143      50856 |   81   919 |     30324|       1.37      47.68|
+Info:      53000 |     1229      51770 |   86   914 |     29441|       1.27      48.95|
+Info:      54000 |     1335      52664 |  106   894 |     28584|       1.48      50.43|
+Info:      55000 |     1450      53549 |  115   885 |     27715|       1.96      52.39|
+Info:      56000 |     1558      54441 |  108   892 |     26865|       1.65      54.04|
+Info:      57000 |     1684      55315 |  126   874 |     26037|       1.52      55.56|
+Info:      58000 |     1800      56199 |  116   884 |     25186|       1.50      57.06|
+Info:      59000 |     1920      57079 |  120   880 |     24360|       1.62      58.68|
+Info:      60000 |     2058      57941 |  138   862 |     23603|       1.85      60.53|
+Info:      61000 |     2212      58787 |  154   846 |     22814|       1.86      62.39|
+Info:      62000 |     2388      59611 |  176   824 |     22083|       1.79      64.18|
+Info:      63000 |     2572      60427 |  184   816 |     21313|       1.70      65.88|
+Info:      64000 |     2759      61240 |  187   813 |     20582|       1.92      67.80|
+Info:      65000 |     2975      62024 |  216   784 |     19980|       2.35      70.15|
+Info:      66000 |     3192      62807 |  217   783 |     19338|       2.02      72.17|
+Info:      67000 |     3419      63580 |  227   773 |     18812|       2.28      74.45|
+Info:      68000 |     3626      64373 |  207   793 |     18185|       2.11      76.56|
+Info:      69000 |     3808      65191 |  182   818 |     17456|       2.02      78.58|
+Info:      70000 |     4040      65959 |  232   768 |     16852|       2.48      81.06|
+Info:      71000 |     4270      66729 |  230   770 |     16200|       2.00      83.06|
+Info:      72000 |     4498      67501 |  228   772 |     15541|       2.51      85.58|
+Info:      73000 |     4769      68230 |  271   729 |     14978|       2.52      88.10|
+Info:      74000 |     5041      68958 |  272   728 |     14451|       2.42      90.52|
+Info:      75000 |     5321      69678 |  280   720 |     13885|       2.37      92.89|
+Info:      76000 |     5639      70360 |  318   682 |     13475|       2.74      95.62|
+Info:      77000 |     5961      71038 |  322   678 |     13167|       2.69      98.31|
+Info:      78000 |     6297      71702 |  336   664 |     12719|       2.71     101.02|
+Info:      79000 |     6586      72413 |  289   711 |     12162|       2.35     103.37|
+Info:      80000 |     6905      73094 |  319   681 |     11667|       3.18     106.55|
+Info:      81000 |     7228      73771 |  323   677 |     11146|       2.96     109.51|
+Info:      82000 |     7560      74439 |  332   668 |     10744|       3.01     112.52|
+Info:      83000 |     7886      75113 |  326   674 |     10389|       2.52     115.05|
+Info:      84000 |     8259      75740 |  373   627 |     10006|       2.86     117.90|
+Info:      85000 |     8624      76375 |  365   635 |      9673|       2.86     120.77|
+Info:      86000 |     8996      77003 |  372   628 |      9365|       2.68     123.45|
+Info:      87000 |     9324      77675 |  328   672 |      8894|       2.56     126.01|
+Info:      88000 |     9675      78324 |  351   649 |      8422|       2.63     128.63|
+Info:      89000 |    10052      78947 |  377   623 |      8091|       2.94     131.57|
+Info:      90000 |    10450      79549 |  398   602 |      7755|       3.07     134.64|
+Info:      91000 |    10798      80201 |  348   652 |      7400|       2.94     137.58|
+Info:      92000 |    11193      80806 |  395   605 |      7073|       3.11     140.69|
+Info:      93000 |    11544      81455 |  351   649 |      6629|       3.58     144.26|
+Info:      94000 |    11949      82050 |  405   595 |      6507|       3.87     148.14|
+Info:      95000 |    12359      82640 |  410   590 |      6151|       3.38     151.51|
+Info:      96000 |    12762      83237 |  403   597 |      6059|       3.32     154.84|
+Info:      97000 |    13180      83819 |  418   582 |      5807|       3.18     158.02|
+Info:      98000 |    13613      84386 |  433   567 |      5536|       3.54     161.55|
+Info:      99000 |    14038      84961 |  425   575 |      5188|       3.27     164.82|
+Info:     100000 |    14460      85539 |  422   578 |      4882|       3.34     168.16|
+Info:     101000 |    14858      86141 |  398   602 |      4575|       3.32     171.48|
+Info:     102000 |    15294      86705 |  436   564 |      4382|       3.59     175.07|
+Info:     103000 |    15754      87245 |  460   540 |      4162|       3.37     178.44|
+Info:     104000 |    16183      87816 |  429   571 |      3883|       2.90     181.34|
+Info:     105000 |    16635      88364 |  452   548 |      3638|       3.29     184.63|
+Info:     106000 |    17024      88975 |  389   611 |      3273|       2.99     187.63|
+Info:     107000 |    17454      89545 |  430   570 |      2939|       3.27     190.90|
+Info:     108000 |    17875      90124 |  421   579 |      2612|       3.31     194.21|
+Info:     109000 |    18380      90619 |  505   495 |      2631|       3.86     198.07|
+Info:     110000 |    18777      91222 |  397   603 |      2543|       3.56     201.63|
+Info:     111000 |    19236      91763 |  459   541 |      2251|       3.57     205.20|
+Info:     112000 |    19716      92283 |  480   520 |      2272|       3.70     208.90|
+Info:     113000 |    20190      92809 |  474   526 |      2092|       3.75     212.65|
+Info:     114000 |    20675      93324 |  485   515 |      2108|       3.97     216.62|
+Info:     115000 |    21070      93929 |  395   605 |      1786|       3.56     220.18|
+Info:     116000 |    21513      94486 |  443   557 |      1631|       3.50     223.68|
+Info:     117000 |    21935      95064 |  422   578 |      1491|       3.32     226.99|
+Info:     118000 |    22305      95694 |  370   630 |      1228|       3.02     230.01|
+Info:     119000 |    22707      96292 |  402   598 |       963|       3.40     233.41|
+Info:     120000 |    23133      96866 |  426   574 |       721|       3.75     237.16|
+Info:     121000 |    23571      97428 |  438   562 |       584|       3.38     240.54|
+Info:     122000 |    24009      97990 |  438   562 |       317|       2.87     243.41|
+Info:     123000 |    24425      98574 |  416   584 |       117|       2.99     246.40|
+Info:     123466 |    24629      98837 |  204   263 |         0|       1.73     248.14|
+Info: Routing complete.
+Info: Router1 time 248.14s
+Info: Checksum: 0x1bea8676
+
+Info: Critical path report for clock 'law.clk' (posedge -> posedge):
+Info:       type curr  total name
+Info:   clk-to-q  0.23  0.23 Source safety.supervisor.command_age[0]_DFFRE_Q_12.Q
+Info:    routing  0.14  0.37 Net safety.supervisor.command_age[0][11] (19,5) -> (19,5)
+Info:                          Sink safety.supervisor.command_age[0]_DFFRE_Q_14_D_LUT3_F_I1_LUT2_F_I0_LUT4_F.I1
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.57  0.94 Source safety.supervisor.command_age[0]_DFFRE_Q_14_D_LUT3_F_I1_LUT2_F_I0_LUT4_F.F
+Info:    routing  0.17  1.11 Net safety.supervisor.command_age[0]_DFFRE_Q_14_D_LUT3_F_I1_LUT2_F_I0[3] (19,5) -> (18,5)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2_LUT4_F_I3_LUT4_F.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  1.48 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2_LUT4_F_I3_LUT4_F.F
+Info:    routing  0.14  1.62 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2_LUT4_F_I3[3] (18,5) -> (18,5)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2_LUT4_F.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  1.99 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2_LUT4_F.F
+Info:    routing  0.38  2.37 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2[2] (18,5) -> (18,3)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2_LUT4_I2.I2
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.46  2.83 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2_LUT4_I2.F
+Info:    routing  0.17  3.00 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_I2_LUT4_F_I2_LUT4_I2_F[3] (18,3) -> (17,3)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_1_F_LUT4_F.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  3.37 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_1_F_LUT4_F.F
+Info:    routing  0.14  3.51 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_1_F[3] (17,3) -> (17,3)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_F_LUT4_F_1.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  3.88 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_F_LUT4_F_1.F
+Info:    routing  0.24  4.12 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_F_I1_LUT4_I3_F_LUT4_I3_F[2] (17,3) -> (17,3)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT4_I2_F_LUT4_F.I2
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.46  4.58 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT4_I2_F_LUT4_F.F
+Info:    routing  0.24  4.82 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT4_F_1_I1_LUT4_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I0_F_LUT4_F_I1_LUT4_I2_F_LUT4_F_I1[3] (17,3) -> (16,3)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT4_F_1_I1_LUT4_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I0_F_LUT4_F_I1_LUT4_I2_F_LUT4_F.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  5.19 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT4_F_1_I1_LUT4_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I0_F_LUT4_F_I1_LUT4_I2_F_LUT4_F.F
+Info:    routing  0.00  5.19 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT4_F_I0[1] (16,3) -> (16,3)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT4_F_1_I1_LUT4_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I0.I1
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.57  5.76 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT4_F_1_I1_LUT4_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I0.F
+Info:    routing  0.17  5.92 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F[1] (16,3) -> (15,3)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT4_F.I2
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.46  6.39 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT4_F.F
+Info:    routing  0.14  6.53 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F[3] (15,3) -> (15,3)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F_LUT3_F_I2_LUT3_I2_1_F_LUT4_I0.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  6.90 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F_LUT3_F_I2_LUT3_I2_1_F_LUT4_I0.F
+Info:    routing  0.40  7.30 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F_LUT3_F_I2_LUT3_I2_1_F_LUT4_I0_F[1] (15,3) -> (13,2)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I1_F_LUT4_F.I1
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.57  7.87 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I1_F_LUT4_F.F
+Info:    routing  0.17  8.04 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I1_F[3] (13,2) -> (13,2)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I1_F_LUT3_F_I2_LUT3_I2_F_LUT4_I0_F_LUT4_F.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  8.41 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_1_F_LUT2_F_I1_LUT3_I2_F_LUT3_F_I2_LUT3_I2_F_LUT4_I1_F_LUT3_F_I2_LUT3_I2_F_LUT4_I0_F_LUT4_F.F
+Info:    routing  0.17  8.57 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_I1_LUT3_F_I2[1] (13,2) -> (13,2)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_F_LUT2_F_I1_LUT3_I1_F_LUT3_F_I1_LUT2_I1_1_F_LUT4_F.I1
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.57  9.14 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_I1_LUT2_I1_F_LUT2_F_I1_LUT3_I1_F_LUT3_F_I1_LUT2_I1_1_F_LUT4_F.F
+Info:    routing  0.38  9.52 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_I1_LUT3_F_I2_LUT4_I1_F_LUT4_F_I0_LUT3_F_I2_LUT3_I2_F[3] (13,2) -> (12,2)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_I1_LUT3_F_I2_LUT4_I1_F_LUT4_F_1.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  9.89 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_I1_LUT3_F_I2_LUT4_I1_F_LUT4_F_1.F
+Info:    routing  0.14  10.03 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_I1[3] (12,2) -> (12,2)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_I1_LUT4_I2.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  10.40 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_I1_LUT4_I2.F
+Info:    routing  0.17  10.57 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F[2] (12,2) -> (12,2)
+Info:                          Sink safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_F_LUT4_F_1.I2
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.46  11.03 Source safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_F_LUT4_F_1.F
+Info:    routing  0.38  11.41 Net safety.supervisor.feedback_age[0]_DFFRE_Q_2_D_LUT3_F_I1_LUT2_I1_F_LUT2_F_I1_LUT4_F_I1_LUT2_I1_F_LUT3_I1_F_LUT4_F_1_I1_LUT2_I1_F_LUT2_F_I1_LUT2_I1_F_LUT3_I0_F[3] (12,2) -> (11,2)
+Info:                          Sink safety.supervisor.reason_DFFSE_Q_D_LUT2_F_I1_LUT4_F_I2_LUT4_I1_1_F_LUT4_F.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  11.78 Source safety.supervisor.reason_DFFSE_Q_D_LUT2_F_I1_LUT4_F_I2_LUT4_I1_1_F_LUT4_F.F
+Info:    routing  0.00  11.78 Net safety.supervisor.reason_DFFSE_Q_D_LUT2_F_I1_LUT4_F_I2_LUT4_I1_1_F[3] (11,2) -> (11,2)
+Info:                          Sink safety.supervisor.reason_DFFSE_Q_D_LUT2_F_I1_LUT4_F_I2_LUT4_I1.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  12.15 Source safety.supervisor.reason_DFFSE_Q_D_LUT2_F_I1_LUT4_F_I2_LUT4_I1.F
+Info:    routing  0.85  13.01 Net safety.supervisor.reason_DFFSE_Q_D_LUT2_F_I1_LUT4_F_I2_LUT4_I1_F[3] (11,2) -> (9,6)
+Info:                          Sink safety.supervisor.reason_DFFRE_Q_2_D_LUT4_F_I2_LUT3_F_I1_LUT2_I1_F_LUT2_I1_F_LUT4_F.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  13.38 Source safety.supervisor.reason_DFFRE_Q_2_D_LUT4_F_I2_LUT3_F_I1_LUT2_I1_F_LUT2_I1_F_LUT4_F.F
+Info:    routing  0.14  13.52 Net safety.supervisor.armed_DFFRE_Q_2_D_LUT4_F_I2_LUT4_F_I1_LUT4_I1_I0_LUT4_I3_F_LUT4_I3_F[3] (9,6) -> (9,6)
+Info:                          Sink safety.supervisor.armed_DFFRE_Q_2_D_LUT4_F_I2_LUT4_F_I1_LUT4_I1_I0_LUT4_I3_F_LUT4_I3_F_LUT4_I0_F_LUT4_F.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  13.89 Source safety.supervisor.armed_DFFRE_Q_2_D_LUT4_F_I2_LUT4_F_I1_LUT4_I1_I0_LUT4_I3_F_LUT4_I3_F_LUT4_I0_F_LUT4_F.F
+Info:    routing  0.98  14.86 Net safety.supervisor.armed_DFFRE_Q_1_D_LUT4_F_I2_LUT4_F_I0[3] (9,6) -> (3,10)
+Info:                          Sink safety.supervisor.armed_DFFRE_Q_1_D_LUT4_F_I2_LUT4_F_I0_LUT4_I1.I3
+Info:                          Defined in:
+Info:                               /Users/elliot/.local/opt/oss-cad-suite/libexec/../share/yosys/gowin/cells_map.v:130.20-130.21
+Info:      logic  0.37  15.23 Source safety.supervisor.armed_DFFRE_Q_1_D_LUT4_F_I2_LUT4_F_I0_LUT4_I1.F
+Info:    routing  0.47  15.71 Net safety.supervisor.armed_DFFRE_Q_1_D_LUT4_F_I2_LUT4_F_I0_LUT4_I1_F (3,10) -> (1,11)
+Info:                          Sink safety.supervisor.command_age[7]_DFFRE_Q_21.RESET
+Info:      setup  0.04  15.74 Source safety.supervisor.command_age[7]_DFFRE_Q_21.RESET
+Info: 9.57 ns logic, 6.17 ns routing
+
+Info: Max frequency for clock 'law.clk': 63.52 MHz (PASS at 50.00 MHz)
+
+Info: Slack histogram:
+Info:  legend: * represents 16 endpoint(s)
+Info:          + represents [1,16) endpoint(s)
+Info: [  4257,   5023) |*************+
+Info: [  5023,   5789) |+
+Info: [  5789,   6555) |+
+Info: [  6555,   7321) |+
+Info: [  7321,   8087) |****+
+Info: [  8087,   8853) |****+
+Info: [  8853,   9619) |+
+Info: [  9619,  10385) |+
+Info: [ 10385,  11151) |+
+Info: [ 11151,  11917) |+
+Info: [ 11917,  12683) |*+
+Info: [ 12683,  13449) |*+
+Info: [ 13449,  14215) |*****************+
+Info: [ 14215,  14981) |********+
+Info: [ 14981,  15747) |*******************************+
+Info: [ 15747,  16513) |****************************************+
+Info: [ 16513,  17279) |************************************************************ 
+Info: [ 17279,  18045) |***********************************************+
+Info: [ 18045,  18811) |***********************+
+Info: [ 18811,  19577) |*********************+
+
+Info: Program finished normally.

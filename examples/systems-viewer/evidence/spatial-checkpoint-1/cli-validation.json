@@ -1,0 +1,30 @@
+[
+  {
+    "args": [
+      "--validate-only"
+    ],
+    "exit_code": 0,
+    "stdout": "Validated 14 spatial parts against 7 components (description 9bee4165ea081b9edf4ea7d0eed7f2c2b78fad38c94360ead9075ede8082e812).",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--validate-only",
+      "--select",
+      "missing-component"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "Error: InspectionError(\"component has no spatial representation\")"
+  },
+  {
+    "args": [
+      "--description",
+      "missing.json",
+      "--validate-only"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "Error: \"provide both --description and --spatial\""
+  }
+]

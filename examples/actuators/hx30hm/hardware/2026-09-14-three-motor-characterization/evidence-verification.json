@@ -1,0 +1,16 @@
+{
+  "recordings": 18,
+  "completed": 16,
+  "interrupted": 2,
+  "complete_frames": 1402,
+  "all_audited_arithmetic_matches": true,
+  "all_stops_verified": true,
+  "final_inspection_zero_off_stationary": true,
+  "all_physical_scopes": [
+    10,
+    11,
+    12
+  ],
+  "accepted_model_changed": false,
+  "verification": "Physical capture checks and existing Rust review outputs. Interrupted captures retain their original failure status; supplemental terminal reviews also classify both failed."
+}

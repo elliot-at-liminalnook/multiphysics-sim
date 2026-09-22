@@ -1,0 +1,412 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "buck_5v",
+  "definitions": {
+    "buck_5v": {
+      "label": "5 V buck regulator",
+      "description": "Voltage-mode buck: 50 kHz PWM, PI on the sensed output (reading 1.0 = 5 V), MOSFET high side, catch diode, 47 µH / 100 µF.",
+      "interface": "regulator.5v",
+      "ports": {
+        "gnd": {},
+        "vin": {},
+        "vout": {}
+      },
+      "instances": {
+        "air": {
+          "label": "Copper to air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "conductance": {
+              "value": 0.05
+            }
+          },
+          "placement": {
+            "position": [
+              -0.014,
+              0.012,
+              -0.012
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "ambient": {
+          "label": "Ambient",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              -0.014,
+              0.016,
+              -0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "c": {
+          "label": "100 µF",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.capacitor"
+          },
+          "parameters": {
+            "capacitance": {
+              "value": 0.0001
+            }
+          },
+          "placement": {
+            "position": [
+              0.024,
+              0.0,
+              -0.002
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "d": {
+          "label": "Catch diode (Schottky)",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.diode"
+          },
+          "parameters": {
+            "forward_voltage": {
+              "value": 0.45
+            }
+          },
+          "placement": {
+            "position": [
+              -0.003,
+              0.0,
+              0.008
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "l": {
+          "label": "47 µH",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.inductor"
+          },
+          "parameters": {
+            "inductance": {
+              "value": 0.000047
+            }
+          },
+          "placement": {
+            "position": [
+              0.008,
+              0.0,
+              -0.002
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pi": {
+          "label": "Voltage loop",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pi"
+          },
+          "parameters": {
+            "ki": {
+              "value": 200.0
+            },
+            "kp": {
+              "value": 0.1
+            },
+            "setpoint": {
+              "value": 1.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.006,
+              0.0,
+              0.012
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "pwm": {
+          "label": "50 kHz PWM",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.pwm"
+          },
+          "parameters": {
+            "frequency": {
+              "value": 50000.0
+            }
+          },
+          "placement": {
+            "position": [
+              -0.012,
+              0.0,
+              0.012
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "q": {
+          "label": "High-side switch",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.03
+            }
+          },
+          "placement": {
+            "position": [
+              -0.014,
+              0.0,
+              -0.004
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "sense": {
+          "label": "Output sense",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.voltage_sense"
+          },
+          "parameters": {
+            "scale": {
+              "value": 5.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.024,
+              0.0,
+              0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "sink": {
+          "label": "Switch copper",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 0.5
+            },
+            "initial.temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              -0.014,
+              0.008,
+              -0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "VIN",
+          "terminals": [
+            {
+              "boundary": "vin"
+            },
+            {
+              "instance": "q",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "label": "SW",
+          "terminals": [
+            {
+              "instance": "q",
+              "port": "source"
+            },
+            {
+              "instance": "d",
+              "port": "n"
+            },
+            {
+              "instance": "l",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "VOUT",
+          "terminals": [
+            {
+              "instance": "l",
+              "port": "n"
+            },
+            {
+              "instance": "c",
+              "port": "p"
+            },
+            {
+              "instance": "sense",
+              "port": "p"
+            },
+            {
+              "boundary": "vout"
+            }
+          ]
+        },
+        {
+          "label": "GND",
+          "terminals": [
+            {
+              "boundary": "gnd"
+            },
+            {
+              "instance": "d",
+              "port": "p"
+            },
+            {
+              "instance": "c",
+              "port": "n"
+            },
+            {
+              "instance": "sense",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "sense",
+              "port": "reading"
+            },
+            {
+              "instance": "pi",
+              "port": "measured"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "pi",
+              "port": "command"
+            },
+            {
+              "instance": "pwm",
+              "port": "duty"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "pwm",
+              "port": "gate"
+            },
+            {
+              "instance": "q",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "q",
+              "port": "heat"
+            },
+            {
+              "instance": "sink",
+              "port": "node"
+            },
+            {
+              "instance": "air",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "air",
+              "port": "b"
+            },
+            {
+              "instance": "ambient",
+              "port": "node"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

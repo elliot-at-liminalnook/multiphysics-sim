@@ -1,0 +1,404 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "h_bridge_mosfet",
+  "definitions": {
+    "h_bridge_mosfet": {
+      "label": "MOSFET H-bridge",
+      "description": "Four 20 mΩ MOSFETs with body diodes, 20 kHz sign-magnitude synchronous drive, shared heatsink (2 J/K, 0.5 W/K to air). Same ports as robot.h_bridge.",
+      "interface": "robot.h_bridge",
+      "ports": {
+        "command": {},
+        "n": {},
+        "p": {},
+        "supply_n": {},
+        "supply_p": {}
+      },
+      "instances": {
+        "air": {
+          "label": "Heatsink to air",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.conductance"
+          },
+          "parameters": {
+            "conductance": {
+              "value": 0.5
+            }
+          },
+          "placement": {
+            "position": [
+              0.019,
+              0.012,
+              -0.016
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "ambient": {
+          "label": "Ambient",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.ambient"
+          },
+          "parameters": {
+            "temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.024,
+              0.016,
+              -0.016
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "driver": {
+          "label": "Gate driver 20 kHz",
+          "kind": {
+            "kind": "element",
+            "component_type": "control.h_bridge_pwm"
+          },
+          "parameters": {
+            "frequency": {
+              "value": 20000.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.014
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "heatsink": {
+          "label": "Heatsink",
+          "kind": {
+            "kind": "element",
+            "component_type": "thermal.capacitance"
+          },
+          "parameters": {
+            "heat_capacity": {
+              "value": 2.0
+            },
+            "initial.temperature": {
+              "value": 298.15
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              -0.016
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "appearance": {
+            "shape": {
+              "kind": "box",
+              "size": [
+                0.03,
+                0.015,
+                0.02
+              ]
+            },
+            "color_srgb": [
+              0.74,
+              0.76,
+              0.79
+            ],
+            "model": "heatsink"
+          }
+        },
+        "q_hi_a": {
+          "label": "High A",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02
+            }
+          },
+          "placement": {
+            "position": [
+              -0.018,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "q_hi_b": {
+          "label": "High B",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02
+            }
+          },
+          "placement": {
+            "position": [
+              0.006,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "q_lo_a": {
+          "label": "Low A",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02
+            }
+          },
+          "placement": {
+            "position": [
+              -0.006,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "q_lo_b": {
+          "label": "Low B",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.mosfet"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.02
+            }
+          },
+          "placement": {
+            "position": [
+              0.018,
+              0.0,
+              0.0
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "boundary": "supply_p"
+            },
+            {
+              "instance": "q_hi_a",
+              "port": "drain"
+            },
+            {
+              "instance": "q_hi_b",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "label": "V−",
+          "terminals": [
+            {
+              "boundary": "supply_n"
+            },
+            {
+              "instance": "q_lo_a",
+              "port": "source"
+            },
+            {
+              "instance": "q_lo_b",
+              "port": "source"
+            }
+          ]
+        },
+        {
+          "label": "OUT A",
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "q_hi_a",
+              "port": "source"
+            },
+            {
+              "instance": "q_lo_a",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "label": "OUT B",
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "q_hi_b",
+              "port": "source"
+            },
+            {
+              "instance": "q_lo_b",
+              "port": "drain"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "command"
+            },
+            {
+              "instance": "driver",
+              "port": "command"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "gate_hi_a"
+            },
+            {
+              "instance": "q_hi_a",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "gate_lo_a"
+            },
+            {
+              "instance": "q_lo_a",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "gate_hi_b"
+            },
+            {
+              "instance": "q_hi_b",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "driver",
+              "port": "gate_lo_b"
+            },
+            {
+              "instance": "q_lo_b",
+              "port": "gate"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "q_hi_a",
+              "port": "heat"
+            },
+            {
+              "instance": "q_lo_a",
+              "port": "heat"
+            },
+            {
+              "instance": "q_hi_b",
+              "port": "heat"
+            },
+            {
+              "instance": "q_lo_b",
+              "port": "heat"
+            },
+            {
+              "instance": "heatsink",
+              "port": "node"
+            },
+            {
+              "instance": "air",
+              "port": "a"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "instance": "air",
+              "port": "b"
+            },
+            {
+              "instance": "ambient",
+              "port": "node"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -726,7 +726,8 @@ impl<S: System> Simulation<S> {
     }
 
     pub fn run(&mut self, duration: f64, h: f64) -> Result<(), DynamicsError> {
-        let end = self.time + duration;
+        let start = self.time;
+        let end = start + duration;
         let count = (duration / h).round().max(1.0) as u64;
         for index in 0..count {
             let remaining = end - self.time;
@@ -737,6 +738,16 @@ impl<S: System> Simulation<S> {
                 break;
             }
             self.step(step)?;
+            // Snap the clock onto the grid `start + (k+1)·h` when it differs
+            // only by roundoff. Repeated `t += h` otherwise random-walks the
+            // clock away from scheduled event times until an event misses a
+            // step end by more than the merge window and splits off a
+            // femtosecond step the implicit solve cannot condition. The step
+            // sizes (and so the cached factorisation) are unchanged.
+            let target = start + (index + 1) as f64 * h;
+            if (self.time - target).abs() <= 1024.0 * f64::EPSILON * target.abs().max(h) {
+                self.time = target;
+            }
         }
         self.time = end;
         Ok(())

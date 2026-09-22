@@ -454,9 +454,15 @@ impl SystemSession {
         next.sequence = next.sequence.checked_add(1).ok_or("sequence exhausted")?;
         let start = Instant::now();
         let result = (|| {
+            // Tick onto the exact grid `step · interval`: the duration is
+            // measured from the current clock, so rounding never accumulates
+            // (repeated `t += h` random-walks the clock away from scheduled
+            // event times until an edge splits off a femtosecond step).
+            let target = next.step as f64 * self.config.interval;
+            let duration = target - self.system.runtime.time;
             self.system
                 .runtime
-                .advance(self.config.interval, self.config.interval)
+                .advance(duration, self.config.interval)
                 .map_err(|e| e.to_string())?;
             next.time = self.system.runtime.time;
             let display = self

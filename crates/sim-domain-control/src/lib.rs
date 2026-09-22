@@ -1,6 +1,7 @@
 //! Directed control elements and external controllers.
 
 pub mod elements;
+pub mod pwm;
 pub mod external;
 
 pub mod trajectory;

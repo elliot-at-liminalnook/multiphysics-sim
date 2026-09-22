@@ -33,7 +33,12 @@ pub struct SpatialPart {
     /// Presentation-only offset; never applied to the physical model.
     pub exploded_offset: [f32; 3],
     pub color_srgb: [f32; 3],
+    /// Bounding display shape; also the fallback when no model is available.
     pub shape: SpatialShape,
+    /// Display model ID in the model catalog (`library/models/catalog.json`).
+    /// Presentation only. Viewers without the catalog draw `shape`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,7 +47,7 @@ pub enum GeometryProvenance {
     Illustrative { explanation: String },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum SpatialShape {
     Box {

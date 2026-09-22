@@ -1,0 +1,159 @@
+{
+  "schema": "sim.system-library/1",
+  "definition": "h_bridge_averaged",
+  "definitions": {
+    "h_bridge_averaged": {
+      "label": "Averaged H-bridge",
+      "description": "robot.h_bridge (on-resistance 2 × 20 mΩ, matching two conducting MOSFETs) with 10 MΩ common-mode bleeds. Real-time profile of h_bridge_mosfet; no switching ripple or heat.",
+      "interface": "robot.h_bridge",
+      "ports": {
+        "command": {},
+        "n": {},
+        "p": {},
+        "supply_n": {},
+        "supply_p": {}
+      },
+      "instances": {
+        "bleed_n": {
+          "label": "Common-mode bleed",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.resistor"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 10000000.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              -0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "bleed_p": {
+          "label": "Common-mode bleed",
+          "kind": {
+            "kind": "element",
+            "component_type": "electrical.resistor"
+          },
+          "parameters": {
+            "resistance": {
+              "value": 10000000.0
+            }
+          },
+          "placement": {
+            "position": [
+              0.0,
+              0.0,
+              0.01
+            ],
+            "rotation_xyzw": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        "bridge": {
+          "label": "Averaged bridge",
+          "kind": {
+            "kind": "element",
+            "component_type": "robot.h_bridge"
+          },
+          "parameters": {
+            "on_resistance": {
+              "value": 0.04
+            }
+          }
+        }
+      },
+      "nets": [
+        {
+          "label": "V+",
+          "terminals": [
+            {
+              "boundary": "supply_p"
+            },
+            {
+              "instance": "bridge",
+              "port": "supply_p"
+            }
+          ]
+        },
+        {
+          "label": "V−",
+          "terminals": [
+            {
+              "boundary": "supply_n"
+            },
+            {
+              "instance": "bridge",
+              "port": "supply_n"
+            },
+            {
+              "instance": "bleed_p",
+              "port": "n"
+            },
+            {
+              "instance": "bleed_n",
+              "port": "n"
+            }
+          ]
+        },
+        {
+          "label": "OUT A",
+          "terminals": [
+            {
+              "boundary": "p"
+            },
+            {
+              "instance": "bridge",
+              "port": "p"
+            },
+            {
+              "instance": "bleed_p",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "label": "OUT B",
+          "terminals": [
+            {
+              "boundary": "n"
+            },
+            {
+              "instance": "bridge",
+              "port": "n"
+            },
+            {
+              "instance": "bleed_n",
+              "port": "p"
+            }
+          ]
+        },
+        {
+          "terminals": [
+            {
+              "boundary": "command"
+            },
+            {
+              "instance": "bridge",
+              "port": "command"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

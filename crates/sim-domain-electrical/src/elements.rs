@@ -219,5 +219,6 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     ] {
         registry.register(descriptor)?;
     }
-    crate::voltage_history::register(registry)
+    crate::voltage_history::register(registry)?;
+    crate::semiconductors::register(registry)
 }

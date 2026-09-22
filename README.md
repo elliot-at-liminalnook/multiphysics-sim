@@ -1,14 +1,73 @@
 # Multiphysics Sim
 
-A Rust multiphysics simulator with reusable equation elements, a generic model
-compiler and integrator, a Bevy viewer, and a Python CAD tool. Models combine
-mechanics, motors, electrical circuits, thermal behavior, sensing and external
-controllers through typed ports.
+A general multiphysics simulator in Rust. Any domain can join the solver
+through reusable equation elements and typed ports: mechanics, motors,
+electrical circuits, heat, fluids, acoustics, sensing and controllers so far.
+A generic compiler and integrator runs the result. Around the solver sit a
+CAD tool that owns the physical definition, linked schematic and physical
+system viewers, and a browser workspace that runs the same Rust physics as
+WebAssembly.
+
+The quadruped robot is one instance of this system. It is designed in the CAD
+tool, simulated with measured actuator models, and walked in the browser. It
+exists to prove the whole CAD → physics → controller → measured-result loop
+end to end.
 
 The specialized actuator, three-joint leg and quadruped runtimes, their test
 harnesses, fixed-topology dynamics and dedicated viewers have been removed.
 All supported scenes use the generic runtime. The leg and quadruped phenomena
 are models assembled from reusable elements.
+
+## Tools
+
+### CAD editor
+
+![robocad editing the parametric quadruped: outliner, 3D viewport with joints, and the linked components library](docs/images/cad-editor.png)
+
+RoboCAD (Python, OCCT, Qt) owns the robot's physical definition: geometry,
+materials, joints, transmissions, actuators, sensors and limits, with units
+and provenance. Legs are linked parametric components, so one edit updates all
+four. Every window also serves a REST API on port 8420.
+
+```sh
+cad/run.sh examples/components/quadruped-parametric/model/robot.rcad
+```
+
+### Schematic and physical system viewers
+
+![Rust schematic viewer running the motor-thermal model live, with typed ports, nets and a time graph](docs/images/schematic-viewer.png)
+
+![Rust physical assembly viewer showing the same run with live shaft, current and temperature readouts](docs/images/physical-viewer.png)
+
+Two linked Rust hosts present one compiled system. The schematic (egui) shows
+components, typed ports and nets, and plots live measurements. The physical
+view (Bevy) shows the assembly and animates it from the same run. Selecting a
+component in one view selects it in the other. Both are driven by a background
+simulation worker and expose REST control on ports 8422 and 8421.
+
+```sh
+examples/systems-viewer/run-live.sh     # live motor + heat example, both windows
+cargo run -p sim-viewer -- --description examples/systems-viewer/full-robot.description.json
+```
+
+The full quadruped schematic groups 195 compiled components into subsystems:
+
+![Schematic of the full quadruped: joint measurements, controller boundary, actuators, mechanical assembly, thermal paths and power](docs/images/schematic-full-robot.png)
+
+### Browser robot workspace with WASD control
+
+![Browser workspace: the CAD-derived quadruped walking forward under W with detailed motor models](docs/images/web-wasd.png)
+
+The browser runs the Rust runtime and controller as WebAssembly in a Web
+Worker and renders the CAD-derived collision surfaces. Hold W, A, S or D to
+drive the quadruped. Commands go through the controller rather than moving
+the robot directly. Presets state their fidelity, calibration status and
+measured speed relative to real time. Build and serve steps are in
+[web/README.md](web/README.md).
+
+```sh
+node web/serve-viewer.mjs <built-viewer-dir> 4173   # then open http://127.0.0.1:4173
+```
 
 ## Start with a reproducible CAD example
 

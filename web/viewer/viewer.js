@@ -1,3 +1,4 @@
+import {installHardwareSync} from './hardware-sync.mjs';
 import {motionCommandConfig,motionHeartbeatIndex,nextMotionAction,boundedInputValue,driveMotionValues} from "./motion-commands.mjs";
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -89,7 +90,7 @@ function scheduleLive() {
   const delay = Math.max(0, (tick-liveStartSim)*1000-(performance.now()-liveStartWall));
   liveTimer = setTimeout(() => advanceLive(), delay);
 }
-function setPlaying(value) { playing = value; clearTimeout(liveTimer);
+function setPlaying(value) { if(!value)hardwareSync.stop('Simulation paused'); playing = value; clearTimeout(liveTimer);
   if (!playing && driveKeys.size) {driveKeys.clear();applyDriveKeys();}
   if (playing) { liveStartWall = performance.now(); liveStartSim = tick; scheduleLive(); }
   $('play').textContent = playing ? 'Pause' : 'Play';
@@ -127,7 +128,8 @@ function buildModel(robot) {
   const initial = robot.links.map(l => ({ name: l.name, position_m: l.com, rotation: [[1,0,0],[0,1,0],[0,0,1]] }));
   applyPoses(initial); scene.updateMatrixWorld(true);
   const extent = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).length();
-  grid = new THREE.GridHelper(Math.max(.3, extent * 2.5), 30, 0x5b7684, 0x2c414f); grid.rotation.x = Math.PI / 2; grid.position.z = robot.world.floor_z; scene.add(grid);
+  const gridSize = Math.max(.3, extent * 2.5, current.data.view_grid_size_m || 0);
+  grid = new THREE.GridHelper(gridSize, Math.max(30, Math.round(gridSize / .1)), 0x5b7684, 0x2c414f); grid.rotation.x = Math.PI / 2; grid.position.z = robot.world.floor_z; scene.add(grid);
   $('parts').replaceChildren(); $('search').value = '';
   for (const name of meshes.keys()) { const b = document.createElement('button'); b.textContent = name; b.dataset.name = name; b.onclick = () => selectPart(name); $('parts').append(b); }
   $('source').textContent = robot.source.cad_sha256 ? `CAD ${robot.source.cad_sha256.slice(0, 12)} · ${robot.links.length} rigid links` : `${robot.links.length} CAD-derived links · ${robot.source.exported || 'fixture'}`;
@@ -191,6 +193,14 @@ function showMotionProgress(next) {
 }
 function showFrame(next) {
   drawNeeded = true;
+  if ($('follow').checked && current.data.follow_link && frame) {
+    const old = frame.poses.find(p => p.name === current.data.follow_link);
+    const updated = next.poses.find(p => p.name === current.data.follow_link);
+    if (old && updated) {
+      const delta = new THREE.Vector3(...updated.position_m).sub(new THREE.Vector3(...old.position_m));
+      camera.position.add(delta); controls.target.add(delta);
+    }
+  }
   frame = next; tick = next.time_s; applyPoses(next.poses); showTaskObservations(next); showMotionProgress(next);
   const load=$('world-load-readout');
   if(load&&next.environment_load){
@@ -202,6 +212,8 @@ function showFrame(next) {
     row.textContent=`${row.dataset.target.replace(/\.target$/,'')}: ${(next.policy?.neural_residual?.[row.dataset.target]??0).toFixed(6)} rad`;
   }
   const learning=next.learning, panel=$('learning-progress');panel.hidden=!learning;
+  const travel=$('travel-speed'),speed=learning?.speed;travel.hidden=!speed;
+  if(speed)travel.textContent=`Actual net travel: ${(frame.time_s>0?speed.net_distance_m/frame.time_s:0).toFixed(3)} m/s · ${speed.net_distance_m.toFixed(3)} m since reset${speed.fallen?' · FALL DETECTED':''}. Mean over elapsed simulation time.`;
   const walking=learning?.walking,overlay=$('walking-overlay');overlay.hidden=!walking;
   if(walking)overlay.textContent=`${walking.qualified_steps} qualified · ${walking.failed_steps} failed · body error ${(Math.hypot(...walking.body_error_world_m)*1000).toFixed(2)} mm${walking.heading?' · heading '+(walking.heading.error_rad*180/Math.PI).toFixed(3)+'°':''}`;
   if (learning) {
@@ -309,12 +321,19 @@ async function loadPreset(id) {
       worker = workerClient(); const result = await worker.request('load', { scene: data.scene || data, config: data.config, task: data.task, seed: data.seed ?? 0 }); if (token !== epoch) return false;
       if (result.metadata) Object.assign(current.data, result.metadata);
       makeInputs(result.inputs); showFrame(result.frame); $('timeline').max = result.metadata ? result.metadata.steps * result.metadata.step_s : data.duration_s;
+      const actuation=$('actuation-profile'),families=Object.values(data.scene?.robot?.actuator_profiles?.families??{});
+      actuation.hidden=data.config?.motors?.controller!=='cad_fixed_pd'||!families.length;
+      if(!actuation.hidden){
+        const rates=[...new Set(families.map(f=>1/f.controller.period.value))];
+        actuation.textContent=`Motor feedback/PWM: ${rates.join(' / ')} Hz · native measurement profile: ${(1/(data.config.step_s*data.config.report_every)).toFixed(0)} Hz · motion policy: ${(1/data.scene.period_s).toFixed(0)} Hz. ${families.length} CAD-bound motor parameter sets; provisional calibration.`;
+      }
       $('input-help').textContent = result.metadata?.environment_contract ? `Each command is held for ${result.metadata.environment_contract.period_s*1000} ms of simulation time. The selected controller and actuator profile determine the motor response. ${data.task?.walking ? 'The task scores joint tracking, body position and supported steps'+(data.task.walking.heading?', plus heading':'')+'.' : 'Scores follow the selected task; this preset has no supported-step walking objective.'} Saving and replay preserve the task and command sequence.` : result.metadata?.policy_contract ? 'Rhai reads ideal simulated joint state and sends motor targets at its declared sampling rate. Adjust the commands above; save and replay preserve when they changed. Hardware sensor bindings and walking commands are not yet available.' : preset.mode === 'embedded' ? 'The Rust servo controller executes this experiment live. Pause and reset are available; this preset does not yet declare WASD walking commands.' : 'Use the position slider while running. This fixture has no walking command; WASD locomotion is unavailable.';
       if (current.data.policy_contract?.step_reference) $('input-help').textContent+=current.data.policy_contract.step_reference.config.sequence.update_command_before_lift?' New motion requests are checked before lift-off. A stop at that point keeps the feet planted and returns the body to standing. Airborne feet complete their landing, and reversals wait for the current transfer.':' Motion requests are latched at foot-transfer boundaries. Releasing a key finishes the current transfer before standing; this provisional crawl is deliberately slow.';
       $('performance').textContent = 'Waiting for physics'; $('speed').disabled = true;
     } else {
+      $('actuation-profile').hidden=true;
       playback = data.frames; showFrame(playback[0]); $('timeline').max = playback.at(-1).time_s; $('timeline').disabled = false; $('speed').disabled = false;
-      $('input-help').textContent = 'Recorded motor execution. Scrub to inspect it, or choose the live lift experiment to execute its controller.';
+      $('input-help').textContent = 'Recorded physics at simulation time. Play or scrub to inspect it; WASD and hardware control are unavailable for recordings.';
       $('performance').textContent = `${(data.simulated_s/data.stepping_wall_s).toFixed(3)}× recorded`;
     }
     fit(); $('play').disabled = $('reset').disabled = $('download').disabled = false; $('step').disabled=Boolean(playback); status('');
@@ -324,7 +343,7 @@ async function loadPreset(id) {
 }
 async function advanceLive(single=false) {
   if (busy || (!playing && !single) || !worker) return; busy = true; const token = epoch, before = performance.now(), old = tick;
-  try { values=nextMotionAction(current,inputs,values);const next = await worker.request('step', { action: values, response_encoding: 'json' }); if (token !== epoch) return; showFrame(next);
+  try { values=nextMotionAction(current,inputs,values);const next = await worker.request('step', { action: values, response_encoding: 'json' }); if (token !== epoch) return; showFrame(next); hardwareSync.onFrame();
     wallWork += (performance.now()-before)/1000; simulatedWork += tick-old;
     const liveRate = (tick-liveStartSim)/((performance.now()-liveStartWall)/1000);
     $('performance').textContent = single ? `${(simulatedWork/wallWork).toFixed(2)}× processing` : `${liveRate.toFixed(2)}× live`;
@@ -396,6 +415,7 @@ window.addEventListener('keydown', e => { if ($('leaderboard-dialog').open || /I
 window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(driveKeys.delete(key)){e.preventDefault();applyDriveKeys();}});
 window.addEventListener('blur',()=>{driveKeys.clear();applyDriveKeys();});
 $('task-observation-details').addEventListener('toggle',()=>{if(frame)showTaskObservations(frame);});
+const hardwareSync=installHardwareSync({snapshot:()=>current&&frame?{live:!playback,source:JSON.stringify({preset:current.id,cad:current.data.scene?.robot?.source??current.data.robot?.source}),coordinates:current.data.coordinate_names,targets:frame.servo_targets_rad,time_s:frame.time_s,done:frame.done}:null,play:()=>setPlaying(true),pause:()=>setPlaying(false)});
 let catalog;
 try { catalog = await fetchData('catalog.json'); for (const p of catalog.presets) { const option = document.createElement('option'); option.value = p.id; option.textContent = p.label; $('preset').append(option); }
   $('preset').disabled = false; $('preset').onchange = () => loadPreset($('preset').value);

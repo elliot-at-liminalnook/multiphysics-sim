@@ -12,6 +12,43 @@ env:
   QT_QPA_PLATFORM: offscreen
 
 jobs:
+  fpga-transaction-contract:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install RTL simulator
+        run: sudo apt-get update && sudo apt-get install -y iverilog verilator yosys
+      - name: Verify autonomous transaction evidence and stopping
+        working-directory: examples/actuators/hx30hm/hardware/2026-09-13-controller-refinement/fpga-control/autonomous-transactions
+        run: make sim-experiment-transactions sim-experiment-reply sim-experiment-scheduler
+      - name: Verify device event serialization and retained recording
+        working-directory: examples/actuators/hx30hm/hardware/2026-09-13-controller-refinement/fpga-control/device-events
+        run: make sim-experiment-events sim-experiment-event-stream sim-experiment-recording
+      - name: Verify buffered capture overflow preserves evidence
+        working-directory: examples/actuators/hx30hm/hardware/2026-09-20-buffered-capture
+        run: |
+          iverilog -g2012 -s frame_log_overflow_tb -o /tmp/frame-log.vvp firmware/tb/frame_log_overflow_tb.v firmware/src/experiment_frame_log.v
+          vvp /tmp/frame-log.vvp
+          iverilog -g2012 -s frame_log_overflow_tb -P frame_log_overflow_tb.MODE=1 -o /tmp/frame-log-partial.vvp firmware/tb/frame_log_overflow_tb.v firmware/src/experiment_frame_log.v
+          vvp /tmp/frame-log-partial.vvp
+      - name: Verify buffered capture through complete UART transactions
+        run: node examples/actuators/hx30hm/hardware/2026-09-20-buffered-capture/run.mjs
+      - name: Check synthesis module connections
+        working-directory: examples/actuators/hx30hm/hardware/2026-09-20-buffered-capture/firmware
+        run: yosys -Q -s check-hierarchy.ys
+      - name: Verify 400 Hz control with alternate-frame logging and retained faults
+        run: node examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture/run.mjs
+      - name: Verify sampled logger overflow, partial capture and synthesis connections
+        working-directory: examples/actuators/hx30hm/hardware/2026-09-20-decimated-capture
+        run: |
+          iverilog -g2012 -s frame_log_overflow_tb -o /tmp/sampled-log.vvp firmware/tb/frame_log_overflow_tb.v firmware/src/experiment_frame_log.v
+          vvp /tmp/sampled-log.vvp
+          iverilog -g2012 -s frame_log_overflow_tb -P frame_log_overflow_tb.MODE=1 -o /tmp/sampled-partial.vvp firmware/tb/frame_log_overflow_tb.v firmware/src/experiment_frame_log.v
+          vvp /tmp/sampled-partial.vvp
+          cd firmware
+          yosys -Q -s check-hierarchy.ys
+
   generic-runtime:
     runs-on: ubuntu-22.04
     timeout-minutes: 40
@@ -32,6 +69,19 @@ jobs:
         # The gallery's separate one-second UI benchmark depends on the host.
         # The CAD job below enforces its own explicit performance budgets.
         run: cargo test --release --workspace --exclude sim-app --locked -- --skip every_exhibit_runs_in_real_time
+      - name: Systems viewer retained migration baseline
+        run: |
+          mkdir -p runs/systems-viewer
+          cargo run --release --locked -p sim-compile --example systems_baseline -- --check examples/systems-viewer/evidence/pre-migration-baseline.json > runs/systems-viewer/baseline.json
+          cargo run --release --locked -p sim-example-diffusion -- runs/systems-viewer/diffusion.description.json
+          cargo run --release --locked -p sim-runtime --example inspect_scene_observations -- examples/full-robot/whole-swing/browser.scene.json > runs/systems-viewer/quadruped-observations.json
+      - name: Check the native systems viewer graphics probe
+        run: cargo check --locked -p sim-viewer --example host_probe --features native-probe
+      - name: Headless systems REST acceptance
+        run: |
+          cargo build --release --locked -p sim-runtime -p sim-viewer -p sim-api --bin sim-system-worker --bin sim-viewer --bin simctl
+          cargo build --release --locked -p sim-spatial
+          SIM_REST_BINARY_DIR=target/release cargo run --release --locked -p sim-api --example viewer_rest_smoke -- runs/systems-viewer/rest
       - name: Python controller protocol tests
         env:
           PYTHONPATH: clients/python
@@ -52,7 +102,11 @@ jobs:
       - name: Install CAD dependencies
         run: python -m pip install -r cad/requirements.txt
       - name: Build the headless simulator
-        run: cargo build --release --locked --bin sim-cad --bin sim-experiment
+        run: cargo build --release --locked --bin sim-cad --bin sim-experiment --bin sim-actuator-profiles
+      - name: CAD actuator profiles, native validation and archive round trips
+        env:
+          ROBOCAD_ACTUATOR_PROFILE_TOOL: ${{ github.workspace }}/target/release/sim-actuator-profiles
+        run: python -m pytest -q cad/tests/test_actuator_profiles.py
       - name: CAD to controller to measured result
         run: python examples/motorized-pendulum/run.py
       - name: Acceptance checker and controller failure regression tests
